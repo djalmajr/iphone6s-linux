@@ -96,6 +96,18 @@
       "bytes": 9461973,
       "sha256": "56d6b7be85939198d2d6b6ec3553212f8a6a44d67c55d0b1b23afab3c8a14bdf",
       "published": false
+    },
+    {
+      "name": "iphone6s-console-server-initramfs.gz",
+      "bytes": 13086857,
+      "sha256": "b51e78b9acafea87685f3e09c9329a46929e288c582a91deb76593979480844e",
+      "published": false
+    },
+    {
+      "name": "m1n1-linux-iphone6s-console-server.bin",
+      "bytes": 23767809,
+      "sha256": "c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a",
+      "published": false
     }
   ],
   "Pongo_matches_Hoolock_clone": true,

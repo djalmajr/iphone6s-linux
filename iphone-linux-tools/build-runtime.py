@@ -20,7 +20,8 @@ def copy(source, destination=None):
 
 for source, destination in [('/bin/bash', '/bin/bash'),
                             ('/usr/sbin/dropbear', '/usr/sbin/dropbear'),
-                            ('/usr/bin/dropbearkey', '/usr/bin/dropbearkey')]:
+                            ('/usr/bin/dropbearkey', '/usr/bin/dropbearkey'),
+                            ('/usr/bin/script', '/usr/bin/script')]:
     copy(source, destination)
     dependencies = subprocess.check_output(['ldd', source], text=True)
     for dependency in re.findall(r'(/[^\s()]+)', dependencies):
@@ -63,6 +64,28 @@ if [ ! -f /var/run/dropbear.pid ] || ! kill -0 "$(cat /var/run/dropbear.pid)" 2>
 fi
 ''')
 start.chmod(0o755)
+console = ROOT / 'usr/local/sbin/start-console'
+console.write_text(r"""#!/bin/sh
+export PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+if [ ! -c /dev/fb0 ] || [ ! -c /dev/tty1 ]; then
+    echo "Framebuffer console unavailable" >&2
+    exit 1
+fi
+echo 0 > /sys/class/graphics/fb0/blank || exit 1
+# Writing the VT triggers deferred fbcon takeover in this kernel.
+{
+    printf '\033[2J\033[HiPhone 6s Linux - console\n\n'
+    uname -a
+    printf '\n'
+    uptime
+    printf '\n'
+    free -m
+    printf '\nSSH: 172.16.42.1\nHTTP: http://172.16.42.1:8080/cgi-bin/status\n'
+    printf '\nUse o Mac para digitar; o toque nao e necessario.\n'
+} > /dev/tty1
+chvt 1
+""")
+console.chmod(0o755)
 def root_owner(info):
     info.uid = info.gid = 0
     info.uname = info.gname = 'root'

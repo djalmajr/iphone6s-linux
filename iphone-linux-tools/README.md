@@ -8,8 +8,11 @@ Linux 7.0.12 ARM64 foi iniciado no iPhone 6s em 2026-09-29. Bash, SSH por chave,
 cd ~/iphone6s-linux/iphone-linux-tools
 bash iphone-linux.sh status
 bash iphone-linux.sh shell
+bash iphone-linux.sh console
 bash iphone-linux.sh herdr
 ```
+
+`console` mostra no display do iPhone o Bash digitado no Mac. Veja [procedimento e evidências](docs/CONSOLE.md).
 
 HTTP: http://172.16.42.1:8080/cgi-bin/status. Sair do Bash: `exit`. O Herdr mantém a sessão após fechar SSH; reiniciar o telefone perde tudo que estiver somente em RAM.
 

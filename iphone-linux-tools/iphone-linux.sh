@@ -182,10 +182,11 @@ case "${1:-status}" in
     serve) serve ;;
     install-terminal) install_terminal ;;
     shell) connect; exec ssh -t "${SSH_ARGS[@]}" "root@$PHONE_IP" ;;
+    console) connect; exec ssh -tt "${SSH_ARGS[@]}" "root@$PHONE_IP" '/usr/local/sbin/start-console && TERM=linux /usr/bin/script --quiet --flush --return --command "/bin/bash -i" /dev/tty1' ;;
     herdr) connect; exec ssh -tt "${SSH_ARGS[@]}" "root@$PHONE_IP" 'TERM=xterm-256color herdr --session iphone-linux' ;;
     disconnect)
         iface=$(usb_interface)
         /usr/bin/osascript -e "do shell script \"/sbin/ifconfig $iface inet $HOST_IP -alias\" with administrator privileges"
         ;;
-    *) printf 'Uso: %s {boot|connect|status|serve|install-terminal|shell|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
+    *) printf 'Uso: %s {boot|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
 esac

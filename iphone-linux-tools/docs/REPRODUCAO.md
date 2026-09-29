@@ -274,3 +274,7 @@ A linha de compilação acima vem do tutorial upstream; não foi reexecutada nes
 ## 15. Publicação e privacidade
 
 O repositório público guarda fontes, procedimentos, evidências selecionadas e hashes. `keys/`, `runtime/`, downloads, imagens, logs brutos e clones upstream ficam ignorados. Runtime e imagem candidata contêm a chave privada do servidor SSH: nunca os publique. Cada nova implantação deve gerar suas próprias chaves. A configuração de rede privada da VM foi retirada da evidência pública. Emails de autoria podem constar nos commits.
+
+## 16. Console no display
+
+A tela e um Bash espelhado foram ativados sem reiniciar, com confirmação visual do usuário. Consulte [CONSOLE.md](CONSOLE.md) para comandos, diagnóstico, versões e hashes da candidata nova. O runtime agora inclui `script`; a candidata nova inclui ativação de tty1. Os hashes da candidata anterior na seção 10 descrevem a construção histórica, não a nova imagem. Ambas permanecem preservadas localmente.

@@ -4,6 +4,10 @@
 
 Bash 5.2.21, key-only Dropbear SSH and Herdr 0.9.1/protocol 22 were verified on the phone. The Herdr pane survived disconnecting the SSH client. Bootstrap Telnet is now stopped. The runtime and candidate image contain a private SSH server key and remain local. The candidate image is built but has not booted; the complete updated cold-boot wrapper remains untested. The dedicated build VM was stopped after recording package versions. See `docs/REPRODUCAO.md` for the full chronology and public evidence.
 
+## Display console — verified 2026-09-29
+
+`simpledrm` exposed fb0 at 750 × 1334. Unblanking, writing tty1 and switching VT activated fbcon. The user confirmed both the initial console text and commands typed through an SSH Bash mirrored by util-linux `script`. The `console` helper is tested. A new candidate includes console startup but has not booted; see `docs/CONSOLE.md`.
+
 ## Earlier result: Linux and USB HTTP server running
 
 - On 2026-09-29 the user replaced the cable with a genuine **USB-A-to-Lightning** cable connected to a rear Mac port. The first guided attempt with that cable succeeded: palera1n reported `Device entered DFU mode successfully`, `Checkmate!`, and `Booting PongoOS...`. `ioreg` confirmed `PongoOS USB Device`.

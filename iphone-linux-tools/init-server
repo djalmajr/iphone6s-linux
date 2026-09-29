@@ -37,6 +37,7 @@ if [ -n "$udc" ]; then
     ip link set "$iface" up
     ip addr add 172.16.42.1/24 dev "$iface"
     /usr/local/sbin/start-terminal
+    /usr/local/sbin/start-console || echo "Console unavailable; SSH remains active"
     httpd -f -p 172.16.42.1:8080 -h /srv/iphone </dev/null >>/boot.log 2>&1 &
     echo "SSH by key and HTTP ready on the USB link"
 fi
