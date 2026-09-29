@@ -1,0 +1,14 @@
+Date: 2026-09-29
+Device: iPhone 6s N71/A9, Linux 7.0.12
+Read-only live SSH check:
+charging_validation=unverified
+power_supply=unavailable
+thermal_zone=unavailable
+I2C: i2c-0 and 0-0074; PMIC RTC registered in kernel log.
+Kernel config: /proc/config.gz unavailable.
+Operator observation: cold, physically intact; no reported physical abnormality.
+Result: sustained charging and thermal protection not established.
+Local tests: 9/9 passed (6 persistence, 3 power-check).
+Mutation checks: dropping unverified status and missing-sensor fallback both detected.
+Shell syntax: sh -n passed.
+No package installation, hardware-register writes or network changes.
