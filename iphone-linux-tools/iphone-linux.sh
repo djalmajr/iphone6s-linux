@@ -5,7 +5,7 @@ ROOT=$(cd "$(dirname "$0")" && pwd)
 PHONE_IP=172.16.42.1
 HOST_IP=172.16.42.2
 GUIDE_PID=
-SSH_ARGS=(-F /dev/null -i "$ROOT/keys/iphone_ed25519" -o "UserKnownHostsFile=$ROOT/keys/known_hosts" -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5)
+SSH_ARGS=(-F /dev/null -i "$ROOT/keys/iphone_ed25519" -o "UserKnownHostsFile=$ROOT/keys/known_hosts" -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 -o ServerAliveInterval=5 -o ServerAliveCountMax=3)
 
 ssh_ready() {
     [ -f "$ROOT/keys/iphone_ed25519" ] && ssh -n "${SSH_ARGS[@]}" "root@$PHONE_IP" true 2>/dev/null
@@ -17,6 +17,8 @@ import plistlib
 import subprocess
 
 data = subprocess.check_output(["ioreg", "-r", "-n", "iPhone 6s Linux probe", "-a"])
+if not data.strip():
+    raise SystemExit("O dispositivo USB do Linux ainda não foi detectado.")
 names = set()
 def visit(value):
     if isinstance(value, dict):
@@ -95,6 +97,10 @@ status() {
 
 serve() {
     connect
+    if curl --fail --silent --max-time 2 "http://$PHONE_IP:8080/cgi-bin/status" >/dev/null 2>&1; then
+        printf 'Painel: http://%s:8080/cgi-bin/status\n' "$PHONE_IP"
+        return
+    fi
     local encoded
     encoded=$(base64 -i "$ROOT/server/status" | fold -w 76)
     {
@@ -117,17 +123,31 @@ cleanup_guide() {
 }
 
 boot() {
+    local image="${1:-server}" payload digest
+    if [ "$image" = probe ]; then
+        payload="$ROOT/m1n1-linux-iphone6s.bin"
+        digest=7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520
+    else
+        payload="$ROOT/m1n1-linux-iphone6s-console-server.bin"
+        digest=c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a
+    fi
     if ioreg -p IOUSB -w0 | grep -q 'iPhone 6s Linux probe'; then
-        if ! ssh_ready; then install_terminal; fi
+        connect
+        if ! ssh_ready; then
+            if [ "$image" = probe ]; then install_terminal; else
+                printf 'SSH da imagem integrada não foi confirmado.\n' >&2
+                return 1
+            fi
+        fi
         serve
         return
     fi
-    python3 - "$ROOT/palera1n-macos-arm64" "$ROOT/m1n1-linux-iphone6s.bin" <<'PY'
+    python3 - "$ROOT/palera1n-macos-arm64" "$payload" "$digest" <<'PY'
 import hashlib
 import pathlib
 import sys
-expected = ["950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9", "7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520"]
-for name, digest in zip(sys.argv[1:], expected):
+expected = ["950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9", sys.argv[3]]
+for name, digest in zip(sys.argv[1:3], expected):
     path = pathlib.Path(name)
     if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
         raise SystemExit(f"Hash inesperado: {path.name}. Boot interrompido.")
@@ -158,7 +178,7 @@ PY
     curl --fail --silent http://127.0.0.1:8765/state > "$ROOT/dfu-last-state.json"
     cleanup_guide
     trap - EXIT INT TERM
-    printf '/send %s\nbootm\n' "$ROOT/m1n1-linux-iphone6s.bin" | "$ROOT/pongoterm" &
+    printf '/send %s\nbootm\n' "$payload" | "$ROOT/pongoterm" &
     local transfer_pid=$!
     ready=0
     for ((i=0; i<120; i++)); do
@@ -171,12 +191,25 @@ PY
         printf 'A interface USB do Linux não apareceu. Boot ainda não confirmado.\n' >&2
         return 1
     fi
-    install_terminal
+    connect
+    if [ "$image" = probe ]; then
+        install_terminal
+    else
+        for ((i=0; i<15; i++)); do
+            if ssh_ready; then break; fi
+            sleep 1
+        done
+        if ! ssh_ready; then
+            printf 'Linux USB detectado, mas SSH integrado não confirmado.\n' >&2
+            return 1
+        fi
+    fi
     serve
 }
 
 case "${1:-status}" in
     boot) boot ;;
+    boot-probe) boot probe ;;
     connect) connect ;;
     status) status ;;
     serve) serve ;;
@@ -188,5 +221,5 @@ case "${1:-status}" in
         iface=$(usb_interface)
         /usr/bin/osascript -e "do shell script \"/sbin/ifconfig $iface inet $HOST_IP -alias\" with administrator privileges"
         ;;
-    *) printf 'Uso: %s {boot|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
+    *) printf 'Uso: %s {boot|boot-probe|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
 esac

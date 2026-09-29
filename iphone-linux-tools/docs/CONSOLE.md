@@ -17,7 +17,7 @@ Arquivos: `build-runtime.py`, `init-server`, `iphone-linux.sh` e este documento.
 
 ## Decisão
 
-Mostrar um console de texto com framebuffer já suportado pelo kernel, dispensando GUI e touchscreen. A ativação funciona na sessão atual; o boot da candidata permanece uma checagem separada. Reverter: sair do shell e desativar a tela com `echo 4 > /sys/class/graphics/fb0/blank`; isso não encerra SSH.
+Mostrar um console de texto com framebuffer já suportado pelo kernel, dispensando GUI e touchscreen. A ativação funciona na sessão atual; o boot da imagem integrada foi confirmado posteriormente nesta mesma data. Reverter: sair do shell e desativar a tela com `echo 4 > /sys/class/graphics/fb0/blank`; isso não encerra SSH.
 
 O console pode expor na tela comandos e resultados. Não usar o espelhamento para digitar credenciais. O arquivo de destino de `script` é o dispositivo tty1; não se cria um log persistente dos comandos.
 
@@ -37,6 +37,27 @@ Digite no Terminal do Mac. Os comandos e a saída do Bash aparecem também na te
 - Usuário confirmou visualmente o texto inicial e depois `CONSOLE_BASH_OK` e `7.0.12` digitados pelo Mac.
 - Shell interativo retornou kernel 7.0.12 e uptime de 1h05; `exit` encerrou normalmente.
 - Runtime instalado por USB após verificação SHA-256; imagem candidata reconstruída e VM parada.
-- Candidata `m1n1-linux-iphone6s-console-server.bin`: 23.767.809 bytes, SHA-256 `c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a`. Construída, ainda sem teste de boot.
+- Candidata `m1n1-linux-iphone6s-console-server.bin`: 23.767.809 bytes, SHA-256 `c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a`. Boot confirmado no teste abaixo.
 
-A imagem e seu initramfs contêm a chave privada do servidor SSH e permanecem ignorados pelo Git. A ativação do console foi testada na sessão existente, não durante o boot da candidata. A imagem original e a candidata anterior permanecem preservadas.
+A imagem e seu initramfs contêm a chave privada do servidor SSH e permanecem ignorados pelo Git. A ativação do console foi testada tanto na sessão existente quanto automaticamente no novo boot. A imagem original e a candidata anterior permanecem preservadas.
+
+## Novo boot da imagem integrada — 2026-09-29
+
+- [x] Preservar `/root` da sessão anterior em um tar privado no Mac.
+- [x] Reiniciar, entrar em recuperação e executar novo DFU físico.
+- [x] Confirmar checkm8/PongoOS e carregar 23.767.809 bytes da imagem integrada.
+- [x] Confirmar SSH, Bash, HTTP e utilitário de console sem reinstalar runtime.
+- [x] Receber confirmação visual do usuário de que o console apareceu sozinho.
+- [x] Iniciar o servidor Herdr dedicado e executar `POST_BOOT_HERDR_OK` dentro do painel.
+
+O `reboot` comum só sinaliza init; nesta imagem mínima foi necessário `sync; busybox reboot -f`. O boot voltou inicialmente ao iOS, e o palera1n o levou a recuperação. Após DFU, PongoOS carregou a nova imagem. `pongoterm` reportou timeout USB após o envio, mas o Linux reapareceu no USB e os serviços foram verificados: esse erro isolado não significou falha de boot.
+
+O Mac pediu novamente autenticação para o alias IP USB. O init iniciou SSH e HTTP diretamente; nenhum servidor de transferência ou `install-terminal` foi usado após o novo boot. `fbcon` assumiu a tela cerca de 1,34 s após iniciar o kernel. Herdr estava instalado, mas seu servidor/sessão foi iniciado posteriormente pelo Mac; não é um daemon automático do init atual.
+
+Evidência: [console-cold-boot.txt](evidence/console-cold-boot.txt). O tar privado de `/root` fica em `runtime/phone-root-before-console-boot.tar.gz`, fora do Git. Ele preserva arquivos/configuração, não processos nem sockets.
+
+### Repetir
+
+`bash iphone-linux.sh boot` agora seleciona a imagem integrada verificada. `boot-probe` seleciona a imagem original e restaura seu runtime pelo Mac. O wrapper completo ainda não foi executado de ponta a ponta desde um reboot; nesta rodada o boot foi conduzido manualmente com os mesmos componentes, e o comando `boot` foi verificado somente com a sessão já ativa.
+
+O `boot` não reinicia um Linux já rodando: verifica SSH/HTTP e mantém a sessão. Em caso de reinício, ainda são necessários Mac, cabo USB-A → Lightning e botões físicos para DFU. A imagem anterior permanece disponível.

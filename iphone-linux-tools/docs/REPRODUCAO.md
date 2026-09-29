@@ -10,7 +10,7 @@ Hardware: iPhone 6s, `iPhone8,1`, placa `N71AP`, A9 Samsung S8000, armazenamento
 
 Funciona no aparelho: boot Linux em RAM, rede NCM por USB, HTTP, Bash 5.2.21, SSH Dropbear por chave e Herdr 0.9.1. O servidor Herdr e o painel sobreviveram ao fechamento da conexão SSH. Nenhum agente de IA, conta ou credencial de provedor foi instalado no telefone.
 
-Não estabelecido: armazenamento interno, Wi-Fi, leitura de bateria, temperatura, carga sustentada, boot autônomo, estabilidade prolongada e reinício completo com os wrappers atualizados. Uma imagem candidata inclui o terminal no initramfs, mas ainda não deu boot no aparelho.
+Não estabelecido: armazenamento interno, Wi-Fi, leitura de bateria, temperatura, carga sustentada, boot autônomo, estabilidade prolongada e reinício completo com os wrappers atualizados. A imagem integrada com console, Bash, SSH e HTTP deu boot no aparelho; o usuário confirmou que o console apareceu sozinho. Veja seção 17.
 
 ## 2. Linha do tempo e decisões
 
@@ -121,7 +121,7 @@ multipass transfer iphone6s-build:/home/ubuntu/iphone6s-initramfs.gz ./iphone6s-
 
 Use um destino novo para conservar a imagem comprovada. Cpio, metadados e timestamps podem produzir bytes diferentes; essa receita reproduz a estrutura funcional, não promete hash idêntico a cada execução. O original permanece disponível localmente; binários e imagens não são distribuídos neste repositório.
 
-O init monta proc/sysfs/devtmpfs/devpts/configfs, configura o gadget NCM, atribui `172.16.42.1/24` e abre um shell Telnet somente nesse endereço. Esse é o bootstrap original; no uso atual ele é encerrado após instalar SSH. A imagem candidata usa `init-server` e inicia SSH por chave diretamente.
+O init monta proc/sysfs/devtmpfs/devpts/configfs, configura o gadget NCM, atribui `172.16.42.1/24` e abre um shell Telnet somente nesse endereço. Esse é o bootstrap original, ainda acessível por `boot-probe`. A imagem integrada padrão usa `init-server` e inicia SSH por chave diretamente, sem Telnet.
 
 ## 7. Montar o payload m1n1
 
@@ -149,9 +149,9 @@ cd ~/iphone6s-linux/iphone-linux-tools
 bash iphone-linux.sh boot
 ```
 
-O wrapper confere os hashes originais, abre a contagem, espera PongoOS, envia o payload e espera a interface do Linux. Depois atribui o IP USB temporário do Mac, restaura o terminal e inicia o HTTP. O wrapper integrado ainda precisa de teste desde um reinício; seus componentes foram testados na sessão real.
+O wrapper confere os hashes do palera1n e da imagem integrada, abre a contagem, espera PongoOS, envia o payload e espera a interface do Linux. Depois atribui o IP USB temporário do Mac e verifica SSH e HTTP iniciados pelo init. `boot-probe` conserva o fluxo original com instalação posterior do runtime. O wrapper completo ainda precisa de teste desde um reinício; o boot manual da integrada foi confirmado.
 
-Fluxo manual comprovado:
+Fluxo manual original comprovado (para a integrada, substituir o nome do payload conforme seção 17):
 
 1. Cabo **USB-A → Lightning**, porta USB-A traseira do Mac. Recuperação mostra cabo/computador.
 2. `dfu_visual.py` usa `PALERA1N_BYPASS_PASSCODE_CHECK=1 palera1n-macos-arm64 -lp -k Pongo.bin`. No A9 deste teste, o bypass evita a verificação de passcode da ferramenta; não desbloqueia dados de usuário nem altera conta.
@@ -216,7 +216,7 @@ multipass transfer iphone6s-build:/home/ubuntu/iphone6s-server-initramfs.gz ./ip
 python3 compose-payload.py iphone6s-server-initramfs.gz m1n1-linux-iphone6s-server.bin
 ```
 
-O build combina o rootfs original com o runtime, `init-server` e HTTP. O payload candidato desta rodada tem 23.746.076 bytes e SHA-256 `a12e2e36c7ee9b47c92a2b56c8679bb94908cd1f3dded7615ec2f3da65742a4e`. **Construção não é prova de boot.** O wrapper mantém o payload original como padrão e restaura o runtime pelo Mac. Não promover a candidata antes de testar um ciclo DFU completo.
+O build combina o rootfs original com o runtime, `init-server` e HTTP. O payload candidato desta rodada tem 23.746.076 bytes e SHA-256 `a12e2e36c7ee9b47c92a2b56c8679bb94908cd1f3dded7615ec2f3da65742a4e`. **Construção não é prova de boot.** Esses bytes descrevem a candidata anterior. A imagem posterior com console foi testada em DFU e passou a ser o padrão, conforme seção 17.
 
 ## 11. Operação, persistência e atualizações
 
@@ -253,7 +253,7 @@ O cliente OpenSSH atual imprime um aviso de ausência de troca pós-quântica co
 
 Evidências locais: `evidence/multipass-build.json`, `evidence/ubuntu-package-versions.txt`, `evidence/ssh-linux-status.txt`, `evidence/herdr-phone.txt`, `../linux-boot-proof.txt`, `../linux-http-proof.html`, `artifacts.json`. O log `../runtime/install-last.log` permanece somente local. Alguns registros iniciais são históricos, anteriores ao SSH; os mais novos mostram o estado atualizado.
 
-Gates pendentes: boot frio pelo wrapper; boot da imagem candidata; confirmação física de carga; estabilidade prolongada; persistência de dados alterados; acesso LAN/serviço DNS. Não confundir o HTTP/Bash/Herdr já verificados com esses gates.
+Gates pendentes: boot frio pelo wrapper completo; confirmação física de carga; estabilidade prolongada; persistência de dados alterados; acesso LAN/serviço DNS. Não confundir o HTTP/Bash/Herdr já verificados com esses gates.
 
 Fontes primárias: [Hoolock PongoOS](https://github.com/HoolockLinux/docs/blob/master/tutorials/SETUP_pongoOS.md), [Hoolock A9](https://github.com/HoolockLinux/docs/blob/master/features/A9.md), [armazenamento](https://github.com/HoolockLinux/docs/blob/master/tools/README.md), [palera1n](https://github.com/palera1n/palera1n), [Herdr](https://github.com/herdrdev/herdr), [processo de boot Apple](https://support.apple.com/en-ca/guide/security/secb3000f149/web).
 
@@ -278,3 +278,9 @@ O repositório público guarda fontes, procedimentos, evidências selecionadas e
 ## 16. Console no display
 
 A tela e um Bash espelhado foram ativados sem reiniciar, com confirmação visual do usuário. Consulte [CONSOLE.md](CONSOLE.md) para comandos, diagnóstico, versões e hashes da candidata nova. O runtime agora inclui `script`; a candidata nova inclui ativação de tty1. Os hashes da candidata anterior na seção 10 descrevem a construção histórica, não a nova imagem. Ambas permanecem preservadas localmente.
+
+## 17. Boot confirmado da imagem integrada
+
+Após autorização do usuário e confirmação de que estava pronto para os botões, a imagem `m1n1-linux-iphone6s-console-server.bin` deu boot via DFU → PongoOS → m1n1. SHA-256 `c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a`, 23.767.809 bytes. SSH, Bash 5.2.21, HTTP e console foram confirmados sem transferência posterior do runtime. O usuário confirmou a tela automaticamente ativa. Herdr 0.9.1 foi iniciado e um comando dentro do painel retornou `POST_BOOT_HERDR_OK` e kernel 7.0.12.
+
+`iphone-linux.sh boot` seleciona essa imagem; `boot-probe` conserva a original. Evidências, sequência exata, reinício do init mínimo e diferenças do wrapper: [CONSOLE.md](CONSOLE.md) e [console-cold-boot.txt](evidence/console-cold-boot.txt). Os dados modificados continuam em RAM; a cópia local de `/root` antes do reboot é um snapshot privado, não sincronização automática.

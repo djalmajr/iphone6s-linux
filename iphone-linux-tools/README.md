@@ -16,7 +16,7 @@ bash iphone-linux.sh herdr
 
 HTTP: http://172.16.42.1:8080/cgi-bin/status. Sair do Bash: `exit`. O Herdr mantém a sessão após fechar SSH; reiniciar o telefone perde tudo que estiver somente em RAM.
 
-`bash iphone-linux.sh boot` prepara a repetição com o payload original, DFU físico e restauração do runtime pelo Mac. O wrapper completo ainda não foi retestado desde um reinício. Um clone novo precisa primeiro obter os binários e construir imagens/chaves conforme o [procedimento completo](docs/REPRODUCAO.md).
+`bash iphone-linux.sh boot` seleciona a imagem integrada que deu boot com console, SSH e HTTP automáticos. `boot-probe` conserva o payload original e restaura seu runtime pelo Mac. O wrapper completo ainda não foi retestado desde um reinício. Um clone novo precisa primeiro obter os binários e construir imagens/chaves conforme o [procedimento completo](docs/REPRODUCAO.md).
 
 Não há storage interno, Wi-Fi, boot autônomo ou carga sustentada comprovados. O Mac fornece o enlace USB; conectar somente a um carregador não fornece essa rede. SSH usa chaves locais dedicadas; Telnet do bootstrap é encerrado depois de verificar SSH.
 
