@@ -7,6 +7,7 @@ Experimento de mini servidor Linux em um iPhone 6s com tela defeituosa, usando b
 ## Documentação
 
 - [Procedimento completo e histórico](iphone-linux-tools/docs/REPRODUCAO.md): diagnóstico, DFU, Multipass, builds, chaves, operação, atualizações e limitações.
+- [Estado do Wi-Fi nativo](iphone-linux-tools/docs/WIFI.md).
 - [Backup e restauração no Mac](iphone-linux-tools/docs/PERSISTENCIA.md).
 - [Console no display e Bash espelhado](iphone-linux-tools/docs/CONSOLE.md).
 - [Comandos de operação](iphone-linux-tools/README.md).

@@ -290,3 +290,7 @@ Após autorização do usuário e confirmação de que estava pronto para os bot
 `backup`, `backups` e `restore` guardam snapshots privados de `/srv/data` e arquivos de trabalho de `/root`. Identidade SSH e estado vivo de sessões Herdr são excluídos. A restauração verifica hash/escopo, salva a cópia anterior e recupera conteúdo/permissões sem remover arquivos extras. O ciclo real foi testado no telefone ativo sem reboot; 6 testes locais e testes de bloqueio de links/corrupção passaram. O procedimento completo e seus limites estão em [PERSISTENCIA.md](PERSISTENCIA.md).
 
 Os backups ficam no Mac e não são publicados. Alterações após o último snapshot continuam vulneráveis à perda de energia. Não há restauração automática no boot nem validação de recuperação após outro DFU nesta etapa.
+
+## 19. Investigação de Wi-Fi
+
+A inspeção do rádio/barramento no Linux ativo e do device tree oficial A9 no commit `6831bc701a6ce059e71e5aaa9488c9195bea6927` não encontrou um caminho pronto para habilitar Wi-Fi nativo no N71. O fork que documenta Wi-Fi funcionando foi validado em A10, não A9. Não foi instalada ferramenta nem alterada a rede do Mac. Evidências, fontes e limites: [WIFI.md](WIFI.md).
