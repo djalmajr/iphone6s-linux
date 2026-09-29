@@ -1,0 +1,5 @@
+keys/
+runtime/
+*-server-initramfs.gz
+*-server.bin
+__pycache__/

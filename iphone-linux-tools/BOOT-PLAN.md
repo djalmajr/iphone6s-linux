@@ -1,0 +1,51 @@
+# Boot experimental de Linux no iPhone 6s
+
+## Contexto
+
+O aparelho é um iPhone 6s `iPhone8,1` com A9 Samsung S8000. O toque falha mesmo após a atualização para iOS 15.8.8. O usuário quer Linux no próprio telefone e autorizou alterações locais nele, sem alterar contas ou serviços remotos e sem instalar ferramentas inseguras no Mac.
+
+## Arquivos
+
+- `STATUS.md`: fatos do aparelho, hashes e resultado de cada tentativa.
+- `dfu_visual.py`: guia visual já preparado para entrar em DFU.
+- `Pongo.bin`, `pongoterm`, `m1n1-linux-iphone6s.bin`: cadeia de boot Hoolock já preparada.
+
+## Detalhes
+
+- O boot documentado é DFU → PongoOS → m1n1 → kernel/initramfs Linux; no A9, este teste usa RAM e depende do Mac. Não executar fakefs, particionamento nem restauração.
+- A USB-C frontal passa por um hub interno; a USB-C traseira foi testada e o iPhone aparece diretamente sob `AppleT8112USBXHCI@03000000`.
+- A finalização do iOS terminou e o usuário conseguiu digitar o PIN. A tela de configuração do iOS não é necessária para o boot Linux.
+- DFU de hardware exige tela preta e USB `05ac:1227`. Tela de cabo é recovery. Cabo USB-C–Lightning pode falhar; se o teste traseiro não funcionar, usar USB-A–Lightning numa das USB-A traseiras.
+- O initramfs atual oferece telnet sem autenticação no enlace USB para prova de boot. Não habilitar compartilhamento para a LAN nem tratá-lo como servidor definitivo.
+
+## Tarefas
+
+- [x] Conferir modelo, fontes, hashes e ferramentas já presentes.
+- [x] Comparar pesquisa própria com Grok e agy Gemini 3.8 Flash Medium; corrigir sugestões inseguras de fakefs.
+- [x] Trocar da USB-C frontal para a traseira e confirmar o novo caminho USB.
+- [x] Aguardar a finalização do iOS e colocar o iPhone em recovery sem precisar do toque.
+- [x] Tentar DFU guiado pela USB-C traseira e confirmar que permaneceu em Recovery Mode, não em DFU.
+- [x] Repetir com cabo USB-A–Lightning na USB-A traseira: DFU e PongoOS confirmados em 2026-09-29.
+- [x] Carregar o payload Linux em RAM; confirmar gadget USB, terminal, modelo e `uname`.
+- [x] Servir um painel HTTP no endereço USB do iPhone e verificar a resposta real.
+- [x] Preparar comandos locais para terminal e repetição do serviço; testar `status`, `shell` e `serve`.
+- [x] Registrar o resultado da tentativa com USB-C traseira e o limite atual para operação como servidor.
+
+- [x] Instalar e verificar Bash, SSH por chave e Herdr no telefone; encerrar Telnet após validação.
+- [x] Construir candidata com terminal integrado, preservando a original.
+- [x] Documentar Multipass, builds, falhas, insumos e evidências para reprodução.
+- [ ] Testar novo boot completo com o wrapper e testar a candidata.
+
+## Verificação
+
+`ioreg -p IOUSB -w0` e `idProduct` distinguem recovery de DFU; o log de palera1n confirma PongoOS; `pongoterm` envia o payload; interface USB e `uname -a` confirmam Linux. Nenhum pacote é instalado no Mac, nenhum dado remoto é alterado e nenhuma operação de disco do iPhone é feita nesta etapa.
+
+## Decisões e alternativas
+
+**D1 — Boot RAM dependente do Mac.** Escolhido por ser o caminho documentado para A9 e dispensar a tela defeituosa. Instalação autônoma no armazenamento interno não está documentada neste modelo; servidor sobre iOS foi descartado pelo usuário. Reversão: reinício do aparelho, desde que o iOS local permaneça íntegro. Status: em curso.
+
+**D2 — Porta traseira antes de trocar cabo.** A tentativa com USB-C traseira retornou a Recovery Mode. A troca para USB-A–Lightning foi seguida por DFU, PongoOS e Linux confirmados em 2026-09-29. Reversão: trocar o cabo. Status: aplicada.
+
+**D3 — Primeiro serviço limitado ao USB e à RAM.** O servidor BusyBox HTTP usa `172.16.42.1:8080`; o terminal usa o mesmo enlace USB. A interface dedicada do Mac recebeu apenas o alias temporário `172.16.42.2/24`. O armazenamento interno e a leitura da bateria não apareceram no Linux atual. Reversão: reiniciar o telefone e remover o alias com `iphone-linux.sh disconnect` enquanto o dispositivo estiver conectado. Status: aplicada e verificada; boot autônomo e persistência continuam indisponíveis neste experimento.
+
+Fontes: [HoolockLinux](https://github.com/HoolockLinux/docs/blob/master/tutorials/SETUP_pongoOS.md), [suporte de armazenamento](https://github.com/HoolockLinux/docs/blob/master/tools/README.md), [palera1n](https://github.com/palera1n/palera1n/blob/main/README.md), [DFU](https://theapplewiki.com/wiki/DFU_Mode).

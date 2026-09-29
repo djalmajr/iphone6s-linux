@@ -1,0 +1,44 @@
+#!/bin/busybox sh
+
+# Minimal, RAM-only boot probe for the iPhone 6s. Binds its shell to the
+# direct USB network link only; it never configures Wi-Fi or remote services.
+export PATH=/usr/local/bin:/usr/local/sbin:/bin:/sbin:/usr/bin:/usr/sbin
+mkdir -p /sbin /usr/bin /usr/sbin
+/bin/busybox --install -s
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+mkdir -p /dev/pts /sys/kernel/config
+mount -t devpts devpts /dev/pts
+mount -t configfs configfs /sys/kernel/config
+exec >>/boot.log 2>&1
+
+echo "iPhone 6s Linux USB boot probe"
+uname -a
+insmod /lib/modules/usb_f_ncm.ko || echo "usb_f_ncm module load failed"
+
+gadget=/sys/kernel/config/usb_gadget/iphone6s
+mkdir -p "$gadget"
+echo 0x05ac > "$gadget/idVendor"
+echo 0x4142 > "$gadget/idProduct"
+mkdir -p "$gadget/strings/0x409" "$gadget/configs/c.1/strings/0x409"
+echo "iPhone 6s Linux probe" > "$gadget/strings/0x409/product"
+echo "Local USB test" > "$gadget/strings/0x409/manufacturer"
+echo "iphone6s-local" > "$gadget/strings/0x409/serialnumber"
+echo "USB network" > "$gadget/configs/c.1/strings/0x409/configuration"
+mkdir -p "$gadget/functions/ncm.usb0"
+ln -s "$gadget/functions/ncm.usb0" "$gadget/configs/c.1/ncm.usb0"
+udc=$(ls /sys/class/udc | head -n 1)
+echo "UDC: $udc"
+if [ -n "$udc" ]; then
+    echo "$udc" > "$gadget/UDC"
+    iface=$(cat "$gadget/functions/ncm.usb0/ifname")
+    echo "USB interface: $iface"
+    ip link set "$iface" up
+    ip addr add 172.16.42.1/24 dev "$iface"
+    /usr/local/sbin/start-terminal
+    httpd -f -p 172.16.42.1:8080 -h /srv/iphone </dev/null >>/boot.log 2>&1 &
+    echo "SSH by key and HTTP ready on the USB link"
+fi
+
+while true; do sleep 3600; done

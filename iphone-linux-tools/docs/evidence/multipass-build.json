@@ -1,0 +1,30 @@
+{
+  "errors": [],
+  "info": {
+    "iphone6s-build": {
+      "cpu_count": "6",
+      "disks": {
+        "sda1": {
+          "total": "25918811136",
+          "used": "4084816384"
+        }
+      },
+      "image_hash": "1d6bffe64b848468ac97f821d369a4846d983de1800ccf6b5ec8853e85cefc55",
+      "image_release": "24.04 LTS",
+      "load": [
+        0,
+        0.03,
+        0.05
+      ],
+      "memory": {
+        "total": 8303263744,
+        "used": 357269504
+      },
+      "mounts": {},
+      "release": "Ubuntu 24.04.5 LTS",
+      "snapshot_count": "0",
+      "state": "Running"
+    }
+  },
+  "publication_note": "VM network addresses omitted; snapshot captured during build before VM was stopped."
+}

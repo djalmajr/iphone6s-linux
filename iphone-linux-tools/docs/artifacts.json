@@ -1,0 +1,106 @@
+{
+  "captured": "2026-09-29",
+  "artifacts": [
+    {
+      "name": "APKINDEX.tar.gz",
+      "bytes": 106274,
+      "sha256": "7b8e81e2d18e27a0585226313e5cc5ba3bc09bdc111f566bce4605431c67766d",
+      "published": false
+    },
+    {
+      "name": "Pongo.bin",
+      "bytes": 238096,
+      "sha256": "1e5543fd8e6dbd84c334b87d71aa473f4d347c2ba8a5e863b6e10f18461c7575",
+      "published": false
+    },
+    {
+      "name": "herdr-linux-aarch64",
+      "bytes": 24101456,
+      "sha256": "f4ccf4de745f2cb9a39a983e9ba3703dad50ec2a58dea83026ceab721bbd8d9e",
+      "published": false
+    },
+    {
+      "name": "iphone6s-initramfs.gz",
+      "bytes": 1019597,
+      "sha256": "df79ba88f6ba35229ac27da7830c3d5dd7c59be9b603f3f799ee6625bc89b547",
+      "published": false
+    },
+    {
+      "name": "iphone6s-server-initramfs.gz",
+      "bytes": 13065124,
+      "sha256": "3f6395134f743be600bfb7f4b5fcc6f81882697cfeeeae11e9b3aa58a34a5a9c",
+      "published": false
+    },
+    {
+      "name": "linux-postmarketos-apple-16k-7.0.12-r0.apk",
+      "bytes": 16999527,
+      "sha256": "5cedfa79ad8bdaff8fa05327624071e7b17c24f24370b11ef3b58bde2c7220b2",
+      "published": false
+    },
+    {
+      "name": "m1n1-linux-iphone6s-server.bin",
+      "bytes": 23746076,
+      "sha256": "a12e2e36c7ee9b47c92a2b56c8679bb94908cd1f3dded7615ec2f3da65742a4e",
+      "published": false
+    },
+    {
+      "name": "m1n1-linux-iphone6s.bin",
+      "bytes": 11700549,
+      "sha256": "7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520",
+      "published": false
+    },
+    {
+      "name": "m1n1.bin",
+      "bytes": 1196032,
+      "sha256": "13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b",
+      "published": false
+    },
+    {
+      "name": "palera1n-macos-arm64",
+      "bytes": 4874592,
+      "sha256": "950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9",
+      "published": false
+    },
+    {
+      "name": "pongoterm",
+      "bytes": 53608,
+      "sha256": "ad4d66f1e2908090cc52a07ce5a58076b5ae877bb3d50b2a8d8e267b63113a56",
+      "published": false
+    },
+    {
+      "name": "s8000-n71.dtb",
+      "bytes": 22884,
+      "sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58",
+      "published": false
+    },
+    {
+      "name": "usb_f_ncm.ko.zst",
+      "bytes": 13406,
+      "sha256": "425cb6fe2323d7d12779936db0da2b3d06bff1fe126a19d3a9f7fd10bd9283af",
+      "published": false
+    },
+    {
+      "name": "usb_f_rndis.ko.zst",
+      "bytes": 17131,
+      "sha256": "9037dcd4292b8da2641613b19406d74903e1638187513240b9e9975e755be359",
+      "published": false
+    },
+    {
+      "name": "usb_f_serial.ko.zst",
+      "bytes": 4372,
+      "sha256": "64bba0100f7cc1de41e7049edeaf30a312de7b4a50a205a360936ca1b592fb72",
+      "published": false
+    },
+    {
+      "name": "vmlinuz-apple-16k",
+      "bytes": 9461973,
+      "sha256": "56d6b7be85939198d2d6b6ec3553212f8a6a44d67c55d0b1b23afab3c8a14bdf",
+      "published": false
+    }
+  ],
+  "Pongo_matches_Hoolock_clone": true,
+  "upstream": {
+    "HoolockLinux/docs": "23ebe1fbc375599221553a7e1815e5de182a6b42",
+    "checkra1n/PongoOS": "4c9b7541629234147fcc778f0ce4162482aaccef"
+  }
+}

@@ -1,0 +1,276 @@
+# Reprodução e análise do Linux no iPhone 6s
+
+Atualizado em 2026-09-29. Este documento reúne o procedimento, os artefatos preservados, os comandos comprovados e as lacunas. O ponto de entrada fica em `~/iphone6s-linux/iphone-linux-tools`.
+
+## 1. Escopo e estado atual
+
+O usuário autorizou alterações locais e perda dos dados do iPhone; contas e serviços remotos ficam fora do escopo. Nenhum pacote foi instalado no macOS. Pacotes de construção foram instalados somente na VM isolada `iphone6s-build`.
+
+Hardware: iPhone 6s, `iPhone8,1`, placa `N71AP`, A9 Samsung S8000, armazenamento nominal de 32 GB. Host: Mac Studio M2 Max, `Mac14,13`. Linux verificado: kernel postmarketOS 7.0.12, ARM64, páginas de 16 KB, dois processadores e 1.973 MiB de RAM.
+
+Funciona no aparelho: boot Linux em RAM, rede NCM por USB, HTTP, Bash 5.2.21, SSH Dropbear por chave e Herdr 0.9.1. O servidor Herdr e o painel sobreviveram ao fechamento da conexão SSH. Nenhum agente de IA, conta ou credencial de provedor foi instalado no telefone.
+
+Não estabelecido: armazenamento interno, Wi-Fi, leitura de bateria, temperatura, carga sustentada, boot autônomo, estabilidade prolongada e reinício completo com os wrappers atualizados. Uma imagem candidata inclui o terminal no initramfs, mas ainda não deu boot no aparelho.
+
+## 2. Linha do tempo e decisões
+
+### Diagnóstico e preparação — 2026-09-27
+
+- O usuário relatou pouca autonomia e toques fantasmas. Diagnóstico anterior reportou 1.462 ciclos de bateria. Esse número é histórico; não foi medido pelo Linux.
+- Os toques continuaram com o cabo desligado. O vídeo da Calculadora mostrou teclas sendo acionadas sem contato e artefatos próximos à parte inferior. A ausência de artefatos durante a maçã não isolou software versus hardware.
+- O Home respondia à pressão prolongada abrindo Siri, mas Siri não executava os comandos tentados.
+- Várias sequências de DFU com USB-C → Lightning terminaram em maçã ou desenho de cabo. Recuperação funcionou, DFU não.
+- Foi preparada a cadeia HoolockLinux: DFU → checkm8 → PongoOS → m1n1 → kernel/DTB/initramfs. Foi usada uma VM Multipass para o initramfs ARM64 e módulos USB.
+- CleanMyMac classificou `palera1n-macos-arm64` como jailbreak/riskware. O binário foi obtido da distribuição oficial e seu SHA-256 comparado ao digest oficial. Essa comparação prova a origem do artefato distribuído; não é uma auditoria integral do código.
+- A atualização oficial pelo Finder, opção **Atualizar**, reinstalou o iOS 15.8.8. O usuário digitou o PIN e concluiu a instalação. O toque continuou defeituoso. Não foi feita restauração completa/apagamento pelo Finder.
+- O cabo USB-C foi movido da porta frontal à USB-C traseira. O caminho USB passou de um hub ASMedia para `AppleT8112USBXHCI@03000000`; ainda assim, a tentativa sincronizada reportou `Whoops, device did not enter DFU mode`.
+- O guia e o cliente foram encerrados; `palera1n -n` retirou o telefone da recuperação, e iOS 15.8.8 foi confirmado.
+- Foram consultados advisors Grok e Gemini pelo Herdr, e as conclusões comparadas a fontes primárias. Sugestões de fakefs/particionamento A11 foram rejeitadas. Ambos os métodos documentados do Hoolock ainda exigiam DFU físico.
+- Um adaptador na ponta do mesmo cabo USB-C não comprovou solucionar o problema. Não foi afirmado que o cabo era a única causa possível.
+
+### Primeiro boot Linux — 2026-09-29
+
+- O usuário trocou para um cabo verdadeiro **USB-A → Lightning**, ligado à porta USB-A traseira do Mac.
+- A cópia local do palera1n estava ausente. Foi baixada novamente a versão oficial v2.4; tamanho e digest da API GitHub foram conferidos antes de executar.
+- `dfu_visual.py` colocou o telefone em recuperação e abriu uma página local. O usuário iniciou a contagem e pressionou Power + Home por 4 segundos, depois apenas Home por 10 segundos.
+- O log confirmou `Device entered DFU mode successfully`, `Checkmate!` e `Booting PongoOS...`. O USB identificou `PongoOS USB Device`.
+- O guia foi encerrado após PongoOS, como permitido no procedimento upstream.
+- `pongoterm` enviou 11.700.549 bytes do payload original e executou `bootm`.
+- Após a reconexão, apareceu `iPhone 6s Linux probe`, com interface NCM `en12` no Mac. A tela ficou preta, conforme relato do usuário.
+- O macOS recebeu um alias temporário `172.16.42.2/24` somente nessa interface. `sudo -n` pediu senha; o comando foi autorizado no diálogo padrão do macOS via AppleScript. Nenhuma senha foi coletada no chat.
+- O shell retornou kernel, modelo e RAM reais. O telefone usa `172.16.42.1/24`. A rota ao telefone foi confirmada por `en12`.
+- BusyBox HTTP passou a servir o painel em `172.16.42.1:8080/cgi-bin/status`.
+
+### Terminal Bash, SSH e Herdr — 2026-09-29
+
+- Foi iniciado apenas `iphone6s-build`, que estava parado. Configuração observada: Ubuntu 24.04 LTS ARM64, 6 vCPUs e aproximadamente 8 GiB RAM. O disco e a imagem-base estão no snapshot JSON de evidência.
+- A resolução de `ports.ubuntu.com` falhou dentro da VM. O Mac resolveu o domínio. Um mapeamento temporário para `91.189.91.102`, identificado por `# iphone-build-temporary`, foi adicionado somente ao `/etc/hosts` da VM.
+- `apt-get update` verificou os índices pelos keyrings do Ubuntu; `apt-get install --no-install-recommends dropbear-bin ncurses-base bash` preparou o runtime. Não foram iniciados daemons SSH da VM por esse procedimento.
+- Foi escolhido Herdr 0.9.1 para coincidir com a versão do Mac. O artefato oficial `herdr-linux-aarch64` teve seu digest SHA-256 conferido na release. ELF estático, segmentos alinhados a 64 KB: compatível com as páginas de 16 KB usadas neste kernel. Execução real no telefone confirmou a compatibilidade.
+- Uma chave cliente Ed25519 dedicada foi gerada em `keys/`. Somente a chave pública foi enviada à VM/telefone. A chave do servidor foi criada na VM e preservada no pacote; `keys/known_hosts` foi preenchido com essa chave pública, antes da conexão.
+- `build-runtime.py` empacotou Bash, Dropbear, bibliotecas detectadas por `ldd`, terminfo, Herdr, contas mínimas e scripts de inicialização.
+- O pacote foi servido temporariamente pelo Mac, **somente em `172.16.42.2:8766`**. O telefone baixou, verificou SHA-256 e extraiu na RAM. O servidor de transferência foi encerrado.
+- O primeiro SSH foi recusado porque o tar conservava UID 1000 da VM. A propriedade foi corrigida no telefone e no filtro do tar, agora UID/GID 0. As permissões das chaves também são conferidas no startup.
+- Bash precisava de `/sbin`, `/usr/bin` e `/usr/sbin` existentes para os links BusyBox. Foram criados e incluídos no runtime.
+- Foi aberto Herdr pela conexão SSH com PTY, na sessão exclusiva `iphone-linux`. Uma checagem dentro do painel retornou `HERDR_PHONE_OK` e Bash 5.2.21. A conexão de teste foi fechada; servidor e painel continuaram ativos.
+- O Telnet sem senha foi encerrado somente após confirmar o SSH. `iphone-linux.sh` passou a usar SSH para os comandos e a reinstalar o runtime após um boot da imagem original.
+- Foi construída uma imagem candidata `m1n1-linux-iphone6s-server.bin`, preservando a original. A candidata não foi carregada no telefone nesta rodada.
+
+## 3. Artefatos, origem e limites de proveniência
+
+`artifacts.json` registra SHA-256 e tamanho dos arquivos locais. Ele não inclui conteúdo de chaves. `runtime/SHA256SUMS` registra o pacote específico desta construção.
+
+| Artefato | Origem/uso |
+|---|---|
+| `palera1n-macos-arm64` | Release oficial v2.4, `https://github.com/palera1n/palera1n/releases/download/v2.4/palera1n-macos-arm64`; SHA-256 `950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9` |
+| `herdr-linux-aarch64` | Release oficial v0.9.1; SHA-256 `f4ccf4de745f2cb9a39a983e9ba3703dad50ec2a58dea83026ceab721bbd8d9e` |
+| `linux-postmarketos-apple-16k-7.0.12-r0.apk` | Kernel ARM64 pré-compilado; não compilamos o kernel. `.PKGINFO` identifica versão, arquitetura, mantenedor e `commit = -dirty` |
+| `vmlinuz-apple-16k`, `s8000-n71.dtb`, módulos `.ko.zst` | Extraídos do APK preservado; caminhos internos abaixo |
+| `Pongo.bin`, `m1n1.bin`, `pongoterm` | Insumos preservados da primeira preparação, usados no boot confirmado. Clones locais: Hoolock `23ebe1fbc375599221553a7e1815e5de182a6b42`; PongoOS `4c9b7541629234147fcc778f0ce4162482aaccef`. Os comandos originais completos não foram recuperados |
+| `iphone6s-initramfs.gz` | Initramfs mínimo original, criado na VM com BusyBox estático e módulo NCM |
+| `m1n1-linux-iphone6s.bin` | Payload original que deu boot; SHA-256 `7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520` |
+| `runtime/iphone6s-runtime.tar.gz` | Bash, Dropbear, bibliotecas e Herdr, mais chave privada **do servidor**; proteger este arquivo |
+| `iphone6s-server-initramfs.gz` / `m1n1-linux-iphone6s-server.bin` | Candidatos com o runtime incluído; construídos, ainda sem prova de boot no telefone |
+
+Lacunas importantes: o comando original de criação da VM não foi recuperado; o snapshot descreve seu estado real. A URL exata do primeiro download do APK e o commit de m1n1 não estão comprovados neste registro. Os HEADs dos clones foram recuperados, mas o HEAD de PongoOS não prova sozinho a origem do binário Pongo usado. A assinatura do APK não foi revalidada nesta rodada. Preservar os artefatos e hashes permite reproduzir o boot já confirmado; não equivale a uma reconstrução integral desses componentes a partir de commits imutáveis. Não preencher essas lacunas com versões atuais presumidas.
+
+## 4. Preparar um ambiente equivalente
+
+Os comandos de criação abaixo são uma receita equivalente, não uma transcrição da criação original. Não execute `launch` se a VM já existir:
+
+```bash
+multipass launch 24.04 --name iphone6s-build --cpus 6 --memory 8G --disk 25G
+multipass start iphone6s-build
+multipass info iphone6s-build --format json
+multipass exec iphone6s-build -- sudo apt-get update
+multipass exec iphone6s-build -- sudo apt-get install -y --no-install-recommends busybox-static cpio zstd file bash dropbear-bin ncurses-base
+```
+
+O `launch` novo resolve a imagem disponível naquele momento. Para análise histórica, compare com o `image_hash` em `evidence/multipass-build.json`. Os pacotes atuais podem ter versões diferentes; consulte `evidence/ubuntu-package-versions.txt` para a construção desta rodada.
+
+Se DNS falhar na VM, diagnostique antes de alterar qualquer coisa. O contorno desta sessão foi temporário no `/etc/hosts` da VM, para o domínio oficial; não fixe permanentemente o IP usado aqui. O arquivo foi limpo ao terminar a construção.
+
+## 5. Extrair kernel, DTB e módulos do APK preservado
+
+No Mac, em uma pasta de extração separada:
+
+```bash
+tar -tf linux-postmarketos-apple-16k-7.0.12-r0.apk
+tar -xOf linux-postmarketos-apple-16k-7.0.12-r0.apk .PKGINFO
+```
+
+Caminhos internos confirmados:
+
+```text
+boot/vmlinuz
+boot/dtbs/apple/s8000-n71.dtb
+usr/lib/modules/7.0.12/kernel/drivers/usb/gadget/function/usb_f_ncm.ko.zst
+usr/lib/modules/7.0.12/modules.dep
+```
+
+O kernel local recebeu o nome `vmlinuz-apple-16k`. O DTB é específico da variante Samsung N71; não substituir pelo DTB de outra variante. Na VM, `zstd -d usb_f_ncm.ko.zst` produz o módulo usado pelo `build-initramfs.sh`. Kernel e módulo precisam corresponder; não misture releases.
+
+## 6. Reconstruir o initramfs original
+
+`build-initramfs.sh` documenta os arquivos e caminhos originais na VM. Envie `init` como `/home/ubuntu/init-iphone6s`, o módulo descomprimido para `/home/ubuntu/iphone6s-modules/usb_f_ncm.ko` e o script para a VM. Depois:
+
+```bash
+multipass exec iphone6s-build -- bash /home/ubuntu/build-initramfs.sh
+multipass transfer iphone6s-build:/home/ubuntu/iphone6s-initramfs.gz ./iphone6s-initramfs-rebuilt.gz
+```
+
+Use um destino novo para conservar a imagem comprovada. Cpio, metadados e timestamps podem produzir bytes diferentes; essa receita reproduz a estrutura funcional, não promete hash idêntico a cada execução. O original permanece disponível localmente; binários e imagens não são distribuídos neste repositório.
+
+O init monta proc/sysfs/devtmpfs/devpts/configfs, configura o gadget NCM, atribui `172.16.42.1/24` e abre um shell Telnet somente nesse endereço. Esse é o bootstrap original; no uso atual ele é encerrado após instalar SSH. A imagem candidata usa `init-server` e inicia SSH por chave diretamente.
+
+## 7. Montar o payload m1n1
+
+A ordem exata foi confirmada comparando a concatenação com o arquivo original, byte por byte:
+
+```text
+m1n1.bin
+chosen.bootargs=rdinit=/init console=ttySAC0,115200 loglevel=7 + newline
+s8000-n71.dtb
+vmlinuz-apple-16k
+iphone6s-initramfs.gz
+```
+
+```bash
+python3 compose-payload.py iphone6s-initramfs.gz m1n1-linux-reproduzido.bin
+shasum -a 256 m1n1-linux-reproduzido.bin
+```
+
+Com os insumos originais preservados, a concatenação reproduziu exatamente `7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520`. O utilitário recusa sobrescrever um destino que tenha conteúdo diferente.
+
+## 8. Repetir o boot confirmado
+
+```bash
+cd ~/iphone6s-linux/iphone-linux-tools
+bash iphone-linux.sh boot
+```
+
+O wrapper confere os hashes originais, abre a contagem, espera PongoOS, envia o payload e espera a interface do Linux. Depois atribui o IP USB temporário do Mac, restaura o terminal e inicia o HTTP. O wrapper integrado ainda precisa de teste desde um reinício; seus componentes foram testados na sessão real.
+
+Fluxo manual comprovado:
+
+1. Cabo **USB-A → Lightning**, porta USB-A traseira do Mac. Recuperação mostra cabo/computador.
+2. `dfu_visual.py` usa `PALERA1N_BYPASS_PASSCODE_CHECK=1 palera1n-macos-arm64 -lp -k Pongo.bin`. No A9 deste teste, o bypass evita a verificação de passcode da ferramenta; não desbloqueia dados de usuário nem altera conta.
+3. Na página local `127.0.0.1:8765`, iniciar a contagem. Em VAI, segurar Power + Home por 4 segundos; soltar só Power e manter Home por 10 segundos. Tela preta é necessária, mas só a detecção USB comprova DFU (`05ac:1227`). Cabo na tela significa recuperação.
+4. Confirmar log de sucesso e `PongoOS USB Device`. O guia pode ser interrompido depois disso.
+5. Enviar o payload:
+
+```bash
+printf '/send %s/m1n1-linux-iphone6s.bin\nbootm\n' "$PWD" | ./pongoterm
+```
+
+6. Esperar `iPhone 6s Linux probe` e sua interface Ethernet USB. A desconexão momentânea após `bootm` é parte da transição; não prova sozinha que houve boot.
+7. `bash iphone-linux.sh connect` identifica a interface pelo dispositivo no IORegistry. Não presumir `en12` em todo boot. O Mac pode pedir autenticação para um alias IPv4 temporário somente nessa interface.
+8. `bash iphone-linux.sh install-terminal`, depois `status` e `serve`, caso o fluxo tenha sido manual.
+
+Não executar fakefs, particionamento A11, restore ou scripts desconhecidos para contornar falhas de boot.
+
+## 9. Reconstruir Bash, SSH e Herdr
+
+Em uma reconstrução com a identidade SSH atual, conservar `keys/` e a chave de servidor já presente na VM/runtime. Não regenerar chaves por rotina.
+
+Para uma implantação nova, criar `keys/` com permissão 700 antes de gerar a chave; `ssh-keygen -t ed25519 -N '' -f keys/iphone_ed25519 -C iphone6s-linux-local` cria a chave cliente dedicada. A chave privada fica no Mac; envie **somente** `.pub`.
+
+Baixe o Herdr da release oficial `https://github.com/herdrdev/herdr/releases/download/v0.9.1/herdr-linux-aarch64` e confira o digest da API `https://api.github.com/repos/herdrdev/herdr/releases/tags/v0.9.1`. Não use um instalador remoto executado via pipe. O binário do Mac não foi alterado.
+
+```bash
+multipass transfer herdr-linux-aarch64 iphone6s-build:/home/ubuntu/herdr-linux-aarch64
+multipass transfer keys/iphone_ed25519.pub iphone6s-build:/home/ubuntu/iphone_ed25519.pub
+multipass transfer build-runtime.py iphone6s-build:/home/ubuntu/build-runtime.py
+multipass exec iphone6s-build -- python3 /home/ubuntu/build-runtime.py
+multipass transfer iphone6s-build:/home/ubuntu/iphone6s-runtime.tar.gz runtime/iphone6s-runtime.tar.gz
+multipass transfer iphone6s-build:/home/ubuntu/iphone-host-public.txt runtime/iphone-host-public.txt
+```
+
+`build-runtime.py` copia bibliotecas listadas por `ldd`, terminfo e arquivos de conta/configuração; usa UID/GID 0 no tar e permissões restritas para SSH. O script preserva a chave do servidor existente na VM. Antes de implantar, recalcular `runtime/SHA256SUMS` e construir `keys/known_hosts` com a linha pública `ssh-ed25519` do servidor, prefixada por `172.16.42.1`. Nunca aceitar uma chave diferente silenciosamente. Para preparar os arquivos locais, depois de transferir o runtime e a chave pública do servidor:
+
+```bash
+mkdir -p keys runtime
+chmod 700 keys runtime
+(cd runtime && shasum -a 256 iphone6s-runtime.tar.gz > SHA256SUMS)
+awk '/^ssh-ed25519 / {print "172.16.42.1 " $1 " " $2}' runtime/iphone-host-public.txt > keys/known_hosts
+chmod 600 keys/known_hosts runtime/iphone6s-runtime.tar.gz
+```
+
+Confirme que `keys/known_hosts` contém exatamente uma linha válida. O fingerprint deve vir da construção confiável na VM; não substituir por `ssh-keyscan` sem conferir sua origem.
+
+```bash
+bash iphone-linux.sh install-terminal
+bash iphone-linux.sh shell
+bash iphone-linux.sh herdr
+```
+
+`install-terminal` verifica o pacote local, abre um servidor HTTP temporário somente no USB, verifica novamente o hash no telefone, instala na RAM e testa SSH. Só então encerra Telnet. Após uso, fecha o servidor de transferência. As conexões usam uma chave e um known_hosts locais dedicados, `StrictHostKeyChecking=yes` e nenhum forwarding de agente SSH.
+
+## 10. Construir a imagem candidata com o terminal incluído
+
+Transferir para `/home/ubuntu` da VM: `build-server-image.sh`, `init-server`, `server/status` com nome `iphone-status`, o `iphone6s-initramfs.gz` original e o runtime final. Depois:
+
+```bash
+multipass exec iphone6s-build -- bash /home/ubuntu/build-server-image.sh
+multipass transfer iphone6s-build:/home/ubuntu/iphone6s-server-initramfs.gz ./iphone6s-server-initramfs.gz
+python3 compose-payload.py iphone6s-server-initramfs.gz m1n1-linux-iphone6s-server.bin
+```
+
+O build combina o rootfs original com o runtime, `init-server` e HTTP. O payload candidato desta rodada tem 23.746.076 bytes e SHA-256 `a12e2e36c7ee9b47c92a2b56c8679bb94908cd1f3dded7615ec2f3da65742a4e`. **Construção não é prova de boot.** O wrapper mantém o payload original como padrão e restaura o runtime pelo Mac. Não promover a candidata antes de testar um ciclo DFU completo.
+
+## 11. Operação, persistência e atualizações
+
+- Shell: `bash iphone-linux.sh shell`; sair com `exit`.
+- Herdr: `bash iphone-linux.sh herdr`; sessão `iphone-linux`. O detach normal do Herdr é `Ctrl+B`, depois `q`, conforme a documentação upstream. Neste teste, a permanência foi comprovada fechando a conexão SSH, não por validar esse atalho no terminal do usuário.
+- Fechar SSH não encerra os painéis do Herdr. Reiniciar o iPhone encerra todos os processos e perde os arquivos em RAM, inclusive layout/configuração do Herdr que não tenham backup no Mac.
+- Atualização do Linux: construir outro payload, conferir fontes/hashes, manter o anterior, fazer boot do novo e verificar o resultado. Não precisa formatar NAND. Não há apt/apk completo na imagem mínima atual.
+- Configurações iniciais e chaves são persistidas nos artefatos do Mac; alterações arbitrárias feitas no telefone ainda não têm sincronização automática.
+- O Mac precisa manter o enlace USB disponível. Carregador sozinho não fornece a rede USB; não há interface Wi-Fi disponível nesta imagem.
+- DNS local ainda não foi instalado. Nenhum DNS do Mac/roteador foi alterado; não há NAT/encaminhamento para a LAN nem internet de saída no telefone.
+- Para remover somente o alias USB do Mac enquanto o telefone estiver conectado: `bash iphone-linux.sh disconnect`. Não altera a rota padrão de Ethernet/Wi-Fi.
+- Restaurar pelo Finder reinstala iOS e apaga dados locais; não é parte da atualização do Linux em RAM. O boot normal continua Apple/iOS.
+
+## 12. Falhas e aprendizado reproduzível
+
+| Sintoma | Causa/ação comprovada |
+|---|---|
+| Maçã/cabo após sequência | Recuperação, não DFU. USB-A → Lightning foi a mudança seguida de sucesso; o cabo não foi provado como única causa |
+| PongoOS iniciado, ferramenta ainda esperando | O upstream permite interromper após PongoOS; confirmar pelo USB antes de enviar |
+| Nenhuma interface logo após bootm | Esperar a transição; confirmar gadget USB e shell, não apenas tela preta |
+| sudo pede senha | Usar diálogo de administrador do macOS para o alias dedicado; não pedir senha no chat |
+| /sys/block sem disco interno | Driver/acesso ao storage indisponível nesta imagem A9; formatar não resolve |
+| Transferência de comando longo corrompida | Editor BusyBox limitou a linha; usar base64 em linhas de 76 caracteres/heredoc |
+| Cliente Telnet esperava indefinidamente | Prompt inclui `ESC[6n`; cliente trata a sequência e espera confirmação explícita de execução |
+| ioreg plist não contém BSD Name | Identificar o nó `IOEthernetInterface` pelo `IORegistryEntryName` dentro do gadget específico |
+| SSH Permission denied apesar da chave certa | Tar mantinha UID 1000; usar UID/GID 0, diretório .ssh 700, authorized_keys 600 |
+| Bash não acha head/insmod/etc. | Criar os diretórios padrão e instalar links BusyBox; ash antes conseguia usar applets internamente |
+| Comandos via helper saem sem resposta | A sondagem SSH consumia stdin; `ssh_ready` usa `ssh -n` |
+| DNS quebrado na VM | Contorno temporário no /etc/hosts somente da VM; apt mantém a verificação de assinatura |
+
+O cliente OpenSSH atual imprime um aviso de ausência de troca pós-quântica com esta versão do Dropbear. A conexão usa SSH autenticado convencional pelo enlace USB dedicado. Não foram relaxadas a verificação de host ou a autenticação. Isso fica como diferença a considerar se a conexão deixar de ser local/dedicada.
+
+## 13. Evidência e próximos gates
+
+Evidências locais: `evidence/multipass-build.json`, `evidence/ubuntu-package-versions.txt`, `evidence/ssh-linux-status.txt`, `evidence/herdr-phone.txt`, `../linux-boot-proof.txt`, `../linux-http-proof.html`, `artifacts.json`. O log `../runtime/install-last.log` permanece somente local. Alguns registros iniciais são históricos, anteriores ao SSH; os mais novos mostram o estado atualizado.
+
+Gates pendentes: boot frio pelo wrapper; boot da imagem candidata; confirmação física de carga; estabilidade prolongada; persistência de dados alterados; acesso LAN/serviço DNS. Não confundir o HTTP/Bash/Herdr já verificados com esses gates.
+
+Fontes primárias: [Hoolock PongoOS](https://github.com/HoolockLinux/docs/blob/master/tutorials/SETUP_pongoOS.md), [Hoolock A9](https://github.com/HoolockLinux/docs/blob/master/features/A9.md), [armazenamento](https://github.com/HoolockLinux/docs/blob/master/tools/README.md), [palera1n](https://github.com/palera1n/palera1n), [Herdr](https://github.com/herdrdev/herdr), [processo de boot Apple](https://support.apple.com/en-ca/guide/security/secb3000f149/web).
+
+## 14. Fontes preservadas e reconstrução do cliente Pongo
+
+Clones locais sem alterações observadas no inventário:
+
+```bash
+git clone https://github.com/HoolockLinux/docs.git ../hoolock-docs
+git -C ../hoolock-docs checkout 23ebe1fbc375599221553a7e1815e5de182a6b42
+git clone https://github.com/checkra1n/PongoOS.git ../pongoOS
+git -C ../pongoOS checkout 4c9b7541629234147fcc778f0ce4162482aaccef
+clang -Os -x objective-c -framework IOKit -framework CoreFoundation ../pongoOS/scripts/pongoterm.c -lobjc -framework Foundation -mmacosx-version-min=10.8 -o pongoterm
+```
+
+A linha de compilação acima vem do tutorial upstream; não foi reexecutada nesta rodada. A comparação confirmou que `Pongo.bin` corresponde byte por byte à cópia do clone Hoolock; o resultado também está no manifesto. m1n1 e o APK ainda precisam de proveniência completa para uma reconstrução independente. Um clone público deste projeto contém scripts e registros, não uma imagem pronta para boot: obtenha e confira os insumos antes de executar.
+
+## 15. Publicação e privacidade
+
+O repositório público guarda fontes, procedimentos, evidências selecionadas e hashes. `keys/`, `runtime/`, downloads, imagens, logs brutos e clones upstream ficam ignorados. Runtime e imagem candidata contêm a chave privada do servidor SSH: nunca os publique. Cada nova implantação deve gerar suas próprias chaves. A configuração de rede privada da VM foi retirada da evidência pública. Emails de autoria podem constar nos commits.

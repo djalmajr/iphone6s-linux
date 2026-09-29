@@ -1,0 +1,7 @@
+USB: Mac 172.16.42.2 → iPhone 172.16.42.1 (en12).
+Linux iphone6s-linux 7.0.12 #1-postmarketOS SMP PREEMPT Fri Jun 12 10:53:24 UTC 2026 aarch64 GNU/Linux
+Apple iPhone 6s (Samsung)
+ 18:07:25 up 32 min,  0 users,  load average: 0.00, 0.00, 0.00
+              total        used        free      shared  buff/cache   available
+Mem:           1973          98        1764         108         111        1618
+Swap:             0           0           0

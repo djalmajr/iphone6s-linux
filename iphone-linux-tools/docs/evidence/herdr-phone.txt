@@ -1,0 +1,9 @@
+Verified over authenticated USB SSH on 2026-09-29, after disconnecting the previous interactive client.
+client version: 0.9.1; protocol: 22
+server status: running; version: 0.9.1
+endpoint_compatible: yes; private_protocol_compatible: yes
+restart_needed: no; server_binary_stale: no
+session: iphone-linux
+pane w1:p1 read returned:
+HERDR_PHONE_OK
+GNU bash, version 5.2.21(1)-release (aarch64-unknown-linux-gnu)

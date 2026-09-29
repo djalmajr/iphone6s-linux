@@ -1,0 +1,8 @@
+bash 5.2.21-2ubuntu4
+busybox-static 1:1.36.1-6ubuntu3.1
+dropbear-bin 2022.83-4
+libc6:arm64 2.39-0ubuntu8.9
+libtinfo6:arm64 6.4+20240113-1ubuntu2.2
+libtomcrypt1:arm64 1.18.2+dfsg-7build1
+libtommath1:arm64 1.2.1-2build1
+ncurses-base 6.4+20240113-1ubuntu2.2

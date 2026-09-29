@@ -1,0 +1,24 @@
+# Upstream clones are documented by URL and commit, not vendored.
+/hoolock-docs/
+/pongoOS/
+# Credentials and generated images containing server private keys.
+**/keys/
+**/runtime/
+**/__pycache__/
+*.pyc
+*.log
+.DS_Store
+# Downloaded/generated artifacts: hashes and build recipes are public.
+*.bin
+*.gz
+*.apk
+*.dtb
+*.zst
+/iphone-linux-tools/palera1n-macos-arm64
+/iphone-linux-tools/pongoterm
+/iphone-linux-tools/herdr-linux-aarch64
+/iphone-linux-tools/vmlinuz-apple-16k
+/iphone-linux-tools/modules.dep
+/iphone-linux-tools/build.postmarketos.org.rsa.pub
+# Guide state can contain runtime tokens and raw device logs.
+/iphone-linux-tools/dfu-last-state.json

@@ -1,0 +1,24 @@
+#!/bin/sh
+printf 'Content-Type: text/html; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'
+cat <<'HTML'
+<!doctype html><html lang="pt-BR"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="10">
+<title>Servidor Linux do iPhone</title>
+<style>body{max-width:850px;margin:40px auto;padding:0 24px;background:#102021;color:#edf7f0;font:18px system-ui}h1{font-size:32px}pre{padding:18px;background:#183333;border-radius:12px;overflow:auto;font-size:14px}p{line-height:1.6}small{color:#b2ccc2}</style>
+<h1>Servidor Linux do iPhone</h1>
+<p>Este painel está sendo servido pelo iPhone através do cabo USB.</p>
+<pre>
+HTML
+uname -a
+printf '\nModelo: '
+tr -d '\000' < /proc/device-tree/model
+printf '\n\n'
+uptime
+printf '\n'
+free -m
+printf '\nProcessadores: '
+grep -c '^processor' /proc/cpuinfo
+cat <<'HTML'
+</pre><p><small>Atualização a cada 10 segundos. Sessão experimental em RAM: arquivos e serviços desta sessão se perdem ao reiniciar. Acesso limitado ao enlace USB.</small></p></html>
+HTML
