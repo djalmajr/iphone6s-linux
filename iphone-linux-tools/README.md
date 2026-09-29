@@ -20,4 +20,16 @@ HTTP: http://172.16.42.1:8080/cgi-bin/status. Sair do Bash: `exit`. O Herdr mant
 
 Não há storage interno, Wi-Fi, boot autônomo ou carga sustentada comprovados. O Mac fornece o enlace USB; conectar somente a um carregador não fornece essa rede. SSH usa chaves locais dedicadas; Telnet do bootstrap é encerrado depois de verificar SSH.
 
+## Salvar arquivos em RAM
+
+Use `/srv/data` para os dados dos serviços. No Mac:
+
+```bash
+bash iphone-linux.sh backup
+bash iphone-linux.sh backups
+bash iphone-linux.sh restore
+```
+
+`restore` aplica o snapshot manual mais recente e cria uma cópia do estado atual antes de sobrescrever arquivos. Backups ficam privados no Mac, fora do Git. Veja [escopo, exclusões e testes](docs/PERSISTENCIA.md). Execute `backup` antes de reiniciar; ainda não há sincronização automática.
+
 Veja [estado e histórico](STATUS.md), [plano](BOOT-PLAN.md) e [manifesto de artefatos](docs/artifacts.json).

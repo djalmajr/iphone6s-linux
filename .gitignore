@@ -22,3 +22,5 @@
 /iphone-linux-tools/build.postmarketos.org.rsa.pub
 # Guide state can contain runtime tokens and raw device logs.
 /iphone-linux-tools/dfu-last-state.json
+# Private snapshots and manifests may contain user data.
+**/backups/

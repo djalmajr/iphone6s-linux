@@ -284,3 +284,9 @@ A tela e um Bash espelhado foram ativados sem reiniciar, com confirmação visua
 Após autorização do usuário e confirmação de que estava pronto para os botões, a imagem `m1n1-linux-iphone6s-console-server.bin` deu boot via DFU → PongoOS → m1n1. SHA-256 `c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a`, 23.767.809 bytes. SSH, Bash 5.2.21, HTTP e console foram confirmados sem transferência posterior do runtime. O usuário confirmou a tela automaticamente ativa. Herdr 0.9.1 foi iniciado e um comando dentro do painel retornou `POST_BOOT_HERDR_OK` e kernel 7.0.12.
 
 `iphone-linux.sh boot` seleciona essa imagem; `boot-probe` conserva a original. Evidências, sequência exata, reinício do init mínimo e diferenças do wrapper: [CONSOLE.md](CONSOLE.md) e [console-cold-boot.txt](evidence/console-cold-boot.txt). Os dados modificados continuam em RAM; a cópia local de `/root` antes do reboot é um snapshot privado, não sincronização automática.
+
+## 18. Persistência de arquivos no Mac
+
+`backup`, `backups` e `restore` guardam snapshots privados de `/srv/data` e arquivos de trabalho de `/root`. Identidade SSH e estado vivo de sessões Herdr são excluídos. A restauração verifica hash/escopo, salva a cópia anterior e recupera conteúdo/permissões sem remover arquivos extras. O ciclo real foi testado no telefone ativo sem reboot; 6 testes locais e testes de bloqueio de links/corrupção passaram. O procedimento completo e seus limites estão em [PERSISTENCIA.md](PERSISTENCIA.md).
+
+Os backups ficam no Mac e não são publicados. Alterações após o último snapshot continuam vulneráveis à perda de energia. Não há restauração automática no boot nem validação de recuperação após outro DFU nesta etapa.

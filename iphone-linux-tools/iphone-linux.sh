@@ -210,6 +210,8 @@ PY
 case "${1:-status}" in
     boot) boot ;;
     boot-probe) boot probe ;;
+    backup|restore) connect; exec python3 "$ROOT/persist.py" "$@" ;;
+    backups) exec python3 "$ROOT/persist.py" "$@" ;;
     connect) connect ;;
     status) status ;;
     serve) serve ;;
@@ -221,5 +223,5 @@ case "${1:-status}" in
         iface=$(usb_interface)
         /usr/bin/osascript -e "do shell script \"/sbin/ifconfig $iface inet $HOST_IP -alias\" with administrator privileges"
         ;;
-    *) printf 'Uso: %s {boot|boot-probe|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
+    *) printf 'Uso: %s {boot|boot-probe|backup|restore [ID]|backups|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
 esac
