@@ -65,3 +65,20 @@ A extração não é transacional: falta de espaço ou interrupção pode deixar
 A recuperação foi testada no Linux atual. Ainda não foi feita uma restauração desses snapshots após outro DFU/reboot; não foi necessário reiniciar novamente para validar o ciclo de arquivos.
 
 Registro resumido: [persistence-check.txt](evidence/persistence-check.txt).
+
+## Encerramento da etapa
+
+Fonte: plano deste documento e PR #1. Modo: encerramento de uma etapa do mini servidor.
+
+**Entregue:** snapshots privados, listagem, restauração com cópia anterior, validação de integridade/escopo e testes no telefone. **Pendente:** recuperação após novo DFU, sincronização automática e serviço DNS. Não houve mudança de escopo além da documentação de operação/estado necessária aos comandos.
+
+| Verificação | Resultado |
+|---|---|
+| Sintaxe | Bash e AST Python sem erros |
+| Lint | Não há linter configurado; `git diff --check` passou |
+| Tipos | Não há verificador de tipos configurado |
+| Testes | 6/6 locais e ciclo real no telefone passaram |
+| Documentação | Comandos, escopo, exclusões, evidências e limites registrados |
+| Privacidade | Backup e manifesto ignorados; nenhum segredo encontrado nos padrões revisados dos arquivos preparados |
+
+Os serviços atuais permanecem ativos; não foram instaladas dependências. Os comandos novos são aditivos. Captura e extração não fornecem consistência transacional para bancos ativos. Próxima etapa recomendada: serviço DNS limitado ao enlace USB, com configurações guardadas em `/srv/data`; acesso pela LAN depende de uma configuração de rede separada.
