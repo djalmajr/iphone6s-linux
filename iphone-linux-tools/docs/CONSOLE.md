@@ -13,7 +13,7 @@ Arquivos: `build-runtime.py`, `init-server`, `iphone-linux.sh` e este documento.
 - [x] Adicionar `start-console`, que ativa tty1 e mostra estado inicial.
 - [x] Oferecer `iphone-linux.sh console`: Bash digitado no Mac com saída também na tela do telefone.
 - [x] Testar o comando no Linux ativo e reconstruir a candidata.
-- [ ] Documentar evidências e publicar a branch para revisão.
+- [x] Documentar evidências e publicar a branch para revisão: PR #1.
 
 ## Decisão
 
