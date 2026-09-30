@@ -15,4 +15,15 @@ HTTP PID before and after: 92
 HTTP status endpoint: successful response
 Herdr session: running, version 0.9.1, protocol 22, endpoint compatible
 Final operational snapshot saved locally; no snapshot content published.
-Recovery after another DFU boot is not yet verified.
+Recovery after another DFU boot was not verified in that initial session.
+
+2026-09-30: fresh Linux boot via single invocation of manual-DFU wrapper.
+Known sentinela saved before reboot: absent in newly booted RAM filesystem.
+Explicit snapshot restored after pre-restore backup and hash validation.
+Sentinela SHA-256: b236202ff49d61b978537415137da685cbf63164a42494dff6e7f004b28e7260
+Sentinela mode: 640
+Extra destination file: preserved, then temporary fixture removed.
+SSH identities: compared before/after, unchanged; values withheld.
+HTTP PID: unchanged; endpoint HTTP 200 after restore.
+Snapshot archives/manifests remain private and excluded from Git.
+Cold-restore validation passed; interrupted extraction remains issue #15.

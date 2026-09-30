@@ -76,4 +76,6 @@ Na tentativa seguinte, ainda nesta data, o wrapper completou uma única execuç�
 
 O protótipo `dfu_visual.py` foi então removido. `dfu_boot.py` acompanha a enumeração DFU e o processo pelo terminal, sem navegador, contador ou servidor HTTP de apoio. O wrapper conserva a espera por PongoOS e a interrupção antes do envio em caso de falha. Uma pasta privada `runtime/dfu-active` impede dois monitores simultâneos deste checkout; é removida ao encerrar normalmente. Se restar após interrupção abrupta, confirmar que não há execução ativa antes de remover esse diretório.
 
-Os 15 testes locais passaram, incluindo retomada apenas após DFU simulado e encerramento do processo filho. **O substituto sem contador ainda requer teste físico completo**; a execução completa acima utilizou a versão anterior. A saída do monitor fica em log privado ignorado pelo Git.
+Os 15 testes locais passaram, incluindo retomada apenas após DFU simulado e encerramento do processo filho. A saída do monitor fica em log privado ignorado pelo Git.
+
+Na tentativa seguinte, a versão sem contador também completou uma única execução com saída 0: DFU manual, PongoOS, upload da imagem integrada, alias USB, SSH e HTTP 200. O usuário confirmou console Linux e aparelho frio/morno. Foi observado Linux 7.0.12, uptime 46,12 s e framebuffer blank 0. O monitor encerrou e removeu sua pasta de estado; nenhum servidor HTTP de apoio foi iniciado. Isso conclui a validação física do wrapper (#3), sem encerrar a investigação de alimentação (#2).

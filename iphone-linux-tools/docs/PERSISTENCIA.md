@@ -12,6 +12,7 @@ Arquivos: `persist.py`, `iphone-linux.sh`, `.gitignore`, `tests/test_persistence
 - [x] Fazer snapshot do estado atual antes de sobrescrever arquivos.
 - [x] Testar recuperação de conteúdo/permissões e bloqueio de arquivo corrompido, caminho fora de escopo e symlinks.
 - [x] Executar o ciclo real no iPhone sem reboot e publicar evidências sem conteúdo privado.
+- [x] Restaurar snapshot em um novo boot DFU, verificando conteúdo, modo, arquivos extras e identidade SSH.
 
 ## Decisão
 
@@ -62,15 +63,23 @@ A extração não é transacional: falta de espaço ou interrupção pode deixar
 - HTTP manteve o PID 92; Herdr permaneceu ativo. Não houve reboot nem instalação de pacote.
 - Arquivos de teste removidos do telefone; snapshot final do estado operacional salvo no Mac. Os snapshots de teste e a cópia anterior à restauração permanecem locais, sem publicação.
 
-A recuperação foi testada no Linux atual. Ainda não foi feita uma restauração desses snapshots após outro DFU/reboot; não foi necessário reiniciar novamente para validar o ciclo de arquivos.
+Na rodada de 2026-09-29, a recuperação foi testada na mesma sessão, sem outro DFU/reboot. A validação em novo boot foi obtida posteriormente, conforme registro abaixo.
 
 Registro resumido: [persistence-check.txt](evidence/persistence-check.txt).
+
+## Recuperação após novo boot — 2026-09-30
+
+A sentinela `/srv/data/boot-restore-proof.txt`, com modo 640 e conteúdo conhecido, estava no snapshot privado `20260929T201354Z-f0972c5b`, salvo antes dos reinícios. No novo Linux iniciado pelo wrapper sem contador, a sentinela estava ausente. Foi criado um arquivo extra temporário no destino e executada restauração explícita desse snapshot.
+
+Resultado real: SHA-256 da sentinela `b236202ff49d61b978537415137da685cbf63164a42494dff6e7f004b28e7260`, modo 640, arquivo extra preservado. Os hashes das identidades SSH do servidor/cliente autorizado permaneceram iguais (valores não publicados); o PID HTTP permaneceu igual e o endpoint respondeu 200. O mecanismo criou um snapshot privado anterior à restauração. A fixture extra foi removida, e a sentinela recuperada foi mantida.
+
+Isso conclui #4. Persistência depende dos snapshots no Mac: o teste não demonstrou armazenamento interno nem recuperação de processos. A extração continua não transacional; recuperação de interrupção/falta de espaço é #15.
 
 ## Encerramento da etapa
 
 Fonte: plano deste documento e PR #1. Modo: encerramento de uma etapa do mini servidor.
 
-**Entregue:** snapshots privados, listagem, restauração com cópia anterior, validação de integridade/escopo e testes no telefone. **Pendente:** recuperação após novo DFU, sincronização automática e serviço DNS. Não houve mudança de escopo além da documentação de operação/estado necessária aos comandos.
+**Entregue:** snapshots privados, listagem, restauração com cópia anterior, validação de integridade/escopo e recuperação em novo boot DFU. **Pendente:** recuperação de interrupção, sincronização automática e serviço DNS.
 
 | Verificação | Resultado |
 |---|---|
