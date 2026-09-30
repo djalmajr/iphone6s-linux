@@ -41,8 +41,8 @@ O arquivo de teste separará fixtures de prova local e cenário root/VM explíci
 - [x] Implementar CLI e validação antes de executar listeners.
 - [x] Verificar restrições efetivas com OpenSSH real e mutações críticas.
 - [x] Testar SSH/HTTP e cleanup em namespace VM com serviços reais.
-- [ ] Novo boot curto e forwards com o iPhone real, mantendo USB-A traseiro.
-- [ ] Validar SSH e HTTP por outro cliente da LAN; registrar limites e reversão.
+- [x] Novo boot curto e forwards com o iPhone real, mantendo USB-A traseiro.
+- [x] Validar SSH e HTTP por outro cliente da LAN; registrar limites e reversão.
 
 ## Verificação
 
@@ -121,8 +121,8 @@ Contexto: SSH/HTTP diretos funcionavam, mas conexões encaminhadas pelo próprio
 - [x] Confirmar o hash da imagem original e usar somente ferramentas já presentes na VM dedicada.
 - [x] Extrair o initramfs original em diretório novo; comparar conteúdo/metadados de todos os arquivos e exigir que somente `/init` tenha mudado.
 - [x] Compor payload sem sobrescrever a imagem anterior e registrar hash/tamanho.
-- [ ] Validar boot físico sem ativação manual de loopback e repetir HTTP/SSH pelo Windows com identidade temporária nova.
-- [ ] Revogar identidade, salvar snapshot, encerrar forwards e confirmar retorno ao iOS.
+- [x] Validar boot físico sem ativação manual de loopback e repetir HTTP/SSH pelo Windows com identidade temporária nova.
+- [x] Revogar identidade, salvar snapshot, encerrar forwards e confirmar retorno ao iOS.
 
 O piloto anterior durou cerca de 28 minutos por problemas no harness PowerShell. Após snapshot/reboot, o USB deixou de detectar o telefone; o operador confirmou posteriormente tela de desbloqueio do iOS e aparelho sempre frio. A leitura USB de bateria após retorno continua indisponível. Isso não comprova carga nem estabilidade prolongada. No próximo piloto, preparar comandos Windows antes do boot e reduzir o tempo de diagnóstico.
 
@@ -151,3 +151,22 @@ O script exige o initramfs histórico de hash `b51e78b9acafea87685f3e09c9329a469
 Candidata recebida: initramfs SHA-256 `fdfceea110c1bd75f1c30c7ebcccd9a6baebc4207d5dbef63356d0e1c4d644fe`, 13.084.080 bytes; payload SHA-256 `8b1a46dd67613c63aa6608dd3a0e73a73b358aaddc1818b423ff6009b55e3f66`, 23.765.032 bytes. A comparação confirma equivalência dos arquivos preservados; empacotamento cpio depende de metadados do filesystem, portanto não é promessa de builds idênticos byte a byte (#12). Boot físico da candidata ainda pendente.
 
 O wrapper foi preparado para selecionar essa candidata em `boot`; a imagem anterior continua preservada e sua identidade SSH é a mesma. A seleção é preparação para o teste, não prova física. Dois testes do wrapper passaram, incluindo interrupção antes de upload após falha DFU e limpeza do monitor; dois testes locais LAN passaram, com um skip VM explícito. A prova isolada de forwards/mutações anterior permanece válida para o código LAN inalterado. Pyflakes/Flake8 fatal e Bash/ShellCheck passaram; o init tem apenas o aviso informativo preexistente SC2012, sem warnings/erros. Nenhum typechecker configurado. Diretórios privados próprios de rebuild removidos da VM, que voltou a Stopped. Para retornar à seleção anterior, restaurar no wrapper o caminho `m1n1-linux-iphone6s-console-server.bin` e hash `c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a` em uma alteração revisável.
+
+## Conclusão física — #6
+
+O boot seguinte completou DFU → PongoOS → upload de 23.765.032 bytes → Linux, restore e HTTP, com saída 0. O operador confirmou o console. Antes de qualquer comando de configuração de rede no telefone, SSH mostrou `lo: <LOOPBACK,UP,LOWER_UP>`, endereço `127.0.0.1/8` e hash esperado do `/init`. Não houve ativação manual do loopback.
+
+O Windows recebeu `IPHONE_HTTP2_STATUS=200`, validou corpo contendo iPhone/kernel, autenticou por SSH com chave própria e confiança estrita, recebeu `WINDOWS_LAN_SSH2_OK`, kernel 7.0.12 e loopback UP. O comando terminou com `IPHONE_PHYSICAL2_DONE`. Enquanto a conexão estava ativa, os sockets reais do Mac mostraram listeners somente no IPv4 LAN escolhido e conexão estabelecida desse IPv4:2222 para o IPv4 LAN do Windows; endereços pessoais não são publicados. Isso conclui o teste independente de SSH/HTTP pela LAN.
+
+Autorização original restaurada e comparada, chave temporária revogada, arquivos privados do fixture Windows/Mac removidos. Snapshot final privado concluído, forwards encerrados e ausência de listeners confirmada. O iPhone retornou ao iOS, novamente detectado pelo USB, com 100% e `BatteryIsCharging=true`; baseline era 100%. O operador relatou frio/morno e prefere avisar espontaneamente se houver aquecimento, sem perguntas repetidas de temperatura. A amostra no teto de 100% continua inconclusiva para carga sustentada (#2/#8).
+
+### Relatório desta entrega
+
+- **Arquivos:** `lan.py`, CLI, testes/mutações LAN, init, receita privada de rebuild reproduzível por fonte pública, manifest e documentação/evidências. Imagens e identidades fora do Git.
+- **Plano:** tarefas de #6 e correção de bootstrap concluídas; próxima #7, DNS inicialmente pelo USB.
+- **Compatibilidade:** `boot` agora seleciona a imagem com loopback; a anterior está preservada. CLI LAN permanece optativo/foreground.
+- **Testes:** wrapper 2/2 e LAN local 2 aprovados/1 skip VM rerodados; VM real e sete mutações LAN anteriores reutilizados para código LAN inalterado; build comparou 2.969 entradas e rejeitou delta extra; novo boot/restore/SSH/HTTP/cleanup comprovados fisicamente.
+- **Tipos/lint:** nenhum typechecker configurado; Pyflakes/Flake8 fatal, sintaxe Bash/ShellCheck e diff-check passaram. Aviso informativo preexistente SC2012 no init.
+- **Banco/dependências:** nenhuma migração, instalação de pacote ou alteração global de configuração no Mac/Windows; VM limpa/parada.
+- **Desempenho:** piloto curto sem carga artificial de CPU; nenhum benchmark ou prova prolongada.
+- **Limites:** HTTP sem autenticação acessível na LAN escolhida; SSH exige chave autorizada. Não habilita Wi-Fi nativo, UDP, DNS ou saída geral para internet. #2/#8 continuam abertas; merge não autorizado.

@@ -149,6 +149,14 @@ O script só lê sysfs; não instala nada no telefone. `unavailable` significa q
 
 Pendente: medição repetível de carga sustentada e decisão de manutenção/substituição se necessária. As comparações antes/depois acima tiveram resultados divergentes. A recuperação da carga em iOS e a observação física inicial foram obtidas, mas não encerram #2. Não concluir por uptime, por ausência de sintomas relatados ou por uma leitura pontual. O teste prolongado #8 depende deste gate.
 
+## Pilotos LAN posteriores — 2026-09-30
+
+No piloto inicial de LAN, iOS informou 100% antes do Linux; após cerca de 28 minutos, snapshot e reboot, o operador confirmou tela de desbloqueio e aparelho sempre frio. O USB precisou de reconexão Lightning antes de ler novamente 100%. A leitura ocorreu depois de algum tempo em iOS; não isola carga durante Linux.
+
+O piloto seguinte foi curto: novo init com loopback, restore, SSH/HTTP Windows e cleanup; uptime de 171,82 s imediatamente antes do snapshot final. Brilho reduzido para 256, sem carga artificial de CPU. iOS voltou a ser detectado por USB e informou 100% e carregamento ativo, partindo de 100%. O operador relatou frio/morno e pediu para cessar perguntas repetidas de temperatura; avisará caso esquente. Continuar supervisionando as etapas necessárias, sem tratar ausência de aviso como telemetria ou prova térmica.
+
+Essas duas comparações no teto de 100% não comprovam corrente líquida nem resolvem a divergência dos campos brutos anteriores. #2/#8 permanecem abertas. Evidência sanitizada de rede: [lan-check.txt](evidence/lan-check.txt).
+
 ## Fontes
 
 - [Apple: temperaturas e proteções em iOS](https://support.apple.com/en-ca/118431). A descrição das proteções do iOS não comprova que existam no kernel Linux experimental.

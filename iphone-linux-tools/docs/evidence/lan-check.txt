@@ -109,3 +109,22 @@ Pyflakes/Flake8 fatal pass using existing Python 3.12.6; Bash -n/ShellCheck wrap
 pass; init ShellCheck warning/error gate pass (pre-existing informational SC2012).
 No typechecker configured. Previous unchanged LAN VM/mutation evidence reused.
 Owned private rebuild directories/input removed from VM; VM returned to Stopped.
+
+Fresh physical boot passed (supersedes candidate-pending status above):
+Wrapper exit 0, PongoOS upload=23765032 bytes, restored snapshot, direct HTTP ready.
+Operator confirmed console. Before any manual phone network configuration:
+lo: LOOPBACK,UP,LOWER_UP; inet 127.0.0.1/8.
+/init SHA-256 matches 06ea39593751a1c054ae1564261debb5d44f9d9002f98fda48c10cbf881b21f9.
+Windows native output: IPHONE_HTTP2_STATUS=200; expected phone body validated;
+WINDOWS_LAN_SSH2_OK; 7.0.12; lo UP; IPHONE_PHYSICAL2_DONE.
+Actual Mac sockets: LAN-specific 2222 and 8086 LISTEN; LAN Mac:2222 -> LAN Windows
+ESTABLISHED captured during authenticated SSH hold. Personal addresses omitted.
+No manual loopback activation in this boot, no generic egress enabled.
+Original authorization restored with cmp, temporary key revoked and files removed
+on phone/Mac/Windows. Private final snapshot succeeded; forward exit 255 after
+Ctrl+C expected; lsof showed no listeners. Reboot SSH timed out as transport ended;
+subsequent USB identified iPhone iOS, battery 100%, BatteryIsCharging=true.
+Baseline 100%. Phone uptime at authorization cleanup=171.82 seconds; short pilot,
+not long-duration testing. Operator reported cold/warm, no further temperature
+polling requested; operator will report heating. Charging remains unverified.
+Issue #6 criteria satisfied; #2/#8 remain open.
