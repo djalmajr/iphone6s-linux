@@ -5,6 +5,7 @@ ROOT=$(cd "$(dirname "$0")" && pwd)
 PHONE_IP=172.16.42.1
 HOST_IP=172.16.42.2
 GUIDE_PID=
+GUIDE_STATE_DIR=
 SSH_ARGS=(-F /dev/null -i "$ROOT/keys/iphone_ed25519" -o "UserKnownHostsFile=$ROOT/keys/known_hosts" -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 -o ServerAliveInterval=5 -o ServerAliveCountMax=3)
 
 ssh_ready() {
@@ -122,34 +123,41 @@ cleanup_guide() {
         wait "$GUIDE_PID" 2>/dev/null || true
         GUIDE_PID=
     fi
+    if [ -n "$GUIDE_STATE_DIR" ]; then
+        rm -f "$GUIDE_STATE_DIR/state.json" "$GUIDE_STATE_DIR/state.tmp"
+        rmdir "$GUIDE_STATE_DIR"
+        GUIDE_STATE_DIR=
+    fi
 }
 
 wait_for_pongo() {
-    if curl --fail --silent --max-time 1 http://127.0.0.1:8765/state >/dev/null 2>&1; then
-        printf 'Já existe um guia na porta 8765. Encerre esse guia antes de iniciar outro.\n' >&2
+    trap cleanup_guide EXIT INT TERM
+    mkdir -p "$ROOT/runtime"
+    if ! mkdir "$ROOT/runtime/dfu-active"; then
+        printf 'Existe um monitor DFU ativo ou interrompido; confira runtime/dfu-active antes de repetir.\n' >&2
         return 1
     fi
-    trap cleanup_guide EXIT INT TERM
-    python3 "$ROOT/dfu_visual.py" > "$ROOT/dfu-last.log" 2>&1 &
+    GUIDE_STATE_DIR="$ROOT/runtime/dfu-active"
+    python3 "$ROOT/dfu_boot.py" "$GUIDE_STATE_DIR/state.json" > "$ROOT/dfu-last.log" 2>&1 &
     GUIDE_PID=$!
-    for ((i=0; i<20; i++)); do
-        if curl --fail --silent --max-time 1 http://127.0.0.1:8765/state >/dev/null 2>&1; then break; fi
-        if ! kill -0 "$GUIDE_PID" 2>/dev/null; then cat "$ROOT/dfu-last.log"; return 1; fi
-        sleep 1
-    done
-    open http://127.0.0.1:8765
-    printf 'Use o cabo USB-A → Lightning. Siga a contagem visual e mantenha o cabo conectado.\n'
+    printf 'Use USB-A → Lightning e entre em DFU manualmente quando aparecer cabo/computador.\n'
+    printf 'Aguardando detecção USB; nenhuma página ou contagem será aberta.\n'
     local ready=0 phase
     for ((i=0; i<240; i++)); do
         if ioreg -p IOUSB -w0 | grep -q 'PongoOS USB Device'; then ready=1; break; fi
-        if ! phase=$(python3 - <<'PY'
+        if ! kill -0 "$GUIDE_PID" 2>/dev/null; then
+            printf 'O monitor DFU encerrou. Nenhum payload Linux foi enviado.\n' >&2
+            return 1
+        fi
+        if [ ! -f "$GUIDE_STATE_DIR/state.json" ]; then sleep 1; continue; fi
+        if ! phase=$(python3 - "$GUIDE_STATE_DIR/state.json" <<'PY'
 import json
-import urllib.request
-with urllib.request.urlopen('http://127.0.0.1:8765/state', timeout=3) as response:
-    print(json.load(response)['phase'])
+import pathlib
+import sys
+print(json.loads(pathlib.Path(sys.argv[1]).read_text())['phase'])
 PY
         ); then
-            printf 'O guia local deixou de responder. Nenhum payload Linux foi enviado.\n' >&2
+            printf 'Estado DFU inválido. Nenhum payload Linux foi enviado.\n' >&2
             return 1
         fi
         case "$phase" in
@@ -164,7 +172,6 @@ PY
         printf 'PongoOS não foi detectado. Nenhum payload Linux foi enviado.\n' >&2
         return 1
     fi
-    curl --fail --silent http://127.0.0.1:8765/state > "$ROOT/dfu-last-state.json"
     cleanup_guide
     trap - EXIT INT TERM
 }
