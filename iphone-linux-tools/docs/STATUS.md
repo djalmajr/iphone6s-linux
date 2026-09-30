@@ -1,5 +1,11 @@
 # iPhone 6s Linux experiment — updated 2026-09-30
 
+## Checkpoint — reprodução de m1n1 (#12)
+
+Dois clones novos da fonte oficial foram compilados offline na VM existente. O clone com profundidade 1 e sem tags reproduziu o componente preservado byte por byte: 1.196.032 bytes, SHA-256 `13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b`. O clone completo gerou uma versão diferente via `git describe`; a profundidade foi incorporada à receita, sem override manual de versão. Ambos terminaram com saída 0 e dois avisos upstream. Quatro arquivos crate e 131 fontes em cache foram conferidos; fontes e payload conhecido preservados. Nenhum pacote foi instalado, nem candidato carregado no telefone. A VM dedicada foi parada após confirmar ausência de processos de build. [Receita, decisão e limites](M1N1-BUILD.md), [evidência](evidence/m1n1-rebuild.json).
+
+#12 continua em andamento: assinatura/origem imutável do kernel e reprodução da imagem inteira em VM nova ainda pendentes. Próxima ação técnica: verificar a assinatura do APK contra uma chave de distribuição obtida de fonte canônica. O DNS físico (#7) aguarda disponibilidade do operador para DFU manual; estabilidade prolongada (#8) depende de alimentação validada (#2). Nenhuma dessas pendências é resolvida pela igualdade do componente m1n1. Nenhum typechecker do projeto foi configurado; esta etapa alterou apenas documentação e executou builds upstream. JSON, identidade dos artefatos e links locais foram verificados; testes de código inalterado permanecem válidos.
+
 ## Validated capabilities: Linux, Bash, SSH, HTTP and Herdr
 
 Bash 5.2.21, key-only Dropbear SSH and Herdr 0.9.1/protocol 22 were verified on the phone. The Herdr pane survived disconnecting the SSH client. Bootstrap Telnet is now stopped. The runtime and candidate image contain a private SSH server key and remain local. Before the folder reorganization on 2026-09-30, the manual-DFU wrapper completed a full boot with exit 0, integrated SSH/HTTP and operator-confirmed console (#3). The dedicated build VM was stopped after recording package versions. See `REPRODUCAO.md` for the full chronology and public evidence.

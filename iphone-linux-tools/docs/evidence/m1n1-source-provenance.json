@@ -1,5 +1,7 @@
 {
   "source_repository": "https://github.com/HoolockLinux/m1n1",
+  "phase": "original checkout inventory and CI comparison, before clean source rebuild",
+  "subsequent_rebuild_evidence": "m1n1-rebuild.json",
   "source_checkout_commit": "d5a10ac52a6468484854419a6c5130f1d62073eb",
   "source_commit_signature_verified": false,
   "source_checkout_tracked_changes": [],
@@ -35,7 +37,7 @@
   },
   "limits": [
     "existing checkout and compiler inventory only",
-    "no new source rebuild performed",
+    "this inventory predates the separate clean source rebuild evidence",
     "no fresh VM/clean-clone full-image proof",
     "marker can be overridden by M1N1_VERSION_TAG",
     "CI binary was not selected or booted",
