@@ -97,3 +97,57 @@ Os testes geram identidades sintéticas, executam Dropbear/BusyBox num chroot e 
 ## Encerramento parcial desta fatia
 
 Implementação, revisão da abordagem e gates isolados concluídos. Local: dois testes aprovados e um skip VM; baseline real VM aprovado; sete mutações rejeitadas (3 locais + 4 VM), após corrigir fixtures/gates descritos na [evidência](evidence/lan-check.txt). Pyflakes/Flake8 fatal, AST Python, Bash/ShellCheck e diff-check; nenhum typechecker configurado. Não há banco/migração, pacote novo, rebuild ou benchmark nesta fatia. Interfaces reais do Mac, iPhone e Windows ainda exigem validação conjunta; #6 permanece aberta, #2/#8 não mudam e o goal permanece ativo.
+
+## Piloto físico e correção do início da rede
+
+O Windows independente recebeu HTTP 200 com modelo/kernel/uptime do iPhone e executou `uname -r` por SSH estrito através dos forwards. O Mac confirmou listeners somente no IPv4 privado escolhido. A requisição Windows usou o endereço LAN explícito e proxy desativado; o canal Herdr de controle é separado desse tráfego. Nenhuma chave privada do Mac foi copiada. A identidade temporária do Windows foi revogada no telefone, a autorização original foi restaurada com comparação exata e os arquivos temporários dos clientes foram removidos. O snapshot final permaneceu privado.
+
+O primeiro acesso encaminhado falhou porque `lo` estava DOWN no telefone. Ativar `lo` em RAM fez os mesmos serviços responderem; adicionar novamente `127.0.0.1/8` retornou `File exists`. O fixture VM já ativava `lo`, portanto não cobria o início da rede no aparelho. O piloto comprova os forwards após essa correção manual, mas não conclui #6 para um boot novo.
+
+### D3. Ativar loopback no init
+
+- **Decisão:** executar `ip link set lo up` antes de iniciar SSH/HTTP em `phone/init/init-server`; reconstruir uma candidata privada a partir do initramfs com console já testado, substituindo somente `/init`.
+- **Por quê:** corrige a configuração ausente na origem. O comando LAN permanece dedicado aos forwards e não modifica silenciosamente o telefone.
+- **Alternativas:** ativação manual após cada boot (não reproduzível); alteração no preflight LAN (oculta a falha de bootstrap). Endereço adicional é desnecessário na observação física atual.
+- **Reverter:** baixo, selecionar a imagem anterior preservada e seu hash; nenhuma mudança na NAND/iOS.
+- **Onde:** `phone/init/init-server`, candidata ignorada em `artifacts/`, seleção/hash do wrapper somente após validação.
+- **Status:** em curso.
+
+### Plano da correção
+
+Contexto: SSH/HTTP diretos funcionavam, mas conexões encaminhadas pelo próprio Dropbear ficavam sem resposta com loopback desligado. Arquivos desta fase: este documento e `phone/init/init-server`; candidata privada e relatório de comparação fora do Git. Fase seguinte: seleção explícita no wrapper, manifest de hashes, evidência e execução, após inspeção da candidata.
+
+- [x] Ativar `lo` no init antes dos serviços e verificar sintaxe/ShellCheck.
+- [x] Confirmar o hash da imagem original e usar somente ferramentas já presentes na VM dedicada.
+- [x] Extrair o initramfs original em diretório novo; comparar conteúdo/metadados de todos os arquivos e exigir que somente `/init` tenha mudado.
+- [x] Compor payload sem sobrescrever a imagem anterior e registrar hash/tamanho.
+- [ ] Validar boot físico sem ativação manual de loopback e repetir HTTP/SSH pelo Windows com identidade temporária nova.
+- [ ] Revogar identidade, salvar snapshot, encerrar forwards e confirmar retorno ao iOS.
+
+O piloto anterior durou cerca de 28 minutos por problemas no harness PowerShell. Após snapshot/reboot, o USB deixou de detectar o telefone; o operador confirmou posteriormente tela de desbloqueio do iOS e aparelho sempre frio. A leitura USB de bateria após retorno continua indisponível. Isso não comprova carga nem estabilidade prolongada. No próximo piloto, preparar comandos Windows antes do boot e reduzir o tempo de diagnóstico.
+
+No PowerShell, enviar blocos completos em uma única linha pelo `pane run`; comandos multilinha ficaram no editor PSReadLine. Variáveis dentro de `& { ... }` não persistem no próximo comando: cada bloco deve resolver seus próprios caminhos e usar `$ErrorActionPreference='Stop'`. Marcadores devem distinguir saída real do texto ecoado do comando. Não alterar ExecutionPolicy nem instalar pacotes.
+
+### Reprodução da candidata de loopback
+
+Da pasta `iphone-linux-tools`, com a VM dedicada e suas ferramentas existentes:
+
+```sh
+multipass start iphone6s-build
+multipass exec iphone6s-build -- sh -c 'umask 077; mkdir /home/ubuntu/iphone6s-loopback-input'
+multipass transfer artifacts/iphone6s-console-server-initramfs.gz iphone6s-build:/home/ubuntu/iphone6s-loopback-input/original.gz
+multipass transfer phone/init/init-server iphone6s-build:/home/ubuntu/iphone6s-loopback-input/init
+multipass transfer scripts/build/rebuild-loopback-initramfs.py iphone6s-build:/home/ubuntu/iphone6s-loopback-input/repack.py
+multipass exec iphone6s-build -- sudo sh -ec 'umask 077; python3 /home/ubuntu/iphone6s-loopback-input/repack.py; chown ubuntu:ubuntu /home/ubuntu/iphone6s-loopback-input/candidate.gz /home/ubuntu/iphone6s-loopback-input/report.json'
+multipass transfer iphone6s-build:/home/ubuntu/iphone6s-loopback-input/candidate.gz artifacts/iphone6s-loopback-server-initramfs.gz
+multipass transfer iphone6s-build:/home/ubuntu/iphone6s-loopback-input/report.json runtime/loopback-build-report.json
+python3 scripts/build/compose-payload.py artifacts/iphone6s-loopback-server-initramfs.gz artifacts/m1n1-linux-iphone6s-loopback-server.bin
+```
+
+Execute cada linha somente se a anterior tiver saída 0. Antes da composição, compare SHA-256/tamanho recebidos com `report.json` e confira os hashes de m1n1/kernel/DTB no manifest. O diretório de entrada precisa ser novo; se já existir, inspecione sua origem, sem sobrescrever trabalho anterior. Os diretórios `iphone6s-loopback.*` gerados são privados e pertencem a esta reconstrução; remova somente os próprios diretórios depois de conferir/copiar os outputs. Os outputs contêm a chave privada do servidor e permanecem fora do Git.
+
+O script exige o initramfs histórico de hash `b51e78b9acafea87685f3e09c9329a46929e288c582a91deb76593979480844e` e exatamente a inserção de `ip link set lo up` no init. É uma receita limitada a esta correção, não um atualizador genérico. Comparou 2.969 entradas, nomes, conteúdo, links, donos, modos e timestamps de arquivos; timestamps de diretórios são ignorados porque o cpio os modifica durante extração. Uma alteração adicional sintética no init foi recusada antes de produzir a candidata. Nenhuma chave foi regenerada.
+
+Candidata recebida: initramfs SHA-256 `fdfceea110c1bd75f1c30c7ebcccd9a6baebc4207d5dbef63356d0e1c4d644fe`, 13.084.080 bytes; payload SHA-256 `8b1a46dd67613c63aa6608dd3a0e73a73b358aaddc1818b423ff6009b55e3f66`, 23.765.032 bytes. A comparação confirma equivalência dos arquivos preservados; empacotamento cpio depende de metadados do filesystem, portanto não é promessa de builds idênticos byte a byte (#12). Boot físico da candidata ainda pendente.
+
+O wrapper foi preparado para selecionar essa candidata em `boot`; a imagem anterior continua preservada e sua identidade SSH é a mesma. A seleção é preparação para o teste, não prova física. Dois testes do wrapper passaram, incluindo interrupção antes de upload após falha DFU e limpeza do monitor; dois testes locais LAN passaram, com um skip VM explícito. A prova isolada de forwards/mutações anterior permanece válida para o código LAN inalterado. Pyflakes/Flake8 fatal e Bash/ShellCheck passaram; o init tem apenas o aviso informativo preexistente SC2012, sem warnings/erros. Nenhum typechecker configurado. Diretórios privados próprios de rebuild removidos da VM, que voltou a Stopped. Para retornar à seleção anterior, restaurar no wrapper o caminho `m1n1-linux-iphone6s-console-server.bin` e hash `c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a` em uma alteração revisável.

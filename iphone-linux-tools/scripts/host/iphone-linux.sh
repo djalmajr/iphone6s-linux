@@ -191,8 +191,8 @@ boot() {
         payload="$ROOT/artifacts/m1n1-linux-iphone6s.bin"
         digest=7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520
     else
-        payload="$ROOT/artifacts/m1n1-linux-iphone6s-console-server.bin"
-        digest=c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a
+        payload="$ROOT/artifacts/m1n1-linux-iphone6s-loopback-server.bin"
+        digest=8b1a46dd67613c63aa6608dd3a0e73a73b358aaddc1818b423ff6009b55e3f66
     fi
     if ioreg -p IOUSB -w0 | grep -q 'iPhone 6s Linux probe'; then
         if [ -n "$restore_id" ]; then

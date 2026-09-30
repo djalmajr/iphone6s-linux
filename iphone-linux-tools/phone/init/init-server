@@ -15,6 +15,7 @@ exec >>/boot.log 2>&1
 
 echo "iPhone 6s Linux USB boot probe"
 uname -a
+ip link set lo up
 insmod /lib/modules/usb_f_ncm.ko || echo "usb_f_ncm module load failed"
 
 gadget=/sys/kernel/config/usb_gadget/iphone6s

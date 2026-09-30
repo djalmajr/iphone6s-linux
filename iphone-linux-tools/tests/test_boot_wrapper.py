@@ -73,7 +73,7 @@ while True: time.sleep(1)
             self.assertFalse(state.with_suffix(".tmp").exists())
 
     def test_exploit_failure_stops_before_transfer_and_cleans_monitor(self):
-        artifacts = ("bin/palera1n-macos-arm64", "artifacts/m1n1-linux-iphone6s-console-server.bin")
+        artifacts = ("bin/palera1n-macos-arm64", "artifacts/m1n1-linux-iphone6s-loopback-server.bin")
         if not all((ROOT / name).is_file() for name in artifacts):
             self.skipTest("Private boot artifacts required for wrapper integration test")
         with tempfile.TemporaryDirectory() as folder:

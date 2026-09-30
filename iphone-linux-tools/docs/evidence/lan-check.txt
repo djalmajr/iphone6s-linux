@@ -56,3 +56,56 @@ Private LAN IPv4 observed on the same subnet as the Mac; addresses not published
 Existing pane belonged to other project. Dedicated test pane created, then moved
 into its own iphone6s-linux workspace at user request. No package installation or
 SSH key modification during this preparation. Actual phone/LAN test still pending.
+
+Physical pilot (supersedes pending status above, but fresh-init boot still pending):
+Preboot iOS reported 100%. Restored Linux boot completed. Actual Mac kernel sockets
+listened only on the chosen private LAN IPv4, ports 2222 and 8086.
+Initial forwarded requests timed out; phone lo was DOWN. Bringing lo UP in RAM
+made both services respond; adding 127.0.0.1 again reported File exists.
+Windows native client, using explicit Mac LAN IPv4 and no HTTP proxy:
+IPHONE_LAN_HTTP_STATUS=200
+HTTP body contained Linux iphone6s-linux 7.0.12, Apple iPhone 6s (Samsung), uptime.
+WINDOWS_LAN_SSH_OK
+7.0.12
+Strict SSH used client-owned temporary identity, trusted public host record,
+HostKeyAlias=172.16.42.1, no copied Mac private key or agent forwarding.
+Herdr control transport was separate from the explicit payload LAN destination.
+No server-side capture of a live client peer was obtained; the inspected
+established-socket listing happened after the short request had finished.
+Exact original authorized_keys restored and compared, temporary phone copy
+removed; Windows private fixture and Mac temporary public-key copy deleted.
+Manual snapshot succeeded before reboot; forwards stopped and listeners absent.
+Pilot took about 28 minutes, longer than planned due to PowerShell harness errors.
+After forced reboot, Linux disappeared; USB/iOS return not confirmed yet.
+Current physical screen/temperature and battery after reboot require operator.
+Subsequent operator observation: iOS unlock screen, always cold. USB remained
+absent on recheck, so postboot battery percentage/charging were not obtained.
+
+Permanent init correction candidate:
+Existing Ubuntu VM/tools only; no packages installed, no identity regenerated.
+2,969 archive entries compared; only init differs. Original image retained.
+Compared content, modes, UID/GID, rdev, link count and file timestamps.
+Directory timestamps excluded because cpio extraction itself updates them.
+Unexpected extra init change rejected before output. Actual BusyBox ip command
+in isolated namespace produced lo UP and 127.0.0.1/8 without explicit addr add.
+init sha256=06ea39593751a1c054ae1564261debb5d44f9d9002f98fda48c10cbf881b21f9
+initramfs bytes=13084080 sha256=fdfceea110c1bd75f1c30c7ebcccd9a6baebc4207d5dbef63356d0e1c4d644fe
+payload bytes=23765032 sha256=8b1a46dd67613c63aa6608dd3a0e73a73b358aaddc1818b423ff6009b55e3f66
+Candidate transfer hash/size and original m1n1/kernel/DTB hashes verified locally.
+Fresh physical boot without manual loopback activation remains pending for #6.
+
+Build harness failures not accepted as evidence:
+First metadata comparison included directory timestamps and failed as expected.
+Failed root-owned transfer left an empty local archive; composition was wrongly
+attempted after that failure. Empty archive and incomplete owned payload removed,
+never selected for boot. Repeated validated transfer and composition succeeded.
+Reproduction now explicitly gates each command on exit 0 and verifies received
+hash/size before composition. First lint invocation used a Python without tools;
+existing Python 3.12.6 Pyflakes/Flake8 fatal passed, no packages installed.
+
+Wrapper prepared to select loopback candidate, physical boot still pending.
+Narrow verification: wrapper 2/2 pass, LAN local 2 pass/1 explicit VM skip.
+Pyflakes/Flake8 fatal pass using existing Python 3.12.6; Bash -n/ShellCheck wrapper
+pass; init ShellCheck warning/error gate pass (pre-existing informational SC2012).
+No typechecker configured. Previous unchanged LAN VM/mutation evidence reused.
+Owned private rebuild directories/input removed from VM; VM returned to Stopped.
