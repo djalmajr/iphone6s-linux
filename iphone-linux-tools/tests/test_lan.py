@@ -15,6 +15,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'scripts/host/lan.py'
+sys.path.insert(0, str(SOURCE.parent))
 spec = importlib.util.spec_from_file_location('lan', SOURCE)
 lan = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(lan)
@@ -98,6 +99,7 @@ def namespace_case():
         host.mkdir(parents=True)
         keys.mkdir(mode=0o700)
         shutil.copy(SOURCE, host / 'lan.py')
+        shutil.copy(SOURCE.parent / 'device_profile.py', host / 'device_profile.py')
         processes = []
         output = (base / 'fixture.log').open('w+')
         try:

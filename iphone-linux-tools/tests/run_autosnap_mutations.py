@@ -10,7 +10,7 @@ if sys.platform not in ('darwin', 'linux'):
     raise SystemExit('Requires macOS or Linux with the POSIX snapshot tools.')
 
 ROOT = Path(__file__).resolve().parents[1]
-HOST_FILES = ('autosnap.py', 'persist.py', 'restore_journal.py', 'snapshot_lock.py', 'snapshot_retention.py', 'iphone-linux.sh')
+HOST_FILES = ('autosnap.py', 'persist.py', 'device_profile.py', 'restore_journal.py', 'snapshot_lock.py', 'snapshot_retention.py', 'iphone-linux.sh')
 RETENTION_TEST = 'test_snapshot_retention.SnapshotRetentionTests.'
 SCHEDULER_TEST = 'test_autosnap.AutoSnapshotTests.'
 MUTATIONS = (

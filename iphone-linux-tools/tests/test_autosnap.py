@@ -36,7 +36,7 @@ class AutoSnapshotTests(unittest.TestCase):
         self.root = Path(self.work.name)
         self.host = self.root / 'scripts/host'
         self.host.mkdir(parents=True)
-        for name in ('autosnap.py', 'persist.py', 'restore_journal.py', 'snapshot_lock.py', 'snapshot_retention.py', 'iphone-linux.sh'):
+        for name in ('autosnap.py', 'persist.py', 'device_profile.py', 'restore_journal.py', 'snapshot_lock.py', 'snapshot_retention.py', 'iphone-linux.sh'):
             shutil.copy(ROOT / 'scripts/host' / name, self.host / name)
         self.bin = self.root / 'bin'
         self.bin.mkdir()

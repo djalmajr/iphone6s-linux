@@ -51,10 +51,13 @@ def main():
             tests = project / 'tests'
             host.mkdir(parents=True)
             tests.mkdir()
-            source = (ROOT / 'scripts/host/lan.py').read_text()
+            for name in ('lan.py', 'device_profile.py'):
+                shutil.copy(ROOT / 'scripts/host' / name, host / name)
+            filename = 'device_profile.py' if label == 'strict-trust' else 'lan.py'
+            source = (host / filename).read_text()
             if source.count(old) != 1:
                 raise SystemExit(label + ': source anchor must occur once')
-            (host / 'lan.py').write_text(source.replace(old, new))
+            (host / filename).write_text(source.replace(old, new))
             shutil.copy(ROOT / 'tests/test_lan.py', tests / 'test_lan.py')
             result = subprocess.run([sys.executable, '-m', 'unittest', test, '-v'], cwd=tests,
                                     capture_output=True, text=True, timeout=40)

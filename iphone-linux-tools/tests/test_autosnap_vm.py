@@ -25,7 +25,7 @@ class AutoSnapshotVmTests(unittest.TestCase):
         project = fixture.base / 'project'
         host = project / 'scripts/host'
         host.mkdir(parents=True)
-        for name in ('autosnap.py', 'persist.py', 'restore_journal.py', 'snapshot_lock.py', 'snapshot_retention.py'):
+        for name in ('autosnap.py', 'persist.py', 'device_profile.py', 'restore_journal.py', 'snapshot_lock.py', 'snapshot_retention.py'):
             shutil.copy(ROOT / 'scripts/host' / name, host / name)
         fixture.store = project / 'backups'
         vm_fixture.persist.STORE = fixture.store
