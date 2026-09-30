@@ -70,3 +70,15 @@ BatteryIsCharging=true
 ExternalConnected=true
 Six-point drop spans all attempts and Linux intervals, not only USB-C pilot.
 Sustained charging under Linux remains unverified; #2 stays open.
+
+Later iOS query: capacity 90%, charging=true, external_connected=true.
+Cable/port for this reading awaiting operator confirmation after requested swap.
+Detailed diagnostic service unavailable while passcode-locked (error classified;
+raw device output withheld). Next boot deferred pending iOS power clarification.
+
+Read-only source inspection at HoolockLinux/linux revision
+6831bc701a6ce059e71e5aaa9488c9195bea6927, branch hoolock:
+N71/6s DeviceTree include chain inspected; Antigua PMIC at I2C 0x74 describes
+RTC and NVMEM, no battery/charger node found in consulted chain.
+Hoolock docs hw/SMC.md applies to T8015; cannot assume same interface on A9.
+These bounded observations do not establish physical charging behavior.

@@ -37,6 +37,16 @@ Após a troca, SSH autenticado e HTTP continuaram respondendo, e o operador conf
 
 A queda de seis pontos confirma consumo no procedimento total, mas não identifica em qual etapa ocorreu nem comprova falta de carregamento no Linux com USB-C. A manutenção da carga durante o Linux continua sem validação. Não encerrar #2 nem iniciar uso prolongado sem supervisão por esse piloto. Para isolar melhor o intervalo, é necessário novo baseline imediatamente antes de um boot com duração registrada e repetir a comparação com o mesmo cabo durante a fase Linux; telemetria de carga específica A9 ou medição física complementar ainda seria preferível.
 
+Em outra consulta, ainda no iOS, a carga informou **90%**, mantendo as duas flags de alimentação/carga verdadeiras. A montagem física nessa segunda leitura precisa ser confirmada pelo operador, pois a troca para USB-A havia sido solicitada e ainda não confirmada. Não atribuir essa queda ao cabo USB-C ou ao Linux. O serviço de diagnóstico detalhado informou bloqueio por senha; a consulta básica de nível funcionou. O próximo boot foi adiado para esclarecer alimentação/bateria no próprio iOS.
+
+## Inspeção do suporte A9
+
+Revisão pública consultada: `HoolockLinux/linux`, branch `hoolock`, commit `6831bc701a6ce059e71e5aaa9488c9195bea6927`. Foram lidos `s8000-n71.dts`, `s8000.dtsi`, `s800x-6s.dtsi`, `s800-0-3.dtsi`, `s800-0-3-common.dtsi` e `s800-0-3-pmgr.dtsi`. A descrição N71 compartilha um PMIC Antigua em I2C 0x74, com filhos RTC e NVMEM; nessa cadeia consultada não foi encontrada descrição de bateria/carregador. Isso é consistente com a ausência de sensores observada, mas não é auditoria de todo o kernel e não prova que o circuito físico tenha parado de carregar.
+
+O documento `hw/SMC.md` da cópia Hoolock usada pelo build declara aplicação a T8015 (A11), portanto suas chaves de carga não estabelecem uma interface válida para o A9/S8000. Habilitar um driver genérico de bateria na configuração também não fornece, por si só, binding, protocolo ou controle de carga para este aparelho. Não houve escrita de registradores nem tentativa de portar controles de outra geração.
+
+Fontes fixadas: [PMIC no DeviceTree do 6s](https://github.com/HoolockLinux/linux/blob/6831bc701a6ce059e71e5aaa9488c9195bea6927/arch/arm64/boot/dts/apple/s800x-6s.dtsi), [SMC com escopo T8015](https://github.com/HoolockLinux/docs/blob/23ebe1fbc375599221553a7e1815e5de182a6b42/hw/SMC.md).
+
 ## Checagem reproduzível
 
 Execute pela mesma identidade SSH já usada pelo projeto, a partir da raiz do repositório:
