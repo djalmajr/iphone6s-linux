@@ -121,11 +121,21 @@ def main():
     configuration = commands.add_parser('record')
     configuration.add_argument('name', type=local_name)
     configuration.add_argument('address', type=service_ip)
+    proxy = commands.add_parser('lan')
+    proxy.add_argument('--bind', required=True, type=lan.bind_address)
+    proxy.add_argument('--allow', required=True, action='append', type=lan.bind_address)
+    proxy.add_argument('--port', type=lan.port, default=1053)
+    proxy.add_argument('--tunnel-port', type=lan.port, default=1054)
     options = parser.parse_args()
     if options.action == 'install':
         install()
     elif options.action == 'record':
         record(options)
+    elif options.action == 'lan':
+        import dns_lan
+        if options.port == options.tunnel_port:
+            parser.error('Portas DNS e túnel devem ser distintas.')
+        dns_lan.serve(options)
     else:
         remote('/bin/sh /srv/data/dns/manage-dns.sh ' + options.action)
 
@@ -133,5 +143,5 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except (OSError, ValueError, subprocess.SubprocessError) as error:
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         raise SystemExit(str(error)) from error
