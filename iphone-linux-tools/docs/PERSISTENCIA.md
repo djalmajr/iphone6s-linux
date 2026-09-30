@@ -4,7 +4,7 @@
 
 O Linux do iPhone roda em RAM. Esta etapa guarda snapshots privados no Mac e permite restaurar arquivos após outro boot, sem depender do armazenamento interno.
 
-Arquivos: `persist.py`, `iphone-linux.sh`, `.gitignore`, `tests/test_persistence.py` e este documento.
+Arquivos: `scripts/host/persist.py`, `scripts/host/iphone-linux.sh`, `.gitignore`, `tests/test_persistence.py` e este documento.
 
 - [x] Criar snapshots privados de `/srv/data` e arquivos de trabalho de `/root`.
 - [x] Excluir identidade SSH, caches e estado de sessões/processos Herdr.
@@ -25,16 +25,16 @@ Sincronização contínua e restauração automática no boot ficam para outra e
 No diretório `iphone-linux-tools`:
 
 ```bash
-bash iphone-linux.sh backup
-bash iphone-linux.sh backups
-bash iphone-linux.sh restore
+bash scripts/host/iphone-linux.sh backup
+bash scripts/host/iphone-linux.sh backups
+bash scripts/host/iphone-linux.sh restore
 # Ou escolher explicitamente um snapshot listado:
-bash iphone-linux.sh restore AAAAMMDDTHHMMSSZ-xxxxxxxx
+bash scripts/host/iphone-linux.sh restore AAAAMMDDTHHMMSSZ-xxxxxxxx
 ```
 
 `restore` sem ID usa o snapshot manual mais recente. Snapshots `pre-restore` nunca são escolhidos automaticamente; seu ID pode ser passado explicitamente para recuperar o estado anterior. Cada restauração verifica primeiro a integridade e os caminhos, salva o estado atual e só então transfere/extrai por SSH. O hash é conferido no Mac e novamente no telefone.
 
-Após novo boot: `boot`, seguido de `restore`. O boot ainda exige DFU físico. Não há sincronização contínua: alterações feitas depois do último snapshot são perdidas se faltar energia ou o telefone reiniciar. Antes de reiniciar, executar `backup` e esperar a confirmação.
+Após novo boot: `bash scripts/host/iphone-linux.sh boot`, seguido de `bash scripts/host/iphone-linux.sh restore`. O boot ainda exige DFU físico. Não há sincronização contínua: alterações feitas depois do último snapshot são perdidas se faltar energia ou o telefone reiniciar. Antes de reiniciar, executar `backup` e esperar a confirmação.
 
 ## O que fica salvo
 
@@ -63,7 +63,7 @@ A extração não é transacional: falta de espaço ou interrupção pode deixar
 - HTTP manteve o PID 92; Herdr permaneceu ativo. Não houve reboot nem instalação de pacote.
 - Arquivos de teste removidos do telefone; snapshot final do estado operacional salvo no Mac. Os snapshots de teste e a cópia anterior à restauração permanecem locais, sem publicação.
 
-Na rodada de 2026-09-29, a recuperação foi testada na mesma sessão, sem outro DFU/reboot. A validação em novo boot foi obtida posteriormente, conforme registro abaixo.
+Na rodada de 2026-09-29, a recuperação foi testada na mesma sessão, sem outro DFU/reboot. A validação física em novo boot ocorreu em 2026-09-30, antes da reorganização dos arquivos, conforme registro abaixo.
 
 Registro resumido: [persistence-check.txt](evidence/persistence-check.txt).
 
@@ -73,7 +73,7 @@ A sentinela `/srv/data/boot-restore-proof.txt`, com modo 640 e conteúdo conheci
 
 Resultado real: SHA-256 da sentinela `b236202ff49d61b978537415137da685cbf63164a42494dff6e7f004b28e7260`, modo 640, arquivo extra preservado. Os hashes das identidades SSH do servidor/cliente autorizado permaneceram iguais (valores não publicados); o PID HTTP permaneceu igual e o endpoint respondeu 200. O mecanismo criou um snapshot privado anterior à restauração. A fixture extra foi removida, e a sentinela recuperada foi mantida.
 
-Isso conclui #4. Persistência depende dos snapshots no Mac: o teste não demonstrou armazenamento interno nem recuperação de processos. A extração continua não transacional; recuperação de interrupção/falta de espaço é #15.
+Isso concluiu #4 antes da reorganização. Persistência depende dos snapshots no Mac: o teste não demonstrou armazenamento interno nem recuperação de processos. A extração continua não transacional; recuperação de interrupção/falta de espaço é #15. Depois da reorganização, ainda é preciso repetir o fluxo com os caminhos novos; por enquanto há somente testes locais e smoke em uma sessão já ativa.
 
 ## Encerramento da etapa
 
