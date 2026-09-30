@@ -37,3 +37,26 @@ for zone in "$sysfs_root"/class/thermal/thermal_zone*; do
     done
 done
 [ "$thermal_count" -gt 0 ] || printf 'thermal_zone=unavailable\n'
+
+# USB descriptors are host power budgets, not measured battery charging current.
+configuration_count=0
+for configuration in "$sysfs_root"/kernel/config/usb_gadget/*/configs/*; do
+    [ -d "$configuration" ] || continue
+    configuration_count=$((configuration_count + 1))
+    gadget=${configuration%/configs/*}
+    printf 'usb_configuration=%s/%s\n' "${gadget##*/}" "${configuration##*/}"
+    for field in MaxPower bmAttributes; do
+        if [ -f "$configuration/$field" ] && [ -r "$configuration/$field" ]; then
+            value=$(cat "$configuration/$field" 2>/dev/null) || value=unavailable
+            [ -n "$value" ] || value=unavailable
+        else
+            value=unavailable
+        fi
+        if [ "$field" = MaxPower ]; then
+            printf 'usb_MaxPower_mA=%s\n' "$value"
+        else
+            printf 'usb_bmAttributes=%s\n' "$value"
+        fi
+    done
+done
+[ "$configuration_count" -gt 0 ] || printf 'usb_configuration=unavailable\n'

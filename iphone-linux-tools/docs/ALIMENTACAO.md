@@ -59,6 +59,72 @@ O documento `hw/SMC.md` da cópia Hoolock usada pelo build declara aplicação a
 
 Fontes fixadas: [PMIC no DeviceTree do 6s](https://github.com/HoolockLinux/linux/blob/6831bc701a6ce059e71e5aaa9488c9195bea6927/arch/arm64/boot/dts/apple/s800x-6s.dtsi), [SMC com escopo T8015](https://github.com/HoolockLinux/docs/blob/23ebe1fbc375599221553a7e1815e5de182a6b42/hw/SMC.md).
 
+## Potência declarada pelo gadget USB — investigação
+
+A fonte atual `phone/init/init-server` não atribui `configs/c.1/MaxPower`. No kernel consultado, `configfs.c` inicializa esse atributo com `CONFIG_USB_GADGET_VBUS_DRAW`; o Kconfig tem default de 2 mA, mas isso **não comprova o valor compilado neste APK**. A configuração completa do APK não foi localizada, e a revisão consultada não prova sua proveniência exata. É necessário ler o atributo real no Linux.
+
+`MaxPower` descreve ao host o consumo máximo solicitado do barramento, em mA. Alterá-lo não implementa o carregador da bateria nem comprova corrente líquida. Nesta etapa a decisão é ampliar somente o diagnóstico de leitura: registrar `MaxPower` e `bmAttributes` junto da ausência/presença de sensores. Não mudar registradores de PMIC, não assumir controle de carga A10/A11 e não modificar o descriptor antes da leitura real.
+
+Plano desta etapa (#2):
+
+- [x] Ampliar `phone/diagnostics/power-check.sh` para ler orçamento USB sem escrever sysfs.
+- [x] Verificar leituras presentes/ausentes, preservação dos atributos e exclusão de strings identificadoras em `tests/test_power_check.py`.
+- [x] Ler o valor real no novo boot e consultar o orçamento no Mac; registrar a indisponibilidade dessa segunda leitura e os limites.
+
+Fontes: [configfs no kernel consultado](https://github.com/HoolockLinux/linux/blob/6831bc701a6ce059e71e5aaa9488c9195bea6927/drivers/usb/gadget/configfs.c), [Kconfig do gadget](https://github.com/HoolockLinux/linux/blob/6831bc701a6ce059e71e5aaa9488c9195bea6927/drivers/usb/gadget/Kconfig), [ABI dos atributos](https://github.com/HoolockLinux/linux/blob/6831bc701a6ce059e71e5aaa9488c9195bea6927/Documentation/ABI/testing/configfs-usb-gadget), [documentação Linux configfs](https://docs.kernel.org/usb/gadget_configfs.html).
+
+### Valor efetivo obtido — 2026-09-30
+
+O boot com os caminhos reorganizados completou uma única execução, saída 0, SSH/HTTP e console confirmado pelo operador. Baseline iOS às 13:21:47 UTC: 98%, carregamento e alimentação externa ativos. A montagem USB-A traseira foi reafirmada pelo operador e mantida.
+
+A leitura real do configfs retornou **MaxPower=500 mA**, `bmAttributes=0x80`. Portanto, a hipótese de um orçamento de 2 mA causado por default não explícito foi descartada para esta imagem. Nenhuma mudança de descriptor foi feita. A consulta do IORegistry não forneceu propriedades de orçamento para esse gadget; não preencher com números presumidos. Sensores de bateria/temperatura continuam ausentes.
+
+Às 13:27:31 UTC, uptime 291,64 s, load average 0,00/0,00/0,00, governador `schedutil` e frequência reportada 1.512.000 kHz. Backlight: 1526 de 2047; framebuffer em blank 0. Frequência instantânea não comprova consumo, nem ausência de diretórios cpuidle comprova ausência de todo mecanismo de idle da CPU.
+
+O fork A10 foi conferido diretamente em `Pauli1Go/HoolockLinux`, commit `d49ac41cb898881457a97bb3cd44b7d92ff50a8c`. O README limita os aparelhos testados ao iPad 7/J172 e iPhone 7 Plus/D111, A10/T8010; seu suporte de bateria usa BQ27545 via UART/HDQ e carregador SN2400. Isso não fornece binding, GPIO, mux nem prova de compatibilidade para N71/A9. Não foi copiado driver nem escrito registrador. [Fonte primária do fork A10](https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/README.md).
+
+### Redução temporária de brilho
+
+O controle padrão do backlight foi reduzido de 1526 para 256 de 2047 no uptime 539,49 s. Ao relatar texto difícil de ver, o operador recebeu ajuste para 512 no uptime 690,27 s; depois esclareceu que não usará o console local, e o brilho voltou a 256 no uptime 780,67 s. O valor anterior foi guardado em `/run/iphone-power-brightness-before`. Essa alteração só vale na sessão em RAM; a imagem não foi reconstruída e o reboot restaura o comportamento original.
+
+**Decisão:** manter brilho baixo na operação pelo Mac e aumentar somente para uma verificação visual necessária. **Alternativa:** apagar o display reduz mais a interface visível, mas exige nova avaliação; não foi feito neste teste. O intervalo tem brilho variável, portanto não é uma comparação controlada que quantifique a economia nem prova isolada de melhora do carregamento.
+
+Reverter nesta sessão Linux:
+
+```bash
+# Envie por SSH usando a identidade dedicada do projeto:
+cat /run/iphone-power-brightness-before > /sys/class/backlight/20e200080.backlight/brightness
+```
+
+### Resultado do intervalo com brilho reduzido
+
+O monitor amostrou SSH/HTTP 11 vezes entre 13:33:02 e 13:38:03 UTC, com todas as respostas SSH válidas e HTTP 200. A última amostra teve uptime 923,76 s. O snapshot final foi salvo antes do reboot solicitado às **13:39:44 UTC**, com uptime **1024,05 s** (17 minutos e 4 segundos). Às **13:40:14 UTC**, iOS informou **100%**, carregamento e alimentação externa ativos; o baseline básico antes do boot era 98%.
+
+A leitura detalhada mostra uma divergência que impede tratar o percentual como prova de carga líquida:
+
+| Campo bruto iOS | 13:19:21 UTC, antes da preparação | 13:42:04 UTC, após o retorno |
+|---|---:|---:|
+| CurrentCapacity | 98 | 100 |
+| AppleRawCurrentCapacity | 873 | 854 |
+| AppleRawMaxCapacity | 884 | 877 |
+| NominalChargeCapacity | 1146 | 1146 |
+| InstantAmperage | 50 | 137 |
+| Temperature | 3300 | 3460 |
+
+Esses campos têm nomes/semânticas diferentes; a unidade e o significado exato dos valores AppleRaw, corrente e temperatura não foram validados aqui. O percentual subiu enquanto o valor bruto de carga caiu e o máximo bruto também mudou. A leitura detalhada anterior precede o baseline básico em mais de dois minutos; a posterior inclui tempo já carregando em iOS. A variação do medidor e o teto de 100% limitam a conclusão. Não calcular corrente média, mAh gastos ou economia do display com esses números.
+
+**Conclusão:** um intervalo curto de disponibilidade foi comprovado, com temperatura física fria/morna relatada pelo operador; **carga sustentada segue sem comprovação (#2 aberta)**. A consulta `ioregplane IODeviceTree` não foi disponibilizada pelo serviço de diagnóstico; o binding A9 de carregador/gauge continua desconhecido. Os bindings SN2400 do fork A10 exigem regmap I2C, mux HDQ, parâmetros da bateria e limites de corrente, e o probe programa registradores: não é um módulo seguro para carregar às cegas neste N71.
+
+### Avaliação de manutenção e próxima etapa
+
+Os 1.462 ciclos, a capacidade nominal reduzida e a autonomia previamente relatada justificam avaliação técnica da bateria e do caminho de alimentação antes de uso sem supervisão. Uma bateria nova não acrescenta um driver Linux; o diagnóstico deve distinguir desgaste de corrente insuficiente/controle de carga. O estado físico aparentemente normal relatado pelo operador não resolve essa distinção.
+
+Próximas provas necessárias: identificar chip/topologia e telemetria A9 a partir de fonte verificável ou medição física qualificada de carga líquida; obter uma comparação repetível sem teto de 100% nem troca de cabo; só então liberar #8. Enquanto essa parte depende de suporte/medição adicionais, os testes de recuperação e desenvolvimento de backups podem seguir localmente, sem prolongar o uso do telefone nem declarar #2 encerrada.
+
+### Verificação e encerramento desta entrega parcial
+
+17/17 testes passaram, cinco deles de diagnóstico; a mutação que substituiu a leitura real de MaxPower por `unavailable` foi rejeitada. Syntax/ShellCheck do diagnóstico e AST Python passaram; não há verificador de tipos configurado. Imagens, kernel, identidades e configuração USB permanecem os mesmos; o controle temporário de backlight perdeu efeito ao reboot. O telefone retornou ao iOS e os dados modificados foram guardados no Mac. A entrega amplia a medição e descarta uma hipótese; não encerra a validação de alimentação.
+
 ## Checagem reproduzível
 
 Execute pela mesma identidade SSH já usada pelo projeto, a partir da raiz do repositório:

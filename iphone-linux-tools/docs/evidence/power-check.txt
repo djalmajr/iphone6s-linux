@@ -108,3 +108,49 @@ Comparison includes iOS/DFU preparation and reboot, with possible gauge variatio
 Ten-point decline does not isolate Linux charging current but leaves sustained
 power unresolved. #2 remains open; prolonged unattended test #8 is not approved.
 No snapshots, SSH identities or raw device identifiers published.
+
+2026-09-30 descriptor investigation, fixed rear USB-A confirmed by operator:
+iOS baseline 13:21:47 UTC: 98%, charging/external_connected true.
+Single cold boot using relocated paths: exit 0; SSH/HTTP and console confirmed.
+Read-only configfs diagnostic:
+  charging_validation=unverified
+  power_supply=unavailable
+  thermal_zone=unavailable
+  usb_configuration=iphone6s/c.1
+  usb_MaxPower_mA=500
+  usb_bmAttributes=0x80
+Hypothesis of an implicit 2mA USB budget discarded for this image.
+No USB descriptor or PMIC register modified.
+Kernel source consulted at 6831bc701a6ce059e71e5aaa9488c9195bea6927; exact
+APK build configuration/provenance remains outside this bounded source proof.
+Mac IORegistry supplied no power-budget property for this Linux gadget.
+13:27:31 UTC: uptime 291.64s, schedutil, reported CPU frequency 1512000kHz,
+load average 0.00/0.00/0.00, backlight 1526/2047, framebuffer blank 0.
+Backlight reduction at uptime539.49s: 1526 -> 256; adjustment at690.27s to512;
+operator later accepted low visibility, reduced to256 at780.67s.
+Operator at reduced brightness: cold/lukewarm, console hard to see.
+17/17 local tests passed; sh syntax and ShellCheck passed for diagnostic.
+Mutation replacing actual MaxPower reading with unavailable was detected.
+Python AST passed; no configured type checker.
+
+Pilot observation completed: 11 SSH/HTTP samples from13:33:02 to13:38:03 UTC,
+all SSH succeeded and HTTP200; final sampled uptime923.76s.
+Private snapshot completed before reboot, no contents published.
+Reboot requested13:39:44 UTC: uptime1024.05s (17m04s).
+iOS basic13:40:14 UTC: capacity100%, charging/external_connected true.
+Detailed readings before preparation13:19:21 vs after return13:42:04 UTC:
+  CurrentCapacity: 98 -> 100
+  AppleRawCurrentCapacity: 873 -> 854
+  AppleRawMaxCapacity: 884 -> 877
+  NominalChargeCapacity: 1146 -> 1146
+  InstantAmperage: 50 -> 137
+  Temperature: 3300 -> 3460
+Units/semantics of raw Apple fields not validated; no inferred mAh/current/heat.
+Percentage increase conflicts with lower raw-current-capacity reading; pre/post
+also include iOS preparation/recharge, variable backlight and gauge variation.
+100% ceiling prevents claiming sustained positive charging in Linux.
+IODeviceTree diagnostic query unavailable; A9 charger/gauge topology unverified.
+A10 SN2400 bindings/probe require regmap, HDQ mux and battery limits and program
+registers; no driver copied or hardware register written on this A9.
+Battery/path-of-power technical assessment recommended given wear evidence.
+#2 remains open; #8 stays gated. Phone now in iOS, snapshot private.
