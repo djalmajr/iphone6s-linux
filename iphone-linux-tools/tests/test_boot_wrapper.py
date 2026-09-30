@@ -77,8 +77,9 @@ while True: time.sleep(1)
             self.skipTest("Private boot artifacts required for wrapper integration test")
         with tempfile.TemporaryDirectory() as folder:
             work = pathlib.Path(folder)
-            source = (ROOT / "iphone-linux.sh").read_text()
-            script = work / "iphone-linux.sh"
+            source = (ROOT / "scripts/host/iphone-linux.sh").read_text()
+            script = work / "scripts/host/iphone-linux.sh"
+            script.parent.mkdir(parents=True)
             script.write_text(source)
             for name in artifacts:
                 (work / name).symlink_to(ROOT / name)

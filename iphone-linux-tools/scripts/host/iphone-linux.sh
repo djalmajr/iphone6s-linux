@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-ROOT=$(cd "$(dirname "$0")" && pwd)
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 PHONE_IP=172.16.42.1
 HOST_IP=172.16.42.2
 GUIDE_PID=
