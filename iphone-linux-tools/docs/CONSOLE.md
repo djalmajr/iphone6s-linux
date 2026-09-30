@@ -69,3 +69,11 @@ A tentativa com USB-C frontal entrou em DFU, mas a exploração terminou com tim
 Com USB-A → Lightning na porta traseira, PongoOS apareceu. Uma corrida entre o fim do processo e a enumeração USB provocou uma interrupção incorreta do wrapper; o tratamento foi corrigido para aguardar a enumeração após DFU. Foi então executado `boot` novamente com PongoOS já ativo: a imagem integrada iniciou, SSH autenticado e HTTP responderam, e o operador confirmou o console.
 
 Essa execução ocorreu em duas etapas e **não comprova ainda o wrapper completo em um único boot frio** (#3). Não houve reinstalação do runtime. Depois, o operador trocou para outro cabo USB-C → Lightning na porta frontal: o console permaneceu e SSH/HTTP continuaram acessíveis após configurar novamente apenas o alias USB no Mac. Isso demonstra continuidade da sessão, não carga sustentada da bateria (#2).
+
+### Execução completa e retirada do contador
+
+Na tentativa seguinte, ainda nesta data, o wrapper completou uma única execução desde iOS/recuperação até o Linux, com saída 0, SSH autenticado, HTTP 200 e `simpledrmdrmfb` em blank 0. O uptime inicial foi 123,09 s. O usuário relatou conseguir fazer a sequência manualmente e pediu a retirada do contador e das páginas de apoio.
+
+O protótipo `dfu_visual.py` foi então removido. `dfu_boot.py` acompanha a enumeração DFU e o processo pelo terminal, sem navegador, contador ou servidor HTTP de apoio. O wrapper conserva a espera por PongoOS e a interrupção antes do envio em caso de falha. Uma pasta privada `runtime/dfu-active` impede dois monitores simultâneos deste checkout; é removida ao encerrar normalmente. Se restar após interrupção abrupta, confirmar que não há execução ativa antes de remover esse diretório.
+
+Os 15 testes locais passaram, incluindo retomada apenas após DFU simulado e encerramento do processo filho. **O substituto sem contador ainda requer teste físico completo**; a execução completa acima utilizou a versão anterior. A saída do monitor fica em log privado ignorado pelo Git.

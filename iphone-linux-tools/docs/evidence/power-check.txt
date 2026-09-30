@@ -82,3 +82,15 @@ N71/6s DeviceTree include chain inspected; Antigua PMIC at I2C 0x74 describes
 RTC and NVMEM, no battery/charger node found in consulted chain.
 Hoolock docs hw/SMC.md applies to T8015; cannot assume same interface on A9.
 These bounded observations do not establish physical charging behavior.
+
+Second supervised procedure, confirmed USB-A -> Lightning at rear Mac port:
+Operator: iOS on, cold/lukewarm.
+Baseline 2026-09-30 12:00:14 UTC: capacity 94%, charging/external_connected true.
+Single wrapper invocation completed with exit 0, integrated Linux 7.0.12,
+strict SSH, HTTP 200, framebuffer blank 0/simpledrmdrmfb.
+Reboot 2026-09-30 12:14:18 UTC: uptime 734.12 s; private snapshot completed.
+iOS 2026-09-30 12:15:42 UTC: capacity 100%, charging/external_connected true.
+Favorable short-interval charge-level result, not isolated current measurement.
+Reboot-related gauge variation and 100% ceiling prevent sustained-charge claim.
+Guide subsequently removed at operator request; replacement monitor has no
+browser/HTTP listener and passed simulated checks. New physical gate pending.

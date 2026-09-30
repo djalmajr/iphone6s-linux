@@ -43,7 +43,7 @@ Private snapshots on the Mac now cover `/srv/data` and work files in `/root`. Re
 - `palera1n-macos-arm64`: official v2.4 binary; SHA-256 `950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9` matched the official GitHub release digest. CleanMyMac classified it as jailbreak riskware. It was run from this directory only.
 - `Pongo.bin`, `pongoterm`, `m1n1.bin`, `vmlinuz-apple-16k`, `s8000-n71.dtb`, and `iphone6s-initramfs.gz` are staged for an experimental RAM boot.
 - `m1n1-linux-iphone6s.bin` is the combined boot payload (SHA-256 `7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520`). It **booted successfully on 2026-09-29**.
-- `dfu_visual.py` is a local countdown prototype. It was stopped after the failed attempt.
+- The local DFU countdown prototype was removed at the operator's request on 2026-09-30. `dfu_boot.py` monitors manual DFU without opening a browser or HTTP listener; its local simulated tests passed, but the replacement still needs a physical cold-boot test.
 - The isolated Multipass VM `iphone6s-build` was used to build arm64 components and is stopped. Existing VMs were not modified.
 
 ## Practical limits and next test

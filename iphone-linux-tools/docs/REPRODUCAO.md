@@ -154,8 +154,8 @@ O wrapper confere os hashes do palera1n e da imagem integrada, abre a contagem, 
 Fluxo manual original comprovado (para a integrada, substituir o nome do payload conforme seção 17):
 
 1. Cabo **USB-A → Lightning**, porta USB-A traseira do Mac. Recuperação mostra cabo/computador.
-2. `dfu_visual.py` usa `PALERA1N_BYPASS_PASSCODE_CHECK=1 palera1n-macos-arm64 -lp -k Pongo.bin`. No A9 deste teste, o bypass evita a verificação de passcode da ferramenta; não desbloqueia dados de usuário nem altera conta.
-3. Na página local `127.0.0.1:8765`, iniciar a contagem. Em VAI, segurar Power + Home por 4 segundos; soltar só Power e manter Home por 10 segundos. Tela preta é necessária, mas só a detecção USB comprova DFU (`05ac:1227`). Cabo na tela significa recuperação.
+2. `dfu_boot.py` usa `PALERA1N_BYPASS_PASSCODE_CHECK=1 palera1n-macos-arm64 -lp -k Pongo.bin`. No A9 deste teste, o bypass evita a verificação de passcode da ferramenta; não desbloqueia dados de usuário nem altera conta.
+3. Entrar em DFU manualmente pelos botões físicos. O monitor aguarda a enumeração USB e não abre página nem contador. Tela preta é necessária, mas só a detecção USB comprova DFU (`05ac:1227`). Cabo na tela significa recuperação. O guia visual histórico foi removido em 2026-09-30 a pedido do operador; o monitor substituto passou em testes locais simulados e ainda precisa de novo teste físico completo.
 4. Confirmar log de sucesso e `PongoOS USB Device`. O guia pode ser interrompido depois disso.
 5. Enviar o payload:
 

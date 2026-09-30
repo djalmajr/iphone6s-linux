@@ -7,7 +7,7 @@ O aparelho é um iPhone 6s `iPhone8,1` com A9 Samsung S8000. O toque falha mesmo
 ## Arquivos
 
 - `STATUS.md`: fatos do aparelho, hashes e resultado de cada tentativa.
-- `dfu_visual.py`: guia visual já preparado para entrar em DFU.
+- `dfu_boot.py`: monitor USB para DFU manual, sem página ou contador. O protótipo visual foi removido a pedido do operador.
 - `Pongo.bin`, `pongoterm`, `m1n1-linux-iphone6s.bin`: cadeia de boot Hoolock já preparada.
 
 ## Detalhes

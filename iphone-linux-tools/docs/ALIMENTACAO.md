@@ -37,7 +37,11 @@ Após a troca, SSH autenticado e HTTP continuaram respondendo, e o operador conf
 
 A queda de seis pontos confirma consumo no procedimento total, mas não identifica em qual etapa ocorreu nem comprova falta de carregamento no Linux com USB-C. A manutenção da carga durante o Linux continua sem validação. Não encerrar #2 nem iniciar uso prolongado sem supervisão por esse piloto. Para isolar melhor o intervalo, é necessário novo baseline imediatamente antes de um boot com duração registrada e repetir a comparação com o mesmo cabo durante a fase Linux; telemetria de carga específica A9 ou medição física complementar ainda seria preferível.
 
-Em outra consulta, ainda no iOS, a carga informou **90%**, mantendo as duas flags de alimentação/carga verdadeiras. A montagem física nessa segunda leitura precisa ser confirmada pelo operador, pois a troca para USB-A havia sido solicitada e ainda não confirmada. Não atribuir essa queda ao cabo USB-C ou ao Linux. O serviço de diagnóstico detalhado informou bloqueio por senha; a consulta básica de nível funcionou. O próximo boot foi adiado para esclarecer alimentação/bateria no próprio iOS.
+Em outra consulta, ainda no iOS, a carga informou **90%**, mantendo as duas flags de alimentação/carga verdadeiras. A montagem física naquele instante não foi confirmada, pois a troca para USB-A havia sido solicitada e ainda não confirmada. Não atribuir essa queda ao cabo USB-C ou ao Linux. O serviço de diagnóstico detalhado informou bloqueio por senha; a consulta básica de nível funcionou.
+
+O operador confirmou depois USB-A traseiro, iOS ligado e aparelho frio/morno. Às 12:00:14 UTC, essa montagem informou **94%**, com carga/alimentação externas ativas. O wrapper anterior à remoção do guia completou um novo boot em uma única execução (saída 0, SSH e HTTP 200). Às 12:14:18 UTC foi solicitado reboot, com uptime 734,12 s e snapshot privado salvo. Às 12:15:42 UTC o iOS informou **100%**, ainda com as duas flags verdadeiras.
+
+O segundo procedimento teve montagem USB-A definida e resultado favorável de nível de carga, mas inclui preparação, boot e retorno ao iOS; não mede corrente líquida exclusivamente durante Linux. A oscilação da leitura entre reinicializações e o teto de 100% também limitam a conclusão. É evidência de um intervalo curto, não aprovação de operação contínua nem encerramento de #2.
 
 ## Inspeção do suporte A9
 
