@@ -13,6 +13,7 @@ import subprocess
 import tarfile
 import tempfile
 import uuid
+import restore_journal
 
 ROOT = Path(__file__).resolve().parents[2]
 STORE = ROOT / 'backups'
@@ -178,18 +179,40 @@ def target_checks(members):
 
 def restore(snapshot_id):
     archive, members = load_snapshot(snapshot_id)
+    restore_journal.records(STORE)
     checks = target_checks(members)
     remote('/bin/bash -se', input=checks.encode())
     before = backup('pre-restore')
+    source = archive.parent.name
+    record = restore_journal.prepare(STORE, source, before)
+    print('Snapshot para recuperação:', before, flush=True)
+    print(restore_journal.recovery_command(before), flush=True)
     temporary = '/run/iphone-restore-' + uuid.uuid4().hex + '.tar.gz'
     quoted = shlex.quote(temporary)
     try:
         with archive.open('rb') as file:
             remote(f'umask 077; set -C; cat > {quoted}', stdin=file)
         script = checks + f'echo "{digest(archive)}  {temporary}" | sha256sum -c -\ntar -xzf {quoted} -C /\n'
+        restore_journal.transition(STORE, record, 'applying')
         remote('/bin/bash -se', input=script.encode())
+    except BaseException:
+        try:
+            restore_journal.transition(STORE, record, 'recovery-needed')
+        except OSError as error:
+            print('Falha ao atualizar journal:', error, flush=True)
+        print('Restauração incompleta. Para recuperar arquivos anteriores:', flush=True)
+        print(restore_journal.recovery_command(before), flush=True)
+        raise
     finally:
-        remote(f'rm -f {quoted}')
+        try:
+            remote(f'rm -f {quoted}')
+        except (OSError, subprocess.SubprocessError) as error:
+            print('Aviso: limpeza do arquivo temporário falhou:', error, flush=True)
+    try:
+        restore_journal.transition(STORE, record, 'succeeded')
+        restore_journal.recovered(STORE, source)
+    except (OSError, ValueError) as error:
+        raise ValueError('Arquivos aplicados, mas atualização do journal falhou: ' + str(error)) from error
     print('Restauração concluída. Snapshot anterior:', before)
 
 
@@ -209,6 +232,7 @@ def main():
         for directory in snapshots():
             manifest = json.loads((directory / 'manifest.json').read_text())
             print(directory.name, manifest['kind'], manifest['entries'], 'entradas')
+        restore_journal.show_pending(STORE)
 
 
 if __name__ == '__main__':
