@@ -103,7 +103,7 @@ serve() {
         return
     fi
     local encoded
-    encoded=$(base64 -i "$ROOT/server/status" | fold -w 76)
+    encoded=$(base64 -i "$ROOT/phone/http/status" | fold -w 76)
     {
         printf 'mkdir -p /srv/iphone/cgi-bin\n'
         printf "base64 -d > /srv/iphone/cgi-bin/status <<'IPHONE_FILE'\n%s\nIPHONE_FILE\n" "$encoded"
