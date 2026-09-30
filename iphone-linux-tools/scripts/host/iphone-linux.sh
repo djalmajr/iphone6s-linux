@@ -48,6 +48,8 @@ remote() {
 
 install_terminal() {
     connect
+    mkdir -p "$ROOT/logs"
+    chmod 700 "$ROOT/logs"
     local digest transfer_pid
     digest=$(python3 - "$ROOT/runtime" <<'PY'
 import hashlib,pathlib,sys
@@ -62,7 +64,7 @@ PY
         printf 'A porta USB 8766 já está em uso; encerre o servidor de transferência anterior.\n' >&2
         return 1
     fi
-    python3 -m http.server 8766 --bind "$HOST_IP" --directory "$ROOT/runtime" > "$ROOT/runtime/transfer.log" 2>&1 &
+    python3 -m http.server 8766 --bind "$HOST_IP" --directory "$ROOT/runtime" > "$ROOT/logs/transfer.log" 2>&1 &
     transfer_pid=$!
     sleep 1
     local result=0
@@ -72,10 +74,10 @@ PY
         printf 'echo "%s  /tmp/iphone6s-runtime.tar.gz" | sha256sum -c -\n' "$digest"
         printf 'tar -xzf /tmp/iphone6s-runtime.tar.gz -C /\nrm /tmp/iphone6s-runtime.tar.gz\n'
         printf '/usr/local/sbin/start-terminal\n'
-    } | remote > "$ROOT/runtime/install-last.log" 2>&1 || result=$?
+    } | remote > "$ROOT/logs/install-last.log" 2>&1 || result=$?
     kill -TERM "$transfer_pid" 2>/dev/null || true
     wait "$transfer_pid" 2>/dev/null || true
-    if [ "$result" -ne 0 ]; then cat "$ROOT/runtime/install-last.log"; return "$result"; fi
+    if [ "$result" -ne 0 ]; then cat "$ROOT/logs/install-last.log"; return "$result"; fi
     if ! ssh_ready; then printf 'SSH não confirmado; o terminal de recuperação foi mantido.\n' >&2; return 1; fi
     ssh "${SSH_ARGS[@]}" "root@$PHONE_IP" 'for pid in $(pidof telnetd); do kill "$pid"; done'
     printf 'Bash, SSH por chave e Herdr disponíveis. Terminal de teste sem senha encerrado.\n'
@@ -103,6 +105,8 @@ serve() {
         return
     fi
     local encoded
+    mkdir -p "$ROOT/logs"
+    chmod 700 "$ROOT/logs"
     encoded=$(base64 -i "$ROOT/phone/http/status" | fold -w 76)
     {
         printf 'mkdir -p /srv/iphone/cgi-bin\n'
@@ -112,7 +116,7 @@ serve() {
         # Expand these expressions on the phone, not on the Mac.
         # shellcheck disable=SC2016
         printf 'if [ ! -f /run/iphone-http.pid ] || ! kill -0 "$(cat /run/iphone-http.pid)" 2>/dev/null; then httpd -f -p 172.16.42.1:8080 -h /srv/iphone </dev/null >/run/iphone-http.log 2>&1 & echo $! > /run/iphone-http.pid; fi\n'
-    } | remote > "$ROOT/server-last.log"
+    } | remote > "$ROOT/logs/server-last.log"
     curl --fail --silent --show-error --max-time 10 "http://$PHONE_IP:8080/cgi-bin/status" > /dev/null
     printf '\nPainel: http://%s:8080/cgi-bin/status\n' "$PHONE_IP"
 }
@@ -133,12 +137,14 @@ cleanup_guide() {
 wait_for_pongo() {
     trap cleanup_guide EXIT INT TERM
     mkdir -p "$ROOT/runtime"
+    mkdir -p "$ROOT/logs"
+    chmod 700 "$ROOT/logs"
     if ! mkdir "$ROOT/runtime/dfu-active"; then
         printf 'Existe um monitor DFU ativo ou interrompido; confira runtime/dfu-active antes de repetir.\n' >&2
         return 1
     fi
     GUIDE_STATE_DIR="$ROOT/runtime/dfu-active"
-    python3 "$ROOT/scripts/boot/dfu_boot.py" "$GUIDE_STATE_DIR/state.json" > "$ROOT/dfu-last.log" 2>&1 &
+    python3 "$ROOT/scripts/boot/dfu_boot.py" "$GUIDE_STATE_DIR/state.json" > "$ROOT/logs/dfu-last.log" 2>&1 &
     GUIDE_PID=$!
     printf 'Use USB-A → Lightning e entre em DFU manualmente quando aparecer cabo/computador.\n'
     printf 'Aguardando detecção USB; nenhuma página ou contagem será aberta.\n'
@@ -179,10 +185,10 @@ PY
 boot() {
     local image="${1:-server}" payload digest
     if [ "$image" = probe ]; then
-        payload="$ROOT/m1n1-linux-iphone6s.bin"
+        payload="$ROOT/artifacts/m1n1-linux-iphone6s.bin"
         digest=7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520
     else
-        payload="$ROOT/m1n1-linux-iphone6s-console-server.bin"
+        payload="$ROOT/artifacts/m1n1-linux-iphone6s-console-server.bin"
         digest=c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a
     fi
     if ioreg -p IOUSB -w0 | grep -q 'iPhone 6s Linux probe'; then
@@ -196,7 +202,7 @@ boot() {
         serve
         return
     fi
-    python3 - "$ROOT/palera1n-macos-arm64" "$payload" "$digest" <<'PY'
+    python3 - "$ROOT/bin/palera1n-macos-arm64" "$payload" "$digest" <<'PY'
 import hashlib
 import pathlib
 import sys
@@ -211,7 +217,7 @@ PY
     else
         printf 'PongoOS já detectado; continuando o boot sem repetir DFU.\n'
     fi
-    printf '/send %s\nbootm\n' "$payload" | "$ROOT/pongoterm" &
+    printf '/send %s\nbootm\n' "$payload" | "$ROOT/bin/pongoterm" &
     local transfer_pid=$!
     local ready=0
     for ((i=0; i<120; i++)); do

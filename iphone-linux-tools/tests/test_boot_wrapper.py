@@ -19,7 +19,8 @@ class BootFailureTests(unittest.TestCase):
             boot.mkdir(parents=True)
             for name in ("dfu_boot.py", "dfu_state.py"):
                 shutil.copyfile(ROOT / "scripts/boot" / name, boot / name)
-            binary = work / "palera1n-macos-arm64"
+            binary = work / "bin/palera1n-macos-arm64"
+            binary.parent.mkdir()
             binary.write_text('''#!/usr/bin/env python3
 import os,pathlib,sys,time
 pathlib.Path("child.pid").write_text(str(os.getpid()))
@@ -31,7 +32,7 @@ while True: time.sleep(1)
 ''')
             binary.chmod(0o700)
             binaries = work / "bin"
-            binaries.mkdir()
+            binaries.mkdir(exist_ok=True)
             usb = binaries / "ioreg"
             usb.write_text('#!/bin/sh\nif [ -f usb-dfu ]; then echo "Apple DFU Device"; fi\n')
             usb.chmod(0o700)
@@ -72,7 +73,7 @@ while True: time.sleep(1)
             self.assertFalse(state.with_suffix(".tmp").exists())
 
     def test_exploit_failure_stops_before_transfer_and_cleans_monitor(self):
-        artifacts = ("palera1n-macos-arm64", "m1n1-linux-iphone6s-console-server.bin")
+        artifacts = ("bin/palera1n-macos-arm64", "artifacts/m1n1-linux-iphone6s-console-server.bin")
         if not all((ROOT / name).is_file() for name in artifacts):
             self.skipTest("Private boot artifacts required for wrapper integration test")
         with tempfile.TemporaryDirectory() as folder:
@@ -82,14 +83,15 @@ while True: time.sleep(1)
             script.parent.mkdir(parents=True)
             script.write_text(source)
             for name in artifacts:
+                (work / name).parent.mkdir(parents=True, exist_ok=True)
                 (work / name).symlink_to(ROOT / name)
             binaries = work / "bin"
-            binaries.mkdir()
+            binaries.mkdir(exist_ok=True)
             for name in ("ioreg", "open"):
                 command = binaries / name
                 command.write_text("#!/bin/sh\nexit 0\n")
                 command.chmod(0o700)
-            transfer = work / "pongoterm"
+            transfer = work / "bin/pongoterm"
             transfer.write_text("#!/bin/sh\ntouch payload-sent\n")
             transfer.chmod(0o700)
             guide = work / "scripts/boot/dfu_boot.py"

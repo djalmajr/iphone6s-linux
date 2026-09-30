@@ -10,11 +10,12 @@ parser.add_argument('initramfs', type=Path)
 parser.add_argument('output', type=Path)
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[2]
+artifacts = root / 'artifacts'
 blob = b''.join([
-    (root / 'm1n1.bin').read_bytes(),
+    (artifacts / 'm1n1.bin').read_bytes(),
     b'chosen.bootargs=rdinit=/init console=ttySAC0,115200 loglevel=7\n',
-    (root / 's8000-n71.dtb').read_bytes(),
-    (root / 'vmlinuz-apple-16k').read_bytes(),
+    (artifacts / 's8000-n71.dtb').read_bytes(),
+    (artifacts / 'vmlinuz-apple-16k').read_bytes(),
     args.initramfs.read_bytes(),
 ])
 if args.output.exists() and args.output.read_bytes() != blob:

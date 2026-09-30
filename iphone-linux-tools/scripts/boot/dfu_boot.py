@@ -15,7 +15,7 @@ from pathlib import Path
 from dfu_state import finish_output, process_output
 
 ROOT = Path(__file__).resolve().parents[2]
-STATE_FILE = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "dfu-last-state.json"
+STATE_FILE = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "logs/dfu-last-state.json"
 
 
 def main():
@@ -33,6 +33,7 @@ def main():
         raise KeyboardInterrupt
 
     signal.signal(signal.SIGTERM, stop)
+    STATE_FILE.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     publish()
     master, slave = pty.openpty()
     environment = dict(os.environ, PALERA1N_BYPASS_PASSCODE_CHECK="1")
@@ -40,7 +41,7 @@ def main():
     reader = None
     try:
         process = subprocess.Popen(
-            [str(ROOT / "palera1n-macos-arm64"), "-lp", "-k", str(ROOT / "Pongo.bin")],
+            [str(ROOT / "bin/palera1n-macos-arm64"), "-lp", "-k", str(ROOT / "artifacts/Pongo.bin")],
             cwd=ROOT, env=environment, stdin=slave, stdout=slave, stderr=slave,
             start_new_session=True,
         )

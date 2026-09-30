@@ -14,12 +14,9 @@
 *.apk
 *.dtb
 *.zst
-/iphone-linux-tools/palera1n-macos-arm64
-/iphone-linux-tools/pongoterm
-/iphone-linux-tools/herdr-linux-aarch64
-/iphone-linux-tools/vmlinuz-apple-16k
-/iphone-linux-tools/modules.dep
-/iphone-linux-tools/build.postmarketos.org.rsa.pub
+/iphone-linux-tools/bin/
+/iphone-linux-tools/artifacts/
+/iphone-linux-tools/logs/
 # Guide state can contain runtime tokens and raw device logs.
 /iphone-linux-tools/dfu-last-state.json
 # Private snapshots and manifests may contain user data.
