@@ -14,9 +14,9 @@ Private snapshots on the Mac cover `/srv/data` and work files in `/root`. Restor
 
 ## Folder organization and power checks — 2026-09-30
 
-Scripts now live in `scripts/host`, `scripts/boot` and `scripts/build`; phone sources in `phone`; ignored binaries/images/logs in `bin`, `artifacts` and `logs`. Run `bash scripts/host/iphone-linux.sh ...` from the tools directory. Reorganization preserves all 18 artifact hashes; warm status/HTTP and snapshot creation passed using the new paths. It does not itself prove another cold boot with the relocated files.
+Scripts now live in `scripts/host`, `scripts/boot` and `scripts/build`; phone sources in `phone`; ignored binaries/images/logs in `bin`, `artifacts` and `logs`. Run `bash scripts/host/iphone-linux.sh ...` from the tools directory. Reorganization preserves all 18 artifact hashes; warm status/HTTP and snapshot creation passed using the new paths. A subsequent cold boot and restore using the relocated CLI also passed: wrapper exit 0, operator-confirmed console, strict SSH/HTTP and sentinel content/mode restored with SSH identities unchanged.
 
-Sustained charging remains open (#2). A roughly 12-minute USB-A interval returned iOS charge 100% from a 94% baseline; a later roughly 25-minute Linux interval returned 90% after an earlier 100% reading. Both include preparation/reboot and possible gauge variation. The operator reported cold/lukewarm and visible console. No Linux battery/temperature sensors were available. See `ALIMENTACAO.md`.
+Sustained charging remains open (#2). A roughly 12-minute USB-A interval returned iOS charge 100% from a 94% baseline; a later roughly 25-minute Linux interval returned 90% after an earlier 100% reading. Both include preparation/reboot and possible gauge variation. A later 17-minute interval with reduced/variable brightness returned iOS 100% from 98%, but raw current-capacity decreased (873 to 854) and raw maximum changed (884 to 877); units and semantics of those fields remain unvalidated. The percentage ceiling and conflicting gauge fields prevent a sustained-charge claim. Effective gadget MaxPower was 500 mA; no descriptor was changed. The operator reported cold/lukewarm and visible console. No Linux battery/temperature sensors were available. See `ALIMENTACAO.md`.
 
 ## Historical snapshot: first Linux and USB HTTP session — 2026-09-29
 

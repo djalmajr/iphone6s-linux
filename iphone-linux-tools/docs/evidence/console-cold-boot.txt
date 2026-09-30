@@ -27,3 +27,12 @@ server:
 update:
   restart_needed: no
   server_binary_stale: no
+
+2026-09-30: physical revalidation after folder reorganization.
+Single scripts/host/iphone-linux.sh boot invocation exited0.
+Manual DFU, PongoOS and intact23767809-byte integrated image upload completed.
+Strict SSH and HTTP200; operator confirmed console.
+Read-only power diagnostic measured configfs MaxPower500mA and bmAttributes0x80.
+Repeated connect within this boot reused en12 alias without administrator prompt.
+Operator preferred low backlight; temporary setting documented in ALIMENTACAO.md.
+No new image build, package installation or remote-account modification.
