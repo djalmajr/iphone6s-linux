@@ -10,7 +10,7 @@ chmod 700 keys runtime backups logs
 
 ## 1. Escopo e estado atual
 
-O usuário autorizou alterações locais e perda dos dados do iPhone; contas e serviços remotos ficam fora do escopo. Nenhum pacote foi instalado no macOS. Pacotes de construção foram instalados somente na VM isolada `iphone6s-build`.
+O usuário autorizou alterações locais e perda dos dados do iPhone; contas e serviços remotos ficam fora do escopo. Nenhum pacote de construção foi instalado no macOS. Dependências de construção foram instaladas nas VMs isoladas `iphone6s-build` e `iphone6s-repro-20260930`.
 
 Hardware: iPhone 6s, `iPhone8,1`, placa `N71AP`, A9 Samsung S8000, armazenamento nominal de 32 GB. Host: Mac Studio M2 Max, `Mac14,13`. Linux verificado: kernel postmarketOS 7.0.12, ARM64, páginas de 16 KB, dois processadores e 1.973 MiB de RAM.
 
@@ -74,12 +74,13 @@ Não estabelecido: armazenamento interno, Wi-Fi, leitura de bateria, temperatura
 | `artifacts/vmlinuz-apple-16k`, `artifacts/s8000-n71.dtb`, módulos `.ko.zst` | Extraídos do APK preservado; caminhos internos abaixo |
 | `artifacts/Pongo.bin`, `artifacts/m1n1.bin`, `bin/pongoterm` | Insumos preservados da primeira preparação, usados no boot confirmado. Clones locais: Hoolock `23ebe1fbc375599221553a7e1815e5de182a6b42`; PongoOS `4c9b7541629234147fcc778f0ce4162482aaccef`. Os comandos originais completos não foram recuperados |
 | m1n1 reconstruído de clone novo na VM existente | HEAD `d5a10ac52a6468484854419a6c5130f1d62073eb`, fetch com profundidade 1 e sem tags, build offline: saída idêntica ao `m1n1.bin` preservado. [Receita e limites](M1N1-BUILD.md), [inventário original/CI](evidence/m1n1-source-provenance.json), [prova do rebuild](evidence/m1n1-rebuild.json) |
+| Imagem completa em VM nova | Fontes fixadas, toolchain e cache novos, m1n1 idêntico, identidades SSH novas e candidata integrada construída. Bash/SSH/HTTP/Herdr e limites SSH passaram em namespace da VM; boot físico desta candidata pendente. [Procedimento](FRESH-BUILD.md), [registro](evidence/fresh-build-provenance.json) |
 | `artifacts/iphone6s-initramfs.gz` | Initramfs mínimo original, criado na VM com BusyBox estático e módulo NCM |
 | `artifacts/m1n1-linux-iphone6s.bin` | Payload original que deu boot; SHA-256 `7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520` |
 | `runtime/iphone6s-runtime.tar.gz` | Bash, Dropbear, bibliotecas e Herdr, mais chave privada **do servidor**; proteger este arquivo |
 | `artifacts/iphone6s-server-initramfs.gz` / `artifacts/m1n1-linux-iphone6s-server.bin` | Candidatos com o runtime incluído; construídos, ainda sem prova de boot no telefone |
 
-Lacunas importantes: o comando original de criação da VM não foi recuperado; o snapshot descreve seu estado real. O APK foi baixado novamente com HTTPS obrigatório e teve controle/dados autenticados pelo índice oficial assinado, mas a assinatura própria e o commit imutável do kernel permanecem pendentes. O endpoint original `master` tenta redirecionar para HTTP; usar a rota HTTPS equivalente registrada em [KERNEL-VERIFY.md](KERNEL-VERIFY.md), sem permitir downgrade. m1n1 foi reconstruído byte por byte em clone novo, na VM e cache existentes; falta a prova da imagem completa em VM nova. O binário do CI upstream tem diferenças dentro de `.rodata`, incluindo referências a outro compilador Rust; não foi selecionado nem carregado no telefone. O HEAD de PongoOS não prova sozinho a origem do binário Pongo usado. Preservar os artefatos e hashes permite repetir o boot já confirmado; não equivale a uma reconstrução integral a partir de commits imutáveis. Não preencher essas lacunas com versões atuais presumidas.
+Lacunas importantes: o comando original de criação da VM não foi recuperado; o snapshot descreve seu estado real. O APK foi baixado novamente com HTTPS obrigatório e teve controle/dados autenticados pelo índice oficial assinado, mas a assinatura própria e o commit imutável do kernel permanecem pendentes. O endpoint original `master` tenta redirecionar para HTTP; usar a rota HTTPS equivalente registrada em [KERNEL-VERIFY.md](KERNEL-VERIFY.md), sem permitir downgrade. Uma VM nova agora reproduziu m1n1 byte por byte e montou a imagem completa com identidades próprias; seus testes de userspace passaram, mas o boot físico dessa candidata não foi executado. O binário do CI upstream tem diferenças dentro de `.rodata`, incluindo referências a outro compilador Rust; não foi selecionado nem carregado no telefone. O HEAD de PongoOS não prova sozinho a origem do binário Pongo usado. Preservar os artefatos e hashes permite repetir o boot já confirmado; não equivale a uma reconstrução integral a partir de commits imutáveis. Não preencher essas lacunas com versões atuais presumidas.
 
 ## 4. Preparar um ambiente equivalente
 
