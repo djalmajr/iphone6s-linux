@@ -1,6 +1,8 @@
 """LAN validation and opt-in real OpenSSH/Dropbear forwarding proof."""
 import argparse
 import importlib.util
+import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -131,7 +133,30 @@ def namespace_case():
             public = subprocess.check_output(['dropbearkey', '-y', '-f', str(hostkey)], text=True)
             line = next(line for line in public.splitlines() if line.startswith('ssh-ed25519 '))
             known = keys / 'known_hosts'
-            known.write_text('172.16.42.1 ' + line + '\n')
+            alias = '172.16.42.1'
+            environment = dict(os.environ)
+            environment.pop('IPHONE_LINUX_PROFILE', None)
+            if os.environ.get('IPHONE_LAN_PROFILE_CASE') == '1':
+                alias = 'candidate-vm-test'
+                selected = keys / 'profile-client'
+                key.rename(selected)
+                key.with_suffix('.pub').rename(selected.with_suffix('.pub'))
+                key = selected
+                data = b'SYNTHETIC_TRANSPORT_ONLY_NOT_BOOTABLE'
+                for name in ('payload.bin', 'initramfs.gz'):
+                    path = keys / name
+                    path.write_bytes(data)
+                    path.chmod(0o600)
+                profile = keys / 'deployment.json'
+                profile.write_text(json.dumps({'format': 1, 'payload': 'payload.bin',
+                    'sha256': hashlib.sha256(data).hexdigest(), 'initramfs': 'initramfs.gz',
+                    'initramfs_sha256': hashlib.sha256(data).hexdigest(),
+                    'client_key': 'profile-client', 'known_hosts': 'known_hosts',
+                    'host_key_alias': alias}))
+                profile.chmod(0o600)
+                environment['IPHONE_LINUX_PROFILE'] = str(profile)
+            known.write_text(alias + ' ' + line + '\n')
+            known.chmod(0o600)
             (root / 'srv/iphone/proof').write_text('VM_FORWARD_HTTP_OK\n')
             server = subprocess.Popen(['chroot', str(root), '/usr/sbin/dropbear', '-F', '-E', '-s', '-p', '172.16.42.1:22', '-r', '/etc/dropbear/key'], stdout=output, stderr=output)
             processes.append(server)
@@ -140,13 +165,13 @@ def namespace_case():
             wait_socket(('172.16.42.1', 22), server)
             wait_socket(('172.16.42.1', 8080), http)
             command = [sys.executable, str(host / 'lan.py'), '--bind', '10.240.0.1']
-            forward = subprocess.Popen(command, stdout=output, stderr=output)
+            forward = subprocess.Popen(command, env=environment, stdout=output, stderr=output)
             processes.append(forward)
             wait_socket(('10.240.0.1', 8086), forward)
             opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
             with opener.open('http://10.240.0.1:8086/proof', timeout=5) as response:
                 assert response.read() == b'VM_FORWARD_HTTP_OK\n'
-            client = ['ssh', '-4', '-F', '/dev/null', '-i', str(key), '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes', '-o', 'UserKnownHostsFile=' + str(known), '-o', 'HostKeyAlias=172.16.42.1', '-p', '2222', 'root@10.240.0.1']
+            client = ['ssh', '-4', '-F', '/dev/null', '-i', str(key), '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes', '-o', 'UserKnownHostsFile=' + str(known), '-o', 'HostKeyAlias=' + alias, '-p', '2222', 'root@10.240.0.1']
             result = subprocess.run(client + ['printf VM_FORWARD_SSH_OK'], capture_output=True, text=True, timeout=5)
             assert result.returncode == 0 and result.stdout == 'VM_FORWARD_SSH_OK', result.stderr
             for address in ('127.0.0.1', '10.240.0.2'):
@@ -160,7 +185,7 @@ def namespace_case():
                 occupied.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 occupied.bind(('10.240.0.1', 8086))
                 occupied.listen()
-                conflict = subprocess.Popen(command, stdout=output, stderr=output)
+                conflict = subprocess.Popen(command, env=environment, stdout=output, stderr=output)
                 processes.append(conflict)
                 assert conflict.wait(timeout=5) != 0
                 assert_closed(('10.240.0.1', 2222))
@@ -168,8 +193,8 @@ def namespace_case():
             # Wrong host key must be refused by the production preflight, not silently replaced.
             events = root / 'var/run/ssh-command-events'
             before = events.read_bytes()
-            known.write_text('172.16.42.1 ' + key.with_suffix('.pub').read_text())
-            refused = subprocess.Popen(command, stdout=output, stderr=output)
+            known.write_text(alias + ' ' + key.with_suffix('.pub').read_text())
+            refused = subprocess.Popen(command, env=environment, stdout=output, stderr=output)
             processes.append(refused)
             try:
                 code = refused.wait(timeout=5)
@@ -203,6 +228,14 @@ def namespace_case():
 class LanVmTests(unittest.TestCase):
     def test_real_forwarding_security_and_cleanup_in_owned_namespace(self):
         result = subprocess.run(['unshare', '--net', sys.executable, str(Path(__file__).resolve()), '--namespace-case'], capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('VM_FORWARD_HTTP_OK VM_FORWARD_SSH_OK', result.stdout)
+
+    def test_real_profile_forwarding_uses_selected_alias_and_client(self):
+        # Mutation killed in the VM: replacing the selected alias prevents authenticated forwarding.
+        environment = dict(os.environ, IPHONE_LAN_PROFILE_CASE='1')
+        result = subprocess.run(['unshare', '--net', sys.executable, str(Path(__file__).resolve()), '--namespace-case'],
+                                env=environment, capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('VM_FORWARD_HTTP_OK VM_FORWARD_SSH_OK', result.stdout)
 

@@ -6,10 +6,33 @@ PHONE_IP=172.16.42.1
 HOST_IP=172.16.42.2
 GUIDE_PID=
 GUIDE_STATE_DIR=
+CLIENT_KEY="$ROOT/keys/iphone_ed25519"
+PROFILE_EXPLICIT=0
 SSH_ARGS=(-F /dev/null -i "$ROOT/keys/iphone_ed25519" -o "UserKnownHostsFile=$ROOT/keys/known_hosts" -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 -o ServerAliveInterval=5 -o ServerAliveCountMax=3)
 
+if [ "${IPHONE_LINUX_PROFILE+x}" = x ]; then
+    PROFILE_EXPLICIT=1
+    fields=$(python3 "$ROOT/scripts/host/device_profile.py" fields)
+    PROFILE_FIELDS=()
+    while IFS= read -r field; do PROFILE_FIELDS+=("$field"); done <<< "$fields"
+    if [ "${#PROFILE_FIELDS[@]}" -ne 5 ]; then
+        printf 'Campos de perfil incompletos; nenhuma ação iniciada.\n' >&2
+        exit 1
+    fi
+    CLIENT_KEY="${PROFILE_FIELDS[0]}"
+    PROFILE_PAYLOAD="${PROFILE_FIELDS[3]}"
+    PROFILE_DIGEST="${PROFILE_FIELDS[4]}"
+    SSH_ARGS=(-4 -F /dev/null -a -i "$CLIENT_KEY" -o "UserKnownHostsFile=${PROFILE_FIELDS[1]}" -o "HostKeyAlias=${PROFILE_FIELDS[2]}" -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 -o ForwardAgent=no -o ForwardX11=no -o ControlMaster=no -o ControlPath=none)
+    case "${1:-status}" in
+        boot-probe|install-terminal)
+            printf 'Perfil explícito exige imagem integrada; comando incompatível recusado.\n' >&2
+            exit 1
+            ;;
+    esac
+fi
+
 ssh_ready() {
-    [ -f "$ROOT/keys/iphone_ed25519" ] && ssh -n "${SSH_ARGS[@]}" "root@$PHONE_IP" true 2>/dev/null
+    [ -f "$CLIENT_KEY" ] && ssh -n "${SSH_ARGS[@]}" "root@$PHONE_IP" true 2>/dev/null
 }
 
 usb_interface() {
@@ -42,6 +65,10 @@ remote() {
     if ssh_ready; then
         ssh "${SSH_ARGS[@]}" "root@$PHONE_IP" '/bin/bash -se'
     else
+        if [ "$PROFILE_EXPLICIT" -eq 1 ]; then
+            printf 'SSH do perfil não confirmado; terminal de recuperação não será usado.\n' >&2
+            return 1
+        fi
         python3 "$ROOT/scripts/host/usb-shell.py" --script
     fi
 }
@@ -100,6 +127,10 @@ status() {
 
 serve() {
     connect
+    if [ "$PROFILE_EXPLICIT" -eq 1 ] && ! ssh_ready; then
+        printf 'SSH do perfil não confirmado; HTTP não comprova a identidade do servidor.\n' >&2
+        return 1
+    fi
     if curl --fail --silent --max-time 2 "http://$PHONE_IP:8080/cgi-bin/status" >/dev/null 2>&1; then
         printf 'Painel: http://%s:8080/cgi-bin/status\n' "$PHONE_IP"
         return
@@ -184,10 +215,16 @@ PY
 
 boot() {
     local image="${1:-server}" restore_id="${2:-}" payload digest
+    if [ "$PROFILE_EXPLICIT" -eq 1 ]; then
+        python3 "$ROOT/scripts/host/device_profile.py" check
+    fi
     if [ -n "$restore_id" ]; then
         python3 "$ROOT/scripts/host/persist.py" verify "$restore_id"
     fi
-    if [ "$image" = probe ]; then
+    if [ "$PROFILE_EXPLICIT" -eq 1 ]; then
+        payload="$PROFILE_PAYLOAD"
+        digest="$PROFILE_DIGEST"
+    elif [ "$image" = probe ]; then
         payload="$ROOT/artifacts/m1n1-linux-iphone6s.bin"
         digest=7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520
     else
