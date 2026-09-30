@@ -279,5 +279,5 @@ case "${1:-status}" in
         iface=$(usb_interface)
         /usr/bin/osascript -e "do shell script \"/sbin/ifconfig $iface inet $HOST_IP -alias\" with administrator privileges"
         ;;
-    *) printf 'Uso: %s {boot [--restore ID]|boot-probe|autosnap {once|watch|status}|lan --bind IP [--ssh-port PORT] [--http-port PORT]|dns {install|start|stop|status|record NAME IP}|backup|restore [ID]|backups|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
+    *) printf 'Uso: %s {boot [--restore ID]|boot-probe|autosnap {once|watch|status}|lan --bind IP [--ssh-port PORT] [--http-port PORT]|dns {install|start|stop|status|record NAME IP|lan --bind IP --allow IP [--port PORT] [--tunnel-port PORT]}|backup|restore [ID]|backups|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
 esac

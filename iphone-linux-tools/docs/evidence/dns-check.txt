@@ -1,6 +1,6 @@
 Date: 2026-09-30
-Scope: issue #7 first phase, authenticated DNS bundle and isolated server proof.
-Status: VM server and SSH installation/restore gates passed; physical proof pending.
+Scope: issue #7 authenticated bundle, server, installer and LAN proxy isolated proof.
+Status: all isolated DNS phases passed; physical phone/Windows/new boot proof pending.
 
 Ubuntu noble-security signed release date Wed, 30 Sep 2026 16:40:42 UTC.
 Signer F6ECB3762474EDA9D21B7022871920D1991BC93C, existing Ubuntu archive keyring.
@@ -62,3 +62,27 @@ Python fatal lint, Bash syntax/ShellCheck and diff passed. No typechecker config
 No new server tests rerun: server source/runtime unchanged and prior proof valid.
 Still pending: actual phone install/DNS, LAN proxy allowlist/cleanup, Windows DNS,
 snapshot restoration in a new physical boot, continuous charging/stability.
+
+LAN proxy phase:
+Final VM baseline 3 tests passed with real dnsmasq/Dropbear/OpenSSH, synthetic keys,
+isolated network/mount namespace and chroot. Allowed client UDP/TCP A answers;
+external name NXDOMAIN; denied client UDP/TCP no answer. Kernel bind explicit IPv4.
+Eight incomplete TCP clients occupy slots; extra UDP query discarded, not queued.
+Owned SSH child loss closes public TCP and loopback tunnel listeners with failure.
+Occupied public/tunnel TCP port: startup fails, existing listener preserved,
+no serving public proxy or owned tunnel left. Empty trust file/wrong host key refused.
+Wire real sockets: mismatched ID, query instead of reply, oversized complete reply
+and incomplete frame refused; valid framed reply preserved.
+Baseline -> eight source mutations rejected: udp-allowlist, tcp-allowlist,
+proxy-bind, capacity, forward-failure, host-trust, response-identity, response-size.
+Mac final 3 tests: 2 passed, 1 explicit dedicated VM/root skip.
+Pyflakes/Flake8 fatal and diff passed. No typechecker configured.
+Zero dnsmasq processes after gates. One old timeout fixture found, synthetic
+identity/no mount verified, exact owned directory removed; final count rechecked.
+Windows preflight only: native nslookup available and one LAN IPv4; no DNS queried.
+Public PowerShell client parser accepted; public target refused before tool/query;
+native System32 nslookup Authenticode signature Valid and Microsoft signer verified.
+Helper checks A answers after Name/Nome section, not server address; actual query
+flow still pending. Wrapper final Bash syntax/ShellCheck and diff passed.
+No real SSH keys in fixtures; no DNS/network config changed on Mac/Windows/router.
+Physical phone install, UDP/TCP USB/LAN/Windows and a new boot restore still pending.

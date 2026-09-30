@@ -28,7 +28,7 @@
 - **Por quê:** atende clientes DNS reais sem regras PF/NAT ou daemon instalado no Mac. Allowlist também vale no protocolo TCP; o servidor de destino não fará recursão externa.
 - **Alternativas:** roteamento/Internet Sharing (mudança global); proxy UDP sem allowlist (exposição ampla); só `ssh -L` (não entrega UDP).
 - **Reverter:** baixo, Ctrl+C remove somente listeners/processo filhos deste proxy.
-- **Status:** na fila, depois da validação USB/VM do servidor.
+- **Status:** implementação e provas isoladas concluídas; falta validação no aparelho/Windows.
 
 ## Arquivos e fases
 
@@ -44,7 +44,7 @@ Cada fase terá no máximo cinco arquivos e será verificada antes da seguinte.
 - [x] Conferir repositórios/keyrings, versão e hash do pacote oficial e dependências; preparar bundle isolado.
 - [x] Validar configuração/local-only e consultas positivas/negativas UDP/TCP com dnsmasq real na VM isolada.
 - [x] Implementar transferência/launcher e recuperação de configuração pelo snapshot existente; prova isolada na VM, ainda sem novo boot físico.
-- [ ] Implementar proxy LAN com allowlist e gates/mutações.
+- [x] Implementar proxy LAN com allowlist e gates/mutações; prova isolada com servidor e SSH reais.
 - [ ] Validar consultas físicas USB/LAN e recuperação em novo boot.
 - [ ] Limpar fixtures, salvar evidência sanitizada, atualizar issues e versionar sem dados pessoais.
 
@@ -110,7 +110,7 @@ dig +tcp @172.16.42.1 -p 5353 iphone-usb.home.arpa
 scripts/host/iphone-linux.sh backup
 ```
 
-Antes de encerrar o boot, salvar snapshot e executar `dns stop`. Em outro boot com `boot --restore ID`, executar `dns start` e repetir a consulta. Não usar `install` sobre arquivos restaurados. Nenhum desses passos foi ainda aprovado no telefone real; o proxy LAN ainda está em implementação.
+Antes de encerrar o boot, salvar snapshot e executar `dns stop`. Em outro boot com `boot --restore ID`, executar `dns start` e repetir a consulta. Não usar `install` sobre arquivos restaurados. Nenhum desses passos foi ainda aprovado no telefone real; o proxy LAN passou somente nos gates isolados.
 
 Reproduzir o gate copiando `scripts/host/*.py`, `phone/dns/manage-dns.sh`, `docs/evidence/dns-provenance.json`, `tests/test_lan.py`, `tests/test_dns_install.py` e `tests/run_dns_install_mutations.py`, conservando a árvore relativa:
 
@@ -119,3 +119,66 @@ sudo env IPHONE_DNS_VM_TESTS=1 IPHONE_DNS_BUNDLE=/CAMINHO/iphone6s-dns-runtime.t
 ```
 
 O fixture usa também Dropbear, ssh-keygen, OpenSSH e Bash existentes na VM. No Mac: teste de argumentos passou e o gate VM é skip explícito. Pyflakes/Flake8 fatal, sintaxe Bash/ShellCheck e diff passaram; nenhum typechecker configurado. O pacote continua sem ser enviado ao telefone. #7 permanece aberta.
+
+## Proxy LAN: implementação e gate isolado concluídos
+
+```mermaid
+flowchart LR
+    C["Cliente IPv4 permitido<br>DNS UDP ou TCP"] -->|"LAN:1053"| P["Proxy foreground no Mac"]
+    P -->|"DNS TCP com framing<br>127.0.0.1:1054"| S["Forward SSH autenticado"]
+    S -->|"USB:5353"| D["dnsmasq no iPhone<br>registros locais, sem upstream"]
+```
+
+`dns lan` exige `--bind IPv4_DO_MAC` e uma ou mais opções `--allow IPv4_DO_CLIENTE`. Não aceita wildcard/público/interface USB; `127.0.0.1` é permitido para testes locais. `--port` padrão 1053 e `--tunnel-port` padrão 1054 precisam ser distintas e não privilegiadas. O túnel usa a chave/pin SSH existentes, sem agent forwarding, ControlMaster ou configuração SSH global. O comando remoto confirma prontidão somente após a criação do forward; isso evita tratar um listener alheio na porta do túnel como prova de sucesso. A conexão remota termina com EOF/encerramento do filho SSH próprio.
+
+O proxy limita mensagens a 4096 bytes, aplica deadlines absolutos de três segundos à leitura de frames e às consultas ao upstream, usa oito workers/slots compartilhados entre UDP e TCP e recusa pedidos excedentes. TCP tem até 16 pedidos por conexão e timeout de leitura/envio; não é um resolvedor recursivo nem um proxy arbitrário. Replies exigem framing completo, mesmo ID e flag de resposta. Clientes fora da allowlist têm UDP descartado/TCP fechado. Logs temporários não contêm chaves e são removidos ao sair. Ctrl+C/SIGTERM encerra o processo próprio; falha de startup/túnel não deixa listeners servindo.
+
+Na VM, baseline final de três testes passou com dnsmasq/Dropbear/OpenSSH reais: respostas UDP/TCP de cliente permitido; NXDOMAIN externo; nenhum resultado para cliente negado em ambos os protocolos; bind do kernel somente no endereço escolhido; oito conexões incompletas saturam capacidade e a consulta excedente é descartada, não enfileirada; queda do filho SSH fecha portas; porta LAN/túnel ocupada preserva listener alheio e recusa startup; arquivo de confiança vazio/chave errada recusa startup. Teste de wire com sockets reais recusa ID errado, pedido no lugar de reply, reply grande e frame incompleto, aceitando uma resposta válida.
+
+O runner aprovou baseline e rejeitou oito mutações: allowlist UDP, allowlist TCP, bind wildcard, capacidade bloqueante, falha de forward ignorada, confiança SSH desativada, ID ignorado e tamanho de reply ignorado. No Mac os dois testes de argumentos/wire passaram; VM é skip explícito. Pyflakes/Flake8 fatal e diff passaram; nenhum typechecker configurado. O fixture remanescente do timeout anterior foi identificado por identidade sintética e ausência de montagem, então removido. Zero dnsmasq e zero fixtures transitórios próprios ao final; a árvore de fontes/bundle da VM fica preservada para reprodução até terminar a etapa.
+
+### Operação e cliente Windows
+
+Deixar este comando foreground aberto no Mac, após `dns start` no telefone:
+
+```sh
+scripts/host/iphone-linux.sh dns lan --bind IPv4_DO_MAC --allow IPv4_DO_WINDOWS
+```
+
+Para consultar também pelo próprio Mac, incluir `--allow IPv4_DO_MAC` e direcionar `dig` a esse IPv4/porta 1053. Cada allowlist é de IP individual; não permite sub-redes inteiras. Por enquanto a lista dura somente neste comando, não modifica firewall ou roteador.
+
+No Windows, usar nslookup nativo em modo interativo:
+
+```text
+nslookup
+set port=1053
+set timeout=2
+set retry=1
+server IPv4_DO_MAC
+set novc
+iphone-usb.home.arpa
+iphone-lan.home.arpa
+set vc
+iphone-usb.home.arpa
+iphone-lan.home.arpa
+exit
+```
+
+O helper público `scripts/host/dns-check-windows.ps1` executa as duas consultas A, UDP e TCP, com timeout e captura separada de stdout/stderr. Antes de usar o executável fixo em System32, exige assinatura Microsoft válida; valida alvo/endereço esperado RFC1918 e nome `home.arpa`. Confere o endereço na seção de resposta `Name`/`Nome`, sem confundir o IP do servidor com uma resposta positiva. Seu preflight no Windows aprovou parser PowerShell, recusa de alvo público e assinatura nativa; consultas reais ainda pendentes:
+
+```powershell
+.\dns-check-windows.ps1 -ServerAddress IPv4_DO_MAC
+.\dns-check-windows.ps1 -ServerAddress IPv4_DO_MAC -Name iphone-lan.home.arpa -ExpectedAddress IPv4_DO_MAC
+```
+
+`set vc` seleciona TCP; `set novc` volta ao modo normal UDP. [Documentação Microsoft](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/nslookup-set-vc). O valor do registro USB não cria uma rota no Windows; `iphone-lan.home.arpa` deve apontar para o IP do Mac e os serviços ainda precisam do forward SSH/HTTP e de suas portas explícitas. Não mudar DNS global do cliente para este serviço em 1053: clientes comuns usam porta 53 e esta fase não oferece recursão pública. O uso como DNS padrão requer outra etapa documentada, sem risco de interromper a resolução atual.
+
+### Reprodução do gate de proxy
+
+Copiar `scripts/host/*.py`, `phone/dns/manage-dns.sh`, `tests/test_lan.py`, `tests/test_dns_lan.py` e `tests/run_dns_lan_mutations.py`, mantendo caminhos relativos; usar o bundle privado autenticado já produzido:
+
+```sh
+sudo env IPHONE_DNS_VM_TESTS=1 IPHONE_DNS_BUNDLE=/CAMINHO/iphone6s-dns-runtime.tar.gz python3 /CAMINHO/ARVORE/tests/run_dns_lan_mutations.py
+```
+
+Não requer instalação de ferramentas novas. Provas físicas USB/LAN/Windows e restauração em novo boot continuam pendentes. O preflight Windows encontrou nslookup nativo assinado e um IPv4 LAN único; nenhuma consulta física ainda foi feita. O wrapper passou sintaxe Bash/ShellCheck e diff após incluir o uso do proxy no help.
