@@ -12,6 +12,7 @@ import subprocess
 import threading
 import time
 from pathlib import Path
+from dfu_state import finish_output, process_output
 
 ROOT = Path(__file__).resolve().parent
 
@@ -49,26 +50,9 @@ def read_output():
             break
         clean = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", chunk.decode(errors="replace"))
         with LOCK:
-            previous = STATE["log"][-100:]
-            combined = previous + clean
-
-            def appeared(message):
-                pos = combined.rfind(message)
-                return pos >= 0 and pos + len(message) > len(previous)
-
-            STATE["log"] = (STATE["log"] + clean)[-12000:]
-            if appeared("Press Enter when ready for DFU mode"):
-                STATE["ready"] = True
-                STATE["phase"] = "ready"
-            if appeared("device did not enter DFU mode"):
-                STATE["phase"] = "retry"
-            if appeared("DFU mode successfully") or appeared("Device entered DFU"):
-                STATE["phase"] = "dfu"
-            if appeared("Booting pongoOS"):
-                STATE["phase"] = "pongo"
+            process_output(STATE, clean)
     with LOCK:
-        if STATE["phase"] not in ("dfu", "pongo"):
-            STATE["phase"] = "exited"
+        finish_output(STATE)
 
 
 threading.Thread(target=read_output, daemon=True).start()
@@ -110,7 +94,8 @@ async function poll(){
  try{const s=await (await fetch('/state')).json(); phase=s.phase;log.textContent=s.log.slice(-1000);
   if(cueAt===null){start.disabled=!s.ready;status.textContent=s.ready?'Pronto: desenho do cabo no iPhone? Clique em Iniciar.':
    s.phase==='pongo'?'PongoOS iniciado.':s.phase==='dfu'?'DFU detectado pelo Mac.':
-   s.phase==='exited'?'A ferramenta encerrou.':s.phase==='retry'?'DFU não detectado; aguarde reconexão.':'Aguardando recuperação…';}
+   s.phase==='failed'?'Falha no boot USB. Tentativa encerrada; não repita a contagem.':
+   s.phase==='exited'?'A ferramenta encerrou.':'Aguardando recuperação…';}
  }catch(e){status.textContent='Conexão local indisponível';start.disabled=true}
 }
 setInterval(poll,500);poll();

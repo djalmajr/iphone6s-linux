@@ -108,6 +108,8 @@ serve() {
         printf "base64 -d > /srv/iphone/cgi-bin/status <<'IPHONE_FILE'\n%s\nIPHONE_FILE\n" "$encoded"
         printf 'chmod 755 /srv/iphone/cgi-bin/status\n'
         printf "printf '%%s' '<!doctype html><meta http-equiv=\"refresh\" content=\"0;url=/cgi-bin/status\">' > /srv/iphone/index.html\n"
+        # Expand these expressions on the phone, not on the Mac.
+        # shellcheck disable=SC2016
         printf 'if [ ! -f /run/iphone-http.pid ] || ! kill -0 "$(cat /run/iphone-http.pid)" 2>/dev/null; then httpd -f -p 172.16.42.1:8080 -h /srv/iphone </dev/null >/run/iphone-http.log 2>&1 & echo $! > /run/iphone-http.pid; fi\n'
     } | remote > "$ROOT/server-last.log"
     curl --fail --silent --show-error --max-time 10 "http://$PHONE_IP:8080/cgi-bin/status" > /dev/null
@@ -120,6 +122,51 @@ cleanup_guide() {
         wait "$GUIDE_PID" 2>/dev/null || true
         GUIDE_PID=
     fi
+}
+
+wait_for_pongo() {
+    if curl --fail --silent --max-time 1 http://127.0.0.1:8765/state >/dev/null 2>&1; then
+        printf 'Já existe um guia na porta 8765. Encerre esse guia antes de iniciar outro.\n' >&2
+        return 1
+    fi
+    trap cleanup_guide EXIT INT TERM
+    python3 "$ROOT/dfu_visual.py" > "$ROOT/dfu-last.log" 2>&1 &
+    GUIDE_PID=$!
+    for ((i=0; i<20; i++)); do
+        if curl --fail --silent --max-time 1 http://127.0.0.1:8765/state >/dev/null 2>&1; then break; fi
+        if ! kill -0 "$GUIDE_PID" 2>/dev/null; then cat "$ROOT/dfu-last.log"; return 1; fi
+        sleep 1
+    done
+    open http://127.0.0.1:8765
+    printf 'Use o cabo USB-A → Lightning. Siga a contagem visual e mantenha o cabo conectado.\n'
+    local ready=0 phase
+    for ((i=0; i<240; i++)); do
+        if ioreg -p IOUSB -w0 | grep -q 'PongoOS USB Device'; then ready=1; break; fi
+        if ! phase=$(python3 - <<'PY'
+import json
+import urllib.request
+with urllib.request.urlopen('http://127.0.0.1:8765/state', timeout=3) as response:
+    print(json.load(response)['phase'])
+PY
+        ); then
+            printf 'O guia local deixou de responder. Nenhum payload Linux foi enviado.\n' >&2
+            return 1
+        fi
+        case "$phase" in
+            failed|retry|exited)
+                printf 'Falha na etapa DFU/exploração USB. Nenhum payload Linux foi enviado.\n' >&2
+                return 1
+                ;;
+        esac
+        sleep 1
+    done
+    if [ "$ready" -ne 1 ]; then
+        printf 'PongoOS não foi detectado. Nenhum payload Linux foi enviado.\n' >&2
+        return 1
+    fi
+    curl --fail --silent http://127.0.0.1:8765/state > "$ROOT/dfu-last-state.json"
+    cleanup_guide
+    trap - EXIT INT TERM
 }
 
 boot() {
@@ -152,35 +199,14 @@ for name, digest in zip(sys.argv[1:3], expected):
     if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
         raise SystemExit(f"Hash inesperado: {path.name}. Boot interrompido.")
 PY
-    if curl --fail --silent --max-time 1 http://127.0.0.1:8765/state >/dev/null 2>&1; then
-        printf 'Já existe um guia na porta 8765. Encerre esse guia antes de iniciar outro.\n' >&2
-        return 1
+    if ! ioreg -p IOUSB -w0 | grep -q 'PongoOS USB Device'; then
+        wait_for_pongo
+    else
+        printf 'PongoOS já detectado; continuando o boot sem repetir DFU.\n'
     fi
-    trap cleanup_guide EXIT INT TERM
-    python3 "$ROOT/dfu_visual.py" > "$ROOT/dfu-last.log" 2>&1 &
-    GUIDE_PID=$!
-    for ((i=0; i<20; i++)); do
-        if curl --fail --silent --max-time 1 http://127.0.0.1:8765/state >/dev/null 2>&1; then break; fi
-        if ! kill -0 "$GUIDE_PID" 2>/dev/null; then cat "$ROOT/dfu-last.log"; return 1; fi
-        sleep 1
-    done
-    open http://127.0.0.1:8765
-    printf 'Use o cabo USB-A → Lightning. Siga a contagem visual e mantenha o cabo conectado.\n'
-    local ready=0
-    for ((i=0; i<240; i++)); do
-        if ioreg -p IOUSB -w0 | grep -q 'PongoOS USB Device'; then ready=1; break; fi
-        sleep 1
-    done
-    if [ "$ready" -ne 1 ]; then
-        printf 'PongoOS não foi detectado. Nenhum payload Linux foi enviado.\n' >&2
-        return 1
-    fi
-    curl --fail --silent http://127.0.0.1:8765/state > "$ROOT/dfu-last-state.json"
-    cleanup_guide
-    trap - EXIT INT TERM
     printf '/send %s\nbootm\n' "$payload" | "$ROOT/pongoterm" &
     local transfer_pid=$!
-    ready=0
+    local ready=0
     for ((i=0; i<120; i++)); do
         if usb_interface >/dev/null 2>&1; then ready=1; break; fi
         sleep 1
