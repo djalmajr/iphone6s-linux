@@ -15,8 +15,10 @@ class BootFailureTests(unittest.TestCase):
     def test_monitor_resumes_only_after_usb_dfu_and_cleans_child(self):
         with tempfile.TemporaryDirectory() as folder:
             work = pathlib.Path(folder)
+            boot = work / "scripts/boot"
+            boot.mkdir(parents=True)
             for name in ("dfu_boot.py", "dfu_state.py"):
-                shutil.copyfile(ROOT / name, work / name)
+                shutil.copyfile(ROOT / "scripts/boot" / name, boot / name)
             binary = work / "palera1n-macos-arm64"
             binary.write_text('''#!/usr/bin/env python3
 import os,pathlib,sys,time
@@ -36,7 +38,7 @@ while True: time.sleep(1)
             state = work / "state.json"
             environment = dict(os.environ, PATH=str(binaries) + os.pathsep + os.environ["PATH"])
             process = subprocess.Popen(
-                ["python3", str(work / "dfu_boot.py"), str(state)], cwd=work,
+                ["python3", str(boot / "dfu_boot.py"), str(state)], cwd=work,
                 env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
             )
             def wait_for(phase):
@@ -89,9 +91,10 @@ while True: time.sleep(1)
             transfer = work / "pongoterm"
             transfer.write_text("#!/bin/sh\ntouch payload-sent\n")
             transfer.chmod(0o700)
-            guide = work / "dfu_boot.py"
+            guide = work / "scripts/boot/dfu_boot.py"
+            guide.parent.mkdir(parents=True)
             guide.write_text('''import json,os,pathlib,sys,time
-pathlib.Path(__file__).with_name("guide.pid").write_text(str(os.getpid()))
+pathlib.Path("guide.pid").write_text(str(os.getpid()))
 pathlib.Path(sys.argv[1]).write_text(json.dumps({"phase":"failed","ready":False}))
 while True: time.sleep(1)
 ''')

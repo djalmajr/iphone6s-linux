@@ -138,7 +138,7 @@ wait_for_pongo() {
         return 1
     fi
     GUIDE_STATE_DIR="$ROOT/runtime/dfu-active"
-    python3 "$ROOT/dfu_boot.py" "$GUIDE_STATE_DIR/state.json" > "$ROOT/dfu-last.log" 2>&1 &
+    python3 "$ROOT/scripts/boot/dfu_boot.py" "$GUIDE_STATE_DIR/state.json" > "$ROOT/dfu-last.log" 2>&1 &
     GUIDE_PID=$!
     printf 'Use USB-A → Lightning e entre em DFU manualmente quando aparecer cabo/computador.\n'
     printf 'Aguardando detecção USB; nenhuma página ou contagem será aberta.\n'

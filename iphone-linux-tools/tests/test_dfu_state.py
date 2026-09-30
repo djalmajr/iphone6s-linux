@@ -2,7 +2,7 @@ import pathlib
 import sys
 import unittest
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts/boot'))
 from dfu_state import finish_output, process_output
 
 
