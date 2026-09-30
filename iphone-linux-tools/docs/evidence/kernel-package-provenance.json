@@ -1,0 +1,25 @@
+{
+  "url": "https://mirror.postmarketos.org/postmarketos/master/postmarketos/aarch64/linux-postmarketos-apple-16k-7.0.12-r0.apk",
+  "retrieved_date": "2026-09-30",
+  "transport": "HTTPS with certificate verification and redirects",
+  "bytes": 16999527,
+  "sha256": "5cedfa79ad8bdaff8fa05327624071e7b17c24f24370b11ef3b58bde2c7220b2",
+  "new_download_matches_preserved": true,
+  "package_metadata": {
+    "pkgname": "linux-postmarketos-apple-16k",
+    "pkgver": "7.0.12-r0",
+    "builddate": "1781259136",
+    "arch": "aarch64",
+    "commit": "-dirty",
+    "datahash": "abb1e7950a2fe5f19f9db9f666a8bf5afc5919fc5ce2c47819cadc0a3f1e882f"
+  },
+  "signature_members": [
+    ".SIGN.RSA.pmos@local-6a2bdb7a.rsa.pub"
+  ],
+  "signature_verified": false,
+  "limits": [
+    "HTTPS download identity is not APK signature verification",
+    "package commit is -dirty, not an immutable source revision",
+    "no independent kernel compilation performed"
+  ]
+}

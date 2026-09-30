@@ -70,15 +70,16 @@ Não estabelecido: armazenamento interno, Wi-Fi, leitura de bateria, temperatura
 |---|---|
 | `bin/palera1n-macos-arm64` | Release oficial v2.4, `https://github.com/palera1n/palera1n/releases/download/v2.4/palera1n-macos-arm64`; SHA-256 `950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9` |
 | `artifacts/herdr-linux-aarch64` | Release oficial v0.9.1; SHA-256 `f4ccf4de745f2cb9a39a983e9ba3703dad50ec2a58dea83026ceab721bbd8d9e` |
-| `artifacts/linux-postmarketos-apple-16k-7.0.12-r0.apk` | Kernel ARM64 pré-compilado; não compilamos o kernel. `.PKGINFO` identifica versão, arquitetura, mantenedor e `commit = -dirty` |
+| `artifacts/linux-postmarketos-apple-16k-7.0.12-r0.apk` | Kernel ARM64 pré-compilado; não compilamos o kernel. Novo download HTTPS da URL original corresponde ao APK preservado; [registro](evidence/kernel-package-provenance.json). `.PKGINFO` identifica versão, arquitetura e `commit = -dirty`; assinatura ainda não verificada |
 | `artifacts/vmlinuz-apple-16k`, `artifacts/s8000-n71.dtb`, módulos `.ko.zst` | Extraídos do APK preservado; caminhos internos abaixo |
 | `artifacts/Pongo.bin`, `artifacts/m1n1.bin`, `bin/pongoterm` | Insumos preservados da primeira preparação, usados no boot confirmado. Clones locais: Hoolock `23ebe1fbc375599221553a7e1815e5de182a6b42`; PongoOS `4c9b7541629234147fcc778f0ce4162482aaccef`. Os comandos originais completos não foram recuperados |
+| Checkout original de m1n1 na VM | HEAD `d5a10ac52a6468484854419a6c5130f1d62073eb`, sem mudanças rastreadas; saída existente corresponde ao `m1n1.bin` preservado. Compiladores, submódulo e comparação com o CI upstream em [m1n1-source-provenance.json](evidence/m1n1-source-provenance.json) |
 | `artifacts/iphone6s-initramfs.gz` | Initramfs mínimo original, criado na VM com BusyBox estático e módulo NCM |
 | `artifacts/m1n1-linux-iphone6s.bin` | Payload original que deu boot; SHA-256 `7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520` |
 | `runtime/iphone6s-runtime.tar.gz` | Bash, Dropbear, bibliotecas e Herdr, mais chave privada **do servidor**; proteger este arquivo |
 | `artifacts/iphone6s-server-initramfs.gz` / `artifacts/m1n1-linux-iphone6s-server.bin` | Candidatos com o runtime incluído; construídos, ainda sem prova de boot no telefone |
 
-Lacunas importantes: o comando original de criação da VM não foi recuperado; o snapshot descreve seu estado real. A URL exata do primeiro download do APK e o commit de m1n1 não estão comprovados neste registro. Os HEADs dos clones foram recuperados, mas o HEAD de PongoOS não prova sozinho a origem do binário Pongo usado. A assinatura do APK não foi revalidada nesta rodada. Preservar os artefatos e hashes permite reproduzir o boot já confirmado; não equivale a uma reconstrução integral desses componentes a partir de commits imutáveis. Não preencher essas lacunas com versões atuais presumidas.
+Lacunas importantes: o comando original de criação da VM não foi recuperado; o snapshot descreve seu estado real. A URL original do APK foi recuperada e o novo download tem o mesmo tamanho e SHA-256; sua assinatura permanece sem verificação. O checkout original de m1n1 e sua saída foram encontrados na VM, mas não foi feita nova compilação a partir de um clone limpo. O binário do CI upstream tem diferenças dentro de `.rodata`, incluindo referências a outro compilador Rust; não foi selecionado nem carregado no telefone. O HEAD de PongoOS não prova sozinho a origem do binário Pongo usado. Preservar os artefatos e hashes permite repetir o boot já confirmado; não equivale a uma reconstrução integral a partir de commits imutáveis. Não preencher essas lacunas com versões atuais presumidas.
 
 ## 4. Preparar um ambiente equivalente
 
