@@ -12,3 +12,61 @@ Local tests: 9/9 passed (6 persistence, 3 power-check).
 Mutation checks: dropping unverified status and missing-sensor fallback both detected.
 Shell syntax: sh -n passed.
 No package installation, hardware-register writes or network changes.
+
+Follow-up: private snapshot completed, then requested reboot to iOS.
+Operator saw lock screen followed by low-battery symbol; USB device disappeared.
+No initial battery percentage was obtained; cause of insufficient charge unknown.
+Sustained-charge gate failed. Waiting for supervised wall charging and baseline.
+Repeated Linux boots and unattended tests deferred pending power diagnosis.
+ShellCheck: installed shellcheck passed for power-check.sh.
+
+2026-09-30 follow-up: different cable connected to front USB-C port.
+After unlock, iPhone detected on USB; battery query succeeded in iOS:
+BatteryCurrentCapacity=100
+BatteryIsCharging=true
+ExternalConnected=true
+Data connectivity and iOS-reported external power established for this cable.
+Earlier absence of USB detection does not establish a cable defect.
+Battery recovered; sustained charging under Linux remains unverified.
+No reboot/DFU in this check. Goal remains paused.
+
+2026-09-30 iOS diagnostics before supervised boot:
+CycleCount=1462
+DesignCapacity=1690
+NominalChargeCapacity=1146
+Nominal/design ratio=67.8% (estimate, not Settings health percentage)
+AppleRawMaxCapacity=830
+BatteryData.MaxCapacity=820
+BatteryHealthMetric=725 (interpretation not verified)
+Normalized capacity fields=100 (not a health percentage)
+
+New USB-C front-port boot attempt:
+DFU and Checkmate confirmed; download-mode reconnect timed out.
+PongoOS absent; no Linux payload sent. Attempt terminated.
+CleanMyMac classified temporary checkra1n file as Jailbreak/riskware.
+Official v2.4 API digest matches executed palera1n SHA-256.
+Official source confirms extraction to checkra1n.XXXXXX and cleanup.
+Temporary file not present after cleanup; independent hash unavailable.
+No protection disabled or Mac exclusion created.
+
+Goal subsequently resumed. USB-A boot reached PongoOS; corrected wrapper resumed
+from active PongoOS and started integrated image, with strict SSH and HTTP verified.
+This two-stage execution does not satisfy the full cold-wrapper gate (#3).
+Local regression: 14/14 tests passed, including wrapper failure cleanup/no transfer.
+Bash syntax, ShellCheck and git diff --check passed.
+
+Supervised pilot using new USB-C -> Lightning, front Mac port:
+Start: 2026-09-30 11:40:13 UTC, Linux uptime 523.35 s.
+Reboot requested: 2026-09-30 11:50:32 UTC, Linux uptime 1147.24 s.
+Periodic SSH/HTTP checks: successful; HTTP 200 throughout sampled interval.
+Operator at end: cold/lukewarm, console visible.
+Linux power_supply and thermal_zone remain unavailable.
+Private snapshot completed before reboot; archives and keys excluded from Git.
+Initial iOS charge: 100% at 11:07:57 UTC, before DFU/PongoOS attempts and
+roughly eight minutes of Linux using USB-A. Comparison cannot isolate USB-C.
+Post-test iOS reading at 2026-09-30 11:51:15 UTC:
+BatteryCurrentCapacity=94
+BatteryIsCharging=true
+ExternalConnected=true
+Six-point drop spans all attempts and Linux intervals, not only USB-C pilot.
+Sustained charging under Linux remains unverified; #2 stays open.

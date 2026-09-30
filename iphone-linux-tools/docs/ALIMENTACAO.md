@@ -6,7 +6,36 @@ Etapa [#2](https://github.com/djalmajr/iphone6s-linux/issues/2), iniciada em 202
 
 Linux 7.0.12 responde por SSH, com mais de uma hora de uptime. `/sys/class/power_supply` está vazio e não há zonas térmicas utilizáveis. `/proc/config.gz` não está disponível. O barramento I2C expõe `0-0074`; o log mostra PMIC/RTC, mas isso não estabelece suporte de carregamento. O PMU `apple_twister_pmu` citado no log é de contadores de desempenho, não leitura de bateria.
 
-Não foram escritos registradores, ativados drivers experimentais, desconectado o cabo ou instalado pacote nesta investigação. Não assumir compatibilidade com implementações de carga A10 de outro fork.
+Na checagem inicial não foram escritos registradores, ativados drivers experimentais ou instalado pacote. Não assumir compatibilidade com implementações de carga A10 de outro fork.
+
+O operador confirmou aparelho frio e fisicamente intacto. Após snapshot privado e reinício solicitado para medição em iOS, apareceu a tela de desbloqueio; depois o aparelho saiu do USB. Ao pressionar somente Power, o operador viu novamente a tela de desbloqueio e logo o símbolo de bateria descarregada. Isso comprova carga insuficiente naquele momento, sem estabelecer a causa: não há medição inicial nem leitura de corrente durante o Linux. Cabo/porta, controle de carga no Linux e bateria continuam hipóteses distintas.
+
+O teste inicial de carga sustentada **não passou**. Em 2026-09-30, com outro cabo na USB-C frontal e após desbloqueio, o iPhone voltou ao USB: `BatteryCurrentCapacity=100`, `BatteryIsCharging=true`, `ExternalConnected=true`. O cabo atual suporta dados e alimentação informada pelo iOS. O operador autorizou retomar com teste Linux curto e supervisionado; a comparação posterior de carga continua pendente. O snapshot com sentinela para #4 foi salvo antes do reboot; nenhum backup foi publicado.
+
+## Diagnóstico de desgaste em iOS
+
+Leitura real em 2026-09-30, por `idevicediagnostics diagnostics GasGauge` e `ioregentry AppleARMPMUCharger`, selecionando somente campos de bateria:
+
+| Campo | Valor reportado |
+|---|---:|
+| CycleCount | 1462 |
+| DesignCapacity | 1690 |
+| NominalChargeCapacity | 1146 |
+| AppleRawMaxCapacity | 830 |
+| BatteryData.MaxCapacity | 820 |
+| BatteryHealthMetric | 725 |
+
+A relação nominal/projeto é `1146 / 1690 ≈ 67,8%`: estimativa nominal de capacidade restante, **não percentual oficial da tela Saúde da Bateria**. Os outros campos divergem e não têm aqui um contrato de interpretação validado; não combinar suas unidades/semânticas nem apresentar um percentual exato de saúde. `GasGauge.FullChargeCapacity=100`, `IORegistry.MaxCapacity=100` e carga atual 100% também apareceram: não representam bateria nova ou saúde de 100%.
+
+Contagem elevada e capacidade nominal reduzida sugerem desgaste importante. A Apple informa o projeto de retenção de 80% após 500 ciclos em condições ideais para essa geração; isso não estabelece a saúde exata deste exemplar. Avaliação/substituição da bateria continua uma alternativa para uso contínuo. A inspeção visual anterior não detectou anormalidade física, mas não mede capacidade.
+
+## Piloto com outro cabo — 2026-09-30
+
+A leitura inicial de 100% ocorreu às 11:07:57 UTC. Houve depois tentativas DFU/PongoOS e cerca de oito minutos de Linux via USB-A, antes da troca para o novo USB-C frontal. O piloto neste último cabo foi iniciado às 11:40:13 UTC, sem carga artificial de CPU. Portanto, a diferença entre as leituras iOS abrange também essas etapas anteriores: não isola o consumo nem o carregamento dos dez minutos no USB-C.
+
+Após a troca, SSH autenticado e HTTP continuaram respondendo, e o operador confirmou novamente aparelho frio/morno e console visível. A checagem Linux continuou sem sensores de bateria e temperatura. O reboot foi solicitado às 11:50:32 UTC (uptime 1147,24 s). Às 11:51:15 UTC, o iOS informou **94%**, `BatteryIsCharging=true` e `ExternalConnected=true`.
+
+A queda de seis pontos confirma consumo no procedimento total, mas não identifica em qual etapa ocorreu nem comprova falta de carregamento no Linux com USB-C. A manutenção da carga durante o Linux continua sem validação. Não encerrar #2 nem iniciar uso prolongado sem supervisão por esse piloto. Para isolar melhor o intervalo, é necessário novo baseline imediatamente antes de um boot com duração registrada e repetir a comparação com o mesmo cabo durante a fase Linux; telemetria de carga específica A9 ou medição física complementar ainda seria preferível.
 
 ## Checagem reproduzível
 
@@ -30,9 +59,10 @@ O script só lê sysfs; não instala nada no telefone. `unavailable` significa q
 4. Com o operador presente e snapshots salvos, registrar nível da bateria em iOS antes de um boot Linux e depois de intervalo supervisionado equivalente. Se não for possível ler o nível com confiança, usar diagnóstico físico qualificado. Uma queda apesar de USB alimentado é falha do requisito de carga sustentada; nível estável no limite de 100% é evidência inconclusiva de corrente líquida.
 5. Confirmar repetibilidade e definir limites de uso. Um medidor USB pode demonstrar entrada de energia, mas isoladamente não comprova saúde da bateria, controle térmico ou carga líquida.
 
-Pendente: observação física atual, comparação de carga e decisão de manutenção/substituição se necessária. Não encerrar #2 por uptime, por ausência de sintomas relatados ou por uma leitura pontual. O teste prolongado #8 depende deste gate.
+Pendente: comparação antes/depois de Linux e decisão de manutenção/substituição se necessária. A recuperação da carga em iOS e a observação física inicial foram obtidas, mas não encerram #2. Não concluir por uptime, por ausência de sintomas relatados ou por uma leitura pontual. O teste prolongado #8 depende deste gate.
 
 ## Fontes
 
 - [Apple: temperaturas e proteções em iOS](https://support.apple.com/en-ca/118431). A descrição das proteções do iOS não comprova que existam no kernel Linux experimental.
+- [Apple: retenção de capacidade e ciclos](https://www.apple.com/br/batteries/service-and-recycling/).
 - [Kernel HoolockLinux](https://github.com/HoolockLinux/linux): qualquer port de driver deve ser validado especificamente para N71/A9.

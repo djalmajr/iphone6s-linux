@@ -61,3 +61,11 @@ Evidência: [console-cold-boot.txt](evidence/console-cold-boot.txt). O tar priva
 `bash iphone-linux.sh boot` agora seleciona a imagem integrada verificada. `boot-probe` seleciona a imagem original e restaura seu runtime pelo Mac. O wrapper completo ainda não foi executado de ponta a ponta desde um reboot; nesta rodada o boot foi conduzido manualmente com os mesmos componentes, e o comando `boot` foi verificado somente com a sessão já ativa.
 
 O `boot` não reinicia um Linux já rodando: verifica SSH/HTTP e mantém a sessão. Em caso de reinício, ainda são necessários Mac, cabo USB-A → Lightning e botões físicos para DFU. A imagem anterior permanece disponível.
+
+## Boot e troca de cabo — 2026-09-30
+
+A tentativa com USB-C frontal entrou em DFU, mas a exploração terminou com timeout de reconexão antes de PongoOS. O wrapper passou a reconhecer essa falha, encerrar o guia que iniciou e impedir o envio do payload. O teste de integração local confirmou esses três resultados com um guia simulado; depende dos artefatos privados para validar seus hashes e é omitido quando eles não estão disponíveis.
+
+Com USB-A → Lightning na porta traseira, PongoOS apareceu. Uma corrida entre o fim do processo e a enumeração USB provocou uma interrupção incorreta do wrapper; o tratamento foi corrigido para aguardar a enumeração após DFU. Foi então executado `boot` novamente com PongoOS já ativo: a imagem integrada iniciou, SSH autenticado e HTTP responderam, e o operador confirmou o console.
+
+Essa execução ocorreu em duas etapas e **não comprova ainda o wrapper completo em um único boot frio** (#3). Não houve reinstalação do runtime. Depois, o operador trocou para outro cabo USB-C → Lightning na porta frontal: o console permaneceu e SSH/HTTP continuaram acessíveis após configurar novamente apenas o alias USB no Mac. Isso demonstra continuidade da sessão, não carga sustentada da bateria (#2).

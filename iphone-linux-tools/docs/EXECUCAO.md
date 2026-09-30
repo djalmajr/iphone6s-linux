@@ -34,3 +34,7 @@ O Linux atual roda em RAM, com console, SSH, HTTP e Herdr. A sequência abaixo s
 - **Reverter:** baixo; a checagem apenas lê arquivos de sensores.
 - **Onde:** #2 e `docs/ALIMENTACAO.md`.
 - **Status:** em curso; validação física pendente.
+
+## Checkpoint — 2026-09-30
+
+Goal retomado. iOS informou 100% de carga antes das tentativas; diagnóstico nominal sugere desgaste importante, detalhado em `ALIMENTACAO.md`. O Linux iniciou novamente via USB-A, em duas etapas (aquisição de PongoOS e retomada do wrapper). A troca posterior para um novo cabo USB-C frontal manteve console, SSH e HTTP. O piloto supervisionado durou pouco mais de dez minutos sem carga artificial de CPU; após reboot, iOS informou 94% e carregamento ativo. A comparação inclui também as tentativas anteriores e o Linux via USB-A, portanto não isola o desempenho do cabo novo. As issues #2 e #3 permanecem abertas.
