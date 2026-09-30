@@ -1,4 +1,5 @@
 """Public input validation and opt-in real SSH install/snapshot recovery."""
+import json
 import os
 from pathlib import Path
 import shutil
@@ -39,6 +40,10 @@ def namespace_case():
         shutil.copy(ROOT / 'phone/dns/manage-dns.sh', project / 'phone/dns/manage-dns.sh')
         shutil.copy(ROOT / 'docs/evidence/dns-provenance.json', project / 'docs/evidence/dns-provenance.json')
         shutil.copy(os.environ['IPHONE_DNS_BUNDLE'], project / 'runtime/iphone6s-dns-runtime.tar.gz')
+        manifest = project / 'runtime/dns-provenance.json'
+        selected = base / 'selected-build.json'
+        shutil.copy(os.environ['IPHONE_DNS_MANIFEST'], manifest)
+        shutil.copy(manifest, selected)
         shutil.copy('/usr/bin/busybox', phone / 'bin/busybox')
         copy_binary('/usr/sbin/dropbear', phone)
         copy_binary('/bin/bash', phone)
@@ -89,6 +94,12 @@ def namespace_case():
 
         try:
             wait_socket(('172.16.42.1', 22), daemon)
+            manifest.unlink()
+            missing = command('dns.py', 'install')
+            if (missing.returncode == 0 or 'Manifesto DNS local ausente' not in missing.stderr
+                    or (phone / 'srv/data/dns').exists()):
+                raise AssertionError('Missing manifest accepted or historical fallback used')
+            shutil.copy(selected, manifest)
             bundle_path = project / 'runtime/iphone6s-dns-runtime.tar.gz'
             original_bundle = bundle_path.read_bytes()
             changed = bytearray(original_bundle)
@@ -116,7 +127,10 @@ def namespace_case():
                 raise AssertionError('Install followed symlink parent')
             (phone / 'srv/data').unlink()
             (phone / 'srv/data').mkdir()
-            require_ok(command('dns.py', 'install'))
+            wrong_report = json.loads(selected.read_text())
+            wrong_report['bundle_sha256'] = '0' * 64
+            manifest.write_text(json.dumps(wrong_report))
+            require_ok(command('dns.py', 'install', '--manifest', str(selected)))
             if list((phone / 'run').glob('iphone-dns-install*')):
                 raise AssertionError('Install lock/archive survived success')
             if list((phone / 'srv/data').glob('.iphone-dns-install-*')):
@@ -157,7 +171,7 @@ class DnsInstallVmTests(unittest.TestCase):
                          os.environ.get('IPHONE_DNS_VM_TESTS') == '1',
                          'requires explicit dedicated Linux VM/root opt-in')
     def test_real_ssh_install_preservation_and_snapshot_recovery(self):
-        # Mutations captured: ignoring existing files, parent symlinks or bundle identity.
+        # Mutations captured: ignoring data/symlink/hash guards or local manifest selection.
         result = subprocess.run(['unshare', '--net', '--mount', '--', sys.executable,
                                  str(Path(__file__).resolve()), '--namespace'],
                                 capture_output=True, text=True, timeout=55)

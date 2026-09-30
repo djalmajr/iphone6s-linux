@@ -41,8 +41,10 @@ def remote(command, payload=None):
                           input=payload, check=True, timeout=60)
 
 
-def verify_bundle():
-    report = json.loads((ROOT / 'docs/evidence/dns-provenance.json').read_text())
+def verify_bundle(manifest):
+    if not manifest.is_file():
+        raise ValueError('Manifesto DNS local ausente; copie o manifesto do build autenticado.')
+    report = json.loads(manifest.read_text())
     archive = ROOT / 'runtime/iphone6s-dns-runtime.tar.gz'
     data = archive.read_bytes()
     digest = hashlib.sha256(data).hexdigest()
@@ -59,8 +61,8 @@ def verify_bundle():
     return data, digest
 
 
-def install():
-    data, digest = verify_bundle()
+def install(manifest):
+    data, digest = verify_bundle(manifest)
     encoded = base64.b64encode((ROOT / 'phone/dns/manage-dns.sh').read_bytes()).decode()
     suffix = uuid.uuid4().hex
     command = f'''set -eu
@@ -116,7 +118,9 @@ echo 'Record saved; restart DNS to load it and save a snapshot.'
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='action', required=True)
-    for action in ('install', 'start', 'stop', 'status'):
+    installation = commands.add_parser('install')
+    installation.add_argument('--manifest', type=Path, default=ROOT / 'runtime/dns-provenance.json')
+    for action in ('start', 'stop', 'status'):
         commands.add_parser(action)
     configuration = commands.add_parser('record')
     configuration.add_argument('name', type=local_name)
@@ -128,7 +132,7 @@ def main():
     proxy.add_argument('--tunnel-port', type=lan.port, default=1054)
     options = parser.parse_args()
     if options.action == 'install':
-        install()
+        install(options.manifest)
     elif options.action == 'record':
         record(options)
     elif options.action == 'lan':

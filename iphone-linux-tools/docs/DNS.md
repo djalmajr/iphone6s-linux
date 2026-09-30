@@ -30,6 +30,15 @@
 - **Reverter:** baixo, Ctrl+C remove somente listeners/processo filhos deste proxy.
 - **Status:** implementação e provas isoladas concluídas; falta validação no aparelho/Windows.
 
+### D4. Manifesto privado do build selecionado
+
+- **Decisão:** o instalador lerá por padrão `runtime/dns-provenance.json`, gerado pela receita autenticada e copiado separadamente do bundle; `install --manifest CAMINHO` permitirá selecionar explicitamente outro manifesto local validado. A evidência pública continuará imutável e não será fallback automático. O instalador nunca derivará o hash esperado do manifesto interno do pacote recebido.
+- **Por quê:** tar/gzip de um novo build pode ter outro hash, mesmo usando inputs autenticados iguais. Prender o instalador ao hash histórico impede reprodução; confiar no próprio pacote apagaria a proteção de integridade.
+- **Alternativas:** trocar o JSON público a cada build (mistura histórico e seleção local); tornar o build idêntico byte a byte (não resolve diferenças de bibliotecas/atualizações); aceitar o manifesto interno (confiança circular).
+- **Reverter:** baixo; preservar bundle/manifesto anteriores e selecionar o par antigo explicitamente. Nenhuma alteração no telefone é necessária para esta correção.
+- **Onde:** `scripts/host/dns.py`, recipe em `scripts/build/build-dns-runtime.py`, testes de instalação/mutações e documentação.
+- **Status:** em curso na #12; reconstruir bundle com verificação Ubuntu real, provar seleção do novo par e recusa de manifesto ausente/hash divergente em fixture SSH antes de usar o aparelho.
+
 ## Arquivos e fases
 
 Cada fase terá no máximo cinco arquivos e será verificada antes da seguinte.

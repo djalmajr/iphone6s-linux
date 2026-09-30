@@ -31,6 +31,13 @@ done
     'address-scope': ([
         ('if not any(address in network for network in lan.PRIVATE):', 'if False:'),
     ], 'FAIL: test_record_rejects_names_and_addresses_before_ssh'),
+    'historical-fallback': ([
+        ("raise ValueError('Manifesto DNS local ausente; copie o manifesto do build autenticado.')",
+         "manifest = ROOT / 'docs/evidence/dns-provenance.json'"),
+    ], 'Missing manifest accepted or historical fallback used'),
+    'manifest-selection': ([
+        ('install(options.manifest)', "install(ROOT / 'runtime/dns-provenance.json')"),
+    ], 'Hash/tamanho do bundle DNS inesperado'),
 }
 
 

@@ -105,7 +105,9 @@ def build(options):
                     output.addfile(info, stream)
         target.chmod(0o600)
         report.update({'bundle_sha256': digest(target), 'bundle_bytes': target.stat().st_size})
-        (options.output / 'dns-provenance.json').write_text(json.dumps(report, indent=2) + '\n')
+        manifest = options.output / 'dns-provenance.json'
+        manifest.write_text(json.dumps(report, indent=2) + '\n')
+        manifest.chmod(0o600)
         print(json.dumps(report))
 
 
