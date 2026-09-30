@@ -4,11 +4,14 @@ Experimento de mini servidor Linux em um iPhone 6s com tela defeituosa, usando b
 
 **Verificado no aparelho:** a árvore reorganizada completou novo boot com console, Bash, SSH e HTTP integrados; Linux 7.0.12 ARM64, rede USB NCM e Herdr 0.9.1. A restauração após novo boot também foi revalidada pelo novo CLI. **Pendente:** confirmação de carga sustentada, boot autônomo, armazenamento interno, Wi-Fi e operação contínua.
 
+Snapshots automáticos optativos (`once`, `watch` e `status`), retenção protegida e `boot --restore ID` estão implementados; a validação final e as mutações críticas da issue #5 ainda estão pendentes.
+
 ## Documentação
 
 - [Procedimento completo e histórico](iphone-linux-tools/docs/REPRODUCAO.md): diagnóstico, DFU, Multipass, builds, chaves, operação, atualizações e limitações.
 - [Estado do Wi-Fi nativo](iphone-linux-tools/docs/WIFI.md).
 - [Backup e restauração no Mac](iphone-linux-tools/docs/PERSISTENCIA.md).
+- [Snapshots automáticos e retenção](iphone-linux-tools/docs/AUTOSNAPSHOTS.md).
 - [Console no display e Bash espelhado](iphone-linux-tools/docs/CONSOLE.md).
 - [Comandos de operação](iphone-linux-tools/README.md).
 - [Estado e evidências](iphone-linux-tools/docs/STATUS.md).

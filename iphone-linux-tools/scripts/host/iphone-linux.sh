@@ -183,7 +183,10 @@ PY
 }
 
 boot() {
-    local image="${1:-server}" payload digest
+    local image="${1:-server}" restore_id="${2:-}" payload digest
+    if [ -n "$restore_id" ]; then
+        python3 "$ROOT/scripts/host/persist.py" verify "$restore_id"
+    fi
     if [ "$image" = probe ]; then
         payload="$ROOT/artifacts/m1n1-linux-iphone6s.bin"
         digest=7d81106731fa74a924c615c1f7710653a42a154703b8f7a227e389556c51b520
@@ -192,6 +195,10 @@ boot() {
         digest=c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a
     fi
     if ioreg -p IOUSB -w0 | grep -q 'iPhone 6s Linux probe'; then
+        if [ -n "$restore_id" ]; then
+            printf 'Restauração automática exige um novo boot; Linux já está ativo.\n' >&2
+            return 1
+        fi
         connect
         if ! ssh_ready; then
             if [ "$image" = probe ]; then install_terminal; else
@@ -243,11 +250,19 @@ PY
             return 1
         fi
     fi
+    if [ -n "$restore_id" ]; then
+        python3 "$ROOT/scripts/host/persist.py" restore "$restore_id"
+    fi
     serve
 }
 
 case "${1:-status}" in
-    boot) boot ;;
+    boot)
+        if [ "$#" -eq 1 ]; then boot
+        elif [ "$#" -eq 3 ] && [ "$2" = --restore ]; then boot server "$3"
+        else printf 'Uso: %s boot [--restore ID]\n' "$0" >&2; exit 2; fi
+        ;;
+    autosnap) shift; exec python3 "$ROOT/scripts/host/autosnap.py" "$@" ;;
     boot-probe) boot probe ;;
     backup|restore) connect; exec python3 "$ROOT/scripts/host/persist.py" "$@" ;;
     backups) exec python3 "$ROOT/scripts/host/persist.py" "$@" ;;
@@ -262,5 +277,5 @@ case "${1:-status}" in
         iface=$(usb_interface)
         /usr/bin/osascript -e "do shell script \"/sbin/ifconfig $iface inet $HOST_IP -alias\" with administrator privileges"
         ;;
-    *) printf 'Uso: %s {boot|boot-probe|backup|restore [ID]|backups|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
+    *) printf 'Uso: %s {boot [--restore ID]|boot-probe|autosnap {once|watch|status}|backup|restore [ID]|backups|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
 esac

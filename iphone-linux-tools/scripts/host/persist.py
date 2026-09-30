@@ -14,6 +14,8 @@ import tarfile
 import tempfile
 import uuid
 import restore_journal
+import snapshot_lock
+import snapshot_retention
 
 ROOT = Path(__file__).resolve().parents[2]
 STORE = ROOT / 'backups'
@@ -81,7 +83,7 @@ def remote(command, **kwargs):
     return subprocess.run(SSH + [command], check=True, **kwargs)
 
 
-def backup(kind='manual'):
+def _backup_locked(kind='manual'):
     STORE.mkdir(mode=0o700, exist_ok=True)
     STORE.chmod(0o700)
     snapshot_id = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid.uuid4().hex[:8]
@@ -117,6 +119,7 @@ def backup(kind='manual'):
         members = validate_archive(archive_path)
         archive_path.chmod(0o600)
         manifest = {'format': 1, 'id': snapshot_id, 'kind': kind,
+                    'created_at': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='microseconds').replace('+00:00', 'Z'),
                     'sha256': digest(archive_path), 'entries': len(members),
                     'skipped_entries': skipped, 'scope': ['root', 'srv/data'],
                     'excluded': list(EXCLUDED)}
@@ -124,7 +127,25 @@ def backup(kind='manual'):
         manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
         manifest_path.chmod(0o600)
         work.rename(STORE / snapshot_id)
+    return snapshot_id
+
+
+def backup(kind='manual'):
+    with snapshot_lock.lock(STORE):
+        snapshot_id = _backup_locked(kind)
     print('Snapshot:', snapshot_id, flush=True)
+    return snapshot_id
+
+
+def automatic(keep):
+    if isinstance(keep, bool) or not isinstance(keep, int) or keep < 1:
+        raise ValueError('A retenção exige keep >= 1.')
+    with snapshot_lock.lock(STORE):
+        snapshot_id = _backup_locked('automatic')
+        removed = snapshot_retention.prune(STORE, {'keep': keep, 'latest': snapshot_id}, load_snapshot)
+    print('Snapshot:', snapshot_id, flush=True)
+    if removed:
+        print('Snapshots removidos:', ' '.join(removed), flush=True)
     return snapshot_id
 
 
@@ -177,12 +198,12 @@ def target_checks(members):
     return '\n'.join(checks) + '\n'
 
 
-def restore(snapshot_id):
+def _restore_locked(snapshot_id):
     archive, members = load_snapshot(snapshot_id)
     restore_journal.records(STORE)
     checks = target_checks(members)
     remote('/bin/bash -se', input=checks.encode())
-    before = backup('pre-restore')
+    before = _backup_locked('pre-restore')
     source = archive.parent.name
     record = restore_journal.prepare(STORE, source, before)
     print('Snapshot para recuperação:', before, flush=True)
@@ -216,23 +237,50 @@ def restore(snapshot_id):
     print('Restauração concluída. Snapshot anterior:', before)
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['backup', 'restore', 'backups'])
-    parser.add_argument('snapshot', nargs='?')
-    args = parser.parse_args()
-    os.umask(0o077)
-    if args.snapshot and args.command != 'restore':
-        parser.error('O identificador só é usado com restore.')
-    if args.command == 'backup':
-        backup()
-    elif args.command == 'restore':
-        restore(args.snapshot)
-    else:
+def restore(snapshot_id):
+    with snapshot_lock.lock(STORE):
+        return _restore_locked(snapshot_id)
+
+
+def verify(snapshot_id):
+    with snapshot_lock.lock(STORE):
+        _, members = load_snapshot(snapshot_id)
+    print(snapshot_id, len(members), 'entradas', flush=True)
+
+
+def show_backups():
+    with snapshot_lock.lock(STORE):
         for directory in snapshots():
             manifest = json.loads((directory / 'manifest.json').read_text())
             print(directory.name, manifest['kind'], manifest['entries'], 'entradas')
         restore_journal.show_pending(STORE)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('command', choices=['backup', 'automatic', 'restore', 'backups', 'verify'])
+    parser.add_argument('snapshot', nargs='?')
+    parser.add_argument('--keep', type=int)
+    args = parser.parse_args()
+    os.umask(0o077)
+    if args.command == 'automatic' and (args.snapshot or args.keep is None or args.keep < 1):
+        parser.error('automatic exige --keep N com N >= 1 e não aceita snapshot.')
+    if args.command == 'verify' and (not args.snapshot or args.keep is not None):
+        parser.error('verify exige um identificador e não aceita --keep.')
+    if args.command in ('backup', 'backups', 'restore') and args.keep is not None:
+        parser.error('--keep só é usado com automatic.')
+    if args.snapshot and args.command not in ('restore', 'verify'):
+        parser.error('O identificador só é usado com restore.')
+    if args.command == 'backup':
+        backup()
+    elif args.command == 'automatic':
+        automatic(args.keep)
+    elif args.command == 'restore':
+        restore(args.snapshot)
+    elif args.command == 'verify':
+        verify(args.snapshot)
+    else:
+        show_backups()
 
 
 if __name__ == '__main__':

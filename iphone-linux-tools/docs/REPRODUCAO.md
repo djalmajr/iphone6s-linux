@@ -247,6 +247,26 @@ O build combina o rootfs original com o runtime, `phone/init/init-server` e HTTP
 - Para remover somente o alias USB do Mac enquanto o telefone estiver conectado: `bash scripts/host/iphone-linux.sh disconnect`. Não altera a rota padrão de Ethernet/Wi-Fi.
 - Restaurar pelo Finder reinstala iOS e apaga dados locais; não é parte da atualização do Linux em RAM. O boot normal continua Apple/iOS.
 
+### Reboot controlado e retorno ao iOS
+
+Antes de reiniciar, salve o estado no Mac e abra um Bash remoto:
+
+```bash
+bash scripts/host/iphone-linux.sh backup
+bash scripts/host/iphone-linux.sh shell
+```
+
+Dentro do Bash remoto, execute:
+
+```bash
+sync
+reboot -f
+```
+
+Nesta imagem, um `reboot` comum retornou saída 0, mas o Linux continuou exposto no USB com o PID 1 (`init`). `reboot -f` foi necessário para concluir a transição; o retorno ao iOS foi confirmado pelo USB e por `ideviceinfo -k ProductVersion`. Não interprete a saída ou o encerramento da sessão SSH como prova de que o iOS voltou: o cliente pode aguardar a desconexão usando `ServerAliveInterval=5` e `ServerAliveCountMax=3`. Não é necessário ler ou digitar no display do telefone para essa confirmação.
+
+O telefone retornou ao iOS com 100%, `BatteryIsCharging=true` e `ExternalConnected=true` após aproximadamente 17 minutos, com uptime Linux anterior de 1019,88 s. Esses campos confirmam o estado observado naquele instante, mas não comprovam carga sustentada ou operação contínua de 24 horas.
+
 ## 12. Falhas e aprendizado reproduzível
 
 | Sintoma | Causa/ação comprovada |
@@ -270,7 +290,7 @@ O cliente OpenSSH atual imprime um aviso de ausência de troca pós-quântica co
 
 Evidências locais: `evidence/multipass-build.json`, `evidence/ubuntu-package-versions.txt`, `evidence/ssh-linux-status.txt`, `evidence/herdr-phone.txt`, `evidence/linux-boot-proof.txt`, `evidence/linux-http-proof.html`, `artifacts.json`. O log `../logs/install-last.log` permanece somente local. Alguns registros iniciais são históricos, anteriores ao SSH; os mais novos mostram o estado atualizado.
 
-Gates pendentes: confirmação física de carga sustentada; estabilidade prolongada; recuperação de uma restauração interrompida; acesso LAN/serviço DNS; e os demais itens do backlog. O boot frio pelo wrapper e a restauração após novo boot foram revalidados fisicamente nesta árvore, mas isso não prova que a alimentação mantenha carga positiva ou operação contínua. Não confundir o HTTP/Bash/Herdr já verificados com esses gates.
+Gates pendentes: confirmação física de carga sustentada; estabilidade prolongada; acesso LAN/serviço DNS; e os demais itens do backlog. O boot frio pelo wrapper, a restauração após novo boot e os snapshots automáticos foram revalidados fisicamente nesta árvore, mas isso não prova que a alimentação mantenha carga positiva ou operação contínua. Não confundir o HTTP/Bash/Herdr já verificados com esses gates.
 
 Fontes primárias: [Hoolock PongoOS](https://github.com/HoolockLinux/docs/blob/master/tutorials/SETUP_pongoOS.md), [Hoolock A9](https://github.com/HoolockLinux/docs/blob/master/features/A9.md), [armazenamento](https://github.com/HoolockLinux/docs/blob/master/tools/README.md), [palera1n](https://github.com/palera1n/palera1n), [Herdr](https://github.com/herdrdev/herdr), [processo de boot Apple](https://support.apple.com/en-ca/guide/security/secb3000f149/web).
 
@@ -304,9 +324,9 @@ Após autorização do usuário e confirmação de que estava pronto para os bot
 
 ## 18. Persistência de arquivos no Mac
 
-`scripts/host/iphone-linux.sh backup`, `backups` e `restore` guardam snapshots privados de `/srv/data` e arquivos de trabalho de `/root`. Identidade SSH e estado vivo de sessões Herdr são excluídos. A restauração verifica hash/escopo, salva a cópia anterior e recupera conteúdo/permissões sem remover arquivos extras. O ciclo real foi testado no telefone ativo sem reboot; 6 testes locais e testes de bloqueio de links/corrupção passaram. O procedimento completo e seus limites estão em [PERSISTENCIA.md](PERSISTENCIA.md).
+`scripts/host/iphone-linux.sh backup`, `backups`, `restore` e `autosnap` guardam snapshots privados de `/srv/data` e arquivos de trabalho de `/root`. Identidade SSH e estado vivo de sessões Herdr são excluídos. A restauração verifica hash/escopo, salva a cópia anterior e recupera conteúdo/permissões sem remover arquivos extras. A automação optativa, retenção e `boot --restore ID` foram validados em teste físico curto, local e VM. O procedimento completo e seus limites estão em [PERSISTENCIA.md](PERSISTENCIA.md), com evidência sanitizada em [autosnapshot-check.txt](evidence/autosnapshot-check.txt).
 
-Os backups ficam no Mac e não são publicados. Alterações após o último snapshot continuam vulneráveis à perda de energia. A recuperação após outro DFU foi revalidada fisicamente com o CLI da árvore reorganizada. Não há restauração automática no boot.
+Os backups ficam no Mac e não são publicados. Alterações após o último snapshot continuam vulneráveis à perda de energia. A recuperação após outro DFU foi revalidada fisicamente com o CLI da árvore reorganizada. Não há restauração implícita no boot; `boot --restore ID` é sempre uma opção explícita.
 
 ## 19. Investigação de Wi-Fi
 
