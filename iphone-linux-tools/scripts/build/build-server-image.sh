@@ -12,6 +12,8 @@ sudo mkdir -p "$server_root/srv/iphone/cgi-bin"
 sudo cp /home/ubuntu/iphone-status "$server_root/srv/iphone/cgi-bin/status"
 sudo chmod 755 "$server_root/srv/iphone/cgi-bin/status"
 sudo chown -R 0:0 "$server_root"
+# Keep the output owned by the VM user; sudo is only needed to read the rootfs.
+# shellcheck disable=SC2024
 sudo sh -c 'cd /home/ubuntu/iphone6s-server-rootfs && find . -print0 | cpio --null -o -H newc 2>/dev/null' > /home/ubuntu/iphone6s-server-initramfs.cpio
 gzip -n -9 -c /home/ubuntu/iphone6s-server-initramfs.cpio > /home/ubuntu/iphone6s-server-initramfs.gz
 chmod 600 /home/ubuntu/iphone6s-server-initramfs.gz

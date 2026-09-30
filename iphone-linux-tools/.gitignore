@@ -1,5 +1,9 @@
 keys/
 runtime/
+backups/
+bin/
+artifacts/
+logs/
 *-server-initramfs.gz
 *-server.bin
 __pycache__/
