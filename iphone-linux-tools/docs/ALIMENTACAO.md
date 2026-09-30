@@ -43,6 +43,14 @@ O operador confirmou depois USB-A traseiro, iOS ligado e aparelho frio/morno. À
 
 O segundo procedimento teve montagem USB-A definida e resultado favorável de nível de carga, mas inclui preparação, boot e retorno ao iOS; não mede corrente líquida exclusivamente durante Linux. A oscilação da leitura entre reinicializações e o teto de 100% também limitam a conclusão. É evidência de um intervalo curto, não aprovação de operação contínua nem encerramento de #2.
 
+## Terceiro intervalo supervisionado — USB-A
+
+O novo boot manual, sem página ou contador, iniciou Linux por volta de 12:23:23 UTC. O baseline anterior, às 12:15:42 UTC, era 100%. O operador confirmou console visível e aparelho frio/morno durante a sessão. Pelo novo caminho do CLI, `status` e HTTP passaram às 12:46:40 UTC; um snapshot privado foi salvo às 12:48:08 UTC.
+
+O reboot foi solicitado às **12:48:09 UTC**, com uptime **1485,28 s** (aproximadamente 24 minutos e 45 segundos). Às **12:50:22 UTC**, o iOS informou **90%**, `BatteryIsCharging=true` e `ExternalConnected=true`, no USB-A traseiro mantido durante este intervalo.
+
+A queda de dez pontos inclui o intervalo iOS/DFU anterior e a volta ao iOS, além de possível variação do medidor após reboot. Ela não isola a corrente durante Linux, mas contraria uma conclusão de carga sustentada baseada no segundo teste favorável. **#2 permanece aberta**; operação prolongada sem supervisão continua sem aprovação. Os arquivos foram preservados no Mac antes de retornar ao iOS.
+
 ## Inspeção do suporte A9
 
 Revisão pública consultada: `HoolockLinux/linux`, branch `hoolock`, commit `6831bc701a6ce059e71e5aaa9488c9195bea6927`. Foram lidos `s8000-n71.dts`, `s8000.dtsi`, `s800x-6s.dtsi`, `s800-0-3.dtsi`, `s800-0-3-common.dtsi` e `s800-0-3-pmgr.dtsi`. A descrição N71 compartilha um PMIC Antigua em I2C 0x74, com filhos RTC e NVMEM; nessa cadeia consultada não foi encontrada descrição de bateria/carregador. Isso é consistente com a ausência de sensores observada, mas não é auditoria de todo o kernel e não prova que o circuito físico tenha parado de carregar.
@@ -60,7 +68,7 @@ ssh -F /dev/null -i iphone-linux-tools/keys/iphone_ed25519 \
   -o UserKnownHostsFile=iphone-linux-tools/keys/known_hosts \
   -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes \
   -o BatchMode=yes -o ConnectTimeout=5 root@172.16.42.1 \
-  'sh -s' < iphone-linux-tools/power-check.sh
+  'sh -s' < iphone-linux-tools/phone/diagnostics/power-check.sh
 ```
 
 O script só lê sysfs; não instala nada no telefone. `unavailable` significa que não há leitura, nunca bateria vazia ou temperatura zero. Mesmo com sensor, `charging_validation=unverified` permanece: uma amostra isolada não valida o sistema de carga. Valores numéricos são os valores brutos do driver (tipicamente temperatura de zona em milésimos de °C; outros campos dependem da ABI/driver). Não tratar corrente USB externa como corrente líquida da bateria.
@@ -73,7 +81,7 @@ O script só lê sysfs; não instala nada no telefone. `unavailable` significa q
 4. Com o operador presente e snapshots salvos, registrar nível da bateria em iOS antes de um boot Linux e depois de intervalo supervisionado equivalente. Se não for possível ler o nível com confiança, usar diagnóstico físico qualificado. Uma queda apesar de USB alimentado é falha do requisito de carga sustentada; nível estável no limite de 100% é evidência inconclusiva de corrente líquida.
 5. Confirmar repetibilidade e definir limites de uso. Um medidor USB pode demonstrar entrada de energia, mas isoladamente não comprova saúde da bateria, controle térmico ou carga líquida.
 
-Pendente: comparação antes/depois de Linux e decisão de manutenção/substituição se necessária. A recuperação da carga em iOS e a observação física inicial foram obtidas, mas não encerram #2. Não concluir por uptime, por ausência de sintomas relatados ou por uma leitura pontual. O teste prolongado #8 depende deste gate.
+Pendente: medição repetível de carga sustentada e decisão de manutenção/substituição se necessária. As comparações antes/depois acima tiveram resultados divergentes. A recuperação da carga em iOS e a observação física inicial foram obtidas, mas não encerram #2. Não concluir por uptime, por ausência de sintomas relatados ou por uma leitura pontual. O teste prolongado #8 depende deste gate.
 
 ## Fontes
 

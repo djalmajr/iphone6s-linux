@@ -8,7 +8,7 @@ O Linux atual roda em RAM, com console, SSH, HTTP e Herdr. A sequência abaixo s
 
 ## Tarefas e verificação
 
-- [ ] #2: validar alimentação/bateria. Arquivos desta etapa: `power-check.sh`, `tests/test_power_check.py`, `docs/ALIMENTACAO.md`, `docs/evidence/power-check.txt`. Verificação: sensores reais por SSH, testes de ausência/leitura parcial e observação física; comprovar carga sustentada antes de uso sem supervisão.
+- [ ] #2: validar alimentação/bateria. Arquivos desta etapa: `phone/diagnostics/power-check.sh`, `tests/test_power_check.py`, `docs/ALIMENTACAO.md`, `docs/evidence/power-check.txt`. Verificação: sensores reais por SSH, testes de ausência/leitura parcial e observação física; comprovar carga sustentada antes de uso sem supervisão.
 - [x] #3: boot completo do wrapper. DFU manual sem página, envio, SSH/HTTP e console confirmados em uma execução, saída 0, em 2026-09-30.
 - [x] #4: snapshot restaurado após novo boot; conteúdo, modo 640, arquivo extra, identidade SSH e HTTP confirmados em 2026-09-30.
 - [ ] #15: recuperação de restauração interrompida/falta de espaço.
@@ -37,6 +37,12 @@ O Linux atual roda em RAM, com console, SSH, HTTP e Herdr. A sequência abaixo s
 
 ## Checkpoint — 2026-09-30
 
-Goal retomado. iOS informou 100% de carga antes das tentativas; diagnóstico nominal sugere desgaste importante, detalhado em `ALIMENTACAO.md`. O Linux iniciou novamente via USB-A, em duas etapas (aquisição de PongoOS e retomada do wrapper). A troca posterior para um novo cabo USB-C frontal manteve console, SSH e HTTP. O piloto supervisionado durou pouco mais de dez minutos sem carga artificial de CPU; após reboot, iOS informou 94% e carregamento ativo. A comparação inclui também as tentativas anteriores e o Linux via USB-A, portanto não isola o desempenho do cabo novo. As issues #2 e #3 permanecem abertas.
+Goal retomado. iOS informou 100% de carga antes das tentativas; diagnóstico nominal sugere desgaste importante, detalhado em `ALIMENTACAO.md`. O Linux iniciou novamente via USB-A, em duas etapas (aquisição de PongoOS e retomada do wrapper). A troca posterior para um novo cabo USB-C frontal manteve console, SSH e HTTP. O piloto supervisionado durou pouco mais de dez minutos sem carga artificial de CPU; após reboot, iOS informou 94% e carregamento ativo. A comparação inclui também as tentativas anteriores e o Linux via USB-A, portanto não isola o desempenho do cabo novo. Nesse checkpoint inicial, #2 e #3 ainda estavam abertas.
 
 Posteriormente, o procedimento USB-A com baseline 94% e cerca de 12 minutos de Linux retornou ao iOS com 100%; a alimentação contínua ainda não está validada. O contador foi removido a pedido do usuário, e o substituto sem interface web passou em 15 testes locais e em um boot físico completo. #3 e #4 têm critérios atendidos e evidências registradas; #2 continua em investigação e mantém bloqueado o teste prolongado sem supervisão.
+
+## Reorganização solicitada — #18
+
+Scripts agrupados em `scripts/host`, `scripts/boot` e `scripts/build`; fontes do telefone em `phone`; binários, imagens e logs privados em `bin`, `artifacts` e `logs`. Documentos e evidências soltos foram movidos para `docs` e `docs/evidence`. Caminhos no CLI, fixtures e procedimentos foram ajustados. A mudança não reconstruiu imagens nem alterou identidades ou snapshots. Resultados e limites: [ORGANIZACAO.md](ORGANIZACAO.md).
+
+No último intervalo supervisionado, aproximadamente 25 minutos de Linux via USB-A, o retorno ao iOS informou 90% às 12:50:22 UTC, comparado a 100% antes da preparação. Um snapshot foi salvo antes do reboot. O aparelho permaneceu frio/morno, mas carga sustentada continua pendente; a comparação não isola corrente líquida durante Linux. Próxima etapa funcional: #2, com medição específica A9 ou comparação repetível; #8 continua bloqueada por esse gate. O goal permanece ativo.

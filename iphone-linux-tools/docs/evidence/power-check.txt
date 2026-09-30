@@ -94,3 +94,17 @@ Favorable short-interval charge-level result, not isolated current measurement.
 Reboot-related gauge variation and 100% ceiling prevent sustained-charge claim.
 Guide subsequently removed at operator request; replacement monitor has no
 browser/HTTP listener and passed simulated checks. New physical gate pending.
+
+Third supervised procedure, same USB-A -> Lightning/rear port:
+Manual headless full boot completed; strict SSH, HTTP and console verified.
+Earlier iOS baseline 2026-09-30 12:15:42 UTC: capacity 100%.
+New Linux session began approximately 12:23:23 UTC.
+Operator during interval: cold/lukewarm, console visible.
+Relocated host CLI status at 12:46:40 UTC: Linux 7.0.12, HTTP 200.
+Relocated CLI private snapshot completed at 12:48:08 UTC.
+Reboot 12:48:09 UTC: uptime 1485.28 s (approximately 24m45s).
+iOS 12:50:22 UTC: capacity 90%, charging/external_connected true.
+Comparison includes iOS/DFU preparation and reboot, with possible gauge variation.
+Ten-point decline does not isolate Linux charging current but leaves sustained
+power unresolved. #2 remains open; prolonged unattended test #8 is not approved.
+No snapshots, SSH identities or raw device identifiers published.
