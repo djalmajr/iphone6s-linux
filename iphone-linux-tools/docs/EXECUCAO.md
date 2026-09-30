@@ -13,7 +13,7 @@ O Linux atual roda em RAM, com console, SSH, HTTP e Herdr. A sequência abaixo s
 - [x] #4: snapshot restaurado após novo boot; conteúdo, modo 640, arquivo extra, identidade SSH e HTTP confirmados em 2026-09-30.
 - [x] #15: recuperação de restauração interrompida/falta de espaço. Journal privado, publicação antecipada do ID anterior, lista de pendências e overlay manual verificados em dois cenários reais na VM Ubuntu ARM64.
 - [x] #5: snapshots automáticos e retenção, sem perder o último íntegro. Concluída com testes locais, VM, mutações negativas e prova física curta; evidência em `docs/evidence/autosnapshot-check.txt`.
-- [ ] #6: LAN/internet pelo Mac, com teste de outra máquina e reversão.
+- [ ] #6: acesso SSH/HTTP pela LAN via Mac, com teste de outra máquina e reversão. Saída genérica de internet permanece separada e desabilitada; implementação/gates isolados em [REDE.md](REDE.md), prova física pendente.
 - [ ] #7: DNS local, começando pelo USB, com configuração restaurável.
 - [ ] #8: estabilidade monitorada prolongada, após alimentação validada.
 - [ ] #12: proveniência e build independente, com atualização/rollback.
@@ -74,3 +74,7 @@ O novo boot frio e a restauração usando a árvore reorganizada passaram fisica
 Diagnóstico ampliado, somente leitura: `MaxPower=500 mA`, `bmAttributes=0x80`, sem sensores de bateria/temperatura. O default de 2 mA da fonte Kconfig não se aplica ao descriptor efetivo desta imagem; não foi alterado o descriptor. O fork SN2400/BQ27545 consultado tem validação A10/D111/J172 e não é prova de suporte N71/A9. Brilho reduzido temporariamente, mantendo os comandos pelo Mac conforme preferência do usuário.
 
 17 testes locais passaram, incluindo atributos ausentes/presentes, preservação de arquivos e exclusão de strings de identificação. Mutação da leitura efetiva foi detectada; syntax/ShellCheck do diagnóstico e AST Python passaram. Não há typechecker configurado. Após 17 minutos de Linux com brilho variável/reduzido, iOS informou 100% a partir de 98%; os campos brutos de carga/máximo caíram, e o teto de 100% e a variação do medidor impedem comprovar carga líquida. Dados salvos antes de retornar ao iOS. #2 segue aberta, com avaliação técnica/topologia A9 e medição repetível pendentes; #8 continua dependente. #5 está concluída com a evidência sanitizada indicada em D3. A prova de #15 é limitada à VM e aos dados sintéticos; não altera o estado de #2 ou #8. O próximo item planejado é #6, sem autorização para merge; o goal permanece ativo.
+
+## Encaminhamento LAN — desenvolvimento da #6
+
+Implementado CLI foreground `lan --bind IP` com destinos TCP fixos, sem configuração global. Gates locais (2 aprovados, 1 skip VM), baseline real OpenSSH/Dropbear/BusyBox em namespace e sete mutações negativas passaram. O parecer do Grok foi incorporado e a investigação prossegue solo conforme preferência atual do usuário. VM limpa/parada; prova com iPhone e Windows alien ainda necessária para encerrar #6. [Procedimento e limites](REDE.md), [evidência sanitizada](evidence/lan-check.txt).

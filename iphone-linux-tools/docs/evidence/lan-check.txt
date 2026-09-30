@@ -1,0 +1,58 @@
+Date: 2026-09-30
+Scope: issue #6, fixed SSH/HTTP TCP forwards via existing OpenSSH.
+Status: implementation and isolated gates passed; physical LAN proof pending.
+
+Mac OpenSSH: 10.3p1, LibreSSL 3.3.6.
+Local unittest test_lan.py: 2 passed, 1 explicit VM/root skip.
+Invalid public/wildcard/link-local/USB/other-loopback bind and privileged,
+out-of-range or equal ports fail with argparse exit 2 before key/network use.
+Real ssh -G confirms explicit forwards, strict identity, batch/identities-only,
+fail-on-listen, keepalive and no agent/X11/dynamic/remote forwarding.
+Config inspection alone is not evidence of a kernel socket's bind address.
+
+Dedicated existing Ubuntu ARM64 VM: real OpenSSH/Dropbear/BusyBox services in an
+unshare network namespace; only public source/tests copied, synthetic keys only.
+Private addresses added only inside the namespace, not the Mac/VM outer network.
+Positive baseline: forwarded HTTP body VM_FORWARD_HTTP_OK and authenticated SSH
+command VM_FORWARD_SSH_OK; alternate loopback/private addresses refuse both ports.
+SIGTERM closes listeners. Occupied HTTP port causes nonzero exit, partial SSH
+listener disappears, pre-existing listener preserved. Wrong host key prevents any
+remote command (server-side shell audit unchanged), and no listeners remain.
+Final isolated baseline passed through the mutation runner before rejection.
+
+Seven source mutations rejected in executed batches: 3 local + 4 VM.
+public-bind, usb-bind, privileged-port; strict-trust, listen-failure, omitted-bind,
+wildcard-bind. Runner rejects failed original baseline before claiming mutations.
+
+Fixture/gate corrections (initial results not accepted as final evidence):
+- Initial reused HTTP port was in TIME_WAIT; test listener now sets SO_REUSEADDR.
+- Strict=no mutation initially survived: OpenSSH accepted a host mismatch but
+  later refused port forwarding. Nonzero exit alone did not prove strict trust.
+  Added server-side audit proving that even the preflight command is not run.
+- Fixture audit shell required /etc/shells registration. Intermediate baseline
+  failed; apparent mutant rejections from that broken fixture were discarded.
+  Added explicit baseline gate; corrected original and all mutants rerun.
+
+Pyflakes/Flake8 fatal and AST syntax passed; no configured typechecker.
+Bash -n/ShellCheck wrapper and git diff --check passed during implementation.
+Final Pyflakes/Flake8 fatal rerun passed on all 3 changed Python files;
+Bash/ShellCheck and diff-check passed after CLI update. No typechecker configured.
+Owned fixtures=0; owned transfer directory removed. VM restored to Stopped.
+No package installation, rebuild, PF/NAT/DNS/Internet Sharing change or PR merge.
+
+Grok read-only review: approach has no blocker; requires actual listener-address
+proof and a separate physical client for #6. HTTP is unauthenticated; all clients
+able to reach the chosen private Mac IPv4/port can read diagnostics. No per-client
+ACL is provided. The two fixed forwards do not create generic internet egress.
+
+Not yet proved: actual iPhone forwards from Windows alien, physical-LAN source
+path, independent-client strict SSH/HTTP, or Mac firewall reachability.
+No long-duration stability or net-charging claim; #2/#8 remain open.
+No personal host addresses/identifiers, real keys or backup data included.
+
+Windows client preparation via existing Herdr saved profile (no new agent):
+OpenSSH_for_Windows_9.5p2, LibreSSL 3.8.2 detected in native PowerShell.
+Private LAN IPv4 observed on the same subnet as the Mac; addresses not published.
+Existing pane belonged to other project. Dedicated test pane created, then moved
+into its own iphone6s-linux workspace at user request. No package installation or
+SSH key modification during this preparation. Actual phone/LAN test still pending.
