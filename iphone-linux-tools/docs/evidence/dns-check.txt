@@ -1,6 +1,6 @@
 Date: 2026-09-30
 Scope: issue #7 first phase, authenticated DNS bundle and isolated server proof.
-Status: VM server gates passed; phone installation/LAN/restore still pending.
+Status: VM server and SSH installation/restore gates passed; physical proof pending.
 
 Ubuntu noble-security signed release date Wed, 30 Sep 2026 16:40:42 UTC.
 Signer F6ECB3762474EDA9D21B7022871920D1991BC93C, existing Ubuntu archive keyring.
@@ -42,3 +42,23 @@ dnsmasq native daemonization. Failed intermediate results not accepted as proof.
 Not proved: actual phone DNS UDP/TCP, Windows DNS, host proxy allowlist/cleanup,
 snapshot/boot service restoration, internet recursion, continuous charging.
 Issue #7 remains open; #2/#8 remain open, goal active, no PR merge.
+
+SSH installer phase (same authenticated runtime/server, no physical phone access):
+Final VM baseline: 2 tests passed; real Dropbear/OpenSSH and dedicated test keys.
+Bundle modified only in gzip header rejected before transfer/destination creation.
+Existing files preserved and installation refused; parent symlink refused.
+Successful installation leaves no owned lock/archive/staging.
+Saved local record served via TCP. Stop -> snapshot -> fixture files/account deleted
+-> restore -> explicit start -> same record served. SSH authorization unchanged,
+no live PID state restored. Runtime/configuration remain inside /srv/data/dns.
+Five source mutations rejected after passing baseline: existing-data,
+symlink-parent, bundle-identity, name-scope, address-scope.
+Input mutations run without external networking; real SSH scenario has its own
+isolated network/mount namespace, chroot and ephemeral keys.
+Fixture lacked gzip then Bash; dependencies aligned to actual phone image.
+An extra outer namespace runner timed out; failed run not accepted as proof.
+Final runner avoids redundant nested namespace and captures timeout diagnostics.
+Python fatal lint, Bash syntax/ShellCheck and diff passed. No typechecker configured.
+No new server tests rerun: server source/runtime unchanged and prior proof valid.
+Still pending: actual phone install/DNS, LAN proxy allowlist/cleanup, Windows DNS,
+snapshot restoration in a new physical boot, continuous charging/stability.

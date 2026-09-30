@@ -43,7 +43,7 @@ Cada fase terá no máximo cinco arquivos e será verificada antes da seguinte.
 
 - [x] Conferir repositórios/keyrings, versão e hash do pacote oficial e dependências; preparar bundle isolado.
 - [x] Validar configuração/local-only e consultas positivas/negativas UDP/TCP com dnsmasq real na VM isolada.
-- [ ] Implementar transferência/launcher e recuperação de configuração pelo snapshot existente.
+- [x] Implementar transferência/launcher e recuperação de configuração pelo snapshot existente; prova isolada na VM, ainda sem novo boot físico.
 - [ ] Implementar proxy LAN com allowlist e gates/mutações.
 - [ ] Validar consultas físicas USB/LAN e recuperação em novo boot.
 - [ ] Limpar fixtures, salvar evidência sanitizada, atualizar issues e versionar sem dados pessoais.
@@ -85,3 +85,37 @@ sudo env IPHONE_DNS_VM_TESTS=1 IPHONE_DNS_BUNDLE=/CAMINHO/iphone6s-dns-runtime.t
 ```
 
 Somente namespace VM root explicitamente autorizado; não execute o fixture com privilégios no Mac/servidores reais. Bibliotecas/executáveis já disponíveis: BusyBox estático, loader ARM64, Python, dig, ip, mount, chroot e unshare. O fixture monta proc somente em seu namespace, usa endereços sintéticos e remove seus processos/arquivos. O runner recusa baseline falha/skips antes de interpretar rejeições de mutantes.
+
+## Instalador e persistência: gate isolado concluído
+
+`scripts/host/iphone-linux.sh dns` oferece `install`, `record NOME IPv4`, `start`, `stop` e `status`. Exige o enlace USB/SSH já disponível, sem solicitar configuração de rede para argumentos inválidos. `install` confere hash/tamanho e escopo regular do bundle antes do SSH, transmite por stdin ao destino com host key estrita, verifica o hash novamente antes de extrair, recusa pais symlink e qualquer diretório DNS preexistente. Staging/archive/lock próprios são removidos; arquivos de outros serviços não são apagados.
+
+Registros aceitam somente nomes válidos em `home.arpa` e endereços RFC1918 explícitos. O arquivo é substituído por rename dentro de `/srv/data/dns`; carregar a alteração exige parar/iniciar DNS. O runtime, launcher e hosts entram no snapshot de `/srv/data`, mas PID/logs em `/run` e a conta de runtime não são restaurados. Após restore, `dns start` recria a conta sem privilégios e inicia uma nova instância.
+
+O fixture real de SSH aprovou: bundle com byte de header gzip alterado recusado antes do destino; preservação de configuração existente; recusa de pai symlink; instalação sem resíduos; registro servido por DNS/TCP; backup; remoção dos arquivos/conta apenas do fixture; restore; início explícito; mesmo registro novamente servido; identidade SSH preservada e nenhum estado de processo restaurado. Baseline de dois testes verde e cinco mutações rejeitadas: dados existentes, pai symlink, identidade do bundle, domínio e endereço fora do escopo.
+
+No desenvolvimento, o fixture faltava os applets gzip e depois Bash necessários ao snapshot existente; ele foi alinhado às dependências da imagem. Um runner com namespace de rede redundante excedeu o timeout e não foi aceito como evidência. O runner final conserva o isolamento interno do teste de SSH e isola separadamente os casos de argumentos inválidos; captura diagnósticos e encerra seu grupo próprio em timeout. Gate final aprovado, sem rerodar as provas anteriores do servidor que não mudaram.
+
+### Uso preparado para o próximo teste físico
+
+Com Linux/SSH já disponíveis e o bundle privado autenticado presente:
+
+```sh
+scripts/host/iphone-linux.sh dns install
+scripts/host/iphone-linux.sh dns record iphone-lan.home.arpa IPv4_PRIVADO_DO_MAC
+scripts/host/iphone-linux.sh dns start
+scripts/host/iphone-linux.sh dns status
+dig @172.16.42.1 -p 5353 iphone-usb.home.arpa
+dig +tcp @172.16.42.1 -p 5353 iphone-usb.home.arpa
+scripts/host/iphone-linux.sh backup
+```
+
+Antes de encerrar o boot, salvar snapshot e executar `dns stop`. Em outro boot com `boot --restore ID`, executar `dns start` e repetir a consulta. Não usar `install` sobre arquivos restaurados. Nenhum desses passos foi ainda aprovado no telefone real; o proxy LAN ainda está em implementação.
+
+Reproduzir o gate copiando `scripts/host/*.py`, `phone/dns/manage-dns.sh`, `docs/evidence/dns-provenance.json`, `tests/test_lan.py`, `tests/test_dns_install.py` e `tests/run_dns_install_mutations.py`, conservando a árvore relativa:
+
+```sh
+sudo env IPHONE_DNS_VM_TESTS=1 IPHONE_DNS_BUNDLE=/CAMINHO/iphone6s-dns-runtime.tar.gz python3 /CAMINHO/ARVORE/tests/run_dns_install_mutations.py
+```
+
+O fixture usa também Dropbear, ssh-keygen, OpenSSH e Bash existentes na VM. No Mac: teste de argumentos passou e o gate VM é skip explícito. Pyflakes/Flake8 fatal, sintaxe Bash/ShellCheck e diff passaram; nenhum typechecker configurado. O pacote continua sem ser enviado ao telefone. #7 permanece aberta.
