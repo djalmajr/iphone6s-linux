@@ -78,4 +78,8 @@ O protótipo `dfu_visual.py` foi então removido. `scripts/boot/dfu_boot.py` aco
 
 Os 15 testes locais passaram, incluindo retomada apenas após DFU simulado e encerramento do processo filho. A saída do monitor fica em log privado ignorado pelo Git.
 
+## Imagem atual após correção LAN
+
+O wrapper agora seleciona `m1n1-linux-iphone6s-loopback-server.bin`, de SHA-256 `8b1a46dd67613c63aa6608dd3a0e73a73b358aaddc1818b423ff6009b55e3f66`, 23.765.032 bytes. O novo init ativa loopback antes dos serviços; os demais arquivos, incluindo console e identidade SSH, foram comparados com a imagem original preservada. Novo boot, restore, console automático e acesso Windows SSH/HTTP foram comprovados. Receita, reversão e evidência atual: [REDE.md](REDE.md). Os registros anteriores deste documento descrevem os testes históricos da imagem original com console.
+
 Na tentativa seguinte, a versão sem contador também completou uma única execução com saída 0: DFU manual, PongoOS, upload da imagem integrada, alias USB, SSH e HTTP 200. O usuário confirmou console Linux e aparelho frio/morno. Foi observado Linux 7.0.12, uptime 46,12 s e framebuffer blank 0. O monitor encerrou e removeu sua pasta de estado; nenhum servidor HTTP de apoio foi iniciado. Isso concluiu a validação física do wrapper (#3) antes da reorganização, sem encerrar a investigação de alimentação (#2). A revalidação posterior da árvore reorganizada repetiu esse fluxo pelo novo CLI e preservou a mesma imagem integrada; isso comprova o boot e os serviços, não carga sustentada da bateria.
