@@ -42,7 +42,7 @@ remote() {
     if ssh_ready; then
         ssh "${SSH_ARGS[@]}" "root@$PHONE_IP" '/bin/bash -se'
     else
-        python3 "$ROOT/usb-shell.py" --script
+        python3 "$ROOT/scripts/host/usb-shell.py" --script
     fi
 }
 
@@ -243,8 +243,8 @@ PY
 case "${1:-status}" in
     boot) boot ;;
     boot-probe) boot probe ;;
-    backup|restore) connect; exec python3 "$ROOT/persist.py" "$@" ;;
-    backups) exec python3 "$ROOT/persist.py" "$@" ;;
+    backup|restore) connect; exec python3 "$ROOT/scripts/host/persist.py" "$@" ;;
+    backups) exec python3 "$ROOT/scripts/host/persist.py" "$@" ;;
     connect) connect ;;
     status) status ;;
     serve) serve ;;

@@ -6,7 +6,7 @@ import tarfile
 import tempfile
 import unittest
 
-spec = importlib.util.spec_from_file_location('persist', Path(__file__).resolve().parents[1] / 'persist.py')
+spec = importlib.util.spec_from_file_location('persist', Path(__file__).resolve().parents[1] / 'scripts/host/persist.py')
 persist = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(persist)
 

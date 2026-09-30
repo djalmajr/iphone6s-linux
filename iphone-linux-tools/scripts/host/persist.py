@@ -14,7 +14,7 @@ import tarfile
 import tempfile
 import uuid
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 STORE = ROOT / 'backups'
 EXCLUDED = ('root/.ssh', 'root/.cache', 'root/.bash_history',
             'root/.config/herdr/sessions', 'root/.local/state')
