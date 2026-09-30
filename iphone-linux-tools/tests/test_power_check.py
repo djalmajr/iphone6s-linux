@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 import unittest
 
-SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "power-check.sh"
+SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "phone/diagnostics/power-check.sh"
 
 
 class PowerCheckTests(unittest.TestCase):
