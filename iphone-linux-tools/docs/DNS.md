@@ -36,8 +36,8 @@
 - **Por quê:** tar/gzip de um novo build pode ter outro hash, mesmo usando inputs autenticados iguais. Prender o instalador ao hash histórico impede reprodução; confiar no próprio pacote apagaria a proteção de integridade.
 - **Alternativas:** trocar o JSON público a cada build (mistura histórico e seleção local); tornar o build idêntico byte a byte (não resolve diferenças de bibliotecas/atualizações); aceitar o manifesto interno (confiança circular).
 - **Reverter:** baixo; preservar bundle/manifesto anteriores e selecionar o par antigo explicitamente. Nenhuma alteração no telefone é necessária para esta correção.
-- **Onde:** `scripts/host/dns.py`, recipe em `scripts/build/build-dns-runtime.py`, testes de instalação/mutações e documentação.
-- **Status:** em curso na #12; reconstruir bundle com verificação Ubuntu real, provar seleção do novo par e recusa de manifesto ausente/hash divergente em fixture SSH antes de usar o aparelho.
+- **Onde:** `scripts/host/dns.py`, receita em `scripts/build/build-dns-runtime.py`, testes de instalação/mutações e documentação.
+- **Status:** aplicada e verificada; novo bundle autenticado instalado/restaurado em fixture SSH, sete mutações recusadas. Não conclui a reprodução integral da imagem nem os gates físicos das #12/#7.
 
 ## Arquivos e fases
 
@@ -97,7 +97,7 @@ Somente namespace VM root explicitamente autorizado; não execute o fixture com 
 
 ## Instalador e persistência: gate isolado concluído
 
-`scripts/host/iphone-linux.sh dns` oferece `install`, `record NOME IPv4`, `start`, `stop` e `status`. Exige o enlace USB/SSH já disponível, sem solicitar configuração de rede para argumentos inválidos. `install` confere hash/tamanho e escopo regular do bundle antes do SSH, transmite por stdin ao destino com host key estrita, verifica o hash novamente antes de extrair, recusa pais symlink e qualquer diretório DNS preexistente. Staging/archive/lock próprios são removidos; arquivos de outros serviços não são apagados.
+`scripts/host/iphone-linux.sh dns` oferece `install [--manifest CAMINHO]`, `record NOME IPv4`, `start`, `stop` e `status`. Exige o enlace USB/SSH já disponível, sem solicitar configuração de rede para argumentos inválidos. `install` lê o manifesto privado do build, confere hash/tamanho e escopo regular do bundle antes do SSH, transmite por stdin ao destino com host key estrita, verifica o hash novamente antes de extrair, recusa pais symlink e qualquer diretório DNS preexistente. Staging/archive/lock próprios são removidos; arquivos de outros serviços não são apagados.
 
 Registros aceitam somente nomes válidos em `home.arpa` e endereços RFC1918 explícitos. O arquivo é substituído por rename dentro de `/srv/data/dns`; carregar a alteração exige parar/iniciar DNS. O runtime, launcher e hosts entram no snapshot de `/srv/data`, mas PID/logs em `/run` e a conta de runtime não são restaurados. Após restore, `dns start` recria a conta sem privilégios e inicia uma nova instância.
 
@@ -107,7 +107,7 @@ No desenvolvimento, o fixture faltava os applets gzip e depois Bash necessários
 
 ### Uso preparado para o próximo teste físico
 
-Com Linux/SSH já disponíveis e o bundle privado autenticado presente:
+Com Linux/SSH já disponíveis e o par privado `runtime/iphone6s-dns-runtime.tar.gz` + `runtime/dns-provenance.json` produzido pelo build autenticado presente:
 
 ```sh
 scripts/host/iphone-linux.sh dns install
@@ -124,7 +124,7 @@ Antes de encerrar o boot, salvar snapshot e executar `dns stop`. Em outro boot c
 Reproduzir o gate copiando `scripts/host/*.py`, `phone/dns/manage-dns.sh`, `docs/evidence/dns-provenance.json`, `tests/test_lan.py`, `tests/test_dns_install.py` e `tests/run_dns_install_mutations.py`, conservando a árvore relativa:
 
 ```sh
-sudo env IPHONE_DNS_VM_TESTS=1 IPHONE_DNS_BUNDLE=/CAMINHO/iphone6s-dns-runtime.tar.gz python3 /CAMINHO/ARVORE/tests/run_dns_install_mutations.py
+sudo env IPHONE_DNS_VM_TESTS=1 IPHONE_DNS_BUNDLE=/CAMINHO/iphone6s-dns-runtime.tar.gz IPHONE_DNS_MANIFEST=/CAMINHO/dns-provenance.json python3 /CAMINHO/ARVORE/tests/run_dns_install_mutations.py
 ```
 
 O fixture usa também Dropbear, ssh-keygen, OpenSSH e Bash existentes na VM. No Mac: teste de argumentos passou e o gate VM é skip explícito. Pyflakes/Flake8 fatal, sintaxe Bash/ShellCheck e diff passaram; nenhum typechecker configurado. O pacote continua sem ser enviado ao telefone. #7 permanece aberta.
@@ -191,3 +191,36 @@ sudo env IPHONE_DNS_VM_TESTS=1 IPHONE_DNS_BUNDLE=/CAMINHO/iphone6s-dns-runtime.t
 ```
 
 Não requer instalação de ferramentas novas. Provas físicas USB/LAN/Windows e restauração em novo boot continuam pendentes. O preflight Windows encontrou nslookup nativo assinado e um IPv4 LAN único; nenhuma consulta física ainda foi feita. O wrapper passou sintaxe Bash/ShellCheck e diff após incluir o uso do proxy no help.
+
+## Reprodução do par DNS e seleção privada
+
+A receita também produz `OUTPUT/dns-provenance.json` com modo 0600. Obter esse arquivo diretamente do build autenticado, separadamente do pacote; o JSON interno ao tar não é fonte confiável de hash esperado. O manifesto público inicial permanece como evidência histórica. O arquivo externo privado é a seleção atual, e o instalador recusa sua ausência mesmo que a evidência pública exista. `--manifest CAMINHO` seleciona outro manifesto validado para o bundle já colocado em `runtime/iphone6s-dns-runtime.tar.gz`.
+
+Para um clone limpo, depois de construir o par e transferi-lo a um diretório privado, executar dentro de `iphone-linux-tools`; o subshell recusa sobrescrever um par existente:
+
+```sh
+(
+    set -eu
+    mkdir -p runtime
+    test ! -e runtime/iphone6s-dns-runtime.tar.gz
+    test ! -e runtime/dns-provenance.json
+    install -m 600 /CAMINHO/BUILD/iphone6s-dns-runtime.tar.gz runtime/iphone6s-dns-runtime.tar.gz
+    install -m 600 /CAMINHO/BUILD/dns-provenance.json runtime/dns-provenance.json
+)
+```
+
+Em uma atualização, preservar o par anterior em diretório privado separado antes de trocar os arquivos selecionados. Não substituir o manifesto público para fazer um pacote divergente passar. Um snapshot restaura os arquivos DNS do telefone e `dns start` inicia a instância restaurada; não exige reinstalar o bundle pelo Mac.
+
+Foi reconstruído o bundle em diretório novo da mesma VM, repetindo gpgv/index/package checks: 4.613.949 bytes, SHA-256 `9dc590eff5cc2001117021115b0e82d0127982b18a4aa33671a91a6dd70d04fe`. Todos os hashes do executável/bibliotecas, índice, pacote e dados de origem são iguais aos do build anterior; somente a identidade do arquivo tar/gzip mudou. [Novo relatório](evidence/dns-rebuild-provenance.json). Ambos os pares privados foram preservados; o par original continua selecionado no Mac para o próximo teste físico.
+
+O gate de instalação foi executado com o pacote novo e seu manifesto externo: dois testes passaram; sete mutações recusadas após baseline verde, incluindo fallback histórico e seleção de manifesto ignorada. O fluxo SSH/DNS/snapshot/restore real ocorreu em namespaces sintéticos. No Mac, a verificação do par original pelo helper atualizado passou sem SSH; teste de argumentos passou com skip VM explícito. Uma tentativa Multipass não conectou e não executou o gate; banner SSH reconfirmado, transferência concluída e somente esse gate repetido com sucesso. Zero dnsmasq/fixtures transitórios próprios ao final. A transferência do pacote novo ao Mac teve hash/tamanho conferidos.
+
+### Fechamento desta correção
+
+- **Arquivos/plano:** helper, receita, teste e runner atualizados; D4 aplicada. Evidência pública histórica preservada, nova evidência de rebuild adicionada.
+- **Mudança de uso:** instalação agora exige manifesto local do build; o default é privado, sem fallback público. `--manifest` é opcional para selecionar outro arquivo validado.
+- **Testes:** 2 VM passaram; 7 mutações recusadas. Mac: 1 teste passou/1 skip explícito, par original verificado sem rede. Provas anteriores de servidor/proxy reutilizadas porque seus caminhos/dependências não mudaram.
+- **Tipagem/lint:** nenhum typechecker configurado; Pyflakes/Flake8 fatal e diff passaram.
+- **Banco/dependências:** sem banco, pacote instalado ou serviço global; dados privados continuam ignorados.
+- **Desempenho:** apenas seleção local do manifesto; limites/processos do DNS inalterados.
+- **Próximos passos:** dois boots físicos na #7; proveniência restante e VM nova de clone limpo na #12. Esta reconstrução usou a VM existente e não prova reconstrução integral/independente do sistema.

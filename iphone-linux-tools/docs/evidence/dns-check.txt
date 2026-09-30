@@ -86,3 +86,26 @@ Helper checks A answers after Name/Nome section, not server address; actual quer
 flow still pending. Wrapper final Bash syntax/ShellCheck and diff passed.
 No real SSH keys in fixtures; no DNS/network config changed on Mac/Windows/router.
 Physical phone install, UDP/TCP USB/LAN/Windows and a new boot restore still pending.
+
+Private manifest reproduction correction (issue #12, no physical phone access):
+Rebuilt from the same authenticated Ubuntu inputs, fresh output in existing VM.
+New bundle bytes=4613949
+sha256=9dc590eff5cc2001117021115b0e82d0127982b18a4aa33671a91a6dd70d04fe
+All authenticated origin/index/package data and binary/22 library hashes unchanged.
+Archive identity differs, demonstrating why the historical public pin cannot be
+the fixed installer selection. External build manifest mode 0600; default private
+runtime/dns-provenance.json, explicit --manifest supported, no embedded/public fallback.
+Final VM baseline 2 passed using the NEW bundle/manifest and real SSH/DNS/snapshots.
+Seven mutations rejected: existing-data, symlink-parent, bundle-identity, name-scope,
+address-scope, historical-fallback, manifest-selection.
+Missing local manifest refused even with public evidence available. Explicit valid
+manifest accepted despite different private default. New pair installed, served,
+backed up, fixture removed, restored, explicitly started and same record served.
+Original selected pair verified by updated helper on Mac with no SSH invocation.
+Mac input test 1 passed/1 explicit VM skip. Fatal Python lint/diff passed; no typechecker.
+First Multipass exec failed connecting before gate; direct SSH banner reconfirmed,
+transfer completed and only failed gate retried. Failed attempt not counted as proof.
+Zero dnsmasq processes and own transient fixture directories after completion.
+Both bundles/manifests retained privately. Historical public evidence unchanged.
+Still not proved: fresh VM/clean clone full-image build, all library package origin,
+phone/Windows DNS and reboot restoration, continuous charging/stability.
