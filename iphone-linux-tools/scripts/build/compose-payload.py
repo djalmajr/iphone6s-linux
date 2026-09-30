@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('initramfs', type=Path)
 parser.add_argument('output', type=Path)
 args = parser.parse_args()
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[2]
 blob = b''.join([
     (root / 'm1n1.bin').read_bytes(),
     b'chosen.bootargs=rdinit=/init console=ttySAC0,115200 loglevel=7\n',
