@@ -5,9 +5,10 @@ import ipaddress
 import os
 from pathlib import Path
 import subprocess
+import device_profile
 
 ROOT = Path(__file__).resolve().parents[2]
-PHONE = '172.16.42.1'
+PHONE = device_profile.PHONE
 PRIVATE = tuple(ipaddress.ip_network(value) for value in
                 ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'))
 
@@ -32,14 +33,7 @@ def port(value):
 
 
 def ssh_options():
-    return ['ssh', '-4', '-F', '/dev/null', '-a',
-            '-i', str(ROOT / 'keys/iphone_ed25519'),
-            '-o', f'UserKnownHostsFile={ROOT / "keys/known_hosts"}',
-            '-o', 'StrictHostKeyChecking=yes', '-o', 'IdentitiesOnly=yes',
-            '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5',
-            '-o', 'ServerAliveInterval=5', '-o', 'ServerAliveCountMax=3',
-            '-o', 'ForwardAgent=no', '-o', 'ForwardX11=no',
-            '-o', 'ControlMaster=no', '-o', 'ControlPath=none']
+    return device_profile.ssh_options(ROOT)
 
 
 def forward_command(options):
@@ -57,7 +51,8 @@ def main():
     options = parser.parse_args()
     if options.ssh_port == options.http_port:
         parser.error('As portas SSH e HTTP devem ser distintas.')
-    if not (ROOT / 'keys/iphone_ed25519').is_file() or not (ROOT / 'keys/known_hosts').is_file():
+    profile = device_profile.load(ROOT)
+    if not profile['client_key'].is_file() or not profile['known_hosts'].is_file():
         raise SystemExit('Identidade SSH dedicada ausente; nenhum encaminhamento iniciado.')
     subprocess.run(ssh_options() + ['-n', f'root@{PHONE}', 'true'], check=True, timeout=15)
     print(f'SSH do iPhone: {options.bind}:{options.ssh_port}; chave do cliente ainda obrigatória.', flush=True)
@@ -70,5 +65,5 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except (OSError, subprocess.SubprocessError) as error:
+    except (ValueError, OSError, subprocess.SubprocessError) as error:
         raise SystemExit(str(error)) from error

@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import threading
 import time
+import device_profile
 import dns_transport as wire
 import lan
 
@@ -84,7 +85,8 @@ def tcp_replies(options):
 def serve(options):
     if options.port == options.tunnel_port:
         raise ValueError('Portas DNS e túnel devem ser distintas.')
-    if not (lan.ROOT / 'keys/iphone_ed25519').is_file() or not (lan.ROOT / 'keys/known_hosts').is_file():
+    profile = device_profile.load(lan.ROOT)
+    if not profile['client_key'].is_file() or not profile['known_hosts'].is_file():
         raise ValueError('Identidade SSH dedicada ausente; nenhum listener iniciado.')
     allowed = frozenset(options.allow)
     stopped = threading.Event()

@@ -22,7 +22,7 @@ MUTATIONS = {
                  'if not slots.acquire():', 'Excess request queued instead of refused'),
     'forward-failure': ('dns_lan.py', 'ExitOnForwardFailure=yes',
                         'ExitOnForwardFailure=no', 'Failed startup published a proxy'),
-    'host-trust': ('lan.py', 'StrictHostKeyChecking=yes',
+    'host-trust': ('device_profile.py', 'StrictHostKeyChecking=yes',
                    'StrictHostKeyChecking=no', 'Failed startup published a proxy'),
     'response-identity': ('dns_transport.py', 'answer[:2] != message[:2] or ',
                           '', 'not raised'),

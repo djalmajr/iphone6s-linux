@@ -13,6 +13,7 @@ import subprocess
 import tarfile
 import tempfile
 import uuid
+import device_profile
 import restore_journal
 import snapshot_lock
 import snapshot_retention
@@ -23,12 +24,13 @@ EXCLUDED = ('root/.ssh', 'root/.cache', 'root/.bash_history',
             'root/.config/herdr/sessions', 'root/.local/state')
 MAX_BYTES = 512 * 1024 * 1024
 MAX_MEMBERS = 50000
-SSH = ['ssh', '-F', '/dev/null', '-i', str(ROOT / 'keys/iphone_ed25519'),
-       '-o', f'UserKnownHostsFile={ROOT / "keys/known_hosts"}',
-       '-o', 'StrictHostKeyChecking=yes', '-o', 'IdentitiesOnly=yes',
-       '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5',
-       '-o', 'ServerAliveInterval=5', '-o', 'ServerAliveCountMax=3',
-       'root@172.16.42.1']
+SSH = None
+
+
+def ssh_command():
+    if SSH is not None:
+        return SSH
+    return device_profile.ssh_options(ROOT) + [f'root@{device_profile.PHONE}']
 
 
 def excluded(name):
@@ -80,17 +82,18 @@ def digest(path):
 
 
 def remote(command, **kwargs):
-    return subprocess.run(SSH + [command], check=True, **kwargs)
+    return subprocess.run(ssh_command() + [command], check=True, **kwargs)
 
 
 def _backup_locked(kind='manual'):
+    command = ssh_command()
     STORE.mkdir(mode=0o700, exist_ok=True)
     STORE.chmod(0o700)
     snapshot_id = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid.uuid4().hex[:8]
     with tempfile.TemporaryDirectory(prefix='.partial-', dir=STORE) as work:
         work = Path(work)
         archive_path = work / 'files.tar.gz'
-        process = subprocess.Popen(SSH + ['mkdir -p /srv/data; cd /; tar -czf - root srv/data'], stdout=subprocess.PIPE)
+        process = subprocess.Popen(command + ['mkdir -p /srv/data; cd /; tar -czf - root srv/data'], stdout=subprocess.PIPE)
         skipped = 0
         total_bytes = 0
         total_members = 0
@@ -262,6 +265,7 @@ def main():
     parser.add_argument('snapshot', nargs='?')
     parser.add_argument('--keep', type=int)
     args = parser.parse_args()
+    device_profile.load(ROOT)
     os.umask(0o077)
     if args.command == 'automatic' and (args.snapshot or args.keep is None or args.keep < 1):
         parser.error('automatic exige --keep N com N >= 1 e não aceita snapshot.')
