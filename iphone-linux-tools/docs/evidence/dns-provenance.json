@@ -1,0 +1,103 @@
+{
+  "architecture": "arm64",
+  "binary_sha256": "9e21d7f9356f8630b615393edf1c87f08d672c66a940137132faa7f8a2337072",
+  "index_sha256": "5e832f1fb276324d6218a01b5d398af8cada4ee0643133dad126b5df7dc3a53c",
+  "libraries": [
+    {
+      "name": "libc.so.6",
+      "sha256": "0f1905dc27dbc6715875c70527bc8da846a10084c9c483e9d8ff76dce8d69d0e"
+    },
+    {
+      "name": "libcap.so.2",
+      "sha256": "1b6d3932cf8b60b2f27f80cdd26d9a296b8a9608fc02b4eccb8fb2fdab73fea2"
+    },
+    {
+      "name": "libdbus-1.so.3",
+      "sha256": "9b8d0d8b10bdffc68f6699b03e7be99d4dc40552aca189be43b55c5f84753241"
+    },
+    {
+      "name": "libgcrypt.so.20",
+      "sha256": "0021b10f8cf217477b73eb3721ed5711c02f77d9251a346552f6099928329151"
+    },
+    {
+      "name": "libgmp.so.10",
+      "sha256": "39b6701812ed7135f28df49352b3f6664c7a9f56880a3fe50c1b87cd7681db9b"
+    },
+    {
+      "name": "libgpg-error.so.0",
+      "sha256": "ff2dccba4993ef97775b70c1ed1144f70dfe8581ee48c1eb25c76878c6cdfdf7"
+    },
+    {
+      "name": "libhogweed.so.6",
+      "sha256": "0495ad11a2266d7300436d57859fc8ebceac79e5235a393c42ae91d6fc23ce84"
+    },
+    {
+      "name": "libidn2.so.0",
+      "sha256": "34a2427db57d47458b460ab15a24e7de73b56fbc7b458af837556445f60ffb4e"
+    },
+    {
+      "name": "libjansson.so.4",
+      "sha256": "ec0e6c38dd7f4979d61563777872de4c9983b0cfb15bbba9b0d9d90e4d736907"
+    },
+    {
+      "name": "liblz4.so.1",
+      "sha256": "d1482a2f74152881d8b83708fedae7bca039f5608024f1178dc21a17df9887a7"
+    },
+    {
+      "name": "liblzma.so.5",
+      "sha256": "47ea0f43683ef829cda43bfe1862c1b06f085fbd813bb58d2d142477f5380139"
+    },
+    {
+      "name": "libmnl.so.0",
+      "sha256": "1dae1fd6e48b655c397e63a9eb54f31fd882d944c67749477cf5804be583af23"
+    },
+    {
+      "name": "libnetfilter_conntrack.so.3",
+      "sha256": "eca73602c11ebf506efff66981f9a74e8e1ab39a7acb2ef2d7efcb0979341c26"
+    },
+    {
+      "name": "libnettle.so.8",
+      "sha256": "8fd8ed433f1b993fe8b8aa8d3fa5342955ab581dc5ce418381872cd3df3dbb11"
+    },
+    {
+      "name": "libnfnetlink.so.0",
+      "sha256": "3a46937f445d86a5db41524948154e5f8f3021f6d21868052fa6311c58403bed"
+    },
+    {
+      "name": "libnftables.so.1",
+      "sha256": "a8d7f39a2b09969ed5283b25cdbf6ed516a20bb10120a2f78ec4d02a9b697cc1"
+    },
+    {
+      "name": "libnftnl.so.11",
+      "sha256": "946fe5883e5aa60711f317fd37d8cf1248252a47c87ec7c6fbdf8a2f8633d7a4"
+    },
+    {
+      "name": "libsystemd.so.0",
+      "sha256": "f0574d5aa73fb8ef26d159d909751c1cf4555ce8679ac5c1ebac76bbdddaec7f"
+    },
+    {
+      "name": "libunistring.so.5",
+      "sha256": "639c4c15f94e960450b69475d7282e4760fd5895a6a4f4e85f44bb15b74e512c"
+    },
+    {
+      "name": "libxtables.so.12",
+      "sha256": "1d0171c83beadfa938452488ad09aa657dc2f3210c786e1e236775c109116011"
+    },
+    {
+      "name": "libzstd.so.1",
+      "sha256": "fe726238b170b83aa83bf1f8a79109b8b61b9eb45234304511d093bbe5f5fb20"
+    },
+    {
+      "name": "ld-linux-aarch64.so.1",
+      "sha256": "390027e5f45f236bd1838bc54bf464c5ff01d260ab9f8b415ea8276641bce505"
+    }
+  ],
+  "origin": "Ubuntu",
+  "package_sha256": "269f450f1ba1e879adfd07f5787a614f494218b8a58856cb2fd59b1c9f679992",
+  "package_version": "2.90-2ubuntu0.4",
+  "release_date": "Wed, 30 Sep 2026 16:40:42 UTC",
+  "signer": "F6ECB3762474EDA9D21B7022871920D1991BC93C",
+  "suite": "noble-security",
+  "bundle_sha256": "8ccb8f30a1a179b02825bda6040bb51a807b4abbcda24f925028481d5c48e72e",
+  "bundle_bytes": 4614005
+}
