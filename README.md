@@ -2,7 +2,7 @@
 
 Experimento de mini servidor Linux em um iPhone 6s com tela defeituosa, usando boot em RAM assistido por um Mac.
 
-**Verificado no aparelho antes da reorganização:** novo boot com console, Bash, SSH e HTTP integrados; Linux 7.0.12 ARM64, rede USB NCM e Herdr 0.9.1. O wrapper completo e a restauração após novo boot também passaram fisicamente nessa rodada. **Pendente:** revalidar esses dois fluxos depois da reorganização, além de boot autônomo, armazenamento interno, Wi-Fi e operação contínua.
+**Verificado no aparelho:** a árvore reorganizada completou novo boot com console, Bash, SSH e HTTP integrados; Linux 7.0.12 ARM64, rede USB NCM e Herdr 0.9.1. A restauração após novo boot também foi revalidada pelo novo CLI. **Pendente:** confirmação de carga sustentada, boot autônomo, armazenamento interno, Wi-Fi e operação contínua.
 
 ## Documentação
 

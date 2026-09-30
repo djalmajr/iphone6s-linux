@@ -58,7 +58,7 @@ Evidência: [console-cold-boot.txt](evidence/console-cold-boot.txt). O tar priva
 
 ### Repetir
 
-`bash scripts/host/iphone-linux.sh boot` seleciona a imagem integrada verificada. `boot-probe` seleciona a imagem original e restaura seu runtime pelo Mac. O wrapper completo foi executado de ponta a ponta antes da reorganização; nesta árvore reorganizada, a validação disponível até a nova verificação é local e por smoke em uma sessão já ativa.
+`bash scripts/host/iphone-linux.sh boot` seleciona a imagem integrada verificada. `boot-probe` seleciona a imagem original e restaura seu runtime pelo Mac. Em 2026-09-30, o wrapper completo foi executado de ponta a ponta com a árvore reorganizada, saída 0, PongoOS, upload intacto da imagem integrada de 23.767.809 bytes, SSH autenticado, HTTP 200 e confirmação do console pelo operador.
 
 O `boot` não reinicia um Linux já rodando: verifica SSH/HTTP e mantém a sessão. Em caso de reinício, ainda são necessários Mac, cabo USB-A → Lightning e botões físicos para DFU. A imagem anterior permanece disponível.
 
@@ -78,4 +78,4 @@ O protótipo `dfu_visual.py` foi então removido. `scripts/boot/dfu_boot.py` aco
 
 Os 15 testes locais passaram, incluindo retomada apenas após DFU simulado e encerramento do processo filho. A saída do monitor fica em log privado ignorado pelo Git.
 
-Na tentativa seguinte, a versão sem contador também completou uma única execução com saída 0: DFU manual, PongoOS, upload da imagem integrada, alias USB, SSH e HTTP 200. O usuário confirmou console Linux e aparelho frio/morno. Foi observado Linux 7.0.12, uptime 46,12 s e framebuffer blank 0. O monitor encerrou e removeu sua pasta de estado; nenhum servidor HTTP de apoio foi iniciado. Isso concluiu a validação física do wrapper (#3) antes da reorganização, sem encerrar a investigação de alimentação (#2). Depois da reorganização, a confirmação disponível é local e por smoke em uma sessão já ativa; o novo boot deve ser repetido para validar os caminhos movidos.
+Na tentativa seguinte, a versão sem contador também completou uma única execução com saída 0: DFU manual, PongoOS, upload da imagem integrada, alias USB, SSH e HTTP 200. O usuário confirmou console Linux e aparelho frio/morno. Foi observado Linux 7.0.12, uptime 46,12 s e framebuffer blank 0. O monitor encerrou e removeu sua pasta de estado; nenhum servidor HTTP de apoio foi iniciado. Isso concluiu a validação física do wrapper (#3) antes da reorganização, sem encerrar a investigação de alimentação (#2). A revalidação posterior da árvore reorganizada repetiu esse fluxo pelo novo CLI e preservou a mesma imagem integrada; isso comprova o boot e os serviços, não carga sustentada da bateria.

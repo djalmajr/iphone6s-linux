@@ -63,7 +63,7 @@ A extração não é transacional: falta de espaço ou interrupção pode deixar
 - HTTP manteve o PID 92; Herdr permaneceu ativo. Não houve reboot nem instalação de pacote.
 - Arquivos de teste removidos do telefone; snapshot final do estado operacional salvo no Mac. Os snapshots de teste e a cópia anterior à restauração permanecem locais, sem publicação.
 
-Na rodada de 2026-09-29, a recuperação foi testada na mesma sessão, sem outro DFU/reboot. A validação física em novo boot ocorreu em 2026-09-30, antes da reorganização dos arquivos, conforme registro abaixo.
+Na rodada de 2026-09-29, a recuperação foi testada na mesma sessão, sem outro DFU/reboot. A validação física em novo boot ocorreu em 2026-09-30, primeiro antes da reorganização e depois novamente com a árvore reorganizada, conforme registro abaixo.
 
 Registro resumido: [persistence-check.txt](evidence/persistence-check.txt).
 
@@ -73,7 +73,7 @@ A sentinela `/srv/data/boot-restore-proof.txt`, com modo 640 e conteúdo conheci
 
 Resultado real: SHA-256 da sentinela `b236202ff49d61b978537415137da685cbf63164a42494dff6e7f004b28e7260`, modo 640, arquivo extra preservado. Os hashes das identidades SSH do servidor/cliente autorizado permaneceram iguais (valores não publicados); o PID HTTP permaneceu igual e o endpoint respondeu 200. O mecanismo criou um snapshot privado anterior à restauração. A fixture extra foi removida, e a sentinela recuperada foi mantida.
 
-Isso concluiu #4 antes da reorganização. Persistência depende dos snapshots no Mac: o teste não demonstrou armazenamento interno nem recuperação de processos. A extração continua não transacional; recuperação de interrupção/falta de espaço é #15. Depois da reorganização, ainda é preciso repetir o fluxo com os caminhos novos; por enquanto há somente testes locais e smoke em uma sessão já ativa.
+Isso concluiu #4 antes da reorganização. Em seguida, o novo CLI da árvore reorganizada repetiu o restore explícito: a sentinela estava ausente antes e voltou com SHA-256 `b236202ff49d61b978537415137da685cbf63164a42494dff6e7f004b28e7260`, modo 640. As identidades SSH foram comparadas e permaneceram intactas, sem publicar seus hashes; HTTP respondeu 200. Uma cópia privada anterior à restauração foi salva no Mac. Persistência depende dos snapshots no Mac: o teste não demonstrou armazenamento interno nem recuperação de processos. A extração continua não transacional; recuperação de interrupção/falta de espaço é #15.
 
 ## Encerramento da etapa
 

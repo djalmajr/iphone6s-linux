@@ -16,7 +16,7 @@ Hardware: iPhone 6s, `iPhone8,1`, placa `N71AP`, A9 Samsung S8000, armazenamento
 
 Funciona no aparelho: boot Linux em RAM, rede NCM por USB, HTTP, Bash 5.2.21, SSH Dropbear por chave e Herdr 0.9.1. O servidor Herdr e o painel sobreviveram ao fechamento da conexão SSH. Nenhum agente de IA, conta ou credencial de provedor foi instalado no telefone.
 
-Não estabelecido: armazenamento interno, Wi-Fi, leitura de bateria, temperatura, carga sustentada, boot autônomo e estabilidade prolongada. O wrapper completo e a restauração após novo boot foram aprovados fisicamente em 2026-09-30 antes da reorganização; nesta árvore reorganizada, esses dois fluxos ainda aguardam repetição desde um reinício, além dos testes locais e do smoke em uma sessão já ativa. A imagem integrada com console, Bash, SSH e HTTP deu boot no aparelho; o usuário confirmou que o console apareceu sozinho. Veja seção 17.
+Não estabelecido: armazenamento interno, Wi-Fi, leitura de bateria, temperatura, carga sustentada, boot autônomo e estabilidade prolongada. Em 2026-09-30, a árvore reorganizada completou o wrapper desde um reinício e o novo CLI restaurou a sentinela em um boot seguinte. A imagem integrada com console, Bash, SSH e HTTP deu boot no aparelho; o usuário confirmou que o console apareceu sozinho. Veja seção 17.
 
 ## 2. Linha do tempo e decisões
 
@@ -161,13 +161,13 @@ cd ~/iphone6s-linux/iphone-linux-tools
 bash scripts/host/iphone-linux.sh boot
 ```
 
-O wrapper confere os hashes do palera1n e da imagem integrada, espera PongoOS, envia o payload e espera a interface do Linux. Depois atribui o IP USB temporário do Mac e verifica SSH e HTTP iniciados pelo init. `boot-probe` conserva o fluxo original com instalação posterior do runtime. O wrapper completo passou fisicamente antes da reorganização; nesta árvore, os testes locais e o smoke em uma sessão já ativa passaram, mas a nova verificação desde um reinício permanece pendente.
+O wrapper confere os hashes do palera1n e da imagem integrada, espera PongoOS, envia o payload e espera a interface do Linux. Depois atribui o IP USB temporário do Mac e verifica SSH e HTTP iniciados pelo init. `boot-probe` conserva o fluxo original com instalação posterior do runtime. Em 2026-09-30, uma invocação de `scripts/host/iphone-linux.sh boot` completou a árvore reorganizada desde um reinício, com saída 0, PongoOS, upload intacto da imagem integrada de 23.767.809 bytes, SSH autenticado, HTTP 200 e confirmação do console pelo operador.
 
 Fluxo manual original comprovado (para a integrada, substituir o nome do payload conforme seção 17):
 
 1. Cabo **USB-A → Lightning**, porta USB-A traseira do Mac. Recuperação mostra cabo/computador.
 2. `scripts/boot/dfu_boot.py` usa `PALERA1N_BYPASS_PASSCODE_CHECK=1 bin/palera1n-macos-arm64 -lp -k artifacts/Pongo.bin`. No A9 deste teste, o bypass evita a verificação de passcode da ferramenta; não desbloqueia dados de usuário nem altera conta.
-3. Entrar em DFU manualmente pelos botões físicos. O monitor aguarda a enumeração USB e não abre página nem contador. Tela preta é necessária, mas só a detecção USB comprova DFU (`05ac:1227`). Cabo na tela significa recuperação. O guia visual histórico foi removido em 2026-09-30 a pedido do operador; o monitor substituto passou em testes locais simulados e no teste físico completo anterior à reorganização. Repetir o teste depois da mudança de caminhos.
+3. Entrar em DFU manualmente pelos botões físicos. O monitor aguarda a enumeração USB e não abre página nem contador. Tela preta é necessária, mas só a detecção USB comprova DFU (`05ac:1227`). Cabo na tela significa recuperação. O guia visual histórico foi removido em 2026-09-30 a pedido do operador; o monitor substituto passou em testes locais simulados e na revalidação física da árvore reorganizada.
 4. Confirmar log de sucesso e `PongoOS USB Device`. O monitor pode ser interrompido depois disso.
 5. Enviar o payload:
 
@@ -270,7 +270,7 @@ O cliente OpenSSH atual imprime um aviso de ausência de troca pós-quântica co
 
 Evidências locais: `evidence/multipass-build.json`, `evidence/ubuntu-package-versions.txt`, `evidence/ssh-linux-status.txt`, `evidence/herdr-phone.txt`, `evidence/linux-boot-proof.txt`, `evidence/linux-http-proof.html`, `artifacts.json`. O log `../logs/install-last.log` permanece somente local. Alguns registros iniciais são históricos, anteriores ao SSH; os mais novos mostram o estado atualizado.
 
-Gates pendentes: repetir o boot frio pelo wrapper e a restauração após novo boot depois desta reorganização; confirmação física de carga; estabilidade prolongada; persistência de dados alterados; acesso LAN/serviço DNS. Os dois primeiros fluxos passaram fisicamente antes da reorganização, mas a árvore reorganizada só tem testes locais e smoke em uma sessão já ativa até a revalidação. Não confundir o HTTP/Bash/Herdr já verificados com esses gates.
+Gates pendentes: confirmação física de carga sustentada; estabilidade prolongada; recuperação de uma restauração interrompida; acesso LAN/serviço DNS; e os demais itens do backlog. O boot frio pelo wrapper e a restauração após novo boot foram revalidados fisicamente nesta árvore, mas isso não prova que a alimentação mantenha carga positiva ou operação contínua. Não confundir o HTTP/Bash/Herdr já verificados com esses gates.
 
 Fontes primárias: [Hoolock PongoOS](https://github.com/HoolockLinux/docs/blob/master/tutorials/SETUP_pongoOS.md), [Hoolock A9](https://github.com/HoolockLinux/docs/blob/master/features/A9.md), [armazenamento](https://github.com/HoolockLinux/docs/blob/master/tools/README.md), [palera1n](https://github.com/palera1n/palera1n), [Herdr](https://github.com/herdrdev/herdr), [processo de boot Apple](https://support.apple.com/en-ca/guide/security/secb3000f149/web).
 
@@ -306,7 +306,7 @@ Após autorização do usuário e confirmação de que estava pronto para os bot
 
 `scripts/host/iphone-linux.sh backup`, `backups` e `restore` guardam snapshots privados de `/srv/data` e arquivos de trabalho de `/root`. Identidade SSH e estado vivo de sessões Herdr são excluídos. A restauração verifica hash/escopo, salva a cópia anterior e recupera conteúdo/permissões sem remover arquivos extras. O ciclo real foi testado no telefone ativo sem reboot; 6 testes locais e testes de bloqueio de links/corrupção passaram. O procedimento completo e seus limites estão em [PERSISTENCIA.md](PERSISTENCIA.md).
 
-Os backups ficam no Mac e não são publicados. Alterações após o último snapshot continuam vulneráveis à perda de energia. A recuperação após outro DFU passou fisicamente antes da reorganização; depois da mudança de caminhos, ainda precisa ser repetida. Não há restauração automática no boot.
+Os backups ficam no Mac e não são publicados. Alterações após o último snapshot continuam vulneráveis à perda de energia. A recuperação após outro DFU foi revalidada fisicamente com o CLI da árvore reorganizada. Não há restauração automática no boot.
 
 ## 19. Investigação de Wi-Fi
 
