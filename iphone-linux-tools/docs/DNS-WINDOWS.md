@@ -95,7 +95,7 @@ Bind exclusivo em `127.0.0.1` para TCP/UDP 15953 e 1053, portas conferidas livre
 - **Alternativas:** continuar dependente do nslookup impede a validação reproduzível em 1053; instalar dig ou alterar DNS/firewall/proteções acrescenta mudanças ao host; manter o diagnóstico de 54 bytes como cliente final não cobre o parser/negativos exigidos.
 - **Reverter:** baixo; preservar histórico/receita nativa e reverter a alteração do helper na branch. Nenhuma migração ou alteração do daemon/proxy do iPhone.
 - **Onde:** fase 1 de cinco arquivos abaixo; publicação/CI em fase seguinte.
-- **Status:** aprovada pelo objetivo da #20, na fila de implementação. Esta rodada não mudou o helper nem cumpriu os testes do cliente final.
+- **Status:** fase 1 implementada e validada no Windows real: 61 casos, 18 mutações e nove invocações do helper público. CI Windows e novo piloto físico ainda pendentes; #20 permanece aberta.
 
 ### Contrato e fases do cliente
 
@@ -110,3 +110,13 @@ Cliente compilado pela ferramenta .NET já disponível: nenhum executável exter
 **Fase 2 — até cinco arquivos:** `.github/workflows/ci.yml`, `docs/DNS.md`, `docs/STATUS.md`, `docs/PR-REVIEW.md` e `docs/evidence/windows-dns-fixture.json`. Registrar runner Windows para testes/mutações novos, conservar Ubuntu/macOS e evidência não afetada, documentar uso/limites e publicar resultado somente depois de observar o CI correspondente. O rollout local pelo Windows deverá também exercitar o helper público contra fixture LAN privada explícita.
 
 **Fase física:** Windows UDP/TCP contra iPhone após novo boot com DNS restaurado, controles negativos aplicáveis, snapshot/limpeza e retorno conforme runbook. Não fechar #20 com prova sintética ou memória dos dois pilotos anteriores. Kernel/Pongo novos, energia/estabilidade e integração permanecem gates distintos.
+
+### Fechamento da fase 1 — cliente e prova nativa
+
+Os cinco arquivos previstos foram implementados. O helper conserva seus parâmetros e marcadores; agora compila a fonte C# local com `Add-Type`, verifica o hash da fonte carregada para recusar reutilização de assembly antiga e consulta diretamente o endpoint declarado. Não instala ferramentas, modifica ExecutionPolicy ou usa o resolvedor do sistema. Tipos de RR suportados: A, AAAA, NS, CNAME, PTR, SOA, MX, SRV, HINFO, TXT e OPT; outros tipos, respostas com aliases em vez do A solicitado e dados não validados são recusados. Não é resolvedor DNS geral.
+
+PowerShell 5.1 do Windows autorizado executou parser/compilação reais e **61 casos aprovados**. O runner criou processos filhos novos, verificou a assinatura Microsoft do PowerShell e aprovou **18 mutações reais**, todas por asserção no caso correspondente, sem contar erro de compilação como rejeição. A primeira mutação `private-range` usava condição constante que o compilador recusou como código inalcançável; não contou como prova. Após corrigir somente esse descritor, baseline e mutação focados passaram; uma passagem final conservada em log confirmou os 61 casos e todas as 18 rejeições com saída 0. Nenhuma fonte operacional foi alterada para aplicar as mutações.
+
+O comando público foi executado em nove processos novos: dois positivos em fixture LAN privada do Mac, nas portas 1053/15953, ambos com `IPHONE_DNS_UDP_OK` e `IPHONE_DNS_TCP_OK`; sete negativos (destino loopback, público, wildcard, IPv4 não canônico, endereço esperado público, nome fora de home.arpa e porta 53) falharam sem marcador de sucesso e pelo motivo esperado. A fixture recebeu exatamente quatro perguntas válidas, nenhum erro/recusa ACL; foi encerrada com saída 0 e não restou listener nas duas portas. Isso prova o helper contra resposta sintética, não contra o iPhone.
+
+Artefatos privados de reprodução estão em `runtime/windows-dns-client-20261001/`: hashes das quatro fontes transferidas, controlador CLI, resultados e fixture/log LAN. A primeira transferência perdeu uma variável entre blocos e falhou antes de executar testes; a repetição usou diretório temporário exclusivo e conferência SHA-256. Não houve pacote novo, banco, chave ou configuração global alterados. Compilação C# e parser PowerShell são os gates de sintaxe/tipos desta fase; `git diff --check` e guard público devem passar antes da publicação. Próxima fase: CI Windows e documentação/evidência sanitizada; o USB ausente ainda impede o gate físico.
