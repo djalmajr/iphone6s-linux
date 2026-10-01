@@ -8,13 +8,13 @@ As provas abaixo são de sessões já concluídas, não indicam um servidor ativ
 |---|---|
 | Boot e recuperação de arquivos (#3/#4) | Wrapper com DFU manual e restore comprovados no aparelho; [operação](EXECUCAO.md) e [perfil](PROFILES.md) |
 | Snapshots e falhas (#5/#15) | Agendador/retenção com prova física curta; recuperação explícita de ENOSPC/interrupção em VM. Correção #22 recusa desvios locais por links, validada em Mac/VM/CI; [procedimentos](RECUPERACAO.md) e [evidência](evidence/local-snapshot-paths.json) |
-| LAN e DNS (#6/#7) | SSH/HTTP e DNS UDP/TCP pelo Mac/Windows; DNS recuperado em segundo boot. Não configura DNS global ou saída geral de internet; porta 53 e nslookup permanecem #19/#20; [DNS](DNS.md) |
+| LAN e DNS (#6/#7) | Correção #24 valida nomes do bundle antes do SSH, com prova local/VM; SSH/HTTP e DNS UDP/TCP pelo Mac/Windows; DNS recuperado em segundo boot. Não configura DNS global ou saída geral de internet; porta 53 e nslookup permanecem #19/#20; [DNS](DNS.md) |
 | Reprodução (#12) | m1n1 reproduzido, imagem userspace validada em VM nova e dois boots curtos. Kernel/Pongo de fonte compilados, empacotamento/seleção com hashes fixos; piloto da nova cadeia e rollback Linux pendentes; [Pongo](PONGO-SOURCE-BUILD.md) |
 | CI (#14) | Matriz pública Ubuntu/macOS, sem chaves/imagens reais. Tests/skips/mutações associados ao commit no [manifesto Pongo](evidence/pongo-source-build.json); CI não prova hardware |
 | Alimentação/estabilidade (#2/#8) | Carga sustentada e estabilidade prolongada não estabelecidas; sem sensores Linux validados; [alimentação](ALIMENTACAO.md) |
 | Retorno ao iOS (#21) | Helper salva/verifica snapshot e confirma USB/modelo; novo kernel com watchdog ainda requer piloto. Fallback físico comprovado; [recuperação](REBOOT.md) |
 | Herdr/hardware (#13/#9/#10/#11) | Herdr comprovado na implantação original; automação/reconexão da candidata, Wi-Fi, NAND e boot autônomo pendentes |
-| Integração (#16) | Branch/PR #1 abertas; descrição alinhada aos gates realizados, revisão parcial de persistência/boot com correções #22/#23. [Cobertura e limites](PR-REVIEW.md); revisão completa e autorização de merge pendentes |
+| Integração (#16) | Branch/PR #1 abertas; descrição alinhada aos gates realizados, revisão parcial de persistência/boot/DNS com correções #22/#23/#24. [Cobertura e limites](PR-REVIEW.md); revisão completa e autorização de merge pendentes |
 
 Nenhum pacote instalado no Mac nesta evolução. Downloads, fontes externas, artefatos, chaves e snapshots ficam privados; builds externos somente em VMs dedicadas. Para trocar Pongo ou perfil de Linux, confirmar primeiro o fim da sessão anterior; retirar uma variável não altera uma sessão já iniciada.
 

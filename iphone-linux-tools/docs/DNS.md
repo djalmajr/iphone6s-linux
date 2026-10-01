@@ -267,3 +267,18 @@ $t=New-Object Net.Sockets.TcpClient
 try { $t.ReceiveTimeout=3000; $t.SendTimeout=3000; $task=$t.ConnectAsync('IPv4_PRIVADO_DO_MAC',1053); if (-not $task.Wait(3000)) { throw 'Connect timeout' }; $s=$t.GetStream(); [byte[]]$frame=@(0,$q.Length)+$q; $s.Write($frame,0,$frame.Length); $a=$s.ReadByte();$b=$s.ReadByte();if ($a -lt 0 -or $b -lt 0) { throw 'Missing frame' };$len=256*$a+$b;if ($len -lt 12 -or $len -gt 4096) { throw 'Bad length' };[byte[]]$r=New-Object byte[] $len;$n=0;while ($n -lt $len) {$got=$s.Read($r,$n,$len-$n);if ($got -le 0) {throw 'Truncated frame'};$n+=$got};Confirm-Reply $r;Write-Output 'IPHONE_RAW_DNS_TCP_OK' } finally {$t.Dispose()}
 }
 ```
+
+## Namespace do bundle — correção #24
+
+O manifesto selecionado precisa ter uma lista de bibliotecas com records e nomes string únicos. Cada nome é um basename ASCII de 1 a 255 caracteres, começa por letra, número ou `_`, e usa somente letras, números, `_`, `.`, `+` e `-`. Caminhos absolutos, subdiretórios, `.`/`..`, aliases, espaços e controles são recusados antes do SSH. O conjunto do tar continua restrito aos três arquivos fixos e às bibliotecas declaradas, todos regulares e sem bits especiais, com hash/tamanho conferidos.
+
+Isso preserva os dois bundles existentes com 22 bibliotecas e `install --manifest CAMINHO`. Não normaliza nomes inválidos nem aceita automaticamente hashes internos. Baseline sintético/CLI de seis testes e dez mutações passou no Mac; na VM dedicada passaram as seis regressões novas, instalação/restore real e sete mutações existentes. Os dados de teste e as identidades eram sintéticos. A reprodução da falha não extraiu arquivos e não demonstra escape no tar do telefone.
+
+Reprodução local, sem dispositivo ou extração:
+
+```sh
+python3 -m unittest discover -s iphone-linux-tools/tests -p test_dns_bundle.py -v
+python3 iphone-linux-tools/tests/run_dns_bundle_mutations.py
+```
+
+A instalação/restore na VM usa a receita isolada já documentada acima e o par bundle/manifesto do build selecionado. Não execute fixtures privilegiados no Mac. [Evidência e limites](evidence/dns-bundle-scope.json); validação completa do manifesto/descompressão, concorrência e instalação transacional permanecem fora desta correção.

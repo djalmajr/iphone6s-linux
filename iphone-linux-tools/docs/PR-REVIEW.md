@@ -124,3 +124,23 @@ Fonte: decisão D2 e issue #23. Modo: encerramento de uma correção dentro de #
 - **Status:** seis cenários sintéticos/CLI e 10/10 mutações aprovados; lint fatal e diff-check passaram. Bundles preservado/reproduzido de 4.614.005/4.613.949 bytes passaram por leitura, sem modificar insumos. Revalidação na VM dedicada em curso; CI/publicação pendentes. Não equivale a assinatura do manifesto, parser com limites completos de descompressão ou instalação transacional. Nenhuma extração no Mac nem ação no telefone nesta correção.
 
 O runner inicialmente usou a âncora `or name in names`, que também aparecia dentro do texto do generator `for name in names`; a validação de unicidade recusou a mutação antes de executá-la. O resultado inicial não foi contado como mutação detectada. A âncora passou a incluir o `:` da condição, e o runner final completou dez mutações com falha de assertion; nenhuma validação operacional foi alterada para facilitar o teste.
+
+## Encerramento da correção #24 — fase documental
+
+Fonte: decisão D3 e issue #24. Código/CI em `d9110cd`; até cinco arquivos nesta fase: relatório, DNS, STATUS, evidência e inventário de cobertura. A declaração de nomes no manifesto podia ampliar o escopo permitido; nomes canônicos únicos agora são necessários antes do SSH. A reprodução não extraiu arquivos nem demonstrou escape do tar remoto.
+
+| Verificação | Resultado |
+|---|---|
+| Regressões locais | 6/6, CLI e bundles sintéticos; transferência positiva com manifesto explícito e recusas sem SSH |
+| Mutações locais | 10/10 detectadas após baseline verde; primeira âncora não única não foi contada |
+| Insumos preservados | Dois bundles com 22 bibliotecas conferidos por leitura; bytes/hashes na evidência |
+| VM Linux | 6/6 novas regressões e 2/2 instalação/restore por SSH e DNS reais; 7/7 mutações existentes recusadas |
+| CI Ubuntu/macOS | Quatro jobs terminais aprovados em `d9110cd`: 122 testes por job, 113 aprovados/nove skips; dez mutações DNS por job, demais runners existentes também verdes |
+| Lint/tipos | Flake8 fatal/diff-check aprovados; nenhum type checker configurado |
+| Limpeza | Transferência própria removida, zero fixtures/montagens restantes, VM dedicada parada sem mounts |
+| Banco/dependências | Nenhum banco, pacote ou configuração global do Mac alterado; dependências existentes na VM |
+| Desempenho | Uma passagem sobre nomes de bibliotecas; throughput do telefone não medido |
+
+**Compatibilidade:** bundles normais e seleção explícita continuam funcionando; entradas malformadas, duplicadas ou com caminhos passam a abortar. **Limites:** validação de namespace não autentica todo manifesto, não impõe limites completos de descompressão e não torna a instalação transacional. Nenhum boot no aparelho nesta correção. [Evidência](evidence/dns-bundle-scope.json). #16 continua parcial, #12/#21 requerem piloto físico da nova cadeia, #2/#8 conservam seus gates físicos.
+
+CI do código aprovado: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/36828530652) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36828523923), com Flake8 fatal, sintaxe, guard público e ShellCheck Linux aprovados. Inventário atualizado: 34 leituras completas em 142 entradas do baseline até `d9110cd`; continua parcial, sem aprovação integral ou merge. O estado em curso na decisão D3 registra o checkpoint anterior; esta seção e o JSON contêm a conclusão dos gates.

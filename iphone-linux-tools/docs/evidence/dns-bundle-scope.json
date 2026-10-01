@@ -1,0 +1,104 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 24,
+  "code_commit": "d9110cdc1027c32e9c4d20aff119f4e9830c20fc",
+  "status": "local-vm-ci-passed",
+  "reproduction": {
+    "synthetic_only": true,
+    "matching_digest_accepted_traversal_before_fix": true,
+    "archive_extracted": false,
+    "ssh_started": false,
+    "remote_escape_demonstrated": false
+  },
+  "change": "Validate list/record shapes and unique canonical ASCII library basenames before constructing permitted tar members and before SSH. Existing digest/type/scope guards remain required.",
+  "local": {
+    "tests": 6,
+    "passed": 6,
+    "mutations_killed": 10,
+    "mutations_total": 10,
+    "fatal_flake8": "passed",
+    "diff_check": "passed",
+    "type_checker": "not-configured"
+  },
+  "preserved_inputs": [
+    {
+      "kind": "original",
+      "bytes": 4614005,
+      "sha256": "8ccb8f30a1a179b02825bda6040bb51a807b4abbcda24f925028481d5c48e72e",
+      "libraries": 22,
+      "read_only_verification": "passed"
+    },
+    {
+      "kind": "rebuilt",
+      "bytes": 4613949,
+      "sha256": "9dc590eff5cc2001117021115b0e82d0127982b18a4aa33671a91a6dd70d04fe",
+      "libraries": 22,
+      "read_only_verification": "passed"
+    }
+  ],
+  "vm": {
+    "new_bundle_tests": 6,
+    "install_restore_tests": 2,
+    "installer_mutations_rejected": 7,
+    "real_dependencies": [
+      "Dropbear",
+      "OpenSSH",
+      "dnsmasq",
+      "BusyBox",
+      "Bash"
+    ],
+    "synthetic_identities_only": true,
+    "transfer_removed": true,
+    "fixture_remains": 0,
+    "fixture_mounts_remain": 0,
+    "final_state": "Stopped",
+    "mounts": {},
+    "packages_installed": false
+  },
+  "ci": {
+    "status": "success",
+    "commit": "d9110cdc1027c32e9c4d20aff119f4e9830c20fc",
+    "runs": [
+      {
+        "id": 36828530652,
+        "event": "pull_request",
+        "conclusion": "success"
+      },
+      {
+        "id": 36828523923,
+        "event": "push",
+        "conclusion": "success"
+      }
+    ],
+    "jobs": 4,
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-15"
+    ],
+    "tests_per_job": 122,
+    "passed_per_job": 113,
+    "explicit_skips_per_job": 9,
+    "mutations_per_job": {
+      "snapshot_paths": 11,
+      "boot_tools": 10,
+      "dns_bundle": 10,
+      "profile": 20,
+      "return_ios": 9,
+      "kernel_integration": 7,
+      "pongo_format": 6,
+      "pongo_selection": 11
+    },
+    "fatal_flake8": "passed",
+    "shell_syntax": "passed",
+    "public_guard": "passed",
+    "shellcheck_linux": "passed"
+  },
+  "limits": [
+    "No phone operation or new physical boot in this correction.",
+    "Manifest signature and complete decompression/parser limits are not implemented by this change.",
+    "Matching digest is not proof of safe namespace or full binary audit.",
+    "No demonstrated BusyBox tar escape, transactional install or concurrent same-user author support."
+  ],
+  "initial_runner_error": "Nonunique duplicate-name mutation anchor refused before executing that mutation; corrected anchor, final ten assertion failures verified."
+}
