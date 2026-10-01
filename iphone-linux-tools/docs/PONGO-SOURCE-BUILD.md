@@ -10,7 +10,7 @@ Arquivos públicos desta fase: este documento, `scripts/build/build-pongo-source
 - [x] Autenticar repositórios/pacotes do guest com assinaturas APT; registrar chave oficial, fingerprints, hashes e versões. Sem instalação ou mudança de confiança no Mac.
 - [x] Fixar PongoOS `bb492b004265ce91123caa23b8bc04b2eff6d2b7` e newlib `f9ea5054de8fb51dff6f6d3c2e7cdd4aa89744b8`, mais cctools-port `e79d784d667816e4b15a0abd78828f9abb0a0b99`; conferir árvores e receitas antes de execução.
 - [x] Compilar apenas `Pongo.bin` e ferramentas necessárias, conservar qualquer falha e validar arquitetura/formato/hashes da saída. Não presumir igualdade com o binário preservado.
-- [ ] Copiar somente artefatos/resultados privados, conferir hashes, parar a VM própria, publicar receita/resultado sanitizado e atualizar #12/#17.
+- [x] Copiar somente artefatos/resultados privados, conferir hashes, parar a VM própria e publicar receita/resultado sanitizado. Atualização das issues acompanha o resultado de CI abaixo.
 
 ## D1. Compilação no guest
 
@@ -103,8 +103,6 @@ O arquivo temporário `/etc/systemd/resolved.conf.d/iphone6s-pongo-build.conf` f
 
 ## Pendências
 
-- Publicar os cinco arquivos desta fase e registrar #12/#17; CI dos testes públicos ainda pendente.
-- Registrar as mutações em CI e atualizar a referência geral na fase seguinte.
 - Integrar a seleção explícita da candidata Pongo sem substituir o padrão; validar negativa por hash antes de USB.
 - Piloto físico separado com o kernel de fonte e Pongo de fonte, console/NCM/SSH/HTTP e snapshot/retorno ao iOS. Fontes/binários conhecidos não comprovam carregamento sustentado, estabilidade, NAND, Wi-Fi ou boot autônomo.
 
@@ -114,4 +112,12 @@ Escopo desta fase: `tests/run_pongo_mutations.py`, `.github/workflows/ci.yml`, e
 
 - [x] Runner público: baseline e 6/6 mutações aprovados no Mac; lint aprovado.
 - [x] Workflow registra o runner nas duas plataformas; referência de reprodução distingue clone histórico, candidata compilada e gate físico.
-- [ ] CI Ubuntu/macOS confirmado e registrado.
+- [x] CI Ubuntu/macOS confirmado e registrado.
+
+## Encerramento da fase de compilação e CI
+
+Fonte: plano deste documento e issue #12; backlog geral #17 continua ativo. Receitas, verificador, testes e runner foram publicados em `bc568ef`/`4e493dd`. Referências e manifesto registram fontes, falhas, recuperação do fetch, duas compilações iguais entre si e limpeza da VM. Nenhum pacote instalado no Mac, imagem padrão substituída, banco alterado ou payload enviado ao telefone nesta fase.
+
+O commit testado é `4e493ddcb74d1a5025d5478ae98dd830f4b23567`: [CI do PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/36817489484) e [CI do push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36817485824) concluíram com sucesso. Cada plataforma executou 92 testes: 83 passaram e 9 cenários exclusivos do guest foram ignorados. Mutações por plataforma: perfil 20/20, retorno ao iOS 9/9, integração de kernel 7/7 e Pongo 6/6 detectadas. Sintaxe, lint e guard público passaram; não há type checker configurado. O CI usa fixtures sintéticos e não compila a cadeia externa nem substitui o build real no guest.
+
+Próximo passo: seleção explícita da candidata com validação pré-USB e piloto supervisionado. O Pongo novo difere do preservado; a candidata continua sem boot físico. Alimentação sustentada, estabilidade e retorno automático ao iOS permanecem pendentes. Sem mudanças de comportamento na cadeia operacional ou impacto no desempenho do telefone nesta fase.

@@ -84,7 +84,23 @@
     "shellcheck": "passed",
     "mac_execution_refused_before_writes": true,
     "type_checker": "not_configured",
-    "remote_ci": "pending"
+    "remote_ci": {
+      "status": "passed",
+      "tested_commit": "4e493ddcb74d1a5025d5478ae98dd830f4b23567",
+      "pr_run": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36817489484",
+      "push_run": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36817485824",
+      "platforms": [
+        "ubuntu-24.04",
+        "macos-15"
+      ],
+      "tests_per_platform": 92,
+      "passed_per_platform": 83,
+      "skipped_per_platform": 9,
+      "profile_mutations": 20,
+      "return_ios_mutations": 9,
+      "kernel_integration_mutations": 7,
+      "pongo_mutations": 6
+    }
   },
   "created_date": "2026-10-01"
 }
