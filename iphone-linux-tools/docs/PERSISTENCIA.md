@@ -38,7 +38,9 @@ bash scripts/host/iphone-linux.sh restore
 # Ou escolher explicitamente um snapshot listado:
 bash scripts/host/iphone-linux.sh restore AAAAMMDDTHHMMSSZ-xxxxxxxx
 # Se uma restauração for interrompida, use o ID anterior publicado:
-bash scripts/host/iphone-linux.sh restore <ID-pre-restore>
+# Substitua o valor abaixo pelo ID pre-restore impresso pela ferramenta.
+restore_before_id=AAAAMMDDTHHMMSSZ-xxxxxxxx
+bash scripts/host/iphone-linux.sh restore "$restore_before_id"
 
 # Captura automática única, acompanhamento e estado privado:
 bash scripts/host/iphone-linux.sh autosnap once
