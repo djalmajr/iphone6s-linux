@@ -215,6 +215,7 @@ PY
 
 boot() {
     local image="${1:-server}" restore_id="${2:-}" payload digest
+    python3 "$ROOT/scripts/boot/pongo_select.py" > /dev/null
     if [ "$PROFILE_EXPLICIT" -eq 1 ]; then
         python3 "$ROOT/scripts/host/device_profile.py" check
     fi
@@ -232,6 +233,10 @@ boot() {
         digest=8b1a46dd67613c63aa6608dd3a0e73a73b358aaddc1818b423ff6009b55e3f66
     fi
     if ioreg -p IOUSB -w0 | grep -q 'iPhone 6s Linux probe'; then
+        if [ "${IPHONE_LINUX_PONGO+x}" = x ]; then
+            printf 'Pongo explícito exige novo boot; Linux já está ativo.\n' >&2
+            return 1
+        fi
         if [ -n "$restore_id" ]; then
             printf 'Restauração automática exige um novo boot; Linux já está ativo.\n' >&2
             return 1
@@ -245,6 +250,10 @@ boot() {
         fi
         serve
         return
+    fi
+    if [ "${IPHONE_LINUX_PONGO+x}" = x ] && ioreg -p IOUSB -w0 | grep -q 'PongoOS USB Device'; then
+        printf 'Pongo já ativo não comprova a candidata selecionada; volte ao iOS e repita DFU.\n' >&2
+        return 1
     fi
     python3 - "$ROOT/bin/palera1n-macos-arm64" "$payload" "$digest" <<'PY'
 import hashlib

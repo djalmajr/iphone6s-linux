@@ -13,12 +13,19 @@ import time
 from pathlib import Path
 
 from dfu_state import finish_output, process_output
+from pongo_select import select
 
 ROOT = Path(__file__).resolve().parents[2]
 STATE_FILE = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "logs/dfu-last-state.json"
 
 
 def main():
+    pongo = select(ROOT)
+    if 'IPHONE_LINUX_PONGO' in os.environ:
+        usb = subprocess.run(['ioreg', '-p', 'IOUSB', '-w0'], capture_output=True,
+                             text=True, timeout=5, check=True)
+        if 'PongoOS USB Device' in usb.stdout or 'iPhone 6s Linux probe' in usb.stdout:
+            raise ValueError('Pongo explícito exige novo boot a partir do iOS/Recovery/DFU.')
     lock = threading.Lock()
     state = {"ready": False, "phase": "starting", "log": ""}
 
@@ -41,7 +48,7 @@ def main():
     reader = None
     try:
         process = subprocess.Popen(
-            [str(ROOT / "bin/palera1n-macos-arm64"), "-lp", "-k", str(ROOT / "artifacts/Pongo.bin")],
+            [str(ROOT / "bin/palera1n-macos-arm64"), "-lp", "-k", str(pongo)],
             cwd=ROOT, env=environment, stdin=slave, stdout=slave, stderr=slave,
             start_new_session=True,
         )
@@ -104,3 +111,5 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         pass
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        raise SystemExit(str(error)) from error

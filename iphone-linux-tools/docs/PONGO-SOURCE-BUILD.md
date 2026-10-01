@@ -140,7 +140,13 @@ Próximo passo: seleção explícita da candidata com validação pré-USB e pil
 
 Testes: default/candidata, arquivo alterado, seleção vazia, arquivo ausente, symlink/hardlink, tamanho, propriedade/permissões e caminhos com controles; CLI e processos sintéticos verificam os efeitos observáveis. Executar mutações de hash, fallback, guard de arquivo e gate pré-USB. AST/Flake8, Bash/ShellCheck e guard público; nenhum type checker configurado. Nenhum pacote novo no host. Validação de caminho/hash pressupõe ausência de autores concorrentes nos arquivos locais; não comprova segurança do bootloader ou hardware.
 
-- [ ] Helper e fixtures aprovados.
-- [ ] Integração e mutações aprovadas.
+- [x] Helper e fixtures aprovados.
+- [x] Integração e mutações aprovadas.
 - [ ] CI e referência de operação registrados.
 - [ ] Boot físico da cadeia selecionada e retorno/rollback comprovados.
+
+### Resultado local da seleção
+
+O helper validou separadamente os arquivos reais preservado e compilado, sem ação USB. O wrapper e o monitor usam o mesmo gate; a seleção explícita exige novo boot, recusando Pongo ou Linux já ativos. A candidata é passada por argumento próprio `-k`, incluindo caminhos com espaços; não há fallback silencioso ou alteração do perfil/SSH.
+
+Oito testes sintéticos de seleção/integração passaram e 11/11 mutações foram rejeitadas por asserção: hash, seleção vazia, arquivo/link/permissões, pai symlink, hash explícito, preflight do wrapper, seleção/argumento do monitor e sessão Pongo/Linux já iniciada. Cinco testes de perfil/SSH e dois de monitor/falha do wrapper também passaram. O teste positivo verifica encerramento do processo filho após parar o monitor. Sintaxe Bash/ShellCheck e Flake8 fatal passaram; sem type checker. O Python padrão do ambiente não tinha Flake8; usamos o Python 3.12.6 já instalado, sem instalar pacote novo. CI integral será registrado na próxima fase.
