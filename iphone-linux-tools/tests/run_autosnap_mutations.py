@@ -22,7 +22,7 @@ MUTATIONS = (
     ('candidate-integrity', 'snapshot_retention.py', '            validate(snapshot_id)', '            pass', RETENTION_TEST + 'test_prune_keeps_latest_pending_manual_invalid_and_extra'),
     ('flock', 'snapshot_lock.py', 'fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)', 'pass', RETENTION_TEST + 'test_lock_is_nonblocking_and_releases_without_deleting_inode'),
     ('hardlink-lock', 'snapshot_lock.py', 'info.st_nlink != 1', 'False', RETENTION_TEST + 'test_lock_rejects_symlink_and_hardlink'),
-    ('nonregular-lock', 'snapshot_lock.py', 'not stat.S_ISREG(info.st_mode)', 'False', RETENTION_TEST + 'test_lock_rejects_fifo_without_blocking'),
+    ('nonregular-lock', 'snapshot_lock.py', 'not valid_type', 'False', RETENTION_TEST + 'test_lock_rejects_fifo_without_blocking'),
     ('keep-limit', 'autosnap.py', "'automatic', '--keep', str(options.keep)", "'automatic', '--keep', '12'", SCHEDULER_TEST + 'test_recurrence_publishes_valid_private_snapshot_and_retains_latest'),
     ('failed-transfer-state', 'autosnap.py', "outcome = 'failed'", "outcome = 'success'", SCHEDULER_TEST + 'test_offline_and_truncated_transfer_preserve_all_previous_snapshots'),
     ('timeout-state', 'autosnap.py', "outcome = 'timeout'", "outcome = 'failed'", SCHEDULER_TEST + 'test_timeout_preserves_backup_and_next_attempt_can_run'),

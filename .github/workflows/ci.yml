@@ -40,6 +40,8 @@ jobs:
           while IFS= read -r file; do bash -n "$file"; done < <(git ls-files '*.sh')
       - name: Synthetic tests without device or real identities
         run: python -m unittest discover -s iphone-linux-tools/tests -p 'test_*.py' -v
+      - name: Local snapshot and journal path mutations
+        run: python iphone-linux-tools/tests/run_snapshot_path_mutations.py
       - name: Profile security mutations
         run: python iphone-linux-tools/tests/run_profile_mutations.py
       - name: Reboot verification mutations

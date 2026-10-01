@@ -120,11 +120,11 @@ A retenção destrutiva foi exercitada somente em fixtures; nenhum autosnapshot 
 
 Nenhum pacote foi instalado no Mac, nenhuma imagem foi reconstruída e nenhum serviço do macOS foi configurado. Evidência sanitizada: [autosnapshot-check.txt](evidence/autosnapshot-check.txt).
 
-## Encerramento da etapa
+## Encerramento da etapa #5 — histórico
 
 Fonte: plano deste documento e PR #1. Modo: encerramento de uma etapa do mini servidor.
 
-**Entregue:** snapshots privados, listagem com pendências do journal, restauração com cópia anterior, validação de integridade/escopo, recuperação em novo boot DFU e procedimento de recuperação manual após interrupção. **#5 concluída:** automação, status, lock e retenção validados com testes locais, VM, mutações negativas e teste físico curto; evidência sanitizada registrada. **Pendente nesta frente:** serviço DNS; #2 e #8 continuam abertas por seus próprios gates.
+**Entregue:** snapshots privados, listagem com pendências do journal, restauração com cópia anterior, validação de integridade/escopo, recuperação em novo boot DFU e procedimento de recuperação manual após interrupção. **#5 concluída:** automação, status, lock e retenção validados com testes locais, VM, mutações negativas e teste físico curto; evidência sanitizada registrada. **Pendente naquele checkpoint:** serviço DNS, posteriormente concluído na #7; #2 e #8 continuam abertas por seus próprios gates.
 
 | Verificação | Resultado |
 |---|---|
@@ -136,3 +136,13 @@ Fonte: plano deste documento e PR #1. Modo: encerramento de uma etapa do mini se
 | Privacidade | Backup e manifesto ignorados; nenhum segredo encontrado nos padrões revisados dos arquivos preparados |
 
 Nesta rodada de #5, não foram instaladas dependências, reconstruídas imagens ou configurados serviços no Mac. Os comandos novos são aditivos. Captura e extração não fornecem consistência transacional para bancos ativos. #2 e #8 continuam abertas; #5 está concluída e o próximo item planejado é #6. A prova física curta não substitui uma medição de carga sustentada ou um teste de 24 horas.
+
+## Caminhos locais de snapshots/journal — #22
+
+A leitura/listagem/default de snapshots e o journal agora conferem nós locais por metadata, antes de ler ou corrigir permissões: store/diretórios reais, arquivos regulares próprios, sem symlinks, hardlinks de arquivos ou modos especiais. O lock usa a mesma validação sobre seu descritor. ID e hash válidos não autorizam um caminho que redireciona para outra pasta. Um journal ausente é permitido; um symlink pendente não é tratado como ausência de referências de recuperação.
+
+Se aparecer `Caminho local de snapshot/journal inválido`, preserve os backups e o erro. Inspecione tipo/propriedade do caminho indicado na sua árvore privada; não apague o journal, altere referências ou force um link para contornar o gate. Corrija somente um desvio que você reconhece e conserva os dados anteriores. Nenhuma migração ou regravação dos snapshots regulares é necessária; arquivos já existentes não foram modificados nesta correção.
+
+A retenção continua preservando estruturas inválidas; a operação de leitura pode recusar a listagem/default quando há um ID de snapshot com desvio local. Não há correção automática de árvore nem proteção contra autores maliciosos do mesmo usuário alterando caminhos concorrentemente. Store privado 700 e arquivos 600 continuam sendo o formato escrito pelo projeto.
+
+Reprodução dos testes sem aparelho: `python3 -m unittest discover -s iphone-linux-tools/tests -p test_local_snapshot_paths.py -v` e `python3 iphone-linux-tools/tests/run_snapshot_path_mutations.py`, a partir da raiz do clone público. Nove cenários sintéticos e 11 mutações; fixtures VM de falha/recuperação continuam separados e exigem o opt-in documentado em [RECUPERACAO.md](RECUPERACAO.md). Resultado e limites em [PR-REVIEW.md](PR-REVIEW.md).
