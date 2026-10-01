@@ -168,3 +168,28 @@ Quatro arquivos documentais nesta fase: plano/relatório, WIFI, STATUS e evidên
 | Próximos passos | Boot selecionado, inventário read-only, identificação privada de placa/radio/DMA antes de desenhar o port N71 |
 
 CI da publicação documental #24 também terminou verde: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/36829031688) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36829026720), quatro jobs Ubuntu/macOS. A investigação não fecha gates de #2/#8/#12/#21, não autoriza parâmetros A10 e não constitui revisão integral #16 ou merge.
+
+## D5. Separar persistência em disco de recuperação do boot — #10/#11
+
+- **Decisão:** documentar o driver/topologia ausentes da candidata N71 e as duas cadeias upstream de boot, separando snapshots no Mac, eventual rootfs interno e capacidade de iniciar após perda de energia. Nenhum particionamento, fakefs, wipe, troca de kernel ou ferramenta externa nova.
+- **Por quê:** ANS2 genérico e um tutorial de GPT não demonstram suporte ao controlador A9; iBoot remoto também parte de DFU e computador. Um filesystem persistente, mesmo funcionando, não altera por si só a cadeia de verificação/entrada do boot.
+- **Alternativas:** aplicar layout/driver A10 ou A11 conserva um requisito não validado; remover iOS para tentar forçar outro boot pode produzir Recovery/DFU sem criar loader autônomo.
+- **Reverter:** baixo; alteração documental, sem estado no aparelho.
+- **Onde:** cinco arquivos, este plano/relatório, novos ARMAZENAMENTO e BOOT-AUTONOMO, evidência conjunta e STATUS. Ler fontes fixadas, conferir hashes/DTB/configuração selecionados, registrar inferências e gates pendentes nas issues #10/#11/#17 e manter o goal completo.
+- **Status:** pesquisa/inspeção estática concluídas, publicação em curso. USB ausente; nenhum teste nativo novo, driver/firmware executado ou VM iniciada. #10/#11 permanecem abertas para os gates não comprovados.
+
+## Relatório de storage e boot autônomo — #10/#11
+
+Cinco arquivos documentais desta fase: plano/relatório, ARMAZENAMENTO, BOOT-AUTONOMO, evidência e STATUS. Nenhum código operacional ou artefato do telefone alterado. Fontes por commit/blob/hash, tabelas de drivers e docs upstream; inspeção local do mesmo DTB/configuração/initramfs usados em #9. A busca inicial `nvme` incluiu `nvmem`; foram separados os três registros PMIC antes de concluir ausência de controlador do disco.
+
+| Verificação | Resultado |
+|---|---|
+| Fonte/artefatos | Seis novos textos públicos fixados; DTB e config correspondem aos hashes publicados. Módulos da mesma imagem ausentes, conforme evidência #9 reutilizada |
+| Driver/topologia | ANS2 com matches T8015/T8103; adequação/controlador N71 não identificados. Células PMIC não são o disco |
+| Boot | Pongo atual depende de DFU/Mac; alternativa iBoot upstream também parte de DFU e envio do host. Nenhuma demonstração autônoma encontrada ou executada |
+| Testes/lint/tipos | Código operacional inalterado; CI anterior reutilizável. JSON/hashes/links/diff/guard público conferidos; nenhum type checker configurado |
+| Banco/dependências | Nenhum banco, pacote, VM, firmware, partição ou configuração global alterado |
+| Impacto | Documental; nenhuma medição de I/O, reboot ou carga nova |
+| Próximos passos | Inventário nativo read-only, dados privados de placa/controlador; piloto kernel/Pongo/retorno/rollback e alimentação antes de operação prolongada |
+
+#10/#11 permanecem abertas; critérios de identificação/detecção e recuperação física completos ainda não comprovados. CI da documentação Wi-Fi terminou verde: PR 36830037501 e push 36830033406, quatro jobs Ubuntu/macOS. Goal inteiro ativo, sem merge; não trocar prioridade dos gates de alimentação/boot pela disponibilidade de pesquisa estática.
