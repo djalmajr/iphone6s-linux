@@ -1,0 +1,200 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "status": "partial",
+  "issue": 20,
+  "scope": "real Windows client against temporary synthetic Mac DNS fixture; no iPhone boot or restore",
+  "native_tool": {
+    "signature": "Valid Microsoft",
+    "version": "10.0.26100.1",
+    "sha256": "b69b378538a7cc65e6701e4e94ee8643356ced94e3da4949683d0dbbfcc85c93"
+  },
+  "fixture": {
+    "ports": [
+      15953,
+      1053
+    ],
+    "bind": "explicit private LAN IPv4",
+    "allowed_clients": "only dedicated Windows and Mac",
+    "recursive": false,
+    "upstream": false,
+    "name": "iphone-usb.home.arpa",
+    "address": "172.16.42.1",
+    "maximum_message_bytes": 4096,
+    "maximum_duration_seconds": 600,
+    "maximum_events": 120,
+    "tcp_read_deadline_seconds": 2
+  },
+  "native_arguments": [
+    {
+      "Case": "native-arguments",
+      "Port": 15953,
+      "Mode": "-novc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 147,
+      "StderrLength": 35
+    },
+    {
+      "Case": "native-arguments",
+      "Port": 15953,
+      "Mode": "-vc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 43,
+      "StderrLength": 66
+    },
+    {
+      "Case": "native-arguments",
+      "Port": 1053,
+      "Mode": "-novc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 147,
+      "StderrLength": 35
+    },
+    {
+      "Case": "native-arguments",
+      "Port": 1053,
+      "Mode": "-vc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 43,
+      "StderrLength": 66
+    }
+  ],
+  "native_interactive": [
+    {
+      "Case": "native-interactive",
+      "Port": 15953,
+      "Mode": "-novc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 508,
+      "StderrLength": 35,
+      "EffectivePorts": [
+        "15953"
+      ],
+      "ErrorText": "*** Request to UnKnown timed-out"
+    },
+    {
+      "Case": "native-interactive",
+      "Port": 15953,
+      "Mode": "-vc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 456,
+      "StderrLength": 66,
+      "EffectivePorts": [
+        "15953"
+      ],
+      "ErrorText": "*** UnKnown can't find [endpoint].: Unspecified error"
+    },
+    {
+      "Case": "native-interactive",
+      "Port": 1053,
+      "Mode": "-novc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 507,
+      "StderrLength": 35,
+      "EffectivePorts": [
+        "1053"
+      ],
+      "ErrorText": "*** Request to UnKnown timed-out"
+    },
+    {
+      "Case": "native-interactive",
+      "Port": 1053,
+      "Mode": "-vc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 455,
+      "StderrLength": 66,
+      "EffectivePorts": [
+        "1053"
+      ],
+      "ErrorText": "*** UnKnown can't find [endpoint].: Unspecified error"
+    }
+  ],
+  "dotnet_sockets": [
+    {
+      "Case": "dotnet-sockets",
+      "Port": 15953,
+      "Mode": "UDP",
+      "ExactFixtureReply": true,
+      "ReplyBytes": 54
+    },
+    {
+      "Case": "dotnet-sockets",
+      "Port": 15953,
+      "Mode": "TCP",
+      "ExactFixtureReply": true,
+      "ReplyBytes": 54
+    },
+    {
+      "Case": "dotnet-sockets",
+      "Port": 1053,
+      "Mode": "UDP",
+      "ExactFixtureReply": true,
+      "ReplyBytes": 54
+    },
+    {
+      "Case": "dotnet-sockets",
+      "Port": 1053,
+      "Mode": "TCP",
+      "ExactFixtureReply": true,
+      "ReplyBytes": 54
+    }
+  ],
+  "received_queries": {
+    "mac_dig": 2,
+    "windows_dotnet": 4,
+    "windows_nslookup": 0,
+    "server_errors": 0,
+    "acl_denied": 0
+  },
+  "validation": {
+    "powershell_native_parser": "passed before each executed diagnostic",
+    "private_fixture_flake8_fatal": "passed",
+    "exact_socket_reply": "all 54 bytes compared with expected synthetic reply",
+    "source_mutation_test": "not applicable: operational source unchanged",
+    "acl_capture": "Final pass logs denied peers and malformed requests as well as accepted queries; 6 positive control questions, no denials/errors, no native nslookup queries.",
+    "repetition": "First pass did not log ACL denials. Repeated 8 native cases and 6 positive controls after adding denial capture; final pass is reported. Total 16 native processes, all terminated."
+  },
+  "initial_submission": {
+    "multiline_transport": "PowerShell parser error before diagnostic execution",
+    "correction": "single-line transport; decoded source parsed by native PowerShell parser; no ExecutionPolicy change"
+  },
+  "cleanup": {
+    "fixture_process": "terminal exit 0 with stop marker",
+    "listeners": "ports 15953/1053 TCP and UDP absent",
+    "windows_child_processes": "All 16 native invocations returned WaitForExit true and Dispose; no server/job/file created on Windows.",
+    "windows_fixture_files": "none created"
+  },
+  "limits": [
+    "No explanation of the underlying Windows per-application network failure yet.",
+    "Successful socket fixture does not prove a complete production DNS parser or negative controls.",
+    "Fixture is direct Mac LAN, not the phone SSH DNS proxy.",
+    "No firewall, DNS, ExecutionPolicy, trust store or protection changed.",
+    "No tool installed, secret published, kernel loaded, remote account or service changed.",
+    "Native timeout text alone is not packet or successful response proof."
+  ],
+  "next": "Compare the native client with a finite Windows loopback fixture before choosing a fix or a complete bounded socket client; retain real phone fresh-boot/restore gate."
+}
