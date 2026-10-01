@@ -1,0 +1,56 @@
+"""Exercise integration guards in disposable synthetic projects, never devices."""
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / 'scripts/build/integrate-source-kernel.py'
+MUTATIONS = [
+    ('kernel-hash', "if digest(blobs[name]) != expected['sha256']:", 'if False:'),
+    ('page-size', "(struct.unpack_from('<Q', header, 24)[0] >> 1) & 3 != 2", 'False'),
+    ('retained-old-module', 'removed += 1\n            continue',
+     'removed += 1\n            result.append(raw[start:offset])\n            continue'),
+    ('private-output-mode', 'path.chmod(0o600)', 'path.chmod(0o644)'),
+    ('destination-scope', "output.parent != ROOT / 'runtime' or output.exists()", 'output.exists()'),
+    ('m1n1-digest', "not expected['matches_original'] or digest(m1n1) != expected['sha256']", 'False'),
+    ('header-byte-preservation', "header[:54] + f'{len(new):08x}'.encode() + header[62:]",
+     "header[:54].lower() + f'{len(new):08x}'.encode() + header[62:].lower()"),
+]
+
+
+def run(source=None):
+    environment = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')
+    environment.pop('KERNEL_INTEGRATION_SCRIPT', None)
+    if source is not None:
+        environment['KERNEL_INTEGRATION_SCRIPT'] = str(source)
+    return subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', str(ROOT / 'tests'),
+                           '-p', 'test_kernel_integration.py', '-v'], env=environment,
+                          capture_output=True, text=True, timeout=60)
+
+
+def main():
+    baseline = run()
+    if baseline.returncode:
+        print(baseline.stderr, file=sys.stderr)
+        return 1
+    text = SOURCE.read_text()
+    with tempfile.TemporaryDirectory(prefix='kernel-integration-mutations-') as work:
+        for name, before, after in MUTATIONS:
+            if text.count(before) != 1:
+                raise ValueError('Mutation anchor changed: ' + name)
+            path = Path(work) / (name + '.py')
+            path.write_text(text.replace(before, after, 1))
+            result = run(path)
+            if not result.returncode or 'FAIL:' not in result.stderr:
+                print('SURVIVED_OR_INFRA_ERROR ' + name, file=sys.stderr)
+                print(result.stderr, file=sys.stderr)
+                return 1
+            print('KILLED ' + name)
+    print(f'KERNEL_INTEGRATION_MUTATIONS_OK {len(MUTATIONS)}/{len(MUTATIONS)}')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
