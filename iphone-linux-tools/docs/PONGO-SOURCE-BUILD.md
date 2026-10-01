@@ -136,7 +136,7 @@ Próximo passo: seleção explícita da candidata com validação pré-USB e pil
 
 1. Preparação (cinco arquivos): este plano, `scripts/boot/pongo_select.py`, `tests/test_pongo_selection.py`, `tests/test_profile_boot.py` e `tests/test_boot_wrapper.py`. Fixtures sintéticos têm hash próprio somente nas cópias de teste; não executam firmware e não usam arquivos privados em CI.
 2. Integração (até cinco arquivos): `scripts/host/iphone-linux.sh`, `scripts/boot/dfu_boot.py`, os testes de seleção, runner de mutações e este documento. Wrapper/monitor compartilham o helper; seleção de candidata recusa Pongo já enumerado porque não há prova de qual binário está rodando. Verificar recusa antes de ioreg/palera/sender e cleanup. Linux já ativo também exige encerrar a sessão antes de trocar Pongo.
-3. CI/documentação (até cinco arquivos): workflow, manifesto de evidência, este documento e referência de reprodução. Registrar jobs somente após conclusão, depois piloto físico supervisionado e rollback separado.
+3. CI/documentação (cinco arquivos): workflow, este documento, referência de reprodução e fixture/runner de autosnapshots. O novo gate requer copiar o helper para essa fixture também; corrigir isso sem remover o gate. Manifesto/registro de jobs em fase documental posterior de até cinco arquivos, somente após conclusão, depois piloto físico supervisionado e rollback separado.
 
 Testes: default/candidata, arquivo alterado, seleção vazia, arquivo ausente, symlink/hardlink, tamanho, propriedade/permissões e caminhos com controles; CLI e processos sintéticos verificam os efeitos observáveis. Executar mutações de hash, fallback, guard de arquivo e gate pré-USB. AST/Flake8, Bash/ShellCheck e guard público; nenhum type checker configurado. Nenhum pacote novo no host. Validação de caminho/hash pressupõe ausência de autores concorrentes nos arquivos locais; não comprova segurança do bootloader ou hardware.
 
@@ -150,3 +150,23 @@ Testes: default/candidata, arquivo alterado, seleção vazia, arquivo ausente, s
 O helper validou separadamente os arquivos reais preservado e compilado, sem ação USB. O wrapper e o monitor usam o mesmo gate; a seleção explícita exige novo boot, recusando Pongo ou Linux já ativos. A candidata é passada por argumento próprio `-k`, incluindo caminhos com espaços; não há fallback silencioso ou alteração do perfil/SSH.
 
 Oito testes sintéticos de seleção/integração passaram e 11/11 mutações foram rejeitadas por asserção: hash, seleção vazia, arquivo/link/permissões, pai symlink, hash explícito, preflight do wrapper, seleção/argumento do monitor e sessão Pongo/Linux já iniciada. Cinco testes de perfil/SSH e dois de monitor/falha do wrapper também passaram. O teste positivo verifica encerramento do processo filho após parar o monitor. Sintaxe Bash/ShellCheck e Flake8 fatal passaram; sem type checker. O Python padrão do ambiente não tinha Flake8; usamos o Python 3.12.6 já instalado, sem instalar pacote novo. CI integral será registrado na próxima fase.
+
+### Operação planejada da candidata
+
+Na pasta `iphone-linux-tools`, valide ambos os componentes antes de iniciar um boot supervisionado. `IPHONE_LINUX_PONGO` seleciona o bootloader; `IPHONE_LINUX_PROFILE` seleciona kernel/initramfs e identidades SSH. Não editar ou misturar os campos do perfil. Os exemplos abaixo exigem artefatos locais produzidos e protegidos pelas receitas, e um ID de snapshot validado se for usado `--restore`.
+
+```bash
+export IPHONE_LINUX_PONGO="/CAMINHO/PRIVADO/Pongo.bin"
+export IPHONE_LINUX_PROFILE="/CAMINHO/PRIVADO/deployment.json"
+python3 scripts/boot/pongo_select.py
+python3 scripts/host/device_profile.py check
+bash scripts/host/iphone-linux.sh boot --restore ID
+```
+
+Faça DFU manual somente com o monitor pronto. Tela preta por si só não confirma DFU nem boot; console, enumeração USB e SSH autenticado são gates distintos. O monitor passa ao palera apenas o caminho já conferido e confere novamente o arquivo imediatamente antes de iniciar o processo. Falha do hash, caminho ou perfil interrompe o fluxo. Pongo/Linux já ativo exige encerrar essa sessão antes de selecionar um novo bootloader.
+
+Para rollback: salvar snapshot, confirmar retorno ao iOS pelo procedimento de recuperação, `unset IPHONE_LINUX_PONGO` e selecionar o perfil/implantação Linux de destino antes do novo DFU. `unset IPHONE_LINUX_PROFILE` volta às identidades da implantação padrão somente no próximo boot; para operar uma sessão ainda ativa, mantenha o perfil que deu boot nela. O rollback físico completo da candidata continua pendente. A lista de hashes aceitos é fixa no helper; outro build exige revisão da proveniência e atualização explícita do código, sem um argumento para autorizar qualquer hash.
+
+O CI registra `run_pongo_selection_mutations.py` em Ubuntu/macOS; seu resultado será preenchido após os jobs concluírem. Nenhum novo boot foi iniciado nesta implementação.
+
+A suíte integral local identificou uma fixture de autosnapshots que ainda não copiava o novo helper; ela foi corrigida com Pongo sintético e seu runner passou a copiar a dependência pública. O cenário de sucesso do retorno ao iOS também sofreu timeout local nesta execução; reexecutado isoladamente, passou em 6,1 segundos sem mudança do código ou da fixture. As falhas originais foram preservadas em log privado. Verificação incremental concentra-se nos cenários afetados; a matriz remota executa a suíte integral.

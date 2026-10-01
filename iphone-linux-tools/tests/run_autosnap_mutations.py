@@ -42,6 +42,9 @@ for label, filename, original, changed, test in selected:
         host.mkdir(parents=True)
         for name in HOST_FILES:
             shutil.copy(ROOT / 'scripts/host' / name, host / name)
+        boot = project / 'scripts/boot'
+        boot.mkdir(parents=True)
+        shutil.copy(ROOT / 'scripts/boot/pongo_select.py', boot / 'pongo_select.py')
         tests = project / 'tests'
         tests.mkdir()
         for name in ('test_autosnap.py', 'test_snapshot_retention.py'):

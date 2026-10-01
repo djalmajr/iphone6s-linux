@@ -1,5 +1,6 @@
 """Scheduler contract tests with a synthetic SSH dependency and real snapshots."""
 import io
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -38,6 +39,15 @@ class AutoSnapshotTests(unittest.TestCase):
         self.host.mkdir(parents=True)
         for name in ('autosnap.py', 'persist.py', 'device_profile.py', 'restore_journal.py', 'snapshot_lock.py', 'snapshot_retention.py', 'iphone-linux.sh'):
             shutil.copy(ROOT / 'scripts/host' / name, self.host / name)
+        boot = self.root / 'scripts/boot'
+        boot.mkdir(parents=True)
+        image = self.root / 'artifacts/Pongo.bin'
+        image.parent.mkdir()
+        image.write_bytes(b'SYNTHETIC_DEFAULT_PONGO'.ljust(238096, b'D'))
+        helper = (ROOT / 'scripts/boot/pongo_select.py').read_text().replace(
+            '1e5543fd8e6dbd84c334b87d71aa473f4d347c2ba8a5e863b6e10f18461c7575',
+            hashlib.sha256(image.read_bytes()).hexdigest())
+        (boot / 'pongo_select.py').write_text(helper)
         self.bin = self.root / 'bin'
         self.bin.mkdir()
         (self.bin / 'ssh').write_text(SSH_STUB)

@@ -48,6 +48,8 @@ jobs:
         run: python iphone-linux-tools/tests/run_kernel_integration_mutations.py
       - name: Pongo binary format mutations
         run: python iphone-linux-tools/tests/run_pongo_mutations.py
+      - name: Pongo selection and USB boundary mutations
+        run: python iphone-linux-tools/tests/run_pongo_selection_mutations.py
       - name: ShellCheck on Linux runner
         if: runner.os == 'Linux'
         shell: bash
