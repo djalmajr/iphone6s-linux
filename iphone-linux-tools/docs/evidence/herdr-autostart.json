@@ -1,0 +1,99 @@
+{
+  "format": 1,
+  "status": "implemented_vm_validated_native_pending",
+  "herdr": {
+    "version": "0.9.1",
+    "source_commit": "065ef9d6a531c49fb8bee7e818ef837065b21ee9",
+    "asset": {
+      "digest": "sha256:f4ccf4de745f2cb9a39a983e9ba3703dad50ec2a58dea83026ceab721bbd8d9e",
+      "name": "herdr-linux-aarch64",
+      "size": 24101456
+    }
+  },
+  "session": "iphone-server",
+  "persistence": "only /srv/data/herdr/autostart = 1; volatile config/process state under /run/iphone-herdr",
+  "local": {
+    "herdr_tests": 11,
+    "passed": 11,
+    "mutations": {
+      "baseline": true,
+      "mutations": [
+        {
+          "name": "skip_digest",
+          "rejected": true
+        },
+        {
+          "name": "drop_marker_guard",
+          "rejected": true
+        },
+        {
+          "name": "drop_lock",
+          "rejected": true
+        },
+        {
+          "name": "duplicate_start",
+          "rejected": true
+        },
+        {
+          "name": "ignore_opt_in",
+          "rejected": true
+        },
+        {
+          "name": "unconfirmed_restart",
+          "rejected": true
+        },
+        {
+          "name": "wrong_stop_scope",
+          "rejected": true
+        },
+        {
+          "name": "leave_attach_lock",
+          "rejected": true
+        }
+      ]
+    },
+    "full_suite": {
+      "total": 133,
+      "passed_initial": 124,
+      "skipped": 8,
+      "sandbox_socket_errors": 1,
+      "socket_rerun_passed": true
+    },
+    "fatal_flake8": true,
+    "generated_shellcheck": true,
+    "wrapper_shellcheck": true,
+    "typechecker": "not configured"
+  },
+  "vm": {
+    "architecture": "aarch64",
+    "installed_packages": false,
+    "checks": {
+      "bash_and_idempotent_reconnect": true,
+      "fresh_volatile_namespace_from_marker": true,
+      "phone_boot": false,
+      "scoped_restart": true
+    },
+    "own_session_stopped": true,
+    "fixture_removed": true,
+    "final_state": "Stopped",
+    "mounts": {}
+  },
+  "native": {
+    "usb_detected": false,
+    "new_boot": false,
+    "ssh_tui_reconnect": false,
+    "required_next": [
+      "confirm phone runtime applets",
+      "new boot with opt-in restored",
+      "macOS SSH/TUI reconnect"
+    ]
+  },
+  "ci": {
+    "status": "pending for new source"
+  },
+  "source_sha256": {
+    "scripts/host/herdr.py": "3a194a7f29d2e989edd0fe80459690532ef0f19cb92096c36d33daead8374d98",
+    "scripts/host/iphone-linux.sh": "d088e150f480c6665cf889a65f9844221c950f456d753be8e8662e88ee7c0df4",
+    "tests/test_herdr_start.py": "6df75e9430bd5dd51a1cc8f44b58a5cd01363dffeb88360e500da0a8b9eb9e7a"
+  }
+}

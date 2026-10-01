@@ -249,6 +249,7 @@ boot() {
             fi
         fi
         serve
+        python3 "$ROOT/scripts/host/herdr.py" boot
         return
     fi
     if [ "${IPHONE_LINUX_PONGO+x}" = x ] && ioreg -p IOUSB -w0 | grep -q 'PongoOS USB Device'; then
@@ -299,6 +300,7 @@ PY
         python3 "$ROOT/scripts/host/persist.py" restore "$restore_id"
     fi
     serve
+    python3 "$ROOT/scripts/host/herdr.py" boot
 }
 
 case "${1:-status}" in
@@ -319,10 +321,10 @@ case "${1:-status}" in
     install-terminal) install_terminal ;;
     shell) connect; exec ssh -t "${SSH_ARGS[@]}" "root@$PHONE_IP" ;;
     console) connect; exec ssh -tt "${SSH_ARGS[@]}" "root@$PHONE_IP" '/usr/local/sbin/start-console && TERM=linux /usr/bin/script --quiet --flush --return --command "/bin/bash -i" /dev/tty1' ;;
-    herdr) connect; exec ssh -tt "${SSH_ARGS[@]}" "root@$PHONE_IP" 'TERM=xterm-256color herdr --session iphone-linux' ;;
+    herdr) connect; shift; exec python3 "$ROOT/scripts/host/herdr.py" "$@" ;;
     disconnect)
         iface=$(usb_interface)
         /usr/bin/osascript -e "do shell script \"/sbin/ifconfig $iface inet $HOST_IP -alias\" with administrator privileges"
         ;;
-    *) printf 'Uso: %s {boot [--restore ID]|boot-probe|autosnap {once|watch|status}|lan --bind IP [--ssh-port PORT] [--http-port PORT]|dns {install|start|stop|status|record NAME IP|lan --bind IP --allow IP [--port PORT] [--tunnel-port PORT]}|backup|restore [ID]|backups|connect|status|serve|install-terminal|shell|console|herdr|disconnect}\n' "$0" >&2; exit 2 ;;
+    *) printf 'Uso: %s {boot [--restore ID]|boot-probe|autosnap {once|watch|status}|lan --bind IP [--ssh-port PORT] [--http-port PORT]|dns {install|start|stop|status|record NAME IP|lan --bind IP --allow IP [--port PORT] [--tunnel-port PORT]}|backup|restore [ID]|backups|connect|status|serve|install-terminal|shell|console|herdr [start|status|enable|disable|restart --confirm-stop]|disconnect}\n' "$0" >&2; exit 2 ;;
 esac
