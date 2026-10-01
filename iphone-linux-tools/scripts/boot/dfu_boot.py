@@ -14,6 +14,7 @@ from pathlib import Path
 
 from dfu_state import finish_output, process_output
 from pongo_select import select
+from boot_tools import verify
 
 ROOT = Path(__file__).resolve().parents[2]
 STATE_FILE = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "logs/dfu-last-state.json"
@@ -21,6 +22,7 @@ STATE_FILE = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "logs/dfu-last-s
 
 def main():
     pongo = select(ROOT)
+    palera = verify('palera1n-macos-arm64', ROOT)
     if 'IPHONE_LINUX_PONGO' in os.environ:
         usb = subprocess.run(['ioreg', '-p', 'IOUSB', '-w0'], capture_output=True,
                              text=True, timeout=5, check=True)
@@ -48,7 +50,7 @@ def main():
     reader = None
     try:
         process = subprocess.Popen(
-            [str(ROOT / "bin/palera1n-macos-arm64"), "-lp", "-k", str(pongo)],
+            [str(palera), "-lp", "-k", str(pongo)],
             cwd=ROOT, env=environment, stdin=slave, stdout=slave, stderr=slave,
             start_new_session=True,
         )

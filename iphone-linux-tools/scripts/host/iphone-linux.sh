@@ -255,15 +255,14 @@ boot() {
         printf 'Pongo já ativo não comprova a candidata selecionada; volte ao iOS e repita DFU.\n' >&2
         return 1
     fi
-    python3 - "$ROOT/bin/palera1n-macos-arm64" "$payload" "$digest" <<'PY'
+    python3 "$ROOT/scripts/boot/boot_tools.py" palera1n-macos-arm64 pongoterm
+    python3 - "$payload" "$digest" <<'PY'
 import hashlib
 import pathlib
 import sys
-expected = ["950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9", sys.argv[3]]
-for name, digest in zip(sys.argv[1:3], expected):
-    path = pathlib.Path(name)
-    if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
-        raise SystemExit(f"Hash inesperado: {path.name}. Boot interrompido.")
+path = pathlib.Path(sys.argv[1])
+if hashlib.sha256(path.read_bytes()).hexdigest() != sys.argv[2]:
+    raise SystemExit(f"Hash inesperado: {path.name}. Boot interrompido.")
 PY
     if ! ioreg -p IOUSB -w0 | grep -q 'PongoOS USB Device'; then
         wait_for_pongo

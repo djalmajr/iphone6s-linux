@@ -69,3 +69,14 @@ Fonte: plano acima e issue #22. Modo: encerramento de uma correção dentro da r
 | Desempenho | Acrescenta consultas de metadata local; nenhuma alteração de throughput/serviço no telefone medida |
 
 **Mudança observável:** uma árvore privada com links/tipos/propriedade inválidos agora aborta leitura/listagem/default/journal em vez de seguir o desvio. Snapshots regulares permanecem compatíveis e não foram migrados. **Limites:** overlay não transacional, autores concorrentes sem suporte, guard público não é auditoria integral de segredos. **Próximos passos:** #16 mantém leitura das demais áreas; #12/#21 requerem USB detectado e operador no novo piloto, #2/#8 conservam seus gates físicos. Nenhuma operação no iPhone ou merge nesta correção.
+
+## D2. Compartilhar integridade das ferramentas externas — #23
+
+- **Decisão:** conferir metadata, tamanho e SHA de palera1n/pongoterm com um helper comum; monitor direto verifica palera1n antes de USB/estado/filho, wrapper verifica ambas antes de execução. Pins do manifesto preservado; nenhum hash observado é aceito automaticamente.
+- **Por quê:** reprodução com ferramentas sintéticas alteradas comprovou execução de palera1n no monitor direto e de pongoterm no wrapper. O fluxo anterior só conferia palera1n dentro do wrapper. Ferramentas reais preservadas continuam coincidindo com os hashes e tamanhos registrados.
+- **Alternativas:** duplicar pins em cada consumidor cria divergência; depender de conferência manual permite executar um insumo modificado sem o controle solicitado pelo operador.
+- **Reverter:** baixo; código aditivo sem instalação ou troca de binários. Insumos novos exigem proveniência e revisão explícita dos pins.
+- **Onde:** fase 1 (cinco arquivos), helper `boot_tools.py`, monitor, wrapper, novo `test_boot_tools.py` e este plano; fase 2 (cinco), fixtures BootWrapper/ProfileBoot/PongoSelection, runner PongoSelection e novo runner de ferramentas; fase 3 (até cinco), CI/procedimentos/evidência. Plano/critério detalhados na #23.
+- **Status:** fase 1 implementada, sete regressões sintéticas aprovadas; lint fatal, sintaxe Bash, ShellCheck e diff-check passaram. Adaptar fixtures/mutações e repetir o CI antes de encerrar. Não equivale a auditoria do binário ou proteção contra autores concorrentes do mesmo usuário; nenhum boot físico nesta fase.
+
+O primeiro fixture de permissões usava setuid; o filesystem do Mac limpou esse bit ao aplicar chmod, de modo que o fixture não representava o caso pretendido. O teste passou a usar o bit especial sticky, com asserção de que o modo foi realmente aplicado, antes de conferir a recusa. Não foi alterado o guard operacional `0o7022`, que recusa todos os bits especiais e escrita por grupo/outros.
