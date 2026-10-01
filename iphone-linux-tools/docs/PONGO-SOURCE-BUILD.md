@@ -107,3 +107,11 @@ O arquivo temporário `/etc/systemd/resolved.conf.d/iphone6s-pongo-build.conf` f
 - Registrar as mutações em CI e atualizar a referência geral na fase seguinte.
 - Integrar a seleção explícita da candidata Pongo sem substituir o padrão; validar negativa por hash antes de USB.
 - Piloto físico separado com o kernel de fonte e Pongo de fonte, console/NCM/SSH/HTTP e snapshot/retorno ao iOS. Fontes/binários conhecidos não comprovam carregamento sustentado, estabilidade, NAND, Wi-Fi ou boot autônomo.
+
+## Fase CI e referência geral
+
+Escopo desta fase: `tests/run_pongo_mutations.py`, `.github/workflows/ci.yml`, este documento, `REPRODUCAO.md` e `docs/evidence/pongo-source-build.json`. O runner público reproduz as seis mutações em fixtures sem aparelho/artefatos privados; a matriz Ubuntu/macOS executa os testes e o runner. Atualizar os resultados somente após os jobs terminais, conservando a distinção entre CI sintético e build real no guest.
+
+- [x] Runner público: baseline e 6/6 mutações aprovados no Mac; lint aprovado.
+- [x] Workflow registra o runner nas duas plataformas; referência de reprodução distingue clone histórico, candidata compilada e gate físico.
+- [ ] CI Ubuntu/macOS confirmado e registrado.
