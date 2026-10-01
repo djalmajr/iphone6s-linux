@@ -20,10 +20,10 @@
   "macho_extraction_verified": true,
   "generated_lto_header_sha256": "e9fc2f15bf371966799309ddaf3510b0dae412d52ed7093adab2369c2aea61e3",
   "generated_lto_header_matches_ubuntu_package": true,
-  "physical_boot_tested": false,
+  "physical_boot_tested": true,
   "preserved_pongo_changed": false,
   "host_packages_installed": false,
-  "status": "compiled_verified_not_booted",
+  "status": "physical_linux_boot_verified",
   "verification": {
     "copied_hashes_verified": true,
     "repeat_build_identical": true,
@@ -145,5 +145,7 @@
       "return_ios_success_rerun_passed": true,
       "full_suite_not_repeated_locally": true
     }
-  }
+  },
+  "physical_pilot_evidence": "source-chain-pilot.json",
+  "historical_verification_note": "Nested build verification records retain the state observed before the physical pilot."
 }
