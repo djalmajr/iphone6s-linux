@@ -11,6 +11,7 @@ import tempfile
 import threading
 import time
 import device_profile
+import dns_activation
 import dns_transport as wire
 import lan
 
@@ -85,6 +86,8 @@ def tcp_replies(options):
 def serve(options):
     if options.port == options.tunnel_port:
         raise ValueError('Portas DNS e túnel devem ser distintas.')
+    if options.port == 53 and (os.getuid() <= 0 or os.getuid() != os.geteuid() or os.getgid() <= 0):
+        raise ValueError('Runtime DNS padrão deve ser usuário não root; não use sudo no proxy.')
     profile = device_profile.load(lan.ROOT)
     if not profile['client_key'].is_file() or not profile['known_hosts'].is_file():
         raise ValueError('Identidade SSH dedicada ausente; nenhum listener iniciado.')
@@ -102,11 +105,16 @@ def serve(options):
                                        stdout=subprocess.PIPE, stderr=log)
             stack.callback(stop_tunnel, process)
             await_tunnel(process)
-            udp = stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
-            udp.bind((options.bind, options.port))
-            tcp = stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
-            tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            tcp.bind((options.bind, options.port))
+            if options.port == 53:
+                udp, tcp = dns_activation.acquire(options.bind)
+                stack.enter_context(udp)
+                stack.enter_context(tcp)
+            else:
+                udp = stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
+                udp.bind((options.bind, options.port))
+                tcp = stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+                tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                tcp.bind((options.bind, options.port))
             tcp.listen(WORKERS)
             udp.setblocking(False)
             tcp.setblocking(False)

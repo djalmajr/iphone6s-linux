@@ -1,6 +1,7 @@
 """Wire boundaries and opt-in real DNS/SSH LAN proxy integration."""
 from contextlib import contextmanager
 import os
+import pwd
 from pathlib import Path
 import shutil
 import signal
@@ -73,7 +74,7 @@ class DnsWireTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2, result.stderr)
 
 
-def namespace_case():
+def namespace_case(standard=False):
     from test_lan import assert_closed, copy_binary, wait_socket
     with tempfile.TemporaryDirectory(prefix='iphone-dns-lan-test-') as folder:
         base = Path(folder)
@@ -120,13 +121,23 @@ def namespace_case():
                                   stdout=log, stderr=log)
         processes = []
         dns_pid = None
+        port = 53 if standard else 11053
+        identity = pwd.getpwnam('ubuntu') if standard else None
+        if standard:
+            Path('/proc/sys/net/ipv4/ip_unprivileged_port_start').write_text('1024')
+            os.chown(base, identity.pw_uid, identity.pw_gid)
+            for path in [project] + list(project.rglob('*')):
+                os.chown(path, identity.pw_uid, identity.pw_gid)
         command = [sys.executable, str(project / 'scripts/host/dns.py'), 'lan',
                    '--bind', '10.240.0.1', '--allow', '10.240.0.2',
-                   '--port', '11053', '--tunnel-port', '11054']
+                   '--tunnel-port', '11054']
+        command += ['--standard-port'] if standard else ['--port', str(port)]
 
         def start():
             output = tempfile.TemporaryFile()
-            process = subprocess.Popen(command, stdout=output, stderr=output)
+            credentials = ({'user': identity.pw_uid, 'group': identity.pw_gid, 'extra_groups': []}
+                           if standard else {})
+            process = subprocess.Popen(command, stdout=output, stderr=output, **credentials)
             processes.append((process, output))
             return process, output
 
@@ -157,7 +168,7 @@ def namespace_case():
                 raise AssertionError('Failed startup published a proxy')
 
         def query(tcp=False, client='10.240.0.2', name='iphone-usb.home.arpa'):
-            args = ['dig', '-b', client, '@10.240.0.1', '-p', '11053',
+            args = ['dig', '-b', client, '@10.240.0.1', '-p', str(port),
                     '+time=1', '+tries=1', '+noall', '+answer', '+comments', name]
             if tcp:
                 args.append('+tcp')
@@ -173,10 +184,15 @@ def namespace_case():
             dns_pid = int((phone / 'run/iphone-dns/state').read_text().split()[0])
             process, output = start()
             ready(process, output)
+            if standard:
+                status = Path(f'/proc/{process.pid}/status').read_text()
+                uid_line = next(line for line in status.splitlines() if line.startswith('Uid:'))
+                if set(uid_line.split()[1:]) != {str(identity.pw_uid)}:
+                    raise AssertionError('Standard proxy retained privileged UID')
             for protocol in ('udp', 'tcp'):
                 bindings = [row.split()[1].split(':')[0] for row in
                             Path('/proc/net/' + protocol).read_text().splitlines()[1:]
-                            if int(row.split()[1].split(':')[1], 16) == 11053]
+                            if int(row.split()[1].split(':')[1], 16) == port]
                 if bindings != ['0100F00A']:
                     raise AssertionError('Unexpected proxy kernel bind: ' + repr(bindings))
             for tcp in (False, True):
@@ -194,14 +210,14 @@ def namespace_case():
                 for _ in range(8):
                     connection = socket.socket()
                     connection.bind(('10.240.0.2', 0))
-                    connection.connect(('10.240.0.1', 11053))
+                    connection.connect(('10.240.0.1', port))
                     connection.sendall(b'\x00\x30\x01')
                     holders.append(connection)
                 time.sleep(0.2)
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
                     client.bind(('10.240.0.2', 0))
                     client.settimeout(3.6)
-                    client.sendto(QUERY, ('10.240.0.1', 11053))
+                    client.sendto(QUERY, ('10.240.0.1', port))
                     try:
                         client.recvfrom(4096)
                     except socket.timeout:
@@ -214,13 +230,18 @@ def namespace_case():
             children = Path(f'/proc/{process.pid}/task/{process.pid}/children').read_text().split()
             if len(children) != 1:
                 raise AssertionError('Unexpected owned SSH child count')
+            if standard:
+                child_status = Path(f'/proc/{children[0]}/status').read_text()
+                uid_line = next(line for line in child_status.splitlines() if line.startswith('Uid:'))
+                if set(uid_line.split()[1:]) != {str(identity.pw_uid)}:
+                    raise AssertionError('Standard SSH child retained privileged UID')
             os.kill(int(children[0]), signal.SIGTERM)
             process.wait(timeout=8)
             if process.returncode == 0:
                 raise AssertionError('Proxy hid lost tunnel')
-            for address in [('10.240.0.1', 11053), ('127.0.0.1', 11054)]:
+            for address in [('10.240.0.1', port), ('127.0.0.1', 11054)]:
                 assert_closed(address)
-            for address in [('10.240.0.1', 11053), ('127.0.0.1', 11054)]:
+            for address in [('10.240.0.1', port), ('127.0.0.1', 11054)]:
                 with socket.socket() as occupied:
                     occupied.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     occupied.bind(address)
@@ -228,7 +249,7 @@ def namespace_case():
                     rejected_start()
                     with socket.create_connection(address, timeout=1):
                         pass
-                assert_closed(('10.240.0.1', 11053))
+                assert_closed(('10.240.0.1', port))
                 assert_closed(('127.0.0.1', 11054))
             original = known.read_text()
             known.write_text('')
@@ -239,9 +260,12 @@ def namespace_case():
             known.write_text('172.16.42.1 ' + other.with_suffix('.pub').read_text())
             rejected_start()
             known.write_text(original)
-            assert_closed(('10.240.0.1', 11053))
+            assert_closed(('10.240.0.1', port))
             assert_closed(('127.0.0.1', 11054))
-            print('DNS_LAN_REAL_UDP_TCP_ACL_BIND_CAPACITY_FAILURE_CLEANUP_OK')
+            if standard:
+                print('DNS_STANDARD_NONROOT_UDP_TCP_ACL_FAILURE_CLEANUP_OK')
+            else:
+                print('DNS_LAN_REAL_UDP_TCP_ACL_BIND_CAPACITY_FAILURE_CLEANUP_OK')
         finally:
             for process, output in processes:
                 if process.poll() is None:
@@ -270,7 +294,9 @@ class DnsLanVmTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    if sys.argv[1:] == ['--namespace']:
-        namespace_case()
+    if sys.argv[1:] in (['--namespace'], ['--standard-namespace']):
+        if os.geteuid() != 0 or os.environ.get('IPHONE_DNS_VM_TESTS') != '1':
+            raise SystemExit('Dedicated Linux VM/root opt-in required')
+        namespace_case(standard=sys.argv[1:] == ['--standard-namespace'])
     else:
         unittest.main()

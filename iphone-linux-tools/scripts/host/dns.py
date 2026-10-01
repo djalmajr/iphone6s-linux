@@ -143,7 +143,9 @@ def main():
     proxy = commands.add_parser('lan')
     proxy.add_argument('--bind', required=True, type=lan.bind_address)
     proxy.add_argument('--allow', required=True, action='append', type=lan.bind_address)
-    proxy.add_argument('--port', type=lan.port, default=1053)
+    proxy.add_argument('--port', type=lan.port)
+    proxy.add_argument('--standard-port', action='store_true',
+                       help='Abrir explicitamente UDP/TCP 53 por bootstrap mínimo; runtime não root.')
     proxy.add_argument('--tunnel-port', type=lan.port, default=1054)
     options = parser.parse_args()
     if options.action == 'install':
@@ -152,6 +154,11 @@ def main():
         record(options)
     elif options.action == 'lan':
         import dns_lan
+        if options.standard_port and options.port is not None:
+            parser.error('--standard-port e --port são alternativas; use somente uma.')
+        options.port = 53 if options.standard_port else (options.port or 1053)
+        if options.standard_port and options.bind == '127.0.0.1':
+            parser.error('Porta padrão exige bind privado da LAN, sem loopback.')
         if options.port == options.tunnel_port:
             parser.error('Portas DNS e túnel devem ser distintas.')
         dns_lan.serve(options)

@@ -94,3 +94,11 @@ PY
 ```
 
 O opt-in privilegiado exige controller Linux não root, bind de fixture e namespace distinto do PID 1 da VM. Baseline com erro/skip, sintaxe inválida, falha de infraestrutura ou mutação sem `AssertionError` nunca contam como aprovação. Nenhuma regra sudoers ou serviço persistente deve ser criado. A fase seguinte precisa integrar a API de sockets ao proxy, conservar 1053 como padrão e testar allowlist, perda do túnel e cleanup antes do piloto acompanhado.
+
+## Fase 2B — integração optativa ao proxy
+
+Cinco arquivos: `scripts/host/dns.py`, `scripts/host/dns_lan.py`, `tests/test_dns_lan.py`, novo `tests/test_dns_standard.py` e este plano. Adicionar `dns lan --standard-port` como seleção explícita de 53, incompatível com `--port`; sem flag conserva 1053 ou a porta alta informada. Recusar loopback em modo padrão e runtime privilegiado antes de ler o perfil. Confirmar SSH antes de adquirir sockets e iniciar atendimento somente depois da validação 2A. Conservar allowlist, prazos e encerramento com perda do túnel.
+
+Testes do CLI verificam encaminhamento dos argumentos e recusas antes de rede/identidade. A fixture DNS/SSH real existente será estendida para rodar o proxy como usuário `ubuntu` em 53 dentro de namespace próprio, conservando o caso de porta alta. Exercitar UDP/TCP, cliente recusado, nome externo NXDOMAIN, capacidade, falha de túnel, conflito UDP/TCP/forward e trust inválido; conferir listeners e UID do runtime/SSH. Sem novo pacote, política cliente ou helper root Mac. CI/mutações adicionais serão a fatia seguinte; não afirmar piloto físico por fixture.
+
+Resultado intermediário: três testes do CLI e dois testes wire Mac passaram. A fixture VM em 53 passou consultas UDP/TCP, ACL/NXDOMAIN/capacidade, identidade não root do proxy/SSH e perda do túnel, mas falhou no cenário seguinte de conflito: `EADDRINUSE` ao tentar reservar o endereço TCP encerrado. A fase 2A usa TCP sem reuse; sockets em TIME_WAIT impedem reinício rápido. A fixture não chegou ao marcador final, portanto não é aprovação da integração completa. Próxima fase corrigirá o contrato de rebind e repetirá o cenário real antes de concluir #19. A porta 1053 permanece o padrão.
