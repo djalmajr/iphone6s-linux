@@ -153,22 +153,35 @@ def automatic(keep):
 
 
 def snapshots():
-    if not STORE.exists():
+    try:
+        snapshot_lock.check_local_path(STORE, directory=True)
+    except FileNotFoundError:
         return []
-    return sorted(p for p in STORE.iterdir() if p.is_dir() and re.fullmatch(r'\d{8}T\d{6}Z-[a-f0-9]{8}', p.name))
+    directories = sorted(p for p in STORE.iterdir() if re.fullmatch(r'\d{8}T\d{6}Z-[a-f0-9]{8}', p.name))
+    for directory in directories:
+        snapshot_lock.check_local_path(directory, directory=True)
+    return directories
+
+
+def snapshot_files(directory):
+    snapshot_lock.check_local_path(STORE, directory=True)
+    snapshot_lock.check_local_path(directory, directory=True)
+    manifest = snapshot_lock.check_local_path(directory / 'manifest.json')
+    archive = snapshot_lock.check_local_path(directory / 'files.tar.gz')
+    return manifest, archive
 
 
 def load_snapshot(snapshot_id):
     if snapshot_id is None:
-        candidates = [p for p in snapshots() if json.loads((p / 'manifest.json').read_text()).get('kind') == 'manual']
+        candidates = [p for p in snapshots() if json.loads(snapshot_files(p)[0].read_text()).get('kind') == 'manual']
         if not candidates:
             raise ValueError('Nenhum snapshot manual encontrado.')
         snapshot_id = candidates[-1].name
     if not re.fullmatch(r'\d{8}T\d{6}Z-[a-f0-9]{8}', snapshot_id):
         raise ValueError('Identificador inválido de snapshot.')
     directory = STORE / snapshot_id
-    manifest = json.loads((directory / 'manifest.json').read_text())
-    archive = directory / 'files.tar.gz'
+    manifest_path, archive = snapshot_files(directory)
+    manifest = json.loads(manifest_path.read_text())
     if manifest.get('format') != 1 or manifest.get('id') != snapshot_id or digest(archive) != manifest.get('sha256'):
         raise ValueError('Integridade do snapshot inválida; restauração bloqueada.')
     members = validate_archive(archive)
@@ -254,7 +267,7 @@ def verify(snapshot_id):
 def show_backups():
     with snapshot_lock.lock(STORE):
         for directory in snapshots():
-            manifest = json.loads((directory / 'manifest.json').read_text())
+            manifest = json.loads(snapshot_files(directory)[0].read_text())
             print(directory.name, manifest['kind'], manifest['entries'], 'entradas')
         restore_journal.show_pending(STORE)
 

@@ -7,6 +7,7 @@ import re
 import shlex
 import tempfile
 import uuid
+import snapshot_lock
 
 PENDING = {'prepared', 'applying', 'recovery-needed'}
 PHASES = PENDING | {'succeeded', 'recovered'}
@@ -14,8 +15,10 @@ SNAPSHOT = r'\d{8}T\d{6}Z-[a-f0-9]{8}'
 
 
 def write(store, record):
+    snapshot_lock.check_local_path(store, directory=True)
     directory = store / 'restore-journal'
     directory.mkdir(mode=0o700, exist_ok=True)
+    snapshot_lock.check_local_path(directory, directory=True)
     directory.chmod(0o700)
     record['updated_at'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     descriptor, name = tempfile.mkstemp(prefix='.partial-', dir=directory)
@@ -44,11 +47,15 @@ def prepare(store, source, before):
 
 
 def records(store):
+    snapshot_lock.check_local_path(store, directory=True)
     directory = store / 'restore-journal'
-    if not directory.exists():
+    try:
+        snapshot_lock.check_local_path(directory, directory=True)
+    except FileNotFoundError:
         return []
     result = []
     for path in sorted(directory.glob('*.json')):
+        snapshot_lock.check_local_path(path)
         record = json.loads(path.read_text())
         if (not isinstance(record, dict) or record.get('format') != 1 or record.get('id') != path.stem
                 or not re.fullmatch(r'[a-f0-9]{32}', path.stem)

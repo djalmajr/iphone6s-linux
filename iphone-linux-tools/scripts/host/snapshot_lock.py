@@ -11,15 +11,26 @@ import stat
 LOCK_NAME = '.snapshot.lock'
 
 
+def _check_metadata(info, directory=False):
+    valid_type = stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode)
+    if (not valid_type or info.st_uid != os.geteuid() or info.st_mode & 0o7000
+            or (not directory and info.st_nlink != 1)):
+        raise ValueError('Caminho local de snapshot/journal inválido; links não são permitidos.')
+
+
+def check_local_path(path, directory=False):
+    path = Path(path)
+    _check_metadata(path.lstat(), directory)
+    return path
+
+
 def _ensure_store(store):
     store = Path(store)
     try:
-        info = store.lstat()
+        store.lstat()
     except FileNotFoundError:
         store.mkdir(mode=0o700)
-        info = store.lstat()
-    if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode):
-        raise ValueError('Diretório de snapshots inválido.')
+    check_local_path(store, directory=True)
     store.chmod(0o700)
     return store
 
@@ -30,10 +41,11 @@ def _open_lock(path):
         fd = os.open(path, flags)
     except FileNotFoundError:
         fd = os.open(path, flags | os.O_CREAT | os.O_EXCL, 0o600)
-    info = os.fstat(fd)
-    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+    try:
+        _check_metadata(os.fstat(fd))
+    except ValueError:
         os.close(fd)
-        raise ValueError('Arquivo de lock inválido.')
+        raise
     os.fchmod(fd, 0o600)
     return fd
 
