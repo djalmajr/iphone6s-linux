@@ -10,7 +10,7 @@ chmod 700 keys runtime backups logs
 
 ## 1. Escopo e estado atual
 
-O usuário autorizou alterações locais e perda dos dados do iPhone; contas e serviços remotos ficam fora do escopo. Nenhum pacote de construção foi instalado no macOS. Dependências de construção foram instaladas nas VMs isoladas `iphone6s-build` e `iphone6s-repro-20260930`.
+O usuário autorizou alterações locais e perda dos dados do iPhone; contas e serviços remotos ficam fora do escopo. Nenhum pacote de construção foi instalado no macOS. Dependências de construção foram instaladas nas VMs isoladas `iphone6s-build`, `iphone6s-repro-20260930`, `iphone6s-kernel-20261001` e `iphone6s-pongo-20261001`; as duas últimas produziram a cadeia de fonte ainda sem boot físico.
 
 Hardware: iPhone 6s, `iPhone8,1`, placa `N71AP`, A9 Samsung S8000, armazenamento nominal de 32 GB. Host: Mac Studio M2 Max, `Mac14,13`. Linux verificado: kernel postmarketOS 7.0.12, ARM64, páginas de 16 KB, dois processadores e 1.973 MiB de RAM.
 
@@ -242,12 +242,12 @@ O build combina o rootfs original com o runtime, `phone/init/init-server` e HTTP
 ## 11. Operação, persistência e atualizações
 
 - Shell: `bash scripts/host/iphone-linux.sh shell`; sair com `exit`.
-- Herdr: `bash scripts/host/iphone-linux.sh herdr`; sessão `iphone-linux`. O detach normal do Herdr é `Ctrl+B`, depois `q`, conforme a documentação upstream. Neste teste, a permanência foi comprovada fechando a conexão SSH, não por validar esse atalho no terminal do usuário.
+- Herdr atual: `bash scripts/host/iphone-linux.sh herdr start`, depois `bash scripts/host/iphone-linux.sh herdr attach`; sessão dedicada `iphone-server`. O launcher optativo e a correção sem nohup passaram em testes/VM/CI; novo piloto SSH/TUI da candidata permanece pendente. A sessão histórica `iphone-linux` sobreviveu ao fechamento de SSH. Veja [HERDR.md](HERDR.md) para marcador restaurável, restart e limites.
 - Fechar SSH não encerra os painéis do Herdr. Reiniciar o iPhone encerra todos os processos e perde os arquivos em RAM, inclusive layout/configuração do Herdr que não tenham backup no Mac.
 - Atualização do Linux: construir outro payload, conferir fontes/hashes, manter o anterior, fazer boot do novo e verificar o resultado. Não precisa formatar NAND. Não há apt/apk completo na imagem mínima atual.
 - Configurações iniciais e chaves são persistidas nos artefatos do Mac; alterações arbitrárias feitas no telefone ainda não têm sincronização automática.
 - O Mac precisa manter o enlace USB disponível. Carregador sozinho não fornece a rede USB; não há interface Wi-Fi disponível nesta imagem.
-- DNS local ainda não foi instalado. Nenhum DNS do Mac/roteador foi alterado; não há NAT/encaminhamento para a LAN nem internet de saída no telefone.
+- DNS local foi instalado e validado em dois boots da candidata 7.0.12, com restore e consultas UDP/TCP pelo Mac/Windows: telefone na porta 5353 e proxy optativo do Mac na 1053. Nenhum DNS global do Mac/roteador foi alterado. SSH/HTTP também têm forwards LAN optativos; não há NAT ou saída geral para internet. Porta DNS padrão e cliente nslookup permanecem #19/#20; [operação e evidência](DNS.md).
 - Para remover somente o alias USB do Mac enquanto o telefone estiver conectado: `bash scripts/host/iphone-linux.sh disconnect`. Não altera a rota padrão de Ethernet/Wi-Fi.
 - Restaurar pelo Finder reinstala iOS e apaga dados locais; não é parte da atualização do Linux em RAM. O boot normal continua Apple/iOS.
 
@@ -302,7 +302,7 @@ O cliente OpenSSH atual imprime um aviso de ausência de troca pós-quântica co
 
 Evidências locais: `evidence/multipass-build.json`, `evidence/ubuntu-package-versions.txt`, `evidence/ssh-linux-status.txt`, `evidence/herdr-phone.txt`, `evidence/linux-boot-proof.txt`, `evidence/linux-http-proof.html`, `artifacts.json`. O log `../logs/install-last.log` permanece somente local. Alguns registros iniciais são históricos, anteriores ao SSH; os mais novos mostram o estado atualizado.
 
-Gates pendentes: confirmação física de carga sustentada; estabilidade prolongada; serviço DNS; e os demais itens do backlog. SSH/HTTP pela LAN foram comprovados pelo Windows após novo boot com loopback automático; [procedimento e limites](REDE.md). O boot frio pelo wrapper, a restauração após novo boot e os snapshots automáticos foram revalidados fisicamente nesta árvore, mas isso não prova que a alimentação mantenha carga positiva ou operação contínua. Não confundir o HTTP/Bash/Herdr já verificados com esses gates.
+Gates pendentes: confirmação física de carga sustentada; estabilidade prolongada; piloto do kernel 7.2.0/Pongo compilados e rollback Linux; retorno verificável ao iOS; novo piloto Herdr; porta DNS padrão/nslookup, Wi-Fi, storage e boot autônomo. DNS UDP/TCP e restore já foram comprovados na #7. SSH/HTTP pela LAN foram comprovados pelo Windows após novo boot com loopback automático; [procedimento e limites](REDE.md). O boot frio pelo wrapper, a restauração após novo boot e os snapshots automáticos foram revalidados fisicamente nesta árvore, mas isso não prova que a alimentação mantenha carga positiva ou operação contínua. Não confundir o HTTP/Bash/Herdr já verificados com esses gates.
 
 Fontes primárias: [Hoolock PongoOS](https://github.com/HoolockLinux/docs/blob/master/tutorials/SETUP_pongoOS.md), [Hoolock A9](https://github.com/HoolockLinux/docs/blob/master/features/A9.md), [armazenamento](https://github.com/HoolockLinux/docs/blob/master/tools/README.md), [palera1n](https://github.com/palera1n/palera1n), [Herdr](https://github.com/herdrdev/herdr), [processo de boot Apple](https://support.apple.com/en-ca/guide/security/secb3000f149/web).
 

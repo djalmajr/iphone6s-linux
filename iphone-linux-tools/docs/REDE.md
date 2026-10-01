@@ -1,5 +1,7 @@
 # Acesso pela LAN — plano da issue #6
 
+**Estado atual:** #6 concluída com SSH/HTTP por um Windows independente após novo boot com loopback automático; resultado e cleanup em “Conclusão física” abaixo. Os planos, estados “em curso” e pilotos pendentes anteriores preservam a cronologia; não são novas pendências. DNS UDP/TCP foi validado depois na [#7](DNS.md). Carga sustentada, estabilidade e a cadeia posterior com kernel/Pongo compilados continuam gates separados.
+
 ## Contexto
 
 A imagem atual oferece SSH por chave e HTTP na rede USB `172.16.42.0/24`. #5 está concluída; #2/#8 ainda impedem alegar operação prolongada. O telefone retornou ao iOS. Prepararemos o encaminhamento antes de pedir um novo boot curto. DNS do Mac/roteador, contas remotas, firewall global e Internet Sharing não serão alterados.
