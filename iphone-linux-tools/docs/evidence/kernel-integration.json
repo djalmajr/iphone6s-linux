@@ -38,7 +38,22 @@
     "mutation_total": 7,
     "lint": "passed",
     "type_checker": "not_configured",
-    "remote_ci": "pending"
+    "remote_ci": {
+      "status": "success",
+      "tested_commit": "a8a58c25ab55c759c045b739a740ae80582126fd",
+      "pr_run": 36813037576,
+      "push_run": 36813034438,
+      "platforms": [
+        "macos-15",
+        "ubuntu-24.04"
+      ],
+      "tests_each": 86,
+      "passed_each": 77,
+      "skipped_each": 9,
+      "profile_mutations": 20,
+      "return_ios_mutations": 9,
+      "kernel_integration_mutations": 7
+    }
   },
   "created_date": "2026-10-01"
 }

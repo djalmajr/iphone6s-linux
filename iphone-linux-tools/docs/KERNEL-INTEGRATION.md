@@ -51,14 +51,14 @@ A primeira execução recusou `runtime/` com modo `755` antes de criar saída; r
 - Dependências/banco: nenhum pacote novo no Mac; nenhum banco alterado.
 - Quebra de compatibilidade: nenhuma troca automática do perfil existente. NCM exige kernel incorporado, por isso o módulo antigo é removido somente na candidata.
 - Desempenho: o payload aumentou aproximadamente 6,2 MB; tempo de boot e consumo ainda não medidos.
-- CI remoto: testes descobertos pela suíte existente. A fase seguinte acrescenta as 7 mutações de integração à matriz Ubuntu/macOS; resultado remoto ainda pendente.
+- CI remoto em `a8a58c2`: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/36813037576) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36813034438) aprovados. Cada plataforma executou 86 cenários: 77 aprovados e 9 skips explícitos. As 20 mutações de perfil, 9 de retorno e 7 de integração foram detectadas nas duas plataformas; guard/lint/sintaxe passaram, e ShellCheck passou no Linux. O nono skip do clone CI é a verificação de artefatos privados não publicados. Este registro posterior altera somente documentação; a evidência se refere ao commit do código e workflow indicado.
 
 ## Fase CI
 
 Escopo: `.github/workflows/ci.yml`, este documento, `docs/evidence/kernel-integration.json`, `KERNEL-SOURCE-BUILD.md` e `REPRODUCAO.md`. As referências anteriores agora distinguem integração verificada de boot físico pendente. Acrescentar o runner de mutações à matriz existente, mantendo as permissões de leitura e os gates anteriores. Conferir guard público, diff e execução real dos jobs Ubuntu/macOS. Nenhuma dependência adicional ou ação no aparelho.
 
 - [x] Registrar o runner das 7 mutações no workflow.
-- [ ] Verificar execução remota nas duas plataformas e registrar os resultados.
+- [x] Verificar execução remota nas duas plataformas e registrar os resultados.
 
 ## Próxima validação física
 
