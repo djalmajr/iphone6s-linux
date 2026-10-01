@@ -66,15 +66,15 @@ bash scripts/host/iphone-linux.sh restore AAAAMMDDTHHMMSSZ-xxxxxxxx
 
 ## Reprodução dos testes
 
-A VM existente já contém Bash, BusyBox estático e Python. Estes testes exigem Linux/root e `IPHONE_RESTORE_VM_TESTS=1`; no macOS são explicitamente ignorados. Não executá-los em um servidor de produção. Só fontes públicas são transferidas; nenhum snapshot ou chave real é usado.
+A VM existente já contém Bash, BusyBox estático, Python e unshare. Estes testes exigem Linux/root e `IPHONE_RESTORE_VM_TESTS=1`; no macOS são explicitamente ignorados. Não executá-los em um servidor de produção. Só fontes públicas são transferidas; nenhum snapshot ou chave real é usado.
 
 ```bash
 multipass start iphone6s-build
 multipass exec iphone6s-build -- mkdir -p /tmp/iphone6s-restore-validation/scripts/host /tmp/iphone6s-restore-validation/tests
 multipass transfer iphone-linux-tools/scripts/host/persist.py iphone-linux-tools/scripts/host/restore_journal.py iphone-linux-tools/scripts/host/snapshot_lock.py iphone-linux-tools/scripts/host/snapshot_retention.py iphone-linux-tools/scripts/host/device_profile.py iphone6s-build:/tmp/iphone6s-restore-validation/scripts/host/
 multipass transfer iphone-linux-tools/tests/test_restore_failure_vm.py iphone-linux-tools/tests/run_restore_mutations.py iphone6s-build:/tmp/iphone6s-restore-validation/tests/
-multipass exec iphone6s-build -- sudo env IPHONE_RESTORE_VM_TESTS=1 python3 -m unittest discover -s /tmp/iphone6s-restore-validation/tests -p test_restore_failure_vm.py -v
-multipass exec iphone6s-build -- sudo env IPHONE_RESTORE_VM_TESTS=1 python3 /tmp/iphone6s-restore-validation/tests/run_restore_mutations.py
+multipass exec iphone6s-build -- sudo unshare --mount --propagation private env IPHONE_RESTORE_VM_TESTS=1 python3 -m unittest discover -s /tmp/iphone6s-restore-validation/tests -p test_restore_failure_vm.py -v
+multipass exec iphone6s-build -- sudo unshare --mount --propagation private env IPHONE_RESTORE_VM_TESTS=1 python3 /tmp/iphone6s-restore-validation/tests/run_restore_mutations.py
 ```
 
 O fixture cria um chroot próprio com os binários existentes; o transporte SSH é substituído por execução nesse chroot. As funções de snapshot/restore não são simuladas. Um cenário monta tmpfs de 64 KiB somente no `/srv/data` sintético. O outro interrompe o grupo de processos da extração real após o primeiro arquivo mudar e força falha de cleanup. Teardown desmonta o tmpfs e remove os fixtures próprios. O runner de mutações copia somente fontes/teste para diretórios descartáveis, sem alterar os originais.
@@ -104,3 +104,18 @@ Fonte: plano deste documento e [issue #15](https://github.com/djalmajr/iphone6s-
 O fixture inicialmente falhou por perder a permissão de execução do carregador Bash ao copiar bibliotecas. A cópia passou a preservar modos e os dois cenários reais passaram; isso não foi falha do restaurador. Os gates do wrapper/power já aprovados foram reutilizados onde não houve alterações relevantes.
 
 **Riscos:** overlay não transacional, arquivos extras preservados, autores concorrentes sem suporte e dados pós-snapshot perdidos no reboot. A alimentação (#2) segue sem prova de carga sustentada, mantendo #8 dependente. Próximo desenvolvimento: snapshots automáticos e retenção (#5). Merge em main continua aguardando autorização específica.
+
+## Contrato das provas de recuperação — #28
+
+O runner exige baseline dos dois cenários aprovado antes das mutações. Cada controle executa somente o caso correspondente, exige seu cabeçalho FAIL, uma única falha e a asserção exata esperada. ERROR, skip, código zero, resumo sem execução, texto contendo apenas `88` e falha de outro caso abortam sem prova de rejeição. Mensagens e nomes de testes integram esse contrato; alterações na fixture exigem atualizar o mapa e as regressões.
+
+Dez regressões do main CLI e treze mutações desse contrato passaram no Mac com processos externos sintéticos. Na VM dedicada, o baseline de interrupção/ENOSPC e ambos os controles reais passaram em namespace de montagem privado, com fontes públicas conferidas na transferência e sem chaves/snapshots reais. O restaurador e o fixture nativo permaneceram inalterados. Limpeza dos diretórios/mounts próprios confirmada e VM parada, sem pacote instalado. [Evidência e limites](evidence/restore-proof-gates.json).
+
+Reproduzir os testes locais sem privilégio ou VM:
+
+```sh
+python3 -m unittest discover -s iphone-linux-tools/tests -p test_restore_mutation_gate.py -v
+python3 iphone-linux-tools/tests/run_restore_mutation_gate_mutations.py
+```
+
+A reprodução sintética demonstrou o falso positivo do runner antigo; não contradiz os resultados reais anteriores de recuperação. A revalidação da VM não comprova alimentação, estabilidade prolongada ou retorno ao iOS no aparelho. O overlay continua não transacional e preserva arquivos extras.

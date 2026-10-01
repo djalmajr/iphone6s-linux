@@ -296,10 +296,28 @@ Reprodução confirmou saída 0 com dois relatórios externos ERROR sem asserç�
 
 - [x] Regressões do main CLI e mutações do contrato, com resultados externos sintéticos, comprovam recusa/aceitação e baseline antes de mutações.
 - [x] Revalidar baseline e dois controles reais em VM própria, sem mounts/chaves ou dependências novas; limpar fixtures/montagens próprias e parar VM.
-- [ ] Lint, suíte local e CI Ubuntu/macOS registrados; evidência sanitizada, documentação e issues em fase posterior de até cinco arquivos.
+- [x] Lint, suíte local e CI Ubuntu/macOS registrados; evidência sanitizada, documentação e issues em fase posterior de até cinco arquivos.
 
 Decisão: vincular cada caso/asserção ao controle existente, sem criar novos cenários de falha ou alterar o restore real. Alternativa rejeitada: um substring mais longo ainda pode aceitar exceções de infraestrutura. Mensagens da fixture são contrato e deverão ser atualizadas junto dos testes quando mudarem. Nenhuma nova prova no aparelho, merge, tag ou release; reconexão USB continua pendente. CI documental de `20e7fc2` está em acompanhamento pelas execuções já iniciadas 36845182743/36845176763.
 
 Verificação da implementação #28: dez regressões CLI e 13/13 mutações do contrato aprovadas; suíte local 171 cenários, 163 aprovados/oito skips, com permissão somente para o socket loopback dos testes já existentes. Ajuste posterior limitou os parâmetros do helper de teste a um objeto de opções; apenas as dez regressões e treze mutações repetidas, com resultados anteriores não afetados reutilizados. Flake8 fatal/diff aprovados; sem typechecker configurado. Baseline real de dois casos e ambas as mutações passaram na VM, usando apenas fontes públicas com SHA de transferência conferido, num namespace de montagem privado. Restore/fixture nativo inalterados; nenhum pacote instalado, identidade real, snapshot real, imagem real, banco ou configuração global alterados.
 
 A checagem inicial de mounts não executou porque `rg` não existe no guest; não foi contada como prova. Diretórios próprios já haviam sido removidos e a VM parada. Repetida somente a auditoria com `findmnt` e `grep` existentes, incluindo ausência da árvore transferida e dos fixtures próprios: `RESTORE_FIXTURE_CLEANUP_OK`. VM novamente Stopped/mounts vazios. CI documental anterior `20e7fc2` terminou verde, PR 36845182743/push 36845176763; CI do código novo e encerramento documental seguem pendentes. Nenhuma ação USB/DFU no telefone nesta rodada.
+
+## Encerramento da correção — #28
+
+Fonte: plano acima/issue #28, parte de #16/#17; goal geral ativo. Fase documental de cinco arquivos: este relatório, RECUPERACAO, STATUS, evidência e inventário. Código em `3df0956`. Runner real exige baseline de dois casos aprovado, seleciona o caso correspondente e aceita somente sua asserção exata com FAIL e resumo de uma falha. O serviço de restore e o fixture nativo permanecem inalterados; nenhum novo comportamento de recuperação ou custo no telefone. Extra baseline e checks de relatório aumentam somente o custo do verificador.
+
+| Verificação | Resultado |
+|---|---|
+| Regressões/mutações locais | Dez cenários e 13/13 controles do contrato aprovados; main CLI real, somente processos externos/precondições simulados |
+| Suíte local | 171 cenários, 163 aprovados/oito skips; após ajuste do helper de teste, somente dez regressões/treze mutações repetidas e evidência não afetada reutilizada |
+| VM real | Baseline de dois casos e 2/2 mutações aprovadas em namespace privado com BusyBox/Bash; fontes públicas conferidas, sem imagens/identidades/snapshots reais |
+| Lint/tipos/docs | Flake8 fatal/diff aprovados; CI confirmou sintaxe/ShellCheck Linux. Sem typechecker configurado; receita exige unshare para as montagens da fixture |
+| Limpeza | Ausência da árvore transferida, fixtures/mounts próprios confirmada com findmnt/grep; VM Stopped/mounts vazios. A tentativa com rg ausente não foi contada |
+| Dependências/banco/compatibilidade | Nenhum pacote/banco/configuração global modificado; exige o mesmo opt-in Linux/root e preserva saída final de sucesso |
+| Limites | Relatórios/nome do caso integram o contrato. Não acrescenta atomicidade/concurrency ao restore nem prova hardware/energia/retorno ao iOS |
+
+CI terminal verde: [PR 36846983347](https://github.com/djalmajr/iphone6s-linux/actions/runs/36846983347) e [push 36846977041](https://github.com/djalmajr/iphone6s-linux/actions/runs/36846977041). Quatro jobs Ubuntu/macOS com 171 cenários cada, 162 aprovados/nove skips e 13/13 mutações do novo gate detectadas; logs terminais conferidos. Guard/lint/sintaxe/ShellCheck Linux passaram. [Evidência sanitizada](evidence/restore-proof-gates.json) registra reprodução anterior, prova atual e recuperação da checagem de cleanup.
+
+Causa: um fragmento de texto era tratado como detecção, sem baseline ou vínculo com a asserção/caso. O contrato agora exige ambos e as regressões reproduzem o erro sem privilégio real no Mac. Nenhum desvio de escopo operacional; inventário/referências atendem à revisão #16. Checkpoint pinado ao código: 108 leituras completas/162 entradas, todos os testes/runners lidos; documentos/evidências atuais ainda têm pendências, sem parecer integral. #16 continua parcial e nenhum merge/tag/release foi feito. Próximo passo: continuar documentos/evidências e realizar candidata/retorno/rollback quando USB e operador estiverem disponíveis. A orientação de reconexão permanece pendente; não houve DFU nem ação no telefone nesta rodada.
