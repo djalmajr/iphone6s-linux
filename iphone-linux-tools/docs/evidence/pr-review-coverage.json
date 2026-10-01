@@ -2,11 +2,11 @@
   "format": 1,
   "date": "2026-10-01",
   "baseline": "168b95453d672a1ae862bf608bf39d5a463ec2f8",
-  "inspected_head": "d5e45975f9e856b104b6a51a735435ac5a654209",
+  "inspected_head": "48136677b9c61c20da528b57974335b0304f19b8",
   "status": "partial",
   "method": "Complete reads plus inspection of own subsequent diffs; unreviewed removals stay explicit. Blob identity binds coverage to this revision. This is a reading inventory, not an audit verdict or native proof.",
-  "file_entries": 164,
-  "complete_reads": 129,
+  "file_entries": 165,
+  "complete_reads": 136,
   "complete_pr_review": false,
   "removed_baseline_sources_completely_reviewed": true,
   "findings": [
@@ -150,12 +150,12 @@
       "path": "iphone-linux-tools/docs/FRESH-BUILD.md",
       "change": "A",
       "blob": "eb8e2309d3959ed40a858da41426d9cdf6c3ad28",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/HERDR.md",
       "change": "A",
-      "blob": "ac9c4e51bf57361c9852dfb34e92b6415fc0a48b",
+      "blob": "03fe9f71e089fc8b9e90dcab7955c65146ce5988",
       "read_complete": true
     },
     {
@@ -168,7 +168,7 @@
       "path": "iphone-linux-tools/docs/KERNEL-SOURCE-BUILD.md",
       "change": "A",
       "blob": "e766cd70c68cdf13859d18254f24c9912807f103",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/KERNEL-VERIFY.md",
@@ -180,7 +180,7 @@
       "path": "iphone-linux-tools/docs/M1N1-BUILD.md",
       "change": "A",
       "blob": "5300352b3aa8eaad150e4ffc4343f21e383fc25e",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/ORGANIZACAO.md",
@@ -203,14 +203,14 @@
     {
       "path": "iphone-linux-tools/docs/PR-REVIEW.md",
       "change": "A",
-      "blob": "98a66615c6f3366428b46e51d47cd6eeededcdde",
+      "blob": "f1395353438822896600a89e10d536f192c01f9e",
       "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/PROFILES.md",
       "change": "A",
       "blob": "30f185d38a07e485aabb1975002a2c2080b4a7cd",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/REBOOT.md",
@@ -239,7 +239,7 @@
     {
       "path": "iphone-linux-tools/docs/STATUS.md",
       "change": "A",
-      "blob": "e802530965d704b687cac9112367f6971a12dff1",
+      "blob": "5bf5884be99a905b9491938a4361396f4e65e3ed",
       "read_complete": true
     },
     {
@@ -318,12 +318,18 @@
       "path": "iphone-linux-tools/docs/evidence/fresh-build-provenance.json",
       "change": "A",
       "blob": "1841e6953accacf1c492e66f66f7cd75094e339a",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/evidence/herdr-autostart.json",
       "change": "A",
       "blob": "4cb70028180dfa1b8e968bd2ad3bad29dab8f51a",
+      "read_complete": true
+    },
+    {
+      "path": "iphone-linux-tools/docs/evidence/herdr-detachment.json",
+      "change": "A",
+      "blob": "d942bc8754f9fa95bac8285aabdc71fc4a1309a3",
       "read_complete": true
     },
     {
@@ -342,7 +348,7 @@
       "path": "iphone-linux-tools/docs/evidence/kernel-integration.json",
       "change": "A",
       "blob": "e49559d1b192d6bbf1810983a596bcbfa937ddfe",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/evidence/kernel-package-provenance.json",
@@ -413,7 +419,7 @@
     {
       "path": "iphone-linux-tools/docs/evidence/pr-review-coverage.json",
       "change": "A",
-      "blob": "2fee2fcb33b9316f64a92f9c85e69fcb8d39e456",
+      "blob": "76e8b8b4795cb1f047b4aafb8c48786c10f3e1b8",
       "read_complete": false
     },
     {

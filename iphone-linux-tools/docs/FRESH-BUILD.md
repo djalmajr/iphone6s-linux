@@ -4,6 +4,8 @@
 
 m1n1 já foi reconstruído de fonte fixada na VM antiga; os conteúdos do kernel foram autenticados pelo índice oficial assinado. Esta etapa cria a imagem de servidor completa em uma VM Ubuntu nova, a partir do repositório público e insumos conferidos. Não reutiliza rootfs, runtime, identidades ou cache de compilação da VM anterior. A assinatura própria do APK e seu `commit = -dirty` continuam lacunas separadas.
 
+**Estado atual:** a construção abaixo registra a etapa de VM em 2026-09-30. Depois dela, esta candidata com kernel 7.0.12 e identidades novas passou em dois boots físicos curtos, com restore e DNS, conforme [PROFILES.md](PROFILES.md) e [evidência do piloto](evidence/dns-physical-check.json). O JSON de proveniência conserva o alcance histórico da construção na VM. A [candidata posterior com kernel 7.2.0 de fonte](KERNEL-INTEGRATION.md) e Pongo recompilado ainda não passou pelo boot físico.
+
 ## Arquivos e limites
 
 - VM nova: `iphone6s-repro-20260930`, Ubuntu 24.04, dois núcleos, 4G de RAM, 10G de disco; sem mounts ou bridge. O nome deve estar ausente antes do launch.
@@ -32,7 +34,7 @@ Manifesto oficial: `https://static.rust-lang.org/dist/channel-rust-1.98.1.toml`,
 - [x] Dependências autenticadas e fontes fixadas preparadas.
 - [x] m1n1 e imagem completa reconstruídos com identidades novas.
 - [x] Userspace da imagem nova verificado e evidências registradas.
-- [ ] Boot físico da candidata verificado; gate depende de DFU manual.
+- [x] Dois boots físicos curtos da candidata 7.0.12 com perfil privado, restore e DNS verificados; limites registrados em PROFILES.md.
 
 ## D1. Recursos e preservação
 
@@ -244,4 +246,6 @@ O build emitiu um aviso de descritores jobserver do Cargo indisponíveis e os do
 
 A candidata privada `runtime/fresh-build-20260930/iphone6s-repro-server.bin` tem 23.767.750 bytes e SHA-256 `274e632b599ba94efc3b6512402ee15762232a9a34e679d034afd0c04eebf496`. O runtime e initramfs privados foram trazidos com hashes conferidos. O hash integral não deve ser esperado em outra implantação com identidades e metadados novos.
 
-**Pendente:** boot físico com as identidades novas, carga sustentada, estabilidade e as lacunas de proveniência já descritas. O wrapper atual usa payload/chaves fixos da implantação conhecida; este build não o retargeteou para a candidata. O próximo teste deverá preparar um perfil privado coerente de imagem/chave/pin sem substituir a seleção padrão. Não fechar #12 apenas por estes gates da VM.
+**Checkpoint histórico ao terminar o build:** ainda faltavam o perfil privado e o boot físico com as identidades novas. Esses passos foram concluídos depois: o wrapper ganhou seleção explícita de perfil, e a candidata 7.0.12 passou em dois boots curtos com restauração do DNS. A seleção padrão conhecida foi preservada. Consulte PROFILES.md para os resultados e os limites de retorno ao iOS.
+
+**Pendente agora:** carga sustentada, estabilidade prolongada, as lacunas de proveniência do APK e o piloto da cadeia posterior com kernel 7.2.0/Pongo compilados, incluindo rollback para o Linux conhecido. Não fechar #12 por estes gates de VM ou pelos dois boots da imagem anterior.
