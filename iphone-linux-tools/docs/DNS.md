@@ -309,3 +309,10 @@ python3 iphone-linux-tools/tests/run_dns_mutation_gate_mutations.py
 ```
 
 A receita de VM acima continua válida; não executar esse fixture privilegiado no Mac. CI executa os testes sintéticos e as onze mutações do contrato nas duas plataformas. A revalidação da VM não comprova alimentação, estabilidade prolongada, Wi-Fi ou boot da nova cadeia no telefone.
+
+
+## Preparação da porta padrão — #19
+
+[Plano e decisões](DNS-STANDARD.md), [evidência sanitizada](evidence/dns-standard-port.json). Tabela do kernel mostrou sete endpoints TCP e sete UDP 53; lsof não privilegiado não os revelou. O IPv4 LAN já testado ainda está atribuído ao Mac e não tem bind IPv4 exato/wildcard observado. Bind UDP e TCP 53, por processo não root sem reuse/listen/tráfego, falhou com EACCES; sockets fechados e nenhum endpoint novo permaneceu no bind escolhido. IPv6 truncado não foi usado como prova de ausência de conflito.
+
+Isso define o próximo trabalho: bootstrap mínimo somente para abrir sockets e entregar FDs ao proxy/SSH não privilegiado, com testes de drop/identidade/limites e rollback. Nenhum listener 53 foi publicado, helper privilegiado implementado, política NRPT aplicada ou DNS do Android/roteador alterado. Split DNS apenas nos FQDNs próprios é o caminho planejado para conservar resolução externa; integração de clientes e uso contínuo dependem de testes acompanhados e #2/#8. Não substituir o DNS global por este servidor não recursivo.

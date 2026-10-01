@@ -1,0 +1,217 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 19,
+  "status": "partial",
+  "scope": "read-only Mac kernel endpoint inventory and short non-root bind preflight; no DNS query, iPhone, listener TCP or client policy change",
+  "kernel_inventory": [
+    {
+      "protocol": "tcp",
+      "port": 53,
+      "endpoint_count": 7,
+      "endpoints": [
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp4",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp4",
+          "state": "LISTEN"
+        }
+      ]
+    },
+    {
+      "protocol": "udp",
+      "port": 53,
+      "endpoint_count": 7,
+      "endpoints": [
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp4",
+          "state": "bound"
+        },
+        {
+          "family": "udp4",
+          "state": "bound"
+        }
+      ]
+    }
+  ],
+  "endpoint_classes": [
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "loopback",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "link-local",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "link-local",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "unparsed-truncated",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": null
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "unparsed-truncated",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": null
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp4",
+      "bind_class": "loopback",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp4",
+      "bind_class": "private",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "loopback",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "link-local",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "link-local",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "unparsed-truncated",
+      "state": "bound",
+      "matches_current_en0_ipv4": null
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "unparsed-truncated",
+      "state": "bound",
+      "matches_current_en0_ipv4": null
+    },
+    {
+      "protocol": "udp",
+      "family": "udp4",
+      "bind_class": "loopback",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp4",
+      "bind_class": "private",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    }
+  ],
+  "selected_endpoint": {
+    "selected_bind": "previously tested explicit private LAN IPv4",
+    "still_assigned_to_mac": true,
+    "ipv4_exact_or_wildcard_conflicts": [],
+    "ipv6_scope": "not selected; truncated kernel output not used as no-conflict proof"
+  },
+  "bind_preflight": {
+    "effective_uid_is_root": false,
+    "selected_bind": "explicit private LAN IPv4 previously verified assigned",
+    "port": 53,
+    "tcp_listen_started": false,
+    "traffic_sent": false,
+    "reuse_options_enabled": false,
+    "sockets_closed": true,
+    "binds": [
+      {
+        "protocol": "UDP",
+        "success": false,
+        "errno": 13,
+        "evidence": "initial preflight"
+      },
+      {
+        "protocol": "TCP",
+        "success": false,
+        "errno": 13
+      }
+    ],
+    "selected_ipv4_endpoint_count_after": 0
+  },
+  "limits": [
+    "Unprivileged lsof returned no rows; kernel table had endpoints, so lsof was not used as proof of availability.",
+    "IPv6 address text was truncated even with -W; two addresses per protocol remained unclassified.",
+    "Selected IPv4 matched previously tested LAN bind and assigned host addresses; endpoint inventory is not a successful privileged bind.",
+    "Neither UDP nor TCP bind succeeded; EACCES observed as non-root. No DNS transport response tested.",
+    "No owner of existing DNS sockets identified; no existing process stopped or configuration changed.",
+    "No NRPT, Android DNS setting, upstream, DHCP reservation or router configuration changed."
+  ],
+  "next": "Implement and test minimal socket bootstrap and unprivileged FD adoption; accompanied native test and phone boot/restore plus client policy/rollback remain pending."
+}
