@@ -2,11 +2,11 @@
   "format": 1,
   "date": "2026-10-01",
   "baseline": "168b95453d672a1ae862bf608bf39d5a463ec2f8",
-  "inspected_head": "7a067cfb86254294a8fe5df7d99dff4b78cba265",
+  "inspected_head": "8b44b245037f94ac1fc341e4ff00486169adeace",
   "status": "partial",
   "method": "Complete reads plus inspection of own subsequent diffs; unreviewed removals stay explicit. Blob identity binds coverage to this revision. This is a reading inventory, not an audit verdict or native proof.",
   "file_entries": 165,
-  "complete_reads": 163,
+  "complete_reads": 164,
   "complete_pr_review": false,
   "removed_baseline_sources_completely_reviewed": true,
   "findings": [
@@ -203,7 +203,7 @@
     {
       "path": "iphone-linux-tools/docs/PR-REVIEW.md",
       "change": "A",
-      "blob": "095cd79c64bc2b68cb7a0e65270aaba44b483f31",
+      "blob": "50a0b56870c2f4e3d380c0f18d52a0672b3a5ec6",
       "read_complete": true
     },
     {
@@ -227,19 +227,19 @@
     {
       "path": "iphone-linux-tools/docs/REDE.md",
       "change": "A",
-      "blob": "6411f5f7cbb4aa0edd65768e956542aeb0f1ae1b",
+      "blob": "4cedfc4242844c7109cd9c761ac33a3c34a4f998",
       "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/REPRODUCAO.md",
       "change": "M",
-      "blob": "c0e24f1f5d6f87a89deab97b1d735356d94eaca4",
+      "blob": "ba741e56499fae49c4174f35124a6f85971fed19",
       "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/STATUS.md",
       "change": "A",
-      "blob": "b144a8ade86201932adc711f3c1957016abccece",
+      "blob": "fbcd8aaf2e39d3748582928f54d33b7c7dfbfe21",
       "read_complete": true
     },
     {
@@ -419,8 +419,8 @@
     {
       "path": "iphone-linux-tools/docs/evidence/pr-review-coverage.json",
       "change": "A",
-      "blob": "d52445dfdfe9e0e2749fbd99ea948a41cafe433a",
-      "read_complete": false
+      "blob": "9ddb1260441163f76ef64a01f1eac1b985fd6498",
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/docs/evidence/restore-failure-check.txt",
@@ -1010,5 +1010,30 @@
       "blob": "206abdcd51df3b91b705d82108942453fe05ace7",
       "read_complete": true
     }
-  ]
+  ],
+  "binary_review": {
+    "format": 1,
+    "date": "2026-10-01",
+    "index_sha256": "da53e0f06b6500d3fd8ebc65cccbe6a1ab4200729b6764f5ccb94d7017d2ff28",
+    "compressed_bytes": 106022,
+    "gzip_streams": 2,
+    "tar_member_names": [
+      [
+        ".SIGN.RSA.build.postmarketos.org.rsa.pub"
+      ],
+      [
+        "APKINDEX",
+        "DESCRIPTION"
+      ]
+    ],
+    "package_records_checked": 1039,
+    "all_records_shape_checked": true,
+    "selected_kernel_metadata_matches_public_evidence": true,
+    "public_key_sha256": "b70e6ffc64a652d63aee0c28cb9ecb2ca3b49d759ca7a023bcb854d08780964b",
+    "rsa_sha1_verified_exit": 0,
+    "bit_flip_rejected_exit": 1,
+    "scope": "complete bounded structural parsing and signature verification; no package content execution or textual read of every binary byte",
+    "package_own_signature_verified": false,
+    "source_kernel_commit_proven": false
+  }
 }
