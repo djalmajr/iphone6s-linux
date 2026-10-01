@@ -220,9 +220,19 @@ Reprodução sintética confirmou que `compose-payload.py` segue um symlink de s
 
 Fase de implementação (até cinco arquivos): `scripts/build/compose-payload.py`, `tests/test_compose_payload.py`, runner `tests/run_compose_mutations.py`, `.github/workflows/ci.yml` e este plano. Guard antes de ler/compor: destino ausente ou arquivo regular próprio, sem links/hardlinks/tipos especiais; cadeia de pais literal sem symlinks, com pasta de saída própria e não gravável por outros. Publicar arquivo novo por temporary privado e rename; preservar saídas existentes diferentes, aceitar recomposição idêntica sem regravar conteúdo. Referências atuais permitem outputs privados fora do repo, portanto não restringir a `artifacts/`.
 
-- [ ] Recusar links válidos/quebrados, hardlinks, FIFO e pais redirecionados antes de escrita/chmod.
-- [ ] Publicar blob privado exatamente igual à composição anterior; recomposição idêntica e erro preservam saídas anteriores.
-- [ ] Verificar falha de publicação/limpeza e controles negativos em testes observáveis; mutações e CI Ubuntu/macOS.
-- [ ] Registrar evidência, cobertura atualizada e limites; não alterar imagens/chaves/snapshots reais nem declarar revisão integral.
+- [x] Recusar links válidos/quebrados, hardlinks, FIFO e pais redirecionados antes de escrita/chmod.
+- [x] Publicar blob privado exatamente igual à composição anterior; recomposição idêntica e erro preservam saídas anteriores.
+- [x] Verificar falha de publicação/limpeza e controles negativos em testes observáveis; mutações e CI Ubuntu/macOS.
+- [x] Registrar evidência, cobertura atualizada e limites; não alterar imagens/chaves/snapshots reais nem declarar revisão integral.
 
 Alternativa rejeitada: resolver symlinks antes da escrita faria o desvio parecer um destino direto. O guard preserva paths literais; em macOS, use um caminho canônico quando o prefixo escolhido for um alias como `/tmp` ou `/var`. Não pretende impedir alterações concorrentes de outro processo do mesmo usuário. Nenhuma compilação upstream ou teste no aparelho é necessário para demonstrar este contrato local.
+
+## Verificação do empacotador — #25
+
+Código em `8a5d2ad`, [evidência sanitizada](evidence/compose-output-paths.json). Fase documental de quatro arquivos: este relatório, STATUS, evidência e inventário de cobertura. Suíte local: 143 testes, 135 aprovados e oito skips; dez regressões novas de filesystem/CLI e 12/12 mutações detectadas. Flake8 fatal e diff-check aprovados; sem typechecker configurado. O fixture usa sticky bit porque o filesystem limpa setuid em arquivo sintético; nenhuma proteção operacional foi removida.
+
+A falha existia porque `exists`/`read_bytes`/`write_bytes`/`chmod` seguiam o link do destino. A validação agora precede composição e publicação, confere metadata literal e publica novas saídas por temporary privado. Arquivo regular idêntico mantém inode/mtime e recebe modo 600; conteúdo diferente permanece intacto. Paths com aliases como `/tmp` requerem diretório canônico. Saídas privadas fora do repo continuam permitidas. Não há proteção contra alterações concorrentes do mesmo usuário nem autenticação completa dos insumos nesta correção.
+
+CI terminal aprovado: [PR 36838539001](https://github.com/djalmajr/iphone6s-linux/actions/runs/36838539001) e [push 36838531797](https://github.com/djalmajr/iphone6s-linux/actions/runs/36838531797), quatro jobs Ubuntu/macOS com 143 testes cada, 134 aprovados e nove skips; 12/12 mutações do empacotador detectadas por job. Guard, lint, sintaxe e ShellCheck Linux passaram; logs terminais conferidos. Nenhum pacote, banco, configuração global, imagem real ou identidade modificada; nenhuma ação USB/VM ou benchmark no telefone. Inventário atualizado por blob no commit do código, preservando como pendentes as remoções do baseline e arquivos não lidos. A revisão #16 continua parcial; boot/retorno/rollback da candidata requerem aparelho detectado e operador.
+
+Inventário desta revisão: 56 leituras completas em 153 entradas de diff até `8a5d2ad`; é inventário de leitura, não parecer integral. As fontes removidas do baseline continuam pendentes. Desvio de escopo documental: atualizar inventário faz parte de #16; não altera os critérios operacionais de #25. Próxima pendência registrada como [#26](https://github.com/djalmajr/iphone6s-linux/issues/26): fixture próprio com `logs` symlink comprovou mudança de modo 755→700 e publicação externa de estado do agendador. Ainda não corrigida; nenhuma árvore real foi alterada. Goal geral ativo, sem merge/tag/release. O USB continuou ausente e o operador foi orientado a reconectar somente a ponta Lightning; nenhum monitor iniciou.

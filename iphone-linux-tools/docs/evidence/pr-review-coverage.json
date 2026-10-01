@@ -2,23 +2,25 @@
   "format": 1,
   "date": "2026-10-01",
   "baseline": "168b95453d672a1ae862bf608bf39d5a463ec2f8",
-  "inspected_head": "d9110cdc1027c32e9c4d20aff119f4e9830c20fc",
+  "inspected_head": "8a5d2adfae8a01190b5430f2194d633b7d0279b3",
   "status": "partial",
   "method": "Complete reads plus inspection of own subsequent diffs; unreviewed removals stay explicit. Blob identity binds coverage to this revision. This is a reading inventory, not an audit verdict or native proof.",
-  "file_entries": 142,
-  "complete_reads": 34,
+  "file_entries": 153,
+  "complete_reads": 56,
   "complete_pr_review": false,
   "removed_baseline_sources_completely_reviewed": false,
   "findings": [
     "#22",
     "#23",
-    "#24"
+    "#24",
+    "#25",
+    "#26"
   ],
   "files": [
     {
       "path": ".github/workflows/ci.yml",
       "change": "A",
-      "blob": "43e991b1165485ae13cbefebe6b36324abeec4bb",
+      "blob": "0a23848f26510d6523cd853c492667d5a7682106",
       "read_complete": true
     },
     {
@@ -94,9 +96,21 @@
       "read_complete": false
     },
     {
+      "path": "iphone-linux-tools/docs/ARMAZENAMENTO.md",
+      "change": "A",
+      "blob": "c8aefa7e02459907b63ad920e2f9bdcefa53bcdd",
+      "read_complete": false
+    },
+    {
       "path": "iphone-linux-tools/docs/AUTOSNAPSHOTS.md",
       "change": "A",
       "blob": "01c506e702460b652cbcdc13b247a775aa7799c1",
+      "read_complete": false
+    },
+    {
+      "path": "iphone-linux-tools/docs/BOOT-AUTONOMO.md",
+      "change": "A",
+      "blob": "f02aadb7e221128d7ac46c11c338f24ec70e6c75",
       "read_complete": false
     },
     {
@@ -120,7 +134,7 @@
     {
       "path": "iphone-linux-tools/docs/DNS.md",
       "change": "A",
-      "blob": "f8aa87b028d67d3d544ae37e181cbf84958b1b0f",
+      "blob": "8e6c75d6f0fedf31dc44d02733a40b469df570dd",
       "read_complete": false
     },
     {
@@ -133,6 +147,12 @@
       "path": "iphone-linux-tools/docs/FRESH-BUILD.md",
       "change": "A",
       "blob": "eb8e2309d3959ed40a858da41426d9cdf6c3ad28",
+      "read_complete": false
+    },
+    {
+      "path": "iphone-linux-tools/docs/HERDR.md",
+      "change": "A",
+      "blob": "ac9c4e51bf57361c9852dfb34e92b6415fc0a48b",
       "read_complete": false
     },
     {
@@ -180,7 +200,7 @@
     {
       "path": "iphone-linux-tools/docs/PR-REVIEW.md",
       "change": "A",
-      "blob": "cfaedfeefdfb537066650ecc99b9ca00045506f1",
+      "blob": "83bd0d91d30be936f45cba707a247c98c411fa9a",
       "read_complete": false
     },
     {
@@ -216,13 +236,13 @@
     {
       "path": "iphone-linux-tools/docs/STATUS.md",
       "change": "A",
-      "blob": "1bb03a3711e50d15946604403502ec98676fe373",
+      "blob": "f9e346195ef14923948612c9a50164099ac3ee74",
       "read_complete": false
     },
     {
       "path": "iphone-linux-tools/docs/WIFI.md",
       "change": "A",
-      "blob": "2349d0a671394aaead24b03c0777d999c3caf1be",
+      "blob": "fc6224b4094e39fe1f43a659080914dc6e4cc8e4",
       "read_complete": false
     },
     {
@@ -247,6 +267,12 @@
       "path": "iphone-linux-tools/docs/evidence/console-cold-boot.txt",
       "change": "A",
       "blob": "d11f609bf02ea785e96781b9a47ae6e926844929",
+      "read_complete": false
+    },
+    {
+      "path": "iphone-linux-tools/docs/evidence/dns-bundle-scope.json",
+      "change": "A",
+      "blob": "84fed6c891c1f53cda3002fec8d92c7bfd2b970b",
       "read_complete": false
     },
     {
@@ -277,6 +303,12 @@
       "path": "iphone-linux-tools/docs/evidence/fresh-build-provenance.json",
       "change": "A",
       "blob": "1841e6953accacf1c492e66f66f7cd75094e339a",
+      "read_complete": false
+    },
+    {
+      "path": "iphone-linux-tools/docs/evidence/herdr-autostart.json",
+      "change": "A",
+      "blob": "4cb70028180dfa1b8e968bd2ad3bad29dab8f51a",
       "read_complete": false
     },
     {
@@ -366,13 +398,25 @@
     {
       "path": "iphone-linux-tools/docs/evidence/pr-review-coverage.json",
       "change": "A",
-      "blob": "a01db8972138c9ab616405431bd2dbb782796b59",
+      "blob": "fe0203b35ee4aa468ae5498f81e863fa308dc253",
       "read_complete": false
     },
     {
       "path": "iphone-linux-tools/docs/evidence/restore-failure-check.txt",
       "change": "A",
       "blob": "6bbe8fbfc8d3a9bc2cd998c1bf20206b725c7a49",
+      "read_complete": false
+    },
+    {
+      "path": "iphone-linux-tools/docs/evidence/storage-boot-n71.json",
+      "change": "A",
+      "blob": "a86bc6818795ec9fa0faff66829442cc4dcb3dbd",
+      "read_complete": false
+    },
+    {
+      "path": "iphone-linux-tools/docs/evidence/wifi-n71-path.json",
+      "change": "A",
+      "blob": "ddd334e3f94e80232b48046134b54836287d7102",
       "read_complete": false
     },
     {
@@ -421,19 +465,19 @@
       "path": "iphone-linux-tools/phone/http/status",
       "change": "A",
       "blob": "5028d58bc3ed8d853964c2833f6fb647b43eccc2",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/phone/init/init",
       "change": "A",
       "blob": "27f7708eeef3bc573b7ff4533be6bab08e2c76f9",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/phone/init/init-server",
       "change": "A",
       "blob": "40d7039380ea99522c86defe34f782fab0c3e565",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/boot/boot_tools.py",
@@ -469,67 +513,67 @@
       "path": "iphone-linux-tools/scripts/build/build-initramfs.sh",
       "change": "A",
       "blob": "1d2e2b6bfc726dd9cb66e780d0c43894cfb7ec75",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/build-kernel-source.sh",
       "change": "A",
       "blob": "3b870d59a37381da770cbac43597503713ac13ab",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/build-pongo-source.sh",
       "change": "A",
       "blob": "c755306c9ea4464fa9c804886e2975ef9cd503f1",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/build-runtime.py",
       "change": "A",
       "blob": "cedaf6b84441e7a28cec8e32d8c10ff7e546a584",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/build-server-image.sh",
       "change": "A",
       "blob": "60d9d509f703f5ef46dc82b204f584a3f0bb5704",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/check-userspace.sh",
       "change": "A",
       "blob": "186b263b9f6c5528d2889dea8f8b38c85b30ce7a",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/compose-payload.py",
       "change": "A",
-      "blob": "d6e8a155f6e1fbe6cfa1eb06966943deb0159953",
-      "read_complete": false
+      "blob": "00b0727b7283460f72196edaa944797d1e0fcb56",
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/integrate-source-kernel.py",
       "change": "A",
       "blob": "e5c4326a62f64440d3f1bb97f070ceca3668b713",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/kernel-n71.config",
       "change": "A",
       "blob": "76e34be78872bbfd20ab8d790a909d387e0938c8",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/rebuild-loopback-initramfs.py",
       "change": "A",
       "blob": "320ce1a2bc67bfb7ffb91ef9fcd4395dbdb4b83a",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/build/verify-pongo-build.py",
       "change": "A",
       "blob": "7290f78dc5506eb77ab7ac192c797a8753840014",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/ci/check-public.py",
@@ -547,7 +591,7 @@
       "path": "iphone-linux-tools/scripts/host/autosnap.py",
       "change": "A",
       "blob": "3ecb258388979201198b9ecc37802e667bdc0fbf",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/host/device_profile.py",
@@ -559,7 +603,7 @@
       "path": "iphone-linux-tools/scripts/host/dns-check-windows.ps1",
       "change": "A",
       "blob": "318aa911971877950a6c441ac6312b8d7de554c9",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/host/dns.py",
@@ -580,9 +624,15 @@
       "read_complete": true
     },
     {
+      "path": "iphone-linux-tools/scripts/host/herdr.py",
+      "change": "A",
+      "blob": "3ecf313ac77de382b95ce5e5b712ef26ce4cc75f",
+      "read_complete": true
+    },
+    {
       "path": "iphone-linux-tools/scripts/host/iphone-linux.sh",
       "change": "A",
-      "blob": "ce17ad6e11973fd3112f6094d939f534b3b6ee04",
+      "blob": "6350c6cc879e0373775991cf01a19682ca2b82c3",
       "read_complete": true
     },
     {
@@ -613,7 +663,7 @@
       "path": "iphone-linux-tools/scripts/host/return_ios.py",
       "change": "A",
       "blob": "4a8752f8068576460270d0c782677e24c929cf4b",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/scripts/host/snapshot_lock.py",
@@ -631,7 +681,7 @@
       "path": "iphone-linux-tools/scripts/host/usb-shell.py",
       "change": "A",
       "blob": "206abdcd51df3b91b705d82108942453fe05ace7",
-      "read_complete": false
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/server/status",
@@ -649,6 +699,12 @@
       "path": "iphone-linux-tools/tests/run_boot_tool_mutations.py",
       "change": "A",
       "blob": "08ed021fed5a9d0598e4f9fd60de24803f6c45cd",
+      "read_complete": true
+    },
+    {
+      "path": "iphone-linux-tools/tests/run_compose_mutations.py",
+      "change": "A",
+      "blob": "e13cefc9faa5d6b0955c2b1a047c5134ea18b979",
       "read_complete": true
     },
     {
@@ -748,6 +804,12 @@
       "read_complete": true
     },
     {
+      "path": "iphone-linux-tools/tests/test_compose_payload.py",
+      "change": "A",
+      "blob": "0134d7b260a3c3adb66410143c83ac6b7e3c83bb",
+      "read_complete": true
+    },
+    {
       "path": "iphone-linux-tools/tests/test_device_profile.py",
       "change": "A",
       "blob": "2e1d9c8b99437686ef1501cf8ead53831a07c1d8",
@@ -782,6 +844,12 @@
       "change": "A",
       "blob": "594a1cb7689a7ec5e1c338010afeb00a0fc981ab",
       "read_complete": false
+    },
+    {
+      "path": "iphone-linux-tools/tests/test_herdr_start.py",
+      "change": "A",
+      "blob": "a98e8c17c7b3b558322379b7e2548b52f55c3dc0",
+      "read_complete": true
     },
     {
       "path": "iphone-linux-tools/tests/test_kernel_integration.py",
