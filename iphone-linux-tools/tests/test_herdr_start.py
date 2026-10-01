@@ -3,6 +3,7 @@ import hashlib
 import importlib.util
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -58,7 +59,8 @@ class HerdrStartTests(unittest.TestCase):
         self.marker = self.base / 'data/herdr/autostart'
         self.state = self.base / 'run'
 
-    def invoke(self, action):
+    def invoke(self, action, options=None):
+        options = options or {}
         source = herdr.script(action)
         source = source.replace('/usr/local/bin/herdr', str(self.peer))
         source = source.replace('/run/iphone-herdr', str(self.state))
@@ -66,10 +68,28 @@ class HerdrStartTests(unittest.TestCase):
         source = source.replace('f4ccf4de745f2cb9a39a983e9ba3703dad50ec2a58dea83026ceab721bbd8d9e', self.digest)
         return subprocess.run(['/bin/bash', '-se'], input=source, text=True,
                               capture_output=True, timeout=15,
-                              env=dict(os.environ, PATH=str(self.base) + os.pathsep + os.environ['PATH']))
+                              env=dict(os.environ, PATH=str(self.base) + os.pathsep + options.get('path', os.environ['PATH'])))
 
     def started(self):
         return (self.base / 'starts').read_text().splitlines()
+
+    def test_start_without_nohup_survives_hangup(self):
+        # Mutations: requiring nohup or dropping inherited HUP protection prevents startup.
+        tools = self.base / 'tools'
+        tools.mkdir()
+        for name in ('sha256sum', 'grep', 'mkdir', 'cat', 'sleep', 'wc', 'find',
+                     'chmod', 'rmdir', 'dirname', 'touch', 'rm'):
+            target = shutil.which(name)
+            self.assertIsNotNone(target, name)
+            (tools / name).symlink_to(target)
+        source = self.peer.read_text().replace('    echo start >>', '    kill -HUP "$$"\n    echo start >>')
+        self.peer.write_text(source)
+        self.digest = hashlib.sha256(self.peer.read_bytes()).hexdigest()
+        result = self.invoke('start', {'path': str(tools)})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('HERDR_STARTED', result.stdout)
+        self.assertEqual(self.started(), ['start'])
+        self.assertFalse((self.state / 'operation.lock').exists())
 
     def test_boot_disabled_then_enable_restores_only_opt_in(self):
         # Mutation: ignoring the opt-in starts the disabled session.

@@ -55,7 +55,7 @@ resume_agents_on_restore = false
 CONFIG
     export HERDR_STARTUP_CWD=/srv/data
     cd /srv/data
-    nohup setsid /usr/local/bin/herdr --session iphone-server server </dev/null >/run/iphone-herdr/start.log 2>&1 &
+    (trap '' HUP; exec setsid /usr/local/bin/herdr --session iphone-server server) </dev/null >/run/iphone-herdr/start.log 2>&1 &
     for phone_herdr_attempt in 1 2 3 4 5 6 7 8 9 10; do
         printf 'Startup check %s\n' "$phone_herdr_attempt" >> /run/iphone-herdr/start.log
         if running; then
