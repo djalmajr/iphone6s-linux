@@ -344,7 +344,7 @@ Fase de cinco arquivos: helper Herdr, teste existente, runner novo de mutações
 
 - [x] Validar regressão, duas mutações, demais contratos Herdr e Bash/ShellCheck/lint; sem typechecker configurado.
 - [x] Revalidar servidor Herdr oficial com Bash e applets reais da candidata na VM isolada; reconexão/restart/marker, sem chaves ou dados reais.
-- [ ] Publicar código e observar CI; atualizar evidência/docs/status/inventário em fase posterior de até cinco arquivos e remover fixtures/processos próprios, devolvendo VM a Stopped/mounts vazios.
+- [x] Publicar código e observar CI; atualizar evidência/docs/status/inventário em fase posterior de até cinco arquivos e remover fixtures/processos próprios, devolvendo VM a Stopped/mounts vazios.
 
 Decisão: setsid e HUP herdado no filho dispensam dependência inexistente; incluir nohup/coreutils ampliaria o runtime e exigiria rebuild. Reversão de baixo custo, sem formato persistente novo. A prova VM não conclui boot/reconexão física/TUI #13, alimentação #2, estabilidade #8 ou retorno/rollback #12/#21. USB ausente; nenhum monitor iniciado.
 
@@ -353,3 +353,18 @@ Verificação da implementação: 12 testes Herdr passaram, incluindo startup co
 Na VM, Herdr oficial `f4ccf4de...` iniciou com o PATH dos applets reais da candidata: Bash 5.2, mesmo painel entre clientes CLI separados, restart e novo namespace volátil recriado pelo marcador passaram. Esse teste usa Bash/bibliotecas do guest e não executa o initramfs completo, SSH/TUI ou hardware. Sessão própria parada; ausência de processos com cwd da fixture confirmada, árvore de transferência removida e VM devolvida a Stopped/mounts vazios. Nenhum pacote/identidade/snapshot real/banco/configuração global alterado. CI documental anterior `6ebe3fd` terminou verde nos quatro jobs, PR 36849274738/push 36849269579; CI desta implementação e fase documental seguem pendentes.
 
 Suíte integral local: 172 cenários, 164 aprovados/oito skips explícitos em 112,909 s; permissão de sockets somente para fixtures loopback existentes. Sem erro ou repetição da suíte. CI sintética executará também as duas mutações novas nas duas plataformas; gates históricos não afetados permanecem válidos enquanto seus inputs não mudarem. Custo operacional: mesmo servidor/session e um processo destacado, sem dependência nohup; não foi feita medição de desempenho no telefone.
+
+## Encerramento da correção — #29
+
+Escopo de cinco arquivos: HERDR, STATUS, este relatório, evidência de detachment e inventário. Atualizar requisitos/runtime e conservar a prova inicial como histórica; registrar reprodução, erro da primeira consulta multicall, resultados locais/VM e CI só depois dos jobs terminais. O checkpoint de leitura inclui nove documentos adicionais de hardware/boot/Herdr/console/organização/CI e a evidência inicial Herdr, além do runner novo, vinculados a seus blobs. As inspeções não substituem o piloto físico nem provam ausência de falhas no restante da PR.
+
+- [x] Confirmar CI do código `d5e4597`, atualizar o resultado e verificar JSON/blobs/links/sintaxe/diff/guard antes de publicar.
+- [x] Publicar os cinco documentos e atualizar #29/#13/#16/#17, mantendo os critérios físicos pendentes.
+
+Plano atendido: launcher sem nohup, teste público de HUP real, runner com duas mutações e workflow publicados em `d5e4597`; fase documental de cinco arquivos conserva a evidência inicial como histórica. Nova [evidência sanitizada](evidence/herdr-detachment.json) registra reprodução, erro inicial de argv[0] e limites dos testes. Quebra de compatibilidade: remove dependência ausente, sem formato de marcador/configuração novo. Nenhum banco, pacote no Mac/guest, chave, snapshot/imagem real ou configuração global alterados; scripts/testes adicionam validação, sem custo de serviço medido no telefone.
+
+Verificação local: 12 testes Herdr e 2/2 mutações aprovados; suíte 172 casos, 164 aprovados/oito skips; sete scripts Bash/ShellCheck, Flake8 fatal, YAML e diff aprovados. Sem typechecker configurado. VM com BusyBox da candidata e Herdr oficial aprovou Bash, clientes CLI separados/idempotência, restart e marcador; fixture/processos próprios removidos e VM Stopped/mounts vazios. Não é chroot/boot completo do initramfs, SSH/TUI ou hardware.
+
+CI terminal verde: [PR 36851283400](https://github.com/djalmajr/iphone6s-linux/actions/runs/36851283400) e [push 36851277105](https://github.com/djalmajr/iphone6s-linux/actions/runs/36851277105). Logs dos quatro jobs conferidos: 172 casos, 163 aprovados/nove skips e ambas as mutações de detachment detectadas em cada job. Guard/lint/sintaxe/ShellCheck Linux aprovados. Não repetimos gates de código/VM para a mudança documental; JSON/blobs, 31 links locais e quatro blocos Bash/sh verificados, diff e guard do índice aprovados.
+
+Causa: a fixture VM original herdava utilitários do guest e ocultava um applet ausente do telefone. A nova regressão restringe PATH e testa o sinal antes de aceitar startup. Inventário pinado ao código `d5e4597`: 129 leituras completas/164 entradas, todos os testes/runners do checkpoint lidos; a evidência nova pertence à fase documental posterior. #16 permanece parcial, sem parecer integral ou merge/tag/release. #13 e #2/#8/#12/#21 mantêm os gates físicos; o USB continua sem enumeração, aguardando a reconexão já solicitada. Goal completo ativo.
