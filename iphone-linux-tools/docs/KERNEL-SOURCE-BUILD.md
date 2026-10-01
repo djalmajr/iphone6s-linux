@@ -1,0 +1,108 @@
+# Kernel N71 a partir de fonte — #12
+
+## Contexto
+
+O APK 7.0.12 atual tem conteúdo autenticado por índice assinado, mas metadado `commit=-dirty`, sem configuração empacotada ou embutida identificada. Não permite vincular cada driver ao código consultado. Esta fase gera artefatos em uma VM; a integração será validada antes de usá-los no telefone.
+
+Fonte escolhida: fork oficial `HoolockLinux/linux`, branch estável consultada `hoolock-stable`, commit imutável `958481f87fee0949ff6a9a4af77f7eb6dac8a149`, versão declarada **7.2.0** e DT N71 presente. A branch principal consultada é 7.3-rc1 e não será usada nesta etapa. Compilar a fonte escolhida não reproduz byte a byte o APK 7.0.12: produz uma nova candidata rastreável, que exigirá gates próprios.
+
+## Plano e limites
+
+1. Criar VM Ubuntu ARM64 dedicada `iphone6s-kernel-20261001`, 2 CPUs/4 GiB, disco virtual 20 GiB, sem mounts do Mac e sem chaves/imagens do servidor. Conferir disco livre, origem da imagem, cloud-init e configuração; preservar VMs anteriores. Nenhuma dependência nova no macOS.
+2. Instalar somente na VM dependências de compilação via APT com metadados assinados; registrar versões/keyring. Não aceitar pacotes não autenticados, habilitar execução de scripts baixados no Mac ou montar sua pasta pessoal.
+3. Clonar fonte oficial via HTTPS e fixar o commit; conferir árvore limpa, versão e receitas. Preparar `defconfig` ARM64 e fragmento explícito N71/16 KiB/USB NCM incorporado. Registrar o `.config` final e verificar que as opções exigidas sobreviveram ao Kconfig. Não adicionar carregadores de outro SoC.
+4. Compilar somente Image e DTB N71, sem instalar kernel ou módulos no Mac/VM. Manter build separado da fonte, limitar paralelismo a dois jobs, registrar log/status e hashes. Interromper se recursos forem insuficientes; não apagar caches ou imagens alheios para obter espaço.
+5. Transferir apenas artefatos/configuração/proveniência para pasta privada do projeto; publicar receita e relatório sanitizado. Nenhuma imagem contendo chaves será publicada. Encerrar a VM própria quando o trabalho terminar.
+6. Integração de initramfs/payload e boot físico serão outra fase, com identidade/pin corretos, snapshot, imagem antiga preservada e DFU coordenado. Sem prova física, não substituir a implantação atual nem encerrar #12/#21/#2.
+
+Arquivos públicos previstos desta fase: este documento, `scripts/build/build-kernel-source.sh`, `scripts/build/kernel-n71.config`, `docs/evidence/kernel-source-build.json` e atualização da referência em `REPRODUCAO.md`. Completar/verificar cada fase de até cinco arquivos antes de ampliar escopo. Artefatos/logs/fontes de pesquisa ficam privados em `runtime/` e não entram no Git.
+
+## D1. Nova candidata com proveniência verificável
+
+- **Decisão:** fonte estável oficial em commit fixado, build em VM nova sem identidades do telefone; USB necessário incorporado no kernel.
+- **Por quê:** separa código/driver verificável do APK `-dirty` e evita depender de módulo NCM com ABI da versão anterior. A VM não expõe chaves do Mac/servidor ao build.
+- **Alternativas:** preservar somente o APK conserva a lacuna de fonte; usar a branch principal acrescenta uma versão RC; portar carga A10 não fornece binding/topologia comprovados para A9.
+- **Reverter:** baixo nesta fase; parar a VM e conservar os artefatos privados. Implantação atual não depende do resultado.
+- **Status:** compilação em curso na VM isolada; integração e gates físicos pendentes.
+
+## Critérios de verificação
+
+- [x] Origem/recursos/mounts da VM e metadados APT registrados.
+- [x] Commit/árvore/versão/configuração final conferidos; sem config obrigatório silenciosamente removido.
+- [ ] Build com saída 0, Image ARM64/16 KiB e DTB N71 correspondentes; hashes dos resultados.
+- [ ] Receitas/parsing/ShellCheck e documentação verificados, branch publicada e issues atualizadas.
+- [ ] VM própria parada, originais preservados e artefatos privados.
+
+O build não comprova suporte de carregamento, Wi-Fi, storage, reinício ou boot autônomo. #2 requer carga líquida/telemetria específica ou medição qualificada; #8 conserva essa dependência. Nenhum novo experimento DFU será iniciado sem disponibilidade do operador.
+
+## Configuração conferida em 2026-10-01
+
+A VM dedicada usa Ubuntu 24.04.5 ARM64, imagem `1d6bffe64b848468ac97f821d369a4846d983de1800ccf6b5ec8853e85cefc55`, sem mounts. APT recusou pacotes não autenticados; quatro assinaturas InRelease foram verificadas por `gpgv`, e o keyring passou em `dpkg --verify`. Versões e logs foram preservados na VM. O fetch HTTPS fixado terminou com árvore limpa e versão 7.2.0 conferida.
+
+A primeira configuração foi recusada porque `BACKLIGHT_CLASS_DEVICE=m` limitou `BACKLIGHT_APPLE_DWI` a módulo. O fragmento agora exige ambos incorporados. A segunda tentativa, em outro diretório, preservou a primeira e conferiu as 47 opções obrigatórias antes de iniciar o build com dois jobs. Sintaxe Bash, ShellCheck e recusa real de execução no macOS passaram. Ainda não há resultado final de compilação nem prova de boot físico desta candidata.
+
+[Checkpoint sanitizado](evidence/kernel-source-build.json): fonte, imagem da VM, dependências, hashes dos inputs/configuração e gates já observados. O campo `status=compiling`, a saída de build nula e os outputs vazios registram que o resultado final continua pendente. Integração, boot físico e a parada da VM não são declarados concluídos.
+
+## Receita de reprodução
+
+Multipass já deve estar instalado no Mac. Confira que o nome escolhido está ausente; não reutilize uma VM com identidades do servidor. Os comandos abaixo partem da raiz deste repositório. Preserve pelo menos 10 GiB livres no Mac durante a construção; o script também exige 8 GiB livres no guest antes de começar.
+
+```bash
+multipass launch 24.04 --name iphone6s-kernel-20261001 --cpus 2 --memory 4G --disk 20G
+multipass info iphone6s-kernel-20261001 --format json
+multipass exec iphone6s-kernel-20261001 -- cloud-init status
+multipass shell iphone6s-kernel-20261001
+```
+
+No shell da VM, leia `/etc/apt/sources.list.d/ubuntu.sources` e confira `dpkg --verify ubuntu-keyring`. A imagem usa índices APT assinados; isso não autentica por TLS o transporte HTTP dos pacotes. Não habilite `--allow-unauthenticated`, `trusted=yes` ou repositório inseguro. Se o resolver DHCP não funcionar, use apenas na VM `sudo resolvectl dns enp0s1 1.1.1.1 8.8.8.8`; reverta ao terminar os downloads. Na execução registrada, DHCP substituiu o primeiro ajuste durante o fetch; a segunda tentativa manteve o mesmo checkout e passou após reaplicar o ajuste e limpar o cache da VM.
+
+```bash
+set -euo pipefail
+umask 077
+mkdir -m 700 /home/ubuntu/kernel-preflight-20261001
+sudo apt-get -o APT::Update::Error-Mode=any \
+  -o APT::Get::AllowUnauthenticated=false \
+  -o Acquire::AllowInsecureRepositories=false update \
+  > /home/ubuntu/kernel-preflight-20261001/apt-update.log 2>&1
+sudo env DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends \
+  -o APT::Get::AllowUnauthenticated=false \
+  -o Acquire::AllowInsecureRepositories=false install \
+  gcc make git flex bison bc libssl-dev libelf-dev pkg-config python3 device-tree-compiler \
+  > /home/ubuntu/kernel-preflight-20261001/apt-install.log 2>&1
+mkdir -m 700 /home/ubuntu/kernel-n71-source-20261001
+git -C /home/ubuntu/kernel-n71-source-20261001 init
+git -C /home/ubuntu/kernel-n71-source-20261001 remote add origin https://github.com/HoolockLinux/linux.git
+export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0
+git -C /home/ubuntu/kernel-n71-source-20261001 \
+  -c core.hooksPath=/dev/null -c http.sslVerify=true -c http.followRedirects=false \
+  -c credential.helper= -c protocol.allow=never -c protocol.https.allow=always \
+  fetch --depth=1 --no-tags origin 958481f87fee0949ff6a9a4af77f7eb6dac8a149
+git -C /home/ubuntu/kernel-n71-source-20261001 -c core.hooksPath=/dev/null checkout --detach FETCH_HEAD
+git -C /home/ubuntu/kernel-n71-source-20261001 rev-parse HEAD
+git -C /home/ubuntu/kernel-n71-source-20261001 status --porcelain --untracked-files=no
+sudo resolvectl revert enp0s1
+mkdir -m 700 /home/ubuntu/kernel-inputs-20261001
+exit
+```
+
+APT e a tag de imagem são mutáveis. Compare versões e hash da imagem com o registro da execução; este procedimento fixa a fonte do kernel, mas não promete reprodução futura byte a byte sem preservar também imagem e pacotes. Na execução registrada foram verificadas separadamente as quatro assinaturas InRelease com `gpgv`, além da validação normal do APT. Logs, versões, configuração e hashes dos inputs devem acompanhar cada nova tentativa.
+
+No Mac, transfira somente a receita e o fragmento, confira seus SHA-256 no host e no guest, e execute como usuário `ubuntu`:
+
+```bash
+multipass transfer iphone-linux-tools/scripts/build/build-kernel-source.sh \
+  iphone-linux-tools/scripts/build/kernel-n71.config \
+  iphone6s-kernel-20261001:/home/ubuntu/kernel-inputs-20261001/
+shasum -a 256 iphone-linux-tools/scripts/build/build-kernel-source.sh \
+  iphone-linux-tools/scripts/build/kernel-n71.config
+multipass exec iphone6s-kernel-20261001 -- sha256sum \
+  /home/ubuntu/kernel-inputs-20261001/build-kernel-source.sh \
+  /home/ubuntu/kernel-inputs-20261001/kernel-n71.config
+multipass exec iphone6s-kernel-20261001 -- bash \
+  /home/ubuntu/kernel-inputs-20261001/build-kernel-source.sh \
+  /home/ubuntu/kernel-n71-source-20261001 /home/ubuntu/kernel-n71-build-20261001-v2
+```
+
+O diretório de build deve ser novo. O script conserva uma tentativa anterior e recusa diretório dentro da fonte, commit diferente, árvore rastreada modificada, usuário root, sistema/arquitetura incompatíveis ou opções Kconfig demovidas. `KERNEL_BUILD_VERIFIED` exige build bem-sucedido, magic/header ARM64 com páginas de 16 KiB e compatible N71 no DTB. Não use ausência de mensagem de erro como substituto desse gate. Nenhum comando de instalação é executado.
+
+Depois de saída 0, copie `Image`, `Image.gz`, `s8000-n71.dtb`, `config`, `provenance.json` e os logs para uma pasta nova em `iphone-linux-tools/runtime/`, com modos privados. Recalcule os hashes após a transferência. Confira o DNS DHCP e pare somente a VM própria com `multipass stop iphone6s-kernel-20261001`. A integração do kernel e o teste no iPhone seguem uma fase própria; mantenha os payloads conhecidos e snapshots preservados.

@@ -1,0 +1,88 @@
+{
+  "format": 1,
+  "observed_at_utc": "2026-10-01T02:30:35.453425+00:00",
+  "status": "compiling",
+  "source": {
+    "url": "https://github.com/HoolockLinux/linux.git",
+    "branch_observed": "hoolock-stable",
+    "commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "version_declared": "7.2.0",
+    "tracked_tree_clean_before_build": true,
+    "https_certificate_verified": true
+  },
+  "vm": {
+    "distribution": "Ubuntu 24.04.5 ARM64",
+    "image_sha256": "1d6bffe64b848468ac97f821d369a4846d983de1800ccf6b5ec8853e85cefc55",
+    "cpu_count": 2,
+    "memory_request": "4G",
+    "disk_request": "20G",
+    "host_mounts": [],
+    "guest_dns_override_reverted": true,
+    "stopped": false
+  },
+  "dependencies": {
+    "format": 1,
+    "distribution": "Ubuntu 24.04.5 ARM64",
+    "packages": {
+      "gcc": "4:13.2.0-7ubuntu1",
+      "gcc-13": "13.3.0-6ubuntu2~24.04.1",
+      "binutils": "2.42-4ubuntu2.10",
+      "make": "4.3-4.1build2",
+      "git": "1:2.43.0-1ubuntu7.3",
+      "flex": "2.6.4-8.2build1",
+      "bison": "2:3.8.2+dfsg-1ubuntu0.24.04.1",
+      "bc": "1.07.1-3ubuntu4",
+      "libssl-dev": "3.0.13-0ubuntu3.16",
+      "libelf-dev": "0.190-1.1ubuntu0.1",
+      "pkg-config": "1.8.1-2build1",
+      "python3": "3.12.3-0ubuntu2.1",
+      "device-tree-compiler": "1.7.0-2build1",
+      "ubuntu-keyring": "2023.11.28.1",
+      "libc6-dev": "2.39-0ubuntu8.9"
+    },
+    "compiler_version": "13.3.0",
+    "binutils_version": "GNU ld (GNU Binutils for Ubuntu) 2.42",
+    "keyring_sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+    "inrelease_valid_signatures": 4,
+    "keyring_package_verification": "passed",
+    "allow_unauthenticated": false,
+    "allow_insecure_repositories": false
+  },
+  "inputs_sha256": {
+    "build-kernel-source.sh": "f04ec115570cd97ee54f7ce49cbe568b898ba9a0cc31c63d97046709e58a2b57",
+    "kernel-n71.config": "2f08f445960e471986c4d68425689c67e88b126f5efe1b4239e5c7ae7aae9102"
+  },
+  "config": {
+    "sha256": "ae1348cdd46bb94eb9e3725b6089a2ecddae5b4dfa423164b4d4f085a8707d2c",
+    "required_values_verified": 47,
+    "page_size_kib": 16,
+    "usb_ncm": "builtin",
+    "watchdog": "builtin",
+    "ikconfig_proc": true,
+    "backlight": "builtin",
+    "first_attempt": "refused before compile: parent backlight class was modular",
+    "corrected_attempt": "all required values verified"
+  },
+  "build": {
+    "jobs": 2,
+    "exit_code": null,
+    "outputs": {},
+    "installed": false,
+    "physical_boot_tested": false
+  },
+  "checks": {
+    "bash_syntax": "passed",
+    "shellcheck": "passed",
+    "embedded_python_ast": "passed",
+    "documented_bash_syntax": "passed",
+    "native_macos_context_guard": "refused as required",
+    "configured_typechecker": false
+  },
+  "limits": [
+    "Not a byte-for-byte rebuild of the 7.0.12 APK",
+    "Build result and output header/DTB validation pending",
+    "Initramfs integration and physical boot pending",
+    "Power, reboot, Wi-Fi, NAND and autonomous boot not proven",
+    "Original phone payloads, keys and snapshots preserved"
+  ]
+}
