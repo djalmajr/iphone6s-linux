@@ -14,7 +14,7 @@ As provas abaixo são de sessões já concluídas, não indicam um servidor ativ
 | Alimentação/estabilidade (#2/#8) | Carga sustentada e estabilidade prolongada não estabelecidas; sem sensores Linux validados; [alimentação](ALIMENTACAO.md) |
 | Retorno ao iOS (#21) | Helper salva/verifica snapshot e confirma USB/modelo; novo kernel com watchdog ainda requer piloto. Fallback físico comprovado; [recuperação](REBOOT.md) |
 | Herdr/hardware (#13/#9/#10/#11) | Herdr comprovado na implantação original; automação/reconexão da candidata, Wi-Fi, NAND e boot autônomo pendentes |
-| Integração (#16) | Branch/PR #1 abertas; descrição alinhada aos gates realizados, revisão parcial de persistência com correção #22. [Cobertura e limites](PR-REVIEW.md); revisão completa e autorização de merge pendentes |
+| Integração (#16) | Branch/PR #1 abertas; descrição alinhada aos gates realizados, revisão parcial de persistência/boot com correções #22/#23. [Cobertura e limites](PR-REVIEW.md); revisão completa e autorização de merge pendentes |
 
 Nenhum pacote instalado no Mac nesta evolução. Downloads, fontes externas, artefatos, chaves e snapshots ficam privados; builds externos somente em VMs dedicadas. Para trocar Pongo ou perfil de Linux, confirmar primeiro o fim da sessão anterior; retirar uma variável não altera uma sessão já iniciada.
 

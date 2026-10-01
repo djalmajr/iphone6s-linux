@@ -2,7 +2,7 @@
   "format": 1,
   "date": "2026-10-01",
   "issue": 23,
-  "status": "local_verified_ci_pending",
+  "status": "local_ci_verified",
   "before_fix": {
     "synthetic_only": true,
     "real_tools_executed": false,
@@ -39,7 +39,27 @@
     "type_checker": "not_configured"
   },
   "ci": {
-    "status": "pending"
+    "status": "passed",
+    "pr_run": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36825015535",
+    "push_run": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36825010472",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-15"
+    ],
+    "terminal_job_logs_checked": 4,
+    "tests_per_platform_per_run": 116,
+    "passed": 107,
+    "skipped": 9,
+    "tool_mutations": 10,
+    "path_mutations": 11,
+    "profile_mutations": 20,
+    "return_ios_mutations": 9,
+    "kernel_integration_mutations": 7,
+    "pongo_format_mutations": 6,
+    "pongo_selection_mutations": 11,
+    "public_guard": "passed",
+    "fatal_lint_shell_syntax": "passed",
+    "shellcheck_linux": "passed"
   },
   "limits": {
     "real_boot_tools_executed": false,
@@ -58,5 +78,6 @@
     "mac_cleared_setuid_bit": true,
     "sticky_bit_applied_and_asserted": true,
     "operational_mode_mask_unchanged": true
-  }
+  },
+  "tested_commit": "f50d44070b5a3492115c93fefab6ef9f839ac5f8"
 }

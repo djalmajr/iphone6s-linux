@@ -54,3 +54,5 @@ Fontes: [HoolockLinux](https://github.com/HoolockLinux/docs/blob/master/tutorial
 ## Revisão do plano — #16, 2026-10-01
 
 O checklist separa o primeiro envio manual, preparação do wrapper e novo boot completo do wrapper (#3), além do restore em outro boot (#4). Esses gates já passaram. A nova cadeia com kernel/Pongo compilados de fonte ainda não deu boot e tem plano próprio em [PONGO-SOURCE-BUILD.md](PONGO-SOURCE-BUILD.md). Não apresentar o sucesso antigo como prova da candidata nova. Resumos da raiz e `STATUS.md` foram alinhados ao DNS/snapshots concluídos e aos gates físicos ainda abertos. Revisão integral da PR, atualização do ramo principal e merge seguem pendentes de revisão/autorização específicas.
+
+A correção #23 compartilha a verificação dos executáveis externos: o monitor direto confere palera1n antes de USB/estado/filho e o wrapper confere palera1n/pongoterm antes de executá-los. Hash/tamanho/metadata inválidos abortam; não se instala nem troca a ferramenta para contornar o erro. [Conferência sem executar binários e limites](PR-REVIEW.md#operação-das-ferramentas-de-boot--23). Esse controle não substitui o piloto físico da cadeia nova.

@@ -79,6 +79,8 @@ Fonte: plano acima e issue #22. Modo: encerramento de uma correção dentro da r
 - **Onde:** fase 1 (cinco arquivos), helper `boot_tools.py`, monitor, wrapper, novo `test_boot_tools.py` e este plano; fase 2 (cinco), fixtures BootWrapper/ProfileBoot/PongoSelection, runner PongoSelection e novo runner de ferramentas; fase 3 (até cinco), CI/procedimentos/evidência. Plano/critério detalhados na #23.
 - **Status:** sete regressões novas e 15 testes existentes de monitor/perfil/Pongo aprovados; nove mutações de ferramentas, 11 PongoSelection e 20 de perfil rejeitadas na fase 2. Fase 3 (cinco arquivos) acrescentou assertion/mutação do erro de nome desconhecido: baseline e 10/10 mutações finais passaram; lint fatal/sintaxe/ShellCheck/diff-check e leitura dos dois executáveis preservados também aprovados. Runner registrado no CI; [evidência](evidence/boot-tools-check.json) local com CI explicitamente pendente. O nome desconhecido nunca admitiu ferramenta arbitrária, porque o lookup nos pins continuava recusando a chave; faltava garantir a saída de erro legível, sem traceback. Obter CI terminal antes de encerrar. Não equivale a auditoria do binário ou proteção contra autores concorrentes do mesmo usuário; nenhum boot físico nesta fase.
 
+Atualização da fase 4: correção aplicada e CI terminal aprovado em `f50d44070b5a3492115c93fefab6ef9f839ac5f8`, [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/36825015535) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36825010472). A indicação pendente acima registra o checkpoint anterior; a evidência JSON agora contém o resultado final.
+
 O primeiro fixture de permissões usava setuid; o filesystem do Mac limpou esse bit ao aplicar chmod, de modo que o fixture não representava o caso pretendido. O teste passou a usar o bit especial sticky, com asserção de que o modo foi realmente aplicado, antes de conferir a recusa. Não foi alterado o guard operacional `0o7022`, que recusa todos os bits especiais e escrita por grupo/outros.
 
 ## Operação das ferramentas de boot — #23
@@ -90,3 +92,24 @@ Ao receber `Ferramenta de boot inválida`, preserve o erro e o insumo; não desa
 Reprodução sintética: `python3 -m unittest discover -s iphone-linux-tools/tests -p test_boot_tools.py -v` e `python3 iphone-linux-tools/tests/run_boot_tool_mutations.py`. Não usam binários reais, dispositivo ou sudo. Ferramentas inválidas agora abortam o boot antes de sua execução, sem troca de binários ou alteração de imagens. Proteção contra substituição concorrente do mesmo usuário e auditoria completa das ferramentas continuam fora desta correção.
 
 Cobertura adicional lida por inteiro: wrapper atual, `dfu_boot.py`, `dfu_state.py`, `pongo_select.py`, `device_profile.py`, diagnóstico `phone/diagnostics/power-check.sh` e testes BootWrapper/DfuState/ProfileBoot/PongoSelection/PowerCheck, além de helper/regressões/runner #23. A leitura local atual encontrou a lacuna de ferramentas e registrou a correção; os restantes arquivos e os removidos do baseline ainda precisam contabilização para #16.
+
+## Encerramento da correção #23 — fase 4
+
+Fonte: decisão D2 e issue #23. Modo: encerramento de uma correção dentro de #16, com o goal geral ativo. Código/fixtures/CI em `3783de6`, `480638f` e `f50d440`. Cinco arquivos documentais nesta fase: este relatório, BOOT-PLAN, STATUS, evidência de ferramentas e inventário de cobertura. Não houve merge, instalação, troca de binário ou boot no aparelho.
+
+**Resultado:** guard de executáveis compartilhado entre wrapper e monitor direto; ferramentas preservadas válidas aceitas por leitura, ferramentas sintéticas modificadas recusadas sem execução. **Desvio de escopo:** o inventário de cobertura foi acrescentado para contabilizar explicitamente inclusões/modificações/remoções no baseline da revisão; ele registra leituras, não uma aprovação integral. São [24 leituras completas em 139 entradas de diff sem renames](evidence/pr-review-coverage.json), fixadas por blob e commit `f50d440`; arquivos removidos antigos ainda não foram revisados por inteiro. A etapa seguinte precisa atualizar essa cobertura e inspecionar áreas restantes.
+
+| Verificação | Resultado |
+|---|---|
+| Novas regressões | 7/7 passaram, metadata/hash/tamanho e recusa nos pontos reais de entrada com processos sintéticos |
+| Fluxos existentes afetados | 2 monitor/wrapper, 5 perfil/boot e 8 seleção Pongo aprovados no Mac |
+| Mutações locais | 10/10 ferramentas, 11/11 seleção Pongo e 20/20 perfil rejeitadas; evidência de Pongo/perfil reutilizada após ajuste somente do erro de nome desconhecido |
+| CI integral | Quatro jobs terminais em Ubuntu/macOS, cada um com 116 testes: 107 aprovados, 9 skips explícitos |
+| Mutações CI | 10 ferramentas, 11 caminhos, 20 perfil, 9 retorno, 7 integração kernel, 6 formato Pongo, 11 seleção Pongo por job |
+| Lint/privacidade | Flake8 fatal/sintaxe Bash, guard público e ShellCheck Linux passaram; diff-check local sem erros |
+| Tipos | Nenhum type checker configurado |
+| Limpeza | Cópias/fixtures descartáveis encerrados; nenhum processo de ferramenta real iniciado ou VM iniciada nesta correção |
+| Banco/dependências | Nenhum banco, pacote, sudoers ou configuração global alterados |
+| Desempenho | Conferência de bytes/metadata dos dois executáveis antes do boot; nenhuma medição de throughput do telefone foi realizada |
+
+**Riscos/continuidade:** integridade contra insumos preservados não é auditoria completa dos binários; alterações concorrentes do mesmo usuário não são suportadas. Não editar os pins para aceitar um arquivo desconhecido. #23 pode ser encerrada após publicação desta evidência; #16 mantém revisão integral/main/merge, #12/#21 mantêm piloto e rollback físicos e #2/#8 mantêm alimentação/estabilidade. O índice #17 registra as pendências; o telefone continua aguardando disponibilidade USB.
