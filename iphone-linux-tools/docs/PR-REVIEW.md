@@ -213,3 +213,16 @@ Leitura completa dos dois arquivos de código e do teste novo, com releitura do 
 | Próximos passos | Confirmar applets e novo boot/restauração do marcador com reconexão SSH/TUI no iPhone; alimentação e cadeia kernel/Pongo permanecem pendentes |
 
 Os CIs da pesquisa anterior terminaram verdes, PR 36831163092/push 36831156321 no commit `b2a4844`. CI de `5f60dec` verde: [PR 36834443230](https://github.com/djalmajr/iphone6s-linux/actions/runs/36834443230), [push 36834436922](https://github.com/djalmajr/iphone6s-linux/actions/runs/36834436922), quatro jobs Ubuntu/macOS, cada um com 133 testes (124 aprovados, nove skips); logs também conferidos para as oito famílias de mutações anteriores registradas no workflow. As doze mutações Herdr são prova local, não um novo step de CI. Comentários de teste adicionados no encerramento preservam o AST; nenhum código operacional mudou após a CI. Esta fase de encerramento toca cinco arquivos: teste somente comentários, HERDR, STATUS, relatório e evidência. Nenhum novo boot ou intervenção no iPhone nesta fase: USB/libimobiledevice não detectaram o aparelho, e a pergunta de reconexão permanece pendente. Goal completo ativo, sem merge/tag/release.
+
+## Guard do destino do empacotador — plano da revisão #16
+
+Reprodução sintética confirmou que `compose-payload.py` segue um symlink de saída: alvo existente idêntico teve modo alterado de 755 para 600; um link quebrado criou arquivo fora da árvore escolhida. Nenhum arquivo real do operador foi alterado. A correção pertence à proteção do Mac e será rastreada por issue própria.
+
+Fase de implementação (até cinco arquivos): `scripts/build/compose-payload.py`, `tests/test_compose_payload.py`, runner `tests/run_compose_mutations.py`, `.github/workflows/ci.yml` e este plano. Guard antes de ler/compor: destino ausente ou arquivo regular próprio, sem links/hardlinks/tipos especiais; cadeia de pais literal sem symlinks, com pasta de saída própria e não gravável por outros. Publicar arquivo novo por temporary privado e rename; preservar saídas existentes diferentes, aceitar recomposição idêntica sem regravar conteúdo. Referências atuais permitem outputs privados fora do repo, portanto não restringir a `artifacts/`.
+
+- [ ] Recusar links válidos/quebrados, hardlinks, FIFO e pais redirecionados antes de escrita/chmod.
+- [ ] Publicar blob privado exatamente igual à composição anterior; recomposição idêntica e erro preservam saídas anteriores.
+- [ ] Verificar falha de publicação/limpeza e controles negativos em testes observáveis; mutações e CI Ubuntu/macOS.
+- [ ] Registrar evidência, cobertura atualizada e limites; não alterar imagens/chaves/snapshots reais nem declarar revisão integral.
+
+Alternativa rejeitada: resolver symlinks antes da escrita faria o desvio parecer um destino direto. O guard preserva paths literais; em macOS, use um caminho canônico quando o prefixo escolhido for um alias como `/tmp` ou `/var`. Não pretende impedir alterações concorrentes de outro processo do mesmo usuário. Nenhuma compilação upstream ou teste no aparelho é necessário para demonstrar este contrato local.
