@@ -40,12 +40,19 @@
     "reboot_requested_utc": "2026-10-01T00:04:02+00:00",
     "uptime_seconds": 1128.59,
     "ios_redetection": "pending",
-    "linux_known_image_rollback_tested": false
+    "linux_known_image_rollback_tested": false,
+    "normal_reboot_did_not_restart": true,
+    "kernel_reboot_requested_utc": "2026-10-01T00:24:02+00:00",
+    "kernel_reboot_uptime_seconds": 2327.83,
+    "kernel_reboot_linux_link_disappeared": true,
+    "automatic_ios_return_confirmed": false,
+    "manual_recovery_confirmation": "pending"
   },
   "limits": [
     "No proof of sustained charging or prolonged stability.",
     "No Windows nslookup success; cause not established.",
     "No DNS restore in a second physical boot.",
-    "No Herdr pane/reconnection proof in this pilot."
+    "No Herdr pane/reconnection proof in this pilot.",
+    "Normal reboot did not restart PID 1; forced kernel request lost USB without confirmed iOS return."
   ]
 }

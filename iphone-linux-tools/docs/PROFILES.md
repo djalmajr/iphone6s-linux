@@ -93,7 +93,7 @@ python3 scripts/host/device_profile.py check
 
 O boot continua dependente de DFU manual e Mac; o preflight não faz exploração USB. Cada processo filho herda a seleção, inclusive o agendador de snapshots. Use `boot` sem `--restore` quando não houver snapshot a aplicar. Os comandos LAN/DNS mantêm o mesmo escopo de rede e não alteram DNS de clientes/roteador.
 
-Para retornar à implantação conhecida: salve um snapshot; entre em `shell` pelo Mac e execute `reboot` no Linux; após voltar ao iOS, execute `unset IPHONE_LINUX_PROFILE` no Mac e faça o boot padrão com novo DFU manual. Isso é o procedimento de rollback planejado; a execução física com a candidata ainda precisa ser comprovada. Excluir a variável não troca a identidade de um Linux já rodando: antes do reboot, mantenha o perfil correspondente para SSH/backups.
+Para retornar à implantação conhecida: salve um snapshot; confirme o retorno ao iOS pelo USB (reinício de software em investigação na [#21](https://github.com/djalmajr/iphone6s-linux/issues/21)); depois, execute `unset IPHONE_LINUX_PROFILE` no Mac e faça o boot padrão com novo DFU manual. Isso é o procedimento de rollback planejado; a execução física com a candidata ainda precisa ser comprovada. Excluir a variável não troca a identidade de um Linux já rodando: antes do reboot, mantenha o perfil correspondente para SSH/backups.
 
 ## Primeiro boot físico — 2026-09-30 / 2026-10-01 UTC
 
@@ -101,4 +101,8 @@ O perfil privado selecionou a candidata reconstruída na VM nova. A execução d
 
 Um snapshot anterior foi restaurado pelo transporte do perfil. A comparação exata dos hashes privados de authorized_keys e da chave de host confirmou preservação das duas identidades. DNS foi instalado em RAM, executado como UID/GID 65534, consultado por UDP/TCP pelo Mac e por sockets .NET de um Windows independente através do proxy versionado. O cliente nslookup falhou e não foi aceito como prova positiva.
 
-Snapshot final validado com 41 entradas; daemon DNS próprio e listeners temporários encerrados. Reboot solicitado no uptime 1128,59 s (18 min 48 s); a leitura de bateria após iOS depende da redetecção USB. Não foi usado `boot --restore` nesta candidata: o restore ocorreu depois do boot. O retorno à imagem Linux conhecida exige outro DFU e permanece pendente. [Evidência sanitizada](evidence/dns-physical-check.json).
+Snapshot final validado com 41 entradas; daemon DNS próprio e listeners temporários encerrados. Reboot solicitado no uptime 1128,59 s (18 min 48 s); esse pedido normal não reiniciou o init mínimo. SSH/gadget e uptime contínuo foram confirmados depois. Às 00:24:02 UTC, no uptime 2327,83 s, `sync; /bin/busybox reboot -f` derrubou o enlace, mas iOS não reapareceu no USB. Recuperação Power + Home até maçã foi solicitada; medição posterior de bateria pendente. Não foi usado `boot --restore` nesta candidata: o restore ocorreu depois do boot. O retorno à imagem Linux conhecida exige outro DFU e permanece pendente. [Evidência sanitizada](evidence/dns-physical-check.json).
+
+### Retorno ao iOS: limite observado
+
+Não interpretar saída SSH 0, timeout ou console congelado como prova de reboot. O pedido normal do BusyBox depende de PID 1 tratar shutdown; este init é um shell mínimo. `-f` contorna o init, mas o teste só comprovou perda do enlace Linux, não retorno ao iOS. Até resolver #21, após salvar os arquivos, o fallback é Power + Home até maçã, soltando ambos e confirmando iOS no USB. A variável de perfil só deve ser removida após encerrar o Linux correspondente.
