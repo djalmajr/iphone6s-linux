@@ -1,0 +1,54 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 27,
+  "inspected_commit": "e96965476b0cf37da0004fe396d0eb84af91cea2",
+  "status": "finding_confirmed_not_fixed",
+  "fixture_process_result_injection": {
+    "scope": "owned disposable copy; external fixture process results injected; no real VM/root/network operation",
+    "baseline_fixture": "success",
+    "mutant_fixture": "nonzero unittest ERROR, no assertion failure",
+    "runner_exit": 0,
+    "unexpected_error_reported_as_rejected": true,
+    "real_process_started": false,
+    "real_operator_files_modified": false
+  },
+  "index_metadata_review": {
+    "scope": "bounded read-only metadata structure and registered SHA; no extraction, package execution or new signature proof",
+    "index_sha256": "da53e0f06b6500d3fd8ebc65cccbe6a1ab4200729b6764f5ccb94d7017d2ff28",
+    "streams": 2,
+    "members": [
+      ".SIGN.RSA.build.postmarketos.org.rsa.pub",
+      "DESCRIPTION",
+      "APKINDEX"
+    ],
+    "records_parsed": 1039,
+    "selected_kernel": {
+      "P": "linux-postmarketos-apple-16k",
+      "V": "7.0.12-r0",
+      "A": "aarch64",
+      "S": "16999527",
+      "C": "Q1P8imlSMXnsTe2Z3/v+Xj3WpjQHM="
+    },
+    "signature_reverified": false
+  },
+  "review": {
+    "complete_reads": 89,
+    "entries": 157,
+    "complete_pr_review": false,
+    "binary_index_complete_read": false
+  },
+  "previous_docs_ci": {
+    "commit": "e96965476b0cf37da0004fe396d0eb84af91cea2",
+    "pr": 36840944285,
+    "push": 36840938621,
+    "status": "success"
+  },
+  "limits": [
+    "Injected subprocess outcomes demonstrate runner acceptance policy; no real Linux/root, VM, network or phone fixture was run.",
+    "Index parsing/hash are structure/integrity evidence; no new signature or package execution proof.",
+    "Reading inventory is partial and not an audit approval."
+  ],
+  "host_packages_installed": false,
+  "native_proof": false
+}
