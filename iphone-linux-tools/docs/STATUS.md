@@ -1,10 +1,29 @@
-# iPhone 6s Linux experiment — updated 2026-09-30
+# iPhone 6s Linux — atualizado em 2026-10-01
 
-## Checkpoint — reprodução de m1n1 (#12)
+## Estado atual e gates pendentes
+
+As provas abaixo são de sessões já concluídas, não indicam um servidor ativo agora. O telefone executou Linux 7.0.12 em RAM, console automático, Bash/SSH/HTTP por USB e serviços encaminhados para a LAN. A cadeia com kernel 7.2.0 compilado e Pongo compilado está preparada e verificada localmente, mas ainda não deu boot físico.
+
+| Área | Evidência e limite atual |
+|---|---|
+| Boot e recuperação de arquivos (#3/#4) | Wrapper com DFU manual e restore comprovados no aparelho; [operação](EXECUCAO.md) e [perfil](PROFILES.md) |
+| Snapshots e falhas (#5/#15) | Agendador/retenção com prova física curta; recuperação explícita de ENOSPC/interrupção em VM; [procedimentos](RECUPERACAO.md) |
+| LAN e DNS (#6/#7) | SSH/HTTP e DNS UDP/TCP pelo Mac/Windows; DNS recuperado em segundo boot. Não configura DNS global ou saída geral de internet; porta 53 e nslookup permanecem #19/#20; [DNS](DNS.md) |
+| Reprodução (#12) | m1n1 reproduzido, imagem userspace validada em VM nova e dois boots curtos. Kernel/Pongo de fonte compilados, empacotamento/seleção com hashes fixos; piloto da nova cadeia e rollback Linux pendentes; [Pongo](PONGO-SOURCE-BUILD.md) |
+| CI (#14) | Matriz pública Ubuntu/macOS, sem chaves/imagens reais. Tests/skips/mutações associados ao commit no [manifesto Pongo](evidence/pongo-source-build.json); CI não prova hardware |
+| Alimentação/estabilidade (#2/#8) | Carga sustentada e estabilidade prolongada não estabelecidas; sem sensores Linux validados; [alimentação](ALIMENTACAO.md) |
+| Retorno ao iOS (#21) | Helper salva/verifica snapshot e confirma USB/modelo; novo kernel com watchdog ainda requer piloto. Fallback físico comprovado; [recuperação](REBOOT.md) |
+| Herdr/hardware (#13/#9/#10/#11) | Herdr comprovado na implantação original; automação/reconexão da candidata, Wi-Fi, NAND e boot autônomo pendentes |
+| Integração (#16) | Branch/PR #1 abertas; revisão completa e autorização de merge pendentes |
+
+Nenhum pacote instalado no Mac nesta evolução. Downloads, fontes externas, artefatos, chaves e snapshots ficam privados; builds externos somente em VMs dedicadas. Para trocar Pongo ou perfil de Linux, confirmar primeiro o fim da sessão anterior; retirar uma variável não altera uma sessão já iniciada.
+
+
+## Checkpoint histórico — reprodução de m1n1 (#12)
 
 Dois clones novos da fonte oficial foram compilados offline na VM existente. O clone com profundidade 1 e sem tags reproduziu o componente preservado byte por byte: 1.196.032 bytes, SHA-256 `13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b`. O clone completo gerou uma versão diferente via `git describe`; a profundidade foi incorporada à receita, sem override manual de versão. Ambos terminaram com saída 0 e dois avisos upstream. Quatro arquivos crate e 131 fontes em cache foram conferidos; fontes e payload conhecido preservados. Nenhum pacote foi instalado, nem candidato carregado no telefone. A VM dedicada foi parada após confirmar ausência de processos de build. [Receita, decisão e limites](M1N1-BUILD.md), [evidência](evidence/m1n1-rebuild.json).
 
-#12 continua em andamento: assinatura/origem imutável do kernel e reprodução da imagem inteira em VM nova ainda pendentes. Próxima ação técnica: verificar a assinatura do APK contra uma chave de distribuição obtida de fonte canônica. O DNS físico (#7) aguarda disponibilidade do operador para DFU manual; estabilidade prolongada (#8) depende de alimentação validada (#2). Nenhuma dessas pendências é resolvida pela igualdade do componente m1n1. Nenhum typechecker do projeto foi configurado; esta etapa alterou apenas documentação e executou builds upstream. JSON, identidade dos artefatos e links locais foram verificados; testes de código inalterado permanecem válidos.
+Naquele checkpoint, #12 ainda aguardava autenticidade do pacote/reprodução em VM nova e #7 aguardava o piloto DNS. Esses gates avançaram depois, conforme o estado atual e os documentos acima. A assinatura própria do APK original/commit `-dirty` mantém limites específicos; a candidata de kernel de fonte é separada. #8 continua dependente de alimentação validada (#2). Nenhuma dessas pendências é resolvida pela igualdade do componente m1n1. Nenhum typechecker do projeto foi configurado; esta etapa alterou apenas documentação e executou builds upstream. JSON, identidade dos artefatos e links locais foram verificados; testes de código inalterado permanecem válidos.
 
 ## Validated capabilities: Linux, Bash, SSH, HTTP and Herdr
 
@@ -12,7 +31,7 @@ Bash 5.2.21, key-only Dropbear SSH and Herdr 0.9.1/protocol 22 were verified on 
 
 ## File persistence — verified 2026-09-29
 
-Private snapshots on the Mac cover `/srv/data` and work files in `/root`. Restore checks integrity/scope and captures a pre-restore snapshot before overwriting. Tests recovered contents/modes, retained extras and blocked invalid links. On 2026-09-30, recovery after a fresh DFU also passed: sentinela/hash, mode 640, extra file, SSH identities and HTTP verified (#4). Snapshots exclude SSH identity and live Herdr state. Automatic synchronization and interrupted-restore recovery remain pending. See `PERSISTENCIA.md`.
+Private snapshots on the Mac cover `/srv/data` and work files in `/root`. Restore checks integrity/scope and captures a pre-restore snapshot before overwriting. Tests recovered contents/modes, retained extras and blocked invalid links. On 2026-09-30, recovery after a fresh DFU also passed: sentinela/hash, mode 640, extra file, SSH identities and HTTP verified (#4). Snapshots exclude SSH identity and live Herdr state. Opt-in automatic snapshots/retention and boot restore later passed a short physical pilot (#5); explicit interrupted-restore recovery passed ENOSPC/process-interruption fixtures in the dedicated VM (#15). See `PERSISTENCIA.md`, `AUTOSNAPSHOTS.md` and `RECUPERACAO.md`.
 
 ## Display console — verified 2026-09-29
 

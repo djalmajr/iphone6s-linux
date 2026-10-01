@@ -16,7 +16,7 @@ O aparelho é um iPhone 6s `iPhone8,1` com A9 Samsung S8000. O toque falha mesmo
 - A USB-C frontal passa por um hub interno; a USB-C traseira foi testada e o iPhone aparece diretamente sob `AppleT8112USBXHCI@03000000`.
 - A finalização do iOS terminou e o usuário conseguiu digitar o PIN. A tela de configuração do iOS não é necessária para o boot Linux.
 - DFU de hardware exige tela preta e USB `05ac:1227`. Tela de cabo é recovery. Cabo USB-C–Lightning pode falhar; se o teste traseiro não funcionar, usar USB-A–Lightning numa das USB-A traseiras.
-- O payload probe original oferece Telnet sem autenticação para bootstrap isolado. A imagem integrada atual inicia SSH por chave e HTTP automaticamente; a LAN e operação contínua continuam pendentes.
+- O payload probe original oferece Telnet sem autenticação para bootstrap isolado. A imagem integrada atual inicia SSH por chave e HTTP automaticamente; SSH/HTTP pela LAN e DNS foram posteriormente comprovados (#6/#7); operação contínua permanece dependente de alimentação (#2/#8).
 
 ## Tarefas
 
@@ -43,10 +43,14 @@ O aparelho é um iPhone 6s `iPhone8,1` com A9 Samsung S8000. O toque falha mesmo
 
 ## Decisões e alternativas
 
-**D1 — Boot RAM dependente do Mac.** Escolhido por ser o caminho documentado para A9 e dispensar a tela defeituosa. Instalação autônoma no armazenamento interno não está documentada neste modelo; servidor sobre iOS foi descartado pelo usuário. Reversão: reinício do aparelho, desde que o iOS local permaneça íntegro. Status: em curso.
+**D1 — Boot RAM dependente do Mac.** Escolhido por ser o caminho documentado para A9 e dispensar a tela defeituosa. Instalação autônoma no armazenamento interno não está documentada neste modelo; servidor sobre iOS foi descartado pelo usuário. Reversão: salvar snapshot e confirmar retorno ao iOS; quando o reinício por software não funcionar, usar Power + Home até a maçã e soltar ambos, confirmando USB/modelo. Boot em RAM comprovado; retorno automático da candidata permanece #21.
 
 **D2 — Porta traseira antes de trocar cabo.** A tentativa com USB-C traseira retornou a Recovery Mode. A troca para USB-A–Lightning foi seguida por DFU, PongoOS e Linux confirmados em 2026-09-29. Reversão: trocar o cabo. Status: aplicada.
 
 **D3 — Primeiro serviço limitado ao USB e à RAM.** O servidor BusyBox HTTP usa `172.16.42.1:8080`; o terminal usa o mesmo enlace USB. A interface dedicada do Mac recebeu apenas o alias temporário `172.16.42.2/24`. O armazenamento interno e a leitura da bateria não apareceram no Linux atual. Reversão: reiniciar o telefone e remover o alias com `bash scripts/host/iphone-linux.sh disconnect` enquanto o dispositivo estiver conectado. Status: aplicada e verificada; boot autônomo e armazenamento interno continuam indisponíveis. Persistência de arquivos por snapshots no Mac foi validada.
 
 Fontes: [HoolockLinux](https://github.com/HoolockLinux/docs/blob/master/tutorials/SETUP_pongoOS.md), [suporte de armazenamento](https://github.com/HoolockLinux/docs/blob/master/tools/README.md), [palera1n](https://github.com/palera1n/palera1n/blob/main/README.md), [DFU](https://theapplewiki.com/wiki/DFU_Mode).
+
+## Revisão do plano — #16, 2026-10-01
+
+O checklist separa o primeiro envio manual, preparação do wrapper e novo boot completo do wrapper (#3), além do restore em outro boot (#4). Esses gates já passaram. A nova cadeia com kernel/Pongo compilados de fonte ainda não deu boot e tem plano próprio em [PONGO-SOURCE-BUILD.md](PONGO-SOURCE-BUILD.md). Não apresentar o sucesso antigo como prova da candidata nova. Resumos da raiz e `STATUS.md` foram alinhados ao DNS/snapshots concluídos e aos gates físicos ainda abertos. Revisão integral da PR, atualização do ramo principal e merge seguem pendentes de revisão/autorização específicas.

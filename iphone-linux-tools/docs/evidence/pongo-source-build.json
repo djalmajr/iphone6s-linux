@@ -102,5 +102,48 @@
       "pongo_mutations": 6
     }
   },
-  "created_date": "2026-10-01"
+  "created_date": "2026-10-01",
+  "selection": {
+    "status": "implemented_ci_verified_not_booted",
+    "environment": "IPHONE_LINUX_PONGO",
+    "default_sha256": "1e5543fd8e6dbd84c334b87d71aa473f4d347c2ba8a5e863b6e10f18461c7575",
+    "source_sha256": "17d3df93213bb24f8ba73a8ad390e6bcc56351b41d87a315d47d37aa51100efd",
+    "candidate_does_not_replace_default": true,
+    "profile_schema_unchanged": true,
+    "rejects_existing_pongo_or_linux": true,
+    "pre_usb_validation": true,
+    "real_default_and_candidate_checked": true,
+    "real_kernel_profile_checked": true,
+    "local_selection_tests": 8,
+    "local_selection_mutations_killed": 11,
+    "physical_boot_tested": false,
+    "ci": {
+      "status": "passed",
+      "tested_commit": "0a6498bf049fd07d37a08b43c640419ee47df401",
+      "pr_run": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36819293965",
+      "push_run": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36819290038",
+      "platforms": [
+        "ubuntu-24.04",
+        "macos-15"
+      ],
+      "tests_per_platform": 100,
+      "passed_per_platform": 91,
+      "skipped_per_platform": 9,
+      "profile_mutations": 20,
+      "return_ios_mutations": 9,
+      "kernel_integration_mutations": 7,
+      "pongo_format_mutations": 6,
+      "pongo_selection_mutations": 11
+    },
+    "local_full_suite_initial": {
+      "tests": 100,
+      "skipped": 8,
+      "failure_assertions": 4,
+      "affected_methods": 2,
+      "fixture_dependency_corrected": true,
+      "affected_autosnap_suite_rerun_passed": 6,
+      "return_ios_success_rerun_passed": true,
+      "full_suite_not_repeated_locally": true
+    }
+  }
 }

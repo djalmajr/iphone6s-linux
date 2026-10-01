@@ -103,7 +103,7 @@ O arquivo temporário `/etc/systemd/resolved.conf.d/iphone6s-pongo-build.conf` f
 
 ## Pendências
 
-- Integrar a seleção explícita da candidata Pongo sem substituir o padrão; validar negativa por hash antes de USB.
+- Seleção explícita concluída e validada em CI; piloto físico e rollback permanecem pendentes.
 - Piloto físico separado com o kernel de fonte e Pongo de fonte, console/NCM/SSH/HTTP e snapshot/retorno ao iOS. Fontes/binários conhecidos não comprovam carregamento sustentado, estabilidade, NAND, Wi-Fi ou boot autônomo.
 
 ## Fase CI e referência geral
@@ -130,7 +130,7 @@ Próximo passo: seleção explícita da candidata com validação pré-USB e pil
 - **Por quê:** permite piloto e reversão sem substituir artefatos conhecidos ou modificar o formato de oito campos do perfil de Linux/SSH. O helper valida antes do primeiro acesso USB no wrapper e antes de iniciar palera no monitor independente.
 - **Alternativas:** ampliar o perfil de implantação acopla bootloader à identidade SSH; substituir Pongo.bin perde a referência operacional; aceitar qualquer hash de manifesto privado cria confiança circular.
 - **Reverter:** baixo; encerrar a sessão Linux, confirmar iOS, retirar somente `IPHONE_LINUX_PONGO` e repetir DFU pelo boot preservado. Retirar a variável não muda um bootloader já executado.
-- **Status:** implementação em curso; nenhum novo piloto iniciado.
+- **Status:** implementada, testes/mutações e CI aprovados; nenhum novo piloto iniciado.
 
 ### Fases e verificação
 
@@ -142,7 +142,7 @@ Testes: default/candidata, arquivo alterado, seleção vazia, arquivo ausente, s
 
 - [x] Helper e fixtures aprovados.
 - [x] Integração e mutações aprovadas.
-- [ ] CI e referência de operação registrados.
+- [x] CI e referência de operação registrados.
 - [ ] Boot físico da cadeia selecionada e retorno/rollback comprovados.
 
 ### Resultado local da seleção
@@ -167,6 +167,20 @@ Faça DFU manual somente com o monitor pronto. Tela preta por si só não confir
 
 Para rollback: salvar snapshot, confirmar retorno ao iOS pelo procedimento de recuperação, `unset IPHONE_LINUX_PONGO` e selecionar o perfil/implantação Linux de destino antes do novo DFU. `unset IPHONE_LINUX_PROFILE` volta às identidades da implantação padrão somente no próximo boot; para operar uma sessão ainda ativa, mantenha o perfil que deu boot nela. O rollback físico completo da candidata continua pendente. A lista de hashes aceitos é fixa no helper; outro build exige revisão da proveniência e atualização explícita do código, sem um argumento para autorizar qualquer hash.
 
-O CI registra `run_pongo_selection_mutations.py` em Ubuntu/macOS; seu resultado será preenchido após os jobs concluírem. Nenhum novo boot foi iniciado nesta implementação.
+O CI registra `run_pongo_selection_mutations.py` em Ubuntu/macOS; ambos os jobs passaram conforme o encerramento abaixo. Nenhum novo boot foi iniciado nesta implementação.
 
 A suíte integral local identificou uma fixture de autosnapshots que ainda não copiava o novo helper; ela foi corrigida com Pongo sintético e seu runner passou a copiar a dependência pública. O cenário de sucesso do retorno ao iOS também sofreu timeout local nesta execução; reexecutado isoladamente, passou em 6,1 segundos sem mudança do código ou da fixture. As falhas originais foram preservadas em log privado. Verificação incremental concentra-se nos cenários afetados; a matriz remota executa a suíte integral.
+
+### Fase documental de fechamento — #12/#16
+
+Escopo de até cinco arquivos: este documento, manifesto de Pongo, `STATUS.md`, `BOOT-PLAN.md` e README da raiz. Atualizar a evidência somente após os jobs; corrigir resumos que ainda apresentavam DNS, snapshots e reprodução como não implementados. Preservar observações históricas, separar candidatas não testadas dos boots confirmados e deixar explícito o fallback físico quando o reinício por software não retorna ao iOS. Esta correção parcial da #16 não substitui revisão integral da PR nem autorização de merge.
+
+## Encerramento da seleção e CI — 2026-10-01
+
+Plano desta seção e issues #12/#16; goal geral #17 continua ativo. Helper, wrapper e monitor compartilham a seleção explícita; fixtures/mutações e comandos de operação/rollback publicados. Resumos da raiz, STATUS e BOOT-PLAN distinguem boots antigos de candidatas ainda sem piloto, DNS/snapshots concluídos e recuperação física ao iOS. Nenhuma mudança de identidades SSH, banco, pacote no Mac, artefato padrão ou alteração no telefone nesta etapa. Leitura/hash adiciona somente o preflight local de um arquivo de 238.096 bytes.
+
+Código testado: `0a6498bf049fd07d37a08b43c640419ee47df401`; [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/36819293965) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36819290038) verdes. Por plataforma: 100 testes, 91 aprovados e 9 skips explícitos; mutações 20/20 perfil, 9/9 retorno, 7/7 integração do kernel, 6/6 formato Pongo e 11/11 seleção. Guard público, lint/sintaxe e ShellCheck Linux passaram. Não há type checker configurado. Jobs sintéticos não provam firmware ou hardware.
+
+Localmente, a suíte inicial executou 100 testes, 8 skips e 4 falhas de asserção em dois métodos. A dependência ausente da fixture de autosnapshots foi corrigida e os seis testes dessa fixture passaram; a mutação do gate de restore também foi rejeitada. O teste de retorno ao iOS que teve timeout passou isoladamente sem alteração; a causa da contenção não foi isolada. As 20 mutações de perfil passaram novamente. Não repetimos toda a suíte local; a matriz remota integral passou depois das correções. Verificações não afetadas foram reutilizadas e os logs originais preservados privadamente.
+
+O preflight real da candidata de kernel/SSH e dos dois arquivos Pongo passou sem USB ou execução. O último check físico não encontrou iPhone/DFU/Recovery/Pongo; não iniciamos monitor nem enviamos payload. Próxima etapa: confirmar enumeração e disponibilidade do operador, boot supervisionado curto da cadeia selecionada, SSH/console/NCM/HTTP, snapshot e retorno/rollback. #12 permanece aberta; revisão integral/merge #16, alimentação #2 e estabilidade #8 não foram concluídas por estes gates.
