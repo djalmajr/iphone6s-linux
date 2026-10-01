@@ -96,3 +96,5 @@ Correção do retorno: `reboot` normal retornou 0 sem reiniciar PID 1; o usuári
 ## CI concluída — #14
 
 Workflow sem telefone/identidades reais passou em Actions Ubuntu 24.04 e macOS 15: 53 testes aprovados, nove skips explícitos e 20/20 mutações de perfil por sistema. Guard de índice aprovado com três testes e três mutações locais; fonte pública, sintaxe, lint e ShellCheck verificados. Dois predicados DNS foram reescritos com `if` para compatibilidade SC2015; runtime do snapshot físico preservado. Sem pacote instalado no Mac ou merge. [CI.md](CI.md) registra origem, hashes, falhas iniciais corrigidas, reprodução e limites.
+
+Retorno físico ao iOS concluído e confirmado por USB (`iPhone8,1`): às 00:31:38 UTC, 93%, carregamento/alimentação externa ativos. A recuperação automática permanece na #21; a manual foi comprovada. Próximo piloto DNS solicitado, até cerca de cinco minutos, com DFU e retorno físico coordenados. Nenhuma nova pergunta de temperatura; #2/#8 continuam abertas.
