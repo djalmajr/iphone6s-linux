@@ -92,10 +92,14 @@ def return_ios(wait):
     with persist.snapshot_lock.lock(persist.STORE):
         persist.load_snapshot(match.group(1))
     print('BACKUP_VERIFIED', flush=True)
-    command = f"set -e; sync; echo {SYNC_MARKER}; /bin/busybox reboot -f"
+    command = f"set -e; sync; echo {SYNC_MARKER}"
     code, output, expired = run_owned(ssh + [command], 15)
-    if SYNC_MARKER not in output.splitlines() or (not expired and code not in (0, 255)):
-        raise ValueError('Sync/pedido de reboot não confirmado; snapshot preservado.')
+    if code != 0 or expired or output.strip() != SYNC_MARKER:
+        raise ValueError('Sync não confirmado; reboot bloqueado, snapshot preservado.')
+    print('SYNC_VERIFIED', flush=True)
+    code, _, expired = run_owned(ssh + ['/bin/busybox reboot -f'], 15)
+    if not expired and code not in (0, 255):
+        raise ValueError('Pedido de reboot recusado; snapshot preservado.')
     observe_ios(wait)
     print('RETURN_IOS_VERIFIED: iPhone8,1 USB; Linux gadget absent')
 

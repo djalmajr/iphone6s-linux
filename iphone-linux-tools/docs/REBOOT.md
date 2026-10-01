@@ -1,5 +1,15 @@
 # Retorno verificável ao iOS — #21
 
+## Correção após piloto da cadeia de fonte — 2026-10-01
+
+Plano desta fase (cinco arquivos): este documento, `return_ios.py`, `test_return_ios.py`, `run_return_ios_mutations.py` e `SOURCE-CHAIN-PILOT.md`. O Linux 7.2 iniciou no N71, com driver `apple-watchdog` vinculado. O comando antigo publicou um snapshot íntegro e perdeu o enlace antes de confirmar seu marcador de sync; retornou falha, embora o Mac depois tenha confirmado iOS. A causa do marcador perdido ainda não foi isolada. A intervenção física do operador será registrada separadamente.
+
+Separar sync e reboot em duas chamadas SSH estritas: exigir saída 0, prazo cumprido e marcador exclusivo da primeira chamada antes de enviar reboot. A segunda pode perder o enlace; somente enumeração USB/modelo e ausência do gadget confirmam sucesso. Não acrescentar espera artificial no telefone nem relaxar o gate de sync. Reproduzir retorno rápido sem saída na fixture, falhas de sync sem reboot, resposta perdida com código 255 e ausência de iOS; atualizar mutações para a sequência observável. O piloto do CLI corrigido ficará pendente até nova execução física.
+
+Implementado: `BACKUP_VERIFIED`, depois `SYNC_VERIFIED` numa conexão concluída, então pedido separado de reboot e confirmação USB. O teste novo reproduziu a falha antiga por assertion antes da mudança. Baseline de 19 casos passou; 11/11 mutações rejeitadas por assertions, incluindo sync/reboot combinados e sync desconectado. Runner agora recusa skips, erro de execução e mutantes com erro de sintaxe. AST, Flake8 fatal e links locais passaram; sem typechecker configurado. O shim Python 3.12 não tinha versão selecionada; lint foi executado pelo Python 3.12.6 já instalado, sem mudar configuração nem instalar pacote.
+
+O operador confirmou console e retorno espontâneo, sem Power/Home, e o Mac confirmou iOS `iPhone8,1`; isto comprova reboot da cadeia de fonte, apesar da saída 1 do CLI antigo. Binding `apple-watchdog` observado em N71, sem abrir o dispositivo watchdog. [Piloto e reprodução](SOURCE-CHAIN-PILOT.md). Novo CLI e rollback Linux ainda aguardam validação física; CI da correção será registrada separadamente.
+
 ## Contexto e plano
 
 O init mínimo não atende `reboot` comum. O runbook já documenta `sync; reboot -f`; saída SSH, timeout ou desaparecimento do gadget não provam retorno ao iOS. Implementar um comando separado, com a identidade do perfil atual, backup obrigatório e confirmação USB limitada por prazo. Nenhum registrador, driver, NAND ou método novo de reset será alterado.

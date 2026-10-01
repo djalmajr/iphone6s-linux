@@ -12,8 +12,13 @@ MUTATIONS = [
      'test_backup_exit_failure_even_with_valid_archive_blocks_reboot'),
     ('skip-published-snapshot-verification', '        persist.load_snapshot(match.group(1))',
      '        pass', 'test_snapshot_tampered_after_publication_blocks_reboot'),
-    ('skip-sync-confirmation', 'if SYNC_MARKER not in output.splitlines() or (not expired and code not in (0, 255)):',
-     'if not expired and code not in (0, 255):', 'test_missing_sync_confirmation_never_reports_success'),
+    ('skip-sync-confirmation', 'if code != 0 or expired or output.strip() != SYNC_MARKER:',
+     'if code != 0 or expired:', 'test_missing_sync_confirmation_never_reports_success'),
+    ('accept-disconnected-sync', 'if code != 0 or expired or output.strip() != SYNC_MARKER:',
+     'if expired:', 'test_disconnected_sync_blocks_reboot'),
+    ('combine-sync-and-reboot', 'command = f"set -e; sync; echo {SYNC_MARKER}"',
+     'command = f"set -e; sync; echo {SYNC_MARKER}; /bin/busybox reboot -f"',
+     'test_fast_reboot_after_separate_confirmed_sync'),
     ('accept-wrong-ios-model', "model.strip() == 'iPhone8,1'", 'True',
      'test_wrong_ios_model_never_reports_success'),
     ('accept-multiple-usb-devices', 'if len(devices) == 1:', 'if devices:',
@@ -43,6 +48,8 @@ def main():
                                   cwd=project, env=environment, capture_output=True, text=True, timeout=180)
         if baseline.returncode:
             raise RuntimeError('Reboot baseline failed:\n' + baseline.stdout + baseline.stderr)
+        if 'skipped=' in baseline.stderr or 'OK' not in baseline.stderr:
+            raise RuntimeError('Reboot baseline did not execute every case.')
         print('BASELINE_RETURN_IOS_OK', flush=True)
         source = project / 'scripts/host/return_ios.py'
         original = source.read_text()
@@ -51,10 +58,13 @@ def main():
                 raise RuntimeError('Mutation target is not unique: ' + name)
             try:
                 source.write_text(original.replace(old, new, 1))
+                compile(source.read_text(), str(source), 'exec')
                 result = subprocess.run(command + ['test_return_ios.ReturnIOSTests.' + test],
                                         cwd=project / 'tests', env=environment, capture_output=True,
                                         text=True, timeout=90)
-                if result.returncode == 0 or 'FAIL:' not in result.stderr:
+                if (result.returncode != 1 or 'FAIL:' not in result.stderr
+                        or 'AssertionError' not in result.stderr or 'ERROR:' in result.stderr
+                        or 'skipped=' in result.stderr):
                     raise RuntimeError('Mutation survived or did not reach an assertion: ' + name
                                        + '\n' + result.stdout + result.stderr)
                 print('KILLED', name, flush=True)

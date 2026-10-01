@@ -49,14 +49,22 @@ elif name=='ssh':
             (base/'owned.pid').write_text(str(os.getpid()))
             time.sleep(60)
         sys.stdout.buffer.write((base/'incoming.tar.gz').read_bytes())
+    elif 'IPHONE_SYNC_COMPLETE' in command and 'reboot' not in command:
+        with (base/'events').open('a') as f: f.write('SYNC\n')
+        assert 'sync;' in command
+        if mode=='sync-error': sys.exit(1)
+        if mode=='sync-disconnect': sys.exit(255)
+        if mode!='missing-sync': print('IPHONE_SYNC_COMPLETE',flush=True)
     else:
         with (base/'events').open('a') as f: f.write('REBOOT\n')
-        assert command.index('sync;')<command.index('reboot -f')
+        assert 'reboot -f' in command
+        if 'sync;' not in command:
+            assert 'SYNC' in (base/'events').read_text().splitlines()
         if mode=='sync-error': sys.exit(1)
-        if mode!='missing-sync': print('IPHONE_SYNC_COMPLETE',flush=True)
+        if mode not in ('missing-sync','fast-reboot'): print('IPHONE_SYNC_COMPLETE',flush=True)
         (base/'phase').touch()
         if mode=='request-error': sys.exit(1)
-        sys.exit(255 if mode=='ssh-disconnect' else 0)
+        sys.exit(255 if mode in ('ssh-disconnect','fast-reboot') else 0)
 '''
 
 
@@ -141,9 +149,23 @@ class ReturnIOSTests(unittest.TestCase):
 
     def test_sync_failure_never_reports_success(self):
         self.assert_return_refused('sync-error')
+        self.assertNotIn('REBOOT', self.events())
 
     def test_missing_sync_confirmation_never_reports_success(self):
         self.assert_return_refused('missing-sync')
+        self.assertNotIn('REBOOT', self.events())
+
+    def test_disconnected_sync_blocks_reboot(self):
+        self.assert_return_refused('sync-disconnect')
+        self.assertNotIn('REBOOT', self.events())
+
+    def test_fast_reboot_after_separate_confirmed_sync(self):
+        result = self.run_cli('fast-reboot')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('RETURN_IOS_VERIFIED', result.stdout)
+        events = self.events()
+        self.assertLess(events.index('SYNC'), events.index('REBOOT'))
+        self.assertIn('ideviceinfo', events[events.index('REBOOT'):])
 
     def test_reboot_error_never_reports_success(self):
         self.assert_return_refused('request-error')
