@@ -27,7 +27,7 @@ Arquivos públicos desta preparação: este plano, fechamento em `PR-REVIEW.md`,
 - [x] Conferir critérios da #20 e localizar somente o workspace/painel dedicado no Windows.
 - [x] Conferir assinatura/versão e parâmetros efetivos do nslookup, com prazo finito.
 - [x] Comparar transporte/consulta em fixture UDP/TCP, com resultados e limpeza registrados.
-- [ ] Identificar a causa subjacente: comparação em loopback Windows antes de atribuir o problema ao caminho LAN ou a uma política por aplicativo.
+- [x] Executar controle em loopback Windows: falha nativa também ocorre sem o caminho LAN/Mac; causa específica continua desconhecida, sem atribuição a uma política por aplicativo.
 - [ ] Corrigir helper ou implementar alternativa justificada com parser completo e controles negativos reais.
 - [ ] Validar no novo boot/restore do iPhone e remover fixtures próprios.
 
@@ -77,4 +77,36 @@ Limpeza concluída: stop próprio, processo da fixture terminou com saída 0 e m
 - **Alternativas:** desabilitar proteções ou mudar DNS/firewall tem impacto no host e não está no plano; trocar imediatamente por sockets exigiria um parser completo e ainda deixaria a causa sem investigação.
 - **Reverter:** baixo; apenas fixture própria finita e sem configuração global.
 - **Onde:** #20, este documento e evidência sanitizada.
-- **Status:** na fila; helper/correção e validação física após boot/restore continuam pendentes. A comparação LAN concluída não encerra #20.
+- **Status:** comparação aplicada: oito casos nativos falharam também no loopback, quatro controles sockets passaram e listeners/threads próprios foram encerrados. O limite observado permite escolher cliente alternativo; causa específica, controles completos e piloto físico permanecem pendentes.
+
+
+## Controle loopback Windows — 2026-10-01
+
+O parser nativo aprovou a fonte PowerShell antes de executá-la. `Add-Type` compilou a fixture C# própria com o .NET existente; sem instalar compilador/pacote ou copiar arquivos do projeto no Windows. O compilador pode usar temporários gerenciados pelo .NET; não foi declarada ausência desses arquivos. A assembly fica na memória da sessão PowerShell até seu término; não é serviço, instalação ou alteração persistente de configuração. A origem/assinatura/hash do nslookup foram reconferidos antes dos casos.
+
+Bind exclusivo em `127.0.0.1` para TCP/UDP 15953 e 1053, portas conferidas livres. Quatro threads próprias, máximo 120 s/64 perguntas/4.096 bytes e leitura TCP de 2 s; sem DNS do sistema, upstream ou rede LAN. Fixture aceitou pergunta A/IN e respondeu o mesmo registro fixo. Oito casos nslookup por argumentos/stdin terminaram dentro de 15 s, saída 0, sem resposta esperada; modo interativo confirmou as portas e informou domínio inexistente. Nenhuma pergunta nativa chegou à fixture. Os quatro controles sockets UDP/TCP nas duas portas compararam integralmente as respostas de 54 bytes; os quatro eventos recebidos correspondem a esses controles. [Resultados sanitizados](evidence/windows-dns-fixture.json).
+
+`Dispose` fechou todos os sockets e aguardou término das threads próprias. Conferência final: zero listeners UDP/TCP nas portas, marcador de conclusão e prompt do painel devolvido. Fontes/resultados privados preservados em `runtime/windows-dns-loopback-20261001/`. A prova exclui dependência do caminho Mac↔Windows para reproduzir a falha; não identifica a causa específica no cliente nativo nem comprova envio dele para outro destino. Nenhuma inspeção/alteração global ou captura de tráfego de outros projetos foi feita.
+
+## D3. Implementar cliente de sockets completo para o serviço local
+
+- **Decisão:** substituir a execução nslookup no helper Windows por cliente DNS em fonte C#/.NET, com PowerShell como interface e validação completa e limitada do pacote.
+- **Por quê:** o caminho nativo falhou na LAN e no loopback, com portas/opções conferidas; sockets no mesmo endpoint passaram. Essa alternativa atende ao critério explícito da #20 sem mudar o Windows para tentar corrigir uma causa ainda desconhecida.
+- **Alternativas:** continuar dependente do nslookup impede a validação reproduzível em 1053; instalar dig ou alterar DNS/firewall/proteções acrescenta mudanças ao host; manter o diagnóstico de 54 bytes como cliente final não cobre o parser/negativos exigidos.
+- **Reverter:** baixo; preservar histórico/receita nativa e reverter a alteração do helper na branch. Nenhuma migração ou alteração do daemon/proxy do iPhone.
+- **Onde:** fase 1 de cinco arquivos abaixo; publicação/CI em fase seguinte.
+- **Status:** aprovada pelo objetivo da #20, na fila de implementação. Esta rodada não mudou o helper nem cumpriu os testes do cliente final.
+
+### Contrato e fases do cliente
+
+**Fase 1 — cinco arquivos:** `scripts/host/dns-check-windows.ps1`, nova fonte `scripts/host/dns_windows.cs`, fixture `tests/dns_windows_fixture.cs`, teste/runner nativo `tests/test_dns_windows.ps1` e este plano. Preservar parâmetros ServerAddress/ExpectedAddress/Name/Port e marcadores separados `IPHONE_DNS_UDP_OK`/`IPHONE_DNS_TCP_OK`; portas 1024–65535, padrão 1053. Destino/endereço devem ser IPv4 RFC1918 explícitos e nome A/IN dentro de home.arpa, sem opção de bypass para aceitar loopback/public/wildcard. Fixture loopback testa componentes de transporte/parser internos; o comando público deve recusar loopback antes de abrir socket.
+
+Cliente compilado pela ferramenta .NET já disponível: nenhum executável externo nslookup/dig, pacote ou mudança de ExecutionPolicy/assinatura do host. A antiga assinatura era exigência do executável nslookup usado; removê-lo não justifica executar outro binário desconhecido. Fonte local auditável vem com o helper e deverá ser compilada em sessão de teste nova quando alterada, sem reutilizar uma classe de versão anterior já carregada.
+
+**Protocolo:** ID de 16 bits novo por consulta, UDP conectado somente ao endpoint declarado, TCP com framing big-endian de dois bytes, mensagens de 12–4096 bytes, prazo total de 3 s por consulta e nenhuma tentativa/fallback para resolvedor implícito. Validar ID/QR/opcode/RCODE/TC, uma pergunta com nome/tipo/classe esperados e todas as contagens/seções/limites/RDLENGTH. Decodificar nomes comprimidos com limite de labels/comprimento/saltos e recusa de ciclos/offsets inválidos. Parsear registros de answer/authority/additional até o fim do pacote; não procurar apenas os quatro bytes finais ou uma substring. Interpretar nomes em RDATA dos tipos suportados, limitar extensões EDNS e recusar explicitamente o que não puder ser validado. Sucesso exige resposta A/IN para o nome pedido com o endereço esperado; respostas conflitantes ou ausência do registro falham. Sem recursão, cache, resolução CNAME por novas consultas ou configuração do resolvedor do sistema. Bases primárias: [formato/compressão/transporte DNS](https://www.rfc-editor.org/rfc/rfc1035) e [EDNS](https://www.rfc-editor.org/rfc/rfc6891).
+
+**Verificação:** parser PowerShell nativo e compilação C# são gates reais de sintaxe/tipos. Testes devem usar fonte real, transporte .NET e fixture finita. Positivos com nomes comprimidos/literais, framing fragmentado e seções adicionais válidas. Negativos de ID, flags/status/truncamento, pergunta/owner/endereço/tipo/classe inesperados, contagens/RDLENGTH, nomes/pointers malformados, trailing bytes, falta de resposta, timeout/EOF, tamanho de frame e porta incorreta. Alvos público/loopback/wildcard recusados no CLI. Mutações reais das validações críticas devem ser rejeitadas por asserções desses casos após baseline válido; erro de compilação/infraestrutura ou skip não contam como rejeição. Fechar sockets/threads/filhos próprios e não matar outro processo para liberar uma porta.
+
+**Fase 2 — até cinco arquivos:** `.github/workflows/ci.yml`, `docs/DNS.md`, `docs/STATUS.md`, `docs/PR-REVIEW.md` e `docs/evidence/windows-dns-fixture.json`. Registrar runner Windows para testes/mutações novos, conservar Ubuntu/macOS e evidência não afetada, documentar uso/limites e publicar resultado somente depois de observar o CI correspondente. O rollout local pelo Windows deverá também exercitar o helper público contra fixture LAN privada explícita.
+
+**Fase física:** Windows UDP/TCP contra iPhone após novo boot com DNS restaurado, controles negativos aplicáveis, snapshot/limpeza e retorno conforme runbook. Não fechar #20 com prova sintética ou memória dos dois pilotos anteriores. Kernel/Pongo novos, energia/estabilidade e integração permanecem gates distintos.

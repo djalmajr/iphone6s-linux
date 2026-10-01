@@ -196,5 +196,169 @@
     "No tool installed, secret published, kernel loaded, remote account or service changed.",
     "Native timeout text alone is not packet or successful response proof."
   ],
-  "next": "Compare the native client with a finite Windows loopback fixture before choosing a fix or a complete bounded socket client; retain real phone fresh-boot/restore gate."
+  "next": "Implement complete bounded Windows socket client with malformed-response negatives and real source mutations, preserving explicit private target; final gate still requires Windows UDP/TCP against iPhone after fresh boot/restore.",
+  "loopback_control": {
+    "bind": "127.0.0.1",
+    "ports": [
+      15953,
+      1053
+    ],
+    "native_cases": [
+      {
+        "Case": "loopback-arguments",
+        "Port": 15953,
+        "Mode": "-novc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 41,
+        "StderrLength": 68
+      },
+      {
+        "Case": "loopback-arguments",
+        "Port": 15953,
+        "Mode": "-vc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 41,
+        "StderrLength": 68
+      },
+      {
+        "Case": "loopback-arguments",
+        "Port": 1053,
+        "Mode": "-novc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 41,
+        "StderrLength": 68
+      },
+      {
+        "Case": "loopback-arguments",
+        "Port": 1053,
+        "Mode": "-vc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 41,
+        "StderrLength": 68
+      },
+      {
+        "Case": "loopback-interactive",
+        "Port": 15953,
+        "Mode": "-novc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 398,
+        "StderrLength": 68,
+        "EffectivePorts": [
+          "15953"
+        ],
+        "ErrorText": "*** UnKnown can't find [endpoint].: Non-existent domain"
+      },
+      {
+        "Case": "loopback-interactive",
+        "Port": 15953,
+        "Mode": "-vc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 398,
+        "StderrLength": 68,
+        "EffectivePorts": [
+          "15953"
+        ],
+        "ErrorText": "*** UnKnown can't find [endpoint].: Non-existent domain"
+      },
+      {
+        "Case": "loopback-interactive",
+        "Port": 1053,
+        "Mode": "-novc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 397,
+        "StderrLength": 68,
+        "EffectivePorts": [
+          "1053"
+        ],
+        "ErrorText": "*** UnKnown can't find [endpoint].: Non-existent domain"
+      },
+      {
+        "Case": "loopback-interactive",
+        "Port": 1053,
+        "Mode": "-vc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 397,
+        "StderrLength": 68,
+        "EffectivePorts": [
+          "1053"
+        ],
+        "ErrorText": "*** UnKnown can't find [endpoint].: Non-existent domain"
+      }
+    ],
+    "socket_controls": [
+      {
+        "Case": "loopback-sockets",
+        "Port": 15953,
+        "Mode": "UDP",
+        "ExactFixtureReply": true,
+        "ReplyBytes": 54
+      },
+      {
+        "Case": "loopback-sockets",
+        "Port": 15953,
+        "Mode": "TCP",
+        "ExactFixtureReply": true,
+        "ReplyBytes": 54
+      },
+      {
+        "Case": "loopback-sockets",
+        "Port": 1053,
+        "Mode": "UDP",
+        "ExactFixtureReply": true,
+        "ReplyBytes": 54
+      },
+      {
+        "Case": "loopback-sockets",
+        "Port": 1053,
+        "Mode": "TCP",
+        "ExactFixtureReply": true,
+        "ReplyBytes": 54
+      }
+    ],
+    "fixture": {
+      "Case": "loopback-fixture",
+      "Events": [
+        "15953:UDP:type=1:known=True:reply=54",
+        "15953:TCP:type=1:known=True:reply=54",
+        "1053:UDP:type=1:known=True:reply=54",
+        "1053:TCP:type=1:known=True:reply=54"
+      ]
+    },
+    "cleanup": {
+      "Case": "loopback-cleanup",
+      "ListenersRemaining": 0,
+      "Disposed": true
+    },
+    "maximum_duration_seconds": 120,
+    "maximum_requests": 64,
+    "maximum_message_bytes": 4096,
+    "tcp_read_deadline_seconds": 2,
+    "compiler": "C# Add-Type using existing Windows .NET; source decoded and compiled, no package installed",
+    "threads": "four background threads joined by Dispose; listeners absent after disposal",
+    "scope": "independent of Mac LAN and iPhone proxy; underlying native client cause still unknown"
+  }
 }
