@@ -175,12 +175,24 @@ iphone-lan.home.arpa
 exit
 ```
 
-O helper público `scripts/host/dns-check-windows.ps1` executa as duas consultas A, UDP e TCP, com timeout e captura separada de stdout/stderr. Antes de usar o executável fixo em System32, exige assinatura Microsoft válida; valida alvo/endereço esperado RFC1918 e nome `home.arpa`. Confere o endereço na seção de resposta `Name`/`Nome`, sem confundir o IP do servidor com uma resposta positiva. Seu preflight no Windows aprovou parser PowerShell, recusa de alvo público e assinatura nativa; consultas reais ainda pendentes:
+O helper público `scripts/host/dns-check-windows.ps1` executa consultas A/IN por UDP e TCP diretamente em sockets .NET. Copie também `scripts/host/dns_windows.cs` para a mesma pasta. A fonte C# é compilada por `Add-Type`, sem pacote externo ou mudança de ExecutionPolicy; se uma versão diferente já estiver carregada, abra uma sessão PowerShell nova. O alvo/endereço esperado devem ser IPv4 RFC1918 canônicos e o nome deve pertencer a `home.arpa`.
+
+Cada consulta tem ID aleatório, prazo total de 3 s, limite de 4.096 bytes e porta explícita 1024–65535 (default 1053). O cliente valida todas as seções, limites, nomes comprimidos, ID/flags/pergunta e a resposta A esperada; tipos não suportados, aliases na resposta, truncamento e registros conflitantes são recusados. Sem cache, recursão, fallback ou resolvedor implícito. Sucesso produz `IPHONE_DNS_UDP_OK` e `IPHONE_DNS_TCP_OK` separadamente. Os exemplos nslookup acima são a receita histórica de diagnóstico: o cliente nativo falhou também em fixture Windows local e não é mais usado pelo helper.
+
+No Windows real, parser/compilação, 61 casos e 18 mutações passaram; o comando público passou nas duas portas de fixture LAN e recusou sete entradas inválidas. Isso não substitui o teste contra o iPhone após novo boot/restore, que continua #20. [Contrato, procedimento e limites](DNS-WINDOWS.md):
 
 ```powershell
 .\dns-check-windows.ps1 -ServerAddress IPv4_DO_MAC
 .\dns-check-windows.ps1 -ServerAddress IPv4_DO_MAC -Name iphone-lan.home.arpa -ExpectedAddress IPv4_DO_MAC
 ```
+
+Reproduzir os testes em clone local no Windows, a partir da raiz do repositório:
+
+```powershell
+.\iphone-linux-tools\tests\test_dns_windows.ps1 -RunMutations
+```
+
+O runner verifica a assinatura Microsoft do PowerShell usado para seus filhos, aplica mutações somente em memória e distingue asserção de erro de compilação/infraestrutura. Não alterar ExecutionPolicy para contornar um bloqueio local. O CI usa runner Windows isolado; não prova o proxy LAN ou o hardware.
 
 `set vc` seleciona TCP; `set novc` volta ao modo normal UDP. [Documentação Microsoft](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/nslookup-set-vc). O valor do registro USB não cria uma rota no Windows; `iphone-lan.home.arpa` deve apontar para o IP do Mac e os serviços ainda precisam do forward SSH/HTTP e de suas portas explícitas. Não mudar DNS global do cliente para este serviço em 1053: clientes comuns usam porta 53 e esta fase não oferece recursão pública. O uso como DNS padrão requer outra etapa documentada, sem risco de interromper a resolução atual.
 
