@@ -2,14 +2,14 @@
 
 ## Contexto
 
-A candidata da VM nova tem imagem e identidades diferentes da implantação conhecida. Boot, snapshots, LAN e DNS selecionam essas identidades por `IPHONE_LINUX_PROFILE`. Sem a variável, permanecem os caminhos da implantação conhecida. A integração foi validada no Mac e em VM; o boot físico da candidata continua pendente.
+A candidata da VM nova tem imagem e identidades diferentes da implantação conhecida. Boot, snapshots, LAN e DNS selecionam essas identidades por `IPHONE_LINUX_PROFILE`. Sem a variável, permanecem os caminhos da implantação conhecida. A integração foi validada no Mac, em VM e no iPhone. O primeiro boot físico da candidata passou; o retorno à imagem Linux conhecida e o restore DNS em outro boot continuam pendentes.
 
 ## Contrato e arquivos
 
 - Perfil JSON privado, formato 1, modo 600, dentro de uma pasta privada modo 700. Campos exatos: `format`, `payload`, `sha256`, `initramfs`, `initramfs_sha256`, `client_key`, `known_hosts`, `host_key_alias`.
 - Os quatro caminhos são relativos à pasta do perfil, sem symlinks/hardlinks, escapes ou caracteres de controle; arquivos privados pertencem ao usuário atual. A seleção explícita inválida falha; não retorna às chaves ou imagem padrão.
 - Endereço do telefone fixo em `172.16.42.1`; não permitir escolher destinos remotos pelo perfil. SSH sem config pessoal, por chave explícita e pin estrito, sem agent forwarding.
-- Na verificação de boot: conferir os hashes do payload/initramfs, vínculo do initramfs com o fim do payload, permissões CPIO das identidades, cliente público derivado com `ssh-keygen -y -P ''` contra authorized_keys e pin contra o campo público da chave Ed25519 Dropbear embutida. Leitura de arquivo, sem extrair ou executar a imagem. O campo público não comprova sozinho a matemática da chave privada; a imagem real já passou em SSH na VM e ainda precisa do teste físico.
+- Na verificação de boot: conferir os hashes do payload/initramfs, vínculo do initramfs com o fim do payload, permissões CPIO das identidades, cliente público derivado com `ssh-keygen -y -P ''` contra authorized_keys e pin contra o campo público da chave Ed25519 Dropbear embutida. Leitura de arquivo, sem extrair ou executar a imagem. O campo público não comprova sozinho a matemática da chave privada; a imagem real passou em SSH na VM e no iPhone.
 - Sem perfil: conservar imagem, caminhos e comportamento já comprovados. Perfil explícito só para a imagem integrada; `boot-probe` e `install-terminal` recusam essa combinação para não misturar runtimes.
 - Snapshots mantêm o armazenamento privado existente do mesmo projeto/aparelho. O perfil seleciona transporte e imagem, não muda o escopo dos arquivos restaurados.
 
@@ -20,7 +20,7 @@ A candidata da VM nova tem imagem e identidades diferentes da implantação conh
    - Preparação: `tests/test_lan.py`, `test_autosnap.py`, `test_autosnap_vm.py`, `run_autosnap_mutations.py`, `run_lan_mutations.py` passam a copiar/importar o helper. Cinco arquivos.
    - Transporte: `scripts/host/persist.py`, `lan.py`, `dns_lan.py`, `tests/test_profile_transport.py`, `run_dns_lan_mutations.py`. Os fixtures DNS já copiam todos os módulos host e não precisaram de alteração. Cinco arquivos.
    - Wrapper: `scripts/host/iphone-linux.sh`, `tests/test_profile_boot.py`, `run_profile_mutations.py`, `test_lan.py`, este documento. Perfil inválido falha antes de USB/listener; `boot-probe` e `install-terminal` recusam perfil explícito. Cinco arquivos.
-3. Documentar operação/rollback, publicar evidências e atualizar #12/#17. Boot físico segue pendente da disponibilidade já solicitada para DFU manual.
+3. Documentar operação/rollback, publicar evidências e atualizar #12/#17. Primeiro boot físico e restauração de arquivos concluídos; rollback Linux e restore DNS após reboot continuam pendentes.
 
 ## Verificação
 
@@ -38,7 +38,7 @@ A candidata da VM nova tem imagem e identidades diferentes da implantação conh
 - **Alternativas:** editar hashes/chaves fixos a cada teste multiplica pontos de erro; copiar o projeto para outra implantação duplica a lógica; um alias SSH global depende da configuração pessoal do Mac.
 - **Reverter:** baixo; deixar de passar a variável volta à implantação conhecida. Dados privados da candidata continuam preservados.
 - **Onde:** helpers, wrapper e consumidores listados acima; #12.
-- **Status:** aplicada no código; boot físico e rollback ainda pendentes.
+- **Status:** aplicada e comprovada em boot físico; rollback Linux ainda pendente.
 
 ## D2. Autenticação e compatibilidade de recuperação
 
@@ -54,7 +54,8 @@ A candidata da VM nova tem imagem e identidades diferentes da implantação conh
 - [x] Loader, preflight e perfil privado real verificados.
 - [x] Seleção compartilhada integrada em todos os consumidores.
 - [x] Baselines, controles negativos, mutações e lint publicados.
-- [ ] Boot físico da candidata e rollback comprovados.
+- [x] Primeiro boot físico da candidata, SSH/HTTP e restauração de arquivos comprovados.
+- [ ] Rollback para a imagem Linux conhecida e restore DNS em novo boot comprovados.
 
 ## Evidência da fase 1
 
@@ -62,7 +63,7 @@ O runner `python3 tests/run_profile_mutations.py` executou baseline de **8 teste
 
 O perfil privado da candidata real retornou `PROFILE_IMAGE_IDENTITIES_OK` por `device_profile.py check`. Isso comprova coerência local entre os arquivos selecionados; não houve acesso ao USB, boot ou conexão de rede nesse comando. Na primeira fase, os consumidores ainda não estavam integrados; a fase 2 abaixo concluiu essa integração.
 
-O formato de chave Dropbear foi conferido na [implementação Ed25519 da versão 2022.83](https://github.com/mkj/dropbear/blob/DROPBEAR_2022.83/ed25519.c), correspondente ao userspace selecionado. A comparação usa o campo público serializado; o teste de autenticação real na VM e o futuro boot físico são provas distintas.
+O formato de chave Dropbear foi conferido na [implementação Ed25519 da versão 2022.83](https://github.com/mkj/dropbear/blob/DROPBEAR_2022.83/ed25519.c), correspondente ao userspace selecionado. A comparação usa o campo público serializado; o teste de autenticação real na VM e o boot físico são provas distintas.
 
 Lint Python (`pyflakes`, `flake8 --select E9,F63,F7,F82`) e parsing passaram nos quatro arquivos Python. Não há typechecker configurado. Imagens e identidades permanecem privadas; nenhum segredo faz parte dos testes versionados.
 
@@ -93,3 +94,11 @@ python3 scripts/host/device_profile.py check
 O boot continua dependente de DFU manual e Mac; o preflight não faz exploração USB. Cada processo filho herda a seleção, inclusive o agendador de snapshots. Use `boot` sem `--restore` quando não houver snapshot a aplicar. Os comandos LAN/DNS mantêm o mesmo escopo de rede e não alteram DNS de clientes/roteador.
 
 Para retornar à implantação conhecida: salve um snapshot; entre em `shell` pelo Mac e execute `reboot` no Linux; após voltar ao iOS, execute `unset IPHONE_LINUX_PROFILE` no Mac e faça o boot padrão com novo DFU manual. Isso é o procedimento de rollback planejado; a execução física com a candidata ainda precisa ser comprovada. Excluir a variável não troca a identidade de um Linux já rodando: antes do reboot, mantenha o perfil correspondente para SSH/backups.
+
+## Primeiro boot físico — 2026-09-30 / 2026-10-01 UTC
+
+O perfil privado selecionou a candidata reconstruída na VM nova. A execução de `boot` terminou com saída 0 depois do envio, configuração do enlace USB, autenticação SSH estrita e HTTP. No iPhone: kernel 7.0.12, páginas de 16 kB, Bash 5.2.21, Herdr 0.9.1 e loopback UP. Herdr foi verificado por versão nesta rodada; isso não comprova ainda seu bootstrap/reconexão da #13.
+
+Um snapshot anterior foi restaurado pelo transporte do perfil. A comparação exata dos hashes privados de authorized_keys e da chave de host confirmou preservação das duas identidades. DNS foi instalado em RAM, executado como UID/GID 65534, consultado por UDP/TCP pelo Mac e por sockets .NET de um Windows independente através do proxy versionado. O cliente nslookup falhou e não foi aceito como prova positiva.
+
+Snapshot final validado com 41 entradas; daemon DNS próprio e listeners temporários encerrados. Reboot solicitado no uptime 1128,59 s (18 min 48 s); a leitura de bateria após iOS depende da redetecção USB. Não foi usado `boot --restore` nesta candidata: o restore ocorreu depois do boot. O retorno à imagem Linux conhecida exige outro DFU e permanece pendente. [Evidência sanitizada](evidence/dns-physical-check.json).

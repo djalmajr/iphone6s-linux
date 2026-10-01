@@ -2,7 +2,7 @@
 
 ## Contexto
 
-#6 concluiu SSH/HTTP pela LAN, mas os forwards OpenSSH transportam TCP; DNS também precisa de UDP. O telefone continua sem saída geral para internet. O próximo serviço atenderá nomes locais; não mudará automaticamente o DNS do Mac, Windows, Android ou roteador. O iPhone está em iOS enquanto preparamos/verificamos a implementação; testes físicos continuam curtos, sem perguntas repetidas de temperatura.
+#6 concluiu SSH/HTTP pela LAN, mas os forwards OpenSSH transportam TCP; DNS também precisa de UDP. O telefone continua sem saída geral para internet. O próximo serviço atenderá nomes locais; não mudará automaticamente o DNS do Mac, Windows, Android ou roteador. O primeiro piloto físico passou por USB e LAN com sockets diretos do Windows. Recuperação DNS em outro boot e compatibilidade do nslookup seguem pendentes; os testes físicos continuam curtos.
 
 ## Decisões
 
@@ -12,7 +12,7 @@
 - **Por quê:** serviço conhecido, com origem verificável e sem necessidade de instalar um gerenciador de pacotes no telefone. Os arquivos sobreviverão por backup/restore no Mac. Não depende de acesso externo no Linux.
 - **Alternativas:** compilar upstream (mais cadeia de build/proveniência); resolvedor próprio (protocolo e segurança desnecessários); encaminhar consultas públicas (exige saída de internet e política separada).
 - **Reverter:** baixo, parar somente o processo DNS próprio e recuperar snapshot/configuração anteriores. Imagem/NAND e contas remotas preservadas.
-- **Status:** em curso; pacote ainda não transferido ao telefone.
+- **Status:** instalado e iniciado em RAM no primeiro piloto físico; recuperação após outro boot pendente.
 
 ### D2. Rede explícita e clientes permitidos
 
@@ -28,7 +28,7 @@
 - **Por quê:** atende clientes DNS reais sem regras PF/NAT ou daemon instalado no Mac. Allowlist também vale no protocolo TCP; o servidor de destino não fará recursão externa.
 - **Alternativas:** roteamento/Internet Sharing (mudança global); proxy UDP sem allowlist (exposição ampla); só `ssh -L` (não entrega UDP).
 - **Reverter:** baixo, Ctrl+C remove somente listeners/processo filhos deste proxy.
-- **Status:** implementação e provas isoladas concluídas; falta validação no aparelho/Windows.
+- **Status:** implementação, provas isoladas e consultas físicas Mac/Windows por sockets concluídas; nslookup pendente.
 
 ### D4. Manifesto privado do build selecionado
 
@@ -224,3 +224,15 @@ O gate de instalação foi executado com o pacote novo e seu manifesto externo: 
 - **Banco/dependências:** sem banco, pacote instalado ou serviço global; dados privados continuam ignorados.
 - **Desempenho:** apenas seleção local do manifesto; limites/processos do DNS inalterados.
 - **Próximos passos:** dois boots físicos na #7; proveniência restante e VM nova de clone limpo na #12. Esta reconstrução usou a VM existente e não prova reconstrução integral/independente do sistema.
+
+## Primeiro piloto físico — 2026-09-30 / 2026-10-01 UTC
+
+Candidata com perfil privado, kernel 7.0.12 e páginas de 16 kB. O instalador verificou o bundle autenticado selecionado e seu hash no destino. dnsmasq 2.90 iniciou em RAM com UID/GID reais 65534. `dig` pelo Mac aprovou a resposta A de `iphone-usb.home.arpa` em UDP/TCP na porta USB 5353; consulta UDP de domínio externo retornou NXDOMAIN.
+
+O proxy original versionado publicou somente no IPv4 LAN escolhido e porta 1053, com allowlist dos dois clientes de teste. Mac aprovou UDP/TCP através dele. Windows independente também recebeu respostas DNS reais pelos dois protocolos com UdpClient/TcpClient .NET, verificando ID, flag de resposta, status, quantidade de respostas e endereço A. O envio de comandos pelo Herdr foi apenas o canal de controle; as consultas atravessaram a LAN.
+
+O helper baseado em nslookup falhou por timeout/erro não especificado, tanto com parâmetros quanto em modo interativo. A conectividade TCP funcionou, e a cópia privada instrumentada do proxy recebeu consultas dos sockets diretos, mas não as consultas nslookup tentadas. Não foi determinada a causa: não atribuir a falha a firewall, malware ou incompatibilidade do DNS sem nova evidência. Pendência registrada na [issue #20](https://github.com/djalmajr/iphone6s-linux/issues/20). Repetição dos sockets com o proxy original sem instrumentação passou.
+
+Foi salvo e validado um snapshot privado com 41 entradas, contendo runtime, launcher e hosts DNS. O daemon próprio foi parado e ambos os listeners temporários do Mac removidos antes do reboot. Isso comprova backup, não recuperação DNS em novo boot. O próximo piloto deverá usar `boot --restore ID`, executar `dns start` explicitamente e repetir UDP/TCP; não reinstalar sobre o diretório restaurado. #7 permanece aberta.
+
+**Verificação desta rodada:** provas físicas acima; gates locais/VM e mutações anteriores reutilizados porque nenhum script público foi alterado. JSON sanitizado validado e diff-check executado. Nenhum typechecker configurado. Sem novos pacotes no Mac, alteração do DNS global, conta remota ou NAND. [Evidência](evidence/dns-physical-check.json).

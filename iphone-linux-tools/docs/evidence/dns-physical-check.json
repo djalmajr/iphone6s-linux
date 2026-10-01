@@ -1,0 +1,51 @@
+{
+  "format": 1,
+  "scope": "physical-iphone6s-first-fresh-profile-dns-pilot",
+  "boot": {
+    "wrapper_exit": 0,
+    "kernel": "7.0.12",
+    "kernel_page_size_kib": 16,
+    "bash": "5.2.21",
+    "herdr": "0.9.1",
+    "loopback_up": true
+  },
+  "restore": {
+    "existing_snapshot_applied": true,
+    "ssh_authorization_preserved": true,
+    "ssh_host_identity_preserved": true,
+    "cold_boot_restore_tested": false
+  },
+  "dns": {
+    "version": "2.90",
+    "uid": 65534,
+    "gid": 65534,
+    "phone_port": 5353,
+    "proxy_port": 1053,
+    "mac_usb_udp": true,
+    "mac_usb_tcp": true,
+    "external_udp_nxdomain": true,
+    "mac_proxy_udp": true,
+    "mac_proxy_tcp": true,
+    "windows_dotnet_public_proxy_udp": true,
+    "windows_dotnet_public_proxy_tcp": true,
+    "windows_nslookup_passed": false,
+    "restore_after_second_boot_tested": false
+  },
+  "cleanup": {
+    "snapshot_verified_entries": 41,
+    "phone_dns_stopped": true,
+    "mac_proxy_listeners_closed": true
+  },
+  "end": {
+    "reboot_requested_utc": "2026-10-01T00:04:02+00:00",
+    "uptime_seconds": 1128.59,
+    "ios_redetection": "pending",
+    "linux_known_image_rollback_tested": false
+  },
+  "limits": [
+    "No proof of sustained charging or prolonged stability.",
+    "No Windows nslookup success; cause not established.",
+    "No DNS restore in a second physical boot.",
+    "No Herdr pane/reconnection proof in this pilot."
+  ]
+}

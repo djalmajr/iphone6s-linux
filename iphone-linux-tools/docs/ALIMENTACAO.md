@@ -162,3 +162,9 @@ Essas duas comparações no teto de 100% não comprovam corrente líquida nem re
 - [Apple: temperaturas e proteções em iOS](https://support.apple.com/en-ca/118431). A descrição das proteções do iOS não comprova que existam no kernel Linux experimental.
 - [Apple: retenção de capacidade e ciclos](https://www.apple.com/br/batteries/service-and-recycling/).
 - [Kernel HoolockLinux](https://github.com/HoolockLinux/linux): qualquer port de driver deve ser validado especificamente para N71/A9.
+
+## Piloto da candidata e DNS — 2026-10-01 UTC
+
+Antes do DFU, iOS informou 100%, `ExternalConnected=true` e `BatteryIsCharging=false`; em 100%, essa flag isolada não demonstra defeito de carregamento. O cabo USB-A traseiro foi mantido. No Linux: MaxPower 500 mA, bmAttributes 0x80, sensores de bateria/temperatura indisponíveis.
+
+Após boot, restore, consultas DNS e snapshot verificado, reboot foi solicitado às 00:04:02 UTC, uptime 1128,59 s. O Mac ainda não redetectou iOS nas duas tentativas posteriores de leitura; reconexão Lightning foi solicitada, sem troca de cabo/porta. Medição posterior pendente. Nenhuma conclusão de carga sustentada ou condição térmica deriva deste piloto; #2/#8 permanecem abertas.
