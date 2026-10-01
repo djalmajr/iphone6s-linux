@@ -61,6 +61,7 @@ bash scripts/host/iphone-linux.sh restore AAAAMMDDTHHMMSSZ-xxxxxxxx
 - Um encerramento abrupto do processo no Mac pode deixar `prepared` ou `applying`; ambos aparecem como pendentes. O estado é conservador: não prova quais arquivos foram aplicados. Journal inválido impede nova restauração antes de operar no telefone; faça uma cópia local e inspecione os registros, sem excluir snapshots para contornar a checagem.
 - Falha de metadata após extração informa `Arquivos aplicados, mas atualização do journal falhou`. Falha de limpeza informa aviso e pode deixar um arquivo aleatório `/run/iphone-restore-*.tar.gz` consumindo RAM até o reboot; após extração bem-sucedida esse aviso não invalida os arquivos aplicados.
 - A verificação de caminhos pressupõe ausência de autores concorrentes. Não execute dois restauradores ou um serviço que substitua caminhos durante a operação. Identidade SSH, caches, estado de processos e arquivos fora do escopo permanecem excluídos.
+- A correção #22 recusa store/journal/snapshot redirecionados por links, arquivos não regulares, hardlinks e propriedade incompatível antes da operação local. Preserve dados e erro quando a árvore for recusada; não remova o journal para contornar o gate. [Contrato local e reprodução](PERSISTENCIA.md#caminhos-locais-de-snapshotsjournal--22), [revisão e limites](PR-REVIEW.md).
 - Bancos ativos exigem exportação nativa ou parada consistente antes do snapshot. Um tar de arquivos sendo modificados não é prova de backup recuperável de banco. Nenhum banco foi adicionado nesta etapa.
 
 ## Reprodução dos testes
@@ -70,13 +71,15 @@ A VM existente já contém Bash, BusyBox estático e Python. Estes testes exigem
 ```bash
 multipass start iphone6s-build
 multipass exec iphone6s-build -- mkdir -p /tmp/iphone6s-restore-validation/scripts/host /tmp/iphone6s-restore-validation/tests
-multipass transfer iphone-linux-tools/scripts/host/persist.py iphone-linux-tools/scripts/host/restore_journal.py iphone6s-build:/tmp/iphone6s-restore-validation/scripts/host/
+multipass transfer iphone-linux-tools/scripts/host/persist.py iphone-linux-tools/scripts/host/restore_journal.py iphone-linux-tools/scripts/host/snapshot_lock.py iphone-linux-tools/scripts/host/snapshot_retention.py iphone-linux-tools/scripts/host/device_profile.py iphone6s-build:/tmp/iphone6s-restore-validation/scripts/host/
 multipass transfer iphone-linux-tools/tests/test_restore_failure_vm.py iphone-linux-tools/tests/run_restore_mutations.py iphone6s-build:/tmp/iphone6s-restore-validation/tests/
 multipass exec iphone6s-build -- sudo env IPHONE_RESTORE_VM_TESTS=1 python3 -m unittest discover -s /tmp/iphone6s-restore-validation/tests -p test_restore_failure_vm.py -v
 multipass exec iphone6s-build -- sudo env IPHONE_RESTORE_VM_TESTS=1 python3 /tmp/iphone6s-restore-validation/tests/run_restore_mutations.py
 ```
 
 O fixture cria um chroot próprio com os binários existentes; o transporte SSH é substituído por execução nesse chroot. As funções de snapshot/restore não são simuladas. Um cenário monta tmpfs de 64 KiB somente no `/srv/data` sintético. O outro interrompe o grupo de processos da extração real após o primeiro arquivo mudar e força falha de cleanup. Teardown desmonta o tmpfs e remove os fixtures próprios. O runner de mutações copia somente fontes/teste para diretórios descartáveis, sem alterar os originais.
+
+A transferência inclui os cinco módulos importados pelo restaurador, inclusive validação de perfil, retenção e lock; copiar apenas `persist.py`/`restore_journal.py` deixa o clone de teste incompleto. Nenhum perfil privado é transferido: os testes substituem somente o transporte por um chroot sintético. Para verificar também #22, transfira `tests/test_local_snapshot_paths.py` para o mesmo diretório `tests` e execute unittest com esse padrão. A rodada de 2026-10-01 repetiu nove cenários de caminhos, dois de falha e um de agendamento na VM; detalhes/limpeza em [PR-REVIEW.md](PR-REVIEW.md).
 
 Após os testes, confirme ausência de fixtures/mounts `iphone-restore-test-*` e `iphone-restore-mutation-*`; remova apenas o diretório público de teste criado acima e devolva a VM ao estado anterior. Nesta execução ela estava parada e voltou a parada. Não pare outras VMs. As fontes transferidas podem ser recriadas a qualquer momento pelos comandos acima.
 
