@@ -40,7 +40,10 @@ prepare_account() {
 
 start() {
     [ "$(id -u)" = 0 ] || { echo 'Start requires phone root.' >&2; return 1; }
-    [ -f "$BINARY" ] && [ -x "$BINARY" ] || { echo 'Verified DNS runtime missing.' >&2; return 1; }
+    if [ ! -f "$BINARY" ] || [ ! -x "$BINARY" ]; then
+        echo 'Verified DNS runtime missing.' >&2
+        return 1
+    fi
     mkdir -p "$BASE" "$RUN"
     chmod 700 "$RUN"
     if pid=$(owned_pid); then
@@ -55,7 +58,10 @@ start() {
         printf '172.16.42.1 iphone-usb.home.arpa\n' > "$BASE/hosts"
         chmod 644 "$BASE/hosts"
     fi
-    [ -f "$BASE/hosts" ] && [ ! -L "$BASE/hosts" ] || { echo 'Hosts must be a regular file.' >&2; return 1; }
+    if [ ! -f "$BASE/hosts" ] || [ -L "$BASE/hosts" ]; then
+        echo 'Hosts must be a regular file.' >&2
+        return 1
+    fi
     export LD_LIBRARY_PATH=$BASE/runtime/lib
     set -- --conf-file=/dev/null --no-resolv --no-hosts '--local=/#/' \
         --cache-size=0 --bind-interfaces --listen-address=172.16.42.1 --port=5353 \

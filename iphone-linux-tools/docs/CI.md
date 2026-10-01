@@ -52,3 +52,9 @@ Para repetir as mutações do guard, copiar somente `scripts/ci/check-public.py`
 A primeira cópia pública foi executada com Python 3.14 do ambiente escalado e cópia sem preservação explícita dos modos: 62 testes, 9 skips, uma falha e dois erros de timeout. Esse resultado não foi aceito. Os três casos afetados passaram em repetição estreita com Python 3.12.6 direto e cópia com modos preservados (13,964 s). A causa não foi isolada entre runtime/cópia; não ampliar deadlines ou marcar testes como skip para ocultar a falha. Suíte completa na configuração alinhada à CI em verificação.
 
 Suíte completa final em cópia pública com Python 3.12.6: **62 testes, 53 aprovados e 9 skips explícitos**, em 26,025 s. Os skips exigem VM privilegiada ou artefatos privados, que não fazem parte do clone/CI. Suíte/mutações de perfil anteriores não alteradas permanecem evidência local válida; o workflow também as repetirá remotamente. Guard aceitou o índice dessa cópia pública. Não há typechecker configurado; lint/parsing, ShellCheck, JSON/YAML e diff-check passaram.
+
+## Fase 2: compatibilidade ShellCheck do runner
+
+Arquivos desta correção: `phone/dns/manage-dns.sh` e este documento. CI remota da PR em 82c6981 aprovou guard, wheels autenticados, lint/sintaxe, suíte e 20 mutações em ambos os sistemas; somente ShellCheck Ubuntu recusou duas expressões `A && B || C` (SC2015). A versão local 0.11.0 não emitia essas duas mensagens.
+
+Reescrever as recusas de executável/hosts como `if` explícitos, conservando os mesmos predicados e mensagens. Não desabilitar a regra, instalar nada no Mac ou alterar bind, identidade de processo, permissões, recursão ou PID. Verificação: ShellCheck e `sh -n` locais; nova execução remota no runner que revelou a falha. A cópia do launcher no snapshot físico anterior continua sendo a versão antiga funcional; esta correção de fonte não foi transferida ao telefone.
