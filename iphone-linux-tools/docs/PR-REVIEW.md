@@ -485,3 +485,8 @@ Correção20695eb separa sync/reboot, exige sync0/marcador sem timeout antes de 
 ### Fechamento nativo do CLI de retorno
 
 Segundo boot da mesma cadeia de fonte com restore: wrapper0 e console/SSH/HTTP confirmados. Novo CLI em6386b2b publicou BACKUP_VERIFIED e SYNC_VERIFIED, pediu reboot separado e retornou RETURN_IOS_VERIFIED com saída0: iPhone8,1 USB e ausência do gadget Linux. Nenhuma intervenção física solicitada. Bateria96→94%, sem concluir carga sustentada. CI PR36940701485/push36940697946 terminal verde, três plataformas. Os cinco documentos deste fechamento tiveram JSON/links/diff/guard conferidos; código não alterado. #21 cumpre o gate da cadeia de fonte, enquanto #12 rollback e #16 revisão integral/merge permanecem separados; complete_pr_review=false.
+
+
+### Rollback nativo após a cadeia de fonte
+
+Pongo/payload conhecidos com hashes preservados e snapshot final verificado. Boot padrão sem seleção explícita terminou0; console/SSH estrito/kernel7.0.12/HTTP e comparação exata de três arquivos DNS aprovados. Snapshot/sync/retorno pelo CLI corrigido terminou0 com iPhone8,1 USB e ausência Linux. Bateria96→100%, sem liberar #2/#8. Cinco documentos desta fase têm JSON/links/diff/guard conferidos; código inalterado, evidência de CI6386b2b reutilizada. Rollback físico cumpriu o critério da #12, que conserva proveniência limitada do legado APK/Pongo; revisão integral/merge #16 continuam pendentes e complete_pr_review=false.

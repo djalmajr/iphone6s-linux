@@ -2,7 +2,7 @@
 
 ## Plano e escopo
 
-Selecionar explicitamente Pongo e perfil Linux, conferir hashes/identidades/snapshot antes do USB e realizar boot supervisionado curto no USB-A traseiro. Verificar console, NCM, SSH estrito, HTTP, restauração e binding do watchdog; encerrar serviços próprios, salvar snapshot e pedir retorno ao iOS. Rollback para a imagem Linux conhecida exige outro DFU e permanece separado. Fontes/builds: [Pongo](PONGO-SOURCE-BUILD.md), [kernel](KERNEL-SOURCE-BUILD.md), [integração](KERNEL-INTEGRATION.md).
+Selecionar explicitamente Pongo e perfil Linux, conferir hashes/identidades/snapshot antes do USB e realizar boot supervisionado curto no USB-A traseiro. Verificar console, NCM, SSH estrito, HTTP, restauração e binding do watchdog; encerrar serviços próprios, salvar snapshot e pedir retorno ao iOS. Rollback para a imagem Linux conhecida passou em outro DFU coordenado, registrado ao final. Fontes/builds: [Pongo](PONGO-SOURCE-BUILD.md), [kernel](KERNEL-SOURCE-BUILD.md), [integração](KERNEL-INTEGRATION.md).
 
 ## Resultado físico
 
@@ -32,13 +32,13 @@ bash scripts/host/iphone-linux.sh boot --restore ID_DO_SNAPSHOT
 
 Faça DFU manual somente com monitor pronto. Se o monitor expirar sem enviar Linux e o USB confirmar DFU depois, repetir o mesmo wrapper aproveita esse DFU; não precisa reinicializar nem restaurar pelo Finder. Não selecionar outra cadeia se Pongo/Linux já estiver ativo. Se necessário, confirmar retorno ao iOS antes de nova seleção.
 
-Depois de encerrar escritores e proxies próprios, o procedimento corrigido de [retorno](REBOOT.md) faz snapshot, confirma sync numa chamada SSH separada e então pede reboot; o gate físico desse CLI passou no segundo piloto descrito abaixo. Para rollback Linux, selecionar os artefatos e identidades conhecidos antes do próximo DFU, sem substituir a imagem preservada.
+Depois de encerrar escritores e proxies próprios, o procedimento corrigido de [retorno](REBOOT.md) faz snapshot, confirma sync numa chamada SSH separada e então pede reboot; o gate físico desse CLI passou no segundo piloto descrito abaixo. Para rollback Linux, selecionar os artefatos e identidades conhecidos antes do próximo DFU, sem substituir a imagem preservada; esse procedimento passou no terceiro piloto.
 
 ## Limites e próximos gates
 
 Cadeia de fonte iniciou e retornou ao iOS uma vez; isso não comprova estabilidade prolongada, carregamento, autoboot, retorno em toda falha ou ausência de malícia na cadeia. Nenhum pacote novo, mudança global de rede/DNS/segurança ou instalação no Mac; somente alias na interface USB do aparelho. Nenhuma escrita em iOS/NAND, merge ou release. Logs, identidades e snapshots permanecem privados.
 
-Próximos gates: rollback Linux (#12), Herdr TUI (#13), DNS padrão no Mac e clientes (#19/#20), alimentação (#2). A revisão integral da PR (#16) continua pendente.
+Próximos gates: lacunas de proveniência do legado (#12), Herdr TUI (#13), DNS padrão no Mac e clientes (#19/#20), alimentação (#2). A revisão integral da PR (#16) continua pendente.
 
 Fase documental seguinte (cinco arquivos): este registro será referenciado por `STATUS.md`, `docs/evidence/source-chain-pilot.json`, `docs/evidence/kernel-integration.json`, `docs/evidence/pongo-source-build.json` e `PR-REVIEW.md`. Registrar o piloto físico sem apagar as verificações históricas dos builds, manter as pendências e publicar somente dados sanitizados. Código e imagens não mudam nessa fase.
 
@@ -48,3 +48,10 @@ Fase documental seguinte (cinco arquivos): este registro será referenciado por 
 Mesma candidata com seleção explícita e restore: wrapper0, console confirmado, SSH/HTTP e driver apple-watchdog vinculados. Uptime116,23s antes de iniciar o comando. Snapshot/sync/reboot separado e enumeração final passaram; CLI saída0, iOS iPhone8,1 confirmado e gadget Linux ausente. Não foi solicitada intervenção nos botões. Bateria96→94%, carregamento ativo após retorno; não tratar como medição isolada de carga Linux.
 
 CI PR36940701485/push36940697946 em6386b2b concluída com sucesso em Ubuntu/macOS/Windows. [Registro sanitizado](evidence/source-chain-pilot.json), [comando e limites](REBOOT.md). Isso conclui o gate operacional da #21 nesta cadeia; não conclui rollback Linux, revisão integral da PR, estabilidade, DNS53 Mac ou suporte de Wi-Fi/storage.
+
+
+## Terceiro piloto — rollback conhecido
+
+Pongo/payload padrão preservados conferidos; perfil/Pongo explícitos retirados somente do ambiente de boot. Snapshot final restaurado, wrapper0 e console confirmado pelo operador. SSH estrito com a identidade conhecida confirmou7.0.12; HTTP e comparação exata dos três arquivos DNS passaram. Uptime61,34s antes de salvar snapshot/retornar. CLI corrigido saiu0 com os três marcadores, iPhone8,1 USB confirmado e gadget Linux ausente. Bateria96→100% nas leituras iOS, sem conclusão de carga Linux isolada.
+
+Rollback físico concluído; limites do APK legado commit-dirty/assinatura própria e do Pongo preservado continuam documentados na #12. [Perfis e operação](PROFILES.md), [evidência](evidence/source-chain-pilot.json). Não houve troca de cabo, pacote no Mac, configuração global, escrita em NAND ou merge/release.

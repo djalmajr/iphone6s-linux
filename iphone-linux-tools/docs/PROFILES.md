@@ -1,8 +1,14 @@
 # Perfis privados de implantação — #12
 
+## Plano executado de rollback após a cadeia de fonte
+
+O Linux7.2/Pongo de fonte iniciou, restaurou arquivos e retornou ao iOS; o CLI de retorno corrigido passou fisicamente e em CI. Este gate selecionou novamente a implantação preservada7.0.12 e o Pongo preservado, sem substituir artefatos. Fase de até cinco documentos: este arquivo, `SOURCE-CHAIN-PILOT.md`, sua evidência JSON, `STATUS.md` e `PR-REVIEW.md`.
+
+Antes do USB: confirmar iOS e bateria, conferir hashes do payload/Pongo conhecidos, permissões das identidades e integridade do snapshot final. Retirar `IPHONE_LINUX_PROFILE` e `IPHONE_LINUX_PONGO` somente do ambiente do novo boot. Realizar novo DFU manual supervisionado; exigir wrapper0, kernel7.0.12, SSH com identidade preservada, HTTP, restore e comparação dos arquivos salvos. Salvar novo snapshot e verificar retorno ao iOS pelo CLI; se falhar, preservar snapshot e seguir fallback físico. Testes de código inalterado são reutilizados; documentar gates nativos realmente executados. Sem pacote novo no Mac, mudança global de rede, NAND ou merge.
+
 ## Contexto
 
-A candidata da VM nova tem imagem e identidades diferentes da implantação conhecida. Boot, snapshots, LAN e DNS selecionam essas identidades por `IPHONE_LINUX_PROFILE`. Sem a variável, permanecem os caminhos da implantação conhecida. A integração foi validada no Mac, em VM e no iPhone. O primeiro boot físico da candidata passou; o retorno à imagem Linux conhecida continua pendente.
+A candidata da VM nova tem imagem e identidades diferentes da implantação conhecida. Boot, snapshots, LAN e DNS selecionam essas identidades por `IPHONE_LINUX_PROFILE`. Sem a variável, permanecem os caminhos da implantação conhecida. A integração foi validada no Mac, em VM e no iPhone. Boots da candidata passaram; o rollback à imagem Linux conhecida foi comprovado após a cadeia de fonte, conforme o fechamento abaixo.
 
 ## Contrato e arquivos
 
@@ -94,7 +100,7 @@ python3 scripts/host/device_profile.py check
 
 O boot continua dependente de DFU manual e Mac; o preflight não faz exploração USB. Cada processo filho herda a seleção, inclusive o agendador de snapshots. Use `boot` sem `--restore` quando não houver snapshot a aplicar. Os comandos LAN/DNS mantêm o mesmo escopo de rede e não alteram DNS de clientes/roteador.
 
-Para retornar à implantação conhecida: salve um snapshot; confirme o retorno ao iOS pelo USB (reinício de software em investigação na [#21](https://github.com/djalmajr/iphone6s-linux/issues/21)); depois, execute `unset IPHONE_LINUX_PROFILE` no Mac e faça o boot padrão com novo DFU manual. Isso é o procedimento de rollback planejado; a execução física com a candidata ainda precisa ser comprovada. Excluir a variável não troca a identidade de um Linux já rodando: antes do reboot, mantenha o perfil correspondente para SSH/backups.
+Para retornar à implantação conhecida: salve um snapshot; confirme o retorno ao iOS pelo USB (reinício de software em investigação na [#21](https://github.com/djalmajr/iphone6s-linux/issues/21)); depois, execute `unset IPHONE_LINUX_PROFILE` no Mac e faça o boot padrão com novo DFU manual. Esse procedimento foi comprovado no piloto de rollback após a cadeia de fonte descrito abaixo. Excluir a variável não troca a identidade de um Linux já rodando: antes do reboot, mantenha o perfil correspondente para SSH/backups.
 
 ## Primeiro boot físico — 2026-09-30 / 2026-10-01 UTC
 
@@ -117,3 +123,12 @@ Fallback físico comprovado nesta rodada: após Power + Home e liberação na ma
 O runbook anterior [REPRODUCAO.md](REPRODUCAO.md) já documentava que reboot comum não serve para esse PID 1 e usava `reboot -f`. A primeira tentativa desta rodada usou incorretamente o comando comum. A #21 acompanhará a confirmação automática da candidata com espera/enumeração, sem atribuir ausência imediata de USB a falha de driver sem prova.
 
 Encerramento do segundo boot: após a espera pelo retorno manual, sync e reboot direto foram solicitados às 00:58:24 UTC, uptime 1252,53 s. iOS confirmado por USB às 00:59:03 UTC, Linux USB ausente; bateria 99% com carregamento ativo. Não há ainda resposta do operador sobre intervenção nos botões, portanto a transição observada não prova isoladamente retorno automático. O restore DNS está concluído; rollback para a imagem Linux conhecida exige outro boot coordenado e continua pendente.
+
+
+## Rollback Linux comprovado — 2026-10-01
+
+Após retorno verificado da candidata7.2, iOS confirmou96% e carregamento ativo. Hashes do payload7.0.12/Pongo preservados, identidades locais privadas e snapshot final conferidos. Ambas as variáveis foram retiradas somente do ambiente do novo boot; artefatos e chaves não foram substituídos. Novo DFU manual: wrapper terminou0, restore passou e operador confirmou console. SSH estrito com a identidade padrão confirmou kernel7.0.12; HTTP respondeu e hosts/launcher/executável DNS corresponderam exatamente ao snapshot.
+
+Uptime61,34s antes do retorno. O CLI corrigido salvou novo snapshot, confirmou sync separado e retornou0 com BACKUP_VERIFIED/SYNC_VERIFIED/RETURN_IOS_VERIFIED; iPhone8,1 USB confirmado e gadget Linux ausente. Leitura posterior100%, carregamento ativo; não isola corrente de carga durante Linux nem conclui #2/#8.
+
+Rollback da candidata para a imagem Linux preservada e retorno ao iOS estão comprovados. Kernel APK legado ainda declara commit-dirty e assinatura própria não verificada; conteúdos foram autenticados pelo índice oficial assinado, conforme KERNEL-VERIFY. Não transformar este piloto em prova de reprodução exata desse kernel de legado ou identidade binária do Pongo preservado com o rebuild. #12 conserva esse limite de proveniência; nova cadeia de fonte tem seu próprio registro e provas físicas. [Evidência](evidence/source-chain-pilot.json).

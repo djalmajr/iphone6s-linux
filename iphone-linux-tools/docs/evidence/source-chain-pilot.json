@@ -50,7 +50,7 @@
   "charging_validation": "unverified",
   "wifi_interface_observed": false,
   "storage_partition_observed": false,
-  "linux_rollback_verified": false,
+  "linux_rollback_verified": true,
   "host_packages_installed": false,
   "global_network_changed": false,
   "nand_written": false,
@@ -79,5 +79,29 @@
     "battery_before_percent": 96,
     "battery_after_percent": 94,
     "battery_after_charging": true
+  },
+  "linux_rollback": {
+    "boot_wrapper_exit": 0,
+    "known_pongo_sha256": "1e5543fd8e6dbd84c334b87d71aa473f4d347c2ba8a5e863b6e10f18461c7575",
+    "known_payload_sha256": "8b1a46dd67613c63aa6608dd3a0e73a73b358aaddc1818b423ff6009b55e3f66",
+    "kernel_release": "7.0.12",
+    "default_identity_strict_ssh_verified": true,
+    "restore_verified": true,
+    "dns_files_compared": 3,
+    "operator_console_confirmed": true,
+    "http_verified": true,
+    "uptime_before_return_seconds": 61.34,
+    "return_cli_exit": 0,
+    "return_markers": [
+      "BACKUP_VERIFIED",
+      "SYNC_VERIFIED",
+      "RETURN_IOS_VERIFIED"
+    ],
+    "ios_model": "iPhone8,1",
+    "linux_gadget_absent": true,
+    "battery_before_percent": 96,
+    "battery_after_percent": 100,
+    "battery_after_charging": true,
+    "known_artifacts_replaced": false
   }
 }
