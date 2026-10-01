@@ -3,7 +3,7 @@
   "date": "2026-10-01",
   "issue": 19,
   "status": "partial",
-  "scope": "read-only Mac kernel endpoint inventory and short non-root bind preflight; no DNS query, iPhone, listener TCP or client policy change",
+  "scope": "Mac non-root inventory/preflight and IPC; isolated Linux VM privileged socket activation and real DNS/SSH integration; no root Mac/client policy/device boot",
   "kernel_inventory": [
     {
       "protocol": "tcp",
@@ -213,5 +213,99 @@
     "No owner of existing DNS sockets identified; no existing process stopped or configuration changed.",
     "No NRPT, Android DNS setting, upstream, DHCP reservation or router configuration changed."
   ],
-  "next": "Implement and test minimal socket bootstrap and unprivileged FD adoption; accompanied native test and phone boot/restore plus client policy/rollback remain pending."
+  "next": "Implement and test minimal socket bootstrap and unprivileged FD adoption; accompanied native test and phone boot/restore plus client policy/rollback remain pending.",
+  "implementation": {
+    "code_head": "98e63843a7285c2ba661f141a11054f6277d71dd",
+    "commits": {
+      "bootstrap": "6a03a0ca9cd84baa2eaae1321802ea55788640b4",
+      "integration": "a173be4",
+      "tcp_rebind": "770f710",
+      "ci_gates": "98e6384"
+    },
+    "default_port": 1053,
+    "standard_port": 53,
+    "standard_port_explicit_flag": "--standard-port",
+    "root_scope": "system Python isolated stdlib helper; bind then permanent UID/GID/groups drop before IPC; no profile/key/SSH root",
+    "reuse": {
+      "udp_reuseaddr": false,
+      "tcp_reuseaddr": true,
+      "reuseport": false
+    },
+    "sources": [
+      {
+        "path": "scripts/host/dns.py",
+        "bytes": 6981,
+        "sha256": "35548ad3a268826cdce0aa89180714ba550e4957dad2efc5261fd0ec8a5214c5"
+      },
+      {
+        "path": "scripts/host/dns_lan.py",
+        "bytes": 6170,
+        "sha256": "cb0744bf8847fb957677a4cbdd6359866eeaaf8e2b86858840c24ad7dbafee48"
+      },
+      {
+        "path": "scripts/host/dns_activation.py",
+        "bytes": 8666,
+        "sha256": "023323052a9a0208ada7b2e95da41f6ab0b139037fa9b45cab3f87d7221a41cc"
+      },
+      {
+        "path": "scripts/host/dns_privileged.py",
+        "bytes": 4111,
+        "sha256": "863c7c5f0ac743fc24f04bb0b5bbc631cb98f8b1c2313d70aacbd0683d2fa7ef"
+      }
+    ],
+    "mac": {
+      "root_helper_executed": false,
+      "ipc_cases": 21,
+      "assertion_killed_mutations": 15,
+      "system_python_compatible": true,
+      "tcp_state_api": "TCP_CONNECTION_INFO",
+      "native_53_pilot_passed": false
+    },
+    "vm": {
+      "platform": "Ubuntu 24.04 ARM64",
+      "isolated_namespaces": true,
+      "bootstrap_cases": 25,
+      "assertion_killed_bootstrap_mutations": 19,
+      "dns_ssh_baseline_tests": 4,
+      "real_proxy_modes": [
+        "high_port",
+        "standard_53_nonroot"
+      ],
+      "dns_ssh_mutations": 8,
+      "tcp_time_wait_rebind_passed": true,
+      "udp_tcp_forward_conflicts_preserved": true,
+      "nonroot_proxy_and_ssh_uid_verified": true,
+      "cleanup_server_processes": 0,
+      "cleanup_fixture_temp_directories": 0,
+      "stopped_after_tests": true
+    },
+    "ci": {
+      "bootstrap_runs": [
+        36930558070,
+        36930548792
+      ],
+      "bootstrap_conclusion": "success",
+      "code_runs": [
+        36932840328,
+        36932841357
+      ],
+      "code_conclusion": "success",
+      "code_mutation_steps_confirmed": {
+        "ubuntu-24.04": 15,
+        "macos-15": 15
+      }
+    },
+    "gates_open": [
+      "refresh selected Mac bind/conflits before accompanied root bootstrap",
+      "native Darwin privilege-drop and DNS53",
+      "fresh iPhone boot/restore/queries",
+      "Windows client explicit 53 option and device test",
+      "Android explicit queries",
+      "client split-DNS policy and rollback",
+      "power and sustained availability #2/#8"
+    ],
+    "client_policy_changed": false,
+    "phone_booted_in_this_phase": false,
+    "preflight_requires_refresh_before_native_pilot": true
+  }
 }

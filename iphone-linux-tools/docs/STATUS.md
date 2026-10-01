@@ -4,7 +4,7 @@
 
 As provas abaixo são de sessões já concluídas, não indicam um servidor ativo agora. O telefone executou Linux 7.0.12 em RAM, console automático, Bash/SSH/HTTP por USB e serviços encaminhados para a LAN. A cadeia com kernel 7.2.0 compilado e Pongo compilado está preparada e verificada localmente, mas ainda não deu boot físico.
 
-Preparação #19: opção explícita `dns lan --standard-port` implementada, mantendo 1053 como padrão. Bootstrap limitado à porta53 remove privilégios antes de entregar FDs ao proxy usuário. Mac passou 21 casos IPC/15 mutações sem root; VM passou 25 casos/19 mutações, mais baseline DNS/SSH nos dois modos e oito mutações do proxy. Rebind TCP após TIME_WAIT corrigido; sem SO_REUSEPORT. Conflitos UDP/TCP/forward e cleanup passaram em namespace privado. CI do bootstrap inicial passou; CI do estado final, piloto físico, Mac privilegiado e política dos clientes continuam abertos. [Contrato e reprodução](DNS-STANDARD.md).
+Preparação #19: opção explícita `dns lan --standard-port` implementada, mantendo 1053 como padrão. Bootstrap limitado à porta53 remove privilégios antes de entregar FDs ao proxy usuário. Mac passou 21 casos IPC/15 mutações sem root; VM passou 25 casos/19 mutações, mais baseline DNS/SSH nos dois modos e oito mutações do proxy. Rebind TCP após TIME_WAIT corrigido; sem SO_REUSEPORT. Conflitos UDP/TCP/forward e cleanup passaram em namespace privado. CI do bootstrap e do código final passou em Windows/Ubuntu/macOS; piloto físico, Mac privilegiado e política dos clientes continuam abertos. [Contrato e reprodução](DNS-STANDARD.md).
 
 | Área | Evidência e limite atual |
 |---|---|

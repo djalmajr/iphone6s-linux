@@ -315,4 +315,19 @@ A receita de VM acima continua válida; não executar esse fixture privilegiado 
 
 [Plano e decisões](DNS-STANDARD.md), [evidência sanitizada](evidence/dns-standard-port.json). Tabela do kernel mostrou sete endpoints TCP e sete UDP 53; lsof não privilegiado não os revelou. O IPv4 LAN já testado ainda está atribuído ao Mac e não tem bind IPv4 exato/wildcard observado. Bind UDP e TCP 53, por processo não root sem reuse/listen/tráfego, falhou com EACCES; sockets fechados e nenhum endpoint novo permaneceu no bind escolhido. IPv6 truncado não foi usado como prova de ausência de conflito.
 
-Isso define o próximo trabalho: bootstrap mínimo somente para abrir sockets e entregar FDs ao proxy/SSH não privilegiado, com testes de drop/identidade/limites e rollback. Nenhum listener 53 foi publicado, helper privilegiado implementado, política NRPT aplicada ou DNS do Android/roteador alterado. Split DNS apenas nos FQDNs próprios é o caminho planejado para conservar resolução externa; integração de clientes e uso contínuo dependem de testes acompanhados e #2/#8. Não substituir o DNS global por este servidor não recursivo.
+O bootstrap e a opção explícita de proxy em 53 estão implementados e testados na VM. Nenhum listener 53 foi publicado no Mac, política NRPT aplicada ou DNS do Android/roteador alterado. Split DNS apenas nos FQDNs próprios é o caminho planejado para conservar resolução externa; integração de clientes e uso contínuo dependem de testes acompanhados e #2/#8. Não substituir o DNS global por este servidor não recursivo.
+
+### Modo explícito implementado; piloto nativo pendente
+
+Após novo boot/restore e início do DNS no telefone, confirmar o IP privado atual do Mac, allowlist e conflitos UDP/TCP53. O comando abaixo é o procedimento do piloto acompanhado, ainda sem prova física nesta porta:
+
+```sh
+python3 iphone-linux-tools/scripts/host/dns.py lan \
+  --bind IPv4_PRIVADO_DO_MAC --allow IPv4_DO_CLIENTE --standard-port
+```
+
+`--standard-port` é alternativa a `--port`. Sem flag, continua 1053; `--port` aceita somente portas altas. Porta53 exige LAN privada, sem wildcard/loopback/USB dedicado, e runtime usuário normal. O proxy confirma o túnel SSH próprio antes de adquirir sockets. Somente o helper de biblioteca padrão usa `/usr/bin/sudo -n -- /usr/bin/python3 -I -S`: abre UDP/TCP53, remove grupos/GID/UID, entrega FDs via canal privado e termina. Não roda SSH ou lê perfil/chave como root. Sem autorização sudo existente, o startup falha; não pede senha por stdin nem muda sudoers. Não inicie o proxy inteiro com sudo.
+
+UDP mantém reuse desligado. TCP usa somente reuseaddr para permitir reinício após TIME_WAIT; reuseport é recusado. Listener existente impede startup e permanece intacto. Ctrl+C ou perda do túnel encerra os sockets/SSH próprios; sem telefone, não há resposta local. Política dos clientes não é modificada pelo comando. O helper Windows atual continua limitado a portas altas: sua seleção explícita de 53 e os testes Windows/Android/NRPT pertencem ao próximo gate da #19.
+
+Provas isoladas: Mac não root, 21 casos/15 mutações IPC; VM, 25 casos/19 mutações bootstrap, dois modos DNS/SSH e oito mutações do proxy. Conflitos UDP/TCP/forward, trust, ACL, capacidade, rebind e cleanup foram verificados na VM. [Receitas e limites](DNS-STANDARD.md). Não equivalem a privilege drop Darwin, piloto iPhone ou configuração do resolvedor dos clientes.
