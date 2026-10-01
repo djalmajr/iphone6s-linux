@@ -1,0 +1,62 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 23,
+  "status": "local_verified_ci_pending",
+  "before_fix": {
+    "synthetic_only": true,
+    "real_tools_executed": false,
+    "monitor_palera_changed": true,
+    "direct_monitor_executed_changed_palera": true,
+    "wrapper_pongoterm_changed": true,
+    "wrapper_executed_changed_pongoterm": true,
+    "wrapper_exit_code": 0,
+    "synthetic_admin_prompt_seen": false
+  },
+  "implementation": {
+    "shared_helper": "scripts/boot/boot_tools.py",
+    "monitor_preflight_before_usb_state_and_child": true,
+    "wrapper_preflight_before_external_tools": true,
+    "regular_owned_single_link_executable": true,
+    "special_modes_and_group_other_write_rejected": true,
+    "fixed_size_and_sha256": true,
+    "unknown_tool_error_without_traceback": true,
+    "tool_binary_replaced": false
+  },
+  "local": {
+    "new_tests": 7,
+    "existing_monitor_tests": 2,
+    "existing_profile_boot_tests": 5,
+    "existing_pongo_selection_tests": 8,
+    "tool_mutations_killed": 10,
+    "pongo_selection_mutations_killed": 11,
+    "profile_mutations_killed": 20,
+    "preserved_tool_files_verified_read_only": true,
+    "fatal_lint": "passed",
+    "bash_syntax": "passed",
+    "shellcheck": "passed",
+    "diff_check": "passed",
+    "type_checker": "not_configured"
+  },
+  "ci": {
+    "status": "pending"
+  },
+  "limits": {
+    "real_boot_tools_executed": false,
+    "phone_boot_performed": false,
+    "new_vm_started": false,
+    "host_packages_installed": false,
+    "host_protections_changed": false,
+    "global_network_configuration_changed": false,
+    "private_data_used": false,
+    "concurrent_same_user_tool_replacement_supported": false,
+    "full_binary_audit": false,
+    "complete_pr_review": false,
+    "merge_performed": false
+  },
+  "fixture_adjustment": {
+    "mac_cleared_setuid_bit": true,
+    "sticky_bit_applied_and_asserted": true,
+    "operational_mode_mask_unchanged": true
+  }
+}

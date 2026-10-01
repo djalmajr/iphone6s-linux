@@ -88,13 +88,16 @@ class BootToolTests(unittest.TestCase):
         return original
 
     def test_valid_pinned_tools_are_read_only_and_unknown_tools_are_refused(self):
-        # Mutation captured: dropping the fixed tool-name allowlist accepts arbitrary tools.
+        # Mutation captured: dropping name validation exposes an unhandled lookup error.
         before = {name: (self.bin / name).read_bytes() for name in PINS}
         result = self.cli(*PINS)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(before, {name: (self.bin / name).read_bytes() for name in PINS})
         for name in ('unknown', '../pongoterm'):
-            self.assertEqual(self.cli(name).returncode, 1)
+            result = self.cli(name)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('Ferramenta de boot desconhecida', result.stderr)
+            self.assertNotIn('Traceback', result.stderr)
         self.assertFalse((self.root / 'palera-executed').exists())
         self.assertFalse((self.root / 'pongoterm-executed').exists())
 

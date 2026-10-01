@@ -11,6 +11,8 @@ HELPER = 'scripts/boot/boot_tools.py'
 MONITOR = 'scripts/boot/dfu_boot.py'
 WRAPPER = 'scripts/host/iphone-linux.sh'
 MUTATIONS = [
+    ('unknown-tool-error', HELPER, 'if name not in PINS:', 'if False:',
+     'test_valid_pinned_tools_are_read_only_and_unknown_tools_are_refused'),
     ('digest', HELPER, 'if digest != expected:', 'if False:',
      'test_same_size_modification_and_missing_tools_are_refused'),
     ('size', HELPER, 'if info.st_size != size:', 'if False:',
