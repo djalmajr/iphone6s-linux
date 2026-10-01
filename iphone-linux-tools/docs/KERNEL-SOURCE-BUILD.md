@@ -23,7 +23,7 @@ Arquivos públicos previstos desta fase: este documento, `scripts/build/build-ke
 - **Por quê:** separa código/driver verificável do APK `-dirty` e evita depender de módulo NCM com ABI da versão anterior. A VM não expõe chaves do Mac/servidor ao build.
 - **Alternativas:** preservar somente o APK conserva a lacuna de fonte; usar a branch principal acrescenta uma versão RC; portar carga A10 não fornece binding/topologia comprovados para A9.
 - **Reverter:** baixo nesta fase; parar a VM e conservar os artefatos privados. Implantação atual não depende do resultado.
-- **Status:** kernel compilado, verificado e transferido; VM própria parada. Integração e gates físicos pendentes.
+- **Status:** kernel compilado, verificado e transferido; VM própria parada. Empacotamento verificado em perfil privado separado; gates físicos pendentes. [Integração](KERNEL-INTEGRATION.md).
 
 ## Critérios de verificação
 
@@ -39,9 +39,9 @@ O build não comprova suporte de carregamento, Wi-Fi, storage, reinício ou boot
 
 A VM dedicada usa Ubuntu 24.04.5 ARM64, imagem `1d6bffe64b848468ac97f821d369a4846d983de1800ccf6b5ec8853e85cefc55`, sem mounts. APT recusou pacotes não autenticados; quatro assinaturas InRelease foram verificadas por `gpgv`, e o keyring passou em `dpkg --verify`. Versões e logs foram preservados na VM. O fetch HTTPS fixado terminou com árvore limpa e versão 7.2.0 conferida.
 
-A primeira configuração foi recusada porque `BACKLIGHT_CLASS_DEVICE=m` limitou `BACKLIGHT_APPLE_DWI` a módulo. O fragmento agora exige ambos incorporados. A segunda tentativa, em outro diretório, preservou a primeira e conferiu as 47 opções obrigatórias antes de iniciar o build com dois jobs. Sintaxe Bash, ShellCheck e recusa real de execução no macOS passaram. O build terminou com saída 0; integração e boot físico desta candidata continuam pendentes.
+A primeira configuração foi recusada porque `BACKLIGHT_CLASS_DEVICE=m` limitou `BACKLIGHT_APPLE_DWI` a módulo. O fragmento agora exige ambos incorporados. A segunda tentativa, em outro diretório, preservou a primeira e conferiu as 47 opções obrigatórias antes de iniciar o build com dois jobs. Sintaxe Bash, ShellCheck e recusa real de execução no macOS passaram. O build terminou com saída 0; a integração foi verificada depois em perfil privado separado; boot físico desta candidata continua pendente.
 
-[Registro sanitizado](evidence/kernel-source-build.json): fonte, imagem da VM, dependências, hashes dos inputs/configuração, resultados e limites. O checkpoint original de 3ee2692 registrava `status=compiling`; o resultado final registra `compiled_verified`, saída 0, outputs com hashes e VM parada. Integração e boot físico não são declarados concluídos.
+[Registro sanitizado](evidence/kernel-source-build.json): fonte, imagem da VM, dependências, hashes dos inputs/configuração, resultados e limites. O checkpoint original de 3ee2692 registrava `status=compiling`; o resultado final registra `compiled_verified`, saída 0, outputs com hashes e VM parada. A integração posterior foi verificada em [KERNEL-INTEGRATION.md](KERNEL-INTEGRATION.md); boot físico não é declarado concluído.
 
 [CI da PR em 3ee2692](https://github.com/djalmajr/iphone6s-linux/actions/runs/36806363771) e [CI do push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36806359794) concluíram com sucesso. Ubuntu/macOS executaram 79 testes cada: 70 aprovados e nove skips explícitos de VM/artefatos privados; 20 mutações de perfil e nove de retorno foram rejeitadas nos dois sistemas. Guard público, lint/parsing e sintaxe passaram; ShellCheck passou no Linux. Não há typechecker configurado. Esses gates conferem as fontes públicas e contratos sintéticos; não compilam este kernel nem comprovam hardware.
 

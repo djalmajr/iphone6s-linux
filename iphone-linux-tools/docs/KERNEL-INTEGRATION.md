@@ -10,7 +10,7 @@ Arquivos desta fase: `scripts/build/integrate-source-kernel.py`, `tests/test_ker
 - [x] Migrar somente a linha de carga NCM no init e excluir somente o módulo antigo; conservar bytes/metadados/identidades dos demais registros CPIO. Uma fonte já migrada pode ser reempacotada sem nova alteração.
 - [x] Criar arquivos privados em uma pasta nova diretamente sob `runtime/`; recusar destino existente ou fora do escopo. Publicar `deployment.json` somente depois da verificação do perfil temporário.
 - [x] Exercitar fluxo real de arquivos/chaves sintéticas, controles negativos e mutações; lint/parsing e empacotamento dos artefatos reais, sem boot físico.
-- [ ] Publicar receita/resultado sanitizado e atualizar #12/#17; manter os gates físicos e de alimentação abertos.
+- [x] Publicar receita/resultado sanitizado e atualizar #12/#17; manter os gates físicos e de alimentação abertos.
 
 ## Decisão
 
@@ -55,7 +55,7 @@ A primeira execução recusou `runtime/` com modo `755` antes de criar saída; r
 
 ## Fase CI
 
-Escopo: `.github/workflows/ci.yml`, este documento e `docs/evidence/kernel-integration.json`. Acrescentar o runner de mutações à matriz existente, mantendo as permissões de leitura e os gates anteriores. Conferir guard público, diff e execução real dos jobs Ubuntu/macOS. Nenhuma dependência adicional ou ação no aparelho.
+Escopo: `.github/workflows/ci.yml`, este documento, `docs/evidence/kernel-integration.json`, `KERNEL-SOURCE-BUILD.md` e `REPRODUCAO.md`. As referências anteriores agora distinguem integração verificada de boot físico pendente. Acrescentar o runner de mutações à matriz existente, mantendo as permissões de leitura e os gates anteriores. Conferir guard público, diff e execução real dos jobs Ubuntu/macOS. Nenhuma dependência adicional ou ação no aparelho.
 
 - [x] Registrar o runner das 7 mutações no workflow.
 - [ ] Verificar execução remota nas duas plataformas e registrar os resultados.
