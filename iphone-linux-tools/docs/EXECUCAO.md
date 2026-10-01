@@ -8,6 +8,8 @@ O Linux foi validado em RAM, com console, SSH, HTTP e Herdr; isso não indica um
 
 ## Tarefas e verificação
 
+Fase documental dos pilotos concluídos (cinco arquivos): este documento, os READMEs da raiz/ferramentas, `BOOT-PLAN.md` e `REPRODUCAO.md`. Alinhar resumos atuais com boot da cadeia de fonte, CLI de retorno e rollback comprovados; preservar checkpoints antigos como histórico e limites do legado. Conferir links/diff/guard, reutilizando CI/código inalterados. Nenhuma nova ação no aparelho nesta fase.
+
 - [ ] #2: validar alimentação/bateria. Arquivos desta etapa: `phone/diagnostics/power-check.sh`, `tests/test_power_check.py`, `docs/ALIMENTACAO.md`, `docs/evidence/power-check.txt`. Verificação: sensores reais por SSH, testes de ausência/leitura parcial e observação física; comprovar carga sustentada antes de uso sem supervisão.
 - [x] #3: boot completo do wrapper. DFU manual sem página, envio, SSH/HTTP e console confirmados em uma execução, saída 0, em 2026-09-30.
 - [x] #4: snapshot restaurado após novo boot; conteúdo, modo 640, arquivo extra, identidade SSH e HTTP confirmados em 2026-09-30.
@@ -16,7 +18,7 @@ O Linux foi validado em RAM, com console, SSH, HTTP e Herdr; isso não indica um
 - [x] #6: acesso SSH/HTTP pela LAN via Mac, com teste Windows independente, novo boot com loopback e reversão. Saída genérica de internet permanece separada e desabilitada; [REDE.md](REDE.md).
 - [x] #7: DNS local UDP/TCP pelo USB e proxy LAN, com clientes Mac/Windows e configuração recuperada em segundo boot. Daemon/proxies próprios encerrados, snapshot verificado e retorno ao iOS confirmado; [prova física](evidence/dns-physical-check.json). Porta padrão/configuração dos clientes e nslookup seguem nas #19/#20.
 - [ ] #8: estabilidade monitorada prolongada, após alimentação validada.
-- [ ] #12: proveniência e build independente, com atualização/rollback.
+- [ ] #12: cadeia de fonte com boot e rollback conhecidos comprovados; proveniência integral dos artefatos legados ainda limitada.
 - [x] #14: CI para testes e privacidade sem dependência do aparelho. Ubuntu/macOS verdes; [CI.md](CI.md).
 - [ ] #16: revisão e documentação da PR; merge exige autorização explícita.
 - [ ] #13: Herdr idempotente no boot e reconexão.
@@ -57,7 +59,7 @@ O Linux foi validado em RAM, com console, SSH, HTTP e Herdr; isso não indica um
 
 ## Histórico das etapas
 
-Os checkpoints abaixo conservam o estado observado e os próximos passos de cada rodada. Referências a builds em execução, sessões ativas ou issues abertas são históricas; o checklist acima e [STATUS.md](STATUS.md) resumem o estado atual. A cadeia compilada de kernel/Pongo e seu rollback físico permanecem sem validação no aparelho.
+Os checkpoints abaixo conservam o estado observado e os próximos passos de cada rodada. Referências a builds em execução, sessões ativas ou issues abertas são históricas; o checklist acima e [STATUS.md](STATUS.md) resumem o estado atual. A cadeia compilada de kernel/Pongo, o CLI de retorno corrigido e rollback físico foram depois validados no aparelho; o fechamento abaixo registra esses resultados.
 
 ## Checkpoint — 2026-09-30
 
@@ -120,3 +122,10 @@ Em 3ee2692, foram publicados cinco arquivos da receita/checkpoint: builder isola
 CI da PR/push em 3ee2692 concluída: por sistema, 79 testes (70 aprovados/nove skips explícitos), 20 mutações de perfil e nove de retorno rejeitadas. Guard, lint/sintaxe e ShellCheck Linux passaram; não há typechecker configurado. Sintaxe dos quatro blocos Bash documentados e AST dos dois trechos Python embutidos conferidos localmente. A CI confere fontes públicas e contratos sintéticos; não compila esse kernel nem prova hardware. O build real terminou com saída 0, release `7.2.0-iphone6s-source`, header ARM64/16 KiB e DTB N71 conferidos, configuração embutida igual e hashes dos artefatos recalculados após cópia privada. Símbolos watchdog ligados à nova imagem, sem prova de binding/reboot físico. O DTB é byte a byte igual ao preservado. Somente a VM própria foi parada após conferir a reversão do DNS; payloads anteriores preservados. Integração/boot físico continuam pendentes.
 
 Rollback físico preparado com imagem conhecida e snapshot verificados: o monitor expirou sem detectar DFU, portanto nenhum payload foi enviado e restore/CLI de retorno não foram executados. Monitor limpo; saída da recuperação concluiu, mas iOS ainda não confirmado pelo USB. Estado da tela solicitado ao operador; nenhum novo DFU enquanto isso. A inspeção de fonte MFi descreve controle no host para iOS externo, não um driver da bateria A9, mantendo a opção desabilitada; [análise](ALIMENTACAO.md). Issues #2/#12/#17 atualizadas, demais gates físicos abertos. Goal ativo, próxima prova observável: resultado do build já em execução.
+
+
+## Fechamento dos pilotos de fonte e rollback — 2026-10-01
+
+Pongo/kernel7.2 de fonte selecionados explicitamente: console/SSH/HTTP/restore e DNS USB UDP/TCP5353 aprovados, apple-watchdog vinculado. Retorno espontâneo confirmado pelo operador/USB apesar da falha de confirmação do CLI antigo. Correção20695eb separou sync/reboot; baseline19 e11 mutações passaram e CI6386b2b em Ubuntu/macOS/Windows verde. Novo piloto do CLI terminou0 com BACKUP_VERIFIED/SYNC_VERIFIED/RETURN_IOS_VERIFIED; #21 concluída.
+
+Rollback ao Pongo/payload7.0.12 preservados: hashes/snapshot conferidos, novo DFU, wrapper0, console/SSH estrito/HTTP e restore exato de três arquivos DNS. Novo snapshot e retorno via CLI0/iOS USB passaram. Comparações iOS100→93%,96→94% e96→100% incluem preparação/reboot; não liberam #2/#8. #12 conserva proveniência do legado commit-dirty/assinatura própria; #13/#19/#20/#16 e hardware seguem gates próprios. [Registro e operação](SOURCE-CHAIN-PILOT.md), [perfis](PROFILES.md), [retorno](REBOOT.md). Nenhum pacote no Mac, mudança global de rede, NAND ou merge/release.
