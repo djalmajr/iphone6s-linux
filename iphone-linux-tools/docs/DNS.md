@@ -282,3 +282,16 @@ python3 iphone-linux-tools/tests/run_dns_bundle_mutations.py
 ```
 
 A instalação/restore na VM usa a receita isolada já documentada acima e o par bundle/manifesto do build selecionado. Não execute fixtures privilegiados no Mac. [Evidência e limites](evidence/dns-bundle-scope.json); validação completa do manifesto/descompressão, concorrência e instalação transacional permanecem fora desta correção.
+
+## Contrato de aceitação dos testes — correção #27
+
+`run_dns_server_mutations.py` exige baseline com um teste realmente executado e aprovado. Para cada mutação, só publica `Rejected` quando a fixture termina com falha de asserção da regra correspondente; ERROR, skip, sucesso, ausência de FAIL ou motivo de outra regra abortam. Mensagens da fixture são parte desse contrato. A primeira reprodução sintética mostrou que o runner antigo aceitava um erro de dependência; não demonstrou falha dos resultados físicos anteriores.
+
+Oito regressões do CLI e onze mutações do verificador passaram no Mac, usando resultados de processos externos sintéticos em cópias descartáveis. Revalidação real na VM dedicada, sem mounts/chaves do projeto, aprovou baseline e cinco mutações do servidor com as asserções esperadas; bundle padrão conferido antes do uso. Fixture removido e VM parada, sem pacote novo. [Evidência e limites](evidence/review-proof-gates.json). Reprodução local, sem namespace privilegiado:
+
+```sh
+python3 -m unittest discover -s iphone-linux-tools/tests -p test_dns_mutation_gate.py -v
+python3 iphone-linux-tools/tests/run_dns_mutation_gate_mutations.py
+```
+
+A receita de VM acima continua válida; não executar esse fixture privilegiado no Mac. CI executa os testes sintéticos e as onze mutações do contrato nas duas plataformas. A revalidação da VM não comprova alimentação, estabilidade prolongada, Wi-Fi ou boot da nova cadeia no telefone.

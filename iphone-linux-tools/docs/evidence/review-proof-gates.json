@@ -3,7 +3,7 @@
   "date": "2026-10-01",
   "issue": 27,
   "inspected_commit": "e96965476b0cf37da0004fe396d0eb84af91cea2",
-  "status": "finding_confirmed_not_fixed",
+  "status": "fixed_verified_local_vm_ci",
   "fixture_process_result_injection": {
     "scope": "owned disposable copy; external fixture process results injected; no real VM/root/network operation",
     "baseline_fixture": "success",
@@ -45,10 +45,68 @@
     "status": "success"
   },
   "limits": [
-    "Injected subprocess outcomes demonstrate runner acceptance policy; no real Linux/root, VM, network or phone fixture was run.",
-    "Index parsing/hash are structure/integrity evidence; no new signature or package execution proof.",
-    "Reading inventory is partial and not an audit approval."
+    "Synthetic external subprocess outcomes prove runner CLI acceptance policy, without invoking native privileged fixtures on the Mac.",
+    "Dedicated VM revalidation uses real dnsmasq/BusyBox, isolated net/mount namespaces and the registered preserved bundle; not new phone hardware proof.",
+    "Expected assertion messages are a fixture contract; changes must update the reason map and regression/mutation tests.",
+    "Index parsing/hash remain structure/integrity evidence, not a new signature or package execution proof.",
+    "Reading inventory remains partial, without audit approval or merge authority."
   ],
   "host_packages_installed": false,
-  "native_proof": false
+  "native_proof": false,
+  "fixed_commit": "929e9621dbca5f9a4d87b1c0a03ee585309f4200",
+  "local_verification": {
+    "regressions": 8,
+    "proof_contract_mutations": 11,
+    "proof_contract_mutations_detected": 11,
+    "suite_cases": 161,
+    "suite_initial_passed": 152,
+    "suite_initial_errors": 1,
+    "suite_skipped": 8,
+    "environment_error": "sandbox refused loopback socket bind",
+    "narrow_retry": "test_dns_lan.py: 2 passed, 1 VM skip outside sandbox",
+    "eligible_cases_passed_across_runs": 153,
+    "fatal_flake8": "passed",
+    "shell_syntax": "passed",
+    "wrapper_shellcheck": "passed",
+    "typechecker": "not configured"
+  },
+  "vm_revalidation": {
+    "scope": "existing dedicated Ubuntu ARM64 guest; no mounts or project SSH identities",
+    "baseline": "passed",
+    "mutations": [
+      "kernel-bind",
+      "root-user",
+      "external-upstream",
+      "stale-pid",
+      "foreign-executable"
+    ],
+    "matching_assertions_detected": 5,
+    "exit_code": 0,
+    "bundle_bytes": 4614005,
+    "bundle_sha256": "8ccb8f30a1a179b02825bda6040bb51a807b4abbcda24f925028481d5c48e72e",
+    "bundle_identity_source": "docs/evidence/dns-provenance.json; matched on host and guest before execution",
+    "new_package_install": false,
+    "fixture_removed": true,
+    "remaining_dnsmasq": 0,
+    "remaining_mutation_directories": 0,
+    "final_vm_state": "Stopped",
+    "mounts": {}
+  },
+  "fixed_code_ci": {
+    "commit": "929e9621dbca5f9a4d87b1c0a03ee585309f4200",
+    "pr": 36844496273,
+    "push": 36844489224,
+    "status": "success",
+    "jobs": 4,
+    "cases_per_job": 161,
+    "passed_per_job": 152,
+    "skipped_per_job": 9,
+    "proof_contract_mutations_per_job": 11
+  },
+  "reading_inventory_checkpoint": {
+    "commit": "929e9621dbca5f9a4d87b1c0a03ee585309f4200",
+    "complete_reads": 102,
+    "entries": 160,
+    "complete_pr_review": false
+  }
 }
