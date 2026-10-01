@@ -44,4 +44,53 @@ A medição elimina a alternativa de abrir 53 diretamente como usuário neste Ma
 
 O processo usuário deve conferir identidade do canal, quantidade/tipos/endereços/portas dos FDs e ownership do diretório/socket, recusar socket alheio ou mensagem truncada, impor prazo e fechar os FDs próprios em qualquer falha. Apenas depois da validação e da prontidão do túnel SSH ele inicia o atendimento. Privilege drop, peer/FD validation e ausência de tráfego para fora da allowlist são gates críticos: testes com sockets reais em ambiente isolado e mutações por asserção, além de teste nativo Mac acompanhado antes de afirmar funcionamento em 53.
 
-Essa arquitetura ainda não foi implementada. O plano da fase de código deve fixar os cinco arquivos e comandos após ler os módulos relevantes. A integração optativa deve preservar 1053, não abrir 53 implicitamente ao iniciar Linux e não colocar todo o runtime sob sudo. Se o bootstrap falhar, encerrar os sockets próprios, conservar a política dos clientes e exibir erro; nunca tentar mudar um serviço existente para fazer o bind passar.
+O bootstrap foi implementado e testado isoladamente na fase 2A abaixo; sua integração ao proxy continua pendente. A integração optativa deve preservar 1053, não abrir 53 implicitamente ao iniciar Linux e não colocar todo o runtime sob sudo. Se o bootstrap falhar, encerrar os sockets próprios, conservar a política dos clientes e exibir erro; nunca tentar mudar um serviço existente para fazer o bind passar.
+
+## Fase 2A — abertura e entrega de sockets
+
+Cinco arquivos: novos `scripts/host/dns_privileged.py`, `scripts/host/dns_activation.py`, `tests/test_dns_activation.py`, `tests/run_dns_activation_mutations.py` e este plano. O proxy/CLI atual não será alterado nesta fase: a próxima fatia adotará a API validada e habilitará uma opção explícita de porta 53.
+
+O helper recebe bind, socket Unix e UID/GID não root explícitos, conferidos com a identidade original informada pelo sudo. Executa `/usr/bin/python3 -I -S`, importa somente biblioteca padrão, abre UDP/TCP IPv4 53 sem reuse/listen, remove grupos suplementares e troca GID/UID permanentemente. Confere a identidade resultante antes de conectar ao socket privado do usuário. Nonce de 32 bytes chega por stdin limitado/prazo, sem senha ou nonce em argumentos. A resposta tem framing fixo, identidade/grupos resultantes, nonce e exatamente dois FDs via SCM_RIGHTS; o helper fecha suas cópias e termina. Nenhum perfil/chave/SSH é lido ou executado no processo privilegiado.
+
+O módulo usuário exige processo não root, diretório privado próprio e fonte do helper regular/sem escrita por terceiros. Lança somente sudo nativo não interativo e Python de sistema isolado; falta de autorização existente deve falhar, sem mudar sudoers ou pedir senha via stdin. Valida peer UID/GID (SO_PEERCRED Linux; libc getpeereid Darwin), payload completo/nonce, ausência de grupos suplementares, quantidade/família/tipo/protocolo e endereço/porta dos FDs, ausência de listener TCP prematuro e deadline. Fecha descritores recebidos em qualquer recusa. Só retorna o par após sucesso e término do helper. A API retorna sockets bound; atender DNS/validar túnel permanece responsabilidade do proxy na fase seguinte.
+
+Verificação: Mac não privilegiado testa IPC real em sockets privados, mensagens fragmentadas, nonce/peer/contagem/tipo/endereço/porta/truncamento/EOF/prazo e fechamento dos FDs rejeitados. VM `iphone6s-repro-20260930` testa o helper real via sudo em namespace de rede próprio, com controller usuário normal, binds 53, UID/GID/grupos, conflito TCP após bind UDP, dados UDP/TCP pelos FDs adotados e cleanup. Mutações reais devem falhar por asserção após baseline aprovado, sem aceitar erro de compilação, skip, falta de sudo ou conflito externo como prova. Nenhum comando root será executado no Mac nesta fatia. Gates: Flake8 fatal, compilação Python, testes focados Mac/VM, mutações e guard público; CI documentado separadamente. Piloto Mac privilegiado/integração DNS/Windows/Android não são declarados concluídos por esses testes.
+
+### Resultado da fase 2A
+
+- Python de sistema do Mac: 21 casos reais de IPC/FDs e 15 mutações de fonte rejeitadas por asserção. A descoberta `unittest` inclui somente a classe não privilegiada; a classe da VM deve ser selecionada explicitamente.
+- Ubuntu 24.04 ARM64, VM do projeto: baseline dos mesmos 21 casos mais três casos privilegiados em namespace de rede próprio; 18 mutações rejeitadas por asserção. Incluem remoção de grupos/UID, identidade original sudo, limpeza de FDs adotados/brutos, peer/nonce, tipos/binds/reuse e permissões do canal.
+- O helper real abriu 53, saiu de root antes da conexão Unix e transferiu UDP/TCP com dados verificáveis. Após fechar os FDs, ambos os binds ficaram livres; um conflito TCP encerrou o helper e também fechou o UDP aberto primeiro. Diretórios de ativação e descritores do controller voltaram ao estado anterior.
+- Compilação dos quatro módulos e Flake8 fatal passaram. Isso não prova DNS do iPhone em 53, política NRPT, integração do proxy ou privilege drop nativo Darwin. Nenhum helper root foi executado no Mac.
+
+Os testes nativos corrigiram duas diferenças Darwin: `SO_ACCEPTCONN` não funcionou como consulta de estado neste host, portanto o TCP é validado por `TCP_CONNECTION_INFO`/estado CLOSED, conforme os headers [tcp.h](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/netinet/tcp.h) e [tcp_fsm.h](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/netinet/tcp_fsm.h). Um buffer de controle inicialmente pequeno revelou vazamento no caso de 17 FDs; o receptor agora reserva espaço para o limite de 512 FDs do [XNU](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/kern/uipc_usrreq.c), recusa excesso e fecha os FDs retornados. Casos de 0/1/3/17/65 descritores passaram sem aumento de FDs. Não considerar truncamento arbitrário de controle em todo kernel/Python como universalmente provado; a [documentação Python](https://docs.python.org/3/library/socket.html#socket.socket.recvmsg) alerta sobre controle parcialmente recebido. Python 3.9 nativo também exigiu normalizar `socket.timeout` para `TimeoutError`.
+
+### Reprodução sem instalar ferramentas no Mac
+
+Mac, sem sudo, usando portas altas loopback e IPC Unix:
+
+```sh
+/usr/bin/python3 -m unittest discover -s iphone-linux-tools/tests -p test_dns_activation.py -v
+/usr/bin/python3 iphone-linux-tools/tests/run_dns_activation_mutations.py
+```
+
+Na VM Linux exclusiva do projeto, copie somente `scripts/host/*.py` e os dois testes novos para um diretório próprio do usuário `ubuntu`, com fontes regulares sem escrita por grupo/outros. Nenhum perfil, chave ou runtime privado é necessário. O cenário seguinte cria somente um namespace efêmero; não altera rede, DNS ou sysctl fora dele. Execute dentro da VM, ajustando `project` para o caminho copiado:
+
+```sh
+sudo -n unshare --net -- /usr/bin/python3 -I -S - /home/ubuntu/activation-final-phase2a-20261001/project <<'PY'
+import pathlib
+import subprocess
+import sys
+project = pathlib.Path(sys.argv[1])
+subprocess.run(['ip', 'link', 'set', 'lo', 'up'], check=True)
+subprocess.run(['ip', 'address', 'add', '10.231.0.1/32', 'dev', 'lo'], check=True)
+pathlib.Path('/proc/sys/net/ipv4/ip_unprivileged_port_start').write_text('1024')
+result = subprocess.run(['sudo', '-u', 'ubuntu', '--', 'env',
+    'IPHONE_ACTIVATION_TEST_BIND=10.231.0.1',
+    'IPHONE_ACTIVATION_MUTATIONS_PRIVILEGED=1', '/usr/bin/python3',
+    str(project / 'tests/run_dns_activation_mutations.py')])
+raise SystemExit(result.returncode)
+PY
+```
+
+O opt-in privilegiado exige controller Linux não root, bind de fixture e namespace distinto do PID 1 da VM. Baseline com erro/skip, sintaxe inválida, falha de infraestrutura ou mutação sem `AssertionError` nunca contam como aprovação. Nenhuma regra sudoers ou serviço persistente deve ser criado. A fase seguinte precisa integrar a API de sockets ao proxy, conservar 1053 como padrão e testar allowlist, perda do túnel e cleanup antes do piloto acompanhado.
