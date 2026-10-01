@@ -30,10 +30,20 @@
   "snapshot_before_reboot_verified": true,
   "software_return_ios_usb_verified": true,
   "operator_no_buttons_during_return": true,
-  "return_fix_native_verified": false,
+  "return_fix_native_verified": true,
   "return_fix_local_tests": 19,
   "return_fix_mutations_killed": 11,
-  "return_fix_ci": "pending",
+  "return_fix_ci": {
+    "status": "success",
+    "tested_head": "6386b2b776c326fac663f0723c96eb99c8e74e5c",
+    "pr_run": 36940701485,
+    "push_run": 36940697946,
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-15",
+      "windows-latest"
+    ]
+  },
   "battery_before_percent": 100,
   "battery_after_percent": 93,
   "battery_after_charging": true,
@@ -50,5 +60,24 @@
     "getconf unavailable; diagnostic rerun using proc KernelPageSize.",
     "DNS queries incorrectly used phone port53; correct port5353 passed UDP/TCP.",
     "Old return CLI failed sync acknowledgement despite subsequent verified software iOS return."
-  ]
+  ],
+  "return_fix_native": {
+    "tested_commit": "6386b2b776c326fac663f0723c96eb99c8e74e5c",
+    "boot_wrapper_exit": 0,
+    "operator_console_confirmed": true,
+    "kernel_release": "7.2.0-iphone6s-source",
+    "last_uptime_before_return_seconds": 116.23,
+    "return_cli_exit": 0,
+    "markers": [
+      "BACKUP_VERIFIED",
+      "SYNC_VERIFIED",
+      "RETURN_IOS_VERIFIED"
+    ],
+    "ios_model": "iPhone8,1",
+    "linux_gadget_absent": true,
+    "manual_intervention_requested": false,
+    "battery_before_percent": 96,
+    "battery_after_percent": 94,
+    "battery_after_charging": true
+  }
 }
