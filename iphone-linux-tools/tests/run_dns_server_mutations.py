@@ -17,6 +17,28 @@ MUTATIONS = {
     'stale-pid': [('    [ "$(process_ticks "$pid")" = "$ticks" ] || return 2\n', '')],
     'foreign-executable': [('    [ "$(readlink "/proc/$pid/exe")" = "$BINARY" ] || return 2\n', '')],
 }
+EXPECTED_FAILURES = {
+    'kernel-bind': ('Unexpected kernel bind', 'Unexpected IPv6 DNS listener'),
+    'root-user': ('DNS retained root privileges',),
+    'external-upstream': ('Unexpected negative DNS behavior', 'DNS forwarded an external query'),
+    'stale-pid': ('Stale start-time record signaled process',),
+    'foreign-executable': ('Foreign executable received signal',),
+}
+
+
+def baseline_passed(result):
+    lines = result.stderr.splitlines()
+    return (result.returncode == 0 and 'OK' in lines
+            and any(line.startswith('Ran 1 test in ') for line in lines)
+            and not any(line.startswith(('FAIL:', 'ERROR:')) or 'skipped' in line for line in lines))
+
+
+def expected_assertion(result, name):
+    lines = result.stderr.splitlines()
+    return (result.returncode != 0 and any(line.startswith('FAIL:') for line in lines)
+            and not any(line.startswith('ERROR:') or 'skipped' in line for line in lines)
+            and any(line.startswith('AssertionError: ' + message)
+                    for line in lines for message in EXPECTED_FAILURES[name]))
 
 
 def run(base):
@@ -41,7 +63,7 @@ if __name__ == '__main__':
         shutil.copy(TEST, base / 'tests' / TEST.name)
         target.write_text(original)
         result = run(base)
-        if result.returncode != 0 or 'skipped' in result.stderr:
+        if not baseline_passed(result):
             raise SystemExit('Original baseline failed:\n' + result.stdout + result.stderr)
         print('Original DNS server baseline passed', flush=True)
         for name in names:
@@ -52,6 +74,7 @@ if __name__ == '__main__':
                 mutated = mutated.replace(before, after)
             target.write_text(mutated)
             result = run(base)
-            if result.returncode == 0 or 'skipped' in result.stderr:
-                raise SystemExit('Mutation survived or gate skipped: ' + name)
+            if not expected_assertion(result, name):
+                raise SystemExit('Mutation survived or failed outside expected assertion: ' + name
+                                 + '\n' + result.stdout + result.stderr)
             print('Rejected ' + name, flush=True)
