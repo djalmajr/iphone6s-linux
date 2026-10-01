@@ -2,11 +2,11 @@
   "format": 1,
   "date": "2026-10-01",
   "baseline": "168b95453d672a1ae862bf608bf39d5a463ec2f8",
-  "inspected_head": "8b44b245037f94ac1fc341e4ff00486169adeace",
+  "inspected_head": "49d874738d662b8f2d93dd7bbbf512505f3ecc6d",
   "status": "partial",
   "method": "Complete reads plus inspection of own subsequent diffs; unreviewed removals stay explicit. Blob identity binds coverage to this revision. This is a reading inventory, not an audit verdict or native proof.",
-  "file_entries": 165,
-  "complete_reads": 164,
+  "file_entries": 170,
+  "complete_reads": 169,
   "complete_pr_review": false,
   "removed_baseline_sources_completely_reviewed": true,
   "findings": [
@@ -23,7 +23,7 @@
     {
       "path": ".github/workflows/ci.yml",
       "change": "A",
-      "blob": "1c1a027fcc0093ecdbb95b5dd59bc64ca6bd1e4c",
+      "blob": "7cda8ffb1fea74d9b8e6f68b0ee7717171f43da5",
       "read_complete": true
     },
     {
@@ -135,9 +135,15 @@
       "read_complete": true
     },
     {
+      "path": "iphone-linux-tools/docs/DNS-WINDOWS.md",
+      "change": "A",
+      "blob": "de4b61c1c7bd4081b97c8450e66f6bc6d33a344e",
+      "read_complete": true
+    },
+    {
       "path": "iphone-linux-tools/docs/DNS.md",
       "change": "A",
-      "blob": "fef2b7bfa801a599c0f3b9f4042214f4f6c9c832",
+      "blob": "35c2452abdfc6ce8447b446e8ed20ab55394bb90",
       "read_complete": true
     },
     {
@@ -203,7 +209,7 @@
     {
       "path": "iphone-linux-tools/docs/PR-REVIEW.md",
       "change": "A",
-      "blob": "50a0b56870c2f4e3d380c0f18d52a0672b3a5ec6",
+      "blob": "e5e1008cd3fc57f1d492939a334b1515f33a9393",
       "read_complete": true
     },
     {
@@ -239,7 +245,7 @@
     {
       "path": "iphone-linux-tools/docs/STATUS.md",
       "change": "A",
-      "blob": "fbcd8aaf2e39d3748582928f54d33b7c7dfbfe21",
+      "blob": "e96441fb445e77d8956761cc67ad997329c60c42",
       "read_complete": true
     },
     {
@@ -419,7 +425,7 @@
     {
       "path": "iphone-linux-tools/docs/evidence/pr-review-coverage.json",
       "change": "A",
-      "blob": "9ddb1260441163f76ef64a01f1eac1b985fd6498",
+      "blob": "399113d3657064f29565642bf69d58fe9721e1de",
       "read_complete": true
     },
     {
@@ -450,6 +456,12 @@
       "path": "iphone-linux-tools/docs/evidence/wifi-n71-path.json",
       "change": "A",
       "blob": "ddd334e3f94e80232b48046134b54836287d7102",
+      "read_complete": true
+    },
+    {
+      "path": "iphone-linux-tools/docs/evidence/windows-dns-fixture.json",
+      "change": "A",
+      "blob": "a37cbd229d83f487509deaac4c8301f07b7763a1",
       "read_complete": true
     },
     {
@@ -635,7 +647,7 @@
     {
       "path": "iphone-linux-tools/scripts/host/dns-check-windows.ps1",
       "change": "A",
-      "blob": "318aa911971877950a6c441ac6312b8d7de554c9",
+      "blob": "7fc729fafaab3d0b08d37f6c5094132e1ea9c0e4",
       "read_complete": true
     },
     {
@@ -654,6 +666,12 @@
       "path": "iphone-linux-tools/scripts/host/dns_transport.py",
       "change": "A",
       "blob": "4eee225da471b1d0bd2f2a840a7a0a44b12213fc",
+      "read_complete": true
+    },
+    {
+      "path": "iphone-linux-tools/scripts/host/dns_windows.cs",
+      "change": "A",
+      "blob": "eed8e005aa697219ced4f2edfdb3925e4e6deff7",
       "read_complete": true
     },
     {
@@ -720,6 +738,12 @@
       "path": "iphone-linux-tools/server/status",
       "change": "D",
       "blob": "5028d58bc3ed8d853964c2833f6fb647b43eccc2",
+      "read_complete": true
+    },
+    {
+      "path": "iphone-linux-tools/tests/dns_windows_fixture.cs",
+      "change": "A",
+      "blob": "1063c940ec67cd4415ccb36240787f5f1976f53b",
       "read_complete": true
     },
     {
@@ -912,6 +936,12 @@
       "path": "iphone-linux-tools/tests/test_dns_server_vm.py",
       "change": "A",
       "blob": "594a1cb7689a7ec5e1c338010afeb00a0fc981ab",
+      "read_complete": true
+    },
+    {
+      "path": "iphone-linux-tools/tests/test_dns_windows.ps1",
+      "change": "A",
+      "blob": "2abd3d0c8797d62842692cd91ca531ea83993ca0",
       "read_complete": true
     },
     {

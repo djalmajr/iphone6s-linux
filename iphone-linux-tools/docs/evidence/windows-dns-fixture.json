@@ -388,7 +388,34 @@
     "lan_fixture_denials_or_errors": 0,
     "lan_fixture_exit": 0,
     "lan_listeners_remaining": 0,
-    "native_ci": "pending for new Windows job",
+    "native_ci": {
+      "commit": "49d874738d662b8f2d93dd7bbbf512505f3ecc6d",
+      "runs": [
+        {
+          "id": 36867261810,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "jobs": [
+            "windows-dns",
+            "source (ubuntu-24.04)",
+            "source (macos-15)"
+          ]
+        },
+        {
+          "id": 36867254184,
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "jobs": [
+            "windows-dns",
+            "source (ubuntu-24.04)",
+            "source (macos-15)"
+          ]
+        }
+      ],
+      "scope": "Windows synthetic client suite and existing source gates; no phone or LAN hardware proof"
+    },
     "physical_boot_restore": "pending",
     "failed_attempts": [
       "Initial transfer lost local-scope root variable; no tests executed.",

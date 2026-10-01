@@ -28,7 +28,7 @@ Arquivos públicos desta preparação: este plano, fechamento em `PR-REVIEW.md`,
 - [x] Conferir assinatura/versão e parâmetros efetivos do nslookup, com prazo finito.
 - [x] Comparar transporte/consulta em fixture UDP/TCP, com resultados e limpeza registrados.
 - [x] Executar controle em loopback Windows: falha nativa também ocorre sem o caminho LAN/Mac; causa específica continua desconhecida, sem atribuição a uma política por aplicativo.
-- [ ] Corrigir helper ou implementar alternativa justificada com parser completo e controles negativos reais.
+- [x] Corrigir helper ou implementar alternativa justificada com parser completo e controles negativos reais.
 - [ ] Validar no novo boot/restore do iPhone e remover fixtures próprios.
 
 Sintaxe do PowerShell deve ser conferida pelo parser nativo antes de usar scripts novos. Testes deverão executar o cliente/falhas reais que se quer validar, sem transformar timeout ou erro de infraestrutura em rejeição comprovada. Não há typechecker configurado. Validação de destino, assinatura e limites da resposta permanecem obrigatórios; nenhum ajuste de ExecutionPolicy ou de confiança do host está previsto.
@@ -95,7 +95,7 @@ Bind exclusivo em `127.0.0.1` para TCP/UDP 15953 e 1053, portas conferidas livre
 - **Alternativas:** continuar dependente do nslookup impede a validação reproduzível em 1053; instalar dig ou alterar DNS/firewall/proteções acrescenta mudanças ao host; manter o diagnóstico de 54 bytes como cliente final não cobre o parser/negativos exigidos.
 - **Reverter:** baixo; preservar histórico/receita nativa e reverter a alteração do helper na branch. Nenhuma migração ou alteração do daemon/proxy do iPhone.
 - **Onde:** fase 1 de cinco arquivos abaixo; publicação/CI em fase seguinte.
-- **Status:** fase 1 implementada e validada no Windows real: 61 casos, 18 mutações e nove invocações do helper público. CI Windows e novo piloto físico ainda pendentes; #20 permanece aberta.
+- **Status:** fase 1 implementada e validada no Windows real: 61 casos, 18 mutações e nove invocações do helper público. CI Windows aprovada; novo piloto físico ainda pendente e #20 permanece aberta.
 
 ### Contrato e fases do cliente
 
@@ -120,3 +120,8 @@ PowerShell 5.1 do Windows autorizado executou parser/compilação reais e **61 c
 O comando público foi executado em nove processos novos: dois positivos em fixture LAN privada do Mac, nas portas 1053/15953, ambos com `IPHONE_DNS_UDP_OK` e `IPHONE_DNS_TCP_OK`; sete negativos (destino loopback, público, wildcard, IPv4 não canônico, endereço esperado público, nome fora de home.arpa e porta 53) falharam sem marcador de sucesso e pelo motivo esperado. A fixture recebeu exatamente quatro perguntas válidas, nenhum erro/recusa ACL; foi encerrada com saída 0 e não restou listener nas duas portas. Isso prova o helper contra resposta sintética, não contra o iPhone.
 
 Artefatos privados de reprodução estão em `runtime/windows-dns-client-20261001/`: hashes das quatro fontes transferidas, controlador CLI, resultados e fixture/log LAN. A primeira transferência perdeu uma variável entre blocos e falhou antes de executar testes; a repetição usou diretório temporário exclusivo e conferência SHA-256. Não houve pacote novo, banco, chave ou configuração global alterados. Compilação C# e parser PowerShell são os gates de sintaxe/tipos desta fase; `git diff --check` e guard público devem passar antes da publicação. Próxima fase: CI Windows e documentação/evidência sanitizada; o USB ausente ainda impede o gate físico.
+
+
+### CI e checkpoint da revisão — 49d8747
+
+CI de PR [36867261810](https://github.com/djalmajr/iphone6s-linux/actions/runs/36867261810) e push [36867254184](https://github.com/djalmajr/iphone6s-linux/actions/runs/36867254184) terminou verde: Windows, Ubuntu e macOS, seis jobs. O CI testa fonte/fixtures; não testa iPhone ou a LAN do operador. JSON, 40 links locais, diff e guard público aprovados antes da publicação. Limpeza conhecida do Windows confirmada: cinco arquivos removidos e diretório ausente. A pasta vazia não identificada da transferência inicial não foi removida por aproximação. #20 tem reprodução, helper e negativos concluídos; piloto físico ainda aberto.
