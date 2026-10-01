@@ -10,7 +10,7 @@ Arquivos desta fase: `scripts/host/return_ios.py`, `tests/test_return_ios.py`, `
 - [x] Salvar snapshot pelo restaurador existente, verificar hash/escopo e abortar antes do reboot se falhar.
 - [x] Executar sync antes de `reboot -f`; confirmar somente um dispositivo USB `iPhone8,1` e ausência do gadget Linux.
 - [x] Limitar espera e encerrar grupos de processos próprios em timeout/interrupção; não imprimir identificadores USB nem saída de dependências.
-- [ ] Executar testes sintéticos e mutações; lint/parsing; publicar e observar CI.
+- [x] Executar testes sintéticos e mutações; lint/parsing; publicar e observar CI.
 - [ ] Validar o comando em piloto físico coordenado; investigar cadeia N71/A9 sem inferir suporte de outro SoC.
 
 ## D1. Verificação pelo resultado observado
@@ -19,7 +19,7 @@ Arquivos desta fase: `scripts/host/return_ios.py`, `tests/test_return_ios.py`, `
 - **Por quê:** elimina falso sucesso por saída SSH e mantém recuperação dos arquivos em RAM.
 - **Alternativas:** comando comum não atende PID 1; forçar outro reset requer suporte de hardware ainda não demonstrado; reinício manual continua fallback.
 - **Reverter:** baixo; deixar de usar o comando e seguir o runbook manual.
-- **Status:** implementada e validada sinteticamente; CI e prova física pendentes.
+- **Status:** implementada, validada sinteticamente e em CI; prova física completa pendente.
 
 ## Operação
 
@@ -60,3 +60,13 @@ python3 -m flake8 --select E9,F63,F7,F82 \
 O DTB preservado foi lido após conferir SHA-256 `b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58`. As duas CPUs usam `spin-table`; há PMGR S8000 e PMU Twister, sem um nó PSCI observado nesse DTB de entrada. Isso não identifica o método efetivo depois dos ajustes do bootloader. O kernel conferiu o SHA-256 registrado em [KERNEL-VERIFY.md](KERNEL-VERIFY.md); a busca estática por `IKCFG_ST` não encontrou configuração embutida. Seu metadado de origem continua `-dirty`: não vincular um driver específico a esse binário sem prova adicional.
 
 As fontes `kboot.c`, `pmgr.c` e `smp.c` foram lidas diretamente do commit m1n1 fixado no build, sem execução. Reset de periférico PMGR e reset de núcleo secundário não devem ser tratados como reinício completo do aparelho. Essa inspeção é parcial; não encerra o critério de cadeia N71 da #21. [Fonte kboot](https://github.com/HoolockLinux/m1n1/blob/d5a10ac52a6468484854419a6c5130f1d62073eb/src/kboot.c), [PMGR](https://github.com/HoolockLinux/m1n1/blob/d5a10ac52a6468484854419a6c5130f1d62073eb/src/pmgr.c), [SMP](https://github.com/HoolockLinux/m1n1/blob/d5a10ac52a6468484854419a6c5130f1d62073eb/src/smp.c).
+
+Uma busca adicional no mesmo DTB identificou `/soc/watchdog@2102b0000`, compatibles `apple,s8000-wdt` e `apple,wdt`. O m1n1 fixado ajusta `cpu-release-addr`; o ajuste SMC de reboot lido é condicionado a outro compatible, `apple,t8015-smc-reboot`. No fork oficial do kernel, commit consultado `6831bc701a6ce059e71e5aaa9488c9195bea6927`, o driver `apple_wdt.c` corresponde a `apple,wdt`, fornece callback de restart e registra prioridade 128. Essa correspondência é uma hipótese para o caminho efetivo, não prova de driver compilado/carregado no APK preservado. [Driver consultado](https://github.com/HoolockLinux/linux/blob/6831bc701a6ce059e71e5aaa9488c9195bea6927/drivers/watchdog/apple_wdt.c).
+
+Próxima prova física: ler somente identidade/driver do watchdog em sysfs, logs pertinentes e DT efetivo; relacionar ao kernel selecionado. Não abrir `/dev/watchdog` nem escrever controles durante a investigação. O comando operacional usa o reboot de kernel já documentado, sem introduzir outro reset de hardware.
+
+## Prova remota e gate nativo parcial
+
+[CI da PR em acdb28b](https://github.com/djalmajr/iphone6s-linux/actions/runs/36800979276) e [CI do push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36800976716) passaram. Cada sistema executou 79 testes: 70 aprovados e nove skips explícitos de VM/artefatos privados. As 20 mutações de perfil e nove de reboot foram rejeitadas nos dois sistemas; guard, lint/sintaxe e ShellCheck Linux passaram. Logs privados preservados, sem publicar imagens/chaves.
+
+No Mac, com ProductType iOS confirmado, o CLI novo foi executado com o perfil privado correto e recusou a operação antes de SSH/backup/reboot: saída 1, gate de iOS pré-existente confirmado. Esse teste é nativo, mas comprova apenas a recusa segura. Nenhum reboot Linux pelo novo comando foi realizado nesta fase. #21 continua aberta para cadeia N71 e piloto físico completo; #12 conserva rollback Linux pendente. Goal ativo, sem merge ou nova instalação no Mac.

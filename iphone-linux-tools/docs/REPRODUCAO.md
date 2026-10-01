@@ -269,6 +269,14 @@ Nesta imagem, um `reboot` comum retornou saída 0, mas o Linux continuou exposto
 
 O telefone retornou ao iOS com 100%, `BatteryIsCharging=true` e `ExternalConnected=true` após aproximadamente 17 minutos, com uptime Linux anterior de 1019,88 s. Esses campos confirmam o estado observado naquele instante, mas não comprovam carga sustentada ou operação contínua de 24 horas.
 
+Para automatizar backup/verificação/sync/pedido de reboot e confirmar o resultado pelo USB, a partir da pasta `iphone-linux-tools`, mantendo o perfil do Linux atual:
+
+```bash
+python3 scripts/host/return_ios.py --wait 90
+```
+
+Encerre escritores e proxies próprios antes de executar. O comando exige snapshot íntegro, somente um iOS USB `iPhone8,1` e ausência do gadget Linux para relatar sucesso. Foi validado sinteticamente e em CI Ubuntu/macOS; no iOS real, o gate de recusa antes de agir passou. A transição Linux completa pelo novo comando ainda requer piloto coordenado. Consulte [REBOOT.md](REBOOT.md) para prazos, fallback físico, testes e limites da investigação N71.
+
 ## 12. Falhas e aprendizado reproduzível
 
 | Sintoma | Causa/ação comprovada |
