@@ -17,14 +17,21 @@ MUTATIONS = {
                'ActivationTests.test_frame_identity_and_groups_refused'),
     'frame-gid': ('dns_activation.py', ' or gid != expected.gid', '',
                   'ActivationTests.test_frame_identity_and_groups_refused'),
-    'socket-type': ('dns_activation.py',
-                    'listener.getsockopt(socket.SOL_SOCKET, socket.SO_TYPE) != kind', 'False',
+    'socket-policy': ('dns_activation.py',
+                    '''if (listener.family != socket.AF_INET
+                    or listener.getsockopt(socket.SOL_SOCKET, socket.SO_TYPE) != kind
+                    or listener.getsockname() != (expected.bind, expected.port)
+                    or (kind == socket.SOCK_STREAM
+                        and premature_tcp_state(listener))
+                    or bool(listener.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)) != (kind == socket.SOCK_STREAM)
+                    or listener.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)):''', 'if False:',
                     'ActivationTests.test_wrong_first_type_refused'),
     'socket-bind': ('dns_activation.py', 'listener.getsockname() != (expected.bind, expected.port)',
                     'False', 'ActivationTests.test_wrong_address_and_port_refused'),
     'tcp-state': ('dns_activation.py', 'and premature_tcp_state(listener)', 'and False',
                   'ActivationTests.test_listening_tcp_refused'),
-    'reuseaddr': ('dns_activation.py', 'listener.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)',
+    'reuseaddr': ('dns_activation.py',
+                  'bool(listener.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)) != (kind == socket.SOCK_STREAM)',
                   'False', 'ActivationTests.test_reuse_options_refused'),
     'reuseport': ('dns_activation.py', 'listener.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)',
                   'False', 'ActivationTests.test_reuse_options_refused'),
@@ -48,6 +55,9 @@ MUTATIONS = {
                      'ActivationTests.test_nonce_exact_length_and_eof'),
 }
 PRIVILEGED = {
+    'tcp-rebind': ('dns_privileged.py',
+                   'tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)', 'pass',
+                   'ActivationBootstrapTests.test_actual_root_bind_drop_handoff_data_and_cleanup'),
     'drop-groups': ('dns_privileged.py', 'os.setgroups([])', 'pass',
                     'ActivationBootstrapTests.test_actual_root_bind_drop_handoff_data_and_cleanup'),
     'drop-uid': ('dns_privileged.py', 'os.setuid(options.uid)', 'pass',

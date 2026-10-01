@@ -113,7 +113,7 @@ def receive_sockets(channel, expected):
                     or listener.getsockname() != (expected.bind, expected.port)
                     or (kind == socket.SOCK_STREAM
                         and premature_tcp_state(listener))
-                    or listener.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)
+                    or bool(listener.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)) != (kind == socket.SOCK_STREAM)
                     or listener.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)):
                 raise ValueError('Activated socket family/type/bind/state refused.')
             try:

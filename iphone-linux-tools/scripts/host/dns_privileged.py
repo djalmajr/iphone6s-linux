@@ -67,6 +67,7 @@ def bootstrap(options):
         udp = stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         udp.bind((bind, 53))
         tcp = stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+        tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         tcp.bind((bind, 53))
         os.setgroups([])
         os.setgid(options.gid)

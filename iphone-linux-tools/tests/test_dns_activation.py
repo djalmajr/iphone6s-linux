@@ -31,6 +31,7 @@ class ActivationTests(unittest.TestCase):
         self.udp = self.stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         self.udp.bind(('127.0.0.1', 0))
         self.tcp = self.stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+        self.tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.tcp.bind(self.udp.getsockname())
         self.expected = activation.Expected('127.0.0.1', os.getgid(), b'n' * 32,
                                             self.udp.getsockname()[1], os.getuid())
@@ -179,6 +180,8 @@ class ActivationTests(unittest.TestCase):
                 self.udp.setsockopt(socket.SOL_SOCKET, option, 1)
                 self.refuse()
                 self.udp.setsockopt(socket.SOL_SOCKET, option, 0)
+        self.tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
+        self.refuse()
 
     def test_open_sender_times_out_and_closes_received_fds(self):
         start = time.monotonic()
@@ -255,7 +258,8 @@ class ActivationBootstrapTests(unittest.TestCase):
                 with self.assertRaises(PermissionError):
                     sock.bind((self.bind, 53))
         code = ('import socket,sys; a=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); '
-                'b=socket.socket(); a.bind((sys.argv[1],53)); b.bind((sys.argv[1],53))')
+                'b=socket.socket(); b.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1); '
+                'a.bind((sys.argv[1],53)); b.bind((sys.argv[1],53))')
         result = subprocess.run(['/usr/bin/sudo', '-n', '--', '/usr/bin/python3', '-I', '-S',
                                  '-c', code, self.bind], capture_output=True, timeout=4)
         self.assertEqual(result.returncode, 0, 'Privileged sockets survived cleanup')
@@ -306,8 +310,36 @@ class ActivationBootstrapTests(unittest.TestCase):
                 self.assertIn(b'original sudo identity', result.stderr)
         self.assert_free()
 
+    def test_tcp_active_close_allows_next_bootstrap_without_reuseport(self):
+        with ExitStack() as stack:
+            udp, tcp = activation.acquire(self.bind)
+            stack.enter_context(udp)
+            stack.enter_context(tcp)
+            self.assertEqual(tcp.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR), 1)
+            self.assertEqual(tcp.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT), 0)
+            tcp.listen(1)
+            with socket.create_connection((self.bind, 53), timeout=1) as client:
+                with tcp.accept()[0] as connection:
+                    connection.shutdown(socket.SHUT_WR)
+                    self.assertEqual(client.recv(64), b'')
+                    client.shutdown(socket.SHUT_WR)
+                    self.assertEqual(connection.recv(64), b'')
+        rows = Path('/proc/net/tcp').read_text().splitlines()[1:]
+        self.assertTrue(any(int(row.split()[1].split(':')[1], 16) == 53
+                            and row.split()[3] == '06' for row in rows),
+                        'Fixture did not create TIME_WAIT at 53')
+        try:
+            sockets = activation.acquire(self.bind)
+        except (ValueError, OSError) as error:
+            self.fail('TIME_WAIT prevented the next bootstrap: ' + str(error))
+        for value in sockets:
+            value.close()
+        self.assert_free()
+
     def test_tcp_conflict_closes_first_udp_and_child(self):
-        code = ('import socket,sys; s=socket.socket(); s.bind((sys.argv[1],53)); '
+        code = ('import socket,sys; s=socket.socket(); '
+                's.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1); '
+                's.bind((sys.argv[1],53)); s.listen(1); '
                 'print("READY",flush=True); sys.stdin.buffer.read()')
         process = subprocess.Popen(['/usr/bin/sudo', '-n', '--', '/usr/bin/python3', '-I', '-S',
                                     '-c', code, self.bind], stdin=subprocess.PIPE,
