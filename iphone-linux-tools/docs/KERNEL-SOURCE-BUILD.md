@@ -23,15 +23,15 @@ Arquivos públicos previstos desta fase: este documento, `scripts/build/build-ke
 - **Por quê:** separa código/driver verificável do APK `-dirty` e evita depender de módulo NCM com ABI da versão anterior. A VM não expõe chaves do Mac/servidor ao build.
 - **Alternativas:** preservar somente o APK conserva a lacuna de fonte; usar a branch principal acrescenta uma versão RC; portar carga A10 não fornece binding/topologia comprovados para A9.
 - **Reverter:** baixo nesta fase; parar a VM e conservar os artefatos privados. Implantação atual não depende do resultado.
-- **Status:** compilação em curso na VM isolada; integração e gates físicos pendentes.
+- **Status:** kernel compilado, verificado e transferido; VM própria parada. Integração e gates físicos pendentes.
 
 ## Critérios de verificação
 
 - [x] Origem/recursos/mounts da VM e metadados APT registrados.
 - [x] Commit/árvore/versão/configuração final conferidos; sem config obrigatório silenciosamente removido.
-- [ ] Build com saída 0, Image ARM64/16 KiB e DTB N71 correspondentes; hashes dos resultados.
-- [ ] Receitas/parsing/ShellCheck e documentação verificados, branch publicada e issues atualizadas.
-- [ ] VM própria parada, originais preservados e artefatos privados.
+- [x] Build com saída 0, Image ARM64/16 KiB e DTB N71 correspondentes; configuração embutida igual e hashes dos resultados.
+- [x] Receitas/parsing/ShellCheck e documentação verificados, branch publicada e issues atualizadas.
+- [x] VM própria parada, originais preservados e artefatos privados.
 
 O build não comprova suporte de carregamento, Wi-Fi, storage, reinício ou boot autônomo. #2 requer carga líquida/telemetria específica ou medição qualificada; #8 conserva essa dependência. Nenhum novo experimento DFU será iniciado sem disponibilidade do operador.
 
@@ -39,9 +39,19 @@ O build não comprova suporte de carregamento, Wi-Fi, storage, reinício ou boot
 
 A VM dedicada usa Ubuntu 24.04.5 ARM64, imagem `1d6bffe64b848468ac97f821d369a4846d983de1800ccf6b5ec8853e85cefc55`, sem mounts. APT recusou pacotes não autenticados; quatro assinaturas InRelease foram verificadas por `gpgv`, e o keyring passou em `dpkg --verify`. Versões e logs foram preservados na VM. O fetch HTTPS fixado terminou com árvore limpa e versão 7.2.0 conferida.
 
-A primeira configuração foi recusada porque `BACKLIGHT_CLASS_DEVICE=m` limitou `BACKLIGHT_APPLE_DWI` a módulo. O fragmento agora exige ambos incorporados. A segunda tentativa, em outro diretório, preservou a primeira e conferiu as 47 opções obrigatórias antes de iniciar o build com dois jobs. Sintaxe Bash, ShellCheck e recusa real de execução no macOS passaram. Ainda não há resultado final de compilação nem prova de boot físico desta candidata.
+A primeira configuração foi recusada porque `BACKLIGHT_CLASS_DEVICE=m` limitou `BACKLIGHT_APPLE_DWI` a módulo. O fragmento agora exige ambos incorporados. A segunda tentativa, em outro diretório, preservou a primeira e conferiu as 47 opções obrigatórias antes de iniciar o build com dois jobs. Sintaxe Bash, ShellCheck e recusa real de execução no macOS passaram. O build terminou com saída 0; integração e boot físico desta candidata continuam pendentes.
 
-[Checkpoint sanitizado](evidence/kernel-source-build.json): fonte, imagem da VM, dependências, hashes dos inputs/configuração e gates já observados. O campo `status=compiling`, a saída de build nula e os outputs vazios registram que o resultado final continua pendente. Integração, boot físico e a parada da VM não são declarados concluídos.
+[Registro sanitizado](evidence/kernel-source-build.json): fonte, imagem da VM, dependências, hashes dos inputs/configuração, resultados e limites. O checkpoint original de 3ee2692 registrava `status=compiling`; o resultado final registra `compiled_verified`, saída 0, outputs com hashes e VM parada. Integração e boot físico não são declarados concluídos.
+
+[CI da PR em 3ee2692](https://github.com/djalmajr/iphone6s-linux/actions/runs/36806363771) e [CI do push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36806359794) concluíram com sucesso. Ubuntu/macOS executaram 79 testes cada: 70 aprovados e nove skips explícitos de VM/artefatos privados; 20 mutações de perfil e nove de retorno foram rejeitadas nos dois sistemas. Guard público, lint/parsing e sintaxe passaram; ShellCheck passou no Linux. Não há typechecker configurado. Esses gates conferem as fontes públicas e contratos sintéticos; não compilam este kernel nem comprovam hardware.
+
+## Resultado real do build
+
+`KERNEL_BUILD_VERIFIED 7.2.0-iphone6s-source`, saída 0. O log de compilação cobre 2242 segundos (37 min 22 s); esse intervalo exclui preparação, compressão final e transferências. `Image` tem 52.070.912 bytes, ARM64/16 KiB conferidos pelo header; gzip corresponde exatamente à imagem descomprimida. `Image.gz` tem 15.659.651 bytes. O DTB tem 22.884 bytes e compatibles `apple,n71 apple,s8000 apple,arm-platform`; seu SHA-256 é idêntico ao DTB preservado, sem atribuir por isso uma origem exata ao kernel 7.0.12.
+
+O extrator da fonte fixada recuperou a configuração da imagem; `cmp` e SHA-256 conferiram igualdade com a configuração usada no build. `vmlinux` contém os símbolos `apple_wdt_driver`, `apple_wdt_of_match` e `apple_wdt_restart`. Isso liga o driver à nova candidata compilada, sem provar binding ou reinício físico no A9. A árvore rastreada da fonte permaneceu limpa após o build.
+
+Artefatos/logs foram transferidos para `runtime/kernel-source-build-20261001/` e seus hashes recalculados no Mac. O inventário inicial da VM já existia nessa pasta; foi preservado. A primeira transferência de logs recusou a subpasta ausente, criada com modo privado antes de repetir somente essa cópia. Diretórios 700, arquivos privados 600; verificador de cópias e relatórios locais preservados. Payloads conhecido e da candidata anterior mantiveram seus hashes. DNS temporário revertido e somente `iphone6s-kernel-20261001` parada. Nenhum kernel foi instalado ou enviado ao iPhone nesta fase.
 
 ## Receita de reprodução
 
@@ -105,4 +115,17 @@ multipass exec iphone6s-kernel-20261001 -- bash \
 
 O diretório de build deve ser novo. O script conserva uma tentativa anterior e recusa diretório dentro da fonte, commit diferente, árvore rastreada modificada, usuário root, sistema/arquitetura incompatíveis ou opções Kconfig demovidas. `KERNEL_BUILD_VERIFIED` exige build bem-sucedido, magic/header ARM64 com páginas de 16 KiB e compatible N71 no DTB. Não use ausência de mensagem de erro como substituto desse gate. Nenhum comando de instalação é executado.
 
-Depois de saída 0, copie `Image`, `Image.gz`, `s8000-n71.dtb`, `config`, `provenance.json` e os logs para uma pasta nova em `iphone-linux-tools/runtime/`, com modos privados. Recalcule os hashes após a transferência. Confira o DNS DHCP e pare somente a VM própria com `multipass stop iphone6s-kernel-20261001`. A integração do kernel e o teste no iPhone seguem uma fase própria; mantenha os payloads conhecidos e snapshots preservados.
+Depois de saída 0, confira também a configuração embutida usando o extrator da mesma fonte fixada. Execute no shell da VM, antes de transferir:
+
+```bash
+set -euo pipefail
+umask 077
+kernel_guest_source=/home/ubuntu/kernel-n71-source-20261001
+kernel_guest_build=/home/ubuntu/kernel-n71-build-20261001-v2
+sh "$kernel_guest_source/scripts/extract-ikconfig" "$kernel_guest_build/artifacts/Image" \
+  > "$kernel_guest_build/artifacts/config-embedded"
+cmp "$kernel_guest_build/artifacts/config" "$kernel_guest_build/artifacts/config-embedded"
+sha256sum "$kernel_guest_build/artifacts/config-embedded"
+```
+
+Copie `Image`, `Image.gz`, `s8000-n71.dtb`, `config`, `config-embedded`, `provenance.json` e os logs para uma pasta nova em `iphone-linux-tools/runtime/`, com modos privados. Recalcule os hashes após a transferência. Confira o DNS DHCP e pare somente a VM própria com `multipass stop iphone6s-kernel-20261001`. A integração do kernel e o teste no iPhone seguem uma fase própria; mantenha os payloads conhecidos e snapshots preservados.

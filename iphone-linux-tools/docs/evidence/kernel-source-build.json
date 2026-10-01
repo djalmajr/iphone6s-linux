@@ -1,14 +1,15 @@
 {
   "format": 1,
-  "observed_at_utc": "2026-10-01T02:30:35.453425+00:00",
-  "status": "compiling",
+  "observed_at_utc": "2026-10-01T03:06:41.013481+00:00",
+  "status": "compiled_verified",
   "source": {
     "url": "https://github.com/HoolockLinux/linux.git",
     "branch_observed": "hoolock-stable",
     "commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
     "version_declared": "7.2.0",
     "tracked_tree_clean_before_build": true,
-    "https_certificate_verified": true
+    "https_certificate_verified": true,
+    "tracked_tree_clean_after_build": true
   },
   "vm": {
     "distribution": "Ubuntu 24.04.5 ARM64",
@@ -18,7 +19,7 @@
     "disk_request": "20G",
     "host_mounts": [],
     "guest_dns_override_reverted": true,
-    "stopped": false
+    "stopped": true
   },
   "dependencies": {
     "format": 1,
@@ -61,14 +62,49 @@
     "ikconfig_proc": true,
     "backlight": "builtin",
     "first_attempt": "refused before compile: parent backlight class was modular",
-    "corrected_attempt": "all required values verified"
+    "corrected_attempt": "all required values verified",
+    "embedded_matches_build_config": true
   },
   "build": {
     "jobs": 2,
-    "exit_code": null,
-    "outputs": {},
+    "exit_code": 0,
+    "outputs": {
+      "s8000-n71.dtb": {
+        "sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58",
+        "bytes": 22884
+      },
+      "config": {
+        "sha256": "ae1348cdd46bb94eb9e3725b6089a2ecddae5b4dfa423164b4d4f085a8707d2c",
+        "bytes": 321747
+      },
+      "Image.gz": {
+        "sha256": "d689ac083156b6d98344524f30c4ce09a0fd36d128654b6600f22264f19f7204",
+        "bytes": 15659651
+      },
+      "Image": {
+        "sha256": "065d539414dfcbcfba0caccf747c37d798d3989de2b1beceb056125bdcb06044",
+        "bytes": 52070912
+      },
+      "config-embedded": {
+        "sha256": "ae1348cdd46bb94eb9e3725b6089a2ecddae5b4dfa423164b4d4f085a8707d2c",
+        "bytes": 321747
+      }
+    },
     "installed": false,
-    "physical_boot_tested": false
+    "physical_boot_tested": false,
+    "kernel_release": "7.2.0-iphone6s-source",
+    "source_epoch": 1787064859,
+    "build_log_duration_seconds": 2242,
+    "image_header_arm64_16k_verified": true,
+    "gzip_matches_uncompressed_image": true,
+    "dtb_compatible": "apple,n71 apple,s8000 apple,arm-platform",
+    "dtb_byte_identical_to_preserved_input": true,
+    "post_transfer_hashes_verified": true,
+    "watchdog_symbols_linked": [
+      "apple_wdt_driver",
+      "apple_wdt_of_match",
+      "apple_wdt_restart"
+    ]
   },
   "checks": {
     "bash_syntax": "passed",
@@ -76,13 +112,25 @@
     "embedded_python_ast": "passed",
     "documented_bash_syntax": "passed",
     "native_macos_context_guard": "refused as required",
-    "configured_typechecker": false
+    "configured_typechecker": false,
+    "checkpoint_ci": {
+      "commit": "3ee2692",
+      "pr_run": 36806363771,
+      "push_run": 36806359794,
+      "conclusion": "success",
+      "tests_per_system": 79,
+      "passed_per_system": 70,
+      "skipped_per_system": 9,
+      "profile_mutations_killed_per_system": 20,
+      "return_mutations_killed_per_system": 9
+    }
   },
   "limits": [
     "Not a byte-for-byte rebuild of the 7.0.12 APK",
-    "Build result and output header/DTB validation pending",
     "Initramfs integration and physical boot pending",
-    "Power, reboot, Wi-Fi, NAND and autonomous boot not proven",
-    "Original phone payloads, keys and snapshots preserved"
+    "Linked watchdog symbols do not prove physical binding or reboot",
+    "Power, Wi-Fi, NAND and autonomous boot not proven",
+    "Original phone payloads, keys and snapshots preserved",
+    "Pongo provenance gap remains separate"
   ]
 }
