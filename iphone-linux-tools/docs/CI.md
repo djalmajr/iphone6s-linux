@@ -12,7 +12,7 @@ Fase de cinco arquivos: `.github/workflows/ci.yml`, `iphone-linux-tools/scripts/
 - [x] Provar aceitação de fontes públicas, recusa de diretórios privados rastreados à força e chave privada staged mesmo se o arquivo de trabalho já tiver sido limpo; executar mutações.
 - [x] CI Ubuntu 24.04/macOS 15, Python 3.12, testes stdlib/sintaxe/lint. Somente runner Linux para ShellCheck; ausência da ferramenta é falha, sem instalação no Mac.
 - [x] Actions oficiais presas por SHA, token contents:read e checkout sem credenciais persistidas; pacotes de lint fixados e conferidos por hash, apenas no runner.
-- [ ] Validar localmente, publicar na branch autorizada, observar execução Actions, corrigir falhas concretas e atualizar #14. Nenhum merge em main.
+- [x] Validar localmente, publicar na branch autorizada, observar execução Actions, corrigir falhas concretas e atualizar #14. Nenhum merge em main.
 
 ## D1. Clone público e índice Git como fronteira
 
@@ -20,7 +20,7 @@ Fase de cinco arquivos: `.github/workflows/ci.yml`, `iphone-linux-tools/scripts/
 - **Por quê:** reproduz o que será publicado e impede que limpar somente o working tree esconda conteúdo privado já staged.
 - **Alternativas:** ler somente o working tree ignora blobs staged; copiar imagens reais expõe identidades e depende do telefone; runner no Mac do operador amplia acesso desnecessário.
 - **Reverter:** baixo; alterar/remover o workflow na branch. Sem serviços locais ou configuração global.
-- **Status:** aplicada e verificada localmente; execução remota ainda pendente.
+- **Status:** aplicada e comprovada localmente e em Actions Ubuntu/macOS.
 
 ## Limites e verificação
 
@@ -58,3 +58,12 @@ Suíte completa final em cópia pública com Python 3.12.6: **62 testes, 53 apro
 Arquivos desta correção: `phone/dns/manage-dns.sh` e este documento. CI remota da PR em 82c6981 aprovou guard, wheels autenticados, lint/sintaxe, suíte e 20 mutações em ambos os sistemas; somente ShellCheck Ubuntu recusou duas expressões `A && B || C` (SC2015). A versão local 0.11.0 não emitia essas duas mensagens.
 
 Reescrever as recusas de executável/hosts como `if` explícitos, conservando os mesmos predicados e mensagens. Não desabilitar a regra, instalar nada no Mac ou alterar bind, identidade de processo, permissões, recursão ou PID. Verificação: ShellCheck e `sh -n` locais; nova execução remota no runner que revelou a falha. A cópia do launcher no snapshot físico anterior continua sendo a versão antiga funcional; esta correção de fonte não foi transferida ao telefone.
+
+## Fechamento da #14
+
+- **Arquivos/plano:** fase inicial de cinco arquivos e correção de dois concluídas; checklist atendido. Guard, workflow, linters fixados e documentação versionados. Sem mudança do escopo de snapshots ou exposição de chaves reais.
+- **Prova remota:** [run da PR em 1fe05bb](https://github.com/djalmajr/iphone6s-linux/actions/runs/36796135158) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36796130472) verdes. Em cada sistema: 62 testes, 53 aprovados/9 skips explícitos e 20/20 mutações de perfil rejeitadas. Ubuntu passou ShellCheck após correção SC2015.
+- **Verificações locais:** 3 testes e 3 mutações do guard, suíte pública Python 3.12.6, lint fatal, Pyflakes dos novos arquivos, ShellCheck/sintaxe e YAML passaram. Gates anteriores não alterados reutilizados; a CI remota repetiu a suíte sem inputs privados. Não há typechecker configurado.
+- **Dependências/banco:** sem banco, instalação no Mac ou mudança de serviços globais. Pacotes de lint somente nos runners, wheels fixados por hash; Actions oficiais fixadas por SHA. Fonte DNS recebeu apenas dois `if` equivalentes; a cópia do snapshot físico não foi substituída.
+- **Desempenho/limites:** dois jobs efêmeros, sem efeito nos recursos do iPhone. CI não comprova VM privilegiada, boot físico, DNS após reboot, carga sustentada ou retorno automático ao iOS. O guard não é detector universal de segredos nem auditoria de commits antigos.
+- **Próximos passos:** #7 restore DNS após novo boot, #12 rollback/proveniência e #21 retorno ao iOS. #16 segue sem autorização de merge. Goal continua ativo.

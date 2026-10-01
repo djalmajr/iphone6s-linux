@@ -17,7 +17,7 @@ O Linux atual roda em RAM, com console, SSH, HTTP e Herdr. A sequência abaixo s
 - [ ] #7: DNS local, começando pelo USB, com configuração restaurável.
 - [ ] #8: estabilidade monitorada prolongada, após alimentação validada.
 - [ ] #12: proveniência e build independente, com atualização/rollback.
-- [ ] #14: CI para testes e privacidade sem dependência do aparelho.
+- [x] #14: CI para testes e privacidade sem dependência do aparelho. Ubuntu/macOS verdes; [CI.md](CI.md).
 - [ ] #16: revisão e documentação da PR; merge exige autorização explícita.
 - [ ] #13: Herdr idempotente no boot e reconexão.
 - [ ] #9: pesquisa de Wi-Fi específica N71/A9.
@@ -92,3 +92,7 @@ Boot da imagem reconstruída em VM nova passou no iPhone com perfil privado, sa�
 Snapshot final privado íntegro (41 entradas); DNS e proxies próprios encerrados; reboot solicitado após 1128,59 s. Redetecção iOS/bateria, restore DNS em novo boot e rollback Linux conhecido ainda pendentes. #7/#12 continuam abertas; #2/#8 não foram resolvidas por este piloto. Goal permanece ativo. Procedimentos/evidência: [PROFILES.md](PROFILES.md), [DNS.md](DNS.md), [dns-physical-check.json](evidence/dns-physical-check.json).
 
 Correção do retorno: `reboot` normal retornou 0 sem reiniciar PID 1; o usuário ainda via console e SSH confirmou uptime contínuo. Às 00:24:02 UTC, uptime 2327,83 s, reboot direto do BusyBox após sync derrubou Linux/USB, mas não houve iOS detectado. Fallback físico foi solicitado; #21 registra diagnóstico, verificação real e procedimento de recuperação. Não considerar a primeira solicitação de reboot um retorno concluído.
+
+## CI concluída — #14
+
+Workflow sem telefone/identidades reais passou em Actions Ubuntu 24.04 e macOS 15: 53 testes aprovados, nove skips explícitos e 20/20 mutações de perfil por sistema. Guard de índice aprovado com três testes e três mutações locais; fonte pública, sintaxe, lint e ShellCheck verificados. Dois predicados DNS foram reescritos com `if` para compatibilidade SC2015; runtime do snapshot físico preservado. Sem pacote instalado no Mac ou merge. [CI.md](CI.md) registra origem, hashes, falhas iniciais corrigidas, reprodução e limites.
