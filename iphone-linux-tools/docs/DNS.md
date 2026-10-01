@@ -4,6 +4,8 @@
 
 #6 concluiu SSH/HTTP pela LAN, mas os forwards OpenSSH transportam TCP; DNS também precisa de UDP. O telefone continua sem saída geral para internet. O próximo serviço atenderá nomes locais; não mudará automaticamente o DNS do Mac, Windows, Android ou roteador. O primeiro piloto físico passou por USB e LAN com sockets diretos do Windows. Recuperação DNS em outro boot foi comprovada; compatibilidade do nslookup segue pendente; os testes físicos continuam curtos.
 
+**Estado atual:** #7 encerrada em 2026-10-01 após os dois boots, restore, consultas UDP/TCP e limpeza dos processos próprios. [Evidência física](evidence/dns-physical-check.json). Porta 53/configuração dos clientes (#19), nslookup (#20), alimentação (#2) e estabilidade (#8) permanecem pendentes. As seções de implementação e pilotos abaixo conservam os checkpoints históricos; frases como “ainda pendente” descrevem aquela rodada, não um servidor ativo ou uma reabertura da #7.
+
 ## Decisões
 
 ### D1. dnsmasq do Ubuntu, inicialmente sem recursão externa
@@ -55,7 +57,7 @@ Cada fase terá no máximo cinco arquivos e será verificada antes da seguinte.
 - [x] Implementar transferência/launcher e recuperação de configuração pelo snapshot existente; prova isolada na VM, ainda sem novo boot físico.
 - [x] Implementar proxy LAN com allowlist e gates/mutações; prova isolada com servidor e SSH reais.
 - [x] Validar consultas físicas USB/LAN e recuperação em novo boot.
-- [ ] Limpar fixtures, salvar evidência sanitizada, atualizar issues e versionar sem dados pessoais.
+- [x] Limpar fixtures/processos próprios, salvar evidência sanitizada, atualizar issues e versionar sem dados pessoais; snapshot verificado e retorno ao iOS confirmado após o segundo boot.
 
 ## Verificação
 

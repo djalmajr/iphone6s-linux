@@ -4,7 +4,7 @@ Goal autorizado em 2026-09-29. Fonte de trabalho: [issue #17](https://github.com
 
 ## Contexto e arquivos
 
-O Linux atual roda em RAM, com console, SSH, HTTP e Herdr. A sequência abaixo segue a ordem já aprovada. Scripts, testes e documentos ficam em `iphone-linux-tools/`; snapshots e identidades continuam privados. Estado inicial: branch `feat/display-console`, sem alterações locais.
+O Linux foi validado em RAM, com console, SSH, HTTP e Herdr; isso não indica uma sessão ativa agora. A sequência abaixo segue a ordem já aprovada. Scripts, testes e documentos ficam em `iphone-linux-tools/`; snapshots e identidades continuam privados. Estado inicial: branch `feat/display-console`, sem alterações locais.
 
 ## Tarefas e verificação
 
@@ -14,7 +14,7 @@ O Linux atual roda em RAM, com console, SSH, HTTP e Herdr. A sequência abaixo s
 - [x] #15: recuperação de restauração interrompida/falta de espaço. Journal privado, publicação antecipada do ID anterior, lista de pendências e overlay manual verificados em dois cenários reais na VM Ubuntu ARM64.
 - [x] #5: snapshots automáticos e retenção, sem perder o último íntegro. Concluída com testes locais, VM, mutações negativas e prova física curta; evidência em `docs/evidence/autosnapshot-check.txt`.
 - [x] #6: acesso SSH/HTTP pela LAN via Mac, com teste Windows independente, novo boot com loopback e reversão. Saída genérica de internet permanece separada e desabilitada; [REDE.md](REDE.md).
-- [ ] #7: DNS local, começando pelo USB, com configuração restaurável.
+- [x] #7: DNS local UDP/TCP pelo USB e proxy LAN, com clientes Mac/Windows e configuração recuperada em segundo boot. Daemon/proxies próprios encerrados, snapshot verificado e retorno ao iOS confirmado; [prova física](evidence/dns-physical-check.json). Porta padrão/configuração dos clientes e nslookup seguem nas #19/#20.
 - [ ] #8: estabilidade monitorada prolongada, após alimentação validada.
 - [ ] #12: proveniência e build independente, com atualização/rollback.
 - [x] #14: CI para testes e privacidade sem dependência do aparelho. Ubuntu/macOS verdes; [CI.md](CI.md).
@@ -54,6 +54,10 @@ O Linux atual roda em RAM, com console, SSH, HTTP e Herdr. A sequência abaixo s
 - **Prova:** novo DFU com saída 0, console e HTTP 200; dois autos com intervalo de 5 s, `keep 12` e timeout 60 passaram com arquivos 600, nove entradas e identidade SSH excluída; o guard em Linux ativo recusou com saída 1 e preservou a sentinela. Foram aprovados 30/33 testes locais (3 skips por exigirem VM), reruns estreitos de retenção 8/8 e scheduler 6/6, 7/7 cenários VM de scheduler/BusyBox e duas falhas de restore revalidadas sob lock, e 15/15 mutações em cópias descartáveis. Não é prova de 24 horas ou carga sustentada.
 - **Onde:** [AUTOSNAPSHOTS.md](AUTOSNAPSHOTS.md), `docs/PERSISTENCIA.md` e evidência sanitizada `docs/evidence/autosnapshot-check.txt`.
 - **Status:** concluída; #2 e #8 continuam abertas.
+
+## Histórico das etapas
+
+Os checkpoints abaixo conservam o estado observado e os próximos passos de cada rodada. Referências a builds em execução, sessões ativas ou issues abertas são históricas; o checklist acima e [STATUS.md](STATUS.md) resumem o estado atual. A cadeia compilada de kernel/Pongo e seu rollback físico permanecem sem validação no aparelho.
 
 ## Checkpoint — 2026-09-30
 
