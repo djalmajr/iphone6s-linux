@@ -243,9 +243,19 @@ Contexto: `logs` symlink desviou chmod e publicação; o leitor também segue li
 
 - [x] Recusar diretório/arquivo symlink, hardlink, tipo especial e propriedade incompatível sem alterar alvos nem iniciar job.
 - [x] Preservar estado inicial, CLI normal, estado anterior em falha, publicação 600/700 e cleanup.
-- [ ] Executar regressões/mutações, lint e CI Ubuntu/macOS; registrar resultados e limites.
-- [ ] Atualizar documentação/evidência e #26/#16/#17 em fase documental posterior.
+- [x] Executar regressões/mutações, lint e CI Ubuntu/macOS; registrar resultados e limites.
+- [x] Atualizar documentação/evidência e #26/#16/#17 em fase documental posterior.
 
 Decisão: manter um helper de caminho local no agendador, apoiado no guard compartilhado; não resolver symlinks nem apagar/corrigir estruturas inválidas. Não alterar snapshots/chaves reais ou dependências; sem proteção contra concorrência do mesmo usuário, serialização nova de jobs ou boot no aparelho. O piloto continua aguardando USB detectado; a CI documental anterior permanece em acompanhamento.
 
-Verificação local #26: dez regressões novas aprovadas e 11/11 mutações detectadas; suíte integral 153 cenários, 145 aprovados e oito skips. Flake8 fatal/diff-check aprovados; sem typechecker configurado. A primeira chamada de lint usou paths da raiz com cwd interno e abortou antes de iniciar testes; paths corrigidos, lint e suíte concluíram. Nenhum pacote, VM, dado real ou ação no aparelho. CI documental de `51ade43` terminal verde, PR 36839163526/push 36839155235. CI da correção ainda precisa ser executada.
+Verificação local #26: dez regressões novas aprovadas e 11/11 mutações detectadas; suíte integral 153 cenários, 145 aprovados e oito skips. Flake8 fatal/diff-check aprovados; sem typechecker configurado. A primeira chamada de lint usou paths da raiz com cwd interno e abortou antes de iniciar testes; paths corrigidos, lint e suíte concluíram. Nenhum pacote, VM, dado real ou ação no aparelho. CI documental de `51ade43` terminal verde, PR 36839163526/push 36839155235. Esse parágrafo registra o checkpoint antes da CI; resultado final abaixo.
+
+## Encerramento da correção — #26
+
+Fonte: plano acima e issue #26, correção dentro da revisão #16; goal geral ativo. Código `d5f2af1`. Fase documental de cinco arquivos: este relatório, AUTOSNAPSHOTS, STATUS, evidência e inventário. Mudança observável: estado/diretório com links ou metadata inválida aborta antes do job; estado normal permanece compatível e privado. Dez regressões, 11 mutações e suíte local 153 cenários (145 aprovados/oito skips); lint/diff aprovados, sem typechecker. CI terminal verde: [PR 36840191241](https://github.com/djalmajr/iphone6s-linux/actions/runs/36840191241) e [push 36840185496](https://github.com/djalmajr/iphone6s-linux/actions/runs/36840185496). Os quatro jobs Ubuntu/macOS executaram 153 cenários, 144 aprovados/nove skips e 11/11 mutações novas detectadas; logs conferidos. Guard, lint, sintaxe e ShellCheck Linux aprovados. [Evidência sanitizada](evidence/autosnap-state-paths.json).
+
+Nenhum pacote, VM, banco, imagem real, snapshot real ou configuração global alterado. Acrescenta consultas de metadata locais; sem benchmark no telefone. Não serializa escritores do estado nem impede alterações concorrentes do mesmo usuário. Cleanup dos fixtures/mutações é automático; logs próprios ficam privados para análise. Escopo documental ampliado somente pelo inventário de leitura da revisão #16; nenhum comportamento adicional fora dos critérios de #26.
+
+Inventário até o commit do código: 75 leituras completas/156 entradas. Os 14 arquivos removidos do baseline foram lidos integralmente; seus substitutos estão nas pastas atuais de scripts, phone, docs e evidência. Cinco movimentos de fonte/prova permaneceram idênticos; monitor substitui o guia visual removido a pedido do operador, demais fontes/resumos tiveram ajustes já rastreados. Essa leitura conclui a pendência das remoções, sem declarar revisão integral das fontes/evidências atuais ou autorizar merge. [Inventário por blob](evidence/pr-review-coverage.json).
+
+Plano da correção atendido; #16 permanece parcial e os gates nativos #2/#8/#12/#13/#21 continuam abertos. Próximo passo: continuar revisão das fontes/evidências atuais enquanto o aparelho não enumera; assim que o USB e o operador estiverem disponíveis, realizar piloto curto da candidata e retorno/rollback. Sem merge/tag/release.

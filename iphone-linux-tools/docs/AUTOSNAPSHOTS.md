@@ -111,3 +111,13 @@ Fonte: este plano, critérios da issue #5 e revisão independente. Três fases c
 Um snapshot manual final foi salvo antes de retornar ao iOS. `reboot` comum retornou 0 sem concluir o reboot neste init mínimo. Pelo Bash acessado no Mac, `sync; reboot -f` efetivamente mudou a enumeração USB para iPhone; o cliente pode perder conexão, e essa perda isolada não comprova iOS. Veja o procedimento em [REPRODUCAO.md](REPRODUCAO.md). Após uptime Linux de 1019,88 s, iOS indicou 100%, carregando e energia externa. O teto de 100% e a preparação/reinício impedem concluir carga líquida sustentada. #2 e #8 permanecem abertas.
 
 #5 atende seus critérios. O goal permanece ativo; próximo item #6, conectividade pela LAN. A branch continua candidata na PR #1, sem merge autorizado.
+
+## Estado local protegido — #26
+
+`logs` e `autosnap-last.json` precisam ser diretório/arquivo reais, próprios e sem permissões especiais; estado não pode ser symlink, hardlink ou tipo especial. A verificação ocorre antes da leitura e do job, e novamente antes de publicar. Caminho inválido aborta; o agendador não segue o link para corrigir modos nem inicia captura. `status` em árvore ainda sem logs retorna estado inicial, sem criar arquivos. Escrita regular mantém logs 700 e estado 600, temporary privado/rename e cleanup; falha de rename conserva o estado anterior.
+
+Se a verificação recusar a árvore, inspecione a estrutura local e preserve o erro antes de repetir. Não apague snapshots, links ou alvos para contornar a recusa automaticamente. Esta proteção não serializa escritores concorrentes do estado nem impede alterações concorrentes do mesmo usuário. O estado continua sendo o registro do último job, sem provar que o watcher está ativo.
+
+Reprodução sem telefone, chaves ou rede: `python3 -m unittest discover -s iphone-linux-tools/tests -p test_autosnap_paths.py -v` e `python3 iphone-linux-tools/tests/run_autosnap_path_mutations.py`, na raiz do clone. Dez regressões de filesystem/CLI e 11/11 mutações passaram; suíte local 153 testes, 145 aprovados/oito skips. Flake8 fatal passou; sem typechecker configurado. [Evidência e CI por commit](evidence/autosnap-state-paths.json). Nenhuma nova prova de boot, alimentação ou recuperação no aparelho nesta correção.
+
+CI da correção `d5f2af1` verde nas duas plataformas, PR 36840191241/push 36840185496: quatro jobs com 153 testes (144 aprovados/nove skips) e 11/11 mutações cada. O nono skip do clone público exige artefatos privados; nenhuma prova física nova.
