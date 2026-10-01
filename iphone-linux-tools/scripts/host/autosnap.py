@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import snapshot_lock
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -22,19 +23,39 @@ def positive(value):
     return number
 
 
+def status_path(create=False):
+    snapshot_lock.check_local_path(ROOT, directory=True)
+    directory = ROOT / 'logs'
+    try:
+        snapshot_lock.check_local_path(directory, directory=True)
+    except FileNotFoundError:
+        if not create:
+            return directory / 'autosnap-last.json'
+        directory.mkdir(mode=0o700)
+        snapshot_lock.check_local_path(directory, directory=True)
+    path = directory / 'autosnap-last.json'
+    try:
+        snapshot_lock.check_local_path(path)
+    except FileNotFoundError:
+        pass
+    return path
+
+
 def read_status():
-    path = ROOT / 'logs/autosnap-last.json'
-    if not path.exists():
+    path = status_path()
+    try:
+        content = path.read_text()
+    except FileNotFoundError:
         return {'format': 1, 'last_success': None}
-    state = json.loads(path.read_text())
+    state = json.loads(content)
     if not isinstance(state, dict) or state.get('format') != 1:
         raise ValueError('Estado do agendador inválido; inspecione logs/autosnap-last.json.')
     return state
 
 
 def write_status(state):
-    directory = ROOT / 'logs'
-    directory.mkdir(mode=0o700, exist_ok=True)
+    path = status_path(create=True)
+    directory = path.parent
     directory.chmod(0o700)
     descriptor, name = tempfile.mkstemp(prefix='.autosnap-', dir=directory)
     temporary = Path(name)
@@ -44,7 +65,8 @@ def write_status(state):
             file.write('\n')
             file.flush()
             os.fsync(file.fileno())
-        temporary.replace(directory / 'autosnap-last.json')
+        status_path()
+        temporary.replace(path)
     finally:
         temporary.unlink(missing_ok=True)
 
