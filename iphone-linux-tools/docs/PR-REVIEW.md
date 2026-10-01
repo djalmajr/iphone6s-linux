@@ -144,3 +144,27 @@ Fonte: decisão D3 e issue #24. Código/CI em `d9110cd`; até cinco arquivos nes
 **Compatibilidade:** bundles normais e seleção explícita continuam funcionando; entradas malformadas, duplicadas ou com caminhos passam a abortar. **Limites:** validação de namespace não autentica todo manifesto, não impõe limites completos de descompressão e não torna a instalação transacional. Nenhum boot no aparelho nesta correção. [Evidência](evidence/dns-bundle-scope.json). #16 continua parcial, #12/#21 requerem piloto físico da nova cadeia, #2/#8 conservam seus gates físicos.
 
 CI do código aprovado: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/36828530652) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36828523923), com Flake8 fatal, sintaxe, guard público e ShellCheck Linux aprovados. Inventário atualizado: 34 leituras completas em 142 entradas do baseline até `d9110cd`; continua parcial, sem aprovação integral ou merge. O estado em curso na decisão D3 registra o checkpoint anterior; esta seção e o JSON contêm a conclusão dos gates.
+
+## D4. Mapear o caminho Wi-Fi da candidata N71 — #9
+
+- **Decisão:** comparar fonte fixada, DTB/configuração/initramfs selecionados e demonstrações específicas por SoC; manter USB e separar identificação provável do chip de enumeração real. Não portar reguladores/endereços A10 nem adicionar firmware sem dados N71.
+- **Por quê:** a candidata não contém um caminho Wi-Fi operacional: DTB sem nó de barramento/rádio correspondente, driver host sem entrada S8000 comprovada, transporte PCIe brcmfmac desligado e módulos ausentes. Habilitar uma opção ou copiar firmware não estabelece a topologia.
+- **Alternativas:** testar o fork A10 às cegas pode programar controladores incompatíveis; aguardar somente USB não avança os requisitos que já podem ser examinados por leitura.
+- **Reverter:** baixo; investigação documental sem trocar imagem/configuração ou executar código externo.
+- **Onde:** até quatro arquivos públicos, este plano/relatório, WIFI, STATUS e evidência sanitizada. Ler fontes nos commits exatos, conferir insumos locais por hash/estrutura e registrar critérios pendentes em #9/#17. Nenhuma instalação, VM ou ação no telefone nesta fase.
+- **Status:** fontes baixadas como texto; inspeção local concluída; documentação/publicação em curso. A issue #9 permanece aberta para identificação da placa, energia/reset/DMA e enumeração/associação nativas.
+
+## Relatório da investigação Wi-Fi — #9
+
+Quatro arquivos documentais nesta fase: plano/relatório, WIFI, STATUS e evidência. Fonte estável/DTB/configuração/initramfs fixados por SHA; tabelas de driver e matriz A10 consultadas por commit. Inspeção de estrutura local sem executar binários externos ou revelar identidades: 136 nós DTB, 2.969 entradas newc, zero módulos; pasta `lib/modules` apenas. Configuração e topologia impedem tratar a candidata como Wi-Fi pronta.
+
+| Verificação | Resultado |
+|---|---|
+| Fontes/insumos | Doze textos públicos por commit/blob/hash; três artefatos locais por hash e leitura estruturada |
+| Hardware | Nenhuma enumeração nova, associação/DHCP ou firmware enviado; #9 permanece aberta |
+| Testes/lint/tipos | Código operacional inalterado; evidência CI anterior reutilizável. JSON, hashes, diff e guard público verificáveis nesta fase; nenhum type checker configurado |
+| Banco/dependências | Nenhum banco, pacote, firmware, VM ou configuração do Mac alterado |
+| Desempenho/compatibilidade | Nenhum impacto operacional ou substituição de imagem; resultado documental não mede throughput |
+| Próximos passos | Boot selecionado, inventário read-only, identificação privada de placa/radio/DMA antes de desenhar o port N71 |
+
+CI da publicação documental #24 também terminou verde: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/36829031688) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36829026720), quatro jobs Ubuntu/macOS. A investigação não fecha gates de #2/#8/#12/#21, não autoriza parâmetros A10 e não constitui revisão integral #16 ou merge.
