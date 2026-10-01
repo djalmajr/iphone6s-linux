@@ -63,6 +63,8 @@ jobs:
         run: python iphone-linux-tools/tests/run_compose_mutations.py
       - name: DNS bundle path scope mutations
         run: python iphone-linux-tools/tests/run_dns_bundle_mutations.py
+      - name: Unprivileged DNS socket activation mutations
+        run: python iphone-linux-tools/tests/run_dns_activation_mutations.py
       - name: DNS mutation proof acceptance
         run: python iphone-linux-tools/tests/run_dns_mutation_gate_mutations.py
       - name: Restore mutation proof acceptance

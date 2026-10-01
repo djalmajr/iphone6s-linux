@@ -174,6 +174,11 @@ def namespace_case(standard=False):
                 args.append('+tcp')
             return subprocess.run(args, capture_output=True, text=True, timeout=4)
 
+        def udp_closed():
+            rows = Path('/proc/net/udp').read_text().splitlines()[1:]
+            if any(int(row.split()[1].split(':')[1], 16) == port for row in rows):
+                raise AssertionError('Owned UDP DNS socket survived cleanup')
+
         try:
             wait_socket(('172.16.42.1', 22), daemon)
             result = subprocess.run(['chroot', str(phone), '/bin/sh',
@@ -239,6 +244,7 @@ def namespace_case(standard=False):
             process.wait(timeout=8)
             if process.returncode == 0:
                 raise AssertionError('Proxy hid lost tunnel')
+            udp_closed()
             for address in [('10.240.0.1', port), ('127.0.0.1', 11054)]:
                 assert_closed(address)
             for address in [('10.240.0.1', port), ('127.0.0.1', 11054)]:
@@ -251,6 +257,15 @@ def namespace_case(standard=False):
                         pass
                 assert_closed(('10.240.0.1', port))
                 assert_closed(('127.0.0.1', 11054))
+                udp_closed()
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as occupied:
+                occupied.bind(('10.240.0.1', port))
+                rejected_start()
+                if occupied.getsockname() != ('10.240.0.1', port):
+                    raise AssertionError('Foreign UDP socket changed')
+                assert_closed(('10.240.0.1', port))
+                assert_closed(('127.0.0.1', 11054))
+            udp_closed()
             original = known.read_text()
             known.write_text('')
             rejected_start()
@@ -262,6 +277,7 @@ def namespace_case(standard=False):
             known.write_text(original)
             assert_closed(('10.240.0.1', port))
             assert_closed(('127.0.0.1', 11054))
+            udp_closed()
             if standard:
                 print('DNS_STANDARD_NONROOT_UDP_TCP_ACL_FAILURE_CLEANUP_OK')
             else:
@@ -284,6 +300,16 @@ class DnsLanVmTests(unittest.TestCase):
     @unittest.skipUnless(sys.platform == 'linux' and os.geteuid() == 0 and
                          os.environ.get('IPHONE_DNS_VM_TESTS') == '1',
                          'requires explicit dedicated Linux VM/root opt-in')
+    def test_real_standard_port_nonroot_acl_conflicts_and_cleanup(self):
+        result = subprocess.run(['unshare', '--net', '--mount', '--', sys.executable,
+                                 str(Path(__file__).resolve()), '--standard-namespace'],
+                                capture_output=True, text=True, timeout=55)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('DNS_STANDARD_NONROOT_UDP_TCP_ACL_FAILURE_CLEANUP_OK', result.stdout)
+
+    @unittest.skipUnless(sys.platform == 'linux' and os.geteuid() == 0 and
+                         os.environ.get('IPHONE_DNS_VM_TESTS') == '1',
+                         'requires explicit dedicated Linux VM/root opt-in')
     def test_real_dns_lan_allowlist_binding_tunnel_loss_and_failed_startup(self):
         # Mutations captured: removing either ACL, bind, capacity, trust or fail-on-forward.
         result = subprocess.run(['unshare', '--net', '--mount', '--', sys.executable,
@@ -295,7 +321,8 @@ class DnsLanVmTests(unittest.TestCase):
 
 if __name__ == '__main__':
     if sys.argv[1:] in (['--namespace'], ['--standard-namespace']):
-        if os.geteuid() != 0 or os.environ.get('IPHONE_DNS_VM_TESTS') != '1':
+        if (sys.platform != 'linux' or os.geteuid() != 0
+                or os.environ.get('IPHONE_DNS_VM_TESTS') != '1'):
             raise SystemExit('Dedicated Linux VM/root opt-in required')
         namespace_case(standard=sys.argv[1:] == ['--standard-namespace'])
     else:

@@ -66,7 +66,7 @@ if __name__ == '__main__':
         result = run(base)
         if result.returncode or 'skipped' in result.stderr:
             raise SystemExit('Original baseline failed:\n' + result.stdout + result.stderr)
-        print('Original DNS LAN baseline passed (3 tests)', flush=True)
+        print('Original DNS LAN baseline passed (4 tests; high and standard ports)', flush=True)
         for name in selected:
             source, before, after, expected = MUTATIONS[name]
             original = originals[source]
