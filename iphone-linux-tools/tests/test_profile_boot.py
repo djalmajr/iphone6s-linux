@@ -22,11 +22,8 @@ class ProfileBootTests(unittest.TestCase):
         self.commands = self.project / 'bin'
         self.commands.mkdir()
         self.script = self.host / 'iphone-linux.sh'
-        palera = self.commands / 'palera1n-macos-arm64'
-        palera.write_bytes(b'SYNTHETIC_NONEXECUTABLE_PALERA_FIXTURE')
-        source = self.script.read_text().replace(
-            '950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9',
-            hashlib.sha256(palera.read_bytes()).hexdigest())
+        self.stub('palera1n-macos-arm64', "raise SystemExit('Synthetic palera must not run in this test')\n")
+        source = self.script.read_text()
         source = source.replace('/sbin/ifconfig', str(self.commands / 'ifconfig'))
         source = source.replace('/usr/bin/osascript', str(self.commands / 'osascript'))
         self.script.write_text(source)
@@ -61,6 +58,13 @@ raise SystemExit(255 if (base/'ssh-fail').exists() else 0)
                                 hashlib.sha256(image.read_bytes()).hexdigest())
         helper = helper.replace('IMAGE_BYTES = 238096', 'IMAGE_BYTES = ' + str(image.stat().st_size))
         (boot / 'pongo_select.py').write_text(helper)
+        tool_check = (fixtures.ROOT / 'scripts/boot/boot_tools.py').read_text()
+        for name, pin in (
+                ('palera1n-macos-arm64', (4874592, '950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9')),
+                ('pongoterm', (53608, 'ad4d66f1e2908090cc52a07ce5a58076b5ae877bb3d50b2a8d8e267b63113a56'))):
+            path = self.commands / name
+            tool_check = tool_check.replace(repr(pin), repr((path.stat().st_size, hashlib.sha256(path.read_bytes()).hexdigest())))
+        (boot / 'boot_tools.py').write_text(tool_check)
         self.environment = dict(self.fixture.environment,
                                 PATH=str(self.commands) + os.pathsep + os.environ['PATH'])
 

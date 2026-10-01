@@ -109,13 +109,21 @@ class PongoBootBoundaryTests(unittest.TestCase):
         self.host = self.root / 'scripts/host'
         self.host.mkdir(parents=True)
         shutil.copyfile(SOURCE_ROOT / 'scripts/host/iphone-linux.sh', self.host / 'iphone-linux.sh')
-        for name in ('dfu_boot.py', 'dfu_state.py'):
+        for name in ('dfu_boot.py', 'dfu_state.py', 'boot_tools.py'):
             shutil.copyfile(SOURCE_ROOT / 'scripts/boot' / name, self.boot / name)
         self.bin = self.root / 'bin'
         self.bin.mkdir()
         self.stub('ioreg', "(root/'usb-accessed').touch()\nprint((root/'usb-state').read_text() if (root/'usb-state').exists() else '')\n")
         self.stub('palera1n-macos-arm64', "import json,sys,time,os\n(root/'child.pid').write_text(str(os.getpid()))\n(root/'palera-args').write_text(json.dumps(sys.argv[1:]))\nwhile True: time.sleep(1)\n")
         self.stub('pongoterm', "(root/'payload-sent').touch()\n")
+        tool_check = self.boot / 'boot_tools.py'
+        text = tool_check.read_text()
+        for name, pin in (
+                ('palera1n-macos-arm64', (4874592, '950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9')),
+                ('pongoterm', (53608, 'ad4d66f1e2908090cc52a07ce5a58076b5ae877bb3d50b2a8d8e267b63113a56'))):
+            path = self.bin / name
+            text = text.replace(repr(pin), repr((path.stat().st_size, hashlib.sha256(path.read_bytes()).hexdigest())))
+        tool_check.write_text(text)
         self.environment['PATH'] = str(self.bin) + os.pathsep + os.environ['PATH']
         self.environment['IPHONE_LINUX_PONGO'] = str(self.candidate)
 

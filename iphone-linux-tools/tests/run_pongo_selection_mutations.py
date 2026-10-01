@@ -46,7 +46,7 @@ MUTATIONS = [
 def main():
     with tempfile.TemporaryDirectory(prefix='pongo-selection-mutations-') as folder:
         project = Path(folder).resolve()
-        for name in (HELPER, MONITOR, WRAPPER, 'scripts/boot/dfu_state.py',
+        for name in (HELPER, MONITOR, WRAPPER, 'scripts/boot/dfu_state.py', 'scripts/boot/boot_tools.py',
                      'tests/test_pongo_selection.py'):
             target = project / name
             target.parent.mkdir(parents=True, exist_ok=True)

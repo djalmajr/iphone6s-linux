@@ -18,7 +18,7 @@ class BootFailureTests(unittest.TestCase):
             work = pathlib.Path(folder)
             boot = work / "scripts/boot"
             boot.mkdir(parents=True)
-            for name in ("dfu_boot.py", "dfu_state.py", "pongo_select.py"):
+            for name in ("dfu_boot.py", "dfu_state.py", "pongo_select.py", "boot_tools.py"):
                 shutil.copyfile(ROOT / "scripts/boot" / name, boot / name)
             image = work / "artifacts/Pongo.bin"
             image.parent.mkdir()
@@ -40,6 +40,10 @@ print("Device entered DFU\\nBooting pongoOS",flush=True)
 while True: time.sleep(1)
 ''')
             binary.chmod(0o700)
+            tool_check = boot / 'boot_tools.py'
+            tool_check.write_text(tool_check.read_text().replace(
+                "(4874592, '950c357b6ae5df36128f6e42a3c6d371e55aeb69a5afcde276f096276210d0c9')",
+                repr((binary.stat().st_size, hashlib.sha256(binary.read_bytes()).hexdigest()))))
             binaries = work / "bin"
             binaries.mkdir(exist_ok=True)
             usb = binaries / "ioreg"
@@ -93,7 +97,8 @@ while True: time.sleep(1)
             script.write_text(source)
             for name in artifacts[:-1]:
                 (work / name).parent.mkdir(parents=True, exist_ok=True)
-                (work / name).symlink_to(ROOT / name)
+                shutil.copyfile(ROOT / name, work / name)
+                (work / name).chmod((ROOT / name).stat().st_mode & 0o777)
             binaries = work / "bin"
             binaries.mkdir(exist_ok=True)
             for name in ("ioreg", "open"):
@@ -106,6 +111,10 @@ while True: time.sleep(1)
             guide = work / "scripts/boot/dfu_boot.py"
             guide.parent.mkdir(parents=True)
             shutil.copyfile(ROOT / 'scripts/boot/pongo_select.py', guide.parent / 'pongo_select.py')
+            tool_check = guide.parent / 'boot_tools.py'
+            tool_check.write_text((ROOT / 'scripts/boot/boot_tools.py').read_text().replace(
+                "(53608, 'ad4d66f1e2908090cc52a07ce5a58076b5ae877bb3d50b2a8d8e267b63113a56')",
+                repr((transfer.stat().st_size, hashlib.sha256(transfer.read_bytes()).hexdigest()))))
             shutil.copyfile(ROOT / 'artifacts/Pongo.bin', work / 'artifacts/Pongo.bin')
             guide.write_text('''import json,os,pathlib,sys,time
 pathlib.Path("guide.pid").write_text(str(os.getpid()))
