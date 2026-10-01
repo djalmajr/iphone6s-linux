@@ -2,7 +2,7 @@
 
 ## Contexto
 
-#6 concluiu SSH/HTTP pela LAN, mas os forwards OpenSSH transportam TCP; DNS também precisa de UDP. O telefone continua sem saída geral para internet. O próximo serviço atenderá nomes locais; não mudará automaticamente o DNS do Mac, Windows, Android ou roteador. O primeiro piloto físico passou por USB e LAN com sockets diretos do Windows. Recuperação DNS em outro boot e compatibilidade do nslookup seguem pendentes; os testes físicos continuam curtos.
+#6 concluiu SSH/HTTP pela LAN, mas os forwards OpenSSH transportam TCP; DNS também precisa de UDP. O telefone continua sem saída geral para internet. O próximo serviço atenderá nomes locais; não mudará automaticamente o DNS do Mac, Windows, Android ou roteador. O primeiro piloto físico passou por USB e LAN com sockets diretos do Windows. Recuperação DNS em outro boot foi comprovada; compatibilidade do nslookup segue pendente; os testes físicos continuam curtos.
 
 ## Decisões
 
@@ -12,7 +12,7 @@
 - **Por quê:** serviço conhecido, com origem verificável e sem necessidade de instalar um gerenciador de pacotes no telefone. Os arquivos sobreviverão por backup/restore no Mac. Não depende de acesso externo no Linux.
 - **Alternativas:** compilar upstream (mais cadeia de build/proveniência); resolvedor próprio (protocolo e segurança desnecessários); encaminhar consultas públicas (exige saída de internet e política separada).
 - **Reverter:** baixo, parar somente o processo DNS próprio e recuperar snapshot/configuração anteriores. Imagem/NAND e contas remotas preservadas.
-- **Status:** instalado e iniciado em RAM no primeiro piloto físico; recuperação após outro boot pendente.
+- **Status:** instalado em RAM e recuperado por snapshot em segundo boot físico.
 
 ### D2. Rede explícita e clientes permitidos
 
@@ -54,7 +54,7 @@ Cada fase terá no máximo cinco arquivos e será verificada antes da seguinte.
 - [x] Validar configuração/local-only e consultas positivas/negativas UDP/TCP com dnsmasq real na VM isolada.
 - [x] Implementar transferência/launcher e recuperação de configuração pelo snapshot existente; prova isolada na VM, ainda sem novo boot físico.
 - [x] Implementar proxy LAN com allowlist e gates/mutações; prova isolada com servidor e SSH reais.
-- [ ] Validar consultas físicas USB/LAN e recuperação em novo boot.
+- [x] Validar consultas físicas USB/LAN e recuperação em novo boot.
 - [ ] Limpar fixtures, salvar evidência sanitizada, atualizar issues e versionar sem dados pessoais.
 
 ## Verificação
@@ -240,3 +240,30 @@ Foi salvo e validado um snapshot privado com 41 entradas, contendo runtime, laun
 O retorno ao iOS desta rodada não foi confirmado: o pedido normal manteve Linux, e o pedido direto seguinte encerrou o enlace sem enumeração iOS. O snapshot DNS está salvo; recuperação física foi solicitada. [#21](https://github.com/djalmajr/iphone6s-linux/issues/21) conserva essa pendência separada das consultas DNS aprovadas. A posterior correção SC2015 do launcher na CI apenas tornou dois checks explícitos; não foi aplicada à cópia antiga no snapshot físico.
 
 Atualização: fallback físico concluído; iOS desbloqueado informado pelo operador e confirmado por ProductType no Mac. Bateria posterior 93%/carregamento ativo. Os dados DNS permaneceram no snapshot privado validado. A recuperação automática permanece pendente na #21; o próximo piloto será curto, com restore/start/consultas e retorno físico coordenado.
+
+## Segundo boot físico: restore DNS comprovado
+
+O wrapper `boot --restore ID` da candidata terminou com saída 0 e aplicou automaticamente o snapshot DNS validado. Antes de iniciar o daemon: autorização e chave de host SSH preservadas, arquivo hosts/launcher/executável DNS iguais byte a byte aos do snapshot, estado de processo em `/run` ausente. Não houve reinstalação DNS. Brilho reduzido para 256/2047 conforme a preferência do operador.
+
+`dns start` iniciou explicitamente a instância restaurada. `dig` aprovou UDP/TCP diretamente pelo USB e pelo proxy LAN; domínio externo retornou NXDOMAIN. Windows independente repetiu UdpClient/TcpClient e recebeu o endereço A esperado com o proxy original. O helper nslookup permanece na #20; configuração de clientes/porta 53, na #19.
+
+Daemon próprio parado, listeners Mac encerrados, snapshot final de 41 entradas salvo/verificado e sync concluído às 00:41:09 UTC, última leitura de uptime 217,10 s. O retorno físico ao iOS foi solicitado e ainda aguarda confirmação; essa leitura não é a duração exata até o usuário reiniciar. #7 conserva os gates funcionais atendidos, sem declarar recuperação automática ou estabilidade prolongada.
+
+### Diagnóstico Windows usado nesta prova
+
+A prova usou sockets .NET em PowerShell com consulta DNS fixa (A de `iphone-usb.home.arpa`), timeout de 3 s e framing TCP limitado a 4096 bytes. Verificou ID, QR, RCODE, uma resposta e os quatro bytes finais do A esperado. É um diagnóstico da resposta simples observada, não um parser DNS geral ou resolvedor do sistema; nomes comprimidos, outras seções/tipos e validação completa pertencem à #20. Fonte sanitizada abaixo: substituir somente `IPv4_PRIVADO_DO_MAC` pelo IP permitido no launcher e executar em um bloco/script completo, sem colar linha a linha no painel.
+
+```powershell
+& {
+$ErrorActionPreference='Stop'
+[byte[]]$q=@(79,49,1,0,0,1,0,0,0,0,0,0,10,105,112,104,111,110,101,45,117,115,98,4,104,111,109,101,4,97,114,112,97,0,0,1,0,1)
+function Confirm-Reply([byte[]]$r) {
+ if ($r.Length -lt 16 -or $r[0] -ne $q[0] -or $r[1] -ne $q[1] -or ($r[2] -band 128) -eq 0 -or ($r[3] -band 15) -ne 0 -or $r[7] -ne 1) { throw 'Invalid DNS response' }
+ if ([BitConverter]::ToString($r[($r.Length-4)..($r.Length-1)]) -ne 'AC-10-2A-01') { throw 'Unexpected A address' }
+}
+$u=New-Object Net.Sockets.UdpClient
+try { $u.Client.ReceiveTimeout=3000; $u.Connect('IPv4_PRIVADO_DO_MAC',1053); [void]$u.Send($q,$q.Length); $peer=New-Object Net.IPEndPoint([Net.IPAddress]::Any,0); [byte[]]$r=$u.Receive([ref]$peer); Confirm-Reply $r; Write-Output 'IPHONE_RAW_DNS_UDP_OK' } finally { $u.Dispose() }
+$t=New-Object Net.Sockets.TcpClient
+try { $t.ReceiveTimeout=3000; $t.SendTimeout=3000; $task=$t.ConnectAsync('IPv4_PRIVADO_DO_MAC',1053); if (-not $task.Wait(3000)) { throw 'Connect timeout' }; $s=$t.GetStream(); [byte[]]$frame=@(0,$q.Length)+$q; $s.Write($frame,0,$frame.Length); $a=$s.ReadByte();$b=$s.ReadByte();if ($a -lt 0 -or $b -lt 0) { throw 'Missing frame' };$len=256*$a+$b;if ($len -lt 12 -or $len -gt 4096) { throw 'Bad length' };[byte[]]$r=New-Object byte[] $len;$n=0;while ($n -lt $len) {$got=$s.Read($r,$n,$len-$n);if ($got -le 0) {throw 'Truncated frame'};$n+=$got};Confirm-Reply $r;Write-Output 'IPHONE_RAW_DNS_TCP_OK' } finally {$t.Dispose()}
+}
+```

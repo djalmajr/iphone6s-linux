@@ -2,7 +2,7 @@
 
 ## Contexto
 
-A candidata da VM nova tem imagem e identidades diferentes da implantação conhecida. Boot, snapshots, LAN e DNS selecionam essas identidades por `IPHONE_LINUX_PROFILE`. Sem a variável, permanecem os caminhos da implantação conhecida. A integração foi validada no Mac, em VM e no iPhone. O primeiro boot físico da candidata passou; o retorno à imagem Linux conhecida e o restore DNS em outro boot continuam pendentes.
+A candidata da VM nova tem imagem e identidades diferentes da implantação conhecida. Boot, snapshots, LAN e DNS selecionam essas identidades por `IPHONE_LINUX_PROFILE`. Sem a variável, permanecem os caminhos da implantação conhecida. A integração foi validada no Mac, em VM e no iPhone. O primeiro boot físico da candidata passou; o retorno à imagem Linux conhecida continua pendente.
 
 ## Contrato e arquivos
 
@@ -20,7 +20,7 @@ A candidata da VM nova tem imagem e identidades diferentes da implantação conh
    - Preparação: `tests/test_lan.py`, `test_autosnap.py`, `test_autosnap_vm.py`, `run_autosnap_mutations.py`, `run_lan_mutations.py` passam a copiar/importar o helper. Cinco arquivos.
    - Transporte: `scripts/host/persist.py`, `lan.py`, `dns_lan.py`, `tests/test_profile_transport.py`, `run_dns_lan_mutations.py`. Os fixtures DNS já copiam todos os módulos host e não precisaram de alteração. Cinco arquivos.
    - Wrapper: `scripts/host/iphone-linux.sh`, `tests/test_profile_boot.py`, `run_profile_mutations.py`, `test_lan.py`, este documento. Perfil inválido falha antes de USB/listener; `boot-probe` e `install-terminal` recusam perfil explícito. Cinco arquivos.
-3. Documentar operação/rollback, publicar evidências e atualizar #12/#17. Primeiro boot físico e restauração de arquivos concluídos; rollback Linux e restore DNS após reboot continuam pendentes.
+3. Documentar operação/rollback, publicar evidências e atualizar #12/#17. Boot físico, restore de arquivos e recuperação DNS em segundo boot concluídos; rollback Linux continua pendente.
 
 ## Verificação
 
@@ -55,7 +55,8 @@ A candidata da VM nova tem imagem e identidades diferentes da implantação conh
 - [x] Seleção compartilhada integrada em todos os consumidores.
 - [x] Baselines, controles negativos, mutações e lint publicados.
 - [x] Primeiro boot físico da candidata, SSH/HTTP e restauração de arquivos comprovados.
-- [ ] Rollback para a imagem Linux conhecida e restore DNS em novo boot comprovados.
+- [x] Restore DNS em segundo boot da candidata comprovado.
+- [ ] Rollback para a imagem Linux conhecida comprovado.
 
 ## Evidência da fase 1
 
@@ -108,3 +109,9 @@ Snapshot final validado com 41 entradas; daemon DNS próprio e listeners tempor�
 Não interpretar saída SSH 0, timeout ou console congelado como prova de reboot. O pedido normal do BusyBox depende de PID 1 tratar shutdown; este init é um shell mínimo. `-f` contorna o init, mas o teste só comprovou perda do enlace Linux, não retorno ao iOS. Até resolver #21, após salvar os arquivos, o fallback é Power + Home até maçã, soltando ambos e confirmando iOS no USB. A variável de perfil só deve ser removida após encerrar o Linux correspondente.
 
 Fallback físico comprovado nesta rodada: após Power + Home e liberação na maçã, o operador informou iOS desbloqueado e o Mac confirmou modelo/bateria. Isso valida recuperação manual para sair da candidata, sem concluir retorno automático, restore DNS em novo boot ou rollback à outra imagem Linux.
+
+## Restore automático da candidata — segundo boot
+
+`boot --restore ID` passou fisicamente com saída 0. Três arquivos DNS (hosts, launcher e executável) comparados exatamente ao snapshot; identidades SSH preservadas e estado de processo ausente antes do início explícito. Mac/Windows aprovaram DNS UDP/TCP novamente. Snapshot final íntegro, DNS/proxies próprios encerrados e sync concluído. Retorno físico ao iOS solicitado; rollback para a outra imagem Linux continua pendente.
+
+O runbook anterior [REPRODUCAO.md](REPRODUCAO.md) já documentava que reboot comum não serve para esse PID 1 e usava `reboot -f`. A primeira tentativa desta rodada usou incorretamente o comando comum. A #21 acompanhará a confirmação automática da candidata com espera/enumeração, sem atribuir ausência imediata de USB a falha de driver sem prova.

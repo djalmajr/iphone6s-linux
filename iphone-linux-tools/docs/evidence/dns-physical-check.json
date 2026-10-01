@@ -13,7 +13,7 @@
     "existing_snapshot_applied": true,
     "ssh_authorization_preserved": true,
     "ssh_host_identity_preserved": true,
-    "cold_boot_restore_tested": false
+    "cold_boot_restore_tested": true
   },
   "dns": {
     "version": "2.90",
@@ -29,7 +29,7 @@
     "windows_dotnet_public_proxy_udp": true,
     "windows_dotnet_public_proxy_tcp": true,
     "windows_nslookup_passed": false,
-    "restore_after_second_boot_tested": false
+    "restore_after_second_boot_tested": true
   },
   "cleanup": {
     "snapshot_verified_entries": 41,
@@ -56,8 +56,31 @@
   "limits": [
     "No proof of sustained charging or prolonged stability.",
     "No Windows nslookup success; cause not established.",
-    "No DNS restore in a second physical boot.",
     "No Herdr pane/reconnection proof in this pilot.",
     "Normal reboot did not restart PID 1; forced kernel request lost USB without confirmed iOS return."
-  ]
+  ],
+  "second_boot": {
+    "wrapper_boot_restore_exit": 0,
+    "ssh_identities_preserved": true,
+    "three_dns_files_match_snapshot": true,
+    "process_state_absent_before_start": true,
+    "dns_reinstalled": false,
+    "explicit_dns_start": true,
+    "display_brightness": 256,
+    "display_max_brightness": 2047,
+    "mac_usb_udp": true,
+    "mac_usb_tcp": true,
+    "mac_proxy_udp": true,
+    "mac_proxy_tcp": true,
+    "external_udp_nxdomain": true,
+    "windows_udp": true,
+    "windows_tcp": true,
+    "snapshot_verified_entries": 41,
+    "dns_stopped": true,
+    "mac_proxy_listeners_closed": true,
+    "sync_utc": "2026-10-01T00:41:09+00:00",
+    "last_observed_uptime_seconds": 217.1,
+    "ios_return": "pending-manual-confirmation",
+    "preboot_battery_percent": 94
+  }
 }
