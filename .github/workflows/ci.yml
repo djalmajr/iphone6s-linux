@@ -44,6 +44,8 @@ jobs:
         run: python iphone-linux-tools/tests/run_profile_mutations.py
       - name: Reboot verification mutations
         run: python iphone-linux-tools/tests/run_return_ios_mutations.py
+      - name: Source kernel integration mutations
+        run: python iphone-linux-tools/tests/run_kernel_integration_mutations.py
       - name: ShellCheck on Linux runner
         if: runner.os == 'Linux'
         shell: bash

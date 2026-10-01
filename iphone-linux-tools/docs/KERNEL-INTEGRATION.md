@@ -51,7 +51,14 @@ A primeira execução recusou `runtime/` com modo `755` antes de criar saída; r
 - Dependências/banco: nenhum pacote novo no Mac; nenhum banco alterado.
 - Quebra de compatibilidade: nenhuma troca automática do perfil existente. NCM exige kernel incorporado, por isso o módulo antigo é removido somente na candidata.
 - Desempenho: o payload aumentou aproximadamente 6,2 MB; tempo de boot e consumo ainda não medidos.
-- CI remoto: pendente de publicação desta fase; testes descobertos pela suíte existente. A inclusão das mutações no workflow será outra fase.
+- CI remoto: testes descobertos pela suíte existente. A fase seguinte acrescenta as 7 mutações de integração à matriz Ubuntu/macOS; resultado remoto ainda pendente.
+
+## Fase CI
+
+Escopo: `.github/workflows/ci.yml`, este documento e `docs/evidence/kernel-integration.json`. Acrescentar o runner de mutações à matriz existente, mantendo as permissões de leitura e os gates anteriores. Conferir guard público, diff e execução real dos jobs Ubuntu/macOS. Nenhuma dependência adicional ou ação no aparelho.
+
+- [x] Registrar o runner das 7 mutações no workflow.
+- [ ] Verificar execução remota nas duas plataformas e registrar os resultados.
 
 ## Próxima validação física
 
