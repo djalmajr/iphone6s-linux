@@ -193,3 +193,23 @@ Cinco arquivos documentais desta fase: plano/relatório, ARMAZENAMENTO, BOOT-AUT
 | Próximos passos | Inventário nativo read-only, dados privados de placa/controlador; piloto kernel/Pongo/retorno/rollback e alimentação antes de operação prolongada |
 
 #10/#11 permanecem abertas; critérios de identificação/detecção e recuperação física completos ainda não comprovados. CI da documentação Wi-Fi terminou verde: PR 36830037501 e push 36830033406, quatro jobs Ubuntu/macOS. Goal inteiro ativo, sem merge; não trocar prioridade dos gates de alimentação/boot pela disponibilidade de pesquisa estática.
+
+## Herdr opcional — #13
+
+Plano/decisão e contrato em [HERDR.md](HERDR.md). Fase de cinco arquivos publicada em `5f60dec`: helper host, wrapper, onze regressões, documento e [evidência](evidence/herdr-autostart.json). A inicialização é feita depois do restore pelo boot assistido; não foi adicionada ao init nem implica boot autônomo. Sessão própria `iphone-server` não interfere na sessão manual histórica ou no servidor do Mac. Configuração/processos em `/run`; snapshot conserva apenas marcador declarativo desta automação, junto dos arquivos de trabalho já previstos.
+
+Leitura completa dos dois arquivos de código e do teste novo, com releitura do wrapper antes da edição. Fonte upstream fixada e ajuda 0.9.1 conferidas, digest da release comparado ao binário preservado. Isso não amplia a cobertura antiga da revisão integral para arquivos ainda não lidos; #16 continua parcial.
+
+| Campo de encerramento desta fase | Resultado |
+|---|---|
+| Plano | Cinco tarefas de implementação/verificação atendidas; boot/reconexão físicos abertos |
+| Testes locais | 133 no total: 124 aprovados, oito skips e um socket impedido pelo sandbox; somente esse teste reexecutado com permissão e aprovado |
+| Herdr/mutações | 11/11 regressões; doze mutações negativas recusadas em cópias descartáveis |
+| VM real | Bash 5.2, painel único preservado entre clientes CLI, restart e namespace novo a partir do marcador comprovados; sessão própria encerrada e fixture removida |
+| Lint/sintaxe/tipos | Flake8 fatal, Bash e ShellCheck dos scripts gerados/wrapper passaram; sem typechecker configurado |
+| Banco/dependências | Nenhum banco ou pacote instalado; binário Herdr oficial preservado; VM própria devolvida a Stopped/mounts vazios |
+| Compatibilidade/impacto | `herdr` agora abre a sessão automatizada; sessão histórica pode ser acessada pelo shell. Um servidor e um Bash consomem RAM/CPU adicionais somente quando iniciados; nenhum benchmark nativo novo |
+| Riscos | Lock não cobre edições concorrentes do mesmo usuário; restart fecha os processos dessa sessão. Falha de início requer conferir status antes de repetir |
+| Próximos passos | Confirmar applets e novo boot/restauração do marcador com reconexão SSH/TUI no iPhone; alimentação e cadeia kernel/Pongo permanecem pendentes |
+
+Os CIs da pesquisa anterior terminaram verdes, PR 36831163092/push 36831156321 no commit `b2a4844`. CI de `5f60dec` verde: [PR 36834443230](https://github.com/djalmajr/iphone6s-linux/actions/runs/36834443230), [push 36834436922](https://github.com/djalmajr/iphone6s-linux/actions/runs/36834436922), quatro jobs Ubuntu/macOS, cada um com 133 testes (124 aprovados, nove skips); logs também conferidos para as oito famílias de mutações anteriores registradas no workflow. As doze mutações Herdr são prova local, não um novo step de CI. Comentários de teste adicionados no encerramento preservam o AST; nenhum código operacional mudou após a CI. Esta fase de encerramento toca cinco arquivos: teste somente comentários, HERDR, STATUS, relatório e evidência. Nenhum novo boot ou intervenção no iPhone nesta fase: USB/libimobiledevice não detectaram o aparelho, e a pergunta de reconexão permanece pendente. Goal completo ativo, sem merge/tag/release.

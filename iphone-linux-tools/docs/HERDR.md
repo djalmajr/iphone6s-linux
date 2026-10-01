@@ -64,9 +64,9 @@ Lock ativo/interrompido recusa outra operação. Não apagar o lock enquanto a o
 ## Verificação desta fase
 
 - Onze regressões locais passaram: opt-in, duplicação, restart explícito, disable, links/lock, hash, erro de status, transporte SSH e limpeza antes de attachment.
-- Oito mutações em cópias descartáveis foram recusadas por falha das asserções: hash, marcador, lock, duplicação, opt-in, confirmação, escopo de stop e lock de attachment.
+- Doze mutações em cópias descartáveis foram recusadas: hash, marcador, lock, duplicação, opt-in, confirmação, escopo de stop, lock de attachment, stop indevido no disable, erro de status tratado como ausência, hardlink do marcador e erro SSH ignorado.
 - VM Ubuntu ARM64: Herdr oficial iniciou com um painel Bash; a saída incluiu a versão Bash 5.2; novos clientes CLI conservaram o ID do painel; restart voltou a responder em Bash; `/run` sintético removido e marcador conservado recriaram um painel.
 - Sessão própria encerrada, fixture removida e VM devolvida a `Stopped`, sem mounts. Nenhum pacote instalado, alteração de banco, credenciais novas ou mudança global de rede.
-- Flake8 fatal, sintaxe Bash e ShellCheck dos scripts gerados passaram. Não há typechecker configurado. CI e suíte geral estão registrados na [evidência](evidence/herdr-autostart.json).
+- Flake8 fatal, sintaxe Bash e ShellCheck dos scripts gerados passaram. Não há typechecker configurado. CI do código `5f60dec`: quatro jobs Ubuntu/macOS, cada um com 133 testes (124 aprovados, nove skips); comentários de mutação posteriores preservam o AST do teste. CI e suíte geral estão registrados na [evidência](evidence/herdr-autostart.json).
 
 VM não comprova novo boot no iPhone, carga sustentada ou reconexão TUI por SSH. #13 conserva esse último gate aberto; #2/#8/#12/#21 mantêm suas pendências físicas.

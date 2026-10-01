@@ -72,6 +72,7 @@ class HerdrStartTests(unittest.TestCase):
         return (self.base / 'starts').read_text().splitlines()
 
     def test_boot_disabled_then_enable_restores_only_opt_in(self):
+        # Mutation: ignoring the opt-in starts the disabled session.
         result = self.invoke('boot')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.base / 'starts').exists())
@@ -86,6 +87,7 @@ class HerdrStartTests(unittest.TestCase):
         self.assertFalse((self.base / 'data/herdr/config.toml').exists())
 
     def test_repeated_start_keeps_session_and_restart_targets_only_its_session(self):
+        # Mutation: bypassing running state duplicates starts; stop scope selects another session.
         for _ in range(2):
             result = self.invoke('start')
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -96,6 +98,7 @@ class HerdrStartTests(unittest.TestCase):
         self.assertEqual((self.base / 'stops').read_text(), 'stop\n')
 
     def test_disable_does_not_stop_running_work(self):
+        # Mutation: stopping the session during disable destroys running work.
         self.assertEqual(self.invoke('enable').returncode, 0)
         result = self.invoke('disable')
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -104,6 +107,7 @@ class HerdrStartTests(unittest.TestCase):
         self.assertFalse((self.base / 'stops').exists())
 
     def test_bad_marker_or_symlink_refused_without_changing_target(self):
+        # Mutation: dropping marker validation starts through invalid or redirected settings.
         self.marker.parent.mkdir(parents=True)
         self.marker.write_text('execute anything\n')
         self.assertNotEqual(self.invoke('boot').returncode, 0)
@@ -117,6 +121,7 @@ class HerdrStartTests(unittest.TestCase):
         self.assertFalse((self.base / 'starts').exists())
 
     def test_existing_operation_lock_refuses_duplicate_start(self):
+        # Mutation: dropping lock acquisition permits another start.
         (self.state / 'operation.lock').mkdir(parents=True)
         result = self.invoke('start')
         self.assertNotEqual(result.returncode, 0)
@@ -124,6 +129,7 @@ class HerdrStartTests(unittest.TestCase):
         self.assertTrue((self.state / 'operation.lock').is_dir())
 
     def test_attach_releases_operation_lock_before_the_client_exec(self):
+        # Mutation: leaving the lock before exec blocks later starts.
         result = self.invoke('attach')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('HERDR_TEST_ATTACHED', result.stdout)
@@ -132,6 +138,7 @@ class HerdrStartTests(unittest.TestCase):
         self.assertEqual(self.started(), ['start'])
 
     def test_altered_binary_is_not_executed(self):
+        # Mutation: skipping digest verification executes modified code.
         self.peer.write_text(self.peer.read_text() + '\n# modified\n')
         result = self.invoke('start')
         self.assertNotEqual(result.returncode, 0)
@@ -139,12 +146,14 @@ class HerdrStartTests(unittest.TestCase):
         self.assertFalse(self.state.exists())
 
     def test_status_failure_does_not_launch_another_server(self):
+        # Mutation: treating a status error as absence launches another server.
         (self.base / 'status-failure').touch()
         result = self.invoke('start')
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.base / 'starts').exists())
 
     def test_hardlinked_marker_and_redirected_state_are_refused(self):
+        # Mutation: ignoring marker link count permits writing through an alias.
         self.marker.parent.mkdir(parents=True)
         target = self.base / 'outside'
         target.write_text('1\n')
@@ -161,6 +170,7 @@ class HerdrStartTests(unittest.TestCase):
         self.assertFalse((self.marker.parent / 'status.txt').exists())
 
     def test_cli_transports_script_with_strict_ssh_and_propagates_failure(self):
+        # Mutation: ignoring SSH exit status reports a failed operation as successful.
         peer = self.base / 'ssh'
         peer.write_text('#!' + sys.executable + '\nimport sys\nfrom pathlib import Path\n'
                         + 'assert "StrictHostKeyChecking=yes" in sys.argv\n'
@@ -177,6 +187,7 @@ class HerdrStartTests(unittest.TestCase):
         self.assertIn('31', result.stderr)
 
     def test_restart_requires_explicit_stop_flag_before_any_ssh(self):
+        # Mutation: dropping confirmation starts transport for an unconfirmed restart.
         result = subprocess.run([sys.executable, str(ROOT / 'scripts/host/herdr.py'), 'restart'],
                                 capture_output=True, text=True, timeout=5,
                                 env=dict(os.environ, PATH='/nonexistent'))
