@@ -80,7 +80,16 @@
     "mac_proxy_listeners_closed": true,
     "sync_utc": "2026-10-01T00:41:09+00:00",
     "last_observed_uptime_seconds": 217.1,
-    "ios_return": "pending-manual-confirmation",
-    "preboot_battery_percent": 94
+    "ios_return": "confirmed-by-usb-after-forced-kernel-request-manual-intervention-unconfirmed",
+    "preboot_battery_percent": 94,
+    "kernel_reboot_requested_utc": "2026-10-01T00:58:24+00:00",
+    "kernel_reboot_uptime_seconds": 1252.53,
+    "ios_confirmed_utc": "2026-10-01T00:59:03+00:00",
+    "linux_usb_absent_at_ios_confirmation": true,
+    "ios_after_reading_utc": "2026-10-01T00:59:21+00:00",
+    "ios_battery_percent": 99,
+    "ios_battery_charging": true,
+    "ios_external_connected": true,
+    "automatic_return_causality_confirmed": false
   }
 }

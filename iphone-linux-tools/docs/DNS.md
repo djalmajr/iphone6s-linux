@@ -247,7 +247,7 @@ O wrapper `boot --restore ID` da candidata terminou com saída 0 e aplicou autom
 
 `dns start` iniciou explicitamente a instância restaurada. `dig` aprovou UDP/TCP diretamente pelo USB e pelo proxy LAN; domínio externo retornou NXDOMAIN. Windows independente repetiu UdpClient/TcpClient e recebeu o endereço A esperado com o proxy original. O helper nslookup permanece na #20; configuração de clientes/porta 53, na #19.
 
-Daemon próprio parado, listeners Mac encerrados, snapshot final de 41 entradas salvo/verificado e sync concluído às 00:41:09 UTC, última leitura de uptime 217,10 s. O retorno físico ao iOS foi solicitado e ainda aguarda confirmação; essa leitura não é a duração exata até o usuário reiniciar. #7 conserva os gates funcionais atendidos, sem declarar recuperação automática ou estabilidade prolongada.
+Daemon próprio parado, listeners Mac encerrados, snapshot final de 41 entradas salvo/verificado e sync concluído às 00:41:09 UTC, uptime 217,10 s naquele instante. A sessão continuou aguardando retorno; às 00:58:24 UTC, novo sync e `reboot -f` foram solicitados no uptime 1252,53 s (20 min 52 s). Às 00:59:03 UTC, o gadget Linux estava ausente e ProductType iOS foi confirmado; bateria 99% e carga ativa às 00:59:21 UTC. A intervenção manual ainda não foi esclarecida pelo operador: não atribuir causalidade exclusiva ao comando. #7 cumpriu seus critérios de DNS/restauração; recuperação automática permanece na #21 e estabilidade prolongada na #8.
 
 ### Diagnóstico Windows usado nesta prova
 
