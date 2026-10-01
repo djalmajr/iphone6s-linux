@@ -51,6 +51,16 @@ raise SystemExit(255 if (base/'ssh-fail').exists() else 0)
 ''')
         recovery = self.host / 'usb-shell.py'
         recovery.write_text("from pathlib import Path\nPath(" + repr(str(self.base / 'recovery-used')) + ").touch()\n")
+        boot = self.project / 'scripts/boot'
+        boot.mkdir(parents=True)
+        image = self.project / 'artifacts/Pongo.bin'
+        image.parent.mkdir()
+        image.write_bytes(b'SYNTHETIC_DEFAULT_PONGO')
+        helper = (fixtures.ROOT / 'scripts/boot/pongo_select.py').read_text()
+        helper = helper.replace('1e5543fd8e6dbd84c334b87d71aa473f4d347c2ba8a5e863b6e10f18461c7575',
+                                hashlib.sha256(image.read_bytes()).hexdigest())
+        helper = helper.replace('IMAGE_BYTES = 238096', 'IMAGE_BYTES = ' + str(image.stat().st_size))
+        (boot / 'pongo_select.py').write_text(helper)
         self.environment = dict(self.fixture.environment,
                                 PATH=str(self.commands) + os.pathsep + os.environ['PATH'])
 

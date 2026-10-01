@@ -1,4 +1,5 @@
 import os
+import hashlib
 import json
 import pathlib
 import shutil
@@ -17,8 +18,16 @@ class BootFailureTests(unittest.TestCase):
             work = pathlib.Path(folder)
             boot = work / "scripts/boot"
             boot.mkdir(parents=True)
-            for name in ("dfu_boot.py", "dfu_state.py"):
+            for name in ("dfu_boot.py", "dfu_state.py", "pongo_select.py"):
                 shutil.copyfile(ROOT / "scripts/boot" / name, boot / name)
+            image = work / "artifacts/Pongo.bin"
+            image.parent.mkdir()
+            image.write_bytes(b'SYNTHETIC_DEFAULT_PONGO')
+            helper = boot / 'pongo_select.py'
+            helper.write_text(helper.read_text().replace(
+                '1e5543fd8e6dbd84c334b87d71aa473f4d347c2ba8a5e863b6e10f18461c7575',
+                hashlib.sha256(image.read_bytes()).hexdigest()).replace(
+                    'IMAGE_BYTES = 238096', 'IMAGE_BYTES = ' + str(image.stat().st_size)))
             binary = work / "bin/palera1n-macos-arm64"
             binary.parent.mkdir()
             binary.write_text('''#!/usr/bin/env python3
@@ -73,7 +82,7 @@ while True: time.sleep(1)
             self.assertFalse(state.with_suffix(".tmp").exists())
 
     def test_exploit_failure_stops_before_transfer_and_cleans_monitor(self):
-        artifacts = ("bin/palera1n-macos-arm64", "artifacts/m1n1-linux-iphone6s-loopback-server.bin")
+        artifacts = ("bin/palera1n-macos-arm64", "artifacts/m1n1-linux-iphone6s-loopback-server.bin", "artifacts/Pongo.bin")
         if not all((ROOT / name).is_file() for name in artifacts):
             self.skipTest("Private boot artifacts required for wrapper integration test")
         with tempfile.TemporaryDirectory() as folder:
@@ -82,7 +91,7 @@ while True: time.sleep(1)
             script = work / "scripts/host/iphone-linux.sh"
             script.parent.mkdir(parents=True)
             script.write_text(source)
-            for name in artifacts:
+            for name in artifacts[:-1]:
                 (work / name).parent.mkdir(parents=True, exist_ok=True)
                 (work / name).symlink_to(ROOT / name)
             binaries = work / "bin"
@@ -96,6 +105,8 @@ while True: time.sleep(1)
             transfer.chmod(0o700)
             guide = work / "scripts/boot/dfu_boot.py"
             guide.parent.mkdir(parents=True)
+            shutil.copyfile(ROOT / 'scripts/boot/pongo_select.py', guide.parent / 'pongo_select.py')
+            shutil.copyfile(ROOT / 'artifacts/Pongo.bin', work / 'artifacts/Pongo.bin')
             guide.write_text('''import json,os,pathlib,sys,time
 pathlib.Path("guide.pid").write_text(str(os.getpid()))
 pathlib.Path(sys.argv[1]).write_text(json.dumps({"phase":"failed","ready":False}))

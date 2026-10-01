@@ -121,3 +121,26 @@ Fonte: plano deste documento e issue #12; backlog geral #17 continua ativo. Rece
 O commit testado é `4e493ddcb74d1a5025d5478ae98dd830f4b23567`: [CI do PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/36817489484) e [CI do push](https://github.com/djalmajr/iphone6s-linux/actions/runs/36817485824) concluíram com sucesso. Cada plataforma executou 92 testes: 83 passaram e 9 cenários exclusivos do guest foram ignorados. Mutações por plataforma: perfil 20/20, retorno ao iOS 9/9, integração de kernel 7/7 e Pongo 6/6 detectadas. Sintaxe, lint e guard público passaram; não há type checker configurado. O CI usa fixtures sintéticos e não compila a cadeia externa nem substitui o build real no guest.
 
 Próximo passo: seleção explícita da candidata com validação pré-USB e piloto supervisionado. O Pongo novo difere do preservado; a candidata continua sem boot físico. Alimentação sustentada, estabilidade e retorno automático ao iOS permanecem pendentes. Sem mudanças de comportamento na cadeia operacional ou impacto no desempenho do telefone nesta fase.
+
+## Plano da seleção explícita — #12
+
+### D2. Seleção por caminho e hashes fixados
+
+- **Decisão:** `IPHONE_LINUX_PONGO` seleciona somente a candidata de fonte cujo hash foi registrado nesta receita. Ausência da variável usa o Pongo preservado, também conferido. Seleção vazia/inválida nunca retorna ao padrão. Não aceitar um hash fornecido pelo operador junto com o arquivo.
+- **Por quê:** permite piloto e reversão sem substituir artefatos conhecidos ou modificar o formato de oito campos do perfil de Linux/SSH. O helper valida antes do primeiro acesso USB no wrapper e antes de iniciar palera no monitor independente.
+- **Alternativas:** ampliar o perfil de implantação acopla bootloader à identidade SSH; substituir Pongo.bin perde a referência operacional; aceitar qualquer hash de manifesto privado cria confiança circular.
+- **Reverter:** baixo; encerrar a sessão Linux, confirmar iOS, retirar somente `IPHONE_LINUX_PONGO` e repetir DFU pelo boot preservado. Retirar a variável não muda um bootloader já executado.
+- **Status:** implementação em curso; nenhum novo piloto iniciado.
+
+### Fases e verificação
+
+1. Preparação (cinco arquivos): este plano, `scripts/boot/pongo_select.py`, `tests/test_pongo_selection.py`, `tests/test_profile_boot.py` e `tests/test_boot_wrapper.py`. Fixtures sintéticos têm hash próprio somente nas cópias de teste; não executam firmware e não usam arquivos privados em CI.
+2. Integração (até cinco arquivos): `scripts/host/iphone-linux.sh`, `scripts/boot/dfu_boot.py`, os testes de seleção, runner de mutações e este documento. Wrapper/monitor compartilham o helper; seleção de candidata recusa Pongo já enumerado porque não há prova de qual binário está rodando. Verificar recusa antes de ioreg/palera/sender e cleanup. Linux já ativo também exige encerrar a sessão antes de trocar Pongo.
+3. CI/documentação (até cinco arquivos): workflow, manifesto de evidência, este documento e referência de reprodução. Registrar jobs somente após conclusão, depois piloto físico supervisionado e rollback separado.
+
+Testes: default/candidata, arquivo alterado, seleção vazia, arquivo ausente, symlink/hardlink, tamanho, propriedade/permissões e caminhos com controles; CLI e processos sintéticos verificam os efeitos observáveis. Executar mutações de hash, fallback, guard de arquivo e gate pré-USB. AST/Flake8, Bash/ShellCheck e guard público; nenhum type checker configurado. Nenhum pacote novo no host. Validação de caminho/hash pressupõe ausência de autores concorrentes nos arquivos locais; não comprova segurança do bootloader ou hardware.
+
+- [ ] Helper e fixtures aprovados.
+- [ ] Integração e mutações aprovadas.
+- [ ] CI e referência de operação registrados.
+- [ ] Boot físico da cadeia selecionada e retorno/rollback comprovados.
