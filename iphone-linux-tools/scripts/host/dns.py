@@ -41,10 +41,25 @@ def remote(command, payload=None):
                           input=payload, check=True, timeout=60)
 
 
+def library_names(report):
+    if not isinstance(report, dict) or not isinstance(report.get('libraries'), list):
+        raise ValueError('Lista de bibliotecas DNS inválida.')
+    names = set()
+    for item in report['libraries']:
+        if not isinstance(item, dict) or not isinstance(item.get('name'), str):
+            raise ValueError('Nome de biblioteca DNS inválido.')
+        name = item['name']
+        if not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.+-]{0,254}', name) or name in names:
+            raise ValueError('Nome de biblioteca DNS inválido ou duplicado.')
+        names.add(name)
+    return names
+
+
 def verify_bundle(manifest):
     if not manifest.is_file():
         raise ValueError('Manifesto DNS local ausente; copie o manifesto do build autenticado.')
     report = json.loads(manifest.read_text())
+    names = library_names(report)
     archive = ROOT / 'runtime/iphone6s-dns-runtime.tar.gz'
     data = archive.read_bytes()
     digest = hashlib.sha256(data).hexdigest()
@@ -52,7 +67,7 @@ def verify_bundle(manifest):
         raise ValueError('Hash/tamanho do bundle DNS inesperado; operação interrompida.')
     expected = {'srv/data/dns/runtime/bin/dnsmasq', 'srv/data/dns/runtime/COPYRIGHT',
                 'srv/data/dns/runtime/provenance.json'}
-    expected.update('srv/data/dns/runtime/lib/' + item['name'] for item in report['libraries'])
+    expected.update('srv/data/dns/runtime/lib/' + name for name in names)
     with tarfile.open(archive, 'r:gz') as content:
         members = content.getmembers()
         if (len(members) != len(expected) or {item.name for item in members} != expected

@@ -113,3 +113,14 @@ Fonte: decisão D2 e issue #23. Modo: encerramento de uma correção dentro de #
 | Desempenho | Conferência de bytes/metadata dos dois executáveis antes do boot; nenhuma medição de throughput do telefone foi realizada |
 
 **Riscos/continuidade:** integridade contra insumos preservados não é auditoria completa dos binários; alterações concorrentes do mesmo usuário não são suportadas. Não editar os pins para aceitar um arquivo desconhecido. #23 pode ser encerrada após publicação desta evidência; #16 mantém revisão integral/main/merge, #12/#21 mantêm piloto e rollback físicos e #2/#8 mantêm alimentação/estabilidade. O índice #17 registra as pendências; o telefone continua aguardando disponibilidade USB.
+
+## D3. Conferir o namespace de bibliotecas do bundle DNS — #24
+
+- **Decisão:** validar a lista/records e basenames ASCII canônicos/únicos antes de construir os caminhos permitidos no tar. Digest e checks de tipo/escopo existentes permanecem necessários. Não modificar pacote, imagens ou protocolo de extração remota.
+- **Por quê:** o verificador aceitou `../` em um membro quando o mesmo texto era informado pelo manifesto como nome de biblioteca. Correspondência de hash não estabelece um namespace seguro. A reprodução foi sintética, sem extração ou SSH; não demonstra escape no tar do telefone.
+- **Alternativas:** confiar implicitamente no manifesto deixa a declaração de escopo expansível; normalizar e aceitar subdiretórios dificulta definir o conjunto permitido e não corresponde ao layout plano do builder.
+- **Reverter:** baixo; nenhum bundle é regravado ou biblioteca movida. Os basenames normais do builder permanecem compatíveis.
+- **Onde:** fase 1 (cinco arquivos), `dns.py`, novo teste/runner de bundle, CI e este plano. Fase 2 documental (até cinco), este relatório, DNS, STATUS, evidência e cobertura. Executar baselines/mutações/CLI sintéticos, conferir bundles preservados por leitura e revalidar instalador na VM própria quando disponível, com limpeza e sem pacotes/identidades reais. Plano/critério na #24.
+- **Status:** seis cenários sintéticos/CLI e 10/10 mutações aprovados; lint fatal e diff-check passaram. Bundles preservado/reproduzido de 4.614.005/4.613.949 bytes passaram por leitura, sem modificar insumos. Revalidação na VM dedicada em curso; CI/publicação pendentes. Não equivale a assinatura do manifesto, parser com limites completos de descompressão ou instalação transacional. Nenhuma extração no Mac nem ação no telefone nesta correção.
+
+O runner inicialmente usou a âncora `or name in names`, que também aparecia dentro do texto do generator `for name in names`; a validação de unicidade recusou a mutação antes de executá-la. O resultado inicial não foi contado como mutação detectada. A âncora passou a incluir o `:` da condição, e o runner final completou dez mutações com falha de assertion; nenhuma validação operacional foi alterada para facilitar o teste.
