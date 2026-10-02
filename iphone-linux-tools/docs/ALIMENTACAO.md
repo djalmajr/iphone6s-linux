@@ -4,6 +4,20 @@ Etapa [#2](https://github.com/djalmajr/iphone6s-linux/issues/2), iniciada em 202
 
 ## Evidência atual
 
+### Desenvolvimento HDQ N71 — 2026-10-02
+
+A análise privada do kernel Apple N71 fixado em [referência reproduzível](N71_REFERENCIA.md) identificou o codec de `AppleHDQGasGaugeControl`: cada byte vira oito símbolos UART C0/FE, bit menos significativo primeiro. Na recepção, um bit vale um somente para símbolo **maior que F8**. O limiar F0 do driver A10 não corresponde a essa rotina N71.
+
+Os eventos seriais da rotina Apple, interpretados pelos cabeçalhos oficiais [IOSerialStreamSync](https://github.com/apple-oss-distributions/IOSerialFamily/blob/1c12ee3d9ec665bb53d0151644408d25e54fe012/IOSerialFamily.kmodproj/IOSerialStreamSync.h) e [IORS232SerialStreamSync](https://github.com/apple-oss-distributions/IOSerialFamily/blob/1c12ee3d9ec665bb53d0151644408d25e54fe012/IOSerialFamily.kmodproj/IORS232SerialStreamSync.h), indicam 57.600 baud, oito bits, sem paridade e dois stop bits. Os valores de taxa/tamanho/stop no evento usam unidades de meio-bit; 115.200 no evento não significa baud físico de 115.200.
+
+`phone/kernel/n71-hdq-codec.h` implementa somente transformações de bytes e junção estável high/low/high; não aciona UART, pinmux, GPIO, I2C ou carregador. Echo estrito é uma proteção opcional mais restritiva que o caminho Apple sem coalescimento. Palavra FFFF, um escravo sintético ou bytes decodificados não identificam gauge nem validam unidades/carga.
+
+O ADT N71 liga `function-battery_swi` ao pin2/config102 e `function-battery_swi_request` ao provider `tigris` por HDQm. São referências da placa: a operação do mux compartilhado precisa ser confirmada antes de transmissão. Não copiar pin173 A10 nem programar limites SN2400. **Telemetria física e carga sustentada continuam pendentes (#2/#8).**
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_hdq_codec.py -v
+```
+
 Linux 7.0.12 responde por SSH, com mais de uma hora de uptime. `/sys/class/power_supply` está vazio e não há zonas térmicas utilizáveis. `/proc/config.gz` não está disponível. O barramento I2C expõe `0-0074`; o log mostra PMIC/RTC, mas isso não estabelece suporte de carregamento. O PMU `apple_twister_pmu` citado no log é de contadores de desempenho, não leitura de bateria.
 
 Na checagem inicial não foram escritos registradores, ativados drivers experimentais ou instalado pacote. Não assumir compatibilidade com implementações de carga A10 de outro fork.
