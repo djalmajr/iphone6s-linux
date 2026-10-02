@@ -80,3 +80,14 @@ gzip -dc /CAMINHO/initramfs.gz | cpio -it 2>/dev/null | rg '\.ko($|\.)'
 ```
 
 O último comando apenas lista nomes, sem extrair arquivos; sem matches termina com saída 1. Nesta fase a mesma estrutura foi lida com Python padrão: 2.969 entradas newc, zero módulos e somente a pasta `lib/modules`; os 136 nós do DTB foram examinados por path/compatible. Não executamos ferramentas de fonte externa no Mac, instalamos pacotes ou iniciamos VM. As versões/configuração dos artefatos e tabelas de driver são evidência estática; não comprovam enumeração ou Wi-Fi no hardware.
+
+
+## Inventário físico da candidata — 2026-10-02
+
+Inspeção somente leitura aproveitou o boot já ativo `7.2.0-iphone6s-source`, por SSH estrito, sem novo DFU/reboot: interfaces `lo` e `usb0`; classe ieee80211 ausente; diretórios de dispositivos PCI/SDIO/MMC presentes, porém vazios; zero módulos carregados. Foram lidas 118 propriedades compatible do DT em execução, sem matches PCIe/MMC/SDIO/WLAN/brcm/DART nos termos examinados. O único log correspondente foi a inicialização genérica PCI CLS; não houve probe de rádio nesse inventário. [Evidência física sanitizada](evidence/wifi-runtime.json), separada da evidência estática de 2026-10-01.
+
+Não há fontes de alimentação em power_supply nem propriedade com nome ADT no chosen examinado. Isso não prova que o ADT original seja impossível de obter por outro caminho; apenas não está exportado ali. Nenhum dump bruto, MAC, serial, firmware ou credencial foi publicado.
+
+**Próximo desenvolvimento:** obter a topologia Apple N71 original de fonte identificada e manter o insumo privado. Mapear barramento/PHY/reset/clocks/PMGR/DMA e comparar com a fonte do driver host antes de preparar uma candidata específica do A9. A fase offline não requer reboot do iPhone. Depois de mapa validado e build na VM, uma única sessão deve reunir enumeração, preservação do SSH USB e logs; só testar firmware/associação se o rádio tiver sido identificado. Instalar módulos genéricos não cria os nós/topologia ausentes.
+
+A tabela/fork A10 foi reconsultada; a validação permanece em J172/D111, sem evidência N71 nessa matriz. #9 passa a prioridade de desenvolvimento. DNS53 fica em espera; suporte A10 não será tratado como prova A9. Fluxo de iteração: [desenvolvimento com menos reinicializações](DESENVOLVIMENTO.md).

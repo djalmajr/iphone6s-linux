@@ -1,4 +1,12 @@
-# iPhone 6s Linux — atualizado em 2026-10-01
+# iPhone 6s Linux — atualizado em 2026-10-02
+
+## Direção de desenvolvimento — 2026-10-02
+
+Prioridade do operador: Wi-Fi e recursos que facilitem a iteração, com o mínimo de reinicializações. [Fluxo de sessões e ordem](DESENVOLVIMENTO.md). DNS53 deixa de ser a próxima entrega; seus gates aprovados são preservados e o piloto funcional continua pendente.
+
+Inventário físico por SSH no boot já ativo 7.2.0-iphone6s-source: somente lo/usb0, ieee80211 ausente, PCI/SDIO/MMC sem dispositivos, nenhum módulo e nenhum compatible correspondente entre 118 propriedades examinadas. Sem power_supply ou ADT original no chosen consultado. Nenhum reboot, firmware, driver ou política de rede nesta fase. [Wi-Fi](WIFI.md), [evidência](evidence/wifi-runtime.json). Próximo gate é identificação offline da topologia N71 para implementação específica A9; associação/DHCP ainda não podem ser testados.
+
+O boot imediatamente anterior desta rodada restaurou os três arquivos DNS com hashes/tamanhos exatos, SSH/kernel/HTTP e Herdr confirmados. Roteiro privado de preflight errou ao chamar dns.start inexistente; não é prova de DNS5353. Controlador DNS53 expirou esperando prontidão e não abriu o endpoint. Nenhuma consulta DNS53 Mac/Windows executada. A nova prioridade não transforma esse piloto em sucesso.
 
 ## Estado atual e gates pendentes
 
