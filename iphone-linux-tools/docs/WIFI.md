@@ -120,3 +120,40 @@ python3 -B iphone-linux-tools/scripts/research/apple-n71-map.py \
 ```
 
 O leitor fixa URL, tamanho, membro e SHA256; limita Range/DER/ADT/LZFSE, valida CRC e recusa outro hash. Não baixa o IPSW inteiro, executa downloads ou instala dependências. Requer macOS pela biblioteca Compression existente. Saídas brutas e nomes/propriedades de placa permanecem privados, modo 600, sob runtime ignorado. Não publicar ADT, calibração, MAC, serial ou firmware. O programa não faz boot/restore/flash, nem converte sozinho o ADT Apple em um DTS Linux operacional.
+
+
+## Topologia N71 compilada — 2026-10-02
+
+Incremento implementado em [11c6f30](https://github.com/djalmajr/iphone6s-linux/commit/11c6f30): fragmento `phone/kernel/n71-peripherals.dtsi` com UART5 em `0x20a0d4000`/IRQ197, DART PCIe1 em `0x602008000`/IRQ248 e PCIe S8000 com os onze recursos e quatro interrupções da referência Apple. O host mantém a ordem Apple; funções secundárias ainda não confirmadas usam nomes `adt-reg-N`. Não foi inventado o recurso PHY-IP `0x60a000000` encontrado no DT T8010, ausente da lista N71 examinada. AUX/REF do A9 são ligados como domínios de energia existentes, sem fabricar provedores de clock A10.
+
+**Todos os três nós estão desativados.** PCIe tem somente compatible S8000, sem fallback T8010/genérico e sem driver operacional novo. Não foram adicionados mapa de streams/DMA, ranges PCI, MSI ou sequência PHY/reset. A árvore compila, mas não é uma implementação completa do binding PCI nem uma candidata aprovada para boot; Wi-Fi continua não habilitado.
+
+O builder compila primeiro a baseline sobre a fonte estável limpa e fixa seus phandles antes de incluir o fragmento. O primeiro build foi recusado ao detectar renumeração de CPUs; o final conserva cada propriedade anterior e acrescenta somente os três nós, mais identificadores necessários nos provedores antes não referenciados. A baseline reproduziu exatamente o hash do DTB funcional preservado. Endereços/IRQs foram traduzidos a partir dos ranges Apple, não copiados do A10. [Hashes, fontes e gates](evidence/n71-topology.json).
+
+### Reprodução da compilação offline
+
+Use a VM dedicada ARM64 com GCC/dtc já disponíveis e um checkout limpo do commit `958481f87fee0949ff6a9a4af77f7eb6dac8a149`. Copie somente os arquivos públicos do projeto para ela. Não enviar firmware bruto, keys ou snapshots. Os comandos seguintes são executados como usuário normal **dentro da VM**, a partir da raiz do repositório; substitua os dois caminhos de exemplo e escolha saídas novas:
+
+```sh
+export N71_SOURCE_DIR=/home/ubuntu/kernel-n71-source-20261001
+# Materializa os fatos fixados no código público. Não substitui a verificação
+# independente da referência Apple descrita acima.
+python3 -B - <<'PYREF'
+import json, runpy
+from pathlib import Path
+facts = runpy.run_path('iphone-linux-tools/scripts/build/prepare-n71-topology.py')['REFERENCE']
+with Path('n71-resource-input.json').open('x') as output:
+    json.dump(facts, output)
+PYREF
+python3 -B iphone-linux-tools/scripts/build/prepare-n71-topology.py \
+  --source-dir "$N71_SOURCE_DIR" --reference n71-resource-input.json \
+  --output-dir /home/ubuntu/n71-topology-build-NOVO
+IPHONE_N71_VM_SOURCE="$N71_SOURCE_DIR" \
+  python3 -B iphone-linux-tools/tests/run_n71_topology_mutations.py
+```
+
+A referência JSON deve coincidir exatamente com hash/ranges/recursos N71 fixados; o input selecionado usado nesta entrega foi conferido contra o ADT privado. A cópia acima reproduz a compilação desses fatos, não reextrai firmware nem verifica assinatura IMG4. Output novo privado (700/600), fonte preservada, comparação limitada do DTB e manifest com `boot_qualified=false`. Recusa links, diretório existente, outra fonte/placa, mudança de propriedades antigas ou nó ativado; não recompõe a imagem de boot nem altera o perfil ativo.
+
+Mac: 13 testes passaram, quatro compilações Linux foram explicitamente ignoradas e sete mutações foram rejeitadas por asserção. VM: 17/17 e oito mutações, incluindo compilação real sem fixação de phandles que falha por diferença nas propriedades anteriores. Flake8 fatal passou; sem typechecker Python configurado. Nenhum pacote instalado no Mac ou VM e nenhum reboot do telefone nesta fase. Logs e DTBs privados ficam em runtime; só hashes/evidência selecionada são públicos.
+
+**Próximo gate da #9:** mapear funções dos blocos MMIO e validar sequência S8000 PHY/energia/reset, porta1 e streams DMA; implementar controlador separado e revisar antes de ativar. Agrupar enumeração/logs e preservação USB/SSH com o descritor USB da #33 no próximo boot necessário. Associação, firmware/calibração e DHCP exigem primeiro PCI-ID/revisão reais; esses critérios continuam abertos.

@@ -31,7 +31,7 @@ Fases seguintes, cada uma até cinco arquivos: evidência sanitizada/compilation
 - [x] Implementar fragmento e preparo/compilação de DTB em diretório separado.
 - [x] Provar recusas/preservação/contratos e mutações locais/VM.
 - [x] Compilar sobre N71 real na VM, verificar baseline e manifest/hashes.
-- [ ] Documentar/publicar o incremento e atualizar issues, mantendo Wi-Fi/carga sem prova como abertos.
+- [x] Documentar/publicar o incremento e atualizar issues, mantendo Wi-Fi/carga sem prova como abertos.
 
 ## Verificação e limites
 
@@ -54,3 +54,8 @@ AUX/REF do S8000 fornecem domínios de energia, sem `#clock-cells`. O fragmento 
 - GCC 13.3.0 e DTC 1.7.0 existentes, sem instalação de pacotes. Fonte fixada permaneceu limpa.
 - Baseline reproduziu exatamente o DTB funcional preservado; a candidata acrescenta três nós desativados. Hashes e reprodução serão registrados na fase de documentação.
 - Nenhum pacote Mac, reboot, probe ou alteração de perfil ativo. Wi-Fi e carga sustentada continuam sem prova.
+
+
+## Fase de registro e entrega
+
+Cinco arquivos: este plano, WIFI.md, ALIMENTACAO.md, evidence/n71-topology.json e .github/workflows/ci.yml. Gate portátil no CI; compilações reais/oitava mutação continuam opt-in na VM. Documentação distingue reprodução de fatos fixados de nova extração Apple e não declara o compatible do gauge como identificação física. Issues #9/#2/#17 recebem checkpoint, sem encerrar suporte Wi-Fi/carga. VM dedicada devolvida a Stopped, confirmado por Multipass info; não há nova imagem/perfil de boot ou ação física requerida.

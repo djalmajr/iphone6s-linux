@@ -188,7 +188,7 @@ Inferência dessa inspeção: habilitar esse driver no kernel que roda no iPhone
 
 ## Mapa de energia e orçamento USB — 2026-10-02
 
-A referência Apple N71, obtida offline conforme [Wi-Fi](WIFI.md), descreve medidor `gas-gauge,bq27540`/HDQ em UART5, carregador `charger,sn2400` em I2C1/tigris e PMIC `pmu,d2255` em I2C0. Isso identifica o caminho da placa; não habilita sensores nem prova a revisão/calibração do aparelho. Não substituir o BQ27540 pelo BQ27545 mencionado em implementações A10.
+A referência Apple N71, obtida offline conforme [Wi-Fi](WIFI.md), descreve medidor `gas-gauge,bq27540`/HDQ em UART5, carregador `charger,sn2400` em I2C1/tigris e PMIC `pmu,d2255` em I2C0. Isso identifica o caminho descrito na referência da placa; o compatible `gas-gauge,bq27540` não comprova o chip físico, sua revisão ou register map. Não habilita sensores nem valida calibração. Não assumir o perfil BQ27545 das implementações A10.
 
 O [driver experimental SN2400](https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/power/supply/apple_sn2400_charger.c) requer regmap do pai, mux HDQ, limite de entrada e parâmetros da bateria; o probe programa limites de carga. Inserir apenas um compatible no DT seria insuficiente e poderia acionar escritas com parâmetros indevidos. Próximo gate: validar UART5/HDQ/mux/regmap e parâmetros N71, inicialmente com telemetria somente leitura. Nenhuma escrita I2C/MMIO/PMIC foi feita.
 
@@ -205,3 +205,12 @@ python3 -B iphone-linux-tools/tests/run_usb_budget_image_mutations.py
 ```
 
 O builder aceita somente o init anterior conhecido e diretório novo privado; recusa âncoras divergentes ou orçamento já presente. Chaves do perfil são copiadas somente no Mac para a candidata privada, nunca para VM/GitHub. Não é atualizador genérico de qualquer initramfs. Fixtures executaram ambas as fontes de init e observaram valores antes da descoberta UDC: seis mutações por asserção no Mac/VM. Repack: cinco testes e quatro mutações por asserção no Mac/VM, delta exato e arquivos/metadados/identidades preservados. Gate físico #33 permanece aberto junto de #2/#8.
+
+
+## UART5 preparada, HDQ ainda desativado — 2026-10-02
+
+O incremento N71 descrito em [Wi-Fi](WIFI.md#topologia-n71-compilada--2026-10-02) compila UART5 com endereço/IRQ/provedores próprios e preserva a árvore funcional anterior. `status=disabled`; nenhum filho HDQ/gauge, pinmux ou driver foi ativado. [Evidência offline](evidence/n71-topology.json). Zero reinicializações ou escritas MMIO/I2C/PMIC; sensores/carga seguem sem prova.
+
+A fonte [HDQ via UART do fork A10](https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/w1/masters/w1-uart.c) usa serdev, 57.600 baud, dois stop bits, break e mux de propriedade da linha. Depende de APIs/temporização específicas do fork, não apenas de um nó UART. O [mux SN2400](https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/mux/sn2400.c) seleciona o acesso AP escrevendo registradores e restaura o estado do carregador. Não é um caminho de leitura puramente passivo. A presença de um escravo W1 sintético nesse driver tampouco comprova resposta do gauge físico.
+
+Próximo desenvolvimento: validar a função/pin routing UART5 N71, protocolo de propriedade do HDQ e register map real do gauge antes de integrar telemetria. Não copiar o GPIO173/pinmux A10 nem ativar SN2400 com limites de bateria presumidos. O compatible da referência não autoriza converter BQ27540 em BQ27545 no DT. #2/#8 continuam abertas; a candidata de orçamento USB #33 permanece separada e não foi bootada. Um boot futuro deve reunir provas úteis após revisão offline dos drivers, sem reiniciar apenas para confirmar novamente que não há sensores.
