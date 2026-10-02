@@ -195,3 +195,19 @@ Gates de preparo são testes reais de Git/filesystem no Mac e VM, aplicação
 na fonte fixada em worktree separada e objeto kernel/Werror. Nenhuma imagem
 com esse patch foi qualificada fisicamente; integração, serialização TCR,
 SID/mapeamento e faults seguem na [issue #34](https://github.com/djalmajr/iphone6s-linux/issues/34).
+
+### Resultado do patchset — 2026-10-02
+
+O build separado terminou com exit0 e `KERNEL_BUILD_VERIFIED`. Os47 valores
+obrigatórios Kconfig sobreviveram; configuração extraída do Image igual à
+usada no build. Gzip/Image, header ARM64/16KiB, DTB N71 e hashes após cópia
+privada para o Mac foram conferidos. A worktree conservou exatamente o
+patchset antes/depois, e a fonte funcional anterior permaneceu intacta.
+
+[Registro selecionado](evidence/kernel-dart-build.json): Image SHA
+`844a85705d0ce79ee97e878bbbd4ff62e76054e6547eabcdf36882e2eef6bd52`;
+DTB igual à baseline. Artefatos estão somente no runtime privado. Nenhuma
+imagem desse patchset foi instalada, enviada ao telefone ou qualificada
+fisicamente. O compositor da baseline continua fixado ao registro anterior;
+a integração precisa de gate próprio e perfil separado. Não trocar hashes
+do registro antigo para fazê-lo aceitar outro kernel.
