@@ -3,7 +3,7 @@
   "date": "2026-10-01",
   "issue": 19,
   "status": "partial",
-  "scope": "Mac non-root inventory/preflight and IPC; isolated Linux VM privileged socket activation and real DNS/SSH integration; no root Mac/client policy/device boot",
+  "scope": "Historical Mac/VM bootstrap proofs plus failed native DNS53 pilot and current Darwin group correction; native DNS53/client policy still unverified",
   "kernel_inventory": [
     {
       "protocol": "tcp",
@@ -307,5 +307,57 @@
     "client_policy_changed": false,
     "phone_booted_in_this_phase": false,
     "preflight_requires_refresh_before_native_pilot": true
+  },
+  "darwin_native_failure": {
+    "issue": 30,
+    "boot_restore_ssh_http_ok": true,
+    "phone_dns5353_udp_tcp_ok": true,
+    "helper_refused_before_handoff": true,
+    "mac_windows_dns53_functional_tests_run": false,
+    "uid_gid_real_effective_matched": true,
+    "python_account_group_count": 17,
+    "kernel_group_count": 1,
+    "kernel_groups_only_primary": true,
+    "kernel_nonprimary_count": 0,
+    "selected_udp_tcp53_absent_after_refusal": true,
+    "tunnel1054_absent_after_refusal": true,
+    "snapshot_verified": true,
+    "sync_verified": true,
+    "return_ios_cli_exit": 1,
+    "return_ios_usb_verified": false,
+    "manual_fallback_requested": true,
+    "packages_installed_on_mac": false,
+    "global_dns_policy_changed": false
+  },
+  "darwin_group_correction": {
+    "status": "in_progress",
+    "regression_before_fix_assertion": true,
+    "mac_nonroot_cases": 27,
+    "mac_source_mutations_assertion_rejected": 21,
+    "new_mutations": [
+      "darwin-account-groups",
+      "darwin-extra-groups",
+      "darwin-group-errno",
+      "darwin-group-count",
+      "darwin-primary-filter",
+      "helper-group-guard"
+    ],
+    "ast_three_files_ok": true,
+    "vm_privileged_candidate_verified": true,
+    "native_mac_corrected_helper_verified": false,
+    "native_phone_dns53_verified": false,
+    "ci_candidate_verified": false,
+    "fixture_error_not_counted": "sendmsg uses an iovec list; corrected only the fixture and repeated its two affected positives",
+    "local_sandbox_permission_error_not_counted": true,
+    "lint_fatal_existing_python312_flake8_ok": true,
+    "vm_cases": 31,
+    "vm_source_mutations_assertion_rejected": 25,
+    "vm_source_hashes_jointly_verified": true,
+    "vm_test_namespace_private": true,
+    "source_sha256": {
+      "scripts/host/dns_privileged.py": "2628afa1b1895f920baf0c1953ca4fde8d3bf6aea89d05f897714761ea9c713c",
+      "tests/test_dns_activation.py": "7bbd094f0119d39b5209c3555ea13e96f573cb0ddb3dcdcfa46c2e296da71d4f",
+      "tests/run_dns_activation_mutations.py": "e02ef92704f7a682d14ff7439f3918e14c7bea6ffd12862efe583c4173296000"
+    }
   }
 }

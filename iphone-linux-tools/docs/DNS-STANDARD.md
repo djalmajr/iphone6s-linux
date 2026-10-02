@@ -172,3 +172,31 @@ Extensão b4fe9e4: seleção explícita53 adicionada, default1053 conservado;54�
 CI exato b4fe9e4 concluído: [PR36949215659](https://github.com/djalmajr/iphone6s-linux/actions/runs/36949215659) e [push36949211094](https://github.com/djalmajr/iphone6s-linux/actions/runs/36949211094), seis jobs aprovados (Windows/Ubuntu/macOS). Log Windows confirmou baseline64 e o passo de mutações terminou verde. CI valida fonte/fixtures; não executa o telefone nem DNS53 nativo no Mac. Nenhuma suíte local foi repetida para esta fase documental.
 
 Quatro arquivos próprios de testes/logs e diretório tests do Windows removidos; dois arquivos cliente verificados preservados para o próximo piloto. Filhos próprios concluíram e nenhuma fixture permanece ativa. Sudo não interativo Mac exigiu autenticação; nenhum bootstrap privilegiado Mac ou DNS53 funcional executados. Android fica pendente; Mac/Windows são os clientes da rodada atual. Não houve instalação, agente, chave, DNS/firewall/política global ou mudança do telefone. #19 conserva os gates nativos/NRPT/IP estável/rollback; #2/#8 e revisão integral #16 continuam separados.
+
+
+## Fase corretiva Darwin — grupos após privilege drop
+
+Contexto: piloto nativo recusou a entrega dos sockets com Privilege drop incomplete; porta53/túnel não ficaram abertos. Diagnóstico em filho isolado confirmou UID/GID reais/efetivos do usuário,17 grupos pela API Python e um único grupo primário na lista do kernel, zero grupos não primários. Não tratar essa recusa como DNS53 funcional.
+
+### D5. Validar grupos do kernel Darwin, mantendo os gates de identidade
+
+- **Decisão:** no Darwin, consultar libc getgroups via ctypes/stdlib e aceitar somente o GID primário já conferido; no Linux conservar os.getgroups e a exigência de lista vazia. O frame informa a contagem suplementar validada, que continua obrigatoriamente zero.
+- **Por quê:** [Python os.getgroups](https://docs.python.org/3/library/os.html#os.getgroups) pode retornar a lista de acesso da conta, independente de setgroups. [XNU getgroups](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/kern/kern_prot.c) inclui o GID efetivo na primeira posição. A leitura nativa confirmou ambas as diferenças.
+- **Alternativas:** remover a guarda de grupos enfraquece a verificação; aceitar a lista de acesso Python não mede o estado do processo; usar comando externo enquanto privilegiado amplia o bootstrap.
+- **Reverter:** baixo; mudança pequena e testável no helper, sem instalação/configuração de host.
+- **Onde:** fase de cinco arquivos: scripts/host/dns_privileged.py, tests/test_dns_activation.py, tests/run_dns_activation_mutations.py, este plano e evidence/dns-standard-port.json.
+- **Status:** planejada; fonte ainda não corrigida. Sem novo bootstrap nativo antes dos gates focados.
+
+Tarefas: adicionar regressão antes de corrigir; leitura Darwin limitada com ABI gid_t32, recusa de erro/contagem impossível, preservação de grupos não primários; Linux permanece igual. Testar resultados observáveis e mutações de seleção da API, filtro de grupo não primário, errno/limite e guarda de privilege drop. Repetir IPC/FDs e gates afetados, usar fixture privilegiada da VM quando necessário; nenhum erro/skip/compilação conta como aprovação. Depois prova nativa do helper sem telefone; DNS53 real exige novo boot acompanhado. Preservar o piloto recusado, cleanup e resultado real do retorno.
+
+
+### Checkpoint local da correção #30
+
+Regressão modelada executou o bootstrap real com leituras de identidade/grupos controladas e falhou por asserção na fonte antiga. Após a correção: baseline27 casos/21 mutações por asserção passou no Python de sistema3.9, incluindo os seis novos contratos. O primeiro teste no sandbox não alcançou o caso por recusa de bind; não conta como prova. A fixture inicialmente tratou sendmsg como buffer simples; corrigida para iovec, somente seus dois positivos afetados foram repetidos antes do baseline final de mutações. Não declarar esses modelos como privilege drop nativo.
+
+AST dos três arquivos, Flake8 fatal7.3.0 com Python3.12.6 já instalado e JSON/links/diff passaram; não houve instalação nem mudança da seleção global do Python. A fonte Linux/VM candidata está em validação isolada; helper nativo corrigido e DNS53 físico ainda pendentes. [Issue30](https://github.com/djalmajr/iphone6s-linux/issues/30). Piloto recusado teve sockets/túnel ausentes após erro e daemon DNS próprio parado. Snapshot/sync passaram; retorno CLI saiu1 e o USB não confirmou iOS, então fallback físico foi solicitado. Tentativa de herdr.py stop era inválida, não foi contada como parada de sessão; reboot encerrou o Linux, mas retorno ainda depende de confirmação.
+
+
+### VM da correção #30
+
+Seis fontes públicas conferidas conjuntamente por SHA256 no diretório exclusivo da VM iphone6s-repro-20260930; sem perfis/chaves/dados do telefone. Namespace de rede próprio: baseline31 casos (27 IPC/modelos + quatro privilegiados),25 mutações por asserção, saída0. Helper real Linux abriu53/removeu grupos/GID/UID antes de IPC, dados/FDs/cleanup, conflito, original sudo e rebind após TIME_WAIT passaram novamente. Não alterou rede/sysctl fora do namespace, não instalou pacote e não conclui o helper Darwin ou DNS53 físico. Fontes/log privado em runtime/dns53-physical-20261001. CI/nativo Mac ainda pendentes.

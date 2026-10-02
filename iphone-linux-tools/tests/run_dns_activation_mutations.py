@@ -8,6 +8,19 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = {
+    'darwin-account-groups': ('dns_privileged.py', "if sys.platform != 'darwin':", 'if True:',
+                             'ActivationTests.test_darwin_primary_only_handoff_ignores_account_groups'),
+    'darwin-extra-groups': ('dns_privileged.py',
+                           'return [value for value in values[:count] if value != primary_gid]', 'return []',
+                           'ActivationTests.test_darwin_nonprimary_groups_refuse_handoff'),
+    'darwin-group-errno': ('dns_privileged.py', 'if count < 0:', 'if False:',
+                          'ActivationTests.test_darwin_getgroups_errno_refuses_handoff'),
+    'darwin-group-count': ('dns_privileged.py', 'if count > len(values):', 'if False:',
+                          'ActivationTests.test_darwin_getgroups_overflow_refuses_handoff'),
+    'darwin-primary-filter': ('dns_privileged.py', 'if value != primary_gid]', 'if value == primary_gid]',
+                             'ActivationTests.test_darwin_primary_only_handoff_ignores_account_groups'),
+    'helper-group-guard': ('dns_privileged.py', 'or groups):', 'or False):',
+                          'ActivationTests.test_darwin_nonprimary_groups_refuse_handoff'),
     'peer': ('dns_activation.py',
              'if peer_identity(channel) != (expected.uid, expected.gid):', 'if False:',
              'ActivationTests.test_wrong_peer_refused'),

@@ -238,6 +238,101 @@ class ActivationTests(unittest.TestCase):
                 self.assertEqual(result.stdout, b'32\n')
 
 
+    def modeled_bootstrap(self, platform, kernel_groups, account_groups, count=None):
+        """Model OS identity/group reads; execute the real handoff/domain guards."""
+        import ctypes
+        from unittest.mock import MagicMock
+        uid, gid = os.getuid(), os.getgid()
+        identity = {'uid': 0, 'gid': 0}
+        frames = []
+
+        def native_groups(size, buffer):
+            if count is not None:
+                return count
+            for index, value in enumerate(kernel_groups):
+                buffer[index] = value
+            return len(kernel_groups)
+
+        native = MagicMock(side_effect=native_groups)
+        library = SimpleNamespace(getgroups=native)
+        def socket_fixture(*_args, **_kwargs):
+            value = MagicMock()
+            value.__enter__.return_value = value
+            value.fileno.return_value = self.udp.fileno()
+            def send(payload, _rights):
+                data = b''.join(payload)
+                frames.append(privileged.FRAME.unpack(data))
+                return len(data)
+            value.sendmsg.side_effect = send
+            return value
+
+        with tempfile.TemporaryDirectory(prefix='idns-groups-') as folder:
+            path = Path(folder).resolve() / 's'
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as channel:
+                channel.bind(str(path))
+                os.chmod(path, 0o600)
+                options = SimpleNamespace(bind='10.231.0.1', channel=str(path), uid=uid, gid=gid)
+                with ExitStack() as context:
+                    context.enter_context(patch.object(privileged, 'ctypes', ctypes, create=True))
+                    context.enter_context(patch.object(ctypes, 'CDLL', return_value=library))
+                    context.enter_context(patch.object(ctypes, 'get_errno', return_value=5))
+                    context.enter_context(patch.object(privileged.sys, 'platform', platform))
+                    for name in ('getuid', 'geteuid'):
+                        context.enter_context(patch.object(privileged.os, name, side_effect=lambda: identity['uid']))
+                    for name in ('getgid', 'getegid'):
+                        context.enter_context(patch.object(privileged.os, name, side_effect=lambda: identity['gid']))
+                    context.enter_context(patch.object(privileged.os, 'setuid', side_effect=lambda value: identity.update(uid=value)))
+                    context.enter_context(patch.object(privileged.os, 'setgid', side_effect=lambda value: identity.update(gid=value)))
+                    context.enter_context(patch.object(privileged.os, 'setgroups'))
+                    context.enter_context(patch.object(privileged.os, 'getgroups', return_value=account_groups))
+                    context.enter_context(patch.dict(privileged.os.environ, {'SUDO_UID': str(uid), 'SUDO_GID': str(gid)}))
+                    context.enter_context(patch.object(privileged, 'read_nonce', return_value=b'n' * 32))
+                    context.enter_context(patch.object(privileged.socket, 'socket', side_effect=socket_fixture))
+                    try:
+                        privileged.bootstrap(options)
+                    except (OSError, ValueError) as error:
+                        return error, frames
+        return None, frames
+
+    def test_darwin_primary_only_handoff_ignores_account_groups(self):
+        # Mutation captured: using Python's account access list refuses a valid dropped process.
+        error, frames = self.modeled_bootstrap('darwin', [os.getgid()], [0, os.getgid(), 80])
+        self.assertIsNone(error, 'Valid kernel groups refused: ' + str(error))
+        self.assertEqual(frames, [(b'DNS1', os.getuid(), os.getgid(), 0, b'n' * 32)])
+
+    def test_darwin_nonprimary_groups_refuse_handoff(self):
+        # Mutation captured: erasing extras or removing the group guard hands off with root group retained.
+        error, frames = self.modeled_bootstrap('darwin', [os.getgid(), 0], [])
+        self.assertIsInstance(error, ValueError)
+        self.assertIn('Privilege drop incomplete', str(error))
+        self.assertEqual(frames, [])
+
+    def test_darwin_getgroups_errno_refuses_handoff(self):
+        # Mutation captured: ignoring native getgroups errno changes the failure contract.
+        error, frames = self.modeled_bootstrap('darwin', [], [], count=-1)
+        self.assertIsInstance(error, OSError)
+        self.assertEqual(error.errno, 5)
+        self.assertEqual(frames, [])
+
+    def test_darwin_getgroups_overflow_refuses_handoff(self):
+        # Mutation captured: dropping the count bound silently truncates the native group list.
+        error, frames = self.modeled_bootstrap('darwin', [], [], count=1025)
+        self.assertIsInstance(error, ValueError)
+        self.assertIn('count', str(error))
+        self.assertEqual(frames, [])
+
+    def test_linux_supplementary_groups_still_refuse_handoff(self):
+        # Mutation captured: selecting the Darwin reader on Linux ignores real supplemental groups.
+        error, frames = self.modeled_bootstrap('linux', [os.getgid()], [0])
+        self.assertIsInstance(error, ValueError)
+        self.assertEqual(frames, [])
+
+    def test_linux_empty_groups_still_handoff(self):
+        error, frames = self.modeled_bootstrap('linux', [0], [])
+        self.assertIsNone(error, str(error))
+        self.assertEqual(frames, [(b'DNS1', os.getuid(), os.getgid(), 0, b'n' * 32)])
+
+
 class ActivationBootstrapTests(unittest.TestCase):
     """Run explicitly as ubuntu inside a root-created private network namespace."""
     def setUp(self):

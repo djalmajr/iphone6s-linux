@@ -3,6 +3,7 @@
 import argparse
 import array
 from contextlib import ExitStack
+import ctypes
 import ipaddress
 import os
 from pathlib import Path
@@ -16,6 +17,23 @@ import time
 FRAME = struct.Struct('!4sIII32s')
 NETWORKS = tuple(ipaddress.ip_network(x) for x in
                  ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'))
+
+
+def supplementary_groups(primary_gid):
+    if sys.platform != 'darwin':
+        return os.getgroups()
+    # Python macOS getgroups may query account membership instead of kernel state.
+    # XNU getgroups includes the effective GID; the caller checks that separately.
+    function = ctypes.CDLL(None, use_errno=True).getgroups
+    function.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_uint32)]
+    function.restype = ctypes.c_int
+    values = (ctypes.c_uint32 * 1024)()
+    count = function(len(values), values)
+    if count < 0:
+        raise OSError(ctypes.get_errno(), 'Kernel group query failed.')
+    if count > len(values):
+        raise ValueError('Kernel group count refused.')
+    return [value for value in values[:count] if value != primary_gid]
 
 
 def private_bind(value):
@@ -72,15 +90,16 @@ def bootstrap(options):
         os.setgroups([])
         os.setgid(options.gid)
         os.setuid(options.uid)
+        groups = supplementary_groups(options.gid)
         if (os.getuid() != options.uid or os.geteuid() != options.uid
                 or os.getgid() != options.gid or os.getegid() != options.gid
-                or os.getgroups()):
+                or groups):
             raise ValueError('Privilege drop incomplete; no socket handoff.')
         private_channel(options)
         channel = stack.enter_context(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM))
         channel.settimeout(3)
         channel.connect(options.channel)
-        payload = FRAME.pack(b'DNS1', os.geteuid(), os.getegid(), len(os.getgroups()), nonce)
+        payload = FRAME.pack(b'DNS1', os.geteuid(), os.getegid(), len(groups), nonce)
         descriptors = array.array('i', [udp.fileno(), tcp.fileno()])
         sent = channel.sendmsg([payload], [(socket.SOL_SOCKET, socket.SCM_RIGHTS, descriptors)])
         if sent != len(payload):
