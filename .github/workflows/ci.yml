@@ -71,6 +71,12 @@ jobs:
         run: python iphone-linux-tools/tests/run_restore_mutation_gate_mutations.py
       - name: Herdr startup without nohup mutations
         run: python iphone-linux-tools/tests/run_herdr_detach_mutations.py
+      - name: Live DNS deployment and rollback mutations
+        run: python iphone-linux-tools/tests/run_dev_mutations.py
+      - name: USB budget before gadget binding mutations
+        run: python iphone-linux-tools/tests/run_usb_budget_mutations.py
+      - name: Init-only USB budget image mutations
+        run: python iphone-linux-tools/tests/run_usb_budget_image_mutations.py
       - name: Profile security mutations
         run: python iphone-linux-tools/tests/run_profile_mutations.py
       - name: Reboot verification mutations

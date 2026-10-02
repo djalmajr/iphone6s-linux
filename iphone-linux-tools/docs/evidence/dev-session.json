@@ -26,5 +26,11 @@
   "scope": [
     "srv/data/dns/manage-dns.sh",
     "srv/data/dns/hosts"
-  ]
+  ],
+  "final_check": {
+    "same_boot_verified": true,
+    "uptime": 8441.32,
+    "herdr_running": true,
+    "strict_ssh_preserved": true
+  }
 }

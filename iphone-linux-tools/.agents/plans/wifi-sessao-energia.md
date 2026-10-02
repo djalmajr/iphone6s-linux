@@ -24,7 +24,7 @@ O operador autorizou os três pontos em 2026-10-02. Direção: mínima reinicial
 - [x] Implementar updater DNS/checkpoint/rollback da sessão SSH.
 - [x] Provar positivos, erro parcial, integridade, destino/link/lock inválido e mutações críticas local/VM.
 - [x] Provar deploy e rollback no mesmo boot do telefone, preservando SSH/kernel/uptime e DNS UDP/TCP.
-- [ ] Atualizar documentação/issues e publicar resultados, conservando hardware/energia não comprovados como abertos.
+- [x] Documentar resultados e reprodução; publicação/checkpoint das issues nesta fase, conservando hardware/energia não comprovados como abertos.
 
 ## Verificação
 
@@ -39,3 +39,8 @@ O boot real reportou MaxPower2 em configfs. As duas fontes de init não atribuem
 ## Fase de reprodução offline
 
 Cinco arquivos: este plano, scripts/build/rebuild-usb-budget.py, tests/test_usb_budget_image.py, tests/run_usb_budget_image_mutations.py e scripts/research/apple-n71-map.py. Repack altera somente init da candidata verificada; preserva identidades e prefixo loader/DTB/kernel, sem executar userspace. Leitor N71 fixa URL/membro/hash da distribuição Apple, usa Range/CRC e a biblioteca Compression do macOS já presente; limites de bytes/DER/ADT, saída exclusivamente privada em runtime novo. Não verifica assinatura IMG4 e não serve para flashear. Testar delta exato/nomes parecidos/anchors/integridade e preparar perfil separado, sem tocar o perfil ativo.
+
+
+## Fechamento desta fatia
+
+Updater DNS passou deploy/rollback físicos no mesmo boot; fontes e candidata do orçamento USB passaram fixtures Mac/VM. Referência N71 obtida duas vezes com igualdade de hashes/árvore. Documentação/evidências públicas sanitizadas e três gates novos de mutação integrados ao workflow. #32 pode concluir este primeiro serviço declarado; #9/#2/#33 continuam abertos para suporte/provas de hardware. Próximo boot somente quando a candidata agregada exigir, sem encerrar o Linux atual apenas para repetir tests de userspace. VM de fixtures deve voltar ao estado parado anterior. CI remoto pertence ao commit publicado; não inferir aprovação antes do resultado terminal.
