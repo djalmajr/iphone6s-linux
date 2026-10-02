@@ -2,6 +2,25 @@
 
 Verificado em 2026-09-29. Resultado: **Wi-Fi nativo não habilitado**. Não foi encontrado um caminho pronto e comprovado para este N71/S8000 com o kernel atual ou o device tree A9 do upstream consultado.
 
+## Desenvolvimento contínuo S8000 — 2026-10-02
+
+O goal de implementação segue ativo, com gates físicos agrupados. Foram implementadas em `phone/kernel/n71-pcie-contract.h` primitivas específicas do controlador S8000: índices dos recursos, seis seletores de registradores e atualização de bits que preserva os demais campos. São funções puras; não há acesso MMIO nem controlador operacional neste header. [Proveniência e mapa selecionado](evidence/n71-driver-reference.json).
+
+A referência é o kernelcache N71 da distribuição oficial Apple 15.8.8/19H422. O membro ZIP foi obtido com Range, conferido por SHA/CRC e descomprimido com LZSS/Adler32. Foram lidos metadados e instruções como dados; o firmware não foi executado, enviado ao aparelho ou publicado. A assinatura criptográfica IMG4 não foi verificada. O match `AppleS8000PCIe` → `apcie,s8000` foi confrontado com o ADT N71; presença de outros drivers no mesmo kernel, isoladamente, não identifica a placa.
+
+Para a porta WLAN1, a referência mapeia recursos Apple 0/3/4/9/10: ECAM `0x610000000`, porta `0x602000000`, bloco secundário `0x602004000`, common `0x600000000`, PHY `0x600008000`. O DART `0x602008000` é separado do bloco secundário. Os seis seletores common dessa porta resultam em `0x24`, `0x2c`, `0x180`, `0x194`, `0x1a4`, `0x1ac`; isso impede substituir o mapa por constantes A10. Os nomes funcionais completos dos controles continuam pendentes; a API preserva IDs/bits em vez de atribuir semântica elétrica presumida.
+
+O driver Apple examinado exige `apcie-phy-tunables`, ausente do ADT do IPSW lido. Ainda falta confirmar a origem desses parâmetros no boot/runtime; não foi adotada uma tabela A10 como substituta. Também faltam integração do controlador Linux, MSI/streams/DART, firmware adequado após enumeração e associação. O header passou no Mac, ARM64 da VM e compilação `__KERNEL__`/`-Werror`; seis mutações são detectadas por asserção após compilação bem-sucedida. Esses gates não comprovam inicialização física ou Wi-Fi.
+
+Reproduzir o contrato sem telefone, com o compilador C já existente:
+
+```sh
+python3 -m unittest discover -s iphone-linux-tools/tests -p test_n71_pcie_contract.py -v
+python3 iphone-linux-tools/tests/run_n71_pcie_mutations.py
+```
+
+O procedimento usa somente diretório temporário e recusa contar falha de compilação como kill de mutação. No Mac não foram instalados pacotes. A candidata e o aparelho não mudaram nesta fatia; nenhuma nova reinicialização foi feita.
+
 ## Evidência no aparelho
 
 - Linux 7.0.12 ARM64; interfaces `lo`, `sit0` e `usb0`.
