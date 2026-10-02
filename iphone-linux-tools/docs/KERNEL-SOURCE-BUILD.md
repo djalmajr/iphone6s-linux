@@ -129,3 +129,69 @@ sha256sum "$kernel_guest_build/artifacts/config-embedded"
 ```
 
 Copie `Image`, `Image.gz`, `s8000-n71.dtb`, `config`, `config-embedded`, `provenance.json` e os logs para uma pasta nova em `iphone-linux-tools/runtime/`, com modos privados. Recalcule os hashes após a transferência. Confira o DNS DHCP e pare somente a VM própria com `multipass stop iphone6s-kernel-20261001`. A integração do kernel e o teste no iPhone seguem uma fase própria; mantenha os payloads conhecidos e snapshots preservados.
+
+## Patchset DART separado — #34
+
+O writer S5L do commit fixado perde bits de outros streams e não desloca o
+valor pelo SID. A [evidência](evidence/dart-s5l-stream-tcr.json) reproduz a
+função original e a correção com MMIO simulado. Não comprova layout/SID do
+N71 nem autoriza habilitar DMA. Topologia DART continua desativada no perfil.
+
+Para agregar esse fix a uma futura imagem, preserve o checkout e o output
+funcionais. Crie uma worktree separada, com HEAD no mesmo commit. Transfira
+somente código público para um bundle com a estrutura abaixo; nenhuma chave,
+firmware, captura DT ou calibração entra na VM:
+
+```text
+/home/ubuntu/n71-patch-inputs-20261002/
+  scripts/build/build-kernel-source.sh
+  scripts/build/kernel-n71.config
+  scripts/build/kernel_patchset.py
+  phone/kernel/patches/0001-s5l8960x-dart-stream-tcr.patch
+```
+
+Confira hashes host/guest antes de executar. O patch está fixado em
+`da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74`.
+No shell da VM, como usuário ubuntu:
+
+```bash
+set -euo pipefail
+umask 077
+kernel_baseline_source=/home/ubuntu/kernel-n71-source-20261001
+kernel_patch_source=/home/ubuntu/kernel-n71-dart-source-20261002
+kernel_patch_inputs=/home/ubuntu/n71-patch-inputs-20261002
+test ! -e "$kernel_patch_source"
+git -c core.hooksPath=/dev/null -c core.fsmonitor=false \
+  -C "$kernel_baseline_source" worktree add --detach "$kernel_patch_source" \
+  958481f87fee0949ff6a9a4af77f7eb6dac8a149
+python3 "$kernel_patch_inputs/scripts/build/kernel_patchset.py" \
+  apply "$kernel_patch_source" n71-dart-tcr-v1
+python3 "$kernel_patch_inputs/scripts/build/kernel_patchset.py" \
+  check "$kernel_patch_source" n71-dart-tcr-v1
+git -C "$kernel_baseline_source" diff --exit-code
+```
+
+Aplicação é idempotente e exige `.git` regular de worktree vinculada, base
+fixada, patch/hunk originais por SHA e conteúdo completo esperado do único
+arquivo alterado. Recusa symlinks, staged/untracked/deltas extras e flags de
+índice que escondam mudanças. Não reseta ou apaga alterações recusadas.
+`check` retorna JSON sem caminhos pessoais, com hashes dos blobs/patch.
+
+Somente quando a imagem agregar os drivers/configurações necessários, rode:
+
+```bash
+bash "$kernel_patch_inputs/scripts/build/build-kernel-source.sh" \
+  "$kernel_patch_source" /home/ubuntu/kernel-n71-dart-build-new n71-dart-tcr-v1
+```
+
+O modo padrão de dois argumentos continua exigindo fonte limpa. O terceiro
+argumento aceita exclusivamente esse patchset e verifica o estado exato antes
+e depois do build. `artifacts/provenance.json` inclui `source_patchset`; uma
+candidata modificada não deve passar pelo compositor fixado ao Image baseline.
+Exigir novo registro de outputs, configuração embutida e perfil separado na
+fase de integração. Não mudar o perfil funcional só por build passar.
+
+Gates de preparo são testes reais de Git/filesystem no Mac e VM, aplicação
+na fonte fixada em worktree separada e objeto kernel/Werror. Nenhuma imagem
+com esse patch foi qualificada fisicamente; integração, serialização TCR,
+SID/mapeamento e faults seguem na [issue #34](https://github.com/djalmajr/iphone6s-linux/issues/34).

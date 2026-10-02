@@ -6,13 +6,16 @@ if [ "$(uname -s)" != Linux ] || [ "$(uname -m)" != aarch64 ] || [ "$EUID" -eq 0
     printf 'Run as the VM user in an isolated Linux ARM64 guest.\n' >&2
     exit 1
 fi
-if [ "$#" -ne 2 ]; then
-    printf 'Usage: %s SOURCE_DIRECTORY NEW_BUILD_DIRECTORY\n' "$0" >&2
+if [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; then
+    printf 'Usage: %s SOURCE_DIRECTORY NEW_BUILD_DIRECTORY [n71-dart-tcr-v1]\n' "$0" >&2
     exit 2
 fi
 source_dir=$(realpath -e "$1")
 build_dir=$(realpath -m "$2")
 fragment=$(cd "$(dirname "$0")" && pwd)/kernel-n71.config
+patch_checker=$(dirname "$fragment")/kernel_patchset.py
+patchset=${3:-}
+patch_record=
 commit=958481f87fee0949ff6a9a4af77f7eb6dac8a149
 if [ -e "$build_dir" ] || [ -L "$build_dir" ]; then
     printf 'Build directory already exists; preserve it and choose another.\n' >&2
@@ -22,7 +25,11 @@ case "$build_dir/" in
     "$source_dir/"*) printf 'Build must remain outside the source checkout.\n' >&2; exit 1 ;;
 esac
 test "$(git -C "$source_dir" rev-parse HEAD)" = "$commit"
-test -z "$(git -C "$source_dir" status --porcelain --untracked-files=no)"
+if [ -n "$patchset" ]; then
+    patch_record=$(python3 "$patch_checker" check "$source_dir" "$patchset")
+else
+    test -z "$(git -C "$source_dir" status --porcelain --untracked-files=no)"
+fi
 test -f "$source_dir/arch/arm64/boot/dts/apple/s8000-n71.dts"
 free_kib=$(df -Pk "$(dirname "$build_dir")" | awk 'NR == 2 {print $4}')
 if [ "$free_kib" -lt 8388608 ]; then
@@ -67,12 +74,16 @@ PY
 printf 'KERNEL_COMPILE_STARTED\n'
 make -C "$source_dir" O="$build_dir" ARCH=arm64 -j2 Image apple/s8000-n71.dtb \
     > "$build_dir/logs/build.log" 2>&1
-test -z "$(git -C "$source_dir" status --porcelain --untracked-files=no)"
+if [ -n "$patchset" ]; then
+    test "$patch_record" = "$(python3 "$patch_checker" check "$source_dir" "$patchset")"
+else
+    test -z "$(git -C "$source_dir" status --porcelain --untracked-files=no)"
+fi
 cp "$build_dir/arch/arm64/boot/Image" "$build_dir/artifacts/Image"
 cp "$build_dir/arch/arm64/boot/dts/apple/s8000-n71.dtb" "$build_dir/artifacts/s8000-n71.dtb"
 cp "$build_dir/.config" "$build_dir/artifacts/config"
 gzip -n -9 -c "$build_dir/artifacts/Image" > "$build_dir/artifacts/Image.gz"
-python3 - "$build_dir" "$commit" "$epoch" <<'PY'
+python3 - "$build_dir" "$commit" "$epoch" "$patch_record" <<'PY'
 import hashlib
 import json
 from pathlib import Path
@@ -94,6 +105,7 @@ for path in artifacts.iterdir():
         digest = hashlib.file_digest(file, 'sha256').hexdigest()
     outputs[path.name] = {'sha256': digest, 'bytes': path.stat().st_size}
 report = {'format': 1, 'source_commit': sys.argv[2], 'source_epoch': int(sys.argv[3]),
+          'source_patchset': json.loads(sys.argv[4]) if sys.argv[4] else None,
           'kernel_release': (root / 'include/config/kernel.release').read_text().strip(),
           'page_size_kib': 16, 'dtb_compatible': compatible, 'usb_ncm': 'builtin',
           'compiler_version': subprocess.check_output(['gcc', '-dumpfullversion'], text=True).strip(),
