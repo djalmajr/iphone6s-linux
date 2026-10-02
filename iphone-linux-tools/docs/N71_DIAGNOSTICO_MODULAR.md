@@ -1,0 +1,91 @@
+# Diagnóstico PCIe modular N71
+
+O objetivo deste experimento é identificar o endpoint WLAN1 sem habilitar DMA,
+firmware ou rádio. Não fornece ainda uma interface Wi-Fi. O kernel funcional,
+USB500mA, initramfs e identidades SSH são preservados; somente o DT privado
+recebe o binding diagnóstico e as tabelas extraídas do próprio runtime N71.
+O módulo fica separado e exige carga explícita. Não usar em outras placas.
+
+## Preparação sem USB
+
+Na raiz do repositório, o gerador aceita somente os insumos privados fixados
+por hash: baseline, topologia desativada e captura Pongo já validada.
+Escolha diretórios novos; os exemplos não devem sobrescrever resultados.
+
+```sh
+python3 iphone-linux-tools/scripts/build/prepare-n71-pcie-diagnostic.py \
+  --baseline iphone-linux-tools/runtime/a9-implementation-20261002/baseline.dtb \
+  --staged iphone-linux-tools/runtime/a9-implementation-20261002/candidate.dtb \
+  --capture iphone-linux-tools/runtime/pongo-n71-reference-20261002/dt-private.txt \
+  --output-dir iphone-linux-tools/runtime/n71-diagnostic-new
+```
+
+Na VM dedicada, use a fonte Hoolock fixada em
+`958481f87fee0949ff6a9a4af77f7eb6dac8a149` e o output do kernel funcional.
+Transfira somente os arquivos públicos `phone/kernel/n71-pcie-*` e Makefile
+para uma pasta externa à fonte. Não transferir DT/tunables, chaves ou firmware.
+
+```sh
+export LOCALVERSION=
+make -C /home/ubuntu/kernel-n71-source-20261001 \
+  O=/home/ubuntu/kernel-n71-build-20261001-v2 ARCH=arm64 modules_prepare
+make -C /home/ubuntu/kernel-n71-source-20261001 \
+  O=/home/ubuntu/kernel-n71-build-20261001-v2 ARCH=arm64 \
+  M=/home/ubuntu/n71-diagnostic-module-20261002 \
+  KBUILD_EXTRA_SYMBOLS=/home/ubuntu/kernel-n71-build-20261001-v2/vmlinux.symvers modules
+```
+
+`LOCALVERSION=` evita ABI com sufixo `+`. O build Image-only não tinha
+`scripts/module.lds`; `modules_prepare` gerou esse suporte. Modpost avisa que
+o `Module.symvers` global não existe, mas recebe os símbolos do mesmo vmlinux
+via `KBUILD_EXTRA_SYMBOLS`; não suprimir erros de símbolos indefinidos.
+Conferir vermagic `7.2.0-iphone6s-source SMP preempt mod_unload aarch64`.
+Copiar o `.ko` de volta para runtime privado no Mac, modo600.
+
+```sh
+python3 iphone-linux-tools/scripts/build/compose-n71-diagnostic.py \
+  --source-profile iphone-linux-tools/runtime/kernel-usb-budget-20261002/deployment.json \
+  --kernel-dir iphone-linux-tools/runtime/kernel-source-build-20261001/artifacts \
+  --diagnostic-dir iphone-linux-tools/runtime/n71-diagnostic-new \
+  --module iphone-linux-tools/runtime/n71-diagnostic-new/n71-pcie-diagnostic.ko \
+  --module-sha256 SHA256_DO_BUILD_VERIFICADO \
+  --output-dir iphone-linux-tools/runtime/n71-diagnostic-profile-new
+```
+
+O compositor confere ELF/ABI/hash, delta DT e layout do payload. Não carrega
+módulo, altera perfil default ou inicia USB. Na candidata de 2026-10-02,
+o módulo tem SHA256
+`8d62aebade3e122d350a6510b88270be0e0291cb40a3b5e74b7244f16c2883ec`.
+
+## Uma sessão física, dois gates
+
+Boot pelo wrapper com `IPHONE_LINUX_PROFILE` apontando ao perfil privado e
+`boot --restore ID` com snapshot previamente verificado. Preservar USB-A
+traseiro; fazer DFU manual somente quando o monitor estiver pronto.
+SSH usa a chave e o pin do perfil, sem fallback para terminal sem senha.
+
+Após conferir kernel, SSH e HTTP, transferir módulo por stdin SSH para `/run`
+e conferir SHA no telefone. Primeiro carregar com `run=1` (enumerate desligado).
+Exigir no dmesg `N71_PCIE_CLOCKS_READY` e ausência de falha/cleanup pendente.
+O exit zero de insmod sozinho não prova probe: registro do driver pode passar
+enquanto o dispositivo falha. Se esse gate passar, descarregar e carregar
+no mesmo boot com `run=1 enumerate=1`. Exigir `N71_PCIE_ENDPOINT_ID`, vendor
+válido e bus-master desabilitado. Em ambos os modos, o driver mantém/reasserta
+PERST e balanceia os quatro domínios ao terminar.
+
+Guardar dmesg bruto somente em runtime privado. Publicar estágio/errno,
+status selecionados e identidade PCI, sem identificadores pessoais/tabelas.
+Falha exige diagnóstico antes de nova tentativa; atualização do módulo pode
+ser enviada por SSH no mesmo boot. Não repetir DFU para trocar um `.ko`.
+
+Ao encerrar, snapshot verificado, sync e `return_ios.py --wait 60`; confirmar
+iOS USB e ausência do gadget Linux. Leitura de bateria antes/depois inclui
+DFU/reboot/iOS: não é medição de corrente líquida ou prova de carga sustentada.
+
+## Gates já executados; prova física ainda pendente
+
+C nativo Mac/ARM64 e objeto kernel/Werror passaram. Fixtures sintéticas testam
+ordem/RMW, erros por operação, timeout, capability cycle, Gen1, reset e recusa
+de DMA. Gerador e compositor passaram com fixtures e insumos privados reais.
+Asserções das mutações são executadas separadamente; falha de compilação
+não conta como kill. Nenhum desses gates identifica o chip físico.
