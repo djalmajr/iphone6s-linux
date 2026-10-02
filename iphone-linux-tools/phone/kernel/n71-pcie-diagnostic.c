@@ -9,66 +9,15 @@
 #include <linux/pm_domain.h>
 #include <linux/pm_runtime.h>
 #include "n71-pcie-port.h"
+#include "n71-pcie-link.h"
+#include "n71-pcie-mmio.h"
 
 static bool run;
 module_param(run, bool, 0400);
 MODULE_PARM_DESC(run, "Explicitly run one N71 clock/reset diagnostic at probe");
-
-struct n71_diagnostic {
-	void __iomem *common, *phy, *port, *ecam;
-	struct gpio_desc *perst;
-	struct device *domains[4];
-	unsigned int attached, powered;
-};
-
-static int n71_read(void *context, enum n71_pcie_region region, u32 offset, u32 *value)
-{
-	struct n71_diagnostic *state = context;
-	void __iomem *base = region == N71_PCIE_COMMON ? state->common : state->phy;
-	u32 size = region == N71_PCIE_COMMON ? 0x8000 : 0x4000;
-
-	if (!value || (region != N71_PCIE_COMMON && region != N71_PCIE_PHY) ||
-	    offset % 4 || offset > size - 4)
-		return -EINVAL;
-	*value = readl(base + offset);
-	return 0;
-}
-
-static int n71_write(void *context, enum n71_pcie_region region, u32 offset, u32 value)
-{
-	struct n71_diagnostic *state = context;
-	void __iomem *base = region == N71_PCIE_COMMON ? state->common : state->phy;
-	u32 size = region == N71_PCIE_COMMON ? 0x8000 : 0x4000;
-
-	if ((region != N71_PCIE_COMMON && region != N71_PCIE_PHY) || offset % 4 || offset > size - 4)
-		return -EINVAL;
-	writel(value, base + offset);
-	return 0;
-}
-
-static int n71_read_port(void *context, u32 offset, u32 *value)
-{
-	struct n71_diagnostic *state = context;
-	if (!value || offset % 4 || offset > 0x3ffc)
-		return -EINVAL;
-	*value = readl(state->port + offset);
-	return 0;
-}
-
-static int n71_write_port(void *context, u32 offset, u32 value)
-{
-	struct n71_diagnostic *state = context;
-	if (offset % 4 || offset > 0x3ffc)
-		return -EINVAL;
-	writel(value, state->port + offset);
-	return 0;
-}
-
-static void n71_delay(void *context, unsigned int microseconds)
-{
-	(void)context;
-	udelay(microseconds);
-}
+static bool enumerate;
+module_param(enumerate, bool, 0400);
+MODULE_PARM_DESC(enumerate, "Also train WLAN1 and read identity, without DMA or radio");
 
 static int n71_table(struct device *dev, const char *name, u32 size,
 		     struct n71_pcie_tunable **table, unsigned int *count)
@@ -171,6 +120,8 @@ static int n71_probe(struct platform_device *pdev)
 	unsigned int port_count, ecam_count;
 	u32 root_id, port_status;
 	struct n71_pcie_port_io io = {{&state, n71_read, n71_write, n71_delay}, n71_read_port, n71_write_port};
+	struct n71_pcie_link_io link = {&state, n71_read_link, n71_write_link, n71_reset, n71_delay, n71_endpoint};
+	u32 identity;
 	const char *stage = "validate";
 	int error, cleanup;
 
@@ -183,6 +134,9 @@ static int n71_probe(struct platform_device *pdev)
 		error = n71_table(dev, "n71,port1-tunables", 0x4000, &port, &port_count);
 	if (!error)
 		error = n71_table(dev, "n71,config1-tunables", 0x1000, &ecam, &ecam_count);
+	if (!error && (!n71_pcie_link_table_valid(ecam, ecam_count, true) ||
+		       !n71_pcie_link_table_valid(port, port_count, false)))
+		error = -EINVAL;
 	if (error)
 		return dev_err_probe(dev, error, "N71_PCIE_DIAGNOSTIC validate failed\n");
 	config.phy = phy;
@@ -216,8 +170,20 @@ static int n71_probe(struct platform_device *pdev)
 			dev_info(dev, "N71_PCIE_CLOCKS_READY root-id=%08x port88=%08x; PERST held; no DMA\n",
 				 root_id, port_status);
 	}
+	if (!error && enumerate) {
+		stage = "enumerate";
+		error = n71_pcie_enumerate_wlan(&link, ecam, ecam_count, port, port_count, &identity);
+		if (!error)
+			dev_info(dev, "N71_PCIE_ENDPOINT_ID=%08x; bus-master clear; no radio\n", identity);
+		cleanup = n71_reset(&state, true);
+		if (cleanup) {
+			dev_err(dev, "N71_PCIE_DIAGNOSTIC reset cleanup failed: %d\n", cleanup);
+			if (!error)
+				error = cleanup;
+		}
+	}
 done:
-	/* Endpoint never leaves reset in this diagnostic; balance every power ref. */
+	/* Reassert reset after enumeration and balance every power reference. */
 	cleanup = n71_release_power(&state);
 	if (cleanup < 0) {
 		dev_err(dev, "N71_PCIE_DIAGNOSTIC power cleanup failed: %d\n", cleanup);
@@ -250,4 +216,4 @@ module_init(n71_init);
 static void __exit n71_exit(void) { platform_driver_unregister(&n71_driver); }
 module_exit(n71_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Opt-in N71 PCIe clocks diagnostic; endpoint held in reset");
+MODULE_DESCRIPTION("Opt-in N71 PCIe clocks and identification diagnostic; no DMA");
