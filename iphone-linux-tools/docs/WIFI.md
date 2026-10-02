@@ -91,3 +91,32 @@ Não há fontes de alimentação em power_supply nem propriedade com nome ADT no
 **Próximo desenvolvimento:** obter a topologia Apple N71 original de fonte identificada e manter o insumo privado. Mapear barramento/PHY/reset/clocks/PMGR/DMA e comparar com a fonte do driver host antes de preparar uma candidata específica do A9. A fase offline não requer reboot do iPhone. Depois de mapa validado e build na VM, uma única sessão deve reunir enumeração, preservação do SSH USB e logs; só testar firmware/associação se o rádio tiver sido identificado. Instalar módulos genéricos não cria os nós/topologia ausentes.
 
 A tabela/fork A10 foi reconsultada; a validação permanece em J172/D111, sem evidência N71 nessa matriz. #9 passa a prioridade de desenvolvimento. DNS53 fica em espera; suporte A10 não será tratado como prova A9. Fluxo de iteração: [desenvolvimento com menos reinicializações](DESENVOLVIMENTO.md).
+
+
+## Referência Apple N71 obtida — 2026-10-02
+
+Foi lido o membro exato `Firmware/all_flash/DeviceTree.n71ap.im4p` da [distribuição Apple iOS 15.8.8/19H422](https://updates.cdn-apple.com/2025FallFCS/fullrestores/122-77510/5D4563BF-445C-4D8D-AF56-0BAC336265F3/iPhone_4.7_15.8.8_19H422_Restore.ipsw), por HTTP Range: 31.376 bytes transferidos, membro de 25.946 bytes, CRC ZIP conferido. SHA256 `739aeb1b52a76ac9147b2479e86a06b3c49b1e09499377ea73f1329a034b5184`. Decodificação LZFSE usou a biblioteca Compression já presente no macOS; duas extrações independentes produziram os mesmos 142.148 bytes/200 nós. Assinatura criptográfica IMG4 não foi verificada; isso é referência de placa, não imagem autorizada para flash. [Mapa público selecionado e proveniência](evidence/n71-board-map.json).
+
+| Caminho Apple N71 | Informação concreta |
+|---|---|
+| arm-io/apcie | Host `apcie,s8000` |
+| apcie/pci-bridge1/wlan | Família `wlan-pcie,bcm4350`, porta PCIe 1 |
+| uart4/wlan | `wlan-pcie-uart,bcm4350` |
+| dart-apcie1 | `dart,s8000`, fallback `dart,s5l8960x`, mapper-apcie1 |
+
+Isso substitui a hipótese anterior de família por uma identificação na referência Apple N71; ainda não identifica PCI-ID/revisão/calibração do rádio deste aparelho, nem demonstra enumeração Linux. O caminho do A10 D111 usa porta 2; não copiar essa topologia para a porta 1 do N71.
+
+O [controlador experimental do fork](https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/pci/controller/pcie-apple-h9p.c) oferece matches J172/T8010, sem match S8000. O [DART da fonte atual](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/iommu/apple-dart.c) já inclui `apple,s5l8960x-dart`; a lacuna é a integração DT/streams/clocks/reset/dominios e sua validação N71, não ausência total de driver DART.
+
+Próxima implementação: revisar mapa MMIO/PHY e sequência de energia/reset S8000; descrever host porta 1 e DART no DT, compilar com drivers correspondentes na VM e preparar uma única candidata. Nessa próxima sessão necessária, reunir enumeração PCI, DMA, logs, preservação USB/SSH e orçamento USB corrigido. Firmware/associação/DHCP ficam depois da identificação real do rádio. Não foram escritos registradores ou instalados drivers/firmware nesta pesquisa.
+
+### Reproduzir a obtenção privada
+
+Na raiz do repositório, escolha um diretório novo diretamente sob runtime, que deve ser do usuário e ter permissão 700:
+
+```sh
+python3 -B iphone-linux-tools/scripts/research/apple-n71-map.py \
+  --output-dir "$PWD/iphone-linux-tools/runtime/n71-reference-NOVO"
+```
+
+O leitor fixa URL, tamanho, membro e SHA256; limita Range/DER/ADT/LZFSE, valida CRC e recusa outro hash. Não baixa o IPSW inteiro, executa downloads ou instala dependências. Requer macOS pela biblioteca Compression existente. Saídas brutas e nomes/propriedades de placa permanecem privados, modo 600, sob runtime ignorado. Não publicar ADT, calibração, MAC, serial ou firmware. O programa não faz boot/restore/flash, nem converte sozinho o ADT Apple em um DTS Linux operacional.

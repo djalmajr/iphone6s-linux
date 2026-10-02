@@ -1,0 +1,30 @@
+{
+  "same_boot_verified": true,
+  "strict_ssh_preserved": true,
+  "kernel": "7.2.0-iphone6s-source",
+  "uptime_before": 6328.17,
+  "uptime_after": 6442.06,
+  "dns_udp_tcp_deploy_and_rollback_passed": true,
+  "original_hosts_and_manager_hash_restored": true,
+  "checkpoints_verified": 4,
+  "reboots_performed": 0,
+  "date": "2026-10-02",
+  "service": "DNS5353",
+  "mac_tests": {
+    "total": 15,
+    "passed": 10,
+    "skipped_vm_only": 5,
+    "assertion_mutations_killed": 7
+  },
+  "vm_tests": {
+    "total": 15,
+    "passed": 15,
+    "assertion_mutations_killed": 12
+  },
+  "raw_logs_public": false,
+  "phone_dns53_tested": false,
+  "scope": [
+    "srv/data/dns/manage-dns.sh",
+    "srv/data/dns/hosts"
+  ]
+}

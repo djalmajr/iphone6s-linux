@@ -184,3 +184,24 @@ Checkpoint final: Linux ainda estava ativo após a espera. Novo sync e reboot di
 A configuração efetiva da candidata 7.2.0 contém `CONFIG_APPLE_MFI_FASTCHARGE` desabilitado. O nome não identifica um carregador A9: a fonte registra um `usb_device_driver`, reconhece dispositivos Apple externos e envia uma requisição de controle USB para o dispositivo conectado. A interface `power_supply` expõe tipo de carga e escopo `DEVICE`, sem capacidade, tensão ou temperatura da bateria interna do computador onde o driver roda. [Fonte consultada, commit fixado](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/usb/misc/apple-mfi-fastcharge.c).
 
 Inferência dessa inspeção: habilitar esse driver no kernel que roda no iPhone em modo periférico não implementa o lado receptor do protocolo nem o controle do PMIC/bateria A9. Não habilitamos a opção, não enviamos comandos de carga e não alteramos driver ou configuração USB do Mac. A investigação de carga sustentada #2 continua aberta; uma interface chamada `power_supply` ou uma opção chamada `fastcharge` não substitui a identificação do hardware e a medição apropriada.
+
+
+## Mapa de energia e orçamento USB — 2026-10-02
+
+A referência Apple N71, obtida offline conforme [Wi-Fi](WIFI.md), descreve medidor `gas-gauge,bq27540`/HDQ em UART5, carregador `charger,sn2400` em I2C1/tigris e PMIC `pmu,d2255` em I2C0. Isso identifica o caminho da placa; não habilita sensores nem prova a revisão/calibração do aparelho. Não substituir o BQ27540 pelo BQ27545 mencionado em implementações A10.
+
+O [driver experimental SN2400](https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/power/supply/apple_sn2400_charger.c) requer regmap do pai, mux HDQ, limite de entrada e parâmetros da bateria; o probe programa limites de carga. Inserir apenas um compatible no DT seria insuficiente e poderia acionar escritas com parâmetros indevidos. Próximo gate: validar UART5/HDQ/mux/regmap e parâmetros N71, inicialmente com telemetria somente leitura. Nenhuma escrita I2C/MMIO/PMIC foi feita.
+
+No boot existente `7.2.0-iphone6s-source`, o diagnóstico reportou sensores de bateria/temperatura indisponíveis e **configfs MaxPower=2 mA**, bmAttributes=0x80. Esta leitura pertence a esta imagem; leituras históricas de 500 mA acima pertencem a outros pilotos. É orçamento declarado pelo gadget, não corrente medida, e não confirma o valor recebido pelo host nem a causa da descarga.
+
+As duas fontes de init agora declaram **500 mA e bus-powered 0x80 antes de descobrir/bindar UDC**. A candidata separada altera somente init; preserva identidades e todo o prefixo loader/DTB/kernel. Hashes, testes e limites em [evidência](evidence/n71-board-map.json). Foi preparada offline, sem mudar o perfil ativo, desbindar USB ou reiniciar o telefone. **Não foi carregada no hardware.** Próximo boot agregado deve conferir configfs e descritor recebido pelo Mac; essa correção não controla SN2400 e não comprova carga sustentada.
+
+```sh
+export IPHONE_LINUX_PROFILE="$PWD/iphone-linux-tools/runtime/PERFIL-ANTERIOR/deployment.json"
+python3 -B iphone-linux-tools/scripts/build/rebuild-usb-budget.py \
+  --output-dir "$PWD/iphone-linux-tools/runtime/kernel-usb-budget-NOVO"
+python3 -B iphone-linux-tools/tests/run_usb_budget_mutations.py
+python3 -B iphone-linux-tools/tests/run_usb_budget_image_mutations.py
+```
+
+O builder aceita somente o init anterior conhecido e diretório novo privado; recusa âncoras divergentes ou orçamento já presente. Chaves do perfil são copiadas somente no Mac para a candidata privada, nunca para VM/GitHub. Não é atualizador genérico de qualquer initramfs. Fixtures executaram ambas as fontes de init e observaram valores antes da descoberta UDC: seis mutações por asserção no Mac/VM. Repack: cinco testes e quatro mutações por asserção no Mac/VM, delta exato e arquivos/metadados/identidades preservados. Gate físico #33 permanece aberto junto de #2/#8.
