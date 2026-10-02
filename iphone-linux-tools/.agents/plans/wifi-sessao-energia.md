@@ -34,3 +34,8 @@ Usar perfil explícito, identidade SSH presa, backup/persistência existentes. L
 ## Fase de orçamento USB identificada no ponto 3
 
 O boot real reportou MaxPower2 em configfs. As duas fontes de init não atribuem orçamento antes do bind; não confundir isso com corrente medida. Correção específica: declarar500mA/atributo bus-powered0x80 antes de selecionar/bindar UDC, em init e init-server. Cinco arquivos nesta fase: este plano, as duas fontes de init, tests/test_usb_budget.py e tests/run_usb_budget_mutations.py. Fixtures executam o trecho real de configuração com observação do orçamento no momento de descobrir UDC; mutações retiram os dois campos ou os movem para depois dessa descoberta. Não mudar kernel/driver, desbindar USB ou reiniciar o telefone nesta fase. Novo initramfs/piloto físico ficam separados; fonte corrigida não altera a imagem já em RAM.
+
+
+## Fase de reprodução offline
+
+Cinco arquivos: este plano, scripts/build/rebuild-usb-budget.py, tests/test_usb_budget_image.py, tests/run_usb_budget_image_mutations.py e scripts/research/apple-n71-map.py. Repack altera somente init da candidata verificada; preserva identidades e prefixo loader/DTB/kernel, sem executar userspace. Leitor N71 fixa URL/membro/hash da distribuição Apple, usa Range/CRC e a biblioteca Compression do macOS já presente; limites de bytes/DER/ADT, saída exclusivamente privada em runtime novo. Não verifica assinatura IMG4 e não serve para flashear. Testar delta exato/nomes parecidos/anchors/integridade e preparar perfil separado, sem tocar o perfil ativo.
