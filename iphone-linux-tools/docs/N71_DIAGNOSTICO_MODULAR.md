@@ -108,13 +108,19 @@ e não comprova carga em Linux. Os sensores e Wi-Fi continuam pendentes.
 
 REG_ON está no PMIC D2255, GPIO10/registro8fc/I2C74, separado do device_wake73
 do SoC. A referência N71 usa endereço BE de dois bytes sem paginação.
-O módulo `n71-wlan-power-diagnostic.ko` usa o binding I2C temporário somente
-se o cliente exato não tem driver. Não substituir outro dono. Não faz probe
+A primeira candidata usava binding I2C temporário e recusou EBUSY no hardware:
+simple-mfd-i2c já controla o cliente e mantém filhos RTC/NVMEM. A versão atual
+compartilha o regmap16r/8v desse MFD, validando driver/mapa a cada operação sob
+device_lock. Não desassociar o driver nem remover seus filhos. Não faz probe
 de endereços nem escreve configuração de carregador, direção ou drive.
+A escrita usa regmap_update_bits com máscara1, preservando os demais bits;
+a referência de vida do cliente não substitui o lock/checagem do mapa devm.
+Um futuro driver GPIO deve arbitrar o pin pela API GPIO; este experimento não
+fornece essa posse genérica e exige o perfil fixado sem esse outro consumidor.
 
 Transfira também os headers `n71-wlan-power*.h` para a pasta do módulo na VM.
 O mesmo Makefile/build acima produz ambos os módulos sem nova imagem.
-A carga `run=1` apenas observa o byte e mantém o cliente bound. Ausência de
+A carga `run=1` apenas observa o byte e mantém uma referência ao cliente/MFD. Ausência de
 `N71_REG_ON_OBSERVED` não é sucesso, mesmo que o comando pareça terminar.
 Não passar `power` ao insmod; o controle só fica disponível após observação.
 
@@ -146,3 +152,21 @@ asserção (incluindo write parcial, posse e verificação). Build/modpost do
 adapter usa símbolos do vmlinux preservado. Isso ainda não comprova leitura
 PMIC, sinal físico REG_ON, link ou Wi-Fi. A próxima sessão reúne esses gates
 observáveis e atualizações `.ko` por SSH, sem DFU por ajuste de código.
+
+### Sessão REG_ON compartilhado — 2026-10-02
+
+No mesmo boot, o adapter foi recompilado e transferido por SSH. Leitura8fc
+retornou00, sem alterar o PMIC. A candidata antiga classificava o modo de
+forma incorreta e recusou ativação; nenhum novo teste PCIe/DMA foi feito.
+
+A referência Apple classifica byte<40 como mode1 (comparação006933e08 e
+classificação006933e0c), portanto00 corresponde ao modo do packetGPIO10.
+O contrato corrigido aceita somente bits7:6=00/bits4:3=00, preservando bits5,
+2 e1; plano00→01→00 passou nos contratos e falhas sintéticas, mas ainda não
+foi aplicado no aparelho. Módulo corrigido SHA92aefccc9c5992f50abb4df350c181d7a2eab71ba4413d5089c3b435f5c3dcca.
+Não substituir esta qualificação por um teste que apenas aceite todo byte.
+
+Power0 confirmou active0/pending0; unload preservou MFD/HTTP. Backup/sync
+concluídos, retorno USB iOS não confirmado em60s; operador confirmou tela de
+bloqueio após fallback. Isso não é prova de reboot por software nem carga.
+[Evidência sanitizada](evidence/n71-reg-on-first-physical.json).

@@ -17,7 +17,7 @@
     "mapper_reference_function": "fffffff006933a88",
     "mapper_rule_below17": "0x8c0 + 6*pin",
     "linux_pmic_compatible": "apple,antigua-pmic / apple,i2c-pmic",
-    "linux_matching_mfd_gpio_driver": "not found in pinned source search; physical binding not yet checked"
+    "linux_matching_mfd_gpio_driver": "simple-mfd-i2c physically bound; RTC/NVMEM children; no GPIO child in this profile"
   },
   "pmic_wire": {
     "vptr_reference": "fffffff006f8c4d8",
@@ -33,6 +33,13 @@
     "clkreq": "SoC GPIO165",
     "perst": "SoC GPIO161"
   },
-  "guarded_update_contract": "Only register8fc; inherited mode bits7:6=01 and bits4:3=00; calculate bit0 change preserving all others; no hardware access",
-  "limits": "Polarity interpretation is from static reference; inherited hardware mode and physical activation remain unverified. No PMIC value writes, charging control or new boot performed for this research"
+  "guarded_update_contract": "Only register8fc; value<40 classified as mode1 by the original Apple set-mode helper. Restrict bits7:6=00 and bits4:3=00, preserve other bits, alter bit0 only through shared MFD regmap",
+  "limits": "Mode/polarity interpretation remains static reference evidence. Physical read00 proved; no physical value writes, endpoint activation, radio or charging control validated in the grouped MFD session.",
+  "mode_classification_reference": {
+    "function": "fffffff006933d8c",
+    "compare": "fffffff006933e08",
+    "classification": "fffffff006933e0c: mode=1 + (value >= 0x40)",
+    "matching_requested_mode_returns_without_write": "fffffff006933e10..fffffff006933e1c",
+    "previous_guard_error": "bits7:6=01 was wrongly equated with packet mode1; physical byte00 exposed this regression"
+  }
 }

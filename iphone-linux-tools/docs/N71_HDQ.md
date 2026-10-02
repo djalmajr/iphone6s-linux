@@ -56,3 +56,12 @@ Atualizações de módulos e userspace devem usar SSH no mesmo boot. Alteração
 indispensável de kernel/DT exige candidata separada e pode exigir novo DFU;
 agregar esses deltas antes de pedir a ação física. Nenhuma nova leitura de
 sensor ou escrita de carregador foi executada para preparar este documento.
+
+## Inventário físico agrupado — 2026-10-02
+
+A leitura do DT no Linux7.2 confirmou status disabled para I2C1 e UART5.
+Não houve varredura I2C, acesso ao SN2400, transmissão UART ou gauge read.
+O PMIC no I2C0 tem MFD/RTC/NVMEM ativos; isso não qualifica o carregador75 do
+outro barramento. power_supply continua vazio. Esses resultados restringem a
+próxima candidata; não representam falha do codec nem prova de sensor.
+Ver [sessão agrupada](evidence/n71-reg-on-first-physical.json).

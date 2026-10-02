@@ -218,6 +218,11 @@ Gates relevantes: lint/AST e compilação C/DTS, tests observáveis e mutações
 - Gates concluídos: dois contratos C Mac/ARM64, dez mutações do planejamento e sete da sequência compiladas com morte por SIGABRT/asserção; módulo Werror/modpost ABI7.2.0-iphone6s-source SHA92aefccc9c5992f50abb4df350c181d7a2eab71ba4413d5089c3b435f5c3dcca, header ARM64 igual ao host. Leituras/regmap/MFD/PCIe no hardware ainda se referem ao artefato anterior; ativação corrigida não foi feita.
 - Operador confirmou tela de bloqueio após fallback físico. Mac ainda sem enumeração USB e leitura de bateria não disponível; solicitada apenas reconexão Lightning. Não interpretar tela de bloqueio como prova de carga nem trocar cabo/porta automaticamente.
 
+### Incremento 26 — registrar sessão e corrigir runbook
+
+- Cinco arquivos documentais: referência REG_ON corrigida, evidência física selecionada, runbook modular, inventário HDQ e plano. Separar módulo observado fdf7... de correção compilada92aef... ainda não aplicada; não promover teste sintético a ativação física. Preservar resultados históricos e explicar guard errado explicitamente.
+- Sessão única agrupou inventário/recusa inicial/update regmap/read00/cleanup/HTTP/snapshot; PCIe não repetido sem ativação qualificada. Nenhum raw/disassembly/calibração/chave/serial publicado. Registrar retorno software inconclusivo e fallback físico; não atribuir carga ou capacidade a leitura ausente. Prosseguir pela candidata corrigida antes de solicitar nova sequência física.
+
 ## Limites e continuidade
 
 Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewall/DNS, contas remotas ou recursos fora do projeto. Não publicar firmware/calibração/serial/MAC/chaves/snapshots. VM dedicada e artefatos privados, preservando fonte/build funcional. Não prolongar operação não supervisionada antes de carga validada. Pedir apenas DFU/ações físicas indispensáveis; ausência de informação crítica para registrar escrita não autoriza inventá-la. Bloqueios concretos entram nas issues e no goal somente segundo o limiar de três turnos; continuar pesquisa/implementação independente enquanto houver avanço possível.
