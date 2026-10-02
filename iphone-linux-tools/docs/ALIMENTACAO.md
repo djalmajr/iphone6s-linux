@@ -4,6 +4,12 @@ Etapa [#2](https://github.com/djalmajr/iphone6s-linux/issues/2), iniciada em 202
 
 ## Evidência atual
 
+### Candidata USB500mA no aparelho — 2026-10-02
+
+Em um único DFU, após colher privadamente o ADT do bootloader, foi carregada a candidata init-only cujo payload tem SHA256 `1a29df4c49bb76c12bb3bcd5929182734172b4f6f0aed76ffbadf885c5f1dbab`. SSH por identidade estrita e HTTP passaram. Aos 105,76 s de uptime, o diagnóstico leu **MaxPower=500 mA**, bmAttributes=80; o IORegistry do Mac reportou **UsbPowerSinkAllocation=500**. Esse campo comprova o orçamento que o host alocou; não é leitura de corrente física. O descritor binário bruto não foi salvo. [Evidência](evidence/n71-runtime-reference.json).
+
+Não apareceram sensores de bateria/temperatura. Brilho foi reduzido temporariamente para 256, conforme preferência do operador. Snapshot/sync passaram e o retorno por software foi confirmado por iPhone8,1 USB e ausência do gadget Linux. iOS reportou 100% antes da preparação e 92% após o retorno, com carga/alimentação externas ativas nessa segunda leitura. O procedimento inclui DFU, Linux, reboot e iOS; não houve medição exata da duração final nem corrente líquida. **A correção do orçamento USB não comprova carga sustentada; #2/#8 continuam abertas.** Não atribuir a queda exclusivamente ao Linux ou tratá-la como oito pontos de consumo medido do intervalo.
+
 ### Desenvolvimento HDQ N71 — 2026-10-02
 
 A análise privada do kernel Apple N71 fixado em [referência reproduzível](N71_REFERENCIA.md) identificou o codec de `AppleHDQGasGaugeControl`: cada byte vira oito símbolos UART C0/FE, bit menos significativo primeiro. Na recepção, um bit vale um somente para símbolo **maior que F8**. O limiar F0 do driver A10 não corresponde a essa rotina N71.

@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-02",
+  "board": "iPhone8,1 / N71 / S8000",
+  "cable": "rear USB-A to Lightning; unchanged during capture and Linux",
+  "pongo_dt": {
+    "read_only_command": "dt",
+    "capture_bytes": 448378,
+    "private_capture_sha256": "9a4baf1b5f18d380d843e78bd39fb466abec313e078b5d6efe2825a5de5589c4",
+    "complete_prompt_and_exit_zero": true,
+    "property_names_present": [
+      "apcie-phy-tunables",
+      "apcie-common-tunables",
+      "apcie-config-tunables",
+      "pcie-rc-tunables",
+      "function-battery_swi",
+      "function-battery_swi_request",
+      "function-tx"
+    ],
+    "tunable_semantics_verified": false,
+    "raw_capture_published": false,
+    "mmio_commands_sent": false
+  },
+  "linux_candidate": {
+    "payload_sha256": "1a29df4c49bb76c12bb3bcd5929182734172b4f6f0aed76ffbadf885c5f1dbab",
+    "initramfs_sha256": "e17091af72ff5b4cb44e0b4890ec92e42f7545312dac1cb08be82b1ce53a2c76",
+    "kernel": "7.2.0-iphone6s-source",
+    "diagnostic_utc": "2026-10-02T16:31:28.449440+00:00",
+    "diagnostic_uptime_seconds": 105.76,
+    "configfs_MaxPower_mA": 500,
+    "configfs_bmAttributes": "0x80",
+    "host_IORegistry_UsbPowerSinkAllocation_mA": 500,
+    "raw_usb_configuration_descriptor_saved": false,
+    "ssh_strict_identity_passed": true,
+    "http_endpoint_2xx_passed": true,
+    "interfaces": ["lo", "usb0"],
+    "pci_device_count": 0,
+    "battery_sensor_available": false,
+    "thermal_sensor_available": false,
+    "temporary_backlight": 256
+  },
+  "recovery": {
+    "private_snapshot_verified": true,
+    "sync_verified": true,
+    "software_return_iOS_usb_verified": true,
+    "linux_gadget_absent_after_return": true,
+    "ios_battery_before_percent": 100,
+    "ios_battery_after_percent": 92,
+    "ios_after_external_connected": true,
+    "ios_after_battery_is_charging": true,
+    "exact_linux_duration_measured": false,
+    "battery_comparison_includes_dfu_reboot_and_ios": true
+  },
+  "limits": {
+    "dfu_sessions_for_this_capture": 1,
+    "linux_boots_for_this_capture": 1,
+    "wifi_enabled": false,
+    "gauge_communication_verified": false,
+    "charging_validation": "unverified",
+    "budget_is_not_measured_current": true,
+    "mac_packages_installed": false,
+    "firmware_keys_serial_or_mac_published": false
+  }
+}

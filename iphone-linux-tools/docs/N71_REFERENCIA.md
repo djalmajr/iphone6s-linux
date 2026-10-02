@@ -31,7 +31,7 @@ O segundo modo confere SHA do membro, Adler32 e SHA do resultado; não declara u
 4. Mapas de recursos, seletor/jump-table e controles RMW foram confrontados com o ADT N71 do mesmo IPSW. Headers de vtable e ponteiros de instância diferem em 16 bytes nesta referência; offsets de chamadas virtuais usam a instância correta. Não copiar endereços de código Apple para o kernel Linux.
 5. O ADT do IPSW não contém `apcie-phy-tunables`, exigido pelo configure examinado. Busca limitada no XML prelinkado também não encontrou propriedades tunables. A origem dos parâmetros do runtime ainda precisa ser determinada antes de habilitar PHY. Presença de driver e checksum não comprovam inicialização física.
 
-## Próxima coleta agrupada: ADT no bootloader
+## Coleta agrupada: ADT no bootloader
 
 O comando `dt` já existente no Pongo consultado imprime o Device Tree carregado. A coleta abaixo usa somente esse comando, com cliente `pongoterm` preservado/verificado por hash; exige um único Pongo já enumerado. Não inicia DFU, carrega payload ou envia `poke`/outros comandos de MMIO. Não há argumento para comando arbitrário.
 
@@ -42,7 +42,7 @@ python3 iphone-linux-tools/scripts/research/pongo-n71-reference.py \
 
 O resultado bruto `dt-private.txt` fica privado (pode conter identificadores do aparelho); não deve ir ao Git/GitHub. O JSON registra somente hash/tamanho/comando e presença de nomes de propriedades, sem concluir que um parâmetro encontrado seja válido para o hardware. A coleta tem limite de 2 MB e 45 segundos, exige término normal e prompt completo. Testes usam processos Python sintéticos; não acessam USB. O tratamento de offsets/mascaras/larguras e o confronto de placa só acontecem após leitura privada do resultado real.
 
-Essa coleta deve ocorrer dentro do mesmo DFU necessário para o próximo boot Linux: capturar primeiro, fechar o cliente e continuar com a candidata preservada. Assim é possível investigar os tunables e verificar o orçamento USB500mA na mesma intervenção física. Nenhuma coleta real foi feita ainda; não declarar parâmetros do runtime confirmados.
+Essa coleta ocorreu dentro do mesmo DFU necessário para testar USB500mA: capturar primeiro, fechar o cliente e continuar com a candidata preservada. O resultado físico completo tem 448378 bytes; cliente encerrou com código zero e prompt completo. `apcie-phy-tunables` e common/config/root-port tunables estão presentes no runtime. Isso resolve a disponibilidade do insumo, não sua semântica, validade de cada escrita ou autoria da injeção. [Evidência selecionada](evidence/n71-runtime-reference.json). Nenhuma tabela bruta foi publicada; próxima etapa é validar registros de 24 bytes/larguras/máscaras/offsets contra as operações Apple antes de integrar controlador Linux.
 
 ## Gates de software
 
