@@ -142,5 +142,33 @@
     "mutation_assertion_kills": 6,
     "mac_packages_installed": false,
     "module_loaded": false
+  },
+  "port_preparation": {
+    "reference_function": "0xfffffff005f8c21c",
+    "global_id3_enable_poll": {
+      "offset": "0x2c",
+      "mask": "0x10"
+    },
+    "port1_ready_poll": {
+      "offset": "0x1ac",
+      "mask": "0x1"
+    },
+    "nvmmu_control_write": {
+      "offset": "0x4060",
+      "value": 3
+    },
+    "port_pending_read_writeback": "0x210",
+    "refclk_to_perst_delay_us": 100,
+    "runtime_muxed_auxclk_auto_dis_present": false,
+    "runtime_no_refclk_gating_present": false,
+    "optional_properties_refused_by_implementation": true,
+    "waits_bounded": true,
+    "endpoint_reset_owned_by_caller": true,
+    "config_and_port_tunables_not_applied_by_prefix": true,
+    "ltssm_not_started_by_prefix": true,
+    "mac_native_sequence": "passed",
+    "vm_native_aarch64_sequence": "passed",
+    "vm_kernel_context_object": "passed",
+    "hardware_access_performed": false
   }
 }
