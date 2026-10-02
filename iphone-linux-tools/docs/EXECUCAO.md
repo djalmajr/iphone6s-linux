@@ -155,3 +155,17 @@ CI exato f969696 terminal aprovado: [PR36953017204](https://github.com/djalmajr/
 Cleanup do episódio: daemon DNS próprio parou, bootstrap/túnel/sockets Mac ausentes e VM devolvida ao estado parado. Snapshot/sync passaram; CLI de retorno saiu1, Linux deixou o USB, porém iOS não reapareceu até a última observação. Fallback físico Power+Home até maçã foi solicitado e ainda aguarda confirmação. Tentativa herdr.py stop era inválida e não foi contada como parada; reboot encerrou o runtime, sem comprovar iOS. Logs/IDs/endpoints privados em runtime/dns53-physical-20261001. Dois arquivos cliente verificados permanecem intencionalmente na pasta exclusiva Windows para próximo piloto; sem teste/servidor próprio ativo lá.
 
 Nenhum pacote no Mac, agente novo, configuração de DNS/NRPT/PF/sudoers/firewall/roteador/conta ou merge/tag/release. #30/#19 continuam abertas para prova nativa/piloto/clientes/política; Android pendente, rodada atual Mac/Windows. #2/#8/proveniência e revisão integral #16 continuam separados; complete_pr_review=false e inventário integral49d8747 preservados. Esta fase documental não repete gates de código inalterado nem declara serviço ativo/contínuo.
+
+
+## Retorno físico e correção de handoff #31
+
+Fallback anterior chegou ao iOS: operador confirmou tela de bloqueio; USB/modelo conferidos,98% e carga ativa. CLI anterior continua saída1; não é retorno por software aprovado neste episódio. Não houve novo DFU. No Mac, validação de grupos/identidade/FDs passou, mas UDP vazio sem origem reproduziu-se também com doador encerrado imediatamente em loopback/porta temporária. Esperar adoção resolveu os controles; não há diagnóstico interno do kernel afirmado.
+
+Fonte32c39d4 exige ACK nonce32 mais EOF após validar FDs, mantendo helper já sem privilégios até confirmação. Mac33/26 e VM37/31 passaram, com hashes/namespace, VM parada e AST/lint aprovados. Tentativa da fonte exata no Mac expirou no sudo-v90s antes de lançar o helper; não contou como prova nativa. [Procedimento e decisões](DNS-STANDARD.md), [evidência](evidence/dns-standard-port.json), [plano](../.agents/plans/dns-handoff-ack.md). Próximo passo requer somente autenticação no terminal para esse teste do Mac; novo boot do telefone vem depois, para a #19.
+
+CI exato32c39d4 aprovado: [PR36957114848](https://github.com/djalmajr/iphone6s-linux/actions/runs/36957114848) e [push36957110071](https://github.com/djalmajr/iphone6s-linux/actions/runs/36957110071), seis jobs. Isso não comprova o helper nativo corrigido ou o telefone em53.
+
+
+### Prova nativa do helper após ACK
+
+Após selecionar/ampliar o painel correto, operador autenticou no TTY. Fonte32c39d4 e quatro módulos/pins conferidos; helper real terminou0 após abandonar grupos/GID/UID e transferir FDs/nonce/peer válidos. Dados UDP/TCP exatos passaram após a saída do helper; FDs/diretórios voltaram à linha de base e kernel confirmou zero listeners próprios53/wildcard IPv4. Marcador DARWIN_HELPER_REAL_DATA_CLEANUP_OK e resultado privado observados. Tentativa anterior de autenticação expirada continua preservada. Nenhuma consulta DNS ao telefone foi feita neste teste; piloto Mac/Windows53 permanece #19. CI exato32c39d4 aprovado em seis jobs. [Evidência](evidence/dns-standard-port.json).

@@ -2,7 +2,7 @@
   "format": 1,
   "date": "2026-10-01",
   "issue": 19,
-  "status": "partial",
+  "status": "corrected_native_darwin_helper_verified_phone_dns53_pending",
   "scope": "Historical Mac/VM bootstrap proofs plus failed native DNS53 pilot and current Darwin group correction; native DNS53/client policy still unverified",
   "kernel_inventory": [
     {
@@ -213,7 +213,7 @@
     "No owner of existing DNS sockets identified; no existing process stopped or configuration changed.",
     "No NRPT, Android DNS setting, upstream, DHCP reservation or router configuration changed."
   ],
-  "next": "Confirm physical return to iOS; authenticate and execute the prepared corrected Darwin helper proof; then run a new accompanied phone boot/restore and explicit Mac/Windows DNS53 pilot. Android, stable IPs, client policy/rollback and sustained power remain separate open gates.",
+  "next": "New accompanied phone boot/restore and explicit Mac/Windows DNS53 pilot; preserve verified helper hashes. Android, stable IPs, client policy/rollback and sustained power remain separate gates.",
   "implementation": {
     "code_head": "98e63843a7285c2ba661f141a11054f6277d71dd",
     "commits": {
@@ -327,10 +327,13 @@
     "return_ios_usb_verified": false,
     "manual_fallback_requested": true,
     "packages_installed_on_mac": false,
-    "global_dns_policy_changed": false
+    "global_dns_policy_changed": false,
+    "manual_fallback_ios_usb_verified": true,
+    "manual_fallback_battery_percent": 98,
+    "manual_fallback_charging": true
   },
   "darwin_group_correction": {
-    "status": "source_and_fixture_verified_native_mac_pending",
+    "status": "native_groups_identity_fds_and_data_verified_after_ack_correction",
     "regression_before_fix_assertion": true,
     "mac_nonroot_cases": 27,
     "mac_source_mutations_assertion_rejected": 21,
@@ -344,7 +347,7 @@
     ],
     "ast_three_files_ok": true,
     "vm_privileged_candidate_verified": true,
-    "native_mac_corrected_helper_verified": false,
+    "native_mac_corrected_helper_verified": true,
     "native_phone_dns53_verified": false,
     "ci_candidate_verified": true,
     "fixture_error_not_counted": "sendmsg uses an iovec list; corrected only the fixture and repeated its two affected positives",
@@ -419,6 +422,110 @@
     "vm_stopped_after_validation": true,
     "native_mac_auth_expired": true,
     "native_mac_standalone_proof_prepared": true,
-    "standalone_ast_and_fatal_lint_ok": true
+    "standalone_ast_and_fatal_lint_ok": true,
+    "native_mac_drop_identity_and_fd_guards_reached": true,
+    "native_data_failed_before_ack_correction": true
+  },
+  "darwin_handoff_ack": {
+    "issue": 31,
+    "code_commit": "32c39d418ee42ebe9ba709573db07cc89af54106",
+    "native_before_fix_udp_empty_without_source": true,
+    "native_defunct_and_socket_error_zero": true,
+    "same_process_drop_data_ok": true,
+    "unprivileged_loopback_immediate_donor_exit_reproduced": true,
+    "unprivileged_donor_adoption_wait_data_ok": true,
+    "private_held_helper_clone_udp_before_and_after_donor_exit_ok": true,
+    "kernel_cause_claimed": false,
+    "regression_before_fix_assertion": true,
+    "initial_unassigned_loopback_fixture_error_not_counted": true,
+    "python39_socket_timeout_normalized": true,
+    "mac_cases": 33,
+    "mac_mutations_assertion_rejected": 26,
+    "vm_cases": 37,
+    "vm_mutations_assertion_rejected": 31,
+    "vm_six_source_hashes_verified": true,
+    "vm_private_network_namespace": true,
+    "vm_stopped": true,
+    "ast_four_files_ok": true,
+    "fatal_lint_existing_python312_ok": true,
+    "exact_nonce_ack_and_eof_required": true,
+    "ack_deadline_seconds": 3,
+    "source_sha256": {
+      "scripts/host/dns_activation.py": "513b3b79b6b560c083b17ee5f1b958cfcc58cd0eba1358ec5900a068bf7562c3",
+      "scripts/host/dns_privileged.py": "150be73f7ca85c320eaa068a184c18e5c237b7ee91b706f6e9c6e0994aff0f13",
+      "scripts/host/lan.py": "962d0b4f251c43cae9b6d105edaf529be02f929664f491c3599c7a29bdb7e7d7",
+      "scripts/host/device_profile.py": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb",
+      "tests/test_dns_activation.py": "4c894d07410337ac20aa3a871cd32c5892abfe36fd8540dc95f0419d791ef765",
+      "tests/run_dns_activation_mutations.py": "b1d3697879933a69fd0230c0f5f711e60240aac7e7ba5518a1185e1ca5708b59"
+    },
+    "corrected_native_helper_verified": true,
+    "corrected_native_helper_executed_after_auth": true,
+    "native_phone_dns53_verified": false,
+    "ci_verified": true,
+    "global_policy_changed": false,
+    "packages_installed_on_mac": false,
+    "ci": [
+      {
+        "headSha": "32c39d418ee42ebe9ba709573db07cc89af54106",
+        "event": "pull_request",
+        "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957114848",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "windows-dns",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957114848/job/110682428204"
+          },
+          {
+            "name": "source (ubuntu-24.04)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957114848/job/110682428339"
+          },
+          {
+            "name": "source (macos-15)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957114848/job/110682428421"
+          }
+        ]
+      },
+      {
+        "headSha": "32c39d418ee42ebe9ba709573db07cc89af54106",
+        "event": "push",
+        "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957110071",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "source (macos-15)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957110071/job/110682413472"
+          },
+          {
+            "name": "source (ubuntu-24.04)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957110071/job/110682413608"
+          },
+          {
+            "name": "windows-dns",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957110071/job/110682413636"
+          }
+        ]
+      }
+    ],
+    "earlier_native_auth_sudo_v_expired_seconds": 90,
+    "focused_terminal_authenticated": true,
+    "native_data_after_helper_exit_udp_tcp_ok": true,
+    "native_nonce_peer_uid_gid_groups_validated": true,
+    "native_fd_private_directory_cleanup_ok": true,
+    "native_project53_or_ipv4_wildcard_count_after": 0,
+    "phone_dns_queried_in_standalone_test": false
   }
 }
