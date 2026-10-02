@@ -1,0 +1,35 @@
+{
+  "format": 1,
+  "board": "N71 / S8000",
+  "reference": "Apple N71 iOS15.8.8/19H422 kernel and same-board Pongo runtime",
+  "reg_on": {
+    "source_property": "function-reg_on",
+    "provider_phandle_adt": "4d",
+    "provider": "pmu,d2255",
+    "bus": "arm-io/i2c0",
+    "i2c_address": "74",
+    "gpio": 10,
+    "function_flags_adt": "101",
+    "gpio_register": "8fc",
+    "mapper_reference_function": "fffffff006933a88",
+    "mapper_rule_below17": "0x8c0 + 6*pin",
+    "linux_pmic_compatible": "apple,antigua-pmic / apple,i2c-pmic",
+    "linux_matching_mfd_gpio_driver": "not found in pinned source search; physical binding not yet checked"
+  },
+  "pmic_wire": {
+    "vptr_reference": "fffffff006f8c4d8",
+    "read_slot_5c8": "fffffff00692cb1c",
+    "write_slot_5d0": "fffffff00692c898",
+    "descriptor_slot_620": "fffffff006930e18",
+    "address_bytes": 2,
+    "address_byte_order": "big endian",
+    "paged": false
+  },
+  "distinct_signals": {
+    "device_wake": "SoC GPIO73; not the PMIC REG_ON",
+    "clkreq": "SoC GPIO165",
+    "perst": "SoC GPIO161"
+  },
+  "guarded_update_contract": "Only register8fc; inherited mode bits7:6=01 and bits4:3=00; calculate bit0 change preserving all others; no hardware access",
+  "limits": "Polarity, inherited hardware mode and physical activation remain unverified; no PMIC writes, charging control or new boot performed for this research"
+}
