@@ -1,5 +1,13 @@
 # Herdr opcional no mini servidor — #13
 
+## Plano dos pilotos físicos
+
+Fase de até cinco documentos: este contrato, `docs/evidence/herdr-physical.json`, `STATUS.md`, `EXECUCAO.md` e `PR-REVIEW.md`. Reutilizar código/testes/CI do launcher sem nohup; não instalar ou atualizar Herdr no Mac. O operador não precisa ler nem operar o console.
+
+Primeiro boot curto da cadeia de fonte com snapshot final: conferir SSH/HTTP e versão/hash Herdr, iniciar/habilitar a sessão dedicada, aprender CLI do binário instalado e obter IDs reais. Testar Bash pelo painel, início repetido sem duplicação e TUI por SSH num PTY próprio do Mac; desconectar/reconectar somente esses clientes e conferir mesmo painel/dados. Salvar snapshot real com o marcador declarativo e retornar ao iOS pelo comando comprovado.
+
+Segundo boot curto com restore desse snapshot: exigir autostart do wrapper, novo servidor efêmero sem restauração de processos/sockets, marcador válido e reconexão TUI pelo Mac. Salvar snapshot e encerrar somente sessão/clientes próprios antes do retorno ao iOS. Se houver falha, preservar logs/snapshot e não marcar o critério físico. Não abrir agentes nem alterar a sessão principal do Herdr no Mac. Alimentação/24h, perfis de clientes LAN e hardware permanecem gates separados.
+
 ## Plano e contrato
 
 Automação autorizada dentro do backlog #17. A implementação usa Herdr 0.9.1 já preservado, sem instalar ou atualizar software no Mac. Arquivos: `scripts/host/herdr.py`, integração em `scripts/host/iphone-linux.sh`, regressões em `tests/test_herdr_start.py` e este documento.
@@ -9,7 +17,7 @@ Automação autorizada dentro do backlog #17. A implementação usa Herdr 0.9.1 
 - [x] Iniciar Bash em `/srv/data` numa sessão própria `iphone-server`, sem agentes ou comandos restaurados.
 - [x] Restaurar apenas a opção de iniciar, sem copiar credenciais, sockets, histórico ou estado de processos.
 - [x] Validar duplicação, seleção SSH, opt-in e restart em testes; conferir servidor real na VM dedicada.
-- [ ] Validar novo boot e reconexão física pelo macOS antes de concluir #13.
+- [x] Validar novo boot e reconexão física pelo macOS: dois boots com quatro attachments TUI, marcador restaurado e autostart comprovados; evidência abaixo.
 
 ## D1. Sessão separada e configuração fixa
 
@@ -18,7 +26,7 @@ Automação autorizada dentro do backlog #17. A implementação usa Herdr 0.9.1 
 - **Alternativas:** restaurar TOML/layout completo permitiria executar configurações adicionais; inserir o servidor no init obrigaria reconstruir a imagem e ocorreria antes do restore. Ambas têm custo e escopo maiores.
 - **Reverter:** baixo; `disable` desativa o próximo início automático. Encerrar a sessão requer o comando explícito documentado, sem parar o Herdr do Mac.
 - **Onde:** #13, os arquivos do plano acima.
-- **Status:** implementada, validada localmente/na VM; piloto físico pendente. Iniciar no boot assistido do wrapper não torna o aparelho independente do Mac/DFU.
+- **Status:** implementada, validada localmente/na VM e em dois pilotos físicos com SSH/TUI pelo Mac. Iniciar no boot assistido do wrapper não torna o aparelho independente do Mac/DFU.
 
 ## Proveniência
 
@@ -36,7 +44,7 @@ bash scripts/host/iphone-linux.sh herdr status
 bash scripts/host/iphone-linux.sh herdr
 ```
 
-`start` cria servidor/painel quando ausente; chamadas repetidas mantêm a sessão. O último comando abre a interface pelo SSH e deixa o Bash disponível após desconectar. Os testes desta automação observaram clientes CLI separados na VM; a reconexão SSH/TUI no telefone ainda precisa do piloto físico. A sessão manual histórica `iphone-linux` continua separada; pode ser acessada explicitamente pelo shell do telefone.
+`start` cria servidor/painel quando ausente; chamadas repetidas mantêm a sessão. O último comando abre a interface pelo SSH e deixa o Bash disponível após desconectar. Os testes observaram clientes CLI separados na VM e quatro attachments TUI pelo SSH no telefone em dois boots, com Bash e reconexão comprovados. A sessão manual histórica `iphone-linux` continua separada; pode ser acessada explicitamente pelo shell do telefone.
 
 Para iniciar automaticamente após os próximos boots assistidos:
 
@@ -57,7 +65,7 @@ bash scripts/host/iphone-linux.sh herdr restart --confirm-stop
 
 ## Falhas e recuperação
 
-Herdr precisa do binário fixado, Bash, `setsid` e do enlace SSH autenticado. O filho ignora HUP antes de executar setsid, com stdin em `/dev/null` e saída no log privado; não depende de `nohup`, ausente no BusyBox da candidata. Os applets e o início foram conferidos na VM com esse BusyBox; novo boot/reconexão física continuam pendentes. Hash inesperado aborta antes de executar o binário. Erro ou formato desconhecido de status não autoriza outro servidor. Um início sem confirmação retorna erro e deixa logs privados em `/run/iphone-herdr/start.log`; consulte `herdr status` antes de repetir.
+Herdr precisa do binário fixado, Bash, `setsid` e do enlace SSH autenticado. O filho ignora HUP antes de executar setsid, com stdin em `/dev/null` e saída no log privado; não depende de `nohup`, ausente no BusyBox da candidata. Os applets e o início foram conferidos na VM com esse BusyBox; os dois pilotos físicos abaixo também comprovaram novo boot/reconexão pelo SSH/TUI. Hash inesperado aborta antes de executar o binário. Erro ou formato desconhecido de status não autoriza outro servidor. Um início sem confirmação retorna erro e deixa logs privados em `/run/iphone-herdr/start.log`; consulte `herdr status` antes de repetir.
 
 Lock ativo/interrompido recusa outra operação. Não apagar o lock enquanto a operação estiver viva. Uma sessão Linux nova recria `/run` e elimina o lock; os arquivos de trabalho e a opção são recuperados pelo snapshot. Links ou marcadores fora do formato aceito são recusados. Alterações concorrentes do mesmo usuário na árvore não são suportadas; o lock serializa apenas este helper. Herdr mantém os próprios sockets para impedir servidores simultâneos da mesma sessão.
 
@@ -69,7 +77,7 @@ Lock ativo/interrompido recusa outra operação. Não apagar o lock enquanto a o
 - Sessão própria encerrada, fixture removida e VM devolvida a `Stopped`, sem mounts. Nenhum pacote instalado, alteração de banco, credenciais novas ou mudança global de rede.
 - Flake8 fatal, sintaxe Bash e ShellCheck dos scripts gerados passaram. Não há typechecker configurado. CI do código `5f60dec`: quatro jobs Ubuntu/macOS, cada um com 133 testes (124 aprovados, nove skips); comentários de mutação posteriores preservam o AST do teste. CI e suíte geral estão registrados na [evidência](evidence/herdr-autostart.json).
 
-VM não comprova novo boot no iPhone, carga sustentada ou reconexão TUI por SSH. #13 conserva esse último gate aberto; #2/#8/#12/#21 mantêm suas pendências físicas.
+Naquele checkpoint, a VM não comprovava novo boot no iPhone ou reconexão TUI por SSH. Esses gates da #13 foram cumpridos depois, conforme o piloto abaixo; carga sustentada/estabilidade e proveniência do legado continuam separadas.
 
 ## Correção do runtime sem nohup — #29
 
@@ -79,9 +87,56 @@ Código corrigido em `d5e4597`: filho com HUP ignorado e exec/setsid, preservand
 
 VM com Herdr oficial e PATH do BusyBox da candidata: painel Bash 5.2, mesmo painel entre clientes CLI separados, restart e recriação pelo marcador passaram. Usa Bash/bibliotecas do guest, não executa o initramfs completo nem comprova SSH/TUI no telefone. Sessão própria encerrada, fixture/processos próprios ausentes e VM parada sem mounts. Nenhuma chave, snapshot, dado real ou imagem completa foi transferido; nenhum pacote instalado no Mac/guest.
 
-[Evidência e limites](evidence/herdr-detachment.json). CI do código terminal verde: [PR 36851283400](https://github.com/djalmajr/iphone6s-linux/actions/runs/36851283400) e [push 36851277105](https://github.com/djalmajr/iphone6s-linux/actions/runs/36851277105). Os quatro jobs Ubuntu/macOS executaram 172 casos (163 aprovados/nove skips) e detectaram ambas as mutações de detachment; logs conferidos. O gate físico da #13 permanece aberto. Reproduzir o contrato local sem aparelho:
+[Evidência e limites](evidence/herdr-detachment.json). CI do código terminal verde: [PR 36851283400](https://github.com/djalmajr/iphone6s-linux/actions/runs/36851283400) e [push 36851277105](https://github.com/djalmajr/iphone6s-linux/actions/runs/36851277105). Os quatro jobs Ubuntu/macOS executaram 172 casos (163 aprovados/nove skips) e detectaram ambas as mutações de detachment; logs conferidos. Naquele checkpoint o gate físico da #13 permanecia aberto; o piloto abaixo o cumpriu posteriormente. Reproduzir o contrato local sem aparelho:
 
 ```sh
 python3 -m unittest discover -s iphone-linux-tools/tests -p test_herdr_start.py -v
 python3 iphone-linux-tools/tests/run_herdr_detach_mutations.py
 ```
+
+
+## Piloto físico concluído — 2026-10-01 (America/Maceio)
+
+Dois boots assistidos com Pongo de fonte e kernel `7.2.0-iphone6s-source`, USB-A traseiro, wrapper saída 0, SSH estrito/HTTP e console confirmado. Herdr ARM64 oficial 0.9.1/hash fixado, Bash e sessão própria `iphone-server`. [Registro sanitizado](evidence/herdr-physical.json). Os logs/ANSI, snapshots e IDs reais permanecem privados em `runtime/herdr-physical-20261001/`.
+
+Primeiro boot: sem autostart inicialmente; `enable` iniciou a sessão e gravou marcador. Um único painel Bash em `/srv/data` executou comando com saída `HERDR_NATIVE_BASH_OK` e salvou arquivo `herdr/reconnect-proof.txt`. Um PTY próprio do Mac anexou a TUI via SSH, capturou essa saída e foi desconectado; novo attachment exibiu a mesma saída com o mesmo painel/terminal. `start` respondeu `HERDR_ALREADY_RUNNING`, sem duplicar painéis. Snapshot real preservou arquivo e marcador `1\n`, modo 600.
+
+Segundo boot: restore do snapshot, `HERDR_STARTED` emitido pelo wrapper antes de attachment/start manual. Arquivo e marcador conferidos por SSH; terminal novo comparado ao primeiro boot, confirmando recriação do servidor efêmero. Duas novas conexões TUI comprovaram Bash/arquivo, desconexão/reconexão com identidade do terminal conservada dentro deste boot e ausência de duplicação. Não se restauraram processos ou sockets.
+
+Nos dois pilotos, somente clientes próprios e a sessão do telefone foram encerrados. Snapshot/sync/retorno ao iOS pelo CLI terminaram 0, com USB `iPhone8,1` e gadget Linux ausente. Uptime observado antes do retorno: 342,35 s e 343,71 s; não são durações totais do piloto. Leituras iOS: 100→92% e 92→92%, carregamento ativo ao final de ambos; preparação/reboots e variação do indicador impedem inferir carga sustentada. Brilho reduzido a 256/2047, sem operação exigida no console. Herdr principal do Mac intacto, sem instalação, agentes ou alterações globais.
+
+Código operacional não mudou nesta fase. Gates do launcher sem nohup e CI já registrados continuam válidos; CI do código de retorno em `6386b2b` passou nos runs PR36940701485/push36940697946. Essa CI não representa prova física ou CI deste documento. #2/#8, hardware, política DNS/clientes e revisão integral #16 continuam pendentes.
+
+### Reproduzir Bash, reconexão e restore
+
+Execute da pasta `iphone-linux-tools`, com perfil privado e Pongo selecionados conforme [PROFILES.md](PROFILES.md). Não copie IDs deste piloto. Faça boot com o wrapper/DFU manual e restore de um snapshot real verificado; use `herdr enable`, `backup` e `boot --restore ID_DO_SNAPSHOT` como acima para o segundo boot.
+
+1. Abra `bash scripts/host/iphone-linux.sh herdr` num terminal próprio do Mac. No Bash da TUI, execute:
+
+   ```bash
+   umask 077
+   printf '%s%s\n' 'HERDR_' 'NATIVE_BASH_OK' > /srv/data/herdr/reconnect-proof.txt
+   cat /srv/data/herdr/reconnect-proof.txt
+   uname -r
+   pwd
+   ```
+
+2. Em outro terminal próprio, obtenha os IDs reais do telefone e salve a resposta num arquivo privado. A preamble fixa/verifica binário e sessão; não use IDs do Herdr do Mac:
+
+   ```bash
+   python3 - <<'PYCODE'
+   import sys, subprocess
+   sys.path.insert(0, 'scripts/host')
+   import device_profile, herdr
+   command = device_profile.ssh_options() + ['root@172.16.42.1', '/bin/bash -se']
+   result = subprocess.run(command, input=herdr.PREAMBLE + 'phone_herdr pane list\n',
+                           text=True, capture_output=True, timeout=12, check=True)
+   print(result.stdout)
+   PYCODE
+   ```
+
+3. Desconecte somente o cliente SSH/TUI aberto para esse teste, fechando seu terminal dedicado. Rode `herdr start`: deve responder `HERDR_ALREADY_RUNNING`. Abra a TUI novamente e confira a saída/arquivo. Repita a consulta de IDs: deve existir um painel com os mesmos `pane_id`/`terminal_id` dentro do boot.
+4. Salve `backup`, retorne com `python3 scripts/host/return_ios.py --wait 60` e faça novo boot/restore. Confirme `HERDR_STARTED` no wrapper antes de iniciar manualmente. Confira arquivo/marker e novo `terminal_id`; repita attachment/desconexão. O terminal deve ser conservado entre clientes desse boot, diferente do boot anterior.
+5. Salve snapshot final e retorne ao iOS pelo helper. O helper exige backup/sync/USB verificados. Não copie logs/ANSI brutos para Git: podem conter dados de terminal. Nenhum comando desta receita controla ou para o servidor principal Herdr do Mac.
+
+A captura automatizada usou quatro PTYs próprios de 30×110, janela de 8 s por attachment e término somente do grupo criado por cada cliente. A prova exige saída Bash renderizada e leitura independente do arquivo; contar bytes ANSI sozinho não indica sucesso. Os resultados são os registrados no JSON. A receita interativa acima reproduz os mesmos checkpoints sem depender do console do iPhone.

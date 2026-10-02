@@ -490,3 +490,12 @@ Segundo boot da mesma cadeia de fonte com restore: wrapper0 e console/SSH/HTTP c
 ### Rollback nativo após a cadeia de fonte
 
 Pongo/payload conhecidos com hashes preservados e snapshot final verificado. Boot padrão sem seleção explícita terminou0; console/SSH estrito/kernel7.0.12/HTTP e comparação exata de três arquivos DNS aprovados. Snapshot/sync/retorno pelo CLI corrigido terminou0 com iPhone8,1 USB e ausência Linux. Bateria96→100%, sem liberar #2/#8. Cinco documentos desta fase têm JSON/links/diff/guard conferidos; código inalterado, evidência de CI6386b2b reutilizada. Rollback físico cumpriu o critério da #12, que conserva proveniência limitada do legado APK/Pongo; revisão integral/merge #16 continuam pendentes e complete_pr_review=false.
+
+
+## Herdr — dois pilotos físicos #13
+
+Fase de cinco documentos previamente planejada: HERDR, evidence/herdr-physical.json, STATUS, EXECUCAO e este relatório. Cadeia compilada/kernel7.2 iniciou duas vezes com wrapper0/SSH/HTTP/console. Primeiro enable iniciou sessão própria; Bash gravou arquivo e TUI exibiu marcador. Desconexão/reconexão pelos clientes próprios conservou painel/terminal, start repetido confirmou servidor existente. Snapshot real guardou marcador1/mode600 e arquivo. Segundo wrapper restaurou esses dados e emitiu HERDR_STARTED antes de qualquer attachment/start manual; terminal novo comparado ao primeiro, mais duas conexões TUI sem duplicação. Quatro capturas renderizaram saída Bash, não apenas contagem de bytes.
+
+Sessão própria do telefone e clientes próprios encerrados; snapshot/sync/retorno CLI0 verificados nos dois com iPhone8,1 USB e gadget Linux ausente. Uptime pré-retorno342,35/343,71s; bateria iOS100→92% e92→92%, carga ativa após ambos. Não é prova de alimentação ou estabilidade prolongada. Receita/checkpoints públicos, logs/ANSI/IDs/snapshots privados. Herdr principal Mac intacto, sem agentes/pacotes/configuração global. Código operacional inalterado; evidências locais/VM/CI do launcher preservadas e CI6386b2b reutilizada para o retorno. JSON/links/diff/guard conferidos; nenhum novo teste de código exigido para essa fase documental.
+
+Gate físico da #13 cumprido. #12 proveniência do legado, #19 política/porta53 nativa, #20 cliente Windows contra novo boot e #2/#8/hardware permanecem abertos. Inventário integral continua pinado a49d8747 (169/170), complete_pr_review=false; as cinco alterações foram lidas no escopo próprio sem parecer integral, merge, tag ou release.

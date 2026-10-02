@@ -21,7 +21,7 @@ Fase documental dos pilotos concluídos (cinco arquivos): este documento, os REA
 - [ ] #12: cadeia de fonte com boot e rollback conhecidos comprovados; proveniência integral dos artefatos legados ainda limitada.
 - [x] #14: CI para testes e privacidade sem dependência do aparelho. Ubuntu/macOS verdes; [CI.md](CI.md).
 - [ ] #16: revisão e documentação da PR; merge exige autorização explícita.
-- [ ] #13: Herdr idempotente no boot e reconexão.
+- [x] #13: Herdr idempotente no boot e reconexão; dois boots da cadeia de fonte, marcador/arquivo restaurados, quatro attachments SSH/TUI e retorno ao iOS verificados; [procedimento](HERDR.md).
 - [ ] #9: pesquisa de Wi-Fi específica N71/A9.
 - [ ] #10: pesquisa de armazenamento interno, primeiro somente leitura.
 - [ ] #11: pesquisa de boot autônomo e recuperação após energia.
@@ -129,3 +129,8 @@ Rollback físico preparado com imagem conhecida e snapshot verificados: o monito
 Pongo/kernel7.2 de fonte selecionados explicitamente: console/SSH/HTTP/restore e DNS USB UDP/TCP5353 aprovados, apple-watchdog vinculado. Retorno espontâneo confirmado pelo operador/USB apesar da falha de confirmação do CLI antigo. Correção20695eb separou sync/reboot; baseline19 e11 mutações passaram e CI6386b2b em Ubuntu/macOS/Windows verde. Novo piloto do CLI terminou0 com BACKUP_VERIFIED/SYNC_VERIFIED/RETURN_IOS_VERIFIED; #21 concluída.
 
 Rollback ao Pongo/payload7.0.12 preservados: hashes/snapshot conferidos, novo DFU, wrapper0, console/SSH estrito/HTTP e restore exato de três arquivos DNS. Novo snapshot e retorno via CLI0/iOS USB passaram. Comparações iOS100→93%,96→94% e96→100% incluem preparação/reboot; não liberam #2/#8. #12 conserva proveniência do legado commit-dirty/assinatura própria; #13/#19/#20/#16 e hardware seguem gates próprios. [Registro e operação](SOURCE-CHAIN-PILOT.md), [perfis](PROFILES.md), [retorno](REBOOT.md). Nenhum pacote no Mac, mudança global de rede, NAND ou merge/release.
+
+
+## Herdr nativo — encerramento #13
+
+Plano de cinco documentos cumprido: HERDR, registro físico JSON, STATUS, este documento e PR-REVIEW. Dois boots assistidos: primeiro habilitou sessão própria e gravou arquivo, segundo iniciou automaticamente depois do restore. Quatro attachments TUI em PTYs próprios do Mac renderizaram Bash; desconexões conservaram painel/terminal em cada boot, start repetido não duplicou e novo boot criou terminal diferente. Marcador1/mode600 e arquivo conferidos no snapshot/restore. Snapshot/sync/retorno CLI0/USB passaram nos dois; iOS100→92% e92→92% não validam carga sustentada. Logs/snapshots/IDs privados, receita pública em HERDR. Código/CI anteriores reutilizados, guard/JSON/links/diff desta fase conferidos antes de publicar. Sem instalação, agentes, configuração global ou controle do Herdr principal Mac. #2/#8/#12/#16/#19/#20 e hardware continuam pendentes.
