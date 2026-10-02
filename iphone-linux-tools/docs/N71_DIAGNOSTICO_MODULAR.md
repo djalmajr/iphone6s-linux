@@ -170,3 +170,30 @@ Power0 confirmou active0/pending0; unload preservou MFD/HTTP. Backup/sync
 concluídos, retorno USB iOS não confirmado em60s; operador confirmou tela de
 bloqueio após fallback. Isso não é prova de reboot por software nem carga.
 [Evidência sanitizada](evidence/n71-reg-on-first-physical.json).
+
+### Sessão mode1 e readback — 2026-10-02
+
+A versão corrigida aceitou00, mas a ativação terminou EIO. Um módulo com trace
+foi compilado e atualizado por SSH, mantendo o boot: regmap_write retornou0,
+porém a leitura válida de8fc continuou00. A segunda tentativa acrescentou
+esse diagnóstico; não repetir a operação esperando resultado diferente.
+
+A versão seguinte acrescentou somente getter `level`, sem transmitir ou mudar
+modo: a função original GPIO read usa187/bit2 para GPIO10. Leitura retornou
+raw20/bit2=0. Isso não qualifica direção/mux, firmware ou rádio. A próxima
+etapa deve explicar a configuração elétrica/lógica e semântica do registrador,
+em vez de retirar a verificação ou forçar outros bits.
+
+```sh
+# Somente leitura, depois de insmod run=1/owner verificado:
+cat /sys/module/n71_wlan_power_diagnostic/parameters/level
+```
+
+Todos os módulos temporários foram removidos com active0/pending0; PCIe não
+foi repetido sem ativação comprovada. Kernels/chaves/DT preservados, duas
+atualizações de módulos no mesmo boot. [Evidência](evidence/n71-reg-on-mode1-physical.json).
+
+Snapshot/sync e retorno automático ao iOS USB foram verificados nesta sessão.
+Bateria97→91 inclui DFU/Linux/reboot/iOS; não mede corrente líquida nem prova
+carga sustentada. iOS voltou a mostrar carregamento ativo. Não recomendar
+operação permanente em Linux enquanto esse gate de energia estiver aberto.

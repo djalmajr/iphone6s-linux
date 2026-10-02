@@ -30,7 +30,7 @@ static bool n71_map_owned(struct i2c_client *client)
 static int n71_reg_on_read(void *context, unsigned char *value)
 {
 	struct i2c_client *client = context;
-	unsigned int raw;
+	unsigned int raw = 0;
 	int error = -ENODEV;
 
 	device_lock(&client->dev);
@@ -41,6 +41,8 @@ static int n71_reg_on_read(void *context, unsigned char *value)
 		if (!error)
 			*value = raw;
 	}
+	pr_info("N71_REG_ON_READ error=%d value_valid=%u value=%02x\n",
+		error, !error, raw);
 	device_unlock(&client->dev);
 	return error;
 }
@@ -48,7 +50,7 @@ static int n71_reg_on_read(void *context, unsigned char *value)
 static int n71_reg_on_write(void *context, unsigned char value)
 {
 	struct i2c_client *client = context;
-	unsigned int raw;
+	unsigned int raw = 0;
 	unsigned char bit;
 	int error = -ENODEV;
 
@@ -62,6 +64,8 @@ static int n71_reg_on_write(void *context, unsigned char value)
 			error = regmap_update_bits(shared_map, N71_WLAN_REG_ON_REGISTER,
 					   1, bit);
 	}
+	pr_info("N71_REG_ON_WRITE requested=%02x prior=%02x error=%d; mask=01\n",
+		(unsigned int)value, raw, error);
 	device_unlock(&client->dev);
 	return error;
 }
@@ -134,6 +138,34 @@ static int n71_state_get(char *buffer, const struct kernel_param *parameter)
 	mutex_unlock(&control_lock);
 	return length;
 }
+
+/* Apple's N71 GPIO read helper selects 0x180 + ((0x600 + pin*32)>>8),
+ * bit(pin&7): GPIO10 uses register0x187/bit2. Read only; no set-mode call.
+ */
+static int n71_level_get(char *buffer, const struct kernel_param *parameter)
+{
+	unsigned int raw = 0;
+	int error = -ENODEV;
+	mutex_lock(&control_lock);
+	if (owned_client) {
+		device_lock(&owned_client->dev);
+		if (n71_map_owned(owned_client)) {
+			error = regmap_read(shared_map, 0x187, &raw);
+			if (!error && raw > 0xff)
+				error = -ERANGE;
+		}
+		device_unlock(&owned_client->dev);
+	}
+	if (!error)
+		error = scnprintf(buffer, PAGE_SIZE, "N71_REG_ON_LEVEL raw=%02x bit2=%u\n",
+			raw, !!(raw & 4));
+	mutex_unlock(&control_lock);
+	return error;
+}
+
+static const struct kernel_param_ops level_ops = {.get = n71_level_get};
+module_param_cb(level, &level_ops, NULL, 0400);
+MODULE_PARM_DESC(level, "Read only GPIO10 level from the pinned Apple status-bank mapping");
 
 static const struct kernel_param_ops power_ops = {.set = n71_power_set, .get = n71_power_get};
 static const struct kernel_param_ops state_ops = {.get = n71_state_get};

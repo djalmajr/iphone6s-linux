@@ -1,0 +1,54 @@
+{
+  "format": 1,
+  "date": "2026-10-02",
+  "board": "N71 / S8000",
+  "kernel": "7.2.0-iphone6s-source",
+  "dfu_count": 1,
+  "corrected_mode_module_sha256": "92aefccc9c5992f50abb4df350c181d7a2eab71ba4413d5089c3b435f5c3dcca",
+  "trace_module_sha256": "6953222fd351effcbb28977270d3403955c6d6c94964aea98b43cd7a22bce73c",
+  "level_module_sha256": "0eda013fe1ee0866cf955416d2547e4fc8e9628c675f4f52c63a63c354096706",
+  "physical": {
+    "ssh_http_restore": "passed;44 entries; Herdr started",
+    "reg_on_control_hex": "00",
+    "corrected_mode_guard": true,
+    "activation_attempts": 2,
+    "activation_result": "EIO; transport accepted the masked write but control readback did not change",
+    "trace_selected": {
+      "requested_hex": "01",
+      "prior_hex": "00",
+      "regmap_write_return": 0,
+      "read_return": 0,
+      "readback_hex": "00"
+    },
+    "gpio_status_read_only": {
+      "register_hex": "187",
+      "bit": 2,
+      "raw_hex": "20",
+      "selected_level": 0
+    },
+    "gpio_status_interpretation": "Matches the pinned Apple GPIO10 bank calculation; line activation not proved",
+    "module_updates_same_boot": 2,
+    "all_temporary_modules_unloaded": true,
+    "last_power_state": "active=0 restore_pending=0",
+    "pcie_new_attempts": 0,
+    "dma_radio": "not enabled",
+    "initial_ios_battery_percent": 97,
+    "initial_ios_external_connected": true,
+    "initial_ios_charging": true,
+    "linux_charging_validation": "unverified",
+    "wifi_validation": "unverified",
+    "backup_sync": "verified",
+    "software_ios_usb_return": "verified; iPhone8,1 USB; Linux gadget absent",
+    "ios_battery_post_percent": 91,
+    "ios_charging_post": true,
+    "ios_external_connected_post": true,
+    "battery_comparison_scope": "97->91 includes DFU/Linux/reboot/iOS; not net-current measurement or charging proof"
+  },
+  "software_gates": {
+    "trace_and_level_modules": "ARM64/Werror/modpost; exact ABI and host/guest hash verified",
+    "unchanged_mode_contract_tests_and_mutations": "reused from commit73b9833; no relevant header/protocol changes",
+    "gpio_status_mapping_reference": "AppleD2255PMU GPIO read helper fffffff00693401c; 0x180+((0x600+pin*32)>>8), bit(pin&7)"
+  },
+  "raw_evidence": "Private runtime logs/artifacts only; no identifiers, private keys, firmware or disassembly published",
+  "next_gate": "Resolve GPIO configuration/ownership and control-write versus status-level semantics before another activation or PCIe attempt"
+}
