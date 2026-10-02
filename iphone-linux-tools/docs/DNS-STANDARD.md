@@ -200,3 +200,23 @@ AST dos três arquivos, Flake8 fatal7.3.0 com Python3.12.6 já instalado e JSON/
 ### VM da correção #30
 
 Seis fontes públicas conferidas conjuntamente por SHA256 no diretório exclusivo da VM iphone6s-repro-20260930; sem perfis/chaves/dados do telefone. Namespace de rede próprio: baseline31 casos (27 IPC/modelos + quatro privilegiados),25 mutações por asserção, saída0. Helper real Linux abriu53/removeu grupos/GID/UID antes de IPC, dados/FDs/cleanup, conflito, original sudo e rebind após TIME_WAIT passaram novamente. Não alterou rede/sysctl fora do namespace, não instalou pacote e não conclui o helper Darwin ou DNS53 físico. Fontes/log privado em runtime/dns53-physical-20261001. CI/nativo Mac ainda pendentes.
+
+
+## Fase documental da correção f969696 — #30/#19
+
+Cinco arquivos: este plano, evidence/dns-standard-port.json, STATUS, PR-REVIEW e EXECUCAO. Registrar os gates locais27/21 e VM31/25, source hashes, CI exato somente após terminal, recusa nativa anterior/diagnóstico real, cleanup/snapshot/sync e retornoCLI1 com fallback pendente. Não declarar DNS53 do telefone, helper Darwin corrigido ou iOS atual comprovados. Android/NRPT/IP estável/energia continuam separados.
+
+O teste privado do helper Darwin corrigido está preparado em runtime/dns53-native-helper-20261001: fontes/pins protegidos, processo usuário, sudo -v somente no TTY, API versionada, UDP/TCP53 com dados de teste próprios, FDs/diretórios/cleanup. Sem telefone/política/serviço permanente. AST/Flake8 fatal passou; execução ainda depende de autenticação local porque o cache expirou. Não confundir esse futuro teste de sockets com consultas DNS funcionais do iPhone. JSON/links/diff/guard antes da publicação; código inalterado nesta fatia, reutilizar os gates correspondentes.
+
+
+## DNS53 — correção Darwin #30 e limite nativo
+
+Primeiro piloto com wrapper0, restore exato de três arquivos DNS, SSH estrito/HTTP/kernel7.2.0-iphone6s-source e DNS5353 UDP/TCP passou. Bootstrap Mac53 recusou antes de handoff: leitura Python17 grupos da conta, versus kernel com um único grupo primário e zero não primários; UID/GID reais/efetivos do usuário conferidos em filho isolado. Nenhum DNS53 Mac/Windows foi executado; sockets53/túnel1054 ausentes após erro. Não é prova de serviço funcional.
+
+Correção f969696 usa getgroups da libc/ctypes stdlib no Darwin, limita contagem/errno e exclui somente o GID primário já conferido; Linux conserva os.getgroups/lista vazia. Regra de UID/GID/sudo original/nonce/peer/FDs e frame suplementar0 mantida. Regressão antiga falhou por asserção. Mac27 casos/21 mutações; VM31 casos/25 mutações em namespace próprio, fonte/hash conferidos. AST/Flake8 fatal do Python3.12.6 já instalado, JSON/links/diff/guard passaram. [Plano e procedimento](DNS-STANDARD.md), [evidência sanitizada](evidence/dns-standard-port.json), [issue30](https://github.com/djalmajr/iphone6s-linux/issues/30).
+
+CI exato f969696 terminal aprovado: [PR36953017204](https://github.com/djalmajr/iphone6s-linux/actions/runs/36953017204) e [push36953013523](https://github.com/djalmajr/iphone6s-linux/actions/runs/36953013523), seis jobs Windows/Ubuntu/macOS. A fonte/fixtures foram testadas; helper Darwin corrigido e consultas DNS53 reais do telefone continuam pendentes. Prova standalone privada preparada com pins/TTY/sockets/dados/cleanup, mas cache local expirou. Não iniciar silenciosamente sem autenticação.
+
+Cleanup do episódio: daemon DNS próprio parou, bootstrap/túnel/sockets Mac ausentes e VM devolvida ao estado parado. Snapshot/sync passaram; CLI de retorno saiu1, Linux deixou o USB, porém iOS não reapareceu até a última observação. Fallback físico Power+Home até maçã foi solicitado e ainda aguarda confirmação. Tentativa herdr.py stop era inválida e não foi contada como parada; reboot encerrou o runtime, sem comprovar iOS. Logs/IDs/endpoints privados em runtime/dns53-physical-20261001. Dois arquivos cliente verificados permanecem intencionalmente na pasta exclusiva Windows para próximo piloto; sem teste/servidor próprio ativo lá.
+
+Nenhum pacote no Mac, agente novo, configuração de DNS/NRPT/PF/sudoers/firewall/roteador/conta ou merge/tag/release. #30/#19 continuam abertas para prova nativa/piloto/clientes/política; Android pendente, rodada atual Mac/Windows. #2/#8/proveniência e revisão integral #16 continuam separados; complete_pr_review=false e inventário integral49d8747 preservados. Esta fase documental não repete gates de código inalterado nem declara serviço ativo/contínuo.

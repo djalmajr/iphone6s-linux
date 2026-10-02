@@ -330,7 +330,7 @@
     "global_dns_policy_changed": false
   },
   "darwin_group_correction": {
-    "status": "in_progress",
+    "status": "source_and_fixture_verified_native_mac_pending",
     "regression_before_fix_assertion": true,
     "mac_nonroot_cases": 27,
     "mac_source_mutations_assertion_rejected": 21,
@@ -346,7 +346,7 @@
     "vm_privileged_candidate_verified": true,
     "native_mac_corrected_helper_verified": false,
     "native_phone_dns53_verified": false,
-    "ci_candidate_verified": false,
+    "ci_candidate_verified": true,
     "fixture_error_not_counted": "sendmsg uses an iovec list; corrected only the fixture and repeated its two affected positives",
     "local_sandbox_permission_error_not_counted": true,
     "lint_fatal_existing_python312_flake8_ok": true,
@@ -358,6 +358,67 @@
       "scripts/host/dns_privileged.py": "2628afa1b1895f920baf0c1953ca4fde8d3bf6aea89d05f897714761ea9c713c",
       "tests/test_dns_activation.py": "7bbd094f0119d39b5209c3555ea13e96f573cb0ddb3dcdcfa46c2e296da71d4f",
       "tests/run_dns_activation_mutations.py": "e02ef92704f7a682d14ff7439f3918e14c7bea6ffd12862efe583c4173296000"
-    }
+    },
+    "ci_commit": "f9696964dbcb4d6532284f4bc1ee95e2ed190355",
+    "ci": [
+      {
+        "conclusion": "success",
+        "event": "pull_request",
+        "headSha": "f9696964dbcb4d6532284f4bc1ee95e2ed190355",
+        "jobs": [
+          {
+            "name": "windows-dns",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953017204/job/110669859301"
+          },
+          {
+            "name": "source (macos-15)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953017204/job/110669859492"
+          },
+          {
+            "name": "source (ubuntu-24.04)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953017204/job/110669859586"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953017204"
+      },
+      {
+        "conclusion": "success",
+        "event": "push",
+        "headSha": "f9696964dbcb4d6532284f4bc1ee95e2ed190355",
+        "jobs": [
+          {
+            "name": "windows-dns",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953013523/job/110669848889"
+          },
+          {
+            "name": "source (ubuntu-24.04)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953013523/job/110669848982"
+          },
+          {
+            "name": "source (macos-15)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953013523/job/110669849080"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953013523"
+      }
+    ],
+    "vm_stopped_after_validation": true,
+    "native_mac_auth_expired": true,
+    "native_mac_standalone_proof_prepared": true,
+    "standalone_ast_and_fatal_lint_ok": true
   }
 }
