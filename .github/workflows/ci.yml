@@ -81,6 +81,8 @@ jobs:
         run: python iphone-linux-tools/tests/run_n71_topology_mutations.py
       - name: S8000 PCIe reference and bit preservation mutations
         run: python iphone-linux-tools/tests/run_n71_pcie_mutations.py
+      - name: N71 HDQ reference threshold and frame mutations
+        run: python iphone-linux-tools/tests/run_n71_hdq_mutations.py
       - name: Profile security mutations
         run: python iphone-linux-tools/tests/run_profile_mutations.py
       - name: Reboot verification mutations
