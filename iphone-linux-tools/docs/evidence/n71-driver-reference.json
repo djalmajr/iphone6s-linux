@@ -1,0 +1,121 @@
+{
+  "format": 1,
+  "board": "N71/S8000",
+  "source": {
+    "version": "15.8.8",
+    "buildid": "19H422",
+    "url": "https://updates.cdn-apple.com/2025FallFCS/fullrestores/122-77510/5D4563BF-445C-4D8D-AF56-0BAC336265F3/iPhone_4.7_15.8.8_19H422_Restore.ipsw",
+    "member": "kernelcache.release.n71",
+    "member_bytes": 20844035,
+    "member_sha256": "5eb352b649bc9a8b3d3af1ceb1d07f15d506b87400276c4f98e93dc2d65c76cf",
+    "decoded_bytes": 42827776,
+    "decoded_sha256": "0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a",
+    "zip_crc_verified": true,
+    "lzss_adler32_verified": true,
+    "cryptographic_signature_verified": false,
+    "executed": false,
+    "flashed": false
+  },
+  "personality": {
+    "IOClass": "AppleS8000PCIe",
+    "IONameMatch": "apcie,s8000",
+    "IOProviderClass": "AppleARMIODevice"
+  },
+  "static_functions": {
+    "port_resource_index": "0xfffffff005f8b0d0",
+    "nvmmu_resource_index": "0xfffffff005f8b0dc",
+    "common_resource_index": "0xfffffff005f8b0e8",
+    "phy_resource_index": "0xfffffff005f8b108",
+    "s8000_configure": "0xfffffff005f90510",
+    "s800x_configure": "0xfffffff005f8b218",
+    "common_register_selector": "0xfffffff005f907d8",
+    "selector_table": "0xfffffff005f9088c",
+    "port_hardware_enable": "0xfffffff005f8c21c"
+  },
+  "wlan_port_resources": {
+    "port": 1,
+    "ecam": {
+      "index": 0,
+      "address": "0x610000000"
+    },
+    "port_registers": {
+      "index": 3,
+      "address": "0x602000000"
+    },
+    "nvmmu": {
+      "index": 4,
+      "address": "0x602004000"
+    },
+    "common": {
+      "index": 9,
+      "address": "0x600000000"
+    },
+    "phy": {
+      "index": 10,
+      "address": "0x600008000"
+    },
+    "dart_separate_from_nvmmu": "0x602008000"
+  },
+  "common_offsets_by_id_for_port1": [
+    "0x24",
+    "0x2c",
+    "0x180",
+    "0x194",
+    "0x1a4",
+    "0x1ac"
+  ],
+  "control_functions": [
+    {
+      "control": "N71_ID2_BIT0",
+      "address": "0xfffffff005f8b3fc",
+      "virtual_slot": "0x7b8"
+    },
+    {
+      "control": "N71_ID2_BIT8",
+      "address": "0xfffffff005f8b468",
+      "virtual_slot": "0x7c8"
+    },
+    {
+      "control": "N71_ID2_BIT20",
+      "address": "0xfffffff005f8b4e0",
+      "virtual_slot": "0x7d0"
+    },
+    {
+      "control": "N71_ID3_BIT0",
+      "address": "0xfffffff005f8b5d0",
+      "virtual_slot": "0x7c0"
+    },
+    {
+      "control": "N71_ID3_BIT8_INVERTED",
+      "address": "0xfffffff005f8b558",
+      "virtual_slot": "0x790"
+    },
+    {
+      "control": "N71_ID4_BIT0_INVERTED",
+      "address": "0xfffffff005f8b688",
+      "virtual_slot": "0x7b0"
+    }
+  ],
+  "limits": {
+    "reference_adt_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+    "reference_adt_has_apcie_phy_tunables": false,
+    "driver_requires_phy_tunables": true,
+    "runtime_tunables_source_verified": false,
+    "header_integrated_into_kernel": false,
+    "hardware_writes_performed": false,
+    "pcie_enum_verified": false,
+    "wifi_verified": false,
+    "gauge_verified": false,
+    "firmware_and_disassembly_published": false
+  },
+  "verification": {
+    "mac_native_c_contract": "passed",
+    "vm_native_aarch64_c_contract": "passed",
+    "vm_kernel_context_object": "passed",
+    "vm_kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "vm_gcc_version": "13.3.0",
+    "mutation_assertion_kills": 6,
+    "mac_packages_installed": false,
+    "module_loaded": false
+  }
+}
