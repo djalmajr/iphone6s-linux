@@ -188,6 +188,8 @@ def acquire(bind):
             sockets = receive_sockets(channel, expected)
             for listener in sockets:
                 ownership.callback(listener.close)
+            channel.sendall(expected.nonce)
+            channel.shutdown(socket.SHUT_WR)
             try:
                 process.wait(timeout=2)
             except subprocess.TimeoutExpired as error:

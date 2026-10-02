@@ -220,3 +220,28 @@ CI exato f969696 terminal aprovado: [PR36953017204](https://github.com/djalmajr/
 Cleanup do episódio: daemon DNS próprio parou, bootstrap/túnel/sockets Mac ausentes e VM devolvida ao estado parado. Snapshot/sync passaram; CLI de retorno saiu1, Linux deixou o USB, porém iOS não reapareceu até a última observação. Fallback físico Power+Home até maçã foi solicitado e ainda aguarda confirmação. Tentativa herdr.py stop era inválida e não foi contada como parada; reboot encerrou o runtime, sem comprovar iOS. Logs/IDs/endpoints privados em runtime/dns53-physical-20261001. Dois arquivos cliente verificados permanecem intencionalmente na pasta exclusiva Windows para próximo piloto; sem teste/servidor próprio ativo lá.
 
 Nenhum pacote no Mac, agente novo, configuração de DNS/NRPT/PF/sudoers/firewall/roteador/conta ou merge/tag/release. #30/#19 continuam abertas para prova nativa/piloto/clientes/política; Android pendente, rodada atual Mac/Windows. #2/#8/proveniência e revisão integral #16 continuam separados; complete_pr_review=false e inventário integral49d8747 preservados. Esta fase documental não repete gates de código inalterado nem declara serviço ativo/contínuo.
+
+
+## Fase corretiva de handoff — #31
+
+O helper da #30 passou validação nativa de grupos/UID/GID/nonce/FDs e terminou0, mas o primeiro teste de dados UDP recebeu bytes vazios sem origem; isso não aprova DNS53. Diagnóstico limitado confirmou SO_ISDEFUNCT0/SO_ERROR0. Remoção de privilégios no mesmo processo passou; transmissão de descritor entre processos não privilegiados passou quando o doador aguardou adoção. Fechamento imediato do doador reproduziu o UDP vazio em loopback/porta temporária. Cópia diagnóstica que aguarda o destinatário passou dados antes/depois da saída. Causa interna do kernel não é declarada. [Issue31](https://github.com/djalmajr/iphone6s-linux/issues/31).
+
+### D6. Confirmar adoção antes de fechar os descritores no helper
+
+- **Decisão:** após sendmsg, helper já sem privilégios faz half-close da saída Unix, conserva UDP/TCP e exige retorno do nonce32 mais EOF com deadline global3s. Receiver responde somente após peer/frame/nonce/FDs/binds/tipos/estado válidos e continua exigindo término0 antes de devolver sockets.
+- **Por quê:** observação nativa localiza a diferença na sequência de adoção/fechamento. A confirmação delimita essa sequência sem manter serviço privilegiado ou afrouxar validação.
+- **Alternativas:** atraso fixo não comprova adoção; manter helper indefinidamente retém processo; executar proxy inteiro root amplia privilégios sem necessidade; ignorar UDP vazio declararia um teste sem dados como funcional.
+- **Reverter:** baixo, protocolo local versionado em ambos os módulos; cliente/helper incompatíveis falham e fecham FDs próprios.
+- **Onde:** fase de cinco arquivos: dns_activation.py, dns_privileged.py, test_dns_activation.py, run_dns_activation_mutations.py e este documento. Plano local em .agents/plans/dns-handoff-ack.md sob iphone-linux-tools.
+- **Status:** código corrigido, Mac verificado; VM/helper nativo da fonte exata e DNS53 do telefone continuam separados.
+
+Regressão acquire entre processos recusou a fonte antiga por asserção depois do handoff, pois o doador aguardou confirmação e o controller não a enviou. Fixture inicial usou loopback não atribuído e não conta como prova; corrigida para127.0.0.1/porta efêmera. Python3.9 possui socket.timeout distinto de TimeoutError; contrato agora normaliza essa exceção, sem contar o erro inicial como gate. Baseline33 e26 mutações reais por asserção passou no Mac. ACK errado/curto/extra/ausente, falta de EOF e prazo global entre fragmentos recusados; dados UDP/TCP após saída do doador e cleanup de FDs/diretório passaram. AST dos quatro arquivos e Flake8 fatal com Python3.12.6 existente aprovados.
+
+Retorno físico anterior ao iOS confirmado por USB/modelo após fallback;98% e carga ativa, sem concluir carga sustentada. CLI anterior continua saída1. Nenhum novo DFU, pacote, agente, DNS/NRPT/PF/firewall/sudoers/roteador ou merge/tag/release. Provas e scripts diagnósticos privados em runtime/dns53-native-helper-20261001; fontes operacionais não foram substituídas por cópias de diagnóstico.
+
+
+### VM do handshake e próximo gate nativo
+
+Seis fontes conferidas conjuntamente por SHA256 em diretório novo/exclusivo da VM. Ubuntu24.04 ARM64, namespace de rede próprio: baseline37 (33 casos comuns + quatro privilegiados) e31 mutações reais por asserção, saída0. Helper real abriu53, removeu grupos/GID/UID, aguardou ACK, entregou dados UDP/TCP após saída e limpou FDs/diretório; conflito e TIME_WAIT continuam aprovados. Mutação sem half-close foi recusada por asserção no caso privilegiado. VM foi parada ao concluir. Não é prova nativa Darwin ou DNS53 do telefone.
+
+Prova privada nativa recebeu novos pins da fonte com ACK; bind explícito ainda atribuído e sem conflito53 exato/wildcard no kernel. Autenticação anterior expirou; teste preparado novamente no TTY com prazo90s. Não declarar sucesso antes do marcador de dados/cleanup e inspeção final dos endpoints. CI do novo handshake ainda pendente; CI f969696 comprova somente a fonte anterior da correção de grupos.

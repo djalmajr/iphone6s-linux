@@ -4,6 +4,7 @@ import argparse
 import array
 from contextlib import ExitStack
 import ctypes
+import hmac
 import ipaddress
 import os
 from pathlib import Path
@@ -104,6 +105,28 @@ def bootstrap(options):
         sent = channel.sendmsg([payload], [(socket.SOL_SOCKET, socket.SCM_RIGHTS, descriptors)])
         if sent != len(payload):
             raise OSError('Socket handoff frame incomplete.')
+        # EOF delimits the frame; retain UDP/TCP until the receiver adopts them.
+        channel.shutdown(socket.SHUT_WR)
+        wait_for_ack(channel, nonce)
+
+
+def wait_for_ack(channel, nonce):
+    data = b''
+    deadline = time.monotonic() + 3
+    while len(data) <= 32:
+        left = deadline - time.monotonic()
+        if left <= 0:
+            raise TimeoutError('Socket adoption acknowledgement deadline exceeded.')
+        channel.settimeout(left)
+        try:
+            piece = channel.recv(33 - len(data))
+        except socket.timeout as error:
+            raise TimeoutError('Socket adoption acknowledgement deadline exceeded.') from error
+        if not piece:
+            break
+        data += piece
+    if not hmac.compare_digest(data, nonce):
+        raise ValueError('Socket adoption acknowledgement refused.')
 
 
 def main():

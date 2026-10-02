@@ -8,6 +8,18 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = {
+    'receiver-ack': ('dns_activation.py', 'channel.sendall(expected.nonce)', 'pass',
+                     'ActivationTests.test_acquire_acknowledges_adoption_before_donor_exit'),
+    'helper-ack': ('dns_privileged.py', '        wait_for_ack(channel, nonce)', '        pass',
+                   'ActivationTests.test_bootstrap_refuses_bad_acknowledgement'),
+    'ack-nonce': ('dns_privileged.py', 'if not hmac.compare_digest(data, nonce):', 'if False:',
+                  'ActivationTests.test_helper_ack_wrong_short_extra_or_absent_refused'),
+    'ack-eof': ('dns_privileged.py', 'deadline = time.monotonic() + 3\n    while len(data) <= 32:',
+                'deadline = time.monotonic() + 3\n    while len(data) < 32:',
+                'ActivationTests.test_helper_ack_requires_eof_and_deadline'),
+    'ack-deadline': ('dns_privileged.py', "deadline = time.monotonic() + 3\n    while len(data) <= 32:",
+                     "deadline = time.monotonic() + 30\n    while len(data) <= 32:",
+                     'ActivationTests.test_helper_ack_deadline_is_global_across_fragments'),
     'darwin-account-groups': ('dns_privileged.py', "if sys.platform != 'darwin':", 'if True:',
                              'ActivationTests.test_darwin_primary_only_handoff_ignores_account_groups'),
     'darwin-extra-groups': ('dns_privileged.py',
@@ -68,6 +80,8 @@ MUTATIONS = {
                      'ActivationTests.test_nonce_exact_length_and_eof'),
 }
 PRIVILEGED = {
+    'helper-frame-eof': ('dns_privileged.py', 'channel.shutdown(socket.SHUT_WR)', 'pass',
+                         'ActivationBootstrapTests.test_actual_root_bind_drop_handoff_data_and_cleanup'),
     'tcp-rebind': ('dns_privileged.py',
                    'tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)', 'pass',
                    'ActivationBootstrapTests.test_actual_root_bind_drop_handoff_data_and_cleanup'),

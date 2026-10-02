@@ -237,8 +237,107 @@ class ActivationTests(unittest.TestCase):
             if len(value) == 32:
                 self.assertEqual(result.stdout, b'32\n')
 
+    def test_acquire_acknowledges_adoption_before_donor_exit(self):
+        # Mutation captured: no ACK leaves the donor waiting and acquire must fail.
+        self.udp.close()
+        self.tcp.close()
+        code = '''import argparse,array,os,socket,struct,sys
+p=argparse.ArgumentParser()
+for name in ('channel','bind','uid','gid','test-port'): p.add_argument('--'+name)
+o=p.parse_args(); nonce=sys.stdin.buffer.read()
+with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as udp, socket.socket() as tcp:
+ udp.bind(('127.0.0.1',int(o.test_port))); tcp.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+ tcp.bind(udp.getsockname())
+ with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as channel:
+  channel.settimeout(3); channel.connect(o.channel)
+  frame=struct.pack('!4sIII32s',b'DNS1',int(o.uid),int(o.gid),0,nonce)
+  channel.sendmsg([frame],[(socket.SOL_SOCKET,socket.SCM_RIGHTS,array.array('i',[udp.fileno(),tcp.fileno()]))])
+  channel.shutdown(socket.SHUT_WR)
+  ack=b''
+  while len(ack)<=32:
+   piece=channel.recv(33-len(ack))
+   if not piece: break
+   ack+=piece
+  assert ack==nonce
+'''
+        launch = subprocess.Popen
+        original_expected = activation.Expected
+        port = self.expected.port
 
-    def modeled_bootstrap(self, platform, kernel_groups, account_groups, count=None):
+        def own_child(command, **kwargs):
+            return launch([sys.executable, '-I', '-S', '-c', code] + command[7:]
+                          + ['--test-port', str(port)], **kwargs)
+
+        def own_expected(bind, gid, nonce, port, uid):
+            return original_expected('127.0.0.1', gid, nonce, self.expected.port, uid)
+
+        before = fd_count()
+        directories = set(Path(tempfile.gettempdir()).glob('idns-*'))
+        with patch.object(activation.subprocess, 'Popen', side_effect=own_child), \
+                patch.object(activation, 'Expected', side_effect=own_expected):
+            try:
+                udp, tcp = activation.acquire('10.231.0.1')
+            except (ValueError, OSError) as error:
+                self.fail('Acknowledged adoption failed: ' + str(error))
+            with udp, tcp:
+                udp.settimeout(1)
+                tcp.settimeout(1)
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
+                    client.sendto(b'after-donor-exit', udp.getsockname())
+                    self.assertEqual(udp.recvfrom(64)[0], b'after-donor-exit')
+                tcp.listen(1)
+                with socket.create_connection(tcp.getsockname(), timeout=1) as client:
+                    with tcp.accept()[0] as connection:
+                        client.sendall(b'after-donor-exit')
+                        self.assertEqual(connection.recv(64), b'after-donor-exit')
+        self.assertEqual(fd_count(), before)
+        self.assertEqual(set(Path(tempfile.gettempdir()).glob('idns-*')), directories)
+
+    def test_helper_ack_exact_nonce_fragmented_and_eof(self):
+        sender, receiver = socket.socketpair()
+        with sender, receiver:
+            sender.sendall(b'n')
+            sender.sendall(b'n' * 31)
+            sender.shutdown(socket.SHUT_WR)
+            privileged.wait_for_ack(receiver, b'n' * 32)
+
+    def test_helper_ack_wrong_short_extra_or_absent_refused(self):
+        for payload in (b'x' * 32, b'n' * 31, b'n' * 33, b''):
+            with self.subTest(length=len(payload)):
+                sender, receiver = socket.socketpair()
+                with sender, receiver:
+                    sender.sendall(payload)
+                    sender.shutdown(socket.SHUT_WR)
+                    with self.assertRaisesRegex(ValueError, 'acknowledgement refused'):
+                        privileged.wait_for_ack(receiver, b'n' * 32)
+
+    def test_helper_ack_requires_eof_and_deadline(self):
+        sender, receiver = socket.socketpair()
+        with sender, receiver:
+            sender.sendall(b'n' * 32)
+            start = time.monotonic()
+            with self.assertRaises(TimeoutError):
+                privileged.wait_for_ack(receiver, b'n' * 32)
+            self.assertLess(time.monotonic() - start, 4)
+
+    def test_helper_ack_deadline_is_global_across_fragments(self):
+        sender, receiver = socket.socketpair()
+        with sender, receiver:
+            sender.sendall(b'n' * 32)
+            sender.shutdown(socket.SHUT_WR)
+            first = [True]
+            def fragmented_receive(size):
+                amount = 1 if first.pop() else size
+                first.append(False)
+                return receiver.recv(amount)
+            channel = SimpleNamespace(settimeout=receiver.settimeout, recv=fragmented_receive)
+            with patch.object(privileged.time, 'monotonic', side_effect=[0, 0, 4, 4]):
+                with self.assertRaises(TimeoutError):
+                    privileged.wait_for_ack(channel, b'n' * 32)
+
+
+
+    def modeled_bootstrap(self, platform, kernel_groups, account_groups, count=None, ack=b'n' * 32):
         """Model OS identity/group reads; execute the real handoff/domain guards."""
         import ctypes
         from unittest.mock import MagicMock
@@ -259,6 +358,7 @@ class ActivationTests(unittest.TestCase):
             value = MagicMock()
             value.__enter__.return_value = value
             value.fileno.return_value = self.udp.fileno()
+            value.recv.side_effect = [ack, b'']
             def send(payload, _rights):
                 data = b''.join(payload)
                 frames.append(privileged.FRAME.unpack(data))
@@ -293,6 +393,12 @@ class ActivationTests(unittest.TestCase):
                     except (OSError, ValueError) as error:
                         return error, frames
         return None, frames
+
+    def test_bootstrap_refuses_bad_acknowledgement(self):
+        error, frames = self.modeled_bootstrap('darwin', [os.getgid()], [], ack=b'x' * 32)
+        self.assertIsInstance(error, ValueError)
+        self.assertIn('acknowledgement refused', str(error))
+        self.assertEqual(len(frames), 1, 'The refusal must occur after the handoff frame.')
 
     def test_darwin_primary_only_handoff_ignores_account_groups(self):
         # Mutation captured: using Python's account access list refuses a valid dropped process.
