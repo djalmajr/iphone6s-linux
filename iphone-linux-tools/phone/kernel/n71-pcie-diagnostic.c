@@ -173,6 +173,8 @@ static int n71_probe(struct platform_device *pdev)
 	if (!error && enumerate) {
 		stage = "enumerate";
 		error = n71_pcie_enumerate_wlan(&link, ecam, ecam_count, port, port_count, &identity);
+		dev_info(dev, "N71_PCIE_LINK_RESULT error=%d port88=%08x reads=%u; no DMA\n",
+			 error, state.last_link_status, state.link_status_reads);
 		if (!error)
 			dev_info(dev, "N71_PCIE_ENDPOINT_ID=%08x; bus-master clear; no radio\n", identity);
 		cleanup = n71_reset(&state, true);

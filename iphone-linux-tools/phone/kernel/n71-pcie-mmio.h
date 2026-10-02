@@ -8,6 +8,8 @@ struct n71_diagnostic {
 	struct gpio_desc *perst;
 	struct device *domains[4];
 	unsigned int attached, powered;
+	u32 last_link_status;
+	unsigned int link_status_reads;
 };
 
 static int n71_read(void *context, enum n71_pcie_region region, u32 offset, u32 *value)
@@ -42,6 +44,10 @@ static int n71_read_link(void *context, bool root, u32 offset, u32 *value)
 	if (!value || offset % 4 || offset > (root ? 0xffc : 0x3ffc))
 		return -EINVAL;
 	*value = readl(base + offset);
+	if (!root && offset == 0x88) {
+		state->last_link_status = *value;
+		state->link_status_reads++;
+	}
 	return 0;
 }
 

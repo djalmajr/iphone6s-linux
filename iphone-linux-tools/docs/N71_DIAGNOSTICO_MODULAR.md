@@ -82,10 +82,24 @@ Ao encerrar, snapshot verificado, sync e `return_ios.py --wait 60`; confirmar
 iOS USB e ausência do gadget Linux. Leitura de bateria antes/depois inclui
 DFU/reboot/iOS: não é medição de corrente líquida ou prova de carga sustentada.
 
-## Gates já executados; prova física ainda pendente
+## Gates já executados
 
 C nativo Mac/ARM64 e objeto kernel/Werror passaram. Fixtures sintéticas testam
 ordem/RMW, erros por operação, timeout, capability cycle, Gen1, reset e recusa
 de DMA. Gerador e compositor passaram com fixtures e insumos privados reais.
 Asserções das mutações são executadas separadamente; falha de compilação
 não conta como kill. Nenhum desses gates identifica o chip físico.
+
+### Primeira sessão física — 2026-10-02
+
+Um DFU preservou SSH/HTTP e restaurou o snapshot DNS/Herdr. O modo clocks
+passou com marker explícito e driver bound: porta raiz `106b:1004`,
+`port88=0000000c`. A enumeração terminou em `-110/ETIMEDOUT`.
+Uma versão que registra o último status foi compilada e carregada por SSH
+no mesmo boot: novamente `0000000c`, após10000 leituras, sem identidade
+do endpoint. Não repetir essa sequência sem corrigir uma causa concreta.
+
+O módulo foi descarregado; SSH continuou respondendo. Backup, sync e retorno
+por software ao iOS foram verificados. Bateria100→92 inclui todas as fases
+e não comprova carga em Linux. Os sensores e Wi-Fi continuam pendentes.
+[Evidência sanitizada](evidence/n71-pcie-first-physical.json).
