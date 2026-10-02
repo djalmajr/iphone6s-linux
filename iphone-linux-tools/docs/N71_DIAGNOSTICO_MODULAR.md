@@ -103,3 +103,46 @@ O módulo foi descarregado; SSH continuou respondendo. Backup, sync e retorno
 por software ao iOS foram verificados. Bateria100→92 inclui todas as fases
 e não comprova carga em Linux. Os sensores e Wi-Fi continuam pendentes.
 [Evidência sanitizada](evidence/n71-pcie-first-physical.json).
+
+## Alimentação WLAN no PMIC — candidata reversível
+
+REG_ON está no PMIC D2255, GPIO10/registro8fc/I2C74, separado do device_wake73
+do SoC. A referência N71 usa endereço BE de dois bytes sem paginação.
+O módulo `n71-wlan-power-diagnostic.ko` usa o binding I2C temporário somente
+se o cliente exato não tem driver. Não substituir outro dono. Não faz probe
+de endereços nem escreve configuração de carregador, direção ou drive.
+
+Transfira também os headers `n71-wlan-power*.h` para a pasta do módulo na VM.
+O mesmo Makefile/build acima produz ambos os módulos sem nova imagem.
+A carga `run=1` apenas observa o byte e mantém o cliente bound. Ausência de
+`N71_REG_ON_OBSERVED` não é sucesso, mesmo que o comando pareça terminar.
+Não passar `power` ao insmod; o controle só fica disponível após observação.
+
+Comandos seguintes são **no Linux do iPhone**, na mesma sessão SSH:
+
+```sh
+insmod /run/n71-wlan-power-diagnostic.ko run=1
+cat /sys/module/n71_wlan_power_diagnostic/parameters/state
+# Só após conferir byte/mode conhecido e marker compatible-plan=1:
+printf '1\n' > /sys/module/n71_wlan_power_diagnostic/parameters/power
+cat /sys/module/n71_wlan_power_diagnostic/parameters/state
+# Executar o diagnóstico PCIe e descarregá-lo antes de restaurar REG_ON.
+printf '0\n' > /sys/module/n71_wlan_power_diagnostic/parameters/power
+cat /sys/module/n71_wlan_power_diagnostic/parameters/state
+# Exigir active=0 restore_pending=0 antes de remover o módulo.
+rmmod n71_wlan_power_diagnostic
+```
+
+Valor originalmente ativo não precisa de escrita. Modos desconhecidos são
+recusados. Escrita parcial marca restauração pendente antes do I2C; falha de
+ativação tenta restaurar. Falha/byte divergente no restore mantém pendência
+e permite retry. Bits de outro dono alterados impedem sobrescrita.
+O kernel não permite retornar erro do callback remove: não usar rmmod para
+ocultar pendência; verificar `power=0`/state primeiro. Remoção tenta cleanup
+e registra errno/pendência, mas seu exit zero não comprova restauração.
+
+Gates da sequência: C Mac/ARM64, objeto kernel/Werror, sete mutações por
+asserção (incluindo write parcial, posse e verificação). Build/modpost do
+adapter usa símbolos do vmlinux preservado. Isso ainda não comprova leitura
+PMIC, sinal físico REG_ON, link ou Wi-Fi. A próxima sessão reúne esses gates
+observáveis e atualizações `.ko` por SSH, sem DFU por ajuste de código.
