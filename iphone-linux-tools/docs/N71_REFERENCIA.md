@@ -46,6 +46,19 @@ Essa coleta ocorreu dentro do mesmo DFU necessário para testar USB500mA: captur
 
 ## Gates de software
 
+### Extração privada dos tunables
+
+O parser usa hierarquia/nomes de nós e exige as quatro propriedades do host S8000 e da porta1; encontrar o nome em qualquer outro nó não basta. Registros little-endian de 24 bytes têm offset32/largura32/máscara64/valor64; nesta extração são aceitas somente operações32 alinhadas dentro da janela correspondente e sem bits altos. A transformação Apple usa valor mascarado, preserva a ordem e permite offsets repetidos. Nenhuma escrita é aplicada pelo parser; validar formato não comprova significado elétrico de cada registro.
+
+```sh
+python3 -B iphone-linux-tools/scripts/research/n71_runtime_tunables.py \
+  --input "$PWD/iphone-linux-tools/runtime/n71-pongo-reference-new/dt-private.txt" \
+  --output-dir "$PWD/iphone-linux-tools/runtime/n71-tunables-new"
+python3 -B -m unittest discover -s iphone-linux-tools/tests -p test_n71_runtime_tunables.py -v
+```
+
+A extração real passou: common34, PHY41, port1 seis e configuração1 dois registros. Resultado/tabelas ficam em JSON privado modo600/pasta700. O CLI imprime somente contagens e recusa sobrescrever saída, input fora de runtime, links, permissões públicas e captura incompleta. Testes usam dados sintéticos e verificam porta/hierarquia/stride/larguras/alinhamento/aperture/bits altos/rows/paths. Próxima integração deverá consumir parâmetros privados validados; não publicar tabelas brutas nem reutilizar offsets A10.
+
 ```sh
 python3 -m unittest discover -s iphone-linux-tools/tests -p test_apple_kernel_format.py -v
 python3 -m unittest discover -s iphone-linux-tools/tests -p test_pongo_n71_reference.py -v

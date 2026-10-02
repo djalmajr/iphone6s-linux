@@ -16,6 +16,14 @@
       "function-battery_swi_request",
       "function-tx"
     ],
+    "selected_tunable_record_format_verified": true,
+    "selected_tunable_records": {
+      "common": 34,
+      "phy": 41,
+      "port1": 6,
+      "config1": 2
+    },
+    "selected_tunable_tables_published": false,
     "tunable_semantics_verified": false,
     "raw_capture_published": false,
     "mmio_commands_sent": false
