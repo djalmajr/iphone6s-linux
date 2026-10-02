@@ -10,6 +10,9 @@
     "i2c_address": "74",
     "gpio": 10,
     "function_flags_adt": "101",
+    "flags_interpretation": "Raw function packet byte12=mode1, byte13=polarity1; GPIOFunction writes bool input with byte13, so bit0 is not inverted for this packet",
+    "gpio_function_reference": "fffffff0069353c0",
+    "gpio_writer_reference": "fffffff006933eb0",
     "gpio_register": "8fc",
     "mapper_reference_function": "fffffff006933a88",
     "mapper_rule_below17": "0x8c0 + 6*pin",
@@ -31,5 +34,5 @@
     "perst": "SoC GPIO161"
   },
   "guarded_update_contract": "Only register8fc; inherited mode bits7:6=01 and bits4:3=00; calculate bit0 change preserving all others; no hardware access",
-  "limits": "Polarity, inherited hardware mode and physical activation remain unverified; no PMIC writes, charging control or new boot performed for this research"
+  "limits": "Polarity interpretation is from static reference; inherited hardware mode and physical activation remain unverified. No PMIC value writes, charging control or new boot performed for this research"
 }
