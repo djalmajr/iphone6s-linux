@@ -147,3 +147,28 @@ Regressão nova falhou por DNS_TEST_ASSERTION standard-port na fonte antiga, com
 Sete invocações do helper público em filhos PowerShell novos/assinados confirmaram recusa por endereço em 53/default/65535 e recusa por porta em 54/1023/52/65536, sem marcadores UDP/TCP. Parser nativo/compilação C# passaram; não há typechecker separado. Quatro fontes transferidas foram conferidas por SHA256 conjuntamente antes de executar. Default literal 1053 permaneceu inalterado; aceitar 53 exige argumento explícito. Nenhum pacote, agente, configuração global, chave ou estado do telefone alterados nesta fase.
 
 Os testes 64/20 e controles CLI são prova do cliente; não indicam servidor53 ativo. Preflight sudo não interativo no Mac retornou senha necessária e nenhum bootstrap privilegiado foi executado. O piloto futuro exigirá autenticação local do operador no terminal dedicado, mantendo helper mínimo53/abandono de privilégios e proxy/SSH como usuário. Fontes/logs privados no Mac em runtime/windows-dns53-client-20261001. No Windows, quatro arquivos de testes/logs foram removidos e o diretório tests apagado; os dois arquivos cliente foram preservados intencionalmente na pasta exclusiva para o próximo piloto, com hashes conferidos. Filhos próprios concluíram; nenhum fixture servidor permaneceu ativo. CI desta extensão ainda será observada após publicar. O teste Android continua pendente; o avanço atual usa Mac/Windows. NRPT/política/IP estável/rollback e energia continuam gates separados.
+
+
+## Fase documental — extensão do cliente e preparação nativa #19
+
+Contexto: a extensão explícita53 foi publicada em b4fe9e4 e o CI correspondente terminou. Esta fase toca somente cinco arquivos públicos: este plano, nova evidence/windows-dns53-client.json, DNS-WINDOWS, STATUS e PR-REVIEW. Registrar a regressão contra fonte antiga, baseline64/20, sete controles públicos, hashes/limpeza e os dois runs terminais; preservar a separação entre cliente validado e DNS53 funcional ainda pendente. Verificar JSON/links/diff/guard público; reutilizar evidência dos testes de fonte inalterada. Nenhum pacote, política, agente, merge ou release.
+
+### D4. Autenticação local para o piloto nativo53
+
+- **Decisão:** preparar controlador privado em runtime/dns53-physical-20261001, como usuário comum, que autentica via sudo -v no TTY dedicado e chama dns.main no mesmo processo somente após sinal explícito de prontidão do telefone. O helper53 versionado permanece isolado, stdlib e abandona privilégios antes de entregar os FDs.
+- **Por quê:** sudo -n recusou por falta de autenticação. Manter o mesmo TTY/processo pai evita depender de cache entre sessões diferentes; a senha fica no terminal nativo e nunca é coletada pelo controlador/chat.
+- **Alternativas:** proxy inteiro sob sudo aumenta acesso desnecessário; sudoers/PF/serviço persistente alterariam o host; autenticar em outro terminal pode não autorizar o helper desta sessão.
+- **Reverter:** baixo; encerrar somente controlador/proxy/túnel próprios, verificar listeners ausentes e conservar política/DNS global. Nenhuma regra sudoers será criada nem cache de outra sessão invalidado.
+- **Onde:** controlador/log/GO privados, helper/proxy já versionados; novo boot/restore e consulta Windows explícita53 antes de qualquer política cliente.
+- **Status:** preparação. Autenticação, bind/privilege drop Darwin e consultas DNS53 funcionais ainda pendentes. Android fica pendente; Mac e Windows são os clientes desta rodada.
+
+O controlador deve conferir ownership/modos/hashes fixados, impor prazo ao sinal GO e lifetime do proxy, recusar root, usar somente bind LAN/allowlist individuais já testados e registrar início/fim. O GO só será criado após wrapper0, SSH/HTTP, comparação do restore e DNS5353 do telefone. Falha de autenticação, conflito ou timeout encerra o processo próprio. Não alterar resolvedores, NRPT, interfaces, firewall, roteador ou serviços alheios.
+
+
+### Cliente Windows53 — evidência e CI publicados
+
+Extensão b4fe9e4: seleção explícita53 adicionada, default1053 conservado;54–1023 continuam recusadas. Regressão nova contra fonte antiga terminou1 por DNS_TEST_ASSERTION standard-port, com compilação válida. Fonte corrigida passou64 casos/20 mutações reais por asserção e sete invocações públicas novas sem marcador nos negativos. Parser PowerShell/compilação C# nativos passaram; quatro fontes conferidas conjuntamente por SHA256. [Evidência sanitizada](evidence/windows-dns53-client.json).
+
+CI exato b4fe9e4 concluído: [PR36949215659](https://github.com/djalmajr/iphone6s-linux/actions/runs/36949215659) e [push36949211094](https://github.com/djalmajr/iphone6s-linux/actions/runs/36949211094), seis jobs aprovados (Windows/Ubuntu/macOS). Log Windows confirmou baseline64 e o passo de mutações terminou verde. CI valida fonte/fixtures; não executa o telefone nem DNS53 nativo no Mac. Nenhuma suíte local foi repetida para esta fase documental.
+
+Quatro arquivos próprios de testes/logs e diretório tests do Windows removidos; dois arquivos cliente verificados preservados para o próximo piloto. Filhos próprios concluíram e nenhuma fixture permanece ativa. Sudo não interativo Mac exigiu autenticação; nenhum bootstrap privilegiado Mac ou DNS53 funcional executados. Android fica pendente; Mac/Windows são os clientes da rodada atual. Não houve instalação, agente, chave, DNS/firewall/política global ou mudança do telefone. #19 conserva os gates nativos/NRPT/IP estável/rollback; #2/#8 e revisão integral #16 continuam separados.

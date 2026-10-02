@@ -46,6 +46,15 @@ Scripts now live in `scripts/host`, `scripts/boot` and `scripts/build`; phone so
 
 Sustained charging remains open (#2). A roughly 12-minute USB-A interval returned iOS charge 100% from a 94% baseline; a later roughly 25-minute Linux interval returned 90% after an earlier 100% reading. Both include preparation/reboot and possible gauge variation. A later 17-minute interval with reduced/variable brightness returned iOS 100% from 98%, but raw current-capacity decreased (873 to 854) and raw maximum changed (884 to 877); units and semantics of those fields remain unvalidated. The percentage ceiling and conflicting gauge fields prevent a sustained-charge claim. Effective gadget MaxPower was 500 mA; no descriptor was changed. The operator reported cold/lukewarm and visible console. No Linux battery/temperature sensors were available. See `ALIMENTACAO.md`.
 
+
+### Cliente Windows53 — evidência e CI publicados
+
+Extensão b4fe9e4: seleção explícita53 adicionada, default1053 conservado;54–1023 continuam recusadas. Regressão nova contra fonte antiga terminou1 por DNS_TEST_ASSERTION standard-port, com compilação válida. Fonte corrigida passou64 casos/20 mutações reais por asserção e sete invocações públicas novas sem marcador nos negativos. Parser PowerShell/compilação C# nativos passaram; quatro fontes conferidas conjuntamente por SHA256. [Evidência sanitizada](evidence/windows-dns53-client.json).
+
+CI exato b4fe9e4 concluído: [PR36949215659](https://github.com/djalmajr/iphone6s-linux/actions/runs/36949215659) e [push36949211094](https://github.com/djalmajr/iphone6s-linux/actions/runs/36949211094), seis jobs aprovados (Windows/Ubuntu/macOS). Log Windows confirmou baseline64 e o passo de mutações terminou verde. CI valida fonte/fixtures; não executa o telefone nem DNS53 nativo no Mac. Nenhuma suíte local foi repetida para esta fase documental.
+
+Quatro arquivos próprios de testes/logs e diretório tests do Windows removidos; dois arquivos cliente verificados preservados para o próximo piloto. Filhos próprios concluíram e nenhuma fixture permanece ativa. Sudo não interativo Mac exigiu autenticação; nenhum bootstrap privilegiado Mac ou DNS53 funcional executados. Android fica pendente; Mac/Windows são os clientes da rodada atual. Não houve instalação, agente, chave, DNS/firewall/política global ou mudança do telefone. #19 conserva os gates nativos/NRPT/IP estável/rollback; #2/#8 e revisão integral #16 continuam separados.
+
 ## Historical snapshot: first Linux and USB HTTP session — 2026-09-29
 
 The following observations describe the first probe session, before the later console, SSH and full-wrapper validations above. Its active-session statements are historical.

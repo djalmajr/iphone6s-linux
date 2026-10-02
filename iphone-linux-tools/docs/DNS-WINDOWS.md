@@ -173,3 +173,12 @@ Proxy próprio terminou0 por SIGTERM; listeners UDP/TCP1053 e túnelTCP1054 ause
 6. `python3 scripts/host/return_ios.py --wait 60` exige snapshot/sync/retorno USB. Preserve snapshot/logs privados, publique somente o resultado sanitizado. Se houver falha, siga [REBOOT.md](REBOOT.md).
 
 #20 cumpre o gate do cliente explícito. A causa específica do nslookup continua desconhecida; a alternativa auditável prevista na issue passou no iPhone. Porta53, política de resolvedores Windows/Android, IP estável/rollback e operação contínua permanecem #19/#2/#8. Revisão integral #16 e hardware também permanecem separados.
+
+
+### Cliente Windows53 — evidência e CI publicados
+
+Extensão b4fe9e4: seleção explícita53 adicionada, default1053 conservado;54–1023 continuam recusadas. Regressão nova contra fonte antiga terminou1 por DNS_TEST_ASSERTION standard-port, com compilação válida. Fonte corrigida passou64 casos/20 mutações reais por asserção e sete invocações públicas novas sem marcador nos negativos. Parser PowerShell/compilação C# nativos passaram; quatro fontes conferidas conjuntamente por SHA256. [Evidência sanitizada](evidence/windows-dns53-client.json).
+
+CI exato b4fe9e4 concluído: [PR36949215659](https://github.com/djalmajr/iphone6s-linux/actions/runs/36949215659) e [push36949211094](https://github.com/djalmajr/iphone6s-linux/actions/runs/36949211094), seis jobs aprovados (Windows/Ubuntu/macOS). Log Windows confirmou baseline64 e o passo de mutações terminou verde. CI valida fonte/fixtures; não executa o telefone nem DNS53 nativo no Mac. Nenhuma suíte local foi repetida para esta fase documental.
+
+Quatro arquivos próprios de testes/logs e diretório tests do Windows removidos; dois arquivos cliente verificados preservados para o próximo piloto. Filhos próprios concluíram e nenhuma fixture permanece ativa. Sudo não interativo Mac exigiu autenticação; nenhum bootstrap privilegiado Mac ou DNS53 funcional executados. Android fica pendente; Mac/Windows são os clientes da rodada atual. Não houve instalação, agente, chave, DNS/firewall/política global ou mudança do telefone. #19 conserva os gates nativos/NRPT/IP estável/rollback; #2/#8 e revisão integral #16 continuam separados.
