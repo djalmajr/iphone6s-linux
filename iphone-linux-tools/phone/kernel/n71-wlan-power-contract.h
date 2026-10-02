@@ -25,7 +25,8 @@ static inline bool n71_wlan_reg_on_address(unsigned char *out)
 }
 
 /* Restricted subset of the Apple GPIO writer: preserve all other bits.
- * Require inherited mode01 in bits7:6 and bits4:3 clear. Do not change
+ * Apple set-mode helper classifies value<0x40 as mode1; require bits7:6
+ * and bits4:3 clear. Do not change
  * direction/drive settings, infer an unknown mode, or accept another register.
  * Physical activation and polarity still require separate verification.
  */
@@ -33,7 +34,7 @@ static inline bool n71_wlan_reg_on_plan(unsigned int reg, unsigned int old,
 				      bool enabled, unsigned char *out)
 {
 	if (!out || reg != N71_WLAN_REG_ON_REGISTER || old > 0xff ||
-	    (old & 0xd8) != 0x40)
+	    (old & 0xd8) != 0)
 		return false;
 	*out = (old & ~1U) | (enabled ? 1U : 0U);
 	return true;

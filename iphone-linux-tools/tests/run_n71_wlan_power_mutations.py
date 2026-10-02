@@ -18,6 +18,7 @@ MUTATIONS = (
     ('cross-register', 'reg != N71_WLAN_REG_ON_REGISTER', 'reg == 0'),
     ('accept-wide-byte', 'old > 0xff', 'old > 0xffff'),
     ('drive-mode', '(old & 0xd8)', '(old & 0xc0)'),
+    ('inverted-mode-class', '(old & 0xd8) != 0)', '(old & 0xd8) != 0x40)'),
     ('clear-other-bit', '(old & ~1U)', '(old & ~3U)'),
     ('shared-owner-mismatch', '((current_value ^ requested) & 0xfe) != 0',
      '((current_value ^ requested) & 0x00) != 0'),
