@@ -4,7 +4,7 @@
 
 Prioridade do operador: Wi-Fi e recursos que facilitem a iteração, com o mínimo de reinicializações. [Fluxo de sessões e ordem](DESENVOLVIMENTO.md). DNS53 deixa de ser a próxima entrega; seus gates aprovados são preservados e o piloto funcional continua pendente.
 
-Inventário físico por SSH no boot já ativo 7.2.0-iphone6s-source: somente lo/usb0, ieee80211 ausente, PCI/SDIO/MMC sem dispositivos, nenhum módulo e nenhum compatible correspondente entre 118 propriedades examinadas. Sem power_supply ou ADT original no chosen consultado. Nenhum reboot, firmware, driver ou política de rede nesta fase. [Wi-Fi](WIFI.md), [evidência](evidence/wifi-runtime.json). Próximo gate é identificação offline da topologia N71 para implementação específica A9; associação/DHCP ainda não podem ser testados.
+Inventário físico por SSH no boot já ativo 7.2.0-iphone6s-source: somente lo/usb0, ieee80211 ausente, PCI/SDIO/MMC sem dispositivos, nenhum módulo e nenhum compatible correspondente entre 118 propriedades examinadas. Sem power_supply ou ADT original no chosen consultado. Nenhum reboot, firmware, driver ou política de rede nesta fase. [Wi-Fi](WIFI.md), [evidência](evidence/wifi-runtime.json). A topologia foi identificada e a preparação compilável avançou depois, no fechamento N71 abaixo; controlador/PHY e associação/DHCP continuam pendentes.
 
 O boot imediatamente anterior desta rodada restaurou os três arquivos DNS com hashes/tamanhos exatos, SSH/kernel/HTTP e Herdr confirmados. Roteiro privado de preflight errou ao chamar dns.start inexistente; não é prova de DNS5353. Controlador DNS53 expirou esperando prontidão e não abriu o endpoint. Nenhuma consulta DNS53 Mac/Windows executada. A nova prioridade não transforma esse piloto em sucesso.
 
@@ -12,9 +12,41 @@ O boot imediatamente anterior desta rodada restaurou os três arquivos DNS com h
 
 **Zero reinicializações nesta entrega.** Updater DNS específico implementado e provado no mesmo Linux: SHA256, quatro checkpoints verificados, UDP/TCP, rollback exato e SSH preservado; Herdr ainda respondeu `running` na conferência final, uptime 8441,32 s no mesmo boot. [Procedimento](DESENVOLVIMENTO.md), [evidência](evidence/dev-session.json). Mac 15 testes (cinco skips VM explícitos)/sete mutações; VM 15 testes/12 mutações. Os demais relatos abaixo permanecem históricos e não representam garantia de continuidade após este checkpoint.
 
-Topologia Apple N71 extraída/reproduzida privadamente: BCM4350/PCIe S8000 porta 1, DART S5L8960X, gauge BQ27540 em UART5/HDQ e SN2400 em I2C1. Não habilita rádio, sensores ou carga. [Wi-Fi](WIFI.md), [mapa sanitizado](evidence/n71-board-map.json). #9/#2 seguem abertas; próximo desenvolvimento é controlador/PHY/DT S8000 e HDQ/mux/regmap específico da placa.
+Topologia Apple N71 extraída/reproduzida privadamente: BCM4350/PCIe S8000 porta 1, DART S5L8960X, referência `gas-gauge,bq27540` em UART5/HDQ (não identifica revisão física/register map) e SN2400 em I2C1. Não habilita rádio, sensores ou carga. [Wi-Fi](WIFI.md), [mapa sanitizado](evidence/n71-board-map.json). #9/#2 seguem abertas; próximo desenvolvimento é controlador/PHY/DT S8000 e HDQ/mux/regmap específico da placa.
 
 Configfs da imagem atual anunciou 2 mA. Fontes corrigidas e candidata privada separada declaram 500 mA antes do bind; seis mutações de ordem e quatro de repack passaram no Mac/VM, preservando arquivos/metadados/identidades. Candidata não carregada; orçamento não equivale a corrente/carga e host ainda não confirmou o descritor. #33 conserva esse gate para próximo boot agregado. DNS53 fica em espera; nenhum pacote no Mac ou política global alterada.
+
+## Fechamento da preparação N71 — 2026-10-02
+
+**Fonte:** [plano de topologia](../.agents/plans/n71-topologia.md), #9/#2. **Modo:** fechamento desta etapa offline; o projeto e as issues de Wi-Fi/carga permanecem abertos.
+
+### Resultado
+
+Fragmento N71 e builder separados compilam UART5, DART PCIe1 e recursos PCIe S8000, todos desativados. A baseline reproduz exatamente o DTB funcional preservado; a candidata mantém todas as propriedades anteriores e os phandles antigos. O primeiro build detectou e recusou renumeração de CPUs; a fixação e a regressão nativa agora cobrem esse defeito. [Procedimento/reprodução](WIFI.md#topologia-n71-compilada--2026-10-02), [hashes e evidência](evidence/n71-topology.json).
+
+O diff foi conferido contra o plano: fragmento, builder, testes/mutações, documentação e gate CI correspondem ao escopo aprovado. Sem mudança adicional de comportamento. Ajustes de implementação registrados no plano: parser Python limitado em lugar de fdtget, fixação de phandles e domínios AUX/REF próprios do A9. Nenhum driver PCIe/HDQ operacional foi acrescentado; não há candidata aprovada para boot, firmware/calibração ou nova imagem instalada.
+
+### Verificação executada
+
+| Gate | Resultado |
+|---|---|
+| Testes Mac | 13 passaram; quatro compilações Linux explicitamente ignoradas; sete mutações rejeitadas por asserção |
+| VM ARM64 nativa | 17/17 passaram, oito mutações por asserção; GCC13.3.0/DTC1.7.0 existentes; fonte limpa preservada |
+| Lint | AST/Flake8 fatal aprovados; nenhuma fonte shell alterada |
+| Typecheck | Não configurado para Python; compilação DTS não é typecheck Python |
+| Artefatos/privacidade | Hashes Mac/VM iguais; DTBs/logs privados; guard público e diff aprovados |
+| Hardware | Nenhum novo boot/probe/ativação; não fornece prova de Wi-Fi, sensores ou carga |
+| CI | Gate portátil incorporado; resultados do SHA final publicados na [PR #1](https://github.com/djalmajr/iphone6s-linux/pull/1) e nos checkpoints das issues |
+
+### Pendências, responsáveis e próximo passo
+
+| Pendência | Impacto | Responsável | Próxima prova |
+|---|---|---|---|
+| #9: sequência PCIe/PHY S8000, porta1 e DMA | Rádio não enumera | Desenvolvimento do projeto | Mapear recursos/sequência verificáveis, implementar controlador separado e revisar offline antes da enumeração |
+| #2: UART5/pin routing/mux HDQ/register map | Sem telemetria ou carga sustentada comprovada | Desenvolvimento do projeto; medição física se necessária | Validar ABI/topologia, integrar leitura do gauge sem limites de carga presumidos |
+| #33: orçamento USB | Candidata500mA não bootada | Desenvolvimento e operador no futuro teste físico | Conferir configfs/descritor recebido pelo host em sessão agregada necessária |
+
+A VM dedicada de kernel retornou a **Stopped**, com fonte/builds preservados. DTBs finais foram copiados para runtime privado no Mac. Zero reinicializações, instalação de pacotes ou mudança de perfil/política global nesta etapa. Entrega registrada nas issues existentes, sem criar duplicatas ou encerrar critérios físicos pendentes. Próxima fatia: controlador/PHY e HDQ específicos; sem novo DFU apenas para repetir inventário já conhecido.
 
 ## Estado atual e gates pendentes
 
