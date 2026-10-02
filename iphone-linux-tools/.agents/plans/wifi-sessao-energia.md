@@ -29,3 +29,8 @@ O operador autorizou os três pontos em 2026-10-02. Direção: mínima reinicial
 ## Verificação
 
 Usar perfil explícito, identidade SSH presa, backup/persistência existentes. Logs e snapshots privados. Nenhum pacote no Mac, política global de rede/sudoers, escrita de NAND, firmware/driver por hipótese ou encerramento de sessões alheias. AST/lint fatal não equivalem a typecheck; projeto não tem typechecker configurado. Testes de fixture não equivalem a hardware. Wi-Fi só conclui com rádio enumerado/associação/DHCP; energia só conclui com telemetria/medição sustentada validada.
+
+
+## Fase de orçamento USB identificada no ponto 3
+
+O boot real reportou MaxPower2 em configfs. As duas fontes de init não atribuem orçamento antes do bind; não confundir isso com corrente medida. Correção específica: declarar500mA/atributo bus-powered0x80 antes de selecionar/bindar UDC, em init e init-server. Cinco arquivos nesta fase: este plano, as duas fontes de init, tests/test_usb_budget.py e tests/run_usb_budget_mutations.py. Fixtures executam o trecho real de configuração com observação do orçamento no momento de descobrir UDC; mutações retiram os dois campos ou os movem para depois dessa descoberta. Não mudar kernel/driver, desbindar USB ou reiniciar o telefone nesta fase. Novo initramfs/piloto físico ficam separados; fonte corrigida não altera a imagem já em RAM.

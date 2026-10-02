@@ -25,9 +25,13 @@ echo "iPhone 6s Linux probe" > "$gadget/strings/0x409/product"
 echo "Local USB test" > "$gadget/strings/0x409/manufacturer"
 echo "iphone6s-local" > "$gadget/strings/0x409/serialnumber"
 echo "USB network" > "$gadget/configs/c.1/strings/0x409/configuration"
+# USB 2.0 bus-power budget; this does not measure or control battery charging.
+echo 500 > "$gadget/configs/c.1/MaxPower"
+echo 0x80 > "$gadget/configs/c.1/bmAttributes"
 mkdir -p "$gadget/functions/ncm.usb0"
 ln -s "$gadget/functions/ncm.usb0" "$gadget/configs/c.1/ncm.usb0"
-udc=$(ls /sys/class/udc | head -n 1)
+udc=$(find /sys/class/udc -mindepth 1 -maxdepth 1 -print | head -n 1)
+udc=${udc##*/}
 echo "UDC: $udc"
 if [ -n "$udc" ]; then
     echo "$udc" > "$gadget/UDC"
