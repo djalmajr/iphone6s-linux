@@ -2,7 +2,7 @@
 
 ## Escopo e estado
 
-A #7 comprovou DNS local não recursivo no telefone e proxy Mac em 1053. A #20 agora tem cliente Windows de sockets com parser/negativos e CI; o gate desse cliente contra novo boot do aparelho continua aberto. A #19 trata exposição em 53 e uso pelo resolvedor dos clientes. Nenhuma configuração de DNS, firewall, PF, roteador ou serviço existente foi alterada.
+A #7 comprovou DNS local não recursivo no telefone e proxy Mac em 1053. A #20 comprovou cliente Windows de sockets com parser/negativos/CI e piloto físico contra novo boot/restore; a prova explícita1053 não configura o resolvedor nem comprova53. A #19 trata exposição em 53 e uso pelo resolvedor dos clientes. Nenhuma configuração de DNS, firewall, PF, roteador ou serviço existente foi alterada.
 
 Leitura real da tabela do kernel do Mac encontrou sete endpoints TCP e sete UDP em 53, incluindo IPv4 loopback e privado. O `lsof` sem privilégios não os mostrou; sua saída vazia não prova porta livre. Dois endereços IPv6 por protocolo vieram truncados mesmo com `netstat -W`, portanto não foram classificados. Esse inventário não identifica o dono nem autoriza parar serviços. Endereços brutos ficam privados em `runtime/dns-standard-port-20261001/`.
 
@@ -124,3 +124,26 @@ Resultado VM: baseline final de quatro testes, cobrindo dois casos wire e duas i
 Cinco arquivos: este plano, `docs/DNS.md`, `docs/STATUS.md`, `docs/PR-REVIEW.md` e `docs/evidence/dns-standard-port.json`. Registrar head de código/CI, hashes dos módulos, provas separadas Mac/VM, falha TIME_WAIT/mutação sobrevivente corrigidas, cleanup/VM parada e procedimentos do modo explícito. Conservar gates nativos Mac/iPhone/Windows/Android/NRPT e a revisão integral #16 abertos; não alterar a política dos clientes nessa fase.
 
 CI final de código: [PR 36932840328](https://github.com/djalmajr/iphone6s-linux/actions/runs/36932840328) e [push 36932841357](https://github.com/djalmajr/iphone6s-linux/actions/runs/36932841357), três jobs terminais verdes por run. Logs confirmaram baseline e 15 mutações por asserção em Ubuntu/macOS. VM confirmada Stopped após zero processos DNS/SSH/diretórios de fixtures. O inventário da revisão integral permanece no checkpoint anterior; esta fase não fecha #16.
+
+
+## D3. Consulta Windows explícita à porta53
+
+- **Decisão:** aceitar `-Port 53` no helper público, conservando default1053 e intervalo alto1024–65535; nenhuma outra porta baixa. O argumento explícito já indica o destino da consulta, sem novo switch ou alteração do resolvedor.
+- **Por quê:** o gate físico da #20 passou em1053, mas o contrato atual recusa53 antes do transporte e impede validar a exposição padrão da #19 com o mesmo parser.
+- **Alternativas:** outro cliente duplicaria parsing/validação; liberar todo intervalo baixo ampliaria escopo sem necessidade. Native Resolve-DnsName será apropriado ao futuro teste de política, separado da consulta UDP/TCP explícita.
+- **Reverter:** baixo; mudança do helper/fonte local, sem migração/instalação ou estado persistente.
+- **Onde:** cinco arquivos desta fase: `scripts/host/dns-check-windows.ps1`, `scripts/host/dns_windows.cs`, `tests/dns_windows_fixture.cs`, `tests/test_dns_windows.ps1` e este plano.
+- **Status:** implementada/validada no Windows real; nenhum DNS53 funcional, política cliente ou helper root Mac executados nesta fase.
+
+Adicionar regressões observáveis ao método público:53 e portas altas1024/1053/65535 passam a guarda de porta e continuam recusando endereço público antes de rede;54/1023 e limites recusados pela guarda de porta. Usar endereço inválido em todos esses casos para impedir tráfego mesmo quando uma mutação remove a guarda. Primeiro executar regressão53 contra fonte antiga e exigir AssertionError, não compilação/infraestrutura. Depois alterar validação PS/C# e comprovar baseline completo/duas mutações de política novas junto das18existentes, em PowerShell assinado nativo. Verificar helper público em processo novo,53/endereço público deve falhar por endereço;54/1023 devem falhar por porta, nenhum marcador.
+
+Esses testes provam aceitação/restrição do cliente, não DNS53 funcional. O futuro piloto continua exigindo bootstrap mínimo/privilege drop Darwin, telefone/ACL, cliente real e cleanup; Android/NRPT/IP estável dependem de acompanhamento do operador. Não alterar DNS/firewall, pacotes, contas, políticas ou executar proxy inteiro como administrador. CI/documentação de fechamento em fase posterior, sem ampliar os cinco arquivos.
+
+
+### Verificação da extensão Windows
+
+Regressão nova falhou por DNS_TEST_ASSERTION standard-port na fonte antiga, compilação válida. Fonte corrigida passou 64 casos e 20 mutações reais por asserção (18 anteriores + standard-port-denied/reserved-port-open), saída0. Caso standard-port cobre53/1024/1053/65535 nas duas seleções de transporte com endereço inválido; reserved-port cobre54/1023 e port-bounds cobre0/52/65536. Não houve tráfego nesses novos casos mesmo nas mutações, pois a guarda de endereço permanece. Fixtures antigas exercitam transportes loopback/parser reais; erro/skip/compilação não são aprovação.
+
+Sete invocações do helper público em filhos PowerShell novos/assinados confirmaram recusa por endereço em 53/default/65535 e recusa por porta em 54/1023/52/65536, sem marcadores UDP/TCP. Parser nativo/compilação C# passaram; não há typechecker separado. Quatro fontes transferidas foram conferidas por SHA256 conjuntamente antes de executar. Default literal 1053 permaneceu inalterado; aceitar 53 exige argumento explícito. Nenhum pacote, agente, configuração global, chave ou estado do telefone alterados nesta fase.
+
+Os testes 64/20 e controles CLI são prova do cliente; não indicam servidor53 ativo. Preflight sudo não interativo no Mac retornou senha necessária e nenhum bootstrap privilegiado foi executado. O piloto futuro exigirá autenticação local do operador no terminal dedicado, mantendo helper mínimo53/abandono de privilégios e proxy/SSH como usuário. Fontes/logs privados no Mac em runtime/windows-dns53-client-20261001. No Windows, quatro arquivos de testes/logs foram removidos e o diretório tests apagado; os dois arquivos cliente foram preservados intencionalmente na pasta exclusiva para o próximo piloto, com hashes conferidos. Filhos próprios concluíram; nenhum fixture servidor permaneceu ativo. CI desta extensão ainda será observada após publicar. O teste Android continua pendente; o avanço atual usa Mac/Windows. NRPT/política/IP estável/rollback e energia continuam gates separados.

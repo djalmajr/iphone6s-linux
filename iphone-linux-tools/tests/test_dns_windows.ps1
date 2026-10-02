@@ -7,6 +7,8 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $mutations = @(
+    @{Name='standard-port-denied'; Case='standard-port'; Old='(options.Port != 53 && options.Port < 1024)'; New='options.Port < 1024'},
+    @{Name='reserved-port-open'; Case='reserved-port'; Old='(options.Port != 53 && options.Port < 1024)'; New='options.Port < 0'},
     @{Name='identity'; Case='identity'; Old='id != query.Message[0] * 256 + query.Message[1]'; New='false'},
     @{Name='flags'; Case='rcode'; Old='(flags & 0x8000) == 0 || (flags & 0x7a4f) != 0 || (flags & 0x0100) != 0'; New='false'},
     @{Name='question-count'; Case='question-count'; Old='questions != 1 || answers + authority + additional > 64'; New='answers + authority + additional > 64'},

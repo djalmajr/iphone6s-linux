@@ -159,8 +159,8 @@ namespace IphoneDns
 
         public static void Check(QueryOptions options, bool tcp)
         {
-            if (options == null || options.Port < 1024 || options.Port > 65535)
-                throw new ArgumentException("DNS port must be between 1024 and 65535.");
+            if (options == null || (options.Port != 53 && options.Port < 1024) || options.Port > 65535)
+                throw new ArgumentException("DNS port must be 53 or between 1024 and 65535.");
             IPEndPoint endpoint = new IPEndPoint(PrivateAddress(options.ServerAddress), options.Port);
             Query query = MakeQuery(options.Name, PrivateAddress(options.ExpectedAddress));
             Validate(Exchange(endpoint, query.Message, tcp), query);

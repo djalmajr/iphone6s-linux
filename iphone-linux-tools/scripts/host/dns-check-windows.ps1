@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory=$true)][string]$ServerAddress,
     [string]$ExpectedAddress = '172.16.42.1',
     [string]$Name = 'iphone-usb.home.arpa',
-    [ValidateRange(1024,65535)][int]$Port = 1053
+    [ValidateRange(53,65535)][int]$Port = 1053
 )
 $ErrorActionPreference = 'Stop'
 

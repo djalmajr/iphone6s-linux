@@ -325,6 +325,25 @@ namespace IphoneDns
             }
         }
 
+        private static void PortPolicy(string name)
+        {
+            int[] ports = name == "standard-port" ? new int[] { 53, 1024, 1053, 65535 } :
+                name == "reserved-port" ? new int[] { 54, 1023 } : new int[] { 0, 52, 65536 };
+            foreach (int port in ports)
+            foreach (bool tcp in new bool[] { false, true })
+            {
+                // Invalid address prevents network even if a port guard is mutated.
+                QueryOptions options = new QueryOptions { Port = port, ServerAddress = "0.0.0.0",
+                    ExpectedAddress = "172.16.42.1", Name = "iphone-usb.home.arpa" };
+                string failure = null;
+                try { Client.Check(options, tcp); }
+                catch (ArgumentException error) { failure = error.Message; }
+                string expected = name == "standard-port" ? "Public, wildcard and loopback" : "DNS port";
+                Assert(failure != null && failure.StartsWith(expected, StringComparison.Ordinal),
+                       name + ": wrong validation outcome for port " + port);
+            }
+        }
+
         private static void Transport(string name)
         {
             bool tcp = !name.StartsWith("udp-", StringComparison.Ordinal);
@@ -367,6 +386,8 @@ namespace IphoneDns
 
         public static void RunOne(string name)
         {
+            if (name == "standard-port" || name == "reserved-port" || name == "port-bounds")
+            { PortPolicy(name); return; }
             if (name == "private-address") { PrivateAddresses(); return; }
             if (name == "query-id")
             {
@@ -393,6 +414,7 @@ namespace IphoneDns
         {
             return new string[] {
                 "good", "literal", "extra", "largest", "upper-case", "private-address", "query-id",
+                "standard-port", "reserved-port", "port-bounds",
                 "identity", "qr", "opcode", "rcode", "truncated", "reserved-flag", "rd-bit",
                 "question-count", "record-count", "question-name", "question-type", "question-class",
                 "owner", "address", "record-class", "answer-type", "no-answer", "rdlength-long", "rdlength-short",
