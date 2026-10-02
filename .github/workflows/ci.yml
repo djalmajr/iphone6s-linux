@@ -85,6 +85,8 @@ jobs:
         run: python iphone-linux-tools/tests/run_n71_hdq_mutations.py
       - name: N71 link identity, bus mastering and reset mutations
         run: python iphone-linux-tools/tests/run_n71_pcie_link_mutations.py
+      - name: N71 REG_ON register scope and drive mode mutations
+        run: python iphone-linux-tools/tests/run_n71_wlan_power_mutations.py
       - name: Profile security mutations
         run: python iphone-linux-tools/tests/run_profile_mutations.py
       - name: Reboot verification mutations
