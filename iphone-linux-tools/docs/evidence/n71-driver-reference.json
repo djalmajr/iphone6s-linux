@@ -170,5 +170,50 @@
     "vm_native_aarch64_sequence": "passed",
     "vm_kernel_context_object": "passed",
     "hardware_access_performed": false
+  },
+  "link_experiment": {
+    "ltssm_control_function": "0xfffffff005f8c59c",
+    "ltssm_control_virtual_slot": "0x6f8",
+    "ltssm_control_offset": "0x80",
+    "link_predicate_function": "0xfffffff005f8c444",
+    "link_predicate_offset": "0x88",
+    "link_predicate_mask": "0x1",
+    "port_enable_function": "0xfffffff005f8c5e4",
+    "port_enable_offset": "0x140",
+    "port_enable_mask": "0x80000000",
+    "irq_mask_zeroed": true,
+    "msi_configuration_function": "0xfffffff005f8bbcc",
+    "msi_control_offset": "0x124",
+    "msi_base_offset": "0x128",
+    "wlan_vector_base": 8,
+    "wlan_vector_count": 8,
+    "runtime_root_tunable_offsets": [
+      "0x98",
+      "0x154"
+    ],
+    "runtime_port_tunable_offsets": [
+      "0x90",
+      "0x130",
+      "0x134",
+      "0x138",
+      "0x13c",
+      "0x140"
+    ],
+    "protocol_choices": {
+      "pcie_capability_walk": "bounded, cycle and aperture checked",
+      "target_link_speed": 1,
+      "root_bus": 0,
+      "secondary_bus": 1,
+      "subordinate_bus": 1,
+      "reset_release_delay_us": 100000,
+      "link_poll_bound_us": 1000000,
+      "endpoint_bus_master_flag": "must be clear; never set by implementation",
+      "failure_reset": "asserted on failure after release attempt"
+    },
+    "mac_native_synthetic_test": "passed",
+    "vm_native_aarch64_synthetic_test": "passed",
+    "vm_kernel_context_object": "passed",
+    "physical_endpoint_enumeration_verified": false,
+    "radio_or_dma_enabled": false
   }
 }
