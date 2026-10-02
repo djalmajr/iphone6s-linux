@@ -208,12 +208,12 @@
   "limits": [
     "Unprivileged lsof returned no rows; kernel table had endpoints, so lsof was not used as proof of availability.",
     "IPv6 address text was truncated even with -W; two addresses per protocol remained unclassified.",
-    "Selected IPv4 matched previously tested LAN bind and assigned host addresses; endpoint inventory is not a successful privileged bind.",
-    "Neither UDP nor TCP bind succeeded; EACCES observed as non-root. No DNS transport response tested.",
+    "Initial inventory/preflight: selected IPv4 matched the tested LAN bind and assigned host address; that inventory alone did not establish a successful privileged bind.",
+    "Initial non-root preflight: UDP/TCP53 bind failed with EACCES; this stage did not test DNS transport.",
     "No owner of existing DNS sockets identified; no existing process stopped or configuration changed.",
     "No NRPT, Android DNS setting, upstream, DHCP reservation or router configuration changed."
   ],
-  "next": "Implement and test minimal socket bootstrap and unprivileged FD adoption; accompanied native test and phone boot/restore plus client policy/rollback remain pending.",
+  "next": "Confirm physical return to iOS; authenticate and execute the prepared corrected Darwin helper proof; then run a new accompanied phone boot/restore and explicit Mac/Windows DNS53 pilot. Android, stable IPs, client policy/rollback and sustained power remain separate open gates.",
   "implementation": {
     "code_head": "98e63843a7285c2ba661f141a11054f6277d71dd",
     "commits": {
