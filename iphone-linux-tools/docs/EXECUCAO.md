@@ -16,7 +16,8 @@ Fase documental dos pilotos concluídos (cinco arquivos): este documento, os REA
 - [x] #15: recuperação de restauração interrompida/falta de espaço. Journal privado, publicação antecipada do ID anterior, lista de pendências e overlay manual verificados em dois cenários reais na VM Ubuntu ARM64.
 - [x] #5: snapshots automáticos e retenção, sem perder o último íntegro. Concluída com testes locais, VM, mutações negativas e prova física curta; evidência em `docs/evidence/autosnapshot-check.txt`.
 - [x] #6: acesso SSH/HTTP pela LAN via Mac, com teste Windows independente, novo boot com loopback e reversão. Saída genérica de internet permanece separada e desabilitada; [REDE.md](REDE.md).
-- [x] #7: DNS local UDP/TCP pelo USB e proxy LAN, com clientes Mac/Windows e configuração recuperada em segundo boot. Daemon/proxies próprios encerrados, snapshot verificado e retorno ao iOS confirmado; [prova física](evidence/dns-physical-check.json). Porta padrão/configuração dos clientes e nslookup seguem nas #19/#20.
+- [x] #7: DNS local UDP/TCP pelo USB e proxy LAN, com clientes Mac/Windows e configuração recuperada em segundo boot. Daemon/proxies próprios encerrados, snapshot verificado e retorno ao iOS confirmado; [prova física](evidence/dns-physical-check.json). Cliente alternativo Windows e negativos concluídos na #20; porta padrão/configuração dos resolvedores seguem na #19.
+- [x] #20: cliente Windows público passou por UDP/TCP contra novo boot/restore DNS, negativos nome/endereço/porta e cleanup/retorno verificados; [procedimento](DNS-WINDOWS.md).
 - [ ] #8: estabilidade monitorada prolongada, após alimentação validada.
 - [ ] #12: cadeia de fonte com boot e rollback conhecidos comprovados; proveniência integral dos artefatos legados ainda limitada.
 - [x] #14: CI para testes e privacidade sem dependência do aparelho. Ubuntu/macOS verdes; [CI.md](CI.md).
@@ -134,3 +135,10 @@ Rollback ao Pongo/payload7.0.12 preservados: hashes/snapshot conferidos, novo DF
 ## Herdr nativo — encerramento #13
 
 Plano de cinco documentos cumprido: HERDR, registro físico JSON, STATUS, este documento e PR-REVIEW. Dois boots assistidos: primeiro habilitou sessão própria e gravou arquivo, segundo iniciou automaticamente depois do restore. Quatro attachments TUI em PTYs próprios do Mac renderizaram Bash; desconexões conservaram painel/terminal em cada boot, start repetido não duplicou e novo boot criou terminal diferente. Marcador1/mode600 e arquivo conferidos no snapshot/restore. Snapshot/sync/retorno CLI0/USB passaram nos dois; iOS100→92% e92→92% não validam carga sustentada. Logs/snapshots/IDs privados, receita pública em HERDR. Código/CI anteriores reutilizados, guard/JSON/links/diff desta fase conferidos antes de publicar. Sem instalação, agentes, configuração global ou controle do Herdr principal Mac. #2/#8/#12/#16/#19/#20 e hardware continuam pendentes.
+
+
+## Cliente Windows — encerramento físico #20
+
+Fase de cinco documentos cumprida: DNS-WINDOWS, evidence/windows-dns-physical.json, STATUS, este documento e PR-REVIEW. Novo boot kernel7.2/Pongo de fonte, wrapper0/SSH/HTTP/console/restore real e comparação exata de três arquivos DNS. Proxy versionado1053/ACL explícita, Mac dig UDP/TCP e dois positivos Windows por ambos os protocolos passaram. Três negativos públicos nome/endereço/porta recusados sem sucesso e por motivo esperado; abortam em UDP, sem reivindicar negativos TCP nativos nesta rodada. Fonte inalterada/hash conferido; baseline61/18mutações e CI anteriores reutilizados.
+
+Colagem excessiva do terminal foi cancelada, shell próprio substituído no mesmo workspace; transferência curta/hash/parser passaram. Dois arquivos temporários removidos, pasta final ausente e inicial conhecida inexistente. Proxy0, listeners/túnel próprios ausentes, daemon/sessão Herdr do telefone encerrados. Snapshot/sync/retorno CLI0/iOS USB passaram; bateria92→91%, carga ativa no iOS, sem liberar #2/#8. Logs/endpoints/IDs privados. Sem pacote/configuração global/novo agente ou controle de outro projeto. #19 e gates de hardware/proveniência/revisão continuam abertos.

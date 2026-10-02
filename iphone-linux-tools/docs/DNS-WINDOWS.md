@@ -29,7 +29,7 @@ Arquivos públicos desta preparação: este plano, fechamento em `PR-REVIEW.md`,
 - [x] Comparar transporte/consulta em fixture UDP/TCP, com resultados e limpeza registrados.
 - [x] Executar controle em loopback Windows: falha nativa também ocorre sem o caminho LAN/Mac; causa específica continua desconhecida, sem atribuição a uma política por aplicativo.
 - [x] Corrigir helper ou implementar alternativa justificada com parser completo e controles negativos reais.
-- [ ] Validar no novo boot/restore do iPhone e remover fixtures próprios.
+- [x] Validar no novo boot/restore do iPhone e remover fixtures próprios; cinco casos públicos Windows e dois controles Mac passaram, conforme o piloto físico abaixo.
 
 Sintaxe do PowerShell deve ser conferida pelo parser nativo antes de usar scripts novos. Testes deverão executar o cliente/falhas reais que se quer validar, sem transformar timeout ou erro de infraestrutura em rejeição comprovada. Não há typechecker configurado. Validação de destino, assinatura e limites da resposta permanecem obrigatórios; nenhum ajuste de ExecutionPolicy ou de confiança do host está previsto.
 
@@ -95,7 +95,7 @@ Bind exclusivo em `127.0.0.1` para TCP/UDP 15953 e 1053, portas conferidas livre
 - **Alternativas:** continuar dependente do nslookup impede a validação reproduzível em 1053; instalar dig ou alterar DNS/firewall/proteções acrescenta mudanças ao host; manter o diagnóstico de 54 bytes como cliente final não cobre o parser/negativos exigidos.
 - **Reverter:** baixo; preservar histórico/receita nativa e reverter a alteração do helper na branch. Nenhuma migração ou alteração do daemon/proxy do iPhone.
 - **Onde:** fase 1 de cinco arquivos abaixo; publicação/CI em fase seguinte.
-- **Status:** fase 1 implementada e validada no Windows real: 61 casos, 18 mutações e nove invocações do helper público. CI Windows aprovada; novo piloto físico ainda pendente e #20 permanece aberta.
+- **Status:** fase 1 implementada e validada no Windows real: 61 casos, 18 mutações e nove invocações do helper público. CI Windows aprovada; novo piloto físico concluído conforme a seção final, sem resolver a política/porta53 da #19.
 
 ### Contrato e fases do cliente
 
@@ -125,3 +125,51 @@ Artefatos privados de reprodução estão em `runtime/windows-dns-client-2026100
 ### CI e checkpoint da revisão — 49d8747
 
 CI de PR [36867261810](https://github.com/djalmajr/iphone6s-linux/actions/runs/36867261810) e push [36867254184](https://github.com/djalmajr/iphone6s-linux/actions/runs/36867254184) terminou verde: Windows, Ubuntu e macOS, seis jobs. O CI testa fonte/fixtures; não testa iPhone ou a LAN do operador. JSON, 40 links locais, diff e guard público aprovados antes da publicação. Limpeza conhecida do Windows confirmada: cinco arquivos removidos e diretório ausente. A pasta vazia não identificada da transferência inicial não foi removida por aproximação. #20 tem reprodução, helper e negativos concluídos; piloto físico ainda aberto.
+
+
+## Plano do gate físico do cliente — #20
+
+Fase de até cinco documentos: este runbook, `evidence/windows-dns-physical.json`, STATUS, EXECUCAO e PR-REVIEW. Usar somente o painel Windows descoberto no workspace iphone6s-linux, sem agentes novos. Transferir duas fontes públicas para pasta temporária exclusiva, conferir hashes e parser PowerShell; preservar identidade do PowerShell Microsoft. Preparar controlador com filhos próprios finitos e positivos/negativos observáveis. Nenhum pacote, chave, DNS global, política ou firewall alterado.
+
+Novo boot curto da cadeia de fonte com snapshot real verificado. Exigir wrapper0/SSH/HTTP e restore exato dos arquivos DNS antes de iniciar daemon. Conferir IP privado Mac atual e sockets altos livres; proxy versionado1053 com allowlist dos clientes Windows/Mac. Cliente público Windows deve confirmar ambos os protocolos, nome/endereço e falhar sem marcador para nome/endereço inesperado e porta errada. Mac dig fornece controle independente. Baseline61/18mutações e CI do cliente inalterado são reutilizados.
+
+Encerrar somente proxy/túnel/daemon próprios, confirmar ausência dos listeners, remover exatamente as duas fontes temporárias Windows e diretório exclusivo. Salvar snapshot e retornar ao iOS com backup/sync/USB verificados. Se houver timeout/erro, manter evidência e não encerrar critérios sem prova. Essa fase não testa porta53/política cliente/Android da #19 nem libera uso contínuo #2/#8.
+
+
+## Piloto físico concluído — 2026-10-01 (America/Maceio)
+
+Novo boot da cadeia Pongo/kernel de fonte: wrapper0, SSH estrito/HTTP/console e restore real comprovados. Hosts, launcher e executável DNS coincidiram exatamente com o snapshot antes de iniciar o daemon. DNS do telefone5353, proxy LAN versionado1053, processo usuário/allowlist de dois IPs individuais. Mac dig aprovou UDP e TCP. [Registro sanitizado](evidence/windows-dns-physical.json).
+
+Cliente público Windows em cinco processos novos, com assinatura Microsoft do PowerShell conferida: dois positivos, ambos UDP/TCP e saída0; nome inexistente, endereço esperado incorreto e porta incorreta terminaram1, sem marcador de sucesso e pelo motivo esperado. O controlador impôs15s por filho e Dispose; helper limita3s por consulta. Os negativos físicos abortam na fase UDP, portanto não são declarados como negativos TCP independentes. A prova anterior61casos/18mutações de parser/transportes e CI Windows continua válida para fonte inalterada, hash conferido antes de executar.
+
+Preparação teve falha operacional: colagem inicial excessiva ficou presa no prompt; nenhum resultado dela foi aceito. Terminal somente do teste substituído no mesmo workspace, sem agentes ou comandos em outros projetos. Transferência em blocos de2048bytes passou SHA256 das duas fontes e parser nativo do helper/controlador. Pasta inicial conhecida estava ausente na limpeza; pasta final teve exatamente duas fontes removidas e diretório apagado. Nenhuma pasta desconhecida foi removida. Assembly/temporários gerenciados pelo Add-Type/.NET são distintos dessa árvore controlada.
+
+Proxy próprio terminou0 por SIGTERM; listeners UDP/TCP1053 e túnelTCP1054 ausentes por inspeção do kernel. Daemon DNS/sessão Herdr do telefone encerrados. Snapshot/sync/retorno ao iOS pelo CLI0 comprovados com USB/modelo/gadget ausente. Uptime antes do retorno261,57s, iOS92→91%, carga ativa após retorno; não comprova carga sustentada. Herdr principal Mac intacto; nenhum pacote, DNS/firewall/política global ou chave alterados. Logs/IDs/endpoints reais privados em runtime/windows-dns-physical-20261001.
+
+### Reproduzir o piloto
+
+1. Selecione o perfil/Pongo privados comprovados em [PROFILES.md](PROFILES.md), confira snapshot com `backups`/`persist.py verify ID` e faça `boot --restore ID` pelo wrapper/DFU manual. Verifique SSH/HTTP e os hashes dos três arquivos DNS contra o snapshot antes de iniciar serviço.
+2. Na pasta `iphone-linux-tools` do Mac, confirme bind/portas livres e inicie somente o DNS próprio e o proxy explícito:
+
+   ```bash
+   python3 scripts/host/dns.py start
+   python3 scripts/host/dns.py lan --bind IP_PRIVADO_MAC --allow IP_WINDOWS --allow IP_PRIVADO_MAC
+   ```
+
+3. No Windows, copie `scripts/host/dns-check-windows.ps1` e `scripts/host/dns_windows.cs` para uma pasta temporária exclusiva, lado a lado. Confira Get-FileHash SHA256 contra o JSON deste checkpoint e parser nativo; use PowerShell novo assinado Microsoft, sem mudar ExecutionPolicy. Nunca cole toda a fonte codificada numa linha enorme do Herdr; divida a transferência e valide os hashes antes de executar.
+4. Execute o helper público duas vezes; cada execução deve terminar0 e imprimir ambos os marcadores UDP/TCP. Substitua apenas o IP LAN explícito:
+
+   ```powershell
+   $powerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+   & $powerShell -NoProfile -NonInteractive -File .\dns-check-windows.ps1 -ServerAddress IP_PRIVADO_MAC -Port 1053
+   & $powerShell -NoProfile -NonInteractive -File .\dns-check-windows.ps1 -ServerAddress IP_PRIVADO_MAC -Port 1053 -Name absent-dns20.home.arpa
+   & $powerShell -NoProfile -NonInteractive -File .\dns-check-windows.ps1 -ServerAddress IP_PRIVADO_MAC -Port 1053 -ExpectedAddress 172.16.42.99
+   & $powerShell -NoProfile -NonInteractive -File .\dns-check-windows.ps1 -ServerAddress IP_PRIVADO_MAC -Port 15953
+   & $powerShell -NoProfile -NonInteractive -File .\dns-check-windows.ps1 -ServerAddress IP_PRIVADO_MAC -Port 1053
+   ```
+
+   A porta15953 deve estar sem serviço; nome/endereço negativos devem diferir dos registros reais. Os três negativos exigem saída não zero, nenhum marcador e motivo esperado; timeout do controlador ou falha de compilação não contam. Dê prazo finito15s somente aos filhos criados para este teste; confira assinatura do PowerShell antes de iniciá-los. Não altere o resolvedor Windows.
+5. No Mac, `dig @IP_PRIVADO_MAC -p 1053 iphone-usb.home.arpa A +norecurse +time=2 +tries=1` e a mesma consulta com `+tcp` devem retornar NOERROR/A172.16.42.1. Encerre apenas o proxy/túnel próprios (Ctrl+C no terminal dedicado), `dns.py stop` e sessão própria Herdr se iniciada; confira listeners ausentes. Remova somente os dois arquivos temporários verificados e a pasta exclusiva vazia do Windows.
+6. `python3 scripts/host/return_ios.py --wait 60` exige snapshot/sync/retorno USB. Preserve snapshot/logs privados, publique somente o resultado sanitizado. Se houver falha, siga [REBOOT.md](REBOOT.md).
+
+#20 cumpre o gate do cliente explícito. A causa específica do nslookup continua desconhecida; a alternativa auditável prevista na issue passou no iPhone. Porta53, política de resolvedores Windows/Android, IP estável/rollback e operação contínua permanecem #19/#2/#8. Revisão integral #16 e hardware também permanecem separados.
