@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: MIT
+/* N71 resource staging. PHY, HDQ routing and gauge ABI are not validated. */
+
+/ {
+	soc {
+		n71_serial5: serial@20a0d4000 {
+			compatible = "apple,s5l-uart";
+			reg = <0x2 0x0a0d4000 0x0 0x4000>;
+			reg-io-width = <4>;
+			interrupts = <AIC_IRQ 197 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clkref>, <&clkref>;
+			clock-names = "uart", "clk_uart_baud0";
+			power-domains = <&ps_uart5>;
+			status = "disabled";
+		};
+
+		n71_dart1: iommu@602008000 {
+			compatible = "apple,s8000-dart", "apple,s5l8960x-dart";
+			reg = <0x6 0x02008000 0x0 0x4000>;
+			interrupts = <AIC_IRQ 248 IRQ_TYPE_LEVEL_HIGH>;
+			#iommu-cells = <1>;
+			power-domains = <&ps_pcie>;
+			status = "disabled";
+		};
+
+		/* Preserve Apple reg ordering; secondary resource roles need review. */
+		n71_pcie: pcie@610000000 {
+			compatible = "apple,s8000-pcie";
+			reg = <0x6 0x10000000 0x0 0x1000000>,
+			      <0x6 0x01000000 0x0 0x4000>,
+			      <0x6 0x01004000 0x0 0x4000>,
+			      <0x6 0x02000000 0x0 0x4000>,
+			      <0x6 0x02004000 0x0 0x4000>,
+			      <0x6 0x03000000 0x0 0x4000>,
+			      <0x6 0x03004000 0x0 0x4000>,
+			      <0x6 0x04000000 0x0 0x4000>,
+			      <0x6 0x04004000 0x0 0x4000>,
+			      <0x6 0x00000000 0x0 0x8000>,
+			      <0x6 0x00008000 0x0 0x4000>;
+			reg-names = "ecam", "adt-reg-1", "adt-reg-2", "adt-reg-3",
+				    "adt-reg-4", "adt-reg-5", "adt-reg-6", "adt-reg-7",
+				    "adt-reg-8", "adt-reg-9", "adt-reg-10";
+			interrupts = <AIC_IRQ 244 IRQ_TYPE_LEVEL_HIGH>,
+				     <AIC_IRQ 247 IRQ_TYPE_LEVEL_HIGH>,
+				     <AIC_IRQ 250 IRQ_TYPE_LEVEL_HIGH>,
+				     <AIC_IRQ 253 IRQ_TYPE_LEVEL_HIGH>;
+			power-domains = <&ps_pcie>, <&ps_pcie_aux>,
+					<&ps_pcie_ref>, <&ps_pcie_link1>;
+			power-domain-names = "pcie", "aux", "ref", "link1";
+			status = "disabled";
+		};
+	};
+};
