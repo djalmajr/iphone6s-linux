@@ -12,8 +12,10 @@ import zlib
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts/host'))
+sys.path.insert(0, str(ROOT / 'scripts/build'))
 import device_profile
 import profile_image
+import kernel_patchset
 
 OLD_LOAD = b'insmod /lib/modules/usb_f_ncm.ko || echo "usb_f_ncm module load failed"\n'
 BUILTIN_LOAD = b'echo "USB NCM built into source kernel"\n'
@@ -76,10 +78,19 @@ def migrate(raw):
     return migrated, ['init', MODULE] if legacy else []
 
 
-def kernel_inputs(folder):
-    record = json.loads((ROOT / 'docs/evidence/kernel-source-build.json').read_text())
+def kernel_inputs(folder, patchset=None):
+    if patchset not in (None, kernel_patchset.PATCHSET):
+        raise ValueError('Patchset de integração desconhecido.')
+    record_name = 'kernel-dart-build.json' if patchset else 'kernel-source-build.json'
+    record = json.loads((ROOT / 'docs/evidence' / record_name).read_text())
     if record['status'] != 'compiled_verified' or record['build']['exit_code'] != 0:
         raise ValueError('Registro público exige kernel compilado e verificado.')
+    if patchset:
+        source = record['source']
+        if source['commit'] != kernel_patchset.BASE:
+            raise ValueError('Base do patchset de integração divergente.')
+        if source['patchset'] != patchset or source['patch_sha256'] != kernel_patchset.PATCH_SHA:
+            raise ValueError('Identidade do patchset de integração divergente.')
     device_profile.protected(folder, directory=True)
     blobs = {}
     for name in ('Image', 'Image.gz', 's8000-n71.dtb', 'config', 'config-embedded'):
@@ -102,6 +113,8 @@ def kernel_inputs(folder):
     for name in ('ARM64_16K_PAGES', 'USB_F_NCM', 'USB_CONFIGFS_NCM', 'APPLE_WATCHDOG'):
         if f'CONFIG_{name}=y' not in config:
             raise ValueError('Configuração obrigatória do kernel ausente.')
+    if patchset and 'CONFIG_APPLE_DART=y' not in config:
+        raise ValueError('Patchset DART exige driver incorporado no kernel.')
     if 'apple,n71' not in record['build']['dtb_compatible'].split():
         raise ValueError('Registro público não identifica N71.')
     return blobs, record
@@ -119,7 +132,7 @@ def integrate(options):
         raise ValueError('Destino exige pasta nova diretamente sob runtime/.')
     device_profile.protected(output.parent, directory=True)
     source = device_profile.verify()
-    blobs, record = kernel_inputs(options.kernel_dir.absolute())
+    blobs, record = kernel_inputs(options.kernel_dir.absolute(), options.kernel_patchset)
     m1n1 = (ROOT / 'artifacts/m1n1.bin').read_bytes()
     expected = json.loads((ROOT / 'docs/evidence/m1n1-rebuild.json').read_text())['shallow_clone']
     if not expected['matches_original'] or digest(m1n1) != expected['sha256']:
@@ -150,6 +163,7 @@ def integrate(options):
             os.environ['IPHONE_LINUX_PROFILE'] = previous
     pending.rename(output / 'deployment.json')
     report = {'format': 1, 'kernel_source_commit': record['source']['commit'],
+              'kernel_patchset': options.kernel_patchset,
               'kernel_release': record['build']['kernel_release'], 'initramfs_changed_paths': changes,
               'identities_preserved': True, 'client_private_key_copied_to_vm': False,
               'payload_sha256': digest(payload), 'payload_bytes': len(payload),
@@ -164,6 +178,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--kernel-dir', required=True, type=Path)
     parser.add_argument('--output-dir', required=True, type=Path)
+    parser.add_argument('--kernel-patchset', choices=(kernel_patchset.PATCHSET,))
     options = parser.parse_args()
     try:
         integrate(options)

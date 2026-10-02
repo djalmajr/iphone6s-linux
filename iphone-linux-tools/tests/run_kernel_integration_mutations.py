@@ -17,6 +17,12 @@ MUTATIONS = [
     ('m1n1-digest', "not expected['matches_original'] or digest(m1n1) != expected['sha256']", 'False'),
     ('header-byte-preservation', "header[:54] + f'{len(new):08x}'.encode() + header[62:]",
      "header[:54].lower() + f'{len(new):08x}'.encode() + header[62:].lower()"),
+    ('patchset-record-selection', "'kernel-dart-build.json' if patchset else 'kernel-source-build.json'",
+     "'kernel-source-build.json'"),
+    ('patchset-base', "if source['commit'] != kernel_patchset.BASE:", 'if False:'),
+    ('patchset-identity', "if source['patchset'] != patchset or source['patch_sha256'] != kernel_patchset.PATCH_SHA:",
+     'if False:'),
+    ('patchset-builtin-dart', "if patchset and 'CONFIG_APPLE_DART=y' not in config:", 'if False:'),
 ]
 
 
@@ -42,8 +48,10 @@ def main():
                 raise ValueError('Mutation anchor changed: ' + name)
             path = Path(work) / (name + '.py')
             path.write_text(text.replace(before, after, 1))
+            compile(path.read_text(), str(path), 'exec')
             result = run(path)
-            if not result.returncode or 'FAIL:' not in result.stderr:
+            if (not result.returncode or 'FAIL:' not in result.stderr
+                    or 'AssertionError' not in result.stderr or 'ERROR:' in result.stderr):
                 print('SURVIVED_OR_INFRA_ERROR ' + name, file=sys.stderr)
                 print(result.stderr, file=sys.stderr)
                 return 1

@@ -211,3 +211,12 @@ imagem desse patchset foi instalada, enviada ao telefone ou qualificada
 fisicamente. O compositor da baseline continua fixado ao registro anterior;
 a integração precisa de gate próprio e perfil separado. Não trocar hashes
 do registro antigo para fazê-lo aceitar outro kernel.
+
+Integração optativa dessa imagem usa `integrate-source-kernel.py` com
+`--kernel-patchset n71-dart-tcr-v1`, selecionando exclusivamente o novo
+registro publicado. Sem a opção, o gate continua fixado à imagem baseline.
+O modo novo exige base/patch fixados e DART incorporado, além de hashes,
+configuração embutida, páginas16KiB e identidades privadas já conferidos.
+O resultado preserva a seleção na proveniência e não altera o perfil default.
+Esse comando compõe um perfil com DTB baseline; o perfil PCIe diagnóstico
+exige composição adicional que confira o layout antigo e o delta DT.

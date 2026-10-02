@@ -44,6 +44,8 @@ class KernelIntegrationTests(unittest.TestCase):
             folder.chmod(0o700)
         self.script = self.root / 'scripts/build/integrate-source-kernel.py'
         shutil.copyfile(SCRIPT, self.script)
+        shutil.copyfile(ROOT / 'scripts/build/kernel_patchset.py',
+                        self.root / 'scripts/build/kernel_patchset.py')
         for name in ('device_profile.py', 'profile_image.py'):
             shutil.copyfile(ROOT / 'scripts/host' / name, self.root / 'scripts/host' / name)
         self.source = self.root / 'runtime/source'
@@ -116,10 +118,71 @@ class KernelIntegrationTests(unittest.TestCase):
             for file in self.kernel.iterdir()}
         (self.root / 'docs/evidence/kernel-source-build.json').write_text(json.dumps(self.record))
 
-    def run_cli(self):
+    def run_cli(self, patchset=None):
+        extra = ['--kernel-patchset', patchset] if patchset else []
         return subprocess.run([sys.executable, str(self.script), '--kernel-dir', str(self.kernel),
-                               '--output-dir', str(self.output)], env=self.environment,
+                               '--output-dir', str(self.output)] + extra, env=self.environment,
                               capture_output=True, text=True, timeout=15)
+
+    def save_patch_record(self):
+        self.patch_record = json.loads(json.dumps(self.record))
+        self.patch_record['source'] = {
+            'commit': '958481f87fee0949ff6a9a4af77f7eb6dac8a149',
+            'patchset': 'n71-dart-tcr-v1',
+            'patch_sha256': 'da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74'}
+        image = (self.kernel / 'Image').read_bytes() + b'PATCHED_IMAGE_SENTINEL'
+        self.save(self.kernel / 'Image', image)
+        self.save(self.kernel / 'Image.gz', gzip.compress(image, mtime=0))
+        config = (self.kernel / 'config').read_bytes() + b'CONFIG_APPLE_DART=y\n'
+        for name in ('config', 'config-embedded'):
+            self.save(self.kernel / name, config)
+        self.update_patch_record()
+
+    def update_patch_record(self):
+        self.patch_record['build']['outputs'] = {
+            name: {'sha256': hashlib.sha256((self.kernel / name).read_bytes()).hexdigest(),
+                   'bytes': (self.kernel / name).stat().st_size}
+            for name in ('Image', 'Image.gz', 's8000-n71.dtb', 'config', 'config-embedded')}
+        (self.root / 'docs/evidence/kernel-dart-build.json').write_text(json.dumps(self.patch_record))
+
+    def test_patchset_is_explicit_and_preserves_baseline_and_identity(self):
+        # Mutation captured: selecting baseline record despite explicit patchset or losing provenance.
+        baseline = (self.root / 'docs/evidence/kernel-source-build.json').read_bytes()
+        self.save_patch_record()
+        refused = self.run_cli()
+        self.assertEqual(refused.returncode, 1)
+        self.assertFalse(self.output.exists())
+        result = self.run_cli('n71-dart-tcr-v1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn((self.kernel / 'Image.gz').read_bytes(), (self.output / 'payload.bin').read_bytes())
+        report = json.loads((self.output / 'provenance.json').read_text())
+        self.assertEqual(report['kernel_patchset'], 'n71-dart-tcr-v1')
+        self.assertFalse(report['physical_boot_tested'])
+        self.assertEqual((self.output / 'client_ed25519').read_bytes(), (self.source / 'client').read_bytes())
+        self.assertEqual((self.root / 'docs/evidence/kernel-source-build.json').read_bytes(), baseline)
+
+    def test_patchset_rejects_wrong_base_and_patch_digest_before_output(self):
+        # Mutation captured: dropping either immutable base or patch digest check.
+        self.save_patch_record()
+        original = dict(self.patch_record['source'])
+        for field in ('commit', 'patch_sha256', 'patchset'):
+            with self.subTest(field=field):
+                self.patch_record['source'] = dict(original, **{field: 'changed'})
+                self.update_patch_record()
+                result = self.run_cli('n71-dart-tcr-v1')
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertFalse(self.output.exists())
+
+    def test_patchset_requires_builtin_dart_with_consistent_manifest(self):
+        # Mutation captured: dropping builtin DART guard accepts an image without the patched driver.
+        self.save_patch_record()
+        config = (self.kernel / 'config').read_bytes().replace(b'CONFIG_APPLE_DART=y', b'CONFIG_APPLE_DART=m')
+        for name in ('config', 'config-embedded'):
+            self.save(self.kernel / name, config)
+        self.update_patch_record()
+        result = self.run_cli('n71-dart-tcr-v1')
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertFalse(self.output.exists())
 
     def refuse(self):
         result = self.run_cli()
