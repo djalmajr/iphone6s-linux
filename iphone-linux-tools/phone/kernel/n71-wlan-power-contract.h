@@ -39,4 +39,19 @@ static inline bool n71_wlan_reg_on_plan(unsigned int reg, unsigned int old,
 	return true;
 }
 
+/* Shared MFD regmap: reject stale mode/drive assumptions and return bit0 only.
+ * The caller uses regmap_update_bits(mask=1), never a whole-byte PMIC write.
+ */
+static inline bool n71_wlan_shared_write_plan(unsigned int current_value,
+					     unsigned int requested, unsigned char *bit)
+{
+	unsigned char planned;
+	if (!bit || requested > 0xff || ((current_value ^ requested) & 0xfe) != 0 ||
+	    !n71_wlan_reg_on_plan(N71_WLAN_REG_ON_REGISTER, current_value,
+				 requested & 1, &planned))
+		return false;
+	*bit = planned & 1;
+	return true;
+}
+
 #endif /* N71_WLAN_POWER_CONTRACT_H */

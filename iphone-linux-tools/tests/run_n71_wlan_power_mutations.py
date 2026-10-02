@@ -19,6 +19,10 @@ MUTATIONS = (
     ('accept-wide-byte', 'old > 0xff', 'old > 0xffff'),
     ('drive-mode', '(old & 0xd8)', '(old & 0xc0)'),
     ('clear-other-bit', '(old & ~1U)', '(old & ~3U)'),
+    ('shared-owner-mismatch', '((current_value ^ requested) & 0xfe) != 0',
+     '((current_value ^ requested) & 0x00) != 0'),
+    ('shared-wide-request', 'requested > 0xff', 'requested > 0xffff'),
+    ('shared-whole-byte', '*bit = planned & 1;', '*bit = planned;'),
 )
 
 

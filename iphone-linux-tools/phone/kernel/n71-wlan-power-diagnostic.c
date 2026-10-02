@@ -1,43 +1,69 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Explicit observation, then optional reversible GPIO10 bit0 experiment. */
+/* Share the existing simple-MFD regmap; never replace the PMIC owner. */
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/of_address.h>
+#include <linux/regmap.h>
+#include <linux/string.h>
 #include "n71-wlan-power.h"
 
 static bool run;
 module_param(run, bool, 0400);
-MODULE_PARM_DESC(run, "Claim the unbound N71 PMIC client and observe REG_ON");
+MODULE_PARM_DESC(run, "Observe N71 REG_ON through the existing simple-MFD regmap");
 static DEFINE_MUTEX(control_lock);
 static struct i2c_client *owned_client;
 static struct n71_wlan_power_state power_state;
-static int probe_error = -ENODEV;
+static struct regmap *shared_map;
+
+/* Hold the parent device lock until each regmap operation has finished.
+ * devm can free the map on unbind: a retained client reference alone is not
+ * sufficient. Revalidate both the exact driver and map on every operation.
+ */
+static bool n71_map_owned(struct i2c_client *client)
+{
+	return client->dev.driver &&
+		!strcmp(client->dev.driver->name, "simple-mfd-i2c") &&
+		shared_map && dev_get_regmap(&client->dev, NULL) == shared_map;
+}
 
 static int n71_reg_on_read(void *context, unsigned char *value)
 {
 	struct i2c_client *client = context;
-	unsigned char address[2];
-	struct i2c_msg messages[] = {
-		{.addr = N71_WLAN_PMU_ADDRESS, .len = 2, .buf = address},
-		{.addr = N71_WLAN_PMU_ADDRESS, .flags = I2C_M_RD, .len = 1, .buf = value},
-	};
-	int result;
-	n71_wlan_reg_on_address(address);
-	result = i2c_transfer(client->adapter, messages, ARRAY_SIZE(messages));
-	return result == ARRAY_SIZE(messages) ? 0 : result < 0 ? result : -EIO;
+	unsigned int raw;
+	int error = -ENODEV;
+
+	device_lock(&client->dev);
+	if (n71_map_owned(client)) {
+		error = regmap_read(shared_map, N71_WLAN_REG_ON_REGISTER, &raw);
+		if (!error && raw > 0xff)
+			error = -ERANGE;
+		if (!error)
+			*value = raw;
+	}
+	device_unlock(&client->dev);
+	return error;
 }
 
 static int n71_reg_on_write(void *context, unsigned char value)
 {
 	struct i2c_client *client = context;
-	unsigned char packet[3];
-	struct i2c_msg message = {.addr = N71_WLAN_PMU_ADDRESS, .len = 3, .buf = packet};
-	int result;
-	n71_wlan_reg_on_address(packet);
-	packet[2] = value;
-	result = i2c_transfer(client->adapter, &message, 1);
-	return result == 1 ? 0 : result < 0 ? result : -EIO;
+	unsigned int raw;
+	unsigned char bit;
+	int error = -ENODEV;
+
+	device_lock(&client->dev);
+	if (n71_map_owned(client)) {
+		/* Never write mode/drive bits, even if a concurrent reader exists. */
+		error = regmap_read(shared_map, N71_WLAN_REG_ON_REGISTER, &raw);
+		if (!error && !n71_wlan_shared_write_plan(raw, value, &bit))
+			error = -EBUSY;
+		if (!error)
+			error = regmap_update_bits(shared_map, N71_WLAN_REG_ON_REGISTER,
+					   1, bit);
+	}
+	device_unlock(&client->dev);
+	return error;
 }
 
 static struct n71_wlan_power_io power_io = {
@@ -59,7 +85,8 @@ static int n71_validate_client(struct i2c_client *client)
 	error = node == expected ? 0 : -ENODEV;
 	of_node_put(expected);
 	if (error || client->adapter->dev.of_node != node->parent ||
-	    !of_device_is_compatible(node, "apple,antigua-pmic") || !of_device_is_available(node))
+	    !of_device_is_compatible(node, "apple,antigua-pmic") ||
+	    !of_device_is_compatible(node, "apple,i2c-pmic") || !of_device_is_available(node))
 		return -ENODEV;
 	error = of_address_to_resource(node->parent, 0, &bus);
 	if (!error)
@@ -68,52 +95,6 @@ static int n71_validate_client(struct i2c_client *client)
 		error = -ENODEV;
 	return error;
 }
-
-static int n71_power_probe(struct i2c_client *client)
-{
-	unsigned char value = 0, planned;
-	int error = n71_validate_client(client);
-	if (error)
-		return error;
-	mutex_lock(&control_lock);
-	error = owned_client ? -EBUSY : n71_reg_on_read(client, &value);
-	probe_error = error;
-	if (!error) {
-		owned_client = client;
-		power_io.context = client;
-		pr_info("N71_REG_ON_OBSERVED control=%02x bit0=%u compatible-plan=%u; no value write\n",
-			(unsigned int)value, (unsigned int)(value & 1),
-			(unsigned int)n71_wlan_reg_on_plan(N71_WLAN_REG_ON_REGISTER, value, true, &planned));
-	}
-	mutex_unlock(&control_lock);
-	return error;
-}
-
-/* Request/verify power=0 before unloading. Removal failure remains visible. */
-static void n71_power_remove(struct i2c_client *client)
-{
-	int error;
-	mutex_lock(&control_lock);
-	if (owned_client == client) {
-		error = n71_wlan_power_release(&power_io, &power_state);
-		pr_info("N71_REG_ON_REMOVE error=%d restore_pending=%u\n",
-			error, power_state.restore_pending);
-		owned_client = NULL;
-		power_io.context = NULL;
-	}
-	mutex_unlock(&control_lock);
-}
-
-static const struct of_device_id n71_power_match[] = {
-	{.compatible = "apple,antigua-pmic"},
-	{},
-};
-/* No MODULE_DEVICE_TABLE: this experiment must not autoload. */
-static struct i2c_driver n71_power_driver = {
-	.driver = {.name = "n71-wlan-power-diagnostic", .of_match_table = n71_power_match},
-	.probe = n71_power_probe,
-	.remove = n71_power_remove,
-};
 
 static int n71_power_set(const char *text, const struct kernel_param *parameter)
 {
@@ -165,7 +146,9 @@ static int __init n71_power_init(void)
 {
 	struct device_node *node;
 	struct i2c_client *client;
+	unsigned char value = 0, planned;
 	int error;
+
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
 	node = of_find_node_by_path("/soc/i2c@20a110000/pmic@74");
@@ -174,25 +157,48 @@ static int __init n71_power_init(void)
 	if (!client)
 		return -ENODEV;
 	device_lock(&client->dev);
-	error = client->dev.driver ? -EBUSY : n71_validate_client(client);
-	device_unlock(&client->dev);
-	put_device(&client->dev);
-	if (error)
-		return error;
-	/* Driver core arbitrates binding; never replace another driver. */
-	error = i2c_add_driver(&n71_power_driver);
-	if (error)
-		return error;
-	if (!owned_client) {
-		i2c_del_driver(&n71_power_driver);
-		pr_err("N71_REG_ON_OBSERVATION_FAILED error=%d; no value write\n", probe_error);
-		return probe_error;
+	error = n71_validate_client(client);
+	if (!error && (!client->dev.driver ||
+			strcmp(client->dev.driver->name, "simple-mfd-i2c")))
+		error = -EBUSY;
+	if (!error) {
+		shared_map = dev_get_regmap(&client->dev, NULL);
+		if (!shared_map || regmap_get_val_bytes(shared_map) != 1 ||
+		    regmap_get_reg_stride(shared_map) != 1)
+			error = -ENODEV;
 	}
+	device_unlock(&client->dev);
+	if (!error)
+		error = n71_reg_on_read(client, &value);
+	if (error) {
+		shared_map = NULL;
+		put_device(&client->dev);
+		return error;
+	}
+	owned_client = client; /* Keep the device reference until module exit. */
+	power_io.context = client;
+	pr_info("N71_REG_ON_PARENT simple-mfd-i2c shared-regmap; no rebind\n");
+	pr_info("N71_REG_ON_OBSERVED control=%02x bit0=%u compatible-plan=%u; no value write\n",
+		(unsigned int)value, (unsigned int)(value & 1),
+		(unsigned int)n71_wlan_reg_on_plan(N71_WLAN_REG_ON_REGISTER,
+			value, true, &planned));
 	return 0;
 }
 
 module_init(n71_power_init);
-static void __exit n71_power_exit(void) { i2c_del_driver(&n71_power_driver); }
+static void __exit n71_power_exit(void)
+{
+	int error;
+	mutex_lock(&control_lock);
+	error = n71_wlan_power_release(&power_io, &power_state);
+	pr_info("N71_REG_ON_REMOVE error=%d restore_pending=%u; parent retained\n",
+		error, power_state.restore_pending);
+	put_device(&owned_client->dev);
+	owned_client = NULL;
+	power_io.context = NULL;
+	shared_map = NULL;
+	mutex_unlock(&control_lock);
+}
 module_exit(n71_power_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("N71 PMIC REG_ON observation and explicit reversible bit0 control");
+MODULE_DESCRIPTION("N71 REG_ON observation and reversible bit0 via parent MFD regmap");

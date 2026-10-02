@@ -6,7 +6,7 @@
 int main(void)
 {
 	unsigned char address[2] = {0xaa, 0xbb}, value;
-	unsigned int old, enable;
+	unsigned int old, enable, requested;
 
 	/* Kills address byte order and wrong GPIO register mutations. */
 	assert(n71_wlan_reg_on_address(address));
@@ -31,6 +31,20 @@ int main(void)
 	assert(!n71_wlan_reg_on_plan(0x8fc, 0x140, true, &value));
 	assert(value == 0xa5);
 	assert(!n71_wlan_reg_on_plan(0x8fc, 0x40, true, NULL));
+	/* Kills shared-owner mismatch, wide request and whole-byte output mutations. */
+	for (old = 0; old < 256; old++) {
+		for (requested = 0; requested < 256; requested++) {
+			bool allowed = (old & 0xd8) == 0x40 && (old & 0xfe) == (requested & 0xfe);
+			value = 0xa5;
+			assert(n71_wlan_shared_write_plan(old, requested, &value) == allowed);
+			assert(value == (allowed ? (requested & 1) : 0xa5));
+		}
+	}
+	value = 0xa5;
+	assert(!n71_wlan_shared_write_plan(0x40, 0x140, &value));
+	assert(!n71_wlan_shared_write_plan(0x140, 0x40, &value));
+	assert(!n71_wlan_shared_write_plan(0x40, 0x41, NULL));
+	assert(value == 0xa5);
 	puts("N71_WLAN_POWER_CONTRACT_OK");
 	return 0;
 }
