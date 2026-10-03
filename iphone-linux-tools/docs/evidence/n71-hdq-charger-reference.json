@@ -85,7 +85,7 @@
     "command1": "setHDQInterfaceGated(interface=1, request=0)",
     "command2": "setHDQInterfaceGated(interface=0, request=1)",
     "command1_handshake": "final_write=false; write04/read ACKbit5; no final06",
-    "release_command0_depends_on": "software_mode, cached masks, controller pointer and status7; not a universally valid raw write06 recipe"
+    "release_command0_depends_on": "software_mode, cached event mask, battery_alert lookup result and status7/bit7; not a universally valid write06 recipe"
   },
   "handshake_implementation_scope": {
     "header": "phone/kernel/n71-hdq-handshake.h",
@@ -174,5 +174,87 @@
         "sha256": "1fb9cf260e312c01b9284c44ff845a2368b08c425c42423e3325ba03d99b9d40"
       }
     ]
+  },
+  "release_reference": {
+    "scope": "command0/request0 selected control flow only; no hardware release or restoration proof",
+    "battery_alert_property": "function-battery_alert",
+    "property_string": "0xfffffff0054f73a9",
+    "lookup_call": "0xfffffff005d674b8",
+    "cached_lookup_result_store": "0xfffffff005d674bc -> object+0xb0",
+    "status_register": "0x07",
+    "status_flag_bit": 7,
+    "status_read_side_effects_qualified": false,
+    "cached_event_mask_field": "object+0xb8",
+    "mode1_cache0": "no handshake",
+    "mode1_cache_nonzero": "handshake final_write=false",
+    "mode0_alert_present_status_bit7_clear": "handshake final_write=true",
+    "mode0_other": "write00 to register1d",
+    "disable_event_mask": "cached_mask & ~0x40 if alert lookup present; cached_mask otherwise",
+    "mask_restore_and_irq_ownership_qualified": false,
+    "selector_header": "phone/kernel/n71-hdq-release-plan.h",
+    "selector_has_io_backend": false,
+    "verification_windows": [
+      {
+        "name": "battery_alert_lookup",
+        "vm_address": "0xfffffff005d674ac",
+        "file_offset": 19084460,
+        "size": 20,
+        "sha256": "0c05733ef34f3113594fd4fecb8ce0f323576d37608cb05cfb91b2dd5c803ebf"
+      },
+      {
+        "name": "battery_alert_property",
+        "vm_address": "0xfffffff0054f73a9",
+        "file_offset": 10236841,
+        "size": 23,
+        "sha256": "40d454a409840edab1278f7933637cf69d9fad763104be1510985dd87573eeec"
+      },
+      {
+        "name": "release_status",
+        "vm_address": "0xfffffff005d68088",
+        "file_offset": 19087496,
+        "size": 32,
+        "sha256": "73d8430a8c94418bb3d1dd4f148306316e77c95f75c3d04eced166186a520a1e"
+      },
+      {
+        "name": "release_mode",
+        "vm_address": "0xfffffff005d68140",
+        "file_offset": 19087680,
+        "size": 44,
+        "sha256": "06d9989a643d1290f1bf6082378ed544eb1b5a82d1697eb79b90ad1cb8973116"
+      },
+      {
+        "name": "release_masks",
+        "vm_address": "0xfffffff005d68240",
+        "file_offset": 19087936,
+        "size": 52,
+        "sha256": "796fe1affe654113974b808f59e48a6be43ffb8dd41ebde520444b8d27246aa3"
+      },
+      {
+        "name": "release_alert_choice",
+        "vm_address": "0xfffffff005d6828c",
+        "file_offset": 19088012,
+        "size": 136,
+        "sha256": "cd544ea0aa4577b24add29d3e754b41d4f8effb1b7da901363549ac5d8709df2"
+      },
+      {
+        "name": "release_zero_write",
+        "vm_address": "0xfffffff005d68300",
+        "file_offset": 19088128,
+        "size": 28,
+        "sha256": "39bba49d00eb1d8d4172b662315e72004e1397e44d6a921fd97dd63db87d9c6f"
+      }
+    ],
+    "offline_validation": {
+      "mac_native_assertion_kills": 14,
+      "arm64_native_assertion_kills": 14,
+      "kernel_object_werror": true,
+      "physical_release_performed": false,
+      "baseline_source_diff_empty": true,
+      "test_inputs_sha256": {
+        "phone/kernel/n71-hdq-release-plan.h": "d77ef3d965e52311ca58f15c3b523e79791fa2e4bfeee0439948a1c2159416ee",
+        "tests/n71_hdq_release_plan.c": "9e852b2a1bdc1749f8873efdfc895c3fb17db285e2196e4c50c1aadcd46c0a82",
+        "tests/run_n71_hdq_release_plan_mutations.py": "f0ca09bc0943da91c8ca63de03b8274be87beab19251e58c096db64df11b2f75"
+      }
+    }
   }
 }
