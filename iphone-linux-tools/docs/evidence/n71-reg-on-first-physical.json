@@ -46,6 +46,14 @@
     "power_sequence_assertion_mutations": 7,
     "corrected_mode_physical_load": false
   },
-  "next_gate": "Verify corrected mode1 activation00->01 and reversible restoration00, then PCIe identification in the same boot",
-  "raw_evidence": "Private logs and artifacts only; no identifiers, keys, raw tunables, firmware or disassembly published"
+  "next_gate": "Observe correct GPIO10 control914 with the corrected module before any activation; require qualified mode/owner, readback and GPIO status before PCIe",
+  "raw_evidence": "Private logs and artifacts only; no identifiers, keys, raw tunables, firmware or disassembly published",
+  "retrospective_address_correction": {
+    "observed_control_register_hex": "8fc",
+    "correct_gpio10_control_register_hex": "914",
+    "reason": "Inverted CSEL source interpretation in the original contract; LO selects 900+2*pin for GPIO10",
+    "physical_reg_on_control_validation": "not proved; old control observations/writes were at the wrong mapped address",
+    "gpio_status_187_bit2": "separate read-only mapping; unchanged by the control-address correction",
+    "historical_results": "retained; do not replay these modules or infer GPIO10 mode from the 8fc readback"
+  }
 }

@@ -106,8 +106,11 @@ e não comprova carga em Linux. Os sensores e Wi-Fi continuam pendentes.
 
 ## Alimentação WLAN no PMIC — candidata reversível
 
-REG_ON está no PMIC D2255, GPIO10/registro8fc/I2C74, separado do device_wake73
+REG_ON está no PMIC D2255, GPIO10/registro914/I2C74, separado do device_wake73
 do SoC. A referência N71 usa endereço BE de dois bytes sem paginação.
+O mapper seleciona900+2*pin abaixo17, portanto GPIO10=914. A interpretação
+anterior inverteu os operandos de CSEL e escolheu8fc; os testes históricos
+desse endereço não qualificam REG_ON. Não reutilizar módulos antigos.
 A primeira candidata usava binding I2C temporário e recusou EBUSY no hardware:
 simple-mfd-i2c já controla o cliente e mantém filhos RTC/NVMEM. A versão atual
 compartilha o regmap16r/8v desse MFD, validando driver/mapa a cada operação sob
@@ -160,7 +163,8 @@ retornou00, sem alterar o PMIC. A candidata antiga classificava o modo de
 forma incorreta e recusou ativação; nenhum novo teste PCIe/DMA foi feito.
 
 A referência Apple classifica byte<40 como mode1 (comparação006933e08 e
-classificação006933e0c), portanto00 corresponde ao modo do packetGPIO10.
+classificação006933e0c). Porém o byte00 desta sessão veio de8fc, endereço
+selecionado incorretamente; não comprova o modo do GPIO10 no registro914.
 O contrato corrigido aceita somente bits7:6=00/bits4:3=00, preservando bits5,
 2 e1; plano00→01→00 passou nos contratos e falhas sintéticas, mas ainda não
 foi aplicado no aparelho. Módulo corrigido SHA92aefccc9c5992f50abb4df350c181d7a2eab71ba4413d5089c3b435f5c3dcca.
@@ -173,7 +177,8 @@ bloqueio após fallback. Isso não é prova de reboot por software nem carga.
 
 ### Sessão mode1 e readback — 2026-10-02
 
-A versão corrigida aceitou00, mas a ativação terminou EIO. Um módulo com trace
+A versão com guard de modo corrigido ainda selecionava8fc incorretamente;
+aceitou00, mas a tentativa nesse endereço terminou EIO. Um módulo com trace
 foi compilado e atualizado por SSH, mantendo o boot: regmap_write retornou0,
 porém a leitura válida de8fc continuou00. A segunda tentativa acrescentou
 esse diagnóstico; não repetir a operação esperando resultado diferente.
@@ -197,3 +202,27 @@ Snapshot/sync e retorno automático ao iOS USB foram verificados nesta sessão.
 Bateria97→91 inclui DFU/Linux/reboot/iOS; não mede corrente líquida nem prova
 carga sustentada. iOS voltou a mostrar carregamento ativo. Não recomendar
 operação permanente em Linux enquanto esse gate de energia estiver aberto.
+
+### Correção do endereço — conferência binária de CSEL
+
+Os 11 opcodes do helper006933a88 foram conferidos no Mach-O fixado.
+`csel w9,w9,w10,lo` em006933aa4 escolhe **w9 quando pin<17**:900+2*pin.
+Pinos17..20 escolhem8c0+6*pin; acima20 retornaFFFF. GPIO10=914. O contrato
+agora testa todos os pinos válidos, a fronteira16/17 e a recusa21; exige
+endereçoBE09 14 e rejeita8fc. A candidata anterior não deve ser reutilizada.
+
+Baseline e14 mutações por asserção passaram no Mac e ARM64; sequência com
+sete mutações também passou. Módulo Werror/modpost compilado na mesma ABI,
+hash02cb9f6b6c9395addcca5c98f90f7657bf12c20c97d6c8a6b56aaf71ad41d1c7.
+Fontes funcionais preservadas sem diff. Isso ainda não prova ativação física.
+
+A próxima sessão começa por leitura914/level187, sem valor escrito no insmod.
+Ativação permanece condicionada ao guard de modo e proprietário MFD;
+identificação PCIe somente após control readback e nível alto confirmados.
+Não retirar essas verificações para fazer o experimento passar.
+
+Consultas iOS somente leitura `ioregentry AppleD2255PMU` e `ioregentry pmu`
+não retornaram gpio-activate-defaults, gpio-suspend-defaults,
+gpio-quiesce-defaults ou gpio-pin-config. Prova restrita a essas duas
+consultas; não demonstra ausência em toda a IORegistry nem autoriza
+presumir uma configuração elétrica. Dados completos permanecem privados.
