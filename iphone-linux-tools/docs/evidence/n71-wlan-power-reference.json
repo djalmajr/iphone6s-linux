@@ -43,13 +43,84 @@
     "clkreq": "SoC GPIO165",
     "perst": "SoC GPIO161"
   },
-  "guarded_update_contract": "Only register914; value<40 classified as mode1 by the original Apple set-mode helper. Restrict bits7:6=00 and bits4:3=00, preserve other bits, alter bit0 only through shared MFD regmap",
-  "limits": "Static reference only for control914; no physical observation/activation of that register yet. Previous 8fc read/write results are retained as observations of an incorrectly selected address and cannot validate REG_ON. GPIO status187/bit2 remains a separate read-only reference.",
+  "guarded_update_contract": "Only register914 and bit0. Original low-byte subset (bits7:6/4:3 clear), plus exact80/81 matching the table-free N71 writer with packet polarity1. Preserve every other bit via shared MFD regmap mask1; no mode/drive update.",
+  "limits": "Physical observation914=80 and level187bit2=0 in corrected boot; old guard refused activation and diagnostic was removed without value write. Selected writer qualification does not prove electrical activation. Old8fc results do not qualify GPIO10. Level and restoration remain separate required gates.",
   "mode_classification_reference": {
     "function": "fffffff006933d8c",
     "compare": "fffffff006933e08",
     "classification": "fffffff006933e0c: mode=1 + (value >= 0x40)",
     "matching_requested_mode_returns_without_write": "fffffff006933e10..fffffff006933e1c",
     "previous_guard_error": "bits7:6=01 was wrongly equated with packet mode1; physical byte00 exposed this regression"
+  },
+  "latch80_reference": {
+    "decoded_kernel_sha256": "0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a",
+    "packet_property": "function-reg_on",
+    "packet_flags": "0x101",
+    "packet_polarity": 1,
+    "writer_table_field": "object+0x1d0",
+    "writer_table_property": "gpio-pin-config",
+    "table_free_mask": "0xe6 clears bits0/3/4, preserves bits7:6",
+    "polarity1_skips_conditional_bit0_inversion": true,
+    "accepted_additional_input_bytes": [
+      "0x80",
+      "0x81"
+    ],
+    "new_write_mask": "0x01",
+    "mode_or_drive_changed": false,
+    "mode_classifier_for80": 2,
+    "table_property_absent_in_complete_runtime_capture": true,
+    "runtime_capture_sha256": "9a4baf1b5f18d380d843e78bd39fb466abec313e078b5d6efe2825a5de5589c4",
+    "table_key_count_in_pinned_prelink_xml": 0,
+    "ios_lookup_absence_scope": "prior selected AppleD2255PMU and pmu queries only; no whole IORegistry claim",
+    "verification_windows": [
+      {
+        "name": "gpio_writer_table_and_mask",
+        "vm_address": "0xfffffff006933f34",
+        "file_offset": 31457076,
+        "size": 56,
+        "sha256": "51ee9f1672576265063917380e3afd411d2b7c44fe20de41baa0deefd48038b1"
+      },
+      {
+        "name": "gpio_writer_value_and_polarity",
+        "vm_address": "0xfffffff006933f6c",
+        "file_offset": 31457132,
+        "size": 104,
+        "sha256": "a4a4fa34ab043f9c48ed45c76f10474076c42c409e2cc0792d9b259aa12ef15a"
+      },
+      {
+        "name": "gpio_function_polarity",
+        "vm_address": "0xfffffff0069353ec",
+        "file_offset": 31462380,
+        "size": 44,
+        "sha256": "205cb1bade1ebcc1adc67251058f08ffbe642a6b5a810456ceab0f13e61d667c"
+      },
+      {
+        "name": "gpio_mode_table_lookup",
+        "vm_address": "0xfffffff006930170",
+        "file_offset": 31441264,
+        "size": 56,
+        "sha256": "7883bd7e813c6db44018aa2bb6fd36cdd0cd4e4c791e253ffcafe23541b39b33"
+      },
+      {
+        "name": "gpio_mode_table_property",
+        "vm_address": "0xfffffff0059ccbb2",
+        "file_offset": 15305650,
+        "size": 16,
+        "sha256": "a29f15aef778cbe347216542500a0396b827882128687a99ecedb47f6f68dcab"
+      }
+    ],
+    "physical_new_subset_activation_proved": false,
+    "offline_validation": {
+      "mac_assertion_kills": 16,
+      "arm64_assertion_kills": 16,
+      "sequence_assertion_kills_mac_and_arm64": 7,
+      "synthetic_latch80_error_restore_harness_mac_arm64": true,
+      "module_werror_modpost": true,
+      "module_sha256": "383b85a09f32e1debbdd44e5c2818e842a93112fa8926377bd628b3f3881becd",
+      "module_bytes": 16792,
+      "vermagic": "7.2.0-iphone6s-source SMP preempt mod_unload aarch64",
+      "symbols_source": "same preserved vmlinux.symvers; KBUILD_EXTRA_SYMBOLS",
+      "baseline_source_diff_empty": true
+    }
   }
 }

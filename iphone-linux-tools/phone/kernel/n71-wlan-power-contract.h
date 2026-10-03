@@ -38,17 +38,19 @@ static inline bool n71_wlan_reg_on_address(unsigned char *out)
 	return true;
 }
 
-/* Restricted subset of the Apple GPIO writer: preserve all other bits.
- * Apple set-mode helper classifies value<0x40 as mode1; require bits7:6
- * and bits4:3 clear. Do not change
- * direction/drive settings, infer an unknown mode, or accept another register.
- * Physical activation and polarity still require separate verification.
+/* Restricted subset of the N71 GPIO writer with packet polarity1.
+ * Allow the original low-byte subset and exact observed latch bytes80/81.
+ * The table-free writer preserves bits7:6; it clears bits0/3/4, then sets
+ * bit0 for bool1. For80/81, changing bit0 alone reproduces that path.
+ * This is not a set-mode operation:80 remains Apple classifier mode2.
+ * Never change drive/mode, infer a table, or accept another register.
+ * Physical activation still requires readback, level and verified cleanup.
  */
 static inline bool n71_wlan_reg_on_plan(unsigned int reg, unsigned int old,
 				      bool enabled, unsigned char *out)
 {
 	if (!out || reg != N71_WLAN_REG_ON_REGISTER || old > 0xff ||
-	    (old & 0xd8) != 0)
+	    ((old & 0xd8) != 0 && old != 0x80 && old != 0x81))
 		return false;
 	*out = (old & ~1U) | (enabled ? 1U : 0U);
 	return true;

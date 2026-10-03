@@ -34,7 +34,7 @@ int main(void)
 			value = 0xa5;
 			accepted = n71_wlan_reg_on_plan(0x914, old, enable, &value);
 			/* Kills mode guard removal and unrelated-bit clearing. */
-			if ((old & 0xc0) == 0 && !(old & 0x18)) {
+			if (((old & 0xc0) == 0 && !(old & 0x18)) || old == 128 || old == 129) {
 				assert(accepted && value == ((old & 0xfe) | enable));
 				assert((value & 0xfe) == (old & 0xfe));
 			} else {
@@ -50,7 +50,8 @@ int main(void)
 	/* Kills shared-owner mismatch, wide request and whole-byte output mutations. */
 	for (old = 0; old < 256; old++) {
 		for (requested = 0; requested < 256; requested++) {
-			bool allowed = (old & 0xd8) == 0 && (old & 0xfe) == (requested & 0xfe);
+			bool allowed = ((old & 0xd8) == 0 || old == 128 || old == 129) &&
+				(old & 0xfe) == (requested & 0xfe);
 			value = 0xa5;
 			assert(n71_wlan_shared_write_plan(old, requested, &value) == allowed);
 			assert(value == (allowed ? (requested & 1) : 0xa5));
@@ -64,6 +65,11 @@ int main(void)
 	/* Physical regression: Apple mode1 is value<0x40, not bit6 set. */
 	assert(n71_wlan_reg_on_plan(0x914, 0x00, true, &value) && value == 0x01);
 	assert(!n71_wlan_reg_on_plan(0x914, 0x40, true, &value));
+	/* Kills exact-byte removal, broad admission and drive/mode changes. */
+	assert(n71_wlan_reg_on_plan(0x914, 0x80, true, &value) && value == 0x81);
+	assert(n71_wlan_reg_on_plan(0x914, 0x81, false, &value) && value == 0x80);
+	assert(!n71_wlan_reg_on_plan(0x914, 0x82, true, &value));
+	assert(!n71_wlan_shared_write_plan(0x80, 0x01, &value));
 	puts("N71_WLAN_POWER_CONTRACT_OK");
 	return 0;
 }
