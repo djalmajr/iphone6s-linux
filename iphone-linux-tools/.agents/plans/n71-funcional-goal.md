@@ -484,3 +484,17 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   comportamento indefinido. Header compilouWerror/modpost no bundle e
   checkpatch0erros/0warnings/0checks. A API não registra PCIhost ou aplica
   topologia/DART/IRQ; não houve I/O físico ou reinicialização nesta fatia.
+
+### Incremento 60 — CI do ECAM e referência das janelas do host
+
+- Quatro arquivos: CI, guiaLINK, evidênciaECAM e plano. Registrar os gates da
+  fase59 e adicionar as nove mutações à matriz Linux/macOS. Correlacionar
+  somente ranges/mapper/IRQ entre a captura Pongo já fixada e ADT oficial
+  decodificado/hash fixado; sem coleta nova. Publicar janela de verificação
+  poroffset/SHA e campos de hardware selecionados, não dumps ou artefatos.
+- Duas janelas packedLE32/64/64/64, byte a byte iguais nos dois insumos.
+  Uma interpretação inicial como high/low de célulasFDT foi recusada por
+  valores incoerentes; corrigida antes de qualquer escritura. Parent PCI
+  address-cells3/size-cells2, mapperreg0 e DARTIRQ248 conferidos nas duas
+  referências. LinuxRID/SID, BARs, IRQ, DMA e host continuam sem qualificação
+  física. CI2f07194 passou37123788259; fonte/kernel/perfis preservados.

@@ -190,3 +190,63 @@ com `vmlinux.symvers` exato; conferir o módulo antes de transferir. Uma futura
 coleta deverá selecionar manifesto, perfil e coletor compatíveis, com snapshot
 e restore verificados, e agrupar inventário com novos gates de host/DART/HDQ.
 Não pedir DFU só para confirmar fatos já obtidos.
+
+## Base do host — ECAM e janelas de referência
+
+`n71-pcie-ecam.h` preserva as coordenadas observadas: raiz bus0/devfn08 em
+ECAM+8000 e endpoint bus1/devfn00 em ECAM+100000. O contrato limita a leitura
+a essas duas funções, com aperture de 16 MiB e tamanhos de 1, 2 ou 4 bytes
+naturalmente alinhados e contidos nos 4 KiB da função. Não registra host. O
+callback recebe um DWORD alinhado; extração só publica saída após sucesso.
+Clock, recurso e link continuam sob responsabilidade do futuro adapter.
+
+[Provas e hashes](evidence/n71-pcie-ecam.json): matriz de 512 coordenadas,
+limites de todos os offsets/tamanhos, nove mutações por asserção em Mac/ARM64,
+UBSan no Mac e objeto kernel Werror/modpost. Sem novo I/O físico ou reboot.
+
+```sh
+python3 -m unittest discover -s tests -p test_n71_pcie_ecam.py -v
+python3 tests/run_n71_pcie_ecam_mutations.py
+```
+
+A captura Pongo preservada e o ADT oficial têm os mesmos 56 bytes de `ranges`.
+O formato Apple é packed little-endian flags32/pci64/cpu64/size64; não copiar
+como células FDT. Duas janelas de referência:
+
+| Flags | Base PCI | Base CPU | Tamanho |
+| --- | --- | --- | --- |
+| 43000000 | 620000000 | 620000000 | 1a0000000 |
+| 02000000 | c0000000 | 7c0000000 | 40000000 |
+
+Todos os valores da tabela são hexadecimais. As referências também concordam
+com mapper-apcie1/reg0 e DART IRQ248. Isso não qualifica sozinho o mapeamento
+Linux RID/SID, roteamento de BAR/IRQ ou DMA. Esses gates continuam obrigatórios.
+A primeira tentativa de interpretar endereços como pares high/low de células
+FDT produziu valores incoerentes; a leitura packed64 e comparação byte a byte
+com o ADT oficial corrigiram o formato antes de qualquer escrita.
+
+Para obter o ADT oficial, use o [leitor público](../scripts/research/apple-n71-map.py),
+que fixa o download Apple e salva os dados privadamente, sem executar firmware:
+
+```sh
+python3 scripts/research/apple-n71-map.py --output-dir "$PWD/runtime/SUA-REFERENCIA"
+```
+
+Se o ADT já estiver salvo, reutilize-o sem download. Confira a janela offline
+com `n71-adt-private.bin` já decodificado:
+
+```python
+import hashlib, json, struct
+from pathlib import Path
+e = json.loads(Path('docs/evidence/n71-pcie-ecam.json').read_text())['host_reference']
+raw = Path('runtime/SUA-REFERENCIA/n71-adt-private.bin').read_bytes()
+assert hashlib.sha256(raw).hexdigest() == e['official_decoded_sha256']
+w = e['official_verification_window']
+chunk = raw[w['offset']:w['offset'] + w['bytes']]
+assert hashlib.sha256(chunk).hexdigest() == w['sha256']
+assert raw[w['offset'] - 36:w['offset'] - 30] == b'ranges'
+assert len(list(struct.iter_unpack('<IQQQ', chunk))) == 2
+```
+
+A captura bruta, tabelas, logs e firmware continuam privados. Não há changeset
+de DT, configuração de IOMMU ou ativação de rádio nesta implementação.
