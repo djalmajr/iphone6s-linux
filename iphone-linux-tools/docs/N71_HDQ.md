@@ -145,3 +145,56 @@ com o mesmo pai. O ADT runtime declara `clock-gates=0x55` para UART5
 (**85 decimal**, não55 decimal). O ID do gate não foi convertido em
 offset por aritmética presumida. O papel isolado do bit4 na máscara270
 também não foi classificado como direção GPIO genérica.
+
+## Adapter serdev 8N2 — compilado, ainda sem integração
+
+A API serdev da fonte fixada não tem operação para selecionar stop bits.
+A referência N71 exige57600/8N2. O [patch](../phone/kernel/patches/0002-serdev-stop-bits.patch)
+adiciona `serdev_device_set_stop_bits`, um callback de controlador e seu
+registro no adapter TTY. `CSTOPB` representa dois stop bits na
+[API serial documentada pelo kernel](https://www.kernel.org/doc/html/latest/driver-api/serial/driver.html).
+Não há chamada automática, cliente novo ou alteração de porta no probe.
+
+A operação aceita apenas1/2, recusa callback ausente ou TTY fechado e
+propaga erro do backend. O adapter copia termios, altera somenteCSTOPB
+e confere o estado aceito pelo TTY. O teste verifica os campos e caracteres
+de controle explícitos, sem depender de padding da estrutura C. A confirmação
+do TTY não é uma medição da forma de onda; em erro, o chamador precisa
+tratar estado possivelmente alterado, sem presumir restauração automática.
+
+Os testes compilam as funções e o registro de callback adicionados pelo
+patch real, com backend TTY sintético. Mac e ARM64 passaram baseline e12
+mutações compiladas por SIGABRT/asserção, incluindo callback não registrado,
+contagem encaminhada incorreta, readback rejeitado e erro engolido. Checkpatch
+passou com0erros/0avisos; `core.o` e `serdev-ttyport.o` compilaram comWerror
+no worktree isolado. [Hashes e escopo](evidence/n71-serdev-stop-bits.json).
+
+```sh
+python3 tests/run_n71_serdev_stop_bits_mutations.py
+```
+
+A build realizada usa:
+
+- Fonte preservada: `/home/ubuntu/kernel-n71-source-20261001`, commit958481f.
+- Worktree próprio: `/home/ubuntu/kernel-n71-serdev-source-20261002`.
+- Saída separada: `/home/ubuntu/kernel-n71-serdev-build-20261002`.
+- Patch aplicado somente após `git apply --check`; três arquivos exatos
+  alterados, hashes publicados e diff vazio na fonte preservada.
+- Configuração inicial copiada de `kernel-n71-build-20261001-v2/.config`,
+  seguida de `olddefconfig` e compilação dos objetos alterados.
+
+Comando de compilação reproduzível nesse worktree:
+
+```sh
+make -C /home/ubuntu/kernel-n71-serdev-source-20261002 \
+  O=/home/ubuntu/kernel-n71-serdev-build-20261002 ARCH=arm64 -j2 \
+  KCFLAGS=-Werror drivers/tty/serdev/core.o drivers/tty/serdev/serdev-ttyport.o
+```
+
+Não houve link de Image, modpost ou boot deste patch. Ele ainda não integra
+o helper de patchset DART nem um perfil de deployment. Como muda o layout
+das operações serdev, a futura integração exige recompilar kernel e módulos
+e usar identificação de kernel distinta. Não carregar esse delta como módulo
+na imagem atual. A receita de [build fonte](KERNEL-SOURCE-BUILD.md) continua
+como base para preparar a candidata agregada após qualificar mux/clocks e
+releaseSN2400. UART5/I2C1 seguem desativados; gauge e carga sem prova física.
