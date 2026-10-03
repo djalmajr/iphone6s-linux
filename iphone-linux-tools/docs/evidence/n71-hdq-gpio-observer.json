@@ -1,0 +1,52 @@
+{
+  "format": 1,
+  "proof_scope": "public pinned Linux source and external module build only; no physical GPIO observation",
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "source_files": {
+    "drivers/pinctrl/pinctrl-apple-gpio.c": "9e387713c4443d0af50fde108ae46d35e2f57adc2738c005b3de5bf8d4c7533c",
+    "drivers/gpio/gpiolib.c": "2193d069cdbf58b9168288b136b93e0e0c80e9be04deebc68496d7549a569f25",
+    "drivers/pinctrl/pinmux.c": "6a43fadf03a2f6e55ee00e70c3e51639273556c3d378a262f930e00f79879fcd",
+    "drivers/base/regmap/regmap.c": "3d4b622a577f2a008539727d9d26b422112da67dcea170e05ba9d567e2f5a7a9"
+  },
+  "provider": {
+    "node": "/soc/pinctrl@20f100000",
+    "compatible": "apple,pinctrl",
+    "driver": "apple-gpio-pinctrl",
+    "resource_start": "0x20f100000",
+    "resource_bytes": 1048576,
+    "regmap_value_bytes": 4,
+    "regmap_stride": 4,
+    "cache_type_in_source": "REGCACHE_FLAT",
+    "pinmux_mask_in_source": "0x260",
+    "gpio2_reference_mask": "0x270",
+    "strict_pinmux": true
+  },
+  "observer": {
+    "source": "phone/kernel/n71-hdq-gpio-observe.c",
+    "explicit_run_required": true,
+    "register_offset": "0x08",
+    "bypassed_reads": 2,
+    "device_lock_held_during_reads": true,
+    "bypass_api_restores_cache_flags_under_internal_lock": true,
+    "gpio_line_requested": false,
+    "ownership_verified": false,
+    "hardware_writes_performed": false,
+    "uart_or_charger_access_performed": false,
+    "ordinary_regmap_reads": 2
+  },
+  "build": {
+    "exit_code": 0,
+    "werror_modpost_verified": true,
+    "same_bundle_vmlinux_exports_verified": true,
+    "elf": "ELF64 little-endian relocatable AArch64",
+    "bytes": 9240,
+    "sha256": "a243e094265871ec6bd5bc4743029e06aaed9d9925262f99ac29a8c891b6f4fa",
+    "vermagic": "7.2.0-iphone6s-dart-serdev1 SMP preempt mod_unload aarch64",
+    "mac_hash_recalculated": true
+  },
+  "physical_loaded": false,
+  "battery_telemetry_verified": false,
+  "default_profile_changed": false,
+  "limits": "Read samples only. No acquisition, mux restoration, UART/SN2400 transaction, gauge ABI, rail or battery/charging proof."
+}

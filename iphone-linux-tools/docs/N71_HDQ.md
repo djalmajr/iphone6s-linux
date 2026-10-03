@@ -248,3 +248,47 @@ dos [fatos selecionados](evidence/n71-hdq-charger-reference.json). Para
 reproduzir a conferência, use o comando de janelas acima com
 `evidence['release_reference']['verification_windows']`. O binário privado
 não é publicado nem executado.
+
+## Observador GPIO2 do bundle — sem escrita física
+
+O provider da fonte fixada usa `REGCACHE_FLAT`: uma leitura normal de regmap
+pode vir do cache. Sua operação de mux usa máscara260; a referência N71
+para GPIO2 também inclui bit4, com máscara270. Não substituir essas máscaras
+por uma escrita MMIO direta: ela contornaria o owner e poderia divergir do
+cache. A [documentação pinctrl](https://docs.kernel.org/driver-api/pin-control.html#pin-control-interaction-with-the-gpio-subsystem) distingue aquisição
+de GPIO e seleção de função periférica; GPIO solicitado não é autorização
+para tomar um mux UART mantido por outro consumidor.
+
+O [observador](../phone/kernel/n71-hdq-gpio-observe.c) é um módulo externo
+com `run=1` explícito. Confere N71, caminho do provider, compatible, recurso
+MMIO, driver existente e regmap32/stride4. Mantém device_lock durante duas
+leituras normais e duas leituras bypassed do offset08 via API regmap. Essa
+API preserva/restaura flags de cache sob o lock interno. Não chama request
+GPIO, pinctrl, set direction, escreve registrador ou aciona UART/carregador.
+Não reconstrói a estrutura privada do driver nem faz rebind.
+
+O log separa os quatro resultados e compara somente a máscara270 entre
+as duas amostras físicas e a leitura normal final. `stable=1` descreve
+aquelas duas amostras; não mede propriedade da linha, nível elétrico, rail
+ou capacidade da bateria. Unload não precisa restaurar mux, pois o módulo
+não adquiriu/configurou a linha. Esse observador prepara o próximo backend,
+sem substituir os gates de SN2400, UART, cleanup e identificação do gauge.
+
+[Hashes, APIs e build](evidence/n71-hdq-gpio-observer.json): compilou com
+Werror/modpost contra os exports do bundle existente, ELF relocável AArch64
+e vermagic `7.2.0-iphone6s-dart-serdev1`. O hash foi recalculado no Mac;
+Image e configuração foram preservados. O arquivo permanece privado em
+`runtime/n71-hdq-gpio-observer-build-20261003/n71-hdq-gpio-observe.ko`.
+
+Para reproduzir, copie as fontes públicas de `phone/kernel` para novo
+diretório M na VM dedicada e execute a receita de módulos externos do
+[bundle](N71_KERNEL_BUNDLE.md), com seu `vmlinux.symvers`. Não suprimir
+erros de símbolos. Depois valide ELF/vermagic/hash e transfira o observador
+via SSH para `/run/` no mesmo boot do bundle; confira SHA no destino antes
+de `insmod /run/n71-hdq-gpio-observe.ko run=1`. Exigir log
+`N71_HDQ_GPIO2` sem erro, executar `rmmod n71_hdq_gpio_observe` e conferir
+o marcador `N71_HDQ_GPIO2_UNLOADED` e ausência do módulo em sysfs. Logs
+completos e observações do aparelho permanecem privados.
+
+Ainda não foi transferido ao telefone ou carregado; não contém autoload
+no initramfs nem altera os dois módulos selecionados do experimento PCIe.
