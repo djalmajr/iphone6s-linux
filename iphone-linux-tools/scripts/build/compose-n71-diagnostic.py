@@ -60,8 +60,10 @@ def compose(original, loader, baseline_dtb, diagnostic_dtb, kernel, initramfs):
     return loader + KERNEL.BOOTARGS + diagnostic_dtb + kernel + initramfs
 
 
-def validate_module(raw):
-    vermagic = b'vermagic=7.2.0-iphone6s-source SMP preempt mod_unload aarch64\0'
+def validate_module(raw, *, kernel_release='7.2.0-iphone6s-source'):
+    if kernel_release not in ('7.2.0-iphone6s-source', '7.2.0' + KERNEL.kernel_bundle.LOCALVERSION):
+        raise ValueError('Only a recorded baseline or explicit bundle ABI is accepted')
+    vermagic = ('vermagic=' + kernel_release + ' SMP preempt mod_unload aarch64\0').encode()
     if (not 64 <= len(raw) <= 4 * 1024 * 1024 or raw[:7] != b'\x7fELF\x02\x01\x01' or
             struct.unpack_from('<HH', raw, 16) != (1, 183) or raw.count(vermagic) != 1):
         raise ValueError('Relocatable AArch64 module with exact preserved ABI required')
@@ -76,6 +78,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-profile', type=Path, required=True)
     parser.add_argument('--kernel-dir', type=Path, required=True)
+    parser.add_argument('--kernel-patchset', choices=(KERNEL.kernel_patchset.PATCHSET, KERNEL.kernel_bundle.BUNDLE))
     parser.add_argument('--diagnostic-dir', type=Path, required=True)
     parser.add_argument('--module', type=Path, required=True)
     parser.add_argument('--module-sha256', required=True)
@@ -90,7 +93,7 @@ def main():
             os.environ.pop('IPHONE_LINUX_PROFILE', None)
         else:
             os.environ['IPHONE_LINUX_PROFILE'] = previous
-    kernel, record = KERNEL.kernel_inputs(options.kernel_dir.absolute())
+    kernel, record = KERNEL.kernel_inputs(options.kernel_dir.absolute(), options.kernel_patchset)
     folder = DIAGNOSTIC.TUNABLES.private_path(options.diagnostic_dir, directory=True)
     path = DIAGNOSTIC.TUNABLES.private_path(folder / 'diagnostic-private.dtb')
     if path.stat().st_size > 4 * 1024 * 1024:
@@ -107,7 +110,7 @@ def main():
     driver = path.read_bytes()
     if hashlib.sha256(driver).hexdigest() != options.module_sha256:
         raise ValueError('Module differs from recorded build hash')
-    validate_module(driver)
+    validate_module(driver, kernel_release=record['build']['kernel_release'])
     loader = (ROOT / 'artifacts/m1n1.bin').read_bytes()
     expected = json.loads((ROOT / 'docs/evidence/m1n1-rebuild.json').read_text())['shallow_clone']
     if not expected['matches_original'] or KERNEL.digest(loader) != expected['sha256']:
@@ -145,6 +148,8 @@ def main():
     pending.rename(destination / 'deployment.json')
     private_write(destination / 'provenance.json', (json.dumps({
         'format': 1, 'kernel_source_commit': record['source']['commit'],
+        'kernel_patchset': options.kernel_patchset,
+        'kernel_release': record['build']['kernel_release'],
         'payload_sha256': KERNEL.digest(payload), 'dtb_sha256': KERNEL.digest(dtb),
         'module_sha256': options.module_sha256, 'kernel_initramfs_identities_preserved': True,
         'module_automatic_load': False, 'requires_explicit_run': True,

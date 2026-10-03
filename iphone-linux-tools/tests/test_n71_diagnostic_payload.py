@@ -1,5 +1,6 @@
 """Diagnostic payload may change DT only; ABI and identity bindings stay exact."""
 import importlib.util
+import os
 from pathlib import Path
 import struct
 import unittest
@@ -8,7 +9,7 @@ from test_n71_topology import encode
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
-    'n71_diagnostic_payload', ROOT / 'scripts/build/compose-n71-diagnostic.py')
+    'n71_diagnostic_payload', os.environ.get('N71_DIAGNOSTIC_COMPOSER_SCRIPT', ROOT / 'scripts/build/compose-n71-diagnostic.py'))
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
@@ -67,6 +68,24 @@ class N71DiagnosticPayload(unittest.TestCase):
                       valid + marker, valid[:18] + struct.pack('<H', 62) + valid[20:]):
             with self.assertRaises(ValueError):
                 MODULE.validate_module(wrong)
+
+    def test_bundle_module_requires_selected_release_and_rejects_unknown_abi(self):
+        header = bytearray(64)
+        header[:7] = b'\x7fELF\x02\x01\x01'
+        struct.pack_into('<HH', header, 16, 1, 183)
+        baseline = '7.2.0-iphone6s-source'
+        bundle = '7.2.0-iphone6s-dart-serdev1'
+
+        def image(release):
+            return bytes(header) + ('vermagic=' + release + ' SMP preempt mod_unload aarch64\0').encode()
+
+        MODULE.validate_module(image(bundle), kernel_release=bundle)
+        MODULE.validate_module(image(baseline), kernel_release=baseline)
+        for actual, selected in ((baseline, bundle), (bundle, baseline),
+                                 (bundle + '+', bundle), (baseline + '+', baseline + '+'),
+                                 ('7.0.12', '7.0.12')):
+            with self.subTest(actual=actual, selected=selected), self.assertRaises(ValueError):
+                MODULE.validate_module(image(actual), kernel_release=selected)
 
 
 if __name__ == '__main__':

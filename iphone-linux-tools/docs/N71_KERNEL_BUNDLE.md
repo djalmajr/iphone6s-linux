@@ -115,10 +115,43 @@ python3 scripts/build/integrate-source-kernel.py \
 
 `IPHONE_LINUX_PROFILE` deve apontar para o perfil anterior a preservar.
 Esse comando prepara um perfil local; não faz USB/DFU ou escolhe o perfil
-padrão. A composição diagnóstica, rebuild dos módulos e prova física da
-ABI nova ainda precisam de fases próprias.
+padrão. Rebuild dos módulos e prova física da ABI nova ainda precisam de
+gates reais.
 
 Gates sintéticos do integrador: 14 testes e 19 mutações por asserção no
 Mac/ARM64. Na VM, dois timeouts durante a compilação foram tratados como
 interrupções; os casos pendentes passaram após reduzir a prioridade do
 build e usar a espera limitada do runner. Nenhum timeout contou como kill.
+
+## Composição diagnóstica com release selecionada
+
+O compositor também aceita `--kernel-patchset n71-dart-serdev-v1` e
+encaminha a seleção ao validador de artefatos acima. A release conferida
+no registro determina o vermagic exigido do módulo; baseline e bundle
+não são intercambiáveis. Releases desconhecidas ou marcadas com `+`
+são recusadas. O padrão continua o baseline registrado.
+
+O compositor preserva o layout exato do payload, loader, kernel,
+initramfs e identidades; troca somente o DTB por sua versão diagnóstica
+conferida. O módulo fica fora do initramfs e não é carregado automaticamente.
+Release e patchset selecionados entram na proveniência privada.
+
+Depois de integrar o kernel e rebuildar/conferir o módulo, selecione
+pastas privadas e nova saída para a composição:
+
+```sh
+python3 scripts/build/compose-n71-diagnostic.py \
+  --kernel-patchset n71-dart-serdev-v1 \
+  --source-profile "$PWD/runtime/BUNDLE-PERFIL-VERIFICADO/deployment.json" \
+  --kernel-dir "$PWD/runtime/BUNDLE-ARTEFATOS-VERIFICADOS" \
+  --diagnostic-dir "$PWD/runtime/DTB-DIAGNOSTICO-VERIFICADO" \
+  --module "$PWD/runtime/BUNDLE-MODULOS/n71-pcie-diagnostic.ko" \
+  --module-sha256 HASH-VERIFICADO \
+  --output-dir "$PWD/runtime/BUNDLE-DIAGNOSTICO-NOVO"
+```
+
+Não é receita para reutilizar o módulo 7.2.0-iphone6s-source. São exigidos
+ELF relocável AArch64, hash selecionado e vermagic correspondente ao
+kernel novo. Testes sintéticos: cinco casos e cinco mutações por asserção
+no Mac/ARM64 (ABI conhecida, cruzamento de ABI, arquitetura, vínculo
+do payload e máscara DT). Não houve composição real ou USB nessa prova.
