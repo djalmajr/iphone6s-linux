@@ -557,3 +557,16 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Coletor61: CI push37145008066 e PR37145010530 passaram. Não há type checker
   Python configurado; AST passou. Os gates de lint do novo builder entram no
   CI da próxima fatia documental; não representar esta compilação como Wi-Fi.
+
+### Incremento 63 — reprodução, estado atual e CI dos módulos Wi-Fi
+
+- Cinco arquivos: novo guia `docs/N71_WIFI_MODULES.md`, referências em LINK
+  e KERNEL_BUNDLE, CI e plano. Documentar a receita real, dependências/ABI,
+  artefatos privados e gates ainda necessários ao hardware. Corrigir os
+  resumos antigos que ainda diziam não existir perfil ou boot do bundle,
+  preservando o escopo histórico das provas anteriores.
+- Acrescentar as 13 mutações à matriz Linux/macOS. Reutilizar as provas nativas
+  de build e os testes que não mudaram; validar diff/árvore pública e CI final.
+  Atualizar issues9/12 com links e escopo, sem criar pendências duplicadas.
+- Não pedir DFU nesta fatia. A candidata do inventário e os drivers externos
+  ficam preparados; host PCI, BAR/IRQ e DART seguem o próximo desenvolvimento.

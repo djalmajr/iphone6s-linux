@@ -141,8 +141,10 @@ dos logs privados](evidence/n71-bundle-first-physical.json).
 
 O próximo desenvolvimento é o host PCI: recursos/BARs, IRQ e DART precisam de
 contrato e cleanup antes de qualquer bus-master/rádio. A configuração atual
-tem BRCMFMAC como módulo, mas BRCMFMAC_PCIE está desativado; identidade do PCI
-ainda não seleciona revisão, firmware ou calibração. Agrupar novos gates numa
+tem BRCMFMAC como módulo, mas BRCMFMAC_PCIE está desativado no Image. O
+[conjunto externo PCIe/MSGBUF](N71_WIFI_MODULES.md) compilou para a mesma ABI,
+preservando configuração e Image; não foi carregado no telefone. Identidade
+PCI ainda não seleciona revisão, firmware ou calibração. Agrupar novos gates numa
 candidata antes de pedir outro DFU; fazer fonte/builds/testes offline e atualizar
 módulos por SSH enquanto uma sessão útil estiver ativa.
 

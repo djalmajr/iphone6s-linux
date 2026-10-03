@@ -2,9 +2,11 @@
 
 O bundle `n71-dart-serdev-v1` reúne a correção DART S5L8960X e a operação
 serdev de stop bits. Empacotar os deltas antes de um boot ajuda a reduzir
-DFUs. **Image e os dois diagnósticos foram linkados e conferidos; ainda não
-há perfil de deployment ou prova física desse bundle.** Wi-Fi, gauge e
-carga não estão habilitados por ele.
+DFUs. **Image, módulos, perfis e o primeiro boot físico foram verificados.**
+A [sessão agrupada](N71_LINK_EXPERIMENT.md) confirmou link PCIe e GPIO2 somente
+de leitura. [Módulos Wi-Fi PCIe](N71_WIFI_MODULES.md) agora compilam externamente
+para esse mesmo Image. Wi-Fi, gauge e carga sustentada ainda não estão
+qualificados. As seções abaixo preservam o histórico das etapas de build.
 
 ## Identidade e preservação
 
@@ -249,4 +251,4 @@ Os dois módulos externos foram conferidos por hash, ELF e ABI nova. Arquivos
 na validação do armazenamento local. Isso comprova composição e disponibilidade
 de restauração, sem comprovar restore no kernel novo. Nenhum perfil padrão
 foi alterado e nenhuma ação USB ocorreu nessa etapa. O coletor e o boot físico
-agrupado permanecem as próximas verificações.
+agrupado passaram depois, conforme o [registro físico](N71_LINK_EXPERIMENT.md).
