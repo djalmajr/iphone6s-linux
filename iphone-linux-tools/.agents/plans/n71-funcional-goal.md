@@ -337,3 +337,13 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 
 - Dois arquivos documentais: ALIMENTACAO e plano. Registrar85%/chargingtrue/externaltrue às02:49:22UTC e a ausência de baseline imediatamente anterior ao boot. Corrigir a hipótese antiga de ponteiro de controlador: campo+b0 foi qualificado como function-battery_alert na fase40. Ligar seleçãoHDQ e bundle sem tratar fonte/objetos como recurso físico.
 - Reutilizar gates executáveis das fases40–45; validar somente delta documental/publictree/diff. Publicar no branch autorizado e atualizar as issues existentes de WLAN/alimentação, mantendo-as abertas. Próximo avanço precisa explicar latch81 com sample0 ou qualificar backendHDQ; não repetir boot/escrita idênticos sem informação nova.
+
+### Incremento 47 — qualificar a amostragem GPIO sem novo boot
+
+- Três arquivos documentais previstos: referênciaGPIO, runbook modular e plano. Conferir getter00693401c, flag de configuração e caminhoAppleGPIOFunction; publicar apenas offsets/hashes/fatos. O getter normal solicita mode1 antes de amostrar; nosso getter lê187/bit2 sem setter e80/81 classifica como mode2. Não inferir alimentação ausente nem alta a partir dessa amostra isolada. Manter o gate físico anterior até definir uma alternativa delimitada e verificável; não forçar configuração de outra placa.
+- Fonte simple-mfd-i2c fixada configura16bits de endereço/8bits de valor sem cache; conferir isso pela fonte real. Driver D2333 público usa latch para saída e banco para entrada, mas não qualifica D2255 por analogia. CIcc926e2 passou37091710685/37091708676. Atualizar#9 com resultado parcial/limites, mantendo aberta.
+
+### Próxima fatia — linkar a candidata agregada na VM
+
+- Reutilizar worktree/output exclusivos já validados do bundle; logs/artefatos em subpasta nova privada e sem concorrência. Conferir fonte/configuração exatas antes/depois, ImageARM64/16KiB, config embutida/gzip/DTB, símbolo serdev e identidade distinta. Rebuild dos diagnósticos fica separado após o link; sem perfil ou boot novo até gates completos.
+- Baselineoutput completo ocupa1082716KiB; output agregado configurado5456KiB; VM tem6989992KiB livres e Mac76494108KiB. Para esta conclusão de output existente, exigir margem de pelo menos tamanho completo anterior mais2GiB, não reduzir o requisito8GiB do builder para diretório novo. Preservar builds anteriores e registrar duração/saída reais; parar somente esta build se espaço ficar insuficiente. Publicar receita/manifesto/plano em até cinco arquivos após prova do link.

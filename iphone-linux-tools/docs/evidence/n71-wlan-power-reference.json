@@ -125,5 +125,70 @@
     "physical_latch_readback_verified": true,
     "physical_restore_readback_verified": true,
     "physical_level_high_verified": false
+  },
+  "sampler_reference": {
+    "reader_function": "0xfffffff00693401c",
+    "normal_function_reader_calls_with_configure_flag": 1,
+    "configure_flag_requests_mode": 1,
+    "raw_diagnostic_performed_mode_setter": false,
+    "control80_81_classifies_as_mode": 2,
+    "pin10_mapping": "0x180 + (((0x600 + 10*32) >> 8) & 0xff) = 0x187; bit10&7 = 2",
+    "function_result_polarity": "raw_bit XOR packet_byte13 XOR 1; byte13=1 leaves raw_bit unchanged",
+    "table_free_mode_setter": "when classifier differs, clears bits3/4 only; absent table adds no bits7:6 change",
+    "configuration_replay_does_not_guarantee_requested_mode": "For80/81, clearing bits3/4 alone leaves the classifier at2. Do not use setter invocation alone as proof of input/output mode.",
+    "sample_interpretation": "Raw bank observation only. Validity as a driven-output or power-rail monitor not established; sample0 neither proves missing rail nor proves output high.",
+    "regmap_source": {
+      "commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "drivers/mfd/simple-mfd-i2c.c",
+      "sha256": "1b6e0dd7f28b947b51d21bb53be1c3447a0a5798c0f85a17a076fb8ac38d419d",
+      "reg_bits": 16,
+      "val_bits": 8,
+      "cache_type_configured": false,
+      "default_enum_regcache_none": 0
+    },
+    "other_board_comparison": {
+      "source": "https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/gpio/gpio-apple-d2365.c",
+      "sha256": "cda1286c0c49bc254cef16edbc2530abb228b5713f465d7153125c735d9fe9a0",
+      "fact": "D2333 get returns control bit0 for output mode and input bank only for input mode. This is not a D2255 mapping or electrical proof."
+    },
+    "verification_windows": [
+      {
+        "name": "reader_mode_request",
+        "vm_address": "0xfffffff006934040",
+        "file_offset": 31457344,
+        "size": 28,
+        "sha256": "9953d8017f7aa88a61ecd7cbc99c7a616ea7a8196083cc501d5241374b56e1b6"
+      },
+      {
+        "name": "reader_status_mapping",
+        "vm_address": "0xfffffff00693407c",
+        "file_offset": 31457404,
+        "size": 64,
+        "sha256": "097d7b77f4228b8e6911be22b5a3922133d8b4c21396063aab819310bcd7bc1e"
+      },
+      {
+        "name": "mode_table_free_path",
+        "vm_address": "0xfffffff006933e2c",
+        "file_offset": 31456812,
+        "size": 96,
+        "sha256": "b5a48a0b68a42eeeb4bbe048223ae3f0eddf05e4e2485339ceda531d0d23987a"
+      },
+      {
+        "name": "reader_mapper_validation",
+        "vm_address": "0xfffffff00693405c",
+        "file_offset": 31457372,
+        "size": 32,
+        "sha256": "302d2b6555ca263b4b0b9c3b9f02d30ed0690e0e81619c783377986882461a8f"
+      },
+      {
+        "name": "function_reader_flag_and_polarity",
+        "vm_address": "0xfffffff00693546c",
+        "file_offset": 31462508,
+        "size": 52,
+        "sha256": "d8bde5a736b8b3dd7001da7da4990c7c46cb1c0c7a91437d9bb16b3954bd0e65"
+      }
+    ],
+    "physical_configuration_or_new_boot_performed": false,
+    "limits": "Same-board reference/code inspection only; no new control-mode write, PCIe attempt or power qualification. Retain current hardware gate until a bounded alternative is reviewed."
   }
 }

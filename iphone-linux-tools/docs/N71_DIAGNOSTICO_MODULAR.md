@@ -258,3 +258,30 @@ diagnóstico mantendo o parent. Snapshot/sync e retorno software ao iOS
 passaram. [Evidência selecionada](evidence/n71-reg-on-latch80-physical.json).
 Próxima investigação: função/mux e validade da amostragem GPIO versus
 alimentação real; não repetir a mesma escrita esperando outro resultado.
+
+### Limite do banco de amostragem — inspeção de referência, 2026-10-03
+
+O getter00693401c usa flag1 para chamar o setter solicitando mode1 antes
+da leitura. O caminho AppleGPIOFunction00693546c também passa flag1,
+depois aplica `raw XOR polarity XOR1`; polarity1 do packet101 conserva
+o bit bruto. O diagnóstico atual lê apenas187/bit2, sem setter. O mapper
+desse banco foi reconferido; não encontramos outro endereço para GPIO10.
+[Janelas reproduzíveis](evidence/n71-wlan-power-reference.json).
+
+80/81 classifica como mode2. Sem gpio-pin-config, a ramificação do setter
+limpa somente bits3/4: isso conserva80/81 e não demonstra mudança para
+mode1. Invocar o setter não seria, por si só, prova de configuração elétrica.
+Não reproduzimos esse write no aparelho. **A amostra0 não comprova ausência
+de alimentação WLAN:** ainda falta qualificar o banco como monitor desse
+pino dirigido. Tampouco o readback81 comprova tensão ou rail ativo.
+
+A fonte simple-mfd-i2c do kernel fixado configura regmap16/8 sem cache;
+REGCACHE_NONE é o valor zero padrão. Isso elimina cache configurado por
+esse driver como explicação do readback, sem fornecer medição de tensão.
+O driver público D2333 distingue leitura do latch de saída e do banco de
+entrada, mas é de outra placa; seus bits não foram copiados para o D2255.
+
+O bloqueio PCIe do teste anterior foi mantido. Antes de outro boot,
+precisamos qualificar a configuração/amostragem ou definir um teste de
+link delimitado que trate latch e alimentação como provas separadas,
+preserve reset/ownership/cleanup e permaneça sem DMA/firmware/rádio.
