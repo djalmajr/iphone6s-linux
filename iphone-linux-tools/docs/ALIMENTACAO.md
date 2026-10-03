@@ -234,3 +234,40 @@ O incremento N71 descrito em [Wi-Fi](WIFI.md#topologia-n71-compilada--2026-10-02
 A fonte [HDQ via UART do fork A10](https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/w1/masters/w1-uart.c) usa serdev, 57.600 baud, dois stop bits, break e mux de propriedade da linha. Depende de APIs/temporização específicas do fork, não apenas de um nó UART. O [mux SN2400](https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/mux/sn2400.c) seleciona o acesso AP escrevendo registradores e restaura o estado do carregador. Não é um caminho de leitura puramente passivo. A presença de um escravo W1 sintético nesse driver tampouco comprova resposta do gauge físico.
 
 Próximo desenvolvimento: validar a função/pin routing UART5 N71, protocolo de propriedade do HDQ e register map real do gauge antes de integrar telemetria. Não copiar o GPIO173/pinmux A10 nem ativar SN2400 com limites de bateria presumidos. O compatible da referência não autoriza converter BQ27540 em BQ27545 no DT. #2/#8 continuam abertas; a candidata de orçamento USB #33 permanece separada e não foi bootada. Um boot futuro deve reunir provas úteis após revisão offline dos drivers, sem reiniciar apenas para confirmar novamente que não há sensores.
+
+## Handshake HDQ N71 implementado, backend físico pendente
+
+O consumidor Apple guarda `function-battery_swi_request` em+a0. Seu helper
+de pedido0068d5568 envia comando1; a liberação0068d560c envia0. O comando2
+pertence ao caminho de mudança de modo0068d5684. No provider SN2400,
+HDQm1 chama setHDQInterfaceGated(1,0), HDQm0 chama(0,0), HDQm2 chama(0,1).
+O caminho1 usa handshake sem escrita final06. A liberação depende também
+de modo de software, máscaras em cache, status7 e um ponteiro do controlador;
+não substituir esse fluxo por uma escrita06 universal.
+
+`phone/kernel/n71-hdq-handshake.h` implementa a primitiva selecionada por
+callbacks: escreve04 em1d, lê ACKbit5 e, se solicitado, escreve06. Os cem
+polls/delays10ms limitam o orçamento nominal de espera a1s; não estabelecem
+deadline das operações do backend. Erros interrompem a sequência. Uma
+obrigação de cleanup é marcada **antes** da primeira escrita e permanece em
+todos os resultados, inclusive sucesso ou escrita parcial; reentrada é
+recusada. ACK e escrita aceita não significam restauração nem presença física
+do gauge. Flags de sucesso anterior são limpas antes de uma nova tentativa.
+
+Não há backend I2C/UART/PMIC associado ao header, probe de carregador,
+alteração DT ou autoload. O caller futuro deverá validar cliente/placa,
+serializar posse da linha e implementar liberação/cleanup qualificados e
+verificados antes de limpar a pendência. Não executar essa primitiva no
+aparelho sem esse adapter; callbacks sintéticos não provam carga ou leitura
+de bateria. [Referência selecionada](evidence/n71-hdq-charger-reference.json).
+
+```sh
+python3 iphone-linux-tools/tests/run_n71_hdq_handshake_mutations.py
+```
+
+Baseline e15 mutações compiladas morreram por SIGABRT/asserção no Mac e
+ARM64, incluindo registrador/valores/ACK, orçamento, I/O parcial, byte largo,
+reentrada e flags obsoletas. Header também compilou como objeto no contexto
+__KERNEL__/Werror da fonte preservada, sem carregar módulo. O CI executa o
+runner em Ubuntu/macOS. Telemetria, pinmux UART5, arbitragem SN2400 e carga
+sustentada permanecem pendentes; nenhum novo DFU nesta implementação.
