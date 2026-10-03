@@ -13,18 +13,28 @@
     "hdq_handshake": "0xfffffff005d68798"
   },
   "event_masks": {
-    "cached_object_offsets": ["0xb9", "0xba", "0xbb"],
+    "cached_object_offsets": [
+      "0xb9",
+      "0xba",
+      "0xbb"
+    ],
     "hardware_register_start": "0x01",
     "write_bytes": 3,
     "enable_clears_selected_mask_bits": true,
     "disable_sets_selected_mask_bits": true,
-    "hdq_second_mask_argument": ["0x40", "0x60"],
+    "hdq_second_mask_argument": [
+      "0x40",
+      "0x60"
+    ],
     "second_mask_targets_register": "0x02",
     "not_a_direct_register_zero_charge_control_write": true
   },
   "software_mode": {
     "object_offset": "0xd4",
-    "setter_accepts": [0, 1],
+    "setter_accepts": [
+      0,
+      1
+    ],
     "is_hardware_revision_read": false
   },
   "handshake_observed_in_reference": {
@@ -58,5 +68,32 @@
   "physical_gauge_verified": false,
   "charger_register_access_performed": false,
   "firmware_or_disassembly_published": false,
-  "limits": "Not a hardware programming recipe. GPIO2 mux semantics, current register ownership, status-read side effects, reversible charger state and gauge ABI must be confirmed before physical transmission or writes."
+  "limits": "Not a hardware programming recipe. GPIO2 mux semantics, current register ownership, status-read side effects, reversible charger state and gauge ABI must be confirmed before physical transmission or writes.",
+  "consumer_request_commands": {
+    "cached_function_offset": "0xa0",
+    "property": "function-battery_swi_request",
+    "consumer_request_helper": "0xfffffff0068d5568",
+    "consumer_request_call": "0xfffffff0068d55a4..0xfffffff0068d55c0: command1",
+    "consumer_release_helper": "0xfffffff0068d560c",
+    "consumer_release_call": "0xfffffff0068d5628..0xfffffff0068d5640: command0",
+    "alternate_mode_helper": "0xfffffff0068d5684; mode==0 selects command2, other mode selects0"
+  },
+  "provider_dispatch": {
+    "fourcc": "HDQm / 0x4844516d",
+    "function": "0xfffffff005d67948",
+    "command0": "setHDQInterfaceGated(interface=0, request=0)",
+    "command1": "setHDQInterfaceGated(interface=1, request=0)",
+    "command2": "setHDQInterfaceGated(interface=0, request=1)",
+    "command1_handshake": "final_write=false; write04/read ACKbit5; no final06",
+    "release_command0_depends_on": "software_mode, cached masks, controller pointer and status7; not a universally valid raw write06 recipe"
+  },
+  "handshake_implementation_scope": {
+    "header": "phone/kernel/n71-hdq-handshake.h",
+    "backend": "external callbacks only; no I2C, UART, GPIO or charger driver attached",
+    "polling": "at most100 reads and100 delays10ms; nominal delay budget only, not wall-clock guarantee",
+    "error_cleanup": "cleanup_required set before first write, retained on all outcomes; caller must implement qualified/verified cleanup before reentry",
+    "difference_from_apple": "bounded polls and retained cleanup obligation even on initial write failure/timeout; no automatic hardware cleanup implemented",
+    "ack_is_not_physical_gauge_presence": true,
+    "physical_execution": false
+  }
 }
