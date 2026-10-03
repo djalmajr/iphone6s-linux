@@ -95,5 +95,84 @@
     "difference_from_apple": "bounded polls and retained cleanup obligation even on initial write failure/timeout; no automatic hardware cleanup implemented",
     "ack_is_not_physical_gauge_presence": true,
     "physical_execution": false
+  },
+  "gpio2_reference": {
+    "proof_scope": "pinned binary and board reference only; no GPIO or UART hardware access",
+    "class": "AppleS5L8960XGPIOIC",
+    "class_string": "0xfffffff00568714e",
+    "metaclass_constructor": "0xfffffff006117c44",
+    "instance_vtable": "0xfffffff006e795a8",
+    "function_class": "AppleARMGPIOFunction",
+    "function_vtable": "0xfffffff006e79338",
+    "function_init": "0xfffffff0061176b8",
+    "function_call": "0xfffffff006117570",
+    "packet_copy": "16 bytes copied to object+0x30; pin at +0x38, mode at +0x3c, polarity at +0x3d",
+    "initial_call": "null arguments select packet mode2, not output-level path for mode1",
+    "mode_setter_vtable_slot": "0x5e8",
+    "mode_setter": "0xfffffff00611929c",
+    "mode2_jump_table": "0xfffffff005686430",
+    "mode2_target": "0xfffffff006119380",
+    "glitchless_property": "glitchless",
+    "glitchless_field": "object+0x144 defaults0, overridden by nonzero property",
+    "normal_mode2": {
+      "register_offset": "0x08",
+      "mask": "0x270",
+      "value": "0x220",
+      "linux_peripheral_selector": 1
+    },
+    "glitchless_mode2": {
+      "register_offset": "0x08",
+      "mask": "0x270",
+      "value": "0x210",
+      "linux_peripheral_selector_not_equivalent": true
+    },
+    "runtime_gpio_node_glitchless_property_present": false,
+    "write_formula": "(old & ~mask) | (value & mask); register stride4; writeback virtual slot0x618",
+    "physical_ownership_cleanup_and_mux_verified": false,
+    "limits": "Reference calculation only. An adapter must acquire shared pin ownership, snapshot/readback and restore the complete qualified mask, determine glitchless from the actual board, and coordinate clocks/UART and charger release. No direct MMIO adapter implemented.",
+    "verification_windows": [
+      {
+        "name": "class_identity",
+        "vm_address": "0xfffffff006117c44",
+        "file_offset": 22953028,
+        "size": 80,
+        "sha256": "c2032051651de598741fcd5e1f39d947264ba1cc061bc10e8c77f55f44fd13cd"
+      },
+      {
+        "name": "function_packet",
+        "vm_address": "0xfffffff0061176b8",
+        "file_offset": 22951608,
+        "size": 132,
+        "sha256": "7d5b91a5c697f641041c124a6a3dadca6af85db530efba5bc43be627d00f8e42"
+      },
+      {
+        "name": "mode_dispatch",
+        "vm_address": "0xfffffff00611929c",
+        "file_offset": 22958748,
+        "size": 132,
+        "sha256": "f90988dd803053fe7e319ee9cc22e66232a7827609198520bdf23e941464673d"
+      },
+      {
+        "name": "mode2_mask",
+        "vm_address": "0xfffffff006119380",
+        "file_offset": 22958976,
+        "size": 36,
+        "sha256": "741b5f3a18253aa14795a13b2f35bbe274509b97bbd711fd1c8ac3e8843b4d52"
+      },
+      {
+        "name": "masked_write",
+        "vm_address": "0xfffffff006119464",
+        "file_offset": 22959204,
+        "size": 44,
+        "sha256": "5c9c2795d0c4aeb05e439658fc6910db82419a3fcfaa4c04012241330296ab2b"
+      },
+      {
+        "name": "mode_table",
+        "vm_address": "0xfffffff005686430",
+        "file_offset": 11871280,
+        "size": 16,
+        "sha256": "1fb9cf260e312c01b9284c44ff845a2368b08c425c42423e3325ba03d99b9d40"
+      }
+    ]
   }
 }
