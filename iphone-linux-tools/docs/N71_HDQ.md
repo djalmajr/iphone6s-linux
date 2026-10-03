@@ -198,3 +198,48 @@ e usar identificação de kernel distinta. Não carregar esse delta como módulo
 na imagem atual. A receita de [build fonte](KERNEL-SOURCE-BUILD.md) continua
 como base para preparar a candidata agregada após qualificar mux/clocks e
 releaseSN2400. UART5/I2C1 seguem desativados; gauge e carga sem prova física.
+
+## Liberação HDQ — seleção qualificada, backend pendente
+
+O campo object+b0 da referência guarda o resultado da busca por
+`function-battery_alert`, na inicialização005d674ac..005d674bc. O CString
+fixado em0054f73a9 confirma o nome; não tratamos esse campo como um
+ponteiro de controlador inferido. A presença do resultado também não prova
+que uma função física esteja registrada no nosso Linux.
+
+Para o pedido padrão command0/request0, o fluxo seleciona:
+
+| Modo software | Cache+b8 | Alert presente | Status7/bit7 | Ação de referência |
+| --- | --- | --- | --- | --- |
+| 1 | zero | qualquer | qualquer | Sem handshake |
+| 1 | nãozero | qualquer | qualquer | Handshake sem escrita final06 |
+| 0 | qualquer | sim | limpo | Handshake com escrita final06 |
+| 0 | qualquer | demais casos | demais casos | Escrita00 em1d |
+
+Ao desabilitar os eventos, o fluxo usa o cache+b8 com bit40 removido
+quando há resultado da busca `battery_alert`; sem esse resultado, mantém
+a máscara. Essa operação usa `enableEvents` e suas máscaras em cache,
+não uma escrita direta de uma constante no registrador0 do carregador.
+O modo é software, não revisão física do chip.
+
+O [seletor](../phone/kernel/n71-hdq-release-plan.h) calcula somente ação e
+bits de eventos, sem callback ou acesso ao aparelho. Exige status marcado
+válido, bytes limitados, modo0/1 e presença0/1; uma entrada recusada não
+altera a saída. Não executa o plano, não limpa a pendência do handshake e
+não afirma restauração. O adapter ainda precisa qualificar efeitos das
+leituras de status, propriedade de IRQs/máscaras, mux e cleanup verificado.
+
+```sh
+python3 tests/run_n71_hdq_release_plan_mutations.py
+```
+
+O teste cobre todas as combinações de modo0/1, máscara0..255, presença0/1
+e status0..255. Mac/ARM64 passaram baseline e14 mutações por asserção;
+o header compilou em contexto kernel comWerror na VM isolada. Isso não
+constitui prova elétrica de HDQ, bateria, carga ou restauração.
+
+Os sete trechos analisados têm offsets/tamanhos/hashes em `release_reference`
+dos [fatos selecionados](evidence/n71-hdq-charger-reference.json). Para
+reproduzir a conferência, use o comando de janelas acima com
+`evidence['release_reference']['verification_windows']`. O binário privado
+não é publicado nem executado.
