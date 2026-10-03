@@ -107,6 +107,8 @@ jobs:
         run: python iphone-linux-tools/tests/run_kernel_integration_mutations.py
       - name: N71 diagnostic payload selected ABI and exact DT boundary
         run: python iphone-linux-tools/tests/run_n71_diagnostic_payload_mutations.py
+      - name: N71 physical session fresh latch and mandatory cleanup mutations
+        run: python iphone-linux-tools/tests/run_n71_link_session_mutations.py
       - name: Kernel patchset source preservation and integrity mutations
         run: python iphone-linux-tools/tests/run_kernel_patchset_mutations.py
       - name: Pongo binary format mutations
