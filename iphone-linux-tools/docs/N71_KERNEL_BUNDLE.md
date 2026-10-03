@@ -226,3 +226,27 @@ release nova. Todos os hashes foram recalculados após transferência para
 módulos e logs não foram publicados. Nada foi instalado ou carregado no
 telefone; [descoberta de link](N71_LINK_EXPERIMENT.md), Wi-Fi/DMA e HDQ
 físicos continuam gates futuros.
+
+## Composição real separada — 2026-10-03
+
+O integrador e o compositor foram executados com os artefatos conferidos,
+seleção explícita do bundle e saídas novas em `runtime/`. O [registro
+sanitizado](evidence/n71-bundle-profile.json) documenta os gates reais.
+A integração troca kernel/DTB; a composição aplica somente o delta DTB
+diagnóstico validado. As cinco entradas do initramfs permaneceram idênticas
+ao perfil fonte: orçamento USB declarado de 500 mA, identidades preservadas
+e nenhum módulo incorporado ou carregado automaticamente. A declaração
+USB não mede corrente nem prova carregamento.
+
+Perfis privados no Mac:
+
+- Base: `runtime/n71-bundle-base-profile-20261003/deployment.json`.
+- Diagnóstico: `runtime/n71-bundle-diagnostic-profile-20261003/deployment.json`.
+- Artefatos: `runtime/kernel-n71-bundle-artifacts-20261003/`.
+
+Os dois módulos externos foram conferidos por hash, ELF e ABI nova. Arquivos
+600/pastas 700; chaves permaneceram no Mac. Um snapshot de 44 entradas passou
+na validação do armazenamento local. Isso comprova composição e disponibilidade
+de restauração, sem comprovar restore no kernel novo. Nenhum perfil padrão
+foi alterado e nenhuma ação USB ocorreu nessa etapa. O coletor e o boot físico
+agrupado permanecem as próximas verificações.
