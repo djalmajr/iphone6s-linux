@@ -226,3 +226,35 @@ não retornaram gpio-activate-defaults, gpio-suspend-defaults,
 gpio-quiesce-defaults ou gpio-pin-config. Prova restrita a essas duas
 consultas; não demonstra ausência em toda a IORegistry nem autoriza
 presumir uma configuração elétrica. Dados completos permanecem privados.
+
+### Controle914 observado e latch80/81 — mesma sessão, 2026-10-03 UTC
+
+No boot corrigido, o módulo02cb9f... leu914=80 e amostra187/raw20/bit2=0.
+O guard original recusou ativação; cleanup e unload passaram sem escrita
+de valor. Isso foi observado no GPIO10 correto, separado do histórico8fc.
+
+A referência writer006933eb0, com polarity1 do packet101 e tabela ausente,
+limpa bits0/3/4 e ajusta bit0, preservando bits7:6. Qualificamos apenas os
+bytes exatos80/81: a exceção não aceita82..ff nem muda modo/drive. A
+classificação Apple de80 continua mode2; não rebatizamos esse byte como
+mode1. gpio-pin-config não aparece no DT runtime completo fixado ou nas
+chaves do XML prelinkado; a ausência das consultas iOS continua restrita
+aos dois objetos consultados. [Janelas e limites](evidence/n71-wlan-power-reference.json).
+
+Contrato Mac/ARM64:16 mutações por asserção; sequência: sete. O módulo
+383b85... passou Werror/modpost com símbolos do mesmo vmlinux e ABI
+7.2.0-iphone6s-source. A primeira build omitiu KBUILD_EXTRA_SYMBOLS e foi
+recusada pelo modpost; corrigimos a receita, sem suprimir erro de símbolo.
+Atualizamos o módulo por SSH, sem outro DFU.
+
+Uma tentativa escreveu81 via regmap mask1 e confirmou readback81. A
+amostra187/raw20/bit2 permaneceu0. Portanto, **alimentação WLAN não foi
+qualificada e PCIe não foi executado**. O registro de amostragem não é
+medição direta de tensão da linha ou do rail. Não forçamos bits de modo,
+DMA, firmware ou rádio para ultrapassar esse gate.
+
+Cleanup escreveu80, confirmou readback80/active0/pending0 e removeu o
+diagnóstico mantendo o parent. Snapshot/sync e retorno software ao iOS
+passaram. [Evidência selecionada](evidence/n71-reg-on-latch80-physical.json).
+Próxima investigação: função/mux e validade da amostragem GPIO versus
+alimentação real; não repetir a mesma escrita esperando outro resultado.

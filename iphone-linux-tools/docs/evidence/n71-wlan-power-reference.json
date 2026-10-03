@@ -44,7 +44,7 @@
     "perst": "SoC GPIO161"
   },
   "guarded_update_contract": "Only register914 and bit0. Original low-byte subset (bits7:6/4:3 clear), plus exact80/81 matching the table-free N71 writer with packet polarity1. Preserve every other bit via shared MFD regmap mask1; no mode/drive update.",
-  "limits": "Physical observation914=80 and level187bit2=0 in corrected boot; old guard refused activation and diagnostic was removed without value write. Selected writer qualification does not prove electrical activation. Old8fc results do not qualify GPIO10. Level and restoration remain separate required gates.",
+  "limits": "Physical914=80 observed. Exact mask1 updated80\u219281 with readback81, restored81\u219280 with readback80/pending0/unload verified. GPIO sample187bit2 remained0, so WLAN power/PCIe remain unqualified. No mode/drive changes, direct rail measurement or new kernel deployment. Historical8fc results do not qualify GPIO10.",
   "mode_classification_reference": {
     "function": "fffffff006933d8c",
     "compare": "fffffff006933e08",
@@ -121,6 +121,9 @@
       "vermagic": "7.2.0-iphone6s-source SMP preempt mod_unload aarch64",
       "symbols_source": "same preserved vmlinux.symvers; KBUILD_EXTRA_SYMBOLS",
       "baseline_source_diff_empty": true
-    }
+    },
+    "physical_latch_readback_verified": true,
+    "physical_restore_readback_verified": true,
+    "physical_level_high_verified": false
   }
 }

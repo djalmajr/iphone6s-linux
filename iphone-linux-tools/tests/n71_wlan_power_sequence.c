@@ -28,6 +28,48 @@ static int write_value(void *context, unsigned char value)
 	return failed ? -EACCES : 0;
 }
 
+static void exercise_latch80(void)
+{
+	struct mock m;
+	struct n71_wlan_power_io io = {&m, read_value, write_value};
+	struct n71_wlan_power_state state;
+	unsigned int i, writes;
+	/* Kills restoring zero instead of80 and clearing pending after failed cleanup. */
+	for (i = 0; i <= 3; i++) {
+		m = (struct mock){.value = 0x80, .fail_at = i, .partial_error = true};
+		state = (struct n71_wlan_power_state){0};
+		assert(n71_wlan_power_acquire(&io, &state) == (i ? -EACCES : 0));
+		if (!i) {
+			assert(m.value == 0x81 && state.original == 0x80);
+			assert(state.active && state.restore_pending);
+			assert(n71_wlan_power_release(&io, &state) == 0);
+		}
+		assert(m.value == 0x80 && !state.active && !state.restore_pending);
+	}
+	for (i = 1; i <= 3; i++) {
+		m = (struct mock){.value = 0x80};
+		state = (struct n71_wlan_power_state){0};
+		assert(n71_wlan_power_acquire(&io, &state) == 0);
+		m.fail_at = m.calls + i;
+		assert(n71_wlan_power_release(&io, &state) == -EACCES);
+		assert(state.active && state.restore_pending);
+		m.fail_at = 0;
+		assert(n71_wlan_power_release(&io, &state) == 0 && m.value == 0x80);
+	}
+	m = (struct mock){.value = 0x81};
+	state = (struct n71_wlan_power_state){0};
+	assert(n71_wlan_power_acquire(&io, &state) == 0 && !state.restore_pending);
+	assert(state.original == 0x81 && m.writes == 0);
+	assert(n71_wlan_power_release(&io, &state) == 0 && m.value == 0x81);
+	m = (struct mock){.value = 0x80};
+	state = (struct n71_wlan_power_state){0};
+	assert(n71_wlan_power_acquire(&io, &state) == 0);
+	m.value = 0xc1;
+	writes = m.writes;
+	assert(n71_wlan_power_release(&io, &state) == -EBUSY);
+	assert(m.value == 0xc1 && m.writes == writes && state.restore_pending);
+}
+
 int main(void)
 {
 	struct mock m = {.value = 0x22};
@@ -96,6 +138,7 @@ int main(void)
 	assert(!n71_wlan_power_io_valid(NULL));
 	assert(n71_wlan_power_acquire(NULL, &state) == -EINVAL);
 	assert(n71_wlan_power_release(&io, NULL) == -EINVAL);
+	exercise_latch80();
 	puts("N71_WLAN_POWER_SEQUENCE_OK");
 	return 0;
 }
