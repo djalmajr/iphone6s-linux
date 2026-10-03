@@ -463,3 +463,24 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   confirmado viafonte eSHAfixados, seminferirchiprev. Imagem/config preservados.
   Ainda semtransferência oucarga física; próximo gate écoletores/host/DART e
   preparar candidata agregada, não repetirDFU para esta entregaoffline.
+
+### Incremento 59 — configuração ECAM para o futuro host PCI
+
+- Até cinco arquivos: contrato de leitura ECAM, harness C, unittest Python,
+  runner de mutações e plano. Preservar a topologia física: porta raiz em
+  bus0/devfn08 (offset8000), endpoint bus1/devfn00 (offset100000), observados
+  no diagnóstico. Não criar alias de slot0 para a raiz, habilitar outras portas
+  ou percorrer funções desconhecidas. Aperture exata16MiB já qualificada.
+- Ler1/2/4bytes alinhados dentro dos4KiB da função; callback recebe apenas
+  DWORD alinhado. Extrair bytes/words sem shifts inválidos e publicar saída
+  somente após sucesso. Matriz debus/devfn/tamanhos e offsets, falhas do
+  callback e mutações devem recusar sem I/O ou saída alterada. Sem escrita,
+  scan/registro dehost, sizingBAR, IRQ/DART oufirmware. CompilarMac/ARM64 e
+  objeto kernel contra o bundle; não alterar Image/perfis ou solicitarDFU.
+
+- Gate59: harness passou no Mac e ARM64, matriz de 512 coordenadasbus/devfn
+  e todos os offsets1/2/4bytes (inclusive recusas) em ambas as funções; nove
+  mutações morreram por SIGABRT/asserção em ambos. UBSan no Mac passou sem
+  comportamento indefinido. Header compilouWerror/modpost no bundle e
+  checkpatch0erros/0warnings/0checks. A API não registra PCIhost ou aplica
+  topologia/DART/IRQ; não houve I/O físico ou reinicialização nesta fatia.
