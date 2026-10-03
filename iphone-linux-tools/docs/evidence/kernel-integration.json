@@ -1,0 +1,61 @@
+{
+  "format": 1,
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-source",
+  "initramfs_changed_paths": [
+    "init",
+    "lib/modules/usb_f_ncm.ko"
+  ],
+  "identities_preserved": true,
+  "client_private_key_copied_to_vm": false,
+  "payload_sha256": "8bce2e77c2d73fa2fab516eba3398ac06659a9e4bf8e7e16569473bf42248d9a",
+  "payload_bytes": 29939712,
+  "initramfs_sha256": "05b37cb3521b5fe6db064b577eb146e0c2b4244d9ce230303f76a5f2d941e6d7",
+  "initramfs_bytes": 13061082,
+  "profile_verified": true,
+  "physical_boot_tested": true,
+  "default_payload_changed": false,
+  "status": "boot_restore_dns_and_software_return_verified",
+  "verification": {
+    "format": 1,
+    "candidate_profile_verified": true,
+    "unchanged_cpio_chunks_equal": true,
+    "init_metadata_equal_except_content_size": true,
+    "removed_paths": [
+      "lib/modules/usb_f_ncm.ko"
+    ],
+    "changed_paths": [
+      "init"
+    ],
+    "source_profile_unchanged": true,
+    "original_payload_unchanged": true,
+    "private_modes_verified": true,
+    "physical_boot_tested": false
+  },
+  "tests": {
+    "synthetic_tests": 7,
+    "mutations_killed": 7,
+    "mutation_total": 7,
+    "lint": "passed",
+    "type_checker": "not_configured",
+    "remote_ci": {
+      "status": "success",
+      "tested_commit": "a8a58c25ab55c759c045b739a740ae80582126fd",
+      "pr_run": 36813037576,
+      "push_run": 36813034438,
+      "platforms": [
+        "macos-15",
+        "ubuntu-24.04"
+      ],
+      "tests_each": 86,
+      "passed_each": 77,
+      "skipped_each": 9,
+      "profile_mutations": 20,
+      "return_ios_mutations": 9,
+      "kernel_integration_mutations": 7
+    }
+  },
+  "created_date": "2026-10-01",
+  "physical_pilot_evidence": "source-chain-pilot.json",
+  "historical_verification_note": "Nested build verification records retain the state observed before the physical pilot."
+}

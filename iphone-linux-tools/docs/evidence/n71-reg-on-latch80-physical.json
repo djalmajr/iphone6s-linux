@@ -1,0 +1,60 @@
+{
+  "format": 1,
+  "board": "N71/S8000",
+  "proof_scope": "Physical shared-regmap latch update/readback/restore only; GPIO sample remained low, WLAN power and PCIe not qualified",
+  "kernel_release": "7.2.0-iphone6s-source",
+  "module_sha256": "383b85a09f32e1debbdd44e5c2818e842a93112fa8926377bd628b3f3881becd",
+  "owner": "same simple-mfd-i2c parent/regmap retained; no rebind",
+  "register": "0x914",
+  "write_mask": "0x01",
+  "original_control": "0x80",
+  "requested_control": "0x81",
+  "readback_control": "0x81",
+  "unrelated_bits_preserved": true,
+  "level_sample": {
+    "register": "0x187",
+    "raw": "0x20",
+    "bit": 2,
+    "sample": 0,
+    "mode_change_performed": false,
+    "voltage_or_power_rail_measured": false
+  },
+  "pcie_test_performed": false,
+  "pcie_gate": "not attempted: required GPIO sample1 absent",
+  "restore": {
+    "requested": "0x80",
+    "readback": "0x80",
+    "active": false,
+    "pending": false,
+    "diagnostic_unloaded": true
+  },
+  "uptime_seconds": {
+    "module_observation": 945.0318,
+    "latch_write": 957.30682,
+    "restore_write": 1033.605999,
+    "module_removed": 1033.770437
+  },
+  "updates_without_additional_dfu": 1,
+  "snapshot_verified": true,
+  "software_ios_return_verified": true,
+  "battery": {
+    "pre_first_monitor_percent": 100,
+    "pre_immediate_successful_boot_measurement_available": false,
+    "post_ios_percent": 85,
+    "post_ios_charging": true,
+    "post_ios_external_connected": true,
+    "observed_post_utc": "2026-10-03T02:49:22.530779+00:00",
+    "net_linux_charge_or_discharge_rate_proved": false,
+    "limits": "The pre100 reading predates the first expired monitor and operator wait, not an immediate baseline for the successful boot. Interval includes recovery/iOS/DFU/Linux/return; do not assign the entire15-point difference to Linux."
+  },
+  "private_log_sha256": {
+    "return-ios-private.log": "1d456537e93c06eb2ffa20d3b25a5c0892b85447312b5c5c2161cf0c9fa90e29",
+    "level-private.log": "070c5463a9f9e00c75066cce885dbb032e3bd578bf290fabb17e73770b5e9d8e",
+    "preflight-private.log": "03a5963ea2a8e2bd49a90c352bbc671fbd6e18ce62e61ed278cd201126ef4379",
+    "activate-private.log": "712b7553d56796c66d26999ec6a5f253382f20404e0fedfbc05cf3ba081a30ce",
+    "unload-private.log": "1e48069ca7da3daba2b1f66697c1aac1550cc1c7f94db558329937d3409a1399",
+    "observe-private.log": "a65c3498b57d96a1ea79e901f933b6c23ae143d186cb48201a5c71c41bb7d9cc",
+    "restore-private.log": "dd6f83141cd66c0c95093ce885a9e4d21e05d3ffb59122ca9375589270825d6a"
+  },
+  "limits": "Register readback proves latch state, not Wi-Fi rail voltage, physical activation, link, firmware, radio or Linux charging. No PCIe/DMA/firmware operation. Both module revisions tested in one Linux boot. Raw logs/module/snapshot/identities remain private."
+}

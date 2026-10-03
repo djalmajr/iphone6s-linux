@@ -1,0 +1,194 @@
+{
+  "format": 1,
+  "board": "N71 / S8000",
+  "reference": "Apple N71 iOS15.8.8/19H422 kernel and same-board Pongo runtime",
+  "reg_on": {
+    "source_property": "function-reg_on",
+    "provider_phandle_adt": "4d",
+    "provider": "pmu,d2255",
+    "bus": "arm-io/i2c0",
+    "i2c_address": "74",
+    "gpio": 10,
+    "function_flags_adt": "101",
+    "flags_interpretation": "Raw function packet byte12=mode1, byte13=polarity1; GPIOFunction writes bool input with byte13, so bit0 is not inverted for this packet",
+    "gpio_function_reference": "fffffff0069353c0",
+    "gpio_writer_reference": "fffffff006933eb0",
+    "gpio_register": "914",
+    "mapper_reference_function": "fffffff006933a88",
+    "mapper_rule_below17": "0x900 + 2*pin",
+    "linux_pmic_compatible": "apple,antigua-pmic / apple,i2c-pmic",
+    "linux_matching_mfd_gpio_driver": "simple-mfd-i2c physically bound; RTC/NVMEM children; no GPIO child in this profile",
+    "mapper_rule_17_through20": "0x8c0 + 6*pin",
+    "mapper_csel_reference": {
+      "address": "fffffff006933aa4",
+      "word": "1a8a3129",
+      "condition": "LO (unsigned pin < 17)",
+      "first_source": "w9 = 0x900 + 2*pin",
+      "second_source": "w10 = 0x8c0 + 6*pin",
+      "gpio10_result": "914",
+      "previous_error": "CSEL sources were reversed; 8fc observations/writes did not target the mapped GPIO10 control"
+    }
+  },
+  "pmic_wire": {
+    "vptr_reference": "fffffff006f8c4d8",
+    "read_slot_5c8": "fffffff00692cb1c",
+    "write_slot_5d0": "fffffff00692c898",
+    "descriptor_slot_620": "fffffff006930e18",
+    "address_bytes": 2,
+    "address_byte_order": "big endian",
+    "paged": false
+  },
+  "distinct_signals": {
+    "device_wake": "SoC GPIO73; not the PMIC REG_ON",
+    "clkreq": "SoC GPIO165",
+    "perst": "SoC GPIO161"
+  },
+  "guarded_update_contract": "Only register914 and bit0. Original low-byte subset (bits7:6/4:3 clear), plus exact80/81 matching the table-free N71 writer with packet polarity1. Preserve every other bit via shared MFD regmap mask1; no mode/drive update.",
+  "limits": "Physical914=80 observed. Exact mask1 updated80\u219281 with readback81, restored81\u219280 with readback80/pending0/unload verified. GPIO sample187bit2 remained0, so WLAN power/PCIe remain unqualified. No mode/drive changes, direct rail measurement or new kernel deployment. Historical8fc results do not qualify GPIO10.",
+  "mode_classification_reference": {
+    "function": "fffffff006933d8c",
+    "compare": "fffffff006933e08",
+    "classification": "fffffff006933e0c: mode=1 + (value >= 0x40)",
+    "matching_requested_mode_returns_without_write": "fffffff006933e10..fffffff006933e1c",
+    "previous_guard_error": "bits7:6=01 was wrongly equated with packet mode1; physical byte00 exposed this regression"
+  },
+  "latch80_reference": {
+    "decoded_kernel_sha256": "0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a",
+    "packet_property": "function-reg_on",
+    "packet_flags": "0x101",
+    "packet_polarity": 1,
+    "writer_table_field": "object+0x1d0",
+    "writer_table_property": "gpio-pin-config",
+    "table_free_mask": "0xe6 clears bits0/3/4, preserves bits7:6",
+    "polarity1_skips_conditional_bit0_inversion": true,
+    "accepted_additional_input_bytes": [
+      "0x80",
+      "0x81"
+    ],
+    "new_write_mask": "0x01",
+    "mode_or_drive_changed": false,
+    "mode_classifier_for80": 2,
+    "table_property_absent_in_complete_runtime_capture": true,
+    "runtime_capture_sha256": "9a4baf1b5f18d380d843e78bd39fb466abec313e078b5d6efe2825a5de5589c4",
+    "table_key_count_in_pinned_prelink_xml": 0,
+    "ios_lookup_absence_scope": "prior selected AppleD2255PMU and pmu queries only; no whole IORegistry claim",
+    "verification_windows": [
+      {
+        "name": "gpio_writer_table_and_mask",
+        "vm_address": "0xfffffff006933f34",
+        "file_offset": 31457076,
+        "size": 56,
+        "sha256": "51ee9f1672576265063917380e3afd411d2b7c44fe20de41baa0deefd48038b1"
+      },
+      {
+        "name": "gpio_writer_value_and_polarity",
+        "vm_address": "0xfffffff006933f6c",
+        "file_offset": 31457132,
+        "size": 104,
+        "sha256": "a4a4fa34ab043f9c48ed45c76f10474076c42c409e2cc0792d9b259aa12ef15a"
+      },
+      {
+        "name": "gpio_function_polarity",
+        "vm_address": "0xfffffff0069353ec",
+        "file_offset": 31462380,
+        "size": 44,
+        "sha256": "205cb1bade1ebcc1adc67251058f08ffbe642a6b5a810456ceab0f13e61d667c"
+      },
+      {
+        "name": "gpio_mode_table_lookup",
+        "vm_address": "0xfffffff006930170",
+        "file_offset": 31441264,
+        "size": 56,
+        "sha256": "7883bd7e813c6db44018aa2bb6fd36cdd0cd4e4c791e253ffcafe23541b39b33"
+      },
+      {
+        "name": "gpio_mode_table_property",
+        "vm_address": "0xfffffff0059ccbb2",
+        "file_offset": 15305650,
+        "size": 16,
+        "sha256": "a29f15aef778cbe347216542500a0396b827882128687a99ecedb47f6f68dcab"
+      }
+    ],
+    "physical_new_subset_activation_proved": false,
+    "offline_validation": {
+      "mac_assertion_kills": 16,
+      "arm64_assertion_kills": 16,
+      "sequence_assertion_kills_mac_and_arm64": 7,
+      "synthetic_latch80_error_restore_harness_mac_arm64": true,
+      "module_werror_modpost": true,
+      "module_sha256": "383b85a09f32e1debbdd44e5c2818e842a93112fa8926377bd628b3f3881becd",
+      "module_bytes": 16792,
+      "vermagic": "7.2.0-iphone6s-source SMP preempt mod_unload aarch64",
+      "symbols_source": "same preserved vmlinux.symvers; KBUILD_EXTRA_SYMBOLS",
+      "baseline_source_diff_empty": true
+    },
+    "physical_latch_readback_verified": true,
+    "physical_restore_readback_verified": true,
+    "physical_level_high_verified": false
+  },
+  "sampler_reference": {
+    "reader_function": "0xfffffff00693401c",
+    "normal_function_reader_calls_with_configure_flag": 1,
+    "configure_flag_requests_mode": 1,
+    "raw_diagnostic_performed_mode_setter": false,
+    "control80_81_classifies_as_mode": 2,
+    "pin10_mapping": "0x180 + (((0x600 + 10*32) >> 8) & 0xff) = 0x187; bit10&7 = 2",
+    "function_result_polarity": "raw_bit XOR packet_byte13 XOR 1; byte13=1 leaves raw_bit unchanged",
+    "table_free_mode_setter": "when classifier differs, clears bits3/4 only; absent table adds no bits7:6 change",
+    "configuration_replay_does_not_guarantee_requested_mode": "For80/81, clearing bits3/4 alone leaves the classifier at2. Do not use setter invocation alone as proof of input/output mode.",
+    "sample_interpretation": "Raw bank observation only. Validity as a driven-output or power-rail monitor not established; sample0 neither proves missing rail nor proves output high.",
+    "regmap_source": {
+      "commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "drivers/mfd/simple-mfd-i2c.c",
+      "sha256": "1b6e0dd7f28b947b51d21bb53be1c3447a0a5798c0f85a17a076fb8ac38d419d",
+      "reg_bits": 16,
+      "val_bits": 8,
+      "cache_type_configured": false,
+      "default_enum_regcache_none": 0
+    },
+    "other_board_comparison": {
+      "source": "https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/gpio/gpio-apple-d2365.c",
+      "sha256": "cda1286c0c49bc254cef16edbc2530abb228b5713f465d7153125c735d9fe9a0",
+      "fact": "D2333 get returns control bit0 for output mode and input bank only for input mode. This is not a D2255 mapping or electrical proof."
+    },
+    "verification_windows": [
+      {
+        "name": "reader_mode_request",
+        "vm_address": "0xfffffff006934040",
+        "file_offset": 31457344,
+        "size": 28,
+        "sha256": "9953d8017f7aa88a61ecd7cbc99c7a616ea7a8196083cc501d5241374b56e1b6"
+      },
+      {
+        "name": "reader_status_mapping",
+        "vm_address": "0xfffffff00693407c",
+        "file_offset": 31457404,
+        "size": 64,
+        "sha256": "097d7b77f4228b8e6911be22b5a3922133d8b4c21396063aab819310bcd7bc1e"
+      },
+      {
+        "name": "mode_table_free_path",
+        "vm_address": "0xfffffff006933e2c",
+        "file_offset": 31456812,
+        "size": 96,
+        "sha256": "b5a48a0b68a42eeeb4bbe048223ae3f0eddf05e4e2485339ceda531d0d23987a"
+      },
+      {
+        "name": "reader_mapper_validation",
+        "vm_address": "0xfffffff00693405c",
+        "file_offset": 31457372,
+        "size": 32,
+        "sha256": "302d2b6555ca263b4b0b9c3b9f02d30ed0690e0e81619c783377986882461a8f"
+      },
+      {
+        "name": "function_reader_flag_and_polarity",
+        "vm_address": "0xfffffff00693546c",
+        "file_offset": 31462508,
+        "size": 52,
+        "sha256": "d8bde5a736b8b3dd7001da7da4990c7c46cb1c0c7a91437d9bb16b3954bd0e65"
+      }
+    ],
+    "physical_configuration_or_new_boot_performed": false,
+    "limits": "Same-board reference/code inspection only; no new control-mode write, PCIe attempt or power qualification. Retain current hardware gate until a bounded alternative is reviewed."
+  }
+}

@@ -1,0 +1,130 @@
+Date: 2026-09-30
+Scope: issue #6, fixed SSH/HTTP TCP forwards via existing OpenSSH.
+Status: implementation and isolated gates passed; physical LAN proof pending.
+
+Mac OpenSSH: 10.3p1, LibreSSL 3.3.6.
+Local unittest test_lan.py: 2 passed, 1 explicit VM/root skip.
+Invalid public/wildcard/link-local/USB/other-loopback bind and privileged,
+out-of-range or equal ports fail with argparse exit 2 before key/network use.
+Real ssh -G confirms explicit forwards, strict identity, batch/identities-only,
+fail-on-listen, keepalive and no agent/X11/dynamic/remote forwarding.
+Config inspection alone is not evidence of a kernel socket's bind address.
+
+Dedicated existing Ubuntu ARM64 VM: real OpenSSH/Dropbear/BusyBox services in an
+unshare network namespace; only public source/tests copied, synthetic keys only.
+Private addresses added only inside the namespace, not the Mac/VM outer network.
+Positive baseline: forwarded HTTP body VM_FORWARD_HTTP_OK and authenticated SSH
+command VM_FORWARD_SSH_OK; alternate loopback/private addresses refuse both ports.
+SIGTERM closes listeners. Occupied HTTP port causes nonzero exit, partial SSH
+listener disappears, pre-existing listener preserved. Wrong host key prevents any
+remote command (server-side shell audit unchanged), and no listeners remain.
+Final isolated baseline passed through the mutation runner before rejection.
+
+Seven source mutations rejected in executed batches: 3 local + 4 VM.
+public-bind, usb-bind, privileged-port; strict-trust, listen-failure, omitted-bind,
+wildcard-bind. Runner rejects failed original baseline before claiming mutations.
+
+Fixture/gate corrections (initial results not accepted as final evidence):
+- Initial reused HTTP port was in TIME_WAIT; test listener now sets SO_REUSEADDR.
+- Strict=no mutation initially survived: OpenSSH accepted a host mismatch but
+  later refused port forwarding. Nonzero exit alone did not prove strict trust.
+  Added server-side audit proving that even the preflight command is not run.
+- Fixture audit shell required /etc/shells registration. Intermediate baseline
+  failed; apparent mutant rejections from that broken fixture were discarded.
+  Added explicit baseline gate; corrected original and all mutants rerun.
+
+Pyflakes/Flake8 fatal and AST syntax passed; no configured typechecker.
+Bash -n/ShellCheck wrapper and git diff --check passed during implementation.
+Final Pyflakes/Flake8 fatal rerun passed on all 3 changed Python files;
+Bash/ShellCheck and diff-check passed after CLI update. No typechecker configured.
+Owned fixtures=0; owned transfer directory removed. VM restored to Stopped.
+No package installation, rebuild, PF/NAT/DNS/Internet Sharing change or PR merge.
+
+Grok read-only review: approach has no blocker; requires actual listener-address
+proof and a separate physical client for #6. HTTP is unauthenticated; all clients
+able to reach the chosen private Mac IPv4/port can read diagnostics. No per-client
+ACL is provided. The two fixed forwards do not create generic internet egress.
+
+Not yet proved: actual iPhone forwards from Windows alien, physical-LAN source
+path, independent-client strict SSH/HTTP, or Mac firewall reachability.
+No long-duration stability or net-charging claim; #2/#8 remain open.
+No personal host addresses/identifiers, real keys or backup data included.
+
+Windows client preparation via existing Herdr saved profile (no new agent):
+OpenSSH_for_Windows_9.5p2, LibreSSL 3.8.2 detected in native PowerShell.
+Private LAN IPv4 observed on the same subnet as the Mac; addresses not published.
+Existing pane belonged to other project. Dedicated test pane created, then moved
+into its own iphone6s-linux workspace at user request. No package installation or
+SSH key modification during this preparation. Actual phone/LAN test still pending.
+
+Physical pilot (supersedes pending status above, but fresh-init boot still pending):
+Preboot iOS reported 100%. Restored Linux boot completed. Actual Mac kernel sockets
+listened only on the chosen private LAN IPv4, ports 2222 and 8086.
+Initial forwarded requests timed out; phone lo was DOWN. Bringing lo UP in RAM
+made both services respond; adding 127.0.0.1 again reported File exists.
+Windows native client, using explicit Mac LAN IPv4 and no HTTP proxy:
+IPHONE_LAN_HTTP_STATUS=200
+HTTP body contained Linux iphone6s-linux 7.0.12, Apple iPhone 6s (Samsung), uptime.
+WINDOWS_LAN_SSH_OK
+7.0.12
+Strict SSH used client-owned temporary identity, trusted public host record,
+HostKeyAlias=172.16.42.1, no copied Mac private key or agent forwarding.
+Herdr control transport was separate from the explicit payload LAN destination.
+No server-side capture of a live client peer was obtained; the inspected
+established-socket listing happened after the short request had finished.
+Exact original authorized_keys restored and compared, temporary phone copy
+removed; Windows private fixture and Mac temporary public-key copy deleted.
+Manual snapshot succeeded before reboot; forwards stopped and listeners absent.
+Pilot took about 28 minutes, longer than planned due to PowerShell harness errors.
+After forced reboot, Linux disappeared; USB/iOS return not confirmed yet.
+Current physical screen/temperature and battery after reboot require operator.
+Subsequent operator observation: iOS unlock screen, always cold. USB remained
+absent on recheck, so postboot battery percentage/charging were not obtained.
+
+Permanent init correction candidate:
+Existing Ubuntu VM/tools only; no packages installed, no identity regenerated.
+2,969 archive entries compared; only init differs. Original image retained.
+Compared content, modes, UID/GID, rdev, link count and file timestamps.
+Directory timestamps excluded because cpio extraction itself updates them.
+Unexpected extra init change rejected before output. Actual BusyBox ip command
+in isolated namespace produced lo UP and 127.0.0.1/8 without explicit addr add.
+init sha256=06ea39593751a1c054ae1564261debb5d44f9d9002f98fda48c10cbf881b21f9
+initramfs bytes=13084080 sha256=fdfceea110c1bd75f1c30c7ebcccd9a6baebc4207d5dbef63356d0e1c4d644fe
+payload bytes=23765032 sha256=8b1a46dd67613c63aa6608dd3a0e73a73b358aaddc1818b423ff6009b55e3f66
+Candidate transfer hash/size and original m1n1/kernel/DTB hashes verified locally.
+Fresh physical boot without manual loopback activation remains pending for #6.
+
+Build harness failures not accepted as evidence:
+First metadata comparison included directory timestamps and failed as expected.
+Failed root-owned transfer left an empty local archive; composition was wrongly
+attempted after that failure. Empty archive and incomplete owned payload removed,
+never selected for boot. Repeated validated transfer and composition succeeded.
+Reproduction now explicitly gates each command on exit 0 and verifies received
+hash/size before composition. First lint invocation used a Python without tools;
+existing Python 3.12.6 Pyflakes/Flake8 fatal passed, no packages installed.
+
+Wrapper prepared to select loopback candidate, physical boot still pending.
+Narrow verification: wrapper 2/2 pass, LAN local 2 pass/1 explicit VM skip.
+Pyflakes/Flake8 fatal pass using existing Python 3.12.6; Bash -n/ShellCheck wrapper
+pass; init ShellCheck warning/error gate pass (pre-existing informational SC2012).
+No typechecker configured. Previous unchanged LAN VM/mutation evidence reused.
+Owned private rebuild directories/input removed from VM; VM returned to Stopped.
+
+Fresh physical boot passed (supersedes candidate-pending status above):
+Wrapper exit 0, PongoOS upload=23765032 bytes, restored snapshot, direct HTTP ready.
+Operator confirmed console. Before any manual phone network configuration:
+lo: LOOPBACK,UP,LOWER_UP; inet 127.0.0.1/8.
+/init SHA-256 matches 06ea39593751a1c054ae1564261debb5d44f9d9002f98fda48c10cbf881b21f9.
+Windows native output: IPHONE_HTTP2_STATUS=200; expected phone body validated;
+WINDOWS_LAN_SSH2_OK; 7.0.12; lo UP; IPHONE_PHYSICAL2_DONE.
+Actual Mac sockets: LAN-specific 2222 and 8086 LISTEN; LAN Mac:2222 -> LAN Windows
+ESTABLISHED captured during authenticated SSH hold. Personal addresses omitted.
+No manual loopback activation in this boot, no generic egress enabled.
+Original authorization restored with cmp, temporary key revoked and files removed
+on phone/Mac/Windows. Private final snapshot succeeded; forward exit 255 after
+Ctrl+C expected; lsof showed no listeners. Reboot SSH timed out as transport ended;
+subsequent USB identified iPhone iOS, battery 100%, BatteryIsCharging=true.
+Baseline 100%. Phone uptime at authorization cleanup=171.82 seconds; short pilot,
+not long-duration testing. Operator reported cold/warm, no further temperature
+polling requested; operator will report heating. Charging remains unverified.
+Issue #6 criteria satisfied; #2/#8 remain open.

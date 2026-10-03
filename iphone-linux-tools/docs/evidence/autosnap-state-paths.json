@@ -1,0 +1,50 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 26,
+  "code_commit": "d5f2af11492ee9aa23c81b5c22664adfb630b6e0",
+  "status": "verified",
+  "before": {
+    "scope": "owned synthetic temporary tree only",
+    "logs_link_followed": true,
+    "external_mode_before": "755",
+    "external_mode_after": "0o700",
+    "phone_actions": false,
+    "real_operator_files_modified": false
+  },
+  "local": {
+    "tests_total": 153,
+    "passed": 145,
+    "skipped": 8,
+    "new_regressions": 10,
+    "mutations_detected": 11,
+    "mutations_total": 11,
+    "lint": "flake8_fatal_passed",
+    "typechecker": "not_configured"
+  },
+  "ci": {
+    "pr_run": 36840191241,
+    "push_run": 36840185496,
+    "status": "success",
+    "jobs": 4,
+    "tests_per_job": 153,
+    "passed_per_job": 144,
+    "skipped_per_job": 9,
+    "mutations_per_job": 11,
+    "logs_inspected": true
+  },
+  "contract": [
+    "Shared metadata policy verifies root, logs and state before read/write/chmod or job.",
+    "Absent status is read-only and returns initial state.",
+    "Output uses private temporary, fsync and rename; state path is checked again before publication.",
+    "Failed rename preserves previous bytes and cleans its own temporary."
+  ],
+  "limits": [
+    "Same-user concurrent edits or concurrent scheduler status writers are not serialized or defended.",
+    "No new native boot or VM fixture run; real host filesystem/CLI plus synthetic job used.",
+    "Shared metadata rejects links/types/owner/special bits; does not authenticate JSON contents."
+  ],
+  "host_packages_installed": false,
+  "real_snapshots_modified": false,
+  "native_proof": false
+}

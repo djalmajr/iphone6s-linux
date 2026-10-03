@@ -1,0 +1,426 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "status": "partial",
+  "issue": 20,
+  "scope": "real Windows client against temporary synthetic Mac DNS fixture; no iPhone boot or restore",
+  "native_tool": {
+    "signature": "Valid Microsoft",
+    "version": "10.0.26100.1",
+    "sha256": "b69b378538a7cc65e6701e4e94ee8643356ced94e3da4949683d0dbbfcc85c93"
+  },
+  "fixture": {
+    "ports": [
+      15953,
+      1053
+    ],
+    "bind": "explicit private LAN IPv4",
+    "allowed_clients": "only dedicated Windows and Mac",
+    "recursive": false,
+    "upstream": false,
+    "name": "iphone-usb.home.arpa",
+    "address": "172.16.42.1",
+    "maximum_message_bytes": 4096,
+    "maximum_duration_seconds": 600,
+    "maximum_events": 120,
+    "tcp_read_deadline_seconds": 2
+  },
+  "native_arguments": [
+    {
+      "Case": "native-arguments",
+      "Port": 15953,
+      "Mode": "-novc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 147,
+      "StderrLength": 35
+    },
+    {
+      "Case": "native-arguments",
+      "Port": 15953,
+      "Mode": "-vc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 43,
+      "StderrLength": 66
+    },
+    {
+      "Case": "native-arguments",
+      "Port": 1053,
+      "Mode": "-novc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 147,
+      "StderrLength": 35
+    },
+    {
+      "Case": "native-arguments",
+      "Port": 1053,
+      "Mode": "-vc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 43,
+      "StderrLength": 66
+    }
+  ],
+  "native_interactive": [
+    {
+      "Case": "native-interactive",
+      "Port": 15953,
+      "Mode": "-novc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 508,
+      "StderrLength": 35,
+      "EffectivePorts": [
+        "15953"
+      ],
+      "ErrorText": "*** Request to UnKnown timed-out"
+    },
+    {
+      "Case": "native-interactive",
+      "Port": 15953,
+      "Mode": "-vc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 456,
+      "StderrLength": 66,
+      "EffectivePorts": [
+        "15953"
+      ],
+      "ErrorText": "*** UnKnown can't find [endpoint].: Unspecified error"
+    },
+    {
+      "Case": "native-interactive",
+      "Port": 1053,
+      "Mode": "-novc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 507,
+      "StderrLength": 35,
+      "EffectivePorts": [
+        "1053"
+      ],
+      "ErrorText": "*** Request to UnKnown timed-out"
+    },
+    {
+      "Case": "native-interactive",
+      "Port": 1053,
+      "Mode": "-vc",
+      "DeadlinePassed": true,
+      "Exit": 0,
+      "ExpectedName": false,
+      "ExpectedAddress": false,
+      "StdoutLength": 455,
+      "StderrLength": 66,
+      "EffectivePorts": [
+        "1053"
+      ],
+      "ErrorText": "*** UnKnown can't find [endpoint].: Unspecified error"
+    }
+  ],
+  "dotnet_sockets": [
+    {
+      "Case": "dotnet-sockets",
+      "Port": 15953,
+      "Mode": "UDP",
+      "ExactFixtureReply": true,
+      "ReplyBytes": 54
+    },
+    {
+      "Case": "dotnet-sockets",
+      "Port": 15953,
+      "Mode": "TCP",
+      "ExactFixtureReply": true,
+      "ReplyBytes": 54
+    },
+    {
+      "Case": "dotnet-sockets",
+      "Port": 1053,
+      "Mode": "UDP",
+      "ExactFixtureReply": true,
+      "ReplyBytes": 54
+    },
+    {
+      "Case": "dotnet-sockets",
+      "Port": 1053,
+      "Mode": "TCP",
+      "ExactFixtureReply": true,
+      "ReplyBytes": 54
+    }
+  ],
+  "received_queries": {
+    "mac_dig": 2,
+    "windows_dotnet": 4,
+    "windows_nslookup": 0,
+    "server_errors": 0,
+    "acl_denied": 0
+  },
+  "validation": {
+    "powershell_native_parser": "passed before each executed diagnostic",
+    "private_fixture_flake8_fatal": "passed",
+    "exact_socket_reply": "all 54 bytes compared with expected synthetic reply",
+    "source_mutation_test": "not applicable: operational source unchanged",
+    "acl_capture": "Final pass logs denied peers and malformed requests as well as accepted queries; 6 positive control questions, no denials/errors, no native nslookup queries.",
+    "repetition": "First pass did not log ACL denials. Repeated 8 native cases and 6 positive controls after adding denial capture; final pass is reported. Total 16 native processes, all terminated."
+  },
+  "initial_submission": {
+    "multiline_transport": "PowerShell parser error before diagnostic execution",
+    "correction": "single-line transport; decoded source parsed by native PowerShell parser; no ExecutionPolicy change"
+  },
+  "cleanup": {
+    "fixture_process": "terminal exit 0 with stop marker",
+    "listeners": "ports 15953/1053 TCP and UDP absent",
+    "windows_child_processes": "All 16 native invocations returned WaitForExit true and Dispose; no server/job/file created on Windows.",
+    "windows_fixture_files": "none created"
+  },
+  "limits": [
+    "No explanation of the underlying Windows per-application network failure yet.",
+    "Successful socket fixture does not prove a complete production DNS parser or negative controls.",
+    "Fixture is direct Mac LAN, not the phone SSH DNS proxy.",
+    "No firewall, DNS, ExecutionPolicy, trust store or protection changed.",
+    "No tool installed, secret published, kernel loaded, remote account or service changed.",
+    "Native timeout text alone is not packet or successful response proof."
+  ],
+  "next": "Observe native Windows CI, then test public client UDP/TCP against iPhone after fresh boot and DNS restore. Underlying nslookup cause unknown; issue 20 stays open.",
+  "loopback_control": {
+    "bind": "127.0.0.1",
+    "ports": [
+      15953,
+      1053
+    ],
+    "native_cases": [
+      {
+        "Case": "loopback-arguments",
+        "Port": 15953,
+        "Mode": "-novc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 41,
+        "StderrLength": 68
+      },
+      {
+        "Case": "loopback-arguments",
+        "Port": 15953,
+        "Mode": "-vc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 41,
+        "StderrLength": 68
+      },
+      {
+        "Case": "loopback-arguments",
+        "Port": 1053,
+        "Mode": "-novc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 41,
+        "StderrLength": 68
+      },
+      {
+        "Case": "loopback-arguments",
+        "Port": 1053,
+        "Mode": "-vc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 41,
+        "StderrLength": 68
+      },
+      {
+        "Case": "loopback-interactive",
+        "Port": 15953,
+        "Mode": "-novc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 398,
+        "StderrLength": 68,
+        "EffectivePorts": [
+          "15953"
+        ],
+        "ErrorText": "*** UnKnown can't find [endpoint].: Non-existent domain"
+      },
+      {
+        "Case": "loopback-interactive",
+        "Port": 15953,
+        "Mode": "-vc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 398,
+        "StderrLength": 68,
+        "EffectivePorts": [
+          "15953"
+        ],
+        "ErrorText": "*** UnKnown can't find [endpoint].: Non-existent domain"
+      },
+      {
+        "Case": "loopback-interactive",
+        "Port": 1053,
+        "Mode": "-novc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 397,
+        "StderrLength": 68,
+        "EffectivePorts": [
+          "1053"
+        ],
+        "ErrorText": "*** UnKnown can't find [endpoint].: Non-existent domain"
+      },
+      {
+        "Case": "loopback-interactive",
+        "Port": 1053,
+        "Mode": "-vc",
+        "DeadlinePassed": true,
+        "Exit": 0,
+        "ExpectedName": false,
+        "ExpectedAddress": false,
+        "StdoutLength": 397,
+        "StderrLength": 68,
+        "EffectivePorts": [
+          "1053"
+        ],
+        "ErrorText": "*** UnKnown can't find [endpoint].: Non-existent domain"
+      }
+    ],
+    "socket_controls": [
+      {
+        "Case": "loopback-sockets",
+        "Port": 15953,
+        "Mode": "UDP",
+        "ExactFixtureReply": true,
+        "ReplyBytes": 54
+      },
+      {
+        "Case": "loopback-sockets",
+        "Port": 15953,
+        "Mode": "TCP",
+        "ExactFixtureReply": true,
+        "ReplyBytes": 54
+      },
+      {
+        "Case": "loopback-sockets",
+        "Port": 1053,
+        "Mode": "UDP",
+        "ExactFixtureReply": true,
+        "ReplyBytes": 54
+      },
+      {
+        "Case": "loopback-sockets",
+        "Port": 1053,
+        "Mode": "TCP",
+        "ExactFixtureReply": true,
+        "ReplyBytes": 54
+      }
+    ],
+    "fixture": {
+      "Case": "loopback-fixture",
+      "Events": [
+        "15953:UDP:type=1:known=True:reply=54",
+        "15953:TCP:type=1:known=True:reply=54",
+        "1053:UDP:type=1:known=True:reply=54",
+        "1053:TCP:type=1:known=True:reply=54"
+      ]
+    },
+    "cleanup": {
+      "Case": "loopback-cleanup",
+      "ListenersRemaining": 0,
+      "Disposed": true
+    },
+    "maximum_duration_seconds": 120,
+    "maximum_requests": 64,
+    "maximum_message_bytes": 4096,
+    "tcp_read_deadline_seconds": 2,
+    "compiler": "C# Add-Type using existing Windows .NET; source decoded and compiled, no package installed",
+    "threads": "four background threads joined by Dispose; listeners absent after disposal",
+    "scope": "independent of Mac LAN and iPhone proxy; underlying native client cause still unknown"
+  },
+  "complete_socket_client": {
+    "implementation_commit": "e3de2d6",
+    "scope": "real Windows 5.1/.NET source compilation, bounded synthetic transport/parser fixtures and public CLI against private Mac LAN fixture; no iPhone test",
+    "source_sha256": {
+      "scripts/host/dns_windows.cs": "e3a23d7643abc839d692c26472b7490b67751bd78c27c4d715e81c8f9674beee",
+      "scripts/host/dns-check-windows.ps1": "0dfd2cad85b409189ec49d4bf4b3f65ef0c65e2ed61f52250f1757967113046a",
+      "tests/dns_windows_fixture.cs": "3fa2fc8b6336f75259579ef5b948e2c4eff6bedcbd478c9e8c8c325ce0fbdf2a",
+      "tests/test_dns_windows.ps1": "ea02572b646a650a474834649c06b11481b7d123adc1d52c94dd1b9a50d08440"
+    },
+    "parser_and_compilation": "passed natively",
+    "baseline_cases": 61,
+    "mutations_rejected_by_assertion": 18,
+    "final_suite_exit": 0,
+    "public_cli_positive_cases": 2,
+    "public_cli_negative_cases": 7,
+    "public_cli_ports": [
+      1053,
+      15953
+    ],
+    "public_cli_positive_transports": [
+      "UDP",
+      "TCP"
+    ],
+    "lan_fixture_queries": 4,
+    "lan_fixture_denials_or_errors": 0,
+    "lan_fixture_exit": 0,
+    "lan_listeners_remaining": 0,
+    "native_ci": {
+      "commit": "49d874738d662b8f2d93dd7bbbf512505f3ecc6d",
+      "runs": [
+        {
+          "id": 36867261810,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "jobs": [
+            "windows-dns",
+            "source (ubuntu-24.04)",
+            "source (macos-15)"
+          ]
+        },
+        {
+          "id": 36867254184,
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "jobs": [
+            "windows-dns",
+            "source (ubuntu-24.04)",
+            "source (macos-15)"
+          ]
+        }
+      ],
+      "scope": "Windows synthetic client suite and existing source gates; no phone or LAN hardware proof"
+    },
+    "physical_boot_restore": "pending",
+    "failed_attempts": [
+      "Initial transfer lost local-scope root variable; no tests executed.",
+      "Initial private-range mutation failed compilation and was not counted. Descriptor corrected; focused baseline/mutant passed; final full suite passed."
+    ],
+    "cleanup": "Mac fixture terminated, ports empty; known Windows root and five files removed, global task variable removed, completion marker confirmed. Initial failed transfer may have left an unidentified empty temporary directory; not removed by guessing."
+  }
+}

@@ -1,0 +1,38 @@
+Verified on the active iPhone Linux session, 2026-09-29; no reboot.
+Local unittest suite: 6 tests passed.
+Live snapshot / modify / restore:
+  original file content recovered
+  file mode 640 recovered
+  extra file preserved
+  pre-restore snapshot created
+CORRUPT_SNAPSHOT_BLOCKED
+SYMLINK_TARGET_BLOCKED
+HARDLINK_TARGET_BLOCKED
+REJECTED_RESTORES_LEFT_FILES_UNCHANGED
+PRIVATE_PERMISSIONS_AND_EXCLUSIONS_OK
+FIXTURES_REMOVED
+HTTP PID before and after: 92
+HTTP status endpoint: successful response
+Herdr session: running, version 0.9.1, protocol 22, endpoint compatible
+Final operational snapshot saved locally; no snapshot content published.
+Recovery after another DFU boot was not verified in that initial session.
+
+2026-09-30: fresh Linux boot via single invocation of manual-DFU wrapper.
+Known sentinela saved before reboot: absent in newly booted RAM filesystem.
+Explicit snapshot restored after pre-restore backup and hash validation.
+Sentinela SHA-256: b236202ff49d61b978537415137da685cbf63164a42494dff6e7f004b28e7260
+Sentinela mode: 640
+Extra destination file: preserved, then temporary fixture removed.
+SSH identities: compared before/after, unchanged; values withheld.
+HTTP PID: unchanged; endpoint HTTP 200 after restore.
+Snapshot archives/manifests remain private and excluded from Git.
+Cold-restore validation passed; interrupted extraction remains issue #15.
+
+2026-09-30: another cold restore with reorganized scripts/host CLI.
+Previously saved sentinel absent in fresh RAM filesystem before restore.
+Explicit private snapshot restored; pre-restore snapshot created automatically.
+Sentinel SHA-256 b236202ff49d61b978537415137da685cbf63164a42494dff6e7f004b28e7260
+Sentinel mode640, SSH identities unchanged (hashes withheld), HTTP200.
+No extra-file fixture created in this revalidation; retention proof is the
+previous cold-restore check above, not inferred from this narrower repeat.
+Final operational private backup completed before returning to iOS.

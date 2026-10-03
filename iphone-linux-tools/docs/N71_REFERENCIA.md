@@ -1,0 +1,112 @@
+# Referência Apple N71: reprodução sem execução de firmware
+
+O objetivo é obter fatos de hardware para uma implementação independente S8000. Dados de firmware/disassembly permanecem em `runtime/` privado e ignorado pelo Git; no repo ficam código próprio, origem, hashes e mapa selecionado. [Proveniência](evidence/n71-driver-reference.json). Assinatura IMG4 não verificada; estes artefatos não são uma receita de flash/restore.
+
+## Download parcial e decodificação
+
+O leitor fixa Apple HTTPS, IPSW 15.8.8/19H422, nome/tamanhos/CRC/hash do membro `kernelcache.release.n71` e hash/tamanho do resultado. Não lê todo o IPSW de 5 GB: o ZIP remoto usa respostas HTTP206 verificadas, máximo 4 MB por leitura e 32 MB no total. O membro comprimido tem aproximadamente 20 MB. Entrada IM4P é analisada como DER, LZSS `complzss` usa ring buffer de 4096 bytes e checksum Adler32; a descompressão tem limites explícitos. O formato LZSS foi confrontado com a [implementação primária Apple BootX](https://github.com/apple-oss-distributions/BootX/blob/814114e6a6cf10dfa512c520f5a1c1fb9c58a432/bootx.tproj/sl.subproj/lzss.c); o código deste projeto é próprio.
+
+Na raiz do repo, com Python padrão já existente e `runtime/` privado (modo700), escolha pasta nova:
+
+```sh
+python3 iphone-linux-tools/scripts/research/apple-n71-kernel.py \
+  --output-dir "$PWD/iphone-linux-tools/runtime/n71-reference-new"
+```
+
+Para reutilizar o membro privado já verificado e evitar rede, escolha outra pasta nova:
+
+```sh
+python3 iphone-linux-tools/scripts/research/apple-n71-kernel.py \
+  --input "$PWD/iphone-linux-tools/runtime/n71-reference-new/kernelcache.release.n71.im4p" \
+  --output-dir "$PWD/iphone-linux-tools/runtime/n71-reference-decoded-again"
+```
+
+O segundo modo confere SHA do membro, Adler32 e SHA do resultado; não declara uma nova prova do CRC ZIP. Nenhum modo executa a imagem, carrega biblioteca do firmware ou se comunica com o iPhone. Os arquivos criados são privados, sem sobrescrever resultados existentes. Os 49152 bytes após o fluxo LZSS desta referência são registrados como sufixo não interpretado.
+
+## Inspeção estática realizada
+
+1. Load commands Mach-O ARM64 foram delimitados e o XML de `__PRELINK_INFO,__info` foi decodificado privadamente. É XML AppleOSSerialize com referências ID/IDREF; `plistlib` simples não basta. Foram conferidos CFBundleIdentifier, personalidade, IOClass, IOProviderClass e IONameMatch.
+2. Segmentos globais traduzem endereço virtual para offset. Offsets internos de kext prelinkados não devem ser tratados como offset do arquivo raiz. `AppleS8000PCIe` é a classe que faz match com `apcie,s8000`, e herda operações de `AppleS800xPCIe`/`AppleEmbeddedPCIE`.
+3. O `objdump` já existente no Xcode leu intervalos de código com `-D --start-address=... --stop-address=...`, como dados. `-d` não selecionou a seção `__PLK_TEXT_EXEC` neste arquivo; uma saída sem instruções não foi contada como análise válida.
+4. Mapas de recursos, seletor/jump-table e controles RMW foram confrontados com o ADT N71 do mesmo IPSW. Headers de vtable e ponteiros de instância diferem em 16 bytes nesta referência; offsets de chamadas virtuais usam a instância correta. Não copiar endereços de código Apple para o kernel Linux.
+5. O ADT do IPSW não contém `apcie-phy-tunables`, exigido pelo configure examinado. Busca limitada no XML prelinkado também não encontrou propriedades tunables. A origem dos parâmetros do runtime ainda precisa ser determinada antes de habilitar PHY. Presença de driver e checksum não comprovam inicialização física.
+
+## Coleta agrupada: ADT no bootloader
+
+O comando `dt` já existente no Pongo consultado imprime o Device Tree carregado. A coleta abaixo usa somente esse comando, com cliente `pongoterm` preservado/verificado por hash; exige um único Pongo já enumerado. Não inicia DFU, carrega payload ou envia `poke`/outros comandos de MMIO. Não há argumento para comando arbitrário.
+
+```sh
+python3 iphone-linux-tools/scripts/research/pongo-n71-reference.py \
+  --output-dir "$PWD/iphone-linux-tools/runtime/n71-pongo-reference-new"
+```
+
+O resultado bruto `dt-private.txt` fica privado (pode conter identificadores do aparelho); não deve ir ao Git/GitHub. O JSON registra somente hash/tamanho/comando e presença de nomes de propriedades, sem concluir que um parâmetro encontrado seja válido para o hardware. A coleta tem limite de 2 MB e 45 segundos, exige término normal e prompt completo. Testes usam processos Python sintéticos; não acessam USB. O tratamento de offsets/mascaras/larguras e o confronto de placa só acontecem após leitura privada do resultado real.
+
+Essa coleta ocorreu dentro do mesmo DFU necessário para testar USB500mA: capturar primeiro, fechar o cliente e continuar com a candidata preservada. O resultado físico completo tem 448378 bytes; cliente encerrou com código zero e prompt completo. `apcie-phy-tunables` e common/config/root-port tunables estão presentes no runtime. Isso resolve a disponibilidade do insumo, não sua semântica, validade de cada escrita ou autoria da injeção. [Evidência selecionada](evidence/n71-runtime-reference.json). Nenhuma tabela bruta foi publicada; próxima etapa é validar registros de 24 bytes/larguras/máscaras/offsets contra as operações Apple antes de integrar controlador Linux.
+
+## Gates de software
+
+### Extração privada dos tunables
+
+O parser usa hierarquia/nomes de nós e exige as quatro propriedades do host S8000 e da porta1; encontrar o nome em qualquer outro nó não basta. Registros little-endian de 24 bytes têm offset32/largura32/máscara64/valor64; nesta extração são aceitas somente operações32 alinhadas dentro da janela correspondente e sem bits altos. A transformação Apple usa valor mascarado, preserva a ordem e permite offsets repetidos. Nenhuma escrita é aplicada pelo parser; validar formato não comprova significado elétrico de cada registro.
+
+```sh
+python3 -B iphone-linux-tools/scripts/research/n71_runtime_tunables.py \
+  --input "$PWD/iphone-linux-tools/runtime/n71-pongo-reference-new/dt-private.txt" \
+  --output-dir "$PWD/iphone-linux-tools/runtime/n71-tunables-new"
+python3 -B -m unittest discover -s iphone-linux-tools/tests -p test_n71_runtime_tunables.py -v
+```
+
+A extração real passou: common34, PHY41, port1 seis e configuração1 dois registros. Resultado/tabelas ficam em JSON privado modo600/pasta700. O CLI imprime somente contagens e recusa sobrescrever saída, input fora de runtime, links, permissões públicas e captura incompleta. Testes usam dados sintéticos e verificam porta/hierarquia/stride/larguras/alinhamento/aperture/bits altos/rows/paths. Próxima integração deverá consumir parâmetros privados validados; não publicar tabelas brutas nem reutilizar offsets A10.
+
+```sh
+python3 -m unittest discover -s iphone-linux-tools/tests -p test_apple_kernel_format.py -v
+python3 -m unittest discover -s iphone-linux-tools/tests -p test_pongo_n71_reference.py -v
+python3 -m unittest discover -s iphone-linux-tools/tests -p test_n71_pcie_contract.py -v
+python3 iphone-linux-tools/tests/run_n71_pcie_mutations.py
+```
+
+Fixtures do decoder são sintéticas e incluem referências sobrepostas, seed, truncamento, excesso de saída, checksum e DER. A referência real privada é conferida separadamente por hashes fixados; firmware não faz parte dos testes/CI. As primitivas também foram compiladas como objeto no contexto `__KERNEL__` da fonte `958481f87fee0949ff6a9a4af77f7eb6dac8a149`, usando GCC13.3.0 na VM dedicada. Nenhum módulo foi carregado, nenhuma candidata mudou e nenhum pacote foi instalado no Mac.
+
+## Conferência independente do mapper GPIO D2255
+
+O opcode `1a8a3129` em006933aa4 é `csel w9,w9,w10,lo`:
+condição verdadeira seleciona o primeiro registrador fonte, w9. A documentação
+[Arm sobre CSEL (R17166)](https://documentation-service.arm.com/static/60082ae0773bb020e3de6c10) confirma essa seleção; [LO significa comparação sem sinal menor](https://developer.arm.com/community/arm-community-blogs/b/architectures-and-processors-blog/posts/condition-codes-1-condition-flags-and-codes).
+
+Nesta referência, w9=900+2*pin, w10=8c0+6*pin e a comparação é pin<17.
+A interpretação anterior inverteu esses operandos. GPIO10 é914, não8fc.
+Os pinos17..20 usam a outra fórmula; acima20 o helper retornaFFFF.
+
+Reproduza a conferência **somente nesse Mach-O já decodificado**. O offset
+foi traduzido pelos load commands do arquivo fixado; não reutilizá-lo em
+outra versão. O comando lê dados locais, não executa instruções Apple:
+
+```sh
+python3 - iphone-linux-tools/runtime/n71-driver-reference-20261002/kernelcache.n71.macho <<'PY'
+import hashlib
+from pathlib import Path
+import struct
+import sys
+raw = Path(sys.argv[1]).read_bytes()
+assert len(raw) == 42827776
+assert hashlib.sha256(raw).hexdigest() == '0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a'
+words = struct.unpack_from('<11I', raw, 0x1dffa88)
+assert words == (
+    0x529fffe8, 0x7100443f, 0x531f7829, 0x11240129,
+    0x528000ca, 0x1b0a7c2a, 0x1123014a, 0x1a8a3129,
+    0x7100503f, 0x1a898100, 0xd65f03c0,
+)
+csel = words[7]
+assert (csel & 31) == 9  # destination
+assert ((csel >> 5) & 31) == 9  # first source, selected when LO is true
+assert ((csel >> 16) & 31) == 10  # second source
+assert ((csel >> 12) & 15) == 3  # LO
+print('N71_GPIO10_REGISTER_REFERENCE_OK 0914')
+PY
+```
+
+A conferência binária passou no insumo privado real. Contratos e mutações
+de software continuam separados de prova elétrica no iPhone; os resultados
+físicos antigos8fc não validam GPIO10. Firmware, dumps e disassembly bruto
+continuam fora do GitHub.

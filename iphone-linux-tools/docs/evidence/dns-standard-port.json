@@ -1,0 +1,531 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 19,
+  "status": "corrected_native_darwin_helper_verified_phone_dns53_pending",
+  "scope": "Historical Mac/VM bootstrap proofs plus failed native DNS53 pilot and current Darwin group correction; native DNS53/client policy still unverified",
+  "kernel_inventory": [
+    {
+      "protocol": "tcp",
+      "port": 53,
+      "endpoint_count": 7,
+      "endpoints": [
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp6",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp4",
+          "state": "LISTEN"
+        },
+        {
+          "family": "tcp4",
+          "state": "LISTEN"
+        }
+      ]
+    },
+    {
+      "protocol": "udp",
+      "port": 53,
+      "endpoint_count": 7,
+      "endpoints": [
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp6",
+          "state": "bound"
+        },
+        {
+          "family": "udp4",
+          "state": "bound"
+        },
+        {
+          "family": "udp4",
+          "state": "bound"
+        }
+      ]
+    }
+  ],
+  "endpoint_classes": [
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "loopback",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "link-local",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "link-local",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "unparsed-truncated",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": null
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp6",
+      "bind_class": "unparsed-truncated",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": null
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp4",
+      "bind_class": "loopback",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "tcp",
+      "family": "tcp4",
+      "bind_class": "private",
+      "state": "LISTEN",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "loopback",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "link-local",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "link-local",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "unparsed-truncated",
+      "state": "bound",
+      "matches_current_en0_ipv4": null
+    },
+    {
+      "protocol": "udp",
+      "family": "udp6",
+      "bind_class": "unparsed-truncated",
+      "state": "bound",
+      "matches_current_en0_ipv4": null
+    },
+    {
+      "protocol": "udp",
+      "family": "udp4",
+      "bind_class": "loopback",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    },
+    {
+      "protocol": "udp",
+      "family": "udp4",
+      "bind_class": "private",
+      "state": "bound",
+      "matches_current_en0_ipv4": false
+    }
+  ],
+  "selected_endpoint": {
+    "selected_bind": "previously tested explicit private LAN IPv4",
+    "still_assigned_to_mac": true,
+    "ipv4_exact_or_wildcard_conflicts": [],
+    "ipv6_scope": "not selected; truncated kernel output not used as no-conflict proof"
+  },
+  "bind_preflight": {
+    "effective_uid_is_root": false,
+    "selected_bind": "explicit private LAN IPv4 previously verified assigned",
+    "port": 53,
+    "tcp_listen_started": false,
+    "traffic_sent": false,
+    "reuse_options_enabled": false,
+    "sockets_closed": true,
+    "binds": [
+      {
+        "protocol": "UDP",
+        "success": false,
+        "errno": 13,
+        "evidence": "initial preflight"
+      },
+      {
+        "protocol": "TCP",
+        "success": false,
+        "errno": 13
+      }
+    ],
+    "selected_ipv4_endpoint_count_after": 0
+  },
+  "limits": [
+    "Unprivileged lsof returned no rows; kernel table had endpoints, so lsof was not used as proof of availability.",
+    "IPv6 address text was truncated even with -W; two addresses per protocol remained unclassified.",
+    "Initial inventory/preflight: selected IPv4 matched the tested LAN bind and assigned host address; that inventory alone did not establish a successful privileged bind.",
+    "Initial non-root preflight: UDP/TCP53 bind failed with EACCES; this stage did not test DNS transport.",
+    "No owner of existing DNS sockets identified; no existing process stopped or configuration changed.",
+    "No NRPT, Android DNS setting, upstream, DHCP reservation or router configuration changed."
+  ],
+  "next": "New accompanied phone boot/restore and explicit Mac/Windows DNS53 pilot; preserve verified helper hashes. Android, stable IPs, client policy/rollback and sustained power remain separate gates.",
+  "implementation": {
+    "code_head": "98e63843a7285c2ba661f141a11054f6277d71dd",
+    "commits": {
+      "bootstrap": "6a03a0ca9cd84baa2eaae1321802ea55788640b4",
+      "integration": "a173be4",
+      "tcp_rebind": "770f710",
+      "ci_gates": "98e6384"
+    },
+    "default_port": 1053,
+    "standard_port": 53,
+    "standard_port_explicit_flag": "--standard-port",
+    "root_scope": "system Python isolated stdlib helper; bind then permanent UID/GID/groups drop before IPC; no profile/key/SSH root",
+    "reuse": {
+      "udp_reuseaddr": false,
+      "tcp_reuseaddr": true,
+      "reuseport": false
+    },
+    "sources": [
+      {
+        "path": "scripts/host/dns.py",
+        "bytes": 6981,
+        "sha256": "35548ad3a268826cdce0aa89180714ba550e4957dad2efc5261fd0ec8a5214c5"
+      },
+      {
+        "path": "scripts/host/dns_lan.py",
+        "bytes": 6170,
+        "sha256": "cb0744bf8847fb957677a4cbdd6359866eeaaf8e2b86858840c24ad7dbafee48"
+      },
+      {
+        "path": "scripts/host/dns_activation.py",
+        "bytes": 8666,
+        "sha256": "023323052a9a0208ada7b2e95da41f6ab0b139037fa9b45cab3f87d7221a41cc"
+      },
+      {
+        "path": "scripts/host/dns_privileged.py",
+        "bytes": 4111,
+        "sha256": "863c7c5f0ac743fc24f04bb0b5bbc631cb98f8b1c2313d70aacbd0683d2fa7ef"
+      }
+    ],
+    "mac": {
+      "root_helper_executed": false,
+      "ipc_cases": 21,
+      "assertion_killed_mutations": 15,
+      "system_python_compatible": true,
+      "tcp_state_api": "TCP_CONNECTION_INFO",
+      "native_53_pilot_passed": false
+    },
+    "vm": {
+      "platform": "Ubuntu 24.04 ARM64",
+      "isolated_namespaces": true,
+      "bootstrap_cases": 25,
+      "assertion_killed_bootstrap_mutations": 19,
+      "dns_ssh_baseline_tests": 4,
+      "real_proxy_modes": [
+        "high_port",
+        "standard_53_nonroot"
+      ],
+      "dns_ssh_mutations": 8,
+      "tcp_time_wait_rebind_passed": true,
+      "udp_tcp_forward_conflicts_preserved": true,
+      "nonroot_proxy_and_ssh_uid_verified": true,
+      "cleanup_server_processes": 0,
+      "cleanup_fixture_temp_directories": 0,
+      "stopped_after_tests": true
+    },
+    "ci": {
+      "bootstrap_runs": [
+        36930558070,
+        36930548792
+      ],
+      "bootstrap_conclusion": "success",
+      "code_runs": [
+        36932840328,
+        36932841357
+      ],
+      "code_conclusion": "success",
+      "code_mutation_steps_confirmed": {
+        "ubuntu-24.04": 15,
+        "macos-15": 15
+      }
+    },
+    "gates_open": [
+      "refresh selected Mac bind/conflits before accompanied root bootstrap",
+      "native Darwin privilege-drop and DNS53",
+      "fresh iPhone boot/restore/queries",
+      "Windows client explicit 53 option and device test",
+      "Android explicit queries",
+      "client split-DNS policy and rollback",
+      "power and sustained availability #2/#8"
+    ],
+    "client_policy_changed": false,
+    "phone_booted_in_this_phase": false,
+    "preflight_requires_refresh_before_native_pilot": true
+  },
+  "darwin_native_failure": {
+    "issue": 30,
+    "boot_restore_ssh_http_ok": true,
+    "phone_dns5353_udp_tcp_ok": true,
+    "helper_refused_before_handoff": true,
+    "mac_windows_dns53_functional_tests_run": false,
+    "uid_gid_real_effective_matched": true,
+    "python_account_group_count": 17,
+    "kernel_group_count": 1,
+    "kernel_groups_only_primary": true,
+    "kernel_nonprimary_count": 0,
+    "selected_udp_tcp53_absent_after_refusal": true,
+    "tunnel1054_absent_after_refusal": true,
+    "snapshot_verified": true,
+    "sync_verified": true,
+    "return_ios_cli_exit": 1,
+    "return_ios_usb_verified": false,
+    "manual_fallback_requested": true,
+    "packages_installed_on_mac": false,
+    "global_dns_policy_changed": false,
+    "manual_fallback_ios_usb_verified": true,
+    "manual_fallback_battery_percent": 98,
+    "manual_fallback_charging": true
+  },
+  "darwin_group_correction": {
+    "status": "native_groups_identity_fds_and_data_verified_after_ack_correction",
+    "regression_before_fix_assertion": true,
+    "mac_nonroot_cases": 27,
+    "mac_source_mutations_assertion_rejected": 21,
+    "new_mutations": [
+      "darwin-account-groups",
+      "darwin-extra-groups",
+      "darwin-group-errno",
+      "darwin-group-count",
+      "darwin-primary-filter",
+      "helper-group-guard"
+    ],
+    "ast_three_files_ok": true,
+    "vm_privileged_candidate_verified": true,
+    "native_mac_corrected_helper_verified": true,
+    "native_phone_dns53_verified": false,
+    "ci_candidate_verified": true,
+    "fixture_error_not_counted": "sendmsg uses an iovec list; corrected only the fixture and repeated its two affected positives",
+    "local_sandbox_permission_error_not_counted": true,
+    "lint_fatal_existing_python312_flake8_ok": true,
+    "vm_cases": 31,
+    "vm_source_mutations_assertion_rejected": 25,
+    "vm_source_hashes_jointly_verified": true,
+    "vm_test_namespace_private": true,
+    "source_sha256": {
+      "scripts/host/dns_privileged.py": "2628afa1b1895f920baf0c1953ca4fde8d3bf6aea89d05f897714761ea9c713c",
+      "tests/test_dns_activation.py": "7bbd094f0119d39b5209c3555ea13e96f573cb0ddb3dcdcfa46c2e296da71d4f",
+      "tests/run_dns_activation_mutations.py": "e02ef92704f7a682d14ff7439f3918e14c7bea6ffd12862efe583c4173296000"
+    },
+    "ci_commit": "f9696964dbcb4d6532284f4bc1ee95e2ed190355",
+    "ci": [
+      {
+        "conclusion": "success",
+        "event": "pull_request",
+        "headSha": "f9696964dbcb4d6532284f4bc1ee95e2ed190355",
+        "jobs": [
+          {
+            "name": "windows-dns",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953017204/job/110669859301"
+          },
+          {
+            "name": "source (macos-15)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953017204/job/110669859492"
+          },
+          {
+            "name": "source (ubuntu-24.04)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953017204/job/110669859586"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953017204"
+      },
+      {
+        "conclusion": "success",
+        "event": "push",
+        "headSha": "f9696964dbcb4d6532284f4bc1ee95e2ed190355",
+        "jobs": [
+          {
+            "name": "windows-dns",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953013523/job/110669848889"
+          },
+          {
+            "name": "source (ubuntu-24.04)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953013523/job/110669848982"
+          },
+          {
+            "name": "source (macos-15)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953013523/job/110669849080"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36953013523"
+      }
+    ],
+    "vm_stopped_after_validation": true,
+    "native_mac_auth_expired": true,
+    "native_mac_standalone_proof_prepared": true,
+    "standalone_ast_and_fatal_lint_ok": true,
+    "native_mac_drop_identity_and_fd_guards_reached": true,
+    "native_data_failed_before_ack_correction": true
+  },
+  "darwin_handoff_ack": {
+    "issue": 31,
+    "code_commit": "32c39d418ee42ebe9ba709573db07cc89af54106",
+    "native_before_fix_udp_empty_without_source": true,
+    "native_defunct_and_socket_error_zero": true,
+    "same_process_drop_data_ok": true,
+    "unprivileged_loopback_immediate_donor_exit_reproduced": true,
+    "unprivileged_donor_adoption_wait_data_ok": true,
+    "private_held_helper_clone_udp_before_and_after_donor_exit_ok": true,
+    "kernel_cause_claimed": false,
+    "regression_before_fix_assertion": true,
+    "initial_unassigned_loopback_fixture_error_not_counted": true,
+    "python39_socket_timeout_normalized": true,
+    "mac_cases": 33,
+    "mac_mutations_assertion_rejected": 26,
+    "vm_cases": 37,
+    "vm_mutations_assertion_rejected": 31,
+    "vm_six_source_hashes_verified": true,
+    "vm_private_network_namespace": true,
+    "vm_stopped": true,
+    "ast_four_files_ok": true,
+    "fatal_lint_existing_python312_ok": true,
+    "exact_nonce_ack_and_eof_required": true,
+    "ack_deadline_seconds": 3,
+    "source_sha256": {
+      "scripts/host/dns_activation.py": "513b3b79b6b560c083b17ee5f1b958cfcc58cd0eba1358ec5900a068bf7562c3",
+      "scripts/host/dns_privileged.py": "150be73f7ca85c320eaa068a184c18e5c237b7ee91b706f6e9c6e0994aff0f13",
+      "scripts/host/lan.py": "962d0b4f251c43cae9b6d105edaf529be02f929664f491c3599c7a29bdb7e7d7",
+      "scripts/host/device_profile.py": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb",
+      "tests/test_dns_activation.py": "4c894d07410337ac20aa3a871cd32c5892abfe36fd8540dc95f0419d791ef765",
+      "tests/run_dns_activation_mutations.py": "b1d3697879933a69fd0230c0f5f711e60240aac7e7ba5518a1185e1ca5708b59"
+    },
+    "corrected_native_helper_verified": true,
+    "corrected_native_helper_executed_after_auth": true,
+    "native_phone_dns53_verified": false,
+    "ci_verified": true,
+    "global_policy_changed": false,
+    "packages_installed_on_mac": false,
+    "ci": [
+      {
+        "headSha": "32c39d418ee42ebe9ba709573db07cc89af54106",
+        "event": "pull_request",
+        "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957114848",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "windows-dns",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957114848/job/110682428204"
+          },
+          {
+            "name": "source (ubuntu-24.04)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957114848/job/110682428339"
+          },
+          {
+            "name": "source (macos-15)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957114848/job/110682428421"
+          }
+        ]
+      },
+      {
+        "headSha": "32c39d418ee42ebe9ba709573db07cc89af54106",
+        "event": "push",
+        "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957110071",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "source (macos-15)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957110071/job/110682413472"
+          },
+          {
+            "name": "source (ubuntu-24.04)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957110071/job/110682413608"
+          },
+          {
+            "name": "windows-dns",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36957110071/job/110682413636"
+          }
+        ]
+      }
+    ],
+    "earlier_native_auth_sudo_v_expired_seconds": 90,
+    "focused_terminal_authenticated": true,
+    "native_data_after_helper_exit_udp_tcp_ok": true,
+    "native_nonce_peer_uid_gid_groups_validated": true,
+    "native_fd_private_directory_cleanup_ok": true,
+    "native_project53_or_ipv4_wildcard_count_after": 0,
+    "phone_dns_queried_in_standalone_test": false
+  }
+}
