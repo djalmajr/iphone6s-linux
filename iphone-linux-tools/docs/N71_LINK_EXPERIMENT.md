@@ -76,3 +76,49 @@ Os getters/registros novos compilaram Werror/modpost para a ABI baseline
 em diretório exclusivo; ELF/AArch64/vermagic foram conferidos e a fonte
 funcional permaneceu sem diff. Essa prova não permite carregar os mesmos
 binários no bundle: o rebuild correspondente ao Image novo ainda é exigido.
+
+## Coletor reproduzível do bundle
+
+O rebuild e a composição real passaram nos [gates do bundle](N71_KERNEL_BUNDLE.md).
+`scripts/host/n71-link-session.py` exige a ABI nova e os hashes dos módulos
+registrados; não seleciona o perfil padrão nem inicia DFU. Confira primeiro
+somente os arquivos locais:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-bundle-diagnostic-profile-20261003/deployment.json" \
+  --check
+```
+
+Depois de um boot explicitamente selecionado com snapshot restaurado e SSH/HTTP
+confirmados, execute em saída nova:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-bundle-diagnostic-profile-20261003/deployment.json" \
+  --output-dir "$PWD/runtime/NOVA-SESSAO-N71"
+```
+
+O coletor recusa diagnóstico PCIe prévio nesse boot, módulos já carregados,
+UART5/I2C1 ativos, ABI divergente e estado original diferente de80. Depois da
+aquisição, exige estado ativo/pendente e controle81 fresco; repete esses testes
+no aparelho imediatamente antes do único insmod PCIe. Amostra187 continua
+observação, sem gate elétrico. Logs são exclusivos e privados; repetir uma
+etapa não envia o comando outra vez. Não há autoload ou retry de treinamento.
+
+Falhas e timeout SSH passam por cleanup: reset/domínios PCIe precisam de
+registros positivos antes do unload; restore REG_ON precisa de readback80 e
+pendência zero antes de unload. Observação recusada não escreve o controle.
+O resultado privado distingue endpoint ausente, falha do experimento e cleanup
+não comprovado. Exit0 com link `-110` registra um experimento negativo concluído
+com restauração; não significa Wi-Fi habilitado. O script não reinicia o
+aparelho: depois do cleanup, conferir serviços e usar `return_ios.py`, que
+valida snapshot/sync antes do retorno. Se cleanup não passar, preservar logs
+e tratar a falha antes de continuar.
+
+Gates sintéticos, sem dispositivo ou dados privados:
+
+```sh
+python3 -m unittest discover -s tests -p test_n71_link_session.py
+python3 tests/run_n71_link_session_mutations.py
+```
