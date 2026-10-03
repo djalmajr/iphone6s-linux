@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "proof_scope": "public pinned Linux source and external module build only; no physical GPIO observation",
+  "proof_scope": "Pinned source/external module build plus read-only physical GPIO2 sampling and unload; no ownership, UART or telemetry proof",
   "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
   "kernel_release": "7.2.0-iphone6s-dart-serdev1",
   "source_files": {
@@ -45,8 +45,9 @@
     "vermagic": "7.2.0-iphone6s-dart-serdev1 SMP preempt mod_unload aarch64",
     "mac_hash_recalculated": true
   },
-  "physical_loaded": false,
+  "physical_loaded": true,
   "battery_telemetry_verified": false,
   "default_profile_changed": false,
-  "limits": "Read samples only. No acquisition, mux restoration, UART/SN2400 transaction, gauge ABI, rail or battery/charging proof."
+  "limits": "Read samples only. No acquisition, mux restoration, UART/SN2400 transaction, gauge ABI, rail or battery/charging proof.",
+  "physical_evidence": "n71-bundle-first-physical.json"
 }

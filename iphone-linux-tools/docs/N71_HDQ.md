@@ -290,5 +290,9 @@ de `insmod /run/n71-hdq-gpio-observe.ko run=1`. Exigir log
 o marcador `N71_HDQ_GPIO2_UNLOADED` e ausência do módulo em sysfs. Logs
 completos e observações do aparelho permanecem privados.
 
-Ainda não foi transferido ao telefone ou carregado; não contém autoload
-no initramfs nem altera os dois módulos selecionados do experimento PCIe.
+Foi transferido e carregado no mesmo boot do teste PCIe do bundle. As quatro
+leituras retornaram00072220; hardware mascarado270=220, stable1/cache-matches1.
+Unload e ausência do módulo foram confirmados. [Evidência física selecionada](evidence/n71-bundle-first-physical.json).
+Isso qualifica somente aquelas amostras; não demonstra owner, UART, handshake
+SN2400 ou sensor. Continua sem autoload no initramfs e sem alterar os dois
+módulos selecionados do experimento PCIe.

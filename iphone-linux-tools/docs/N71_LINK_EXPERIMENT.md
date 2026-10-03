@@ -70,7 +70,8 @@ Readback81 não mede tensão. Link/identidade não demonstram firmware, Wi-Fi,
 DART/DMA ou carga sustentada. Amostra0 não será rebatizada como1. Ausência
 de endpoint mantém a hipótese de alimentação, CLKREQ/PHY/reset ou outra
 sequência aberta; não autoriza copiar configuração elétrica de outra placa.
-Esse runbook prepara um experimento futuro, sem afirmar que já foi feito.
+A primeira execução física do bundle está registrada abaixo; a evidência histórica
+da baseline permanece separada.
 
 Os getters/registros novos compilaram Werror/modpost para a ABI baseline
 em diretório exclusivo; ELF/AArch64/vermagic foram conferidos e a fonte
@@ -122,3 +123,25 @@ Gates sintéticos, sem dispositivo ou dados privados:
 python3 -m unittest discover -s tests -p test_n71_link_session.py
 python3 tests/run_n71_link_session_mutations.py
 ```
+
+## Primeira execução física do bundle — 2026-10-03
+
+Uma sessão com um DFU manual confirmou a release selecionada, restore, Bash e
+HTTP. Controle914 foi80→81→80 com máscara1/readbacks e pendência zero ao final.
+O banco187 continuou20/bit2=0. Mesmo assim, o link passou: port88=00000005,
+error0 em12 leituras; endpoint43a314e4 (vendor14e4/device43a3), COMMAND com
+bus-master limpo. Isso confirma que aquela amostra0 não deve bloquear a
+descoberta de endpoint. Não mede tensão nem qualifica o banco como power-good.
+
+Reset/readback, liberação dos quatro domínios e unload foram confirmados. No
+mesmo boot, GPIO2 foi observado sem escrita; serviços continuaram respondendo.
+Snapshot/sync e retorno por software ao iOS passaram. Bateria iOS100→100 nesse
+intervalo não mede corrente ou carga sustentada. [Fatos selecionados e hashes
+dos logs privados](evidence/n71-bundle-first-physical.json).
+
+O próximo desenvolvimento é o host PCI: recursos/BARs, IRQ e DART precisam de
+contrato e cleanup antes de qualquer bus-master/rádio. A configuração atual
+tem BRCMFMAC como módulo, mas BRCMFMAC_PCIE está desativado; identidade do PCI
+ainda não seleciona revisão, firmware ou calibração. Agrupar novos gates numa
+candidata antes de pedir outro DFU; fazer fonte/builds/testes offline e atualizar
+módulos por SSH enquanto uma sessão útil estiver ativa.

@@ -400,3 +400,23 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Compilar e conferir modpost/ELF/ABI contra o bundle existente em novo diretórioM; transferir somente código público à VM, preservar Image/perfis/módulos selecionados. Esse observador poderá ser transferido via SSH no mesmo boot. CIe645715 passou37096238436/37096242452; o bloqueio físico segue sendo a ausência do iPhone no USB sem resposta de reconexão.
 - Gates: observador compilou Werror/modpost e checkpatch 0 erros/0 avisos (96 linhas). ELF64 little-endian relocatable AArch64/vermagic exato e SHA a243e094265871ec6bd5bc4743029e06aaed9d9925262f99ac29a8c891b6f4fa, 9240 bytes, conferidos na VM e no Mac. Fonte baseline sem diff; bundle checker passou; Image/config mantiveram SHA publicados. Sem carga do módulo no aparelho.
 - USB reapareceu durante a build: iPhone8,1/iOS15.8.8, bateria100%, chargingfalse/externaltrue/fullychargedtrue. Não é baseline imediatamente anterior ao boot ou prova de carga Linux. Pergunta de disponibilidade física atualizada, sem iniciar monitor antes da resposta.
+
+### Incremento 56 — primeiro link PCIe do bundle e GPIO2 no mesmo boot
+
+- Cinco arquivos documentais: evidência física agregada, evidência do observador,
+  runbooks LINK/HDQ e plano. Um DFU manual; kernel7.2.0-iphone6s-dart-serdev1,
+  restore44 entradas/Bash/HTTP passaram. REG_ON80→81→80/readbacks/owner e
+  pending0. Linkerror0/port88=5/12 leituras; endpoint43a314e4, bus-master limpo.
+  Reset/readback/domínios/unload passaram; sem hostPCI/DMA/firmware/rádio.
+- GPIO2 cache/hardware/hardware/cache=00072220, máscara270→220, sem escrita ou
+  aquisição. Todos os módulos ausentes e serviços respondendo ao fim. Snapshot,
+  sync e retorno softwareiOS passaram; percentual100→100 não comprova carga.
+- CI7735a1e passou37097188096/37097190542; execução do coletor e observador
+  terminouexit0. Reutilizar gates de código inalterado e verificar o delta
+  documental. Manter#9/#2/#34 abertos: hostPCI/BAR/IRQ/DART, firmware/scan e
+  UART/SN2400/gauge permanecem pendentes.
+- DecisãoD3: preparar contratos/host/driver e compilações offline; próximoDFU
+  somente para uma candidata que reúna novos gates de hardware. Porquê:
+  operador pediu mínimo de desbloqueios/reboots; link já tem prova suficiente.
+  Alternativa: repetir diagnóstico idêntico não acrescenta informação. Reverter
+  baixo, mantendo módulos externos/perfis separados e rollback. Em curso.
