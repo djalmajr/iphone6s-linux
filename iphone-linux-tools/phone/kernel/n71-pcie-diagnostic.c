@@ -178,6 +178,8 @@ static int n71_probe(struct platform_device *pdev)
 		if (!error)
 			dev_info(dev, "N71_PCIE_ENDPOINT_ID=%08x; bus-master clear; no radio\n", identity);
 		cleanup = n71_reset(&state, true);
+		if (!cleanup)
+			dev_info(dev, "N71_PCIE_RESET_RESTORED asserted=1 readback=1\n");
 		if (cleanup) {
 			dev_err(dev, "N71_PCIE_DIAGNOSTIC reset cleanup failed: %d\n", cleanup);
 			if (!error)
@@ -187,6 +189,9 @@ static int n71_probe(struct platform_device *pdev)
 done:
 	/* Reassert reset after enumeration and balance every power reference. */
 	cleanup = n71_release_power(&state);
+	if (!cleanup)
+		dev_info(dev, "N71_PCIE_POWER_RELEASED powered=%u attached=%u\n",
+			 state.powered, state.attached);
 	if (cleanup < 0) {
 		dev_err(dev, "N71_PCIE_DIAGNOSTIC power cleanup failed: %d\n", cleanup);
 		if (!error) {

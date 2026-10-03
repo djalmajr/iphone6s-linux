@@ -139,6 +139,26 @@ static int n71_state_get(char *buffer, const struct kernel_param *parameter)
 	return length;
 }
 
+/* Observe current hardware state; active/original alone can be stale. */
+static int n71_control_get(char *buffer, const struct kernel_param *parameter)
+{
+	unsigned char value = 0;
+	int error = -ENODEV;
+
+	mutex_lock(&control_lock);
+	if (owned_client)
+		error = n71_reg_on_read(owned_client, &value);
+	if (!error)
+		error = scnprintf(buffer, PAGE_SIZE, "N71_REG_ON_CONTROL_READBACK value=%02x\n",
+			(unsigned int)value);
+	mutex_unlock(&control_lock);
+	return error;
+}
+
+static const struct kernel_param_ops control_ops = {.get = n71_control_get};
+module_param_cb(control, &control_ops, NULL, 0400);
+MODULE_PARM_DESC(control, "Read current GPIO10 control under the existing owner and map locks");
+
 /* Apple's N71 GPIO read helper selects 0x180 + ((0x600 + pin*32)>>8),
  * bit(pin&7): GPIO10 uses register0x187/bit2. Read only; no set-mode call.
  */
