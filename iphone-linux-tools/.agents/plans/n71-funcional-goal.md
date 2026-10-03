@@ -442,3 +442,24 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Werror/modpost contraABIbundle, Image/config conservaram os hashes fixados.
   Lint inicialmente apontou dois alinhamentos; correção somente de espaços,
   com novo gate de compilação/lint. Nenhuma execução no telefone nesta fatia.
+
+### Incremento 58 — adapter opt-in do inventário e CI contínuo
+
+- Até cinco arquivos: diagnósticoC, CI, runbookLINK, evidência selecionada de
+  build e plano. config_inventory=1 somente comenumerate=1/run=1; apóslink
+  válido, gateport88 fresco antes de cada leitura de configuração. SemESCRITA
+  deconfig/BAR, sizing, MSIenable ouMMIOdoendpoint. CleanupPCIe existente
+  sempre executado depois do inventário; falha não publica campos parciais.
+- Default permanecefalse; Image/perfis/módulos já selecionados preservados.
+  Compilar módulo externo novo contraexportsbundlereais e conferirELF/ABI/SHA.
+  Registrar match4350 paraPCI-ID43a3 nafontefixada, seminferirrevisão/gauge
+  ouescolherfirmware. CI recebeasdezmutações. Coleta desseadapter aguardará
+  candidata queagrupe maisgates; nenhumDFUouPINsolicitadonestafatia.
+
+- Gate58: móduloexterno passouWerror/modpost, ELF64LE/REL/AArch64/vermagicbundle,
+  25216bytes/SHAbc960499519542d2016ed69726f8005660362cf3009f8785cfcbc97720f597e5.
+  Mac conferiuhash/ELF/ABI; collector --check confirma perfil antigo intacto.
+  Header e deltaadapter: checkpatch0erros/0warnings/0checks. MatchBCM4350
+  confirmado viafonte eSHAfixados, seminferirchiprev. Imagem/config preservados.
+  Ainda semtransferência oucarga física; próximo gate écoletores/host/DART e
+  preparar candidata agregada, não repetirDFU para esta entregaoffline.

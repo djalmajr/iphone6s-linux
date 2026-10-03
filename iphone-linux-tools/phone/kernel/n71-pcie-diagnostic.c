@@ -10,6 +10,7 @@
 #include <linux/pm_runtime.h>
 #include "n71-pcie-port.h"
 #include "n71-pcie-link.h"
+#include "n71-pcie-inventory.h"
 #include "n71-pcie-mmio.h"
 
 static bool run;
@@ -18,6 +19,47 @@ MODULE_PARM_DESC(run, "Explicitly run one N71 clock/reset diagnostic at probe");
 static bool enumerate;
 module_param(enumerate, bool, 0400);
 MODULE_PARM_DESC(enumerate, "Also train WLAN1 and read identity, without DMA or radio");
+static bool config_inventory;
+module_param(config_inventory, bool, 0400);
+MODULE_PARM_DESC(config_inventory, "Read bounded endpoint config after enumeration; no BAR sizing");
+
+static int n71_inventory_read32(void *context, u32 offset, u32 *value)
+{
+	struct n71_diagnostic *state = context;
+	u32 status;
+
+	if (!value || offset % 4 || offset > 0xfc)
+		return -EINVAL;
+	status = readl(state->port + 0x88);
+	if (status == 0xffffffff || !(status & 1))
+		return -ENOLINK;
+	*value = readl(state->ecam + 0x100000 + offset);
+	return 0;
+}
+
+static int n71_inventory_report(struct device *dev, struct n71_diagnostic *state)
+{
+	struct n71_pcie_inventory_io io = {state, n71_inventory_read32};
+	struct n71_pcie_inventory result;
+	unsigned int index;
+	int error;
+
+	error = n71_pcie_inventory_collect(&io, &result);
+	dev_info(dev, "N71_PCIE_INVENTORY_RESULT error=%d; no config writes\n", error);
+	if (error)
+		return error;
+	dev_info(dev, "N71_PCIE_INVENTORY class-revision=%08x header=%08x subsystem=%08x\n",
+		 result.class_revision, result.header, result.subsystem);
+	dev_info(dev, "N71_PCIE_INVENTORY command-status=%08x interrupt=%08x reads=%u caps=%u\n",
+		 result.command_status, result.interrupt, result.reads, result.capabilities);
+	for (index = 0; index < ARRAY_SIZE(result.bars); index++)
+		dev_info(dev, "N71_PCIE_BAR_RAW index=%u value=%08x; no sizing or MMIO access\n",
+			 index, result.bars[index]);
+	dev_info(dev, "N71_PCIE_CAP_RAW express=%02x/%08x msi=%02x/%08x msix=%02x/%08x\n",
+		 result.express_offset, result.express_header,
+		 result.msi_offset, result.msi_header, result.msix_offset, result.msix_header);
+	return 0;
+}
 
 static int n71_table(struct device *dev, const char *name, u32 size,
 		     struct n71_pcie_tunable **table, unsigned int *count)
@@ -177,6 +219,10 @@ static int n71_probe(struct platform_device *pdev)
 			 error, state.last_link_status, state.link_status_reads);
 		if (!error)
 			dev_info(dev, "N71_PCIE_ENDPOINT_ID=%08x; bus-master clear; no radio\n", identity);
+		if (!error && config_inventory) {
+			stage = "inventory";
+			error = n71_inventory_report(dev, &state);
+		}
 		cleanup = n71_reset(&state, true);
 		if (!cleanup)
 			dev_info(dev, "N71_PCIE_RESET_RESTORED asserted=1 readback=1\n");
@@ -217,6 +263,8 @@ static int __init n71_init(void)
 {
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
+	if (config_inventory && !enumerate)
+		return -EINVAL;
 	return platform_driver_register(&n71_driver);
 }
 module_init(n71_init);

@@ -145,3 +145,48 @@ tem BRCMFMAC como módulo, mas BRCMFMAC_PCIE está desativado; identidade do PCI
 ainda não seleciona revisão, firmware ou calibração. Agrupar novos gates numa
 candidata antes de pedir outro DFU; fazer fonte/builds/testes offline e atualizar
 módulos por SSH enquanto uma sessão útil estiver ativa.
+
+## Próxima candidata — inventário de configuração sem escrita
+
+O PCI-ID físico 43a3 é `BRCM_PCIE_4350_DEVICE_ID` na
+[fonte fixada dos IDs](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h).
+O [match do driver PCIe](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c)
+aponta para BCM4350. A seleção de firmware ainda depende do chip e da revisão
+internos, obtidos pelo driver após integrar BARs e host. O byte de revisão PCI
+não substitui essa identificação. Nada foi carregado no rádio.
+
+`n71-pcie-inventory.h` recebe somente um callback de leitura. Lê revisão,
+classe, header tipo 0, seis BARs brutos, subsystem, linha/pino de IRQ e headers
+convencionais PCIe/MSI/MSI-X. Não sonda BAR escrevendo FFFFFFFF, deduz tamanho
+ou endereço ativo, toca MMIO de BAR ou habilita interrupção. Limita 63 leituras
+de configuração, recusa ponteiros inválidos ou cíclicos, capacidades conhecidas
+duplicadas e identidade/COMMAND divergentes no final. Bus-master inicial
+bloqueia antes das outras leituras. A saída permanece intacta em qualquer recusa.
+
+O adapter é explícito: `config_inventory=1` exige `run=1 enumerate=1`. Depois
+do link, verifica port88 fresco antes de cada leitura. O diagnóstico mantém
+reset e domínios sob sua responsabilidade e executa cleanup também em falha do
+inventário. Ausência de MSI é informação, não autorização para fallback de IRQ.
+[O kernel documenta](https://docs.kernel.org/PCI/pci.html#device-initialization-steps)
+ativação, recursos, DMA e IRQ como passos próprios da inicialização.
+
+[Build e gates offline](evidence/n71-pcie-config-inventory.json) passaram em
+Mac e ARM64: erros em cada leitura, listas malformadas, mudanças tardias,
+limite de 63 leituras e dez mutações por asserção. O módulo novo compilou com
+Werror/modpost e os exports do bundle; ELF, vermagic e hash foram recalculados
+no Mac. Default false; Image, perfis e módulos físicos anteriores preservados.
+**O inventário ainda não foi carregado no telefone.** O coletor anterior fixa
+outro hash e não deve ser burlado.
+
+Para reproduzir os gates sem aparelho:
+
+```sh
+python3 -m unittest discover -s tests -p test_n71_pcie_inventory.py -v
+python3 tests/run_n71_pcie_inventory_mutations.py
+```
+
+O build externo segue [a receita do bundle](N71_KERNEL_BUNDLE.md), em novo M e
+com `vmlinux.symvers` exato; conferir o módulo antes de transferir. Uma futura
+coleta deverá selecionar manifesto, perfil e coletor compatíveis, com snapshot
+e restore verificados, e agrupar inventário com novos gates de host/DART/HDQ.
+Não pedir DFU só para confirmar fatos já obtidos.
