@@ -17,6 +17,11 @@ MUTATIONS = {
                     "require(True, 'Link read budget exceeded')"),
     'endpoint-validity': ("and identities[0] not in ('00000000', 'ffffffff'),", 'and True,'),
     'link-predicate': ('require(int(status, 16) & 1 and len(identities) == 1', 'require(len(identities) == 1'),
+    'inventory-budget': ('1 <= int(reads) <= 63', '1 <= int(reads) <= 64'),
+    'inventory-master': ('not (int(command, 16) & 4)', 'True'),
+    'inventory-bars': ('[int(index) for index, _ in bars] == list(range(6))', 'len(bars) == 6'),
+    'inventory-mode': ("' config_inventory=1' if self.config_inventory else ''", "''"),
+    'inventory-selection': ('if config_inventory:\n        evidence', 'if False:\n        evidence'),
 }
 
 

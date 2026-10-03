@@ -498,3 +498,27 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   address-cells3/size-cells2, mapperreg0 e DARTIRQ248 conferidos nas duas
   referências. LinuxRID/SID, BARs, IRQ, DMA e host continuam sem qualificação
   física. CI2f07194 passou37123788259; fonte/kernel/perfis preservados.
+
+### Incremento 61 — coletor explícito do inventário e candidata privada
+
+- Até cinco arquivos públicos: coletor `scripts/host/n71-link-session.py`,
+  testes e mutações correspondentes, guia `docs/N71_LINK_EXPERIMENT.md` e plano.
+  Acrescentar modo `--config-inventory` que exige o módulo novo registrado e
+  mantém os gates de perfil, ABI, REG_ON, reset e restauração existentes.
+- Validar resultado único, seis BARs ordenados, identidade PCI observada,
+  COMMAND sem bus-master e limites de leituras/capacidades antes de publicar
+  inventário privado. Falhas de parsing também precisam passar pelo cleanup.
+  O modo padrão conserva os artefatos anteriores.
+- Verificação: testes de contrato, injeção de resultados incompletos e mutações
+  reais; gate local dos dois perfis. Compor uma candidata privada com o módulo
+  novo, sem trocar Image, initramfs, DTB ou perfil padrão. Nenhum DFU nessa fase.
+- Decisão D4: continuar com preparação e builds offline; pedir intervenção
+  física somente quando a próxima candidata reunir inventário e novos gates
+  úteis. Alternativa: boot isolado só para o inventário aumentaria o trabalho
+  manual. Reversão baixa, por seleção explícita de perfil/módulo. Em curso.
+
+- Gate61: 14 testes passaram e as 12 mutações foram recusadas por asserção.
+  A primeira execução do runner revelou que o teste de manifesto buscava os
+  dados junto da cópia temporária; fixado o caminho da fixture, preservando a
+  função sob teste. Os gates locais dos perfis antigo e novo passaram. Payload,
+  initramfs e identidades permanecem idênticos; nenhuma ação no iPhone.

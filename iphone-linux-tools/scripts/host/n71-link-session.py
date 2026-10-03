@@ -35,10 +35,56 @@ def module_bytes(profile, record):
     return raw
 
 
+def selected_records(config_inventory):
+    records = json.loads((ROOT / 'docs/evidence/kernel-n71-bundle-build.json').read_text())['diagnostic_modules']['modules']
+    if config_inventory:
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-config-inventory.json').read_text())
+        require(evidence['kernel_release'] == RELEASE, 'Inventory ABI differs')
+        records = [dict(evidence['module'], module=record['module'])
+                   if record['module'] == 'n71-pcie-diagnostic.ko' else record for record in records]
+    return records
+
+
+def inventory_result(text):
+    def one(pattern):
+        matches = re.findall(pattern, text)
+        require(len(matches) == 1, 'Exactly one complete inventory record required')
+        return tuple(int(value, 16) for value in matches[0])
+
+    require(re.findall(r'N71_PCIE_INVENTORY_RESULT error=(-?\d+); no config writes', text) == ['0'],
+            'Successful unique inventory result required')
+    revision, header, subsystem = one(r'N71_PCIE_INVENTORY class-revision=([0-9a-f]{8}) header=([0-9a-f]{8}) subsystem=([0-9a-f]{8})')
+    matches = re.findall(r'N71_PCIE_INVENTORY command-status=([0-9a-f]{8}) interrupt=([0-9a-f]{8}) reads=(\d+) caps=(\d+)', text)
+    require(len(matches) == 1, 'Unique inventory counts required')
+    command, interrupt, reads, caps = matches[0]
+    require(not (int(command, 16) & 4) and not ((header >> 16) & 0x7f),
+            'Endpoint header and bus-master clear required')
+    require(1 <= int(reads) <= 63 and 1 <= int(caps) <= 48, 'Inventory budget differs')
+    bars = re.findall(r'N71_PCIE_BAR_RAW index=(\d+) value=([0-9a-f]{8}); no sizing or MMIO access', text)
+    require([int(index) for index, _ in bars] == list(range(6)), 'Six ordered unique raw BARs required')
+    capabilities = one(r'N71_PCIE_CAP_RAW express=([0-9a-f]{2})/([0-9a-f]{8}) msi=([0-9a-f]{2})/([0-9a-f]{8}) msix=([0-9a-f]{2})/([0-9a-f]{8})')
+    offsets = []
+    for index, expected in enumerate((0x10, 5, 0x11)):
+        offset, raw = capabilities[index * 2:index * 2 + 2]
+        require((index != 0 and offset == raw == 0) or
+                (0x40 <= offset <= (0xcc if index == 0 else 0xfc) and offset % 4 == 0
+                 and raw & 0xff == expected), 'Capability identity or bounds differ')
+        if offset:
+            offsets.append(offset)
+    require(len(offsets) == len(set(offsets)), 'Capability offsets overlap')
+    express = capabilities[1]
+    require((express >> 16) & 0xf and (express >> 20) & 0xf in (0, 1), 'PCIe endpoint capability required')
+    return {'class_revision': revision, 'header': header, 'subsystem': subsystem,
+            'command_status': int(command, 16), 'interrupt': int(interrupt, 16),
+            'reads': int(reads), 'capabilities': int(caps),
+            'bars_raw': [int(value, 16) for _, value in bars], 'capability_headers_raw': capabilities}
+
+
 class Session:
-    def __init__(self, output, modules):
+    def __init__(self, output, modules, *, config_inventory=False):
         self.output = output
         self.modules = modules
+        self.config_inventory = config_inventory
         self.ssh = device_profile.ssh_options() + ['root@' + device_profile.PHONE]
         self.reg_attempted = False
         self.activation_attempted = False
@@ -103,10 +149,11 @@ class Session:
                 'Fresh acquired latch not proved')
         # Repeat the fresh checks on the phone immediately before the single insmod.
         self.pcie_attempted = True
+        parameters = ' config_inventory=1' if self.config_inventory else ''
         p = self.capture('pcie', 'set -e; '
                          'test "$(cat ' + REG + 'state)" = "' + STATE_ACTIVE + '"; '
                          'test "$(cat ' + REG + 'control)" = "N71_REG_ON_CONTROL_READBACK value=81"; '
-                         'insmod /run/n71-pcie-diagnostic.ko run=1 enumerate=1; dmesg')
+                         'insmod /run/n71-pcie-diagnostic.ko run=1 enumerate=1' + parameters + '; dmesg')
         require(p.returncode == 0, 'PCIe command did not complete')
         matches = re.findall(r'N71_PCIE_LINK_RESULT error=(-?\d+) port88=([0-9a-f]+) reads=(\d+)', p.stdout)
         require(len(matches) == 1, 'Exactly one completed link result required')
@@ -120,6 +167,9 @@ class Session:
                     'Successful link lacks unique endpoint evidence')
             self.result['endpoint_identified'] = True
             self.result['endpoint_id'] = identities[0]
+        if self.config_inventory:
+            require(int(error) == 0 and identities == ['43a314e4'], 'Measured inventory endpoint required')
+            self.result['inventory'] = inventory_result(p.stdout)
 
     def cleanup(self):
         failures = []
@@ -178,6 +228,7 @@ def main():
     parser.add_argument('--profile', required=True, type=Path)
     parser.add_argument('--output-dir', type=Path)
     parser.add_argument('--check', action='store_true', help='Local gates only, no SSH')
+    parser.add_argument('--config-inventory', action='store_true', help='Require the separately recorded read-only inventory module')
     options = parser.parse_args()
     os.umask(0o077)
     os.environ['IPHONE_LINUX_PROFILE'] = str(options.profile.absolute())
@@ -188,7 +239,9 @@ def main():
     metadata = json.loads(provenance.read_text())
     require(metadata['kernel_release'] == RELEASE and metadata['kernel_patchset'] == 'n71-dart-serdev-v1'
             and metadata['payload_sha256'] == profile['sha256'], 'Selected profile provenance differs')
-    records = json.loads((ROOT / 'docs/evidence/kernel-n71-bundle-build.json').read_text())['diagnostic_modules']['modules']
+    records = selected_records(options.config_inventory)
+    if options.config_inventory:
+        require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record)) for record in records]
     if options.check:
         print('N71_SESSION_LOCAL_GATE_OK; no SSH or USB action')
@@ -199,7 +252,7 @@ def main():
             'Output must be new, directly under runtime')
     device_profile.protected(output.parent, directory=True)
     output.mkdir(mode=0o700)
-    return Session(output, modules).run()
+    return Session(output, modules, config_inventory=options.config_inventory).run()
 
 
 if __name__ == '__main__':

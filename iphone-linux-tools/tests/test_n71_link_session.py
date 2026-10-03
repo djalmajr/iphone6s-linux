@@ -22,10 +22,18 @@ OBSERVE = ('N71_REG_ON_PARENT simple-mfd-i2c shared-regmap; no rebind\n'
 ACTIVE = MODULE.STATE_ACTIVE + '\nN71_REG_ON_CONTROL_READBACK value=81\nN71_REG_ON_LEVEL raw=20 bit2=0\n'
 RESTORE = 'bound=1 active=0 restore_pending=0 original=80\nN71_REG_ON_CONTROL_READBACK value=80\n'
 CLEANUP = 'N71_PCIE_RESET_RESTORED asserted=1 readback=1\nN71_PCIE_POWER_RELEASED powered=0 attached=0\n'
+LINK = ('N71_PCIE_LINK_RESULT error=0 port88=00000005 reads=12\n'
+        'N71_PCIE_ENDPOINT_ID=43a314e4; bus-master clear; no radio\n')
+INVENTORY = ('N71_PCIE_INVENTORY_RESULT error=0; no config writes\n'
+             'N71_PCIE_INVENTORY class-revision=02800001 header=00000000 subsystem=0000106b\n'
+             'N71_PCIE_INVENTORY command-status=00100002 interrupt=000001ff reads=19 caps=3\n'
+             + ''.join('N71_PCIE_BAR_RAW index=' + str(index) + ' value=00000000; no sizing or MMIO access\n'
+                       for index in range(6))
+             + 'N71_PCIE_CAP_RAW express=40/00025010 msi=50/00806005 msix=60/00000011\n')
 
 
 class LinkSessionTests(unittest.TestCase):
-    def run_session(self, overrides=None):
+    def run_session(self, overrides=None, *, config_inventory=False):
         replies = {'observe': OBSERVE, 'activate': ACTIVE,
                    'pcie': 'N71_PCIE_LINK_RESULT error=-110 port88=0000880c reads=10000\n',
                    'pcie-cleanup': CLEANUP, 'pcie-unload': 'N71_PCIE_UNLOADED\n',
@@ -35,7 +43,7 @@ class LinkSessionTests(unittest.TestCase):
         calls = []
         with tempfile.TemporaryDirectory() as folder:
             with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
-                session = MODULE.Session(Path(folder), [])
+                session = MODULE.Session(Path(folder), [], config_inventory=config_inventory)
 
             def capture(stage, command, raw=None):
                 calls.append((stage, command))
@@ -135,6 +143,60 @@ class LinkSessionTests(unittest.TestCase):
                     session.capture('once', 'true')
                 self.assertEqual(call.call_count, 1)
             self.assertIn('SSH_TIMEOUT', (Path(folder) / 'once-private.log').read_text())
+
+    def test_inventory_opt_in_selects_the_new_hash_only(self):
+        with patch.object(MODULE, 'ROOT', ROOT):
+            original = MODULE.selected_records(False)
+            selected = MODULE.selected_records(True)
+        self.assertEqual([record['module'] for record in selected], [record['module'] for record in original])
+        self.assertNotEqual(selected[0]['sha256'], original[0]['sha256'])
+        self.assertEqual(selected[1], original[1])
+
+    def test_inventory_requires_mode_identity_and_full_private_result(self):
+        code, result, calls = self.run_session({'pcie': LINK + INVENTORY}, config_inventory=True)
+        self.assertEqual(code, 0)
+        self.assertIn('enumerate=1 config_inventory=1;', calls['pcie'])
+        self.assertEqual(result['inventory']['bars_raw'], [0] * 6)
+        self.assertEqual(result['inventory']['reads'], 19)
+        self.assertFalse(result['dma_enabled'])
+        self.assertFalse(result['wifi_verified'])
+        _, result, calls = self.run_session({'pcie': LINK})
+        self.assertNotIn('config_inventory=', calls['pcie'])
+        self.assertNotIn('inventory', result)
+        for altered in (LINK.replace('43a314e4', '43b114e4') + INVENTORY, LINK,
+                        LINK.replace('error=0', 'error=-110') + INVENTORY):
+            code, result, calls = self.run_session({'pcie': altered}, config_inventory=True)
+            self.assertEqual(code, 1)
+            self.assertNotIn('inventory', result)
+            self.assertTrue(result['cleanup_verified'])
+            self.assertIn('reg-unload', calls)
+
+    def test_incomplete_or_unqualified_inventory_still_cleans_up(self):
+        altered = [INVENTORY.replace('error=0;', 'error=-5;'), INVENTORY + INVENTORY,
+                   INVENTORY.replace('reads=19', 'reads=64'), INVENTORY.replace('caps=3', 'caps=49'),
+                   INVENTORY.replace('command-status=00100002', 'command-status=00100006'),
+                   INVENTORY.replace('header=00000000', 'header=00010000'),
+                   INVENTORY.replace('index=5', 'index=4'), INVENTORY.replace('index=5', 'index=6'),
+                   INVENTORY.replace('express=40', 'express=41'),
+                   INVENTORY.replace('express=40', 'express=d0'),
+                   INVENTORY.replace('00025010', '00025005'),
+                   INVENTORY.replace('00025010', '00625010'),
+                   INVENTORY.replace('00025010', '00005010'),
+                   INVENTORY.replace('msi=50/00806005', 'msi=00/00806005'),
+                   INVENTORY.replace('msi=50/00806005', 'msi=40/00806005'),
+                   INVENTORY.replace('msix=60/00000011', 'msix=60/00000005')]
+        for text in altered:
+            with self.subTest(text=text):
+                code, result, calls = self.run_session({'pcie': LINK + text}, config_inventory=True)
+                self.assertEqual(code, 1)
+                self.assertNotIn('inventory', result)
+                self.assertTrue(result['cleanup_verified'])
+                self.assertIn('pcie-unload', calls)
+                self.assertIn('reg-unload', calls)
+
+    def test_inventory_accepts_absent_optional_interrupt_capabilities(self):
+        text = INVENTORY.replace('msi=50/00806005 msix=60/00000011', 'msi=00/00000000 msix=00/00000000')
+        self.assertEqual(MODULE.inventory_result(text)['capability_headers_raw'][2:], (0, 0, 0, 0))
 
 
 if __name__ == '__main__':

@@ -175,8 +175,28 @@ Mac e ARM64: erros em cada leitura, listas malformadas, mudanças tardias,
 limite de 63 leituras e dez mutações por asserção. O módulo novo compilou com
 Werror/modpost e os exports do bundle; ELF, vermagic e hash foram recalculados
 no Mac. Default false; Image, perfis e módulos físicos anteriores preservados.
-**O inventário ainda não foi carregado no telefone.** O coletor anterior fixa
-outro hash e não deve ser burlado.
+**O inventário ainda não foi carregado no telefone.** O modo padrão do coletor
+continua fixando o módulo físico anterior. O modo `--config-inventory` seleciona
+o hash novo registrado, exige sua procedência no perfil e valida o resultado
+completo: endpoint observado, COMMAND sem bus-master, seis BARs ordenados,
+headers das capacidades e orçamento de leitura. Saída incompleta ou duplicada
+recusa o experimento e executa o mesmo cleanup. Não habilita host, DMA ou rádio.
+
+A candidata privada foi composta mantendo payload, initramfs, DTB e identidades
+do perfil físico anterior byte a byte; só o módulo externo selecionado mudou.
+O gate local não acessa USB nem SSH:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-inventory-candidate-20261003/deployment.json" \
+  --config-inventory --check
+```
+
+Depois do próximo boot agrupado, com serviços e restauração confirmados, usar
+o mesmo comando substituindo `--check` por `--output-dir` em diretório novo.
+Não executar os dois modos no mesmo boot: o coletor recusa diagnóstico prévio.
+Os 14 testes do coletor e 12 mutações executadas provam os contratos sintéticos;
+não representam uma coleta física do inventário.
 
 Para reproduzir os gates sem aparelho:
 
@@ -187,7 +207,7 @@ python3 tests/run_n71_pcie_inventory_mutations.py
 
 O build externo segue [a receita do bundle](N71_KERNEL_BUNDLE.md), em novo M e
 com `vmlinux.symvers` exato; conferir o módulo antes de transferir. Uma futura
-coleta deverá selecionar manifesto, perfil e coletor compatíveis, com snapshot
+coleta deve selecionar manifesto, perfil e coletor compatíveis, com snapshot
 e restore verificados, e agrupar inventário com novos gates de host/DART/HDQ.
 Não pedir DFU só para confirmar fatos já obtidos.
 
