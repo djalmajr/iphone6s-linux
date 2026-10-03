@@ -84,6 +84,41 @@ python3 tests/run_kernel_bundle_mutations.py
 Objetos não provam Image, exports linkados/modpost ou comportamento elétrico.
 Antes de qualquer deployment, faltam build completo, configuração embutida,
 validação de ABI/artefatos, rebuild dos módulos, perfil separado e gate de
-boot físico. A receita/integrador legado ainda não aceita este bundle.
+boot físico. A receita de build legado ainda não aceita este bundle.
 UART5/I2C1 continuam desativados; ownership GPIO2/clocks, cleanup SN2400 e
 identificação do gauge seguem em [desenvolvimento HDQ](N71_HDQ.md).
+
+## Integração preparada, dependente de Image completo
+
+O integrador agora aceita seleção explícita
+`--kernel-patchset n71-dart-serdev-v1`. Exige um registro separado
+`docs/evidence/kernel-n71-bundle-build.json` com status `compiled_verified`,
+Image, modpost e export serdev conferidos, base/patches/quatro blobs fixados,
+release `7.2.0-iphone6s-dart-serdev1` e configuração embutida correspondente.
+Enquanto esse registro de build completo estiver ausente, a integração
+real é recusada; o registro de objetos acima não serve como substituto.
+
+DART, serdev e seu adapterTTY devem estar incorporados. O initramfs não
+pode trazer módulos extras da ABI anterior: arquivos sob `lib/modules/` e
+módulos `.ko` ou comprimidos são recusados antes de criar saída. O NCM legado
+conhecido pode ser retirado pela migração existente para builtin. Demais
+entradas, identidades e perfil original permanecem preservados.
+
+Depois dos gates reais e usando uma pasta privada nova:
+
+```sh
+python3 scripts/build/integrate-source-kernel.py \
+  --kernel-patchset n71-dart-serdev-v1 \
+  --kernel-dir "$PWD/runtime/BUNDLE-ARTEFATOS-VERIFICADOS" \
+  --output-dir "$PWD/runtime/BUNDLE-PERFIL-NOVO"
+```
+
+`IPHONE_LINUX_PROFILE` deve apontar para o perfil anterior a preservar.
+Esse comando prepara um perfil local; não faz USB/DFU ou escolhe o perfil
+padrão. A composição diagnóstica, rebuild dos módulos e prova física da
+ABI nova ainda precisam de fases próprias.
+
+Gates sintéticos do integrador: 14 testes e 19 mutações por asserção no
+Mac/ARM64. Na VM, dois timeouts durante a compilação foram tratados como
+interrupções; os casos pendentes passaram após reduzir a prioridade do
+build e usar a espera limitada do runner. Nenhum timeout contou como kill.

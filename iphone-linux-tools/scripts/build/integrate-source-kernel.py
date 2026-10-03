@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / 'scripts/build'))
 import device_profile
 import profile_image
 import kernel_patchset
+import kernel_bundle
 
 OLD_LOAD = b'insmod /lib/modules/usb_f_ncm.ko || echo "usb_f_ncm module load failed"\n'
 BUILTIN_LOAD = b'echo "USB NCM built into source kernel"\n'
@@ -36,7 +37,7 @@ def decompress(data):
     return raw
 
 
-def migrate(raw):
+def migrate(raw, *, forbid_extra_modules=False):
     before = profile_image.records(raw)
     old = before['init']
     legacy = old.count(OLD_LOAD) == 1 and BUILTIN_LOAD not in old
@@ -54,6 +55,10 @@ def migrate(raw):
         content = (offset + 110 + namesize + 3) & ~3
         offset = (content + size + 3) & ~3
         normalized = str(PurePosixPath(name))
+        if forbid_extra_modules and normalized != MODULE:
+            under_modules = normalized.startswith('lib/modules/') and fields[1] & 0o170000 != 0o040000
+            if under_modules or normalized.endswith(('.ko', '.ko.gz', '.ko.xz', '.ko.zst')):
+                raise ValueError('Bundle com ABI nova exige initramfs sem módulos extras da ABI anterior.')
         if normalized == MODULE:
             if fields[1] not in (0o100600, 0o100644) or fields[4] != 1:
                 raise ValueError('Módulo NCM não é um arquivo regular conhecido.')
@@ -79,13 +84,29 @@ def migrate(raw):
 
 
 def kernel_inputs(folder, patchset=None):
-    if patchset not in (None, kernel_patchset.PATCHSET):
+    if patchset not in (None, kernel_patchset.PATCHSET, kernel_bundle.BUNDLE):
         raise ValueError('Patchset de integração desconhecido.')
-    record_name = 'kernel-dart-build.json' if patchset else 'kernel-source-build.json'
+    bundle = patchset == kernel_bundle.BUNDLE
+    record_name = ('kernel-n71-bundle-build.json' if bundle else
+                   ('kernel-dart-build.json' if patchset else 'kernel-source-build.json'))
     record = json.loads((ROOT / 'docs/evidence' / record_name).read_text())
     if record['status'] != 'compiled_verified' or record['build']['exit_code'] != 0:
         raise ValueError('Registro público exige kernel compilado e verificado.')
-    if patchset:
+    if bundle:
+        source = record['source']
+        if record['build'].get('full_image_linked') is not True or record['build'].get('vmlinux_modpost_verified') is not True:
+            raise ValueError('Bundle exige Image completo e modpost conferidos.')
+        if source['commit'] != kernel_bundle.BASE:
+            raise ValueError('Base do bundle de integração divergente.')
+        if source['bundle'] != kernel_bundle.BUNDLE or source['required_localversion'] != kernel_bundle.LOCALVERSION:
+            raise ValueError('Identidade do bundle de integração divergente.')
+        if source['patches'] != kernel_bundle.PATCHES or source['files'] != {key: list(value) for key, value in kernel_bundle.FILES.items()}:
+            raise ValueError('Patches ou blobs do bundle de integração divergentes.')
+        if record['build']['kernel_release'] != '7.2.0' + kernel_bundle.LOCALVERSION:
+            raise ValueError('Release do bundle exige ABI distinta.')
+        if record['build'].get('serdev_stop_bits_export_verified') is not True:
+            raise ValueError('Bundle exige export serdev conferido no kernel linkado.')
+    elif patchset:
         source = record['source']
         if source['commit'] != kernel_patchset.BASE:
             raise ValueError('Base do patchset de integração divergente.')
@@ -115,6 +136,12 @@ def kernel_inputs(folder, patchset=None):
             raise ValueError('Configuração obrigatória do kernel ausente.')
     if patchset and 'CONFIG_APPLE_DART=y' not in config:
         raise ValueError('Patchset DART exige driver incorporado no kernel.')
+    if bundle:
+        required = (f'CONFIG_LOCALVERSION="{kernel_bundle.LOCALVERSION}"',
+                    '# CONFIG_LOCALVERSION_AUTO is not set',
+                    'CONFIG_SERIAL_DEV_BUS=y', 'CONFIG_SERIAL_DEV_CTRL_TTYPORT=y')
+        if any(line not in config for line in required):
+            raise ValueError('Bundle exige identidade explícita e serdev incorporado.')
     if 'apple,n71' not in record['build']['dtb_compatible'].split():
         raise ValueError('Registro público não identifica N71.')
     return blobs, record
@@ -137,7 +164,8 @@ def integrate(options):
     expected = json.loads((ROOT / 'docs/evidence/m1n1-rebuild.json').read_text())['shallow_clone']
     if not expected['matches_original'] or digest(m1n1) != expected['sha256']:
         raise ValueError('Hash do m1n1 preservado inesperado.')
-    raw, changes = migrate(decompress(source['initramfs'].read_bytes()))
+    raw, changes = migrate(decompress(source['initramfs'].read_bytes()),
+                           forbid_extra_modules=options.kernel_patchset == kernel_bundle.BUNDLE)
     compressed = gzip.compress(raw, compresslevel=9, mtime=0)
     payload = m1n1 + BOOTARGS + blobs['s8000-n71.dtb'] + blobs['Image.gz'] + compressed
     os.umask(0o077)
@@ -178,7 +206,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--kernel-dir', required=True, type=Path)
     parser.add_argument('--output-dir', required=True, type=Path)
-    parser.add_argument('--kernel-patchset', choices=(kernel_patchset.PATCHSET,))
+    parser.add_argument('--kernel-patchset', choices=(kernel_patchset.PATCHSET, kernel_bundle.BUNDLE))
     options = parser.parse_args()
     try:
         integrate(options)

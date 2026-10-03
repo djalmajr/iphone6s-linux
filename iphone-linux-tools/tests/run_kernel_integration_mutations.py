@@ -1,4 +1,5 @@
 """Exercise integration guards in disposable synthetic projects, never devices."""
+import argparse
 import os
 from pathlib import Path
 import subprocess
@@ -23,40 +24,60 @@ MUTATIONS = [
     ('patchset-identity', "if source['patchset'] != patchset or source['patch_sha256'] != kernel_patchset.PATCH_SHA:",
      'if False:'),
     ('patchset-builtin-dart', "if patchset and 'CONFIG_APPLE_DART=y' not in config:", 'if False:'),
+    ('bundle-full-link', "if record['build'].get('full_image_linked') is not True or record['build'].get('vmlinux_modpost_verified') is not True:",
+     'if False:'),
+    ('bundle-base', "if source['commit'] != kernel_bundle.BASE:", 'if False:'),
+    ('bundle-identity', "if source['bundle'] != kernel_bundle.BUNDLE or source['required_localversion'] != kernel_bundle.LOCALVERSION:",
+     'if False:'),
+    ('bundle-pinned-sources', "if source['patches'] != kernel_bundle.PATCHES or source['files'] != {key: list(value) for key, value in kernel_bundle.FILES.items()}:",
+     'if False:'),
+    ('bundle-release', "if record['build']['kernel_release'] != '7.2.0' + kernel_bundle.LOCALVERSION:",
+     'if False:'),
+    ('bundle-export', "if record['build'].get('serdev_stop_bits_export_verified') is not True:",
+     'if False:'),
+    ('bundle-config', 'if any(line not in config for line in required):', 'if False:'),
+    ('bundle-old-module', 'if forbid_extra_modules and normalized != MODULE:', 'if False:'),
 ]
 
 
-def run(source=None):
+def run(source=None, *, timeout=60):
     environment = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')
     environment.pop('KERNEL_INTEGRATION_SCRIPT', None)
     if source is not None:
         environment['KERNEL_INTEGRATION_SCRIPT'] = str(source)
     return subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', str(ROOT / 'tests'),
                            '-p', 'test_kernel_integration.py', '-v'], env=environment,
-                          capture_output=True, text=True, timeout=60)
+                          capture_output=True, text=True, timeout=timeout)
 
 
 def main():
-    baseline = run()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--mutation', action='append', choices=[item[0] for item in MUTATIONS],
+                        help='Run only named mutations when retrying an interrupted gate.')
+    parser.add_argument('--test-timeout', type=int, choices=(60, 120, 180), default=60,
+                        help='Bounded suite timeout for a VM sharing resources with a build.')
+    options = parser.parse_args()
+    selected = [item for item in MUTATIONS if not options.mutation or item[0] in options.mutation]
+    baseline = run(timeout=options.test_timeout)
     if baseline.returncode:
         print(baseline.stderr, file=sys.stderr)
         return 1
     text = SOURCE.read_text()
     with tempfile.TemporaryDirectory(prefix='kernel-integration-mutations-') as work:
-        for name, before, after in MUTATIONS:
+        for name, before, after in selected:
             if text.count(before) != 1:
                 raise ValueError('Mutation anchor changed: ' + name)
             path = Path(work) / (name + '.py')
             path.write_text(text.replace(before, after, 1))
             compile(path.read_text(), str(path), 'exec')
-            result = run(path)
+            result = run(path, timeout=options.test_timeout)
             if (not result.returncode or 'FAIL:' not in result.stderr
                     or 'AssertionError' not in result.stderr or 'ERROR:' in result.stderr):
                 print('SURVIVED_OR_INFRA_ERROR ' + name, file=sys.stderr)
                 print(result.stderr, file=sys.stderr)
                 return 1
             print('KILLED ' + name)
-    print(f'KERNEL_INTEGRATION_MUTATIONS_OK {len(MUTATIONS)}/{len(MUTATIONS)}')
+    print(f'KERNEL_INTEGRATION_MUTATIONS_OK {len(selected)}/{len(selected)}')
     return 0
 
 

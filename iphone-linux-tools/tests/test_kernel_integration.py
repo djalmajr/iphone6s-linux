@@ -46,6 +46,8 @@ class KernelIntegrationTests(unittest.TestCase):
         shutil.copyfile(SCRIPT, self.script)
         shutil.copyfile(ROOT / 'scripts/build/kernel_patchset.py',
                         self.root / 'scripts/build/kernel_patchset.py')
+        shutil.copyfile(ROOT / 'scripts/build/kernel_bundle.py',
+                        self.root / 'scripts/build/kernel_bundle.py')
         for name in ('device_profile.py', 'profile_image.py'):
             shutil.copyfile(ROOT / 'scripts/host' / name, self.root / 'scripts/host' / name)
         self.source = self.root / 'runtime/source'
@@ -183,6 +185,100 @@ class KernelIntegrationTests(unittest.TestCase):
         result = self.run_cli('n71-dart-tcr-v1')
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertFalse(self.output.exists())
+
+    def save_bundle_record(self):
+        public_source = json.loads((ROOT / 'docs/evidence/kernel-n71-bundle.json').read_text())['source']
+        self.bundle_record = json.loads(json.dumps(self.record))
+        self.bundle_record['source'] = {
+            'commit': '958481f87fee0949ff6a9a4af77f7eb6dac8a149',
+            'bundle': 'n71-dart-serdev-v1', 'required_localversion': '-iphone6s-dart-serdev1',
+            'patches': public_source['patches'], 'files': public_source['files']}
+        self.bundle_record['build'].update(kernel_release='7.2.0-iphone6s-dart-serdev1',
+                                            full_image_linked=True, vmlinux_modpost_verified=True,
+                                            serdev_stop_bits_export_verified=True)
+        image = (self.kernel / 'Image').read_bytes() + b'BUNDLE_IMAGE_NONBOOTABLE_SENTINEL'
+        self.save(self.kernel / 'Image', image)
+        self.save(self.kernel / 'Image.gz', gzip.compress(image, mtime=0))
+        config = (self.kernel / 'config').read_bytes() + (
+            b'CONFIG_APPLE_DART=y\nCONFIG_SERIAL_DEV_BUS=y\nCONFIG_SERIAL_DEV_CTRL_TTYPORT=y\n'
+            b'CONFIG_LOCALVERSION="-iphone6s-dart-serdev1"\n# CONFIG_LOCALVERSION_AUTO is not set\n')
+        for name in ('config', 'config-embedded'):
+            self.save(self.kernel / name, config)
+        self.update_bundle_record()
+
+    def update_bundle_record(self):
+        self.bundle_record['build']['outputs'] = {
+            name: {'sha256': hashlib.sha256((self.kernel / name).read_bytes()).hexdigest(),
+                   'bytes': (self.kernel / name).stat().st_size}
+            for name in ('Image', 'Image.gz', 's8000-n71.dtb', 'config', 'config-embedded')}
+        (self.root / 'docs/evidence/kernel-n71-bundle-build.json').write_text(json.dumps(self.bundle_record))
+
+    def test_bundle_requires_explicit_selection_preserving_profile_and_legacy_record(self):
+        baseline_record = (self.root / 'docs/evidence/kernel-source-build.json').read_bytes()
+        self.save_bundle_record()
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(self.output.exists())
+        result = self.run_cli('n71-dart-serdev-v1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        provenance = json.loads((self.output / 'provenance.json').read_text())
+        self.assertEqual(provenance['kernel_patchset'], 'n71-dart-serdev-v1')
+        self.assertEqual(provenance['kernel_release'], '7.2.0-iphone6s-dart-serdev1')
+        self.assertFalse(provenance['physical_boot_tested'])
+        self.assertFalse(provenance['default_payload_changed'])
+        self.assertEqual((self.output / 'client_ed25519').read_bytes(), (self.source / 'client').read_bytes())
+        self.assertEqual((self.output / 'known_hosts').read_bytes(), (self.source / 'known_hosts').read_bytes())
+        self.assertEqual((self.source / 'deployment.json').read_bytes(), json.dumps(self.profile).encode())
+        self.assertEqual((self.root / 'docs/evidence/kernel-source-build.json').read_bytes(), baseline_record)
+        self.assertNotIn('lib/modules/usb_f_ncm.ko', archive_chunks(
+            gzip.decompress((self.output / 'initramfs.gz').read_bytes())))
+
+    def test_bundle_rejects_inconsistent_source_full_link_and_release(self):
+        self.save_bundle_record()
+        original = json.loads(json.dumps(self.bundle_record))
+        changes = [('source', key, 'altered') for key in ('commit', 'bundle', 'required_localversion')]
+        changes += [('source', 'patches', {}), ('source', 'files', {})]
+        changes += [('build', key, False) for key in (
+            'full_image_linked', 'vmlinux_modpost_verified', 'serdev_stop_bits_export_verified')]
+        changes += [('build', 'kernel_release', '7.2.0-iphone6s-source')]
+        for section, key, value in changes:
+            with self.subTest(section=section, key=key):
+                self.bundle_record = json.loads(json.dumps(original))
+                self.bundle_record[section][key] = value
+                self.update_bundle_record()
+                result = self.run_cli('n71-dart-serdev-v1')
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertFalse(self.output.exists())
+
+    def test_bundle_requires_distinct_embedded_config_and_builtin_serdev(self):
+        self.save_bundle_record()
+        original = (self.kernel / 'config').read_bytes()
+        for before, after in (
+                (b'-iphone6s-dart-serdev1', b'-iphone6s-source'),
+                (b'# CONFIG_LOCALVERSION_AUTO is not set', b'CONFIG_LOCALVERSION_AUTO=y'),
+                (b'CONFIG_SERIAL_DEV_BUS=y', b'CONFIG_SERIAL_DEV_BUS=m'),
+                (b'CONFIG_SERIAL_DEV_CTRL_TTYPORT=y', b'CONFIG_SERIAL_DEV_CTRL_TTYPORT=m')):
+            with self.subTest(before=before):
+                config = original.replace(before, after)
+                for name in ('config', 'config-embedded'):
+                    self.save(self.kernel / name, config)
+                self.update_bundle_record()
+                result = self.run_cli('n71-dart-serdev-v1')
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertFalse(self.output.exists())
+
+    def test_bundle_refuses_old_modules_before_creating_output(self):
+        self.save_bundle_record()
+        original = list(self.members)
+        for name in ('lib/modules/n71-diagnostic.ko', 'run/n71-diagnostic.ko.gz',
+                     'lib/modules/modules.dep', 'lib/modules/nested/driver.ko.zst'):
+            with self.subTest(name=name):
+                self.members = original + [{'name': name, 'mode': stat.S_IFREG | 0o600,
+                                             'body': b'OLD_KERNEL_ABI_SENTINEL'}]
+                self.save_source()
+                result = self.run_cli('n71-dart-serdev-v1')
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertFalse(self.output.exists())
 
     def refuse(self):
         result = self.run_cli()
