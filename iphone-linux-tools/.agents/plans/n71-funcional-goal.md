@@ -522,3 +522,38 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   dados junto da cópia temporária; fixado o caminho da fixture, preservando a
   função sob teste. Os gates locais dos perfis antigo e novo passaram. Payload,
   initramfs e identidades permanecem idênticos; nenhuma ação no iPhone.
+
+### Incremento 62 — driver Wi-Fi PCIe como conjunto externo reproduzível
+
+- Até cinco arquivos: builder Python em `scripts/build/`, seu teste, runner
+  de mutações, evidência selecionada de build e este plano. Auditar na fonte
+  fixada todos os usos das opções PCIe/MSGBUF; recusar uso fora do pacote
+  brcmfmac ou divergência da configuração/Image/exports do bundle.
+- Copiar rfkill, cfg80211 e brcm80211 para saída exclusiva da VM ARM64;
+  compilar nessa ordem com Werror e modpost fatal, transmitindo exports das
+  dependências. Habilitar PCIe/MSGBUF somente no Kbuild e nas unidades do
+  pacote Broadcom copiado, mantendo SDIO e a configuração do kernel.
+- Exigir ELF AArch64/ABI exata, alias PCI 14e4:43a3, dependências resolvidas e
+  transporte PCIe/MSGBUF realmente ligado. Recalcular hashes no Mac; conferir
+  fonte, Image e configuração ao fim. Não instalar ou carregar módulos.
+- Verificação: recusas de configuração/escopo e mutações em cópias descartáveis,
+  build nativa real na VM e gates de artefatos. Sem nova instalação no macOS,
+  sem DFU. Firmware, host PCI, BAR/IRQ e DMA continuam gates físicos futuros.
+- Decisão D5: módulos externos do mesmo bundle, pois os dois símbolos novos
+  aparecem apenas nos headers internos do brcmfmac e em seu Makefile/Kconfig.
+  Alternativa: novo Image exigiria mais armazenamento e reinicialização sem
+  necessidade para esta compilação. Reversão baixa: artefatos ficam privados
+  e não são selecionados automaticamente. Em curso, sujeita ao modpost real.
+
+- Gate62: receita nativa terminou exit0; oito módulos passaram Werror/modpost,
+  ELF/ABI e dependências completas. PCIe/MSGBUF têm símbolos T ligados e alias
+  14e4:43a3/classe02:80. Hashes/ELF/ABI recalculados no Mac; fonte, Image,
+  configuração e exports conservaram os hashes fixados. Sem instalação/carga.
+- Oito testes e 13 mutações passaram em Mac e ARM64. A primeira build recusou
+  o alias esperado amplo demais; confirmado o filtro de classe upstream e
+  corrigido o gate, sem mudar a tabela. A primeira rodada ARM de mutações
+  revelou que um diretório de fixture criado com umask002 escondia a mutação
+  de escopo; fixado modo700 e repetidos os gates, todos por asserção.
+- Coletor61: CI push37145008066 e PR37145010530 passaram. Não há type checker
+  Python configurado; AST passou. Os gates de lint do novo builder entram no
+  CI da próxima fatia documental; não representar esta compilação como Wi-Fi.
