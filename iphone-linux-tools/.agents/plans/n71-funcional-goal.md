@@ -420,3 +420,25 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   operador pediu mínimo de desbloqueios/reboots; link já tem prova suficiente.
   Alternativa: repetir diagnóstico idêntico não acrescenta informação. Reverter
   baixo, mantendo módulos externos/perfis separados e rollback. Em curso.
+
+### Incremento 57 — inventário de configuração PCI sem I/O de escrita
+
+- Cinco arquivos no máximo: header de leitura, harnessC, unittestPython, runner
+  de mutações e plano. PCI-ID medido43a314e4; ler revisão/class/header, seis
+  BARs brutos, subsystem, linha/pinoIRQ e lista convencional de capacidades.
+  Exigir headerendpoint, identidade estável e COMMAND sembus-master antes/depois;
+  offsets/alinhamento/lista semciclos e orçamento limitado. Não sondar tamanho
+  deBAR comFFFFFFFF, tocar MMIO deBAR, habilitarMSI/DMA ou escolherfirmware.
+- Saída somente quando todas as leituras/gates passarem; injeção de erro em
+  cada leitura, ciclos/offsets inválidos, listas duplicadas e mudanças tardias
+  precisam recusar sem alterar resultado. CompilarMac/ARM64 e headerkernel
+  Werror offline. Integração modular e coleta física ficam na fatia seguinte;
+  nenhumDFU adicional para esta implementação.
+
+- Gate57: harnessMac/ARM64 passou; dez mutações morreram por SIGABRT/asserção
+  em ambos. Uma mutação inicial revelou falta de teste de recusa imediata:
+  o teste aceitava recusa tardia de bus-master; acrescentada contagem2 antes
+  de qualquer outra leitura. Reexecução deu dezkills reais. Header compilou
+  Werror/modpost contraABIbundle, Image/config conservaram os hashes fixados.
+  Lint inicialmente apontou dois alinhamentos; correção somente de espaços,
+  com novo gate de compilação/lint. Nenhuma execução no telefone nesta fatia.
