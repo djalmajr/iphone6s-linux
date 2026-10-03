@@ -11,10 +11,14 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 HEADER = ROOT / 'phone/kernel/n71-wlan-power-contract.h'
 MUTATIONS = (
-    ('address-order', 'out[0] = N71_WLAN_REG_ON_REGISTER >> 8;',
-     'out[0] = N71_WLAN_REG_ON_REGISTER & 0xff;'),
-    ('wrong-register', '#define N71_WLAN_REG_ON_REGISTER 0x8fcU',
-     '#define N71_WLAN_REG_ON_REGISTER 0x8f6U'),
+    ('mapper-csel-reversed', 'pin < 17 ?', 'pin >= 17 ?'),
+    ('mapper-boundary', 'pin < 17 ?', 'pin <= 17 ?'),
+    ('mapper-invalid-pin', 'pin > 20', 'pin > 21'),
+    ('mapper-upper-stride', '0x8c0U + 6U * pin', '0x8c0U + 2U * pin'),
+    ('address-order', 'out[0] = mapped >> 8;',
+     'out[0] = mapped & 0xff;'),
+    ('wrong-register', '#define N71_WLAN_REG_ON_REGISTER 0x914U',
+     '#define N71_WLAN_REG_ON_REGISTER 0x8fcU'),
     ('cross-register', 'reg != N71_WLAN_REG_ON_REGISTER', 'reg == 0'),
     ('accept-wide-byte', 'old > 0xff', 'old > 0xffff'),
     ('drive-mode', '(old & 0xd8)', '(old & 0xc0)'),

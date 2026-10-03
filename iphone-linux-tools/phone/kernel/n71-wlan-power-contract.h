@@ -10,17 +10,31 @@
 
 #define N71_WLAN_PMU_ADDRESS 0x74U
 #define N71_WLAN_PMU_PIN 10U
-#define N71_WLAN_REG_ON_REGISTER 0x8fcU
+#define N71_WLAN_REG_ON_REGISTER 0x914U
 
-/* D2255 GPIO mapper uses 0x8c0 + 6*pin below17; GPIO10 maps to0x8fc.
+/* The pinned D2255 mapper selects 0x900 + 2*pin when pin < 17;
+ * otherwise 0x8c0 + 6*pin. Pins above 20 are invalid.
+ * CSEL LO selects its first source (w9), not its second (w10).
+ */
+static inline bool n71_d2255_gpio_register(unsigned int pin, unsigned int *out)
+{
+	if (!out || pin > 20)
+		return false;
+	*out = pin < 17 ? 0x900U + 2U * pin : 0x8c0U + 6U * pin;
+	return true;
+}
+
+/* GPIO10 maps to0x914.
  * Dialog wire descriptor: two address bytes, not paged; high byte first.
  */
 static inline bool n71_wlan_reg_on_address(unsigned char *out)
 {
-	if (!out)
+	unsigned int mapped;
+	if (!out || !n71_d2255_gpio_register(N71_WLAN_PMU_PIN, &mapped) ||
+	    mapped != N71_WLAN_REG_ON_REGISTER)
 		return false;
-	out[0] = N71_WLAN_REG_ON_REGISTER >> 8;
-	out[1] = N71_WLAN_REG_ON_REGISTER & 0xff;
+	out[0] = mapped >> 8;
+	out[1] = mapped & 0xff;
 	return true;
 }
 
