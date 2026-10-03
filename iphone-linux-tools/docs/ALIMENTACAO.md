@@ -4,6 +4,22 @@ Etapa [#2](https://github.com/djalmajr/iphone6s-linux/issues/2), iniciada em 202
 
 ## Evidência atual
 
+### Retorno do teste de latch WLAN — 2026-10-03 UTC
+
+O teste físico de controle GPIO10 terminou com restauração/readback de
+0x80, pendência zerada e módulo removido. Snapshot, sync e retorno por
+software ao iOS passaram. Às **02:49:22 UTC**, o iOS informou **85%**,
+`BatteryIsCharging=true` e `ExternalConnected=true`, no mesmo USB-A traseiro.
+[Registro selecionado](evidence/n71-reg-on-latch80-physical.json).
+
+A leitura anterior de100% precedeu o primeiro monitor expirado e a espera
+do operador; não houve baseline imediatamente antes do boot bem-sucedido.
+O intervalo inclui recuperação, iOS, DFU, Linux e retorno. Não atribuir os
+quinze pontos inteiros ao Linux nem calcular corrente líquida. Carregamento
+informado pelo iOS não comprova carregamento no Linux; #2/#8 continuam abertas.
+O próximo desenvolvimento segue offline enquanto o aparelho recarrega,
+sem novo DFU para repetir essa observação.
+
 ### Candidata USB500mA no aparelho — 2026-10-02
 
 Em um único DFU, após colher privadamente o ADT do bootloader, foi carregada a candidata init-only cujo payload tem SHA256 `1a29df4c49bb76c12bb3bcd5929182734172b4f6f0aed76ffbadf885c5f1dbab`. SSH por identidade estrita e HTTP passaram. Aos 105,76 s de uptime, o diagnóstico leu **MaxPower=500 mA**, bmAttributes=80; o IORegistry do Mac reportou **UsbPowerSinkAllocation=500**. Esse campo comprova o orçamento que o host alocou; não é leitura de corrente física. O descritor binário bruto não foi salvo. [Evidência](evidence/n71-runtime-reference.json).
@@ -242,7 +258,8 @@ de pedido0068d5568 envia comando1; a liberação0068d560c envia0. O comando2
 pertence ao caminho de mudança de modo0068d5684. No provider SN2400,
 HDQm1 chama setHDQInterfaceGated(1,0), HDQm0 chama(0,0), HDQm2 chama(0,1).
 O caminho1 usa handshake sem escrita final06. A liberação depende também
-de modo de software, máscaras em cache, status7 e um ponteiro do controlador;
+de modo de software, máscaras em cache, status7 e da presença da função
+`function-battery_alert`, armazenada no campo+b0;
 não substituir esse fluxo por uma escrita06 universal.
 
 `phone/kernel/n71-hdq-handshake.h` implementa a primitiva selecionada por
@@ -271,3 +288,11 @@ reentrada e flags obsoletas. Header também compilou como objeto no contexto
 __KERNEL__/Werror da fonte preservada, sem carregar módulo. O CI executa o
 runner em Ubuntu/macOS. Telemetria, pinmux UART5, arbitragem SN2400 e carga
 sustentada permanecem pendentes; nenhum novo DFU nesta implementação.
+
+A [seleção da liberação](N71_HDQ.md) agora distingue os quatro caminhos
+mode/cache/alert/status com testes Mac/ARM64 e objeto kernel/Werror. Ela
+calcula um plano sem executar I/O ou limpar a obrigação de cleanup.
+O [bundle DART/serdev](N71_KERNEL_BUNDLE.md) prepara uma ABI distinta para
+os dois stop bits necessários ao HDQ; sua prova atual é de fonte/objetos,
+sem Image linkado ou deployment. Ambos são preparação de suporte, não
+telemetria física nem controle de carga habilitado.
