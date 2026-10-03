@@ -199,6 +199,11 @@ na imagem atual. A receita de [build fonte](KERNEL-SOURCE-BUILD.md) continua
 como base para preparar a candidata agregada após qualificar mux/clocks e
 releaseSN2400. UART5/I2C1 seguem desativados; gauge e carga sem prova física.
 
+A [candidata DART+serdev](N71_KERNEL_BUNDLE.md) já tem aplicação de fonte e
+três objetos verificados num worktree/output próprios, com identidade distinta.
+Não houve Image/modpost/perfil ou boot do conjunto; o helper legado permanece
+separado. Essa preparação reúne deltas para um futuro teste físico único.
+
 ## Liberação HDQ — seleção qualificada, backend pendente
 
 O campo object+b0 da referência guarda o resultado da busca por

@@ -58,7 +58,8 @@
     "full_image_linked": false,
     "modpost_or_physical_boot_proved": false,
     "source_rechecked_after_build": true,
-    "baseline_source_diff_empty": true
+    "baseline_source_diff_empty": true,
+    "config_only_localversion_changed": true
   },
   "validation": {
     "mac_git_integration_tests": 3,

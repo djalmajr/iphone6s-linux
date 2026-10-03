@@ -91,6 +91,8 @@ jobs:
         run: python iphone-linux-tools/tests/run_n71_hdq_pinmux_mutations.py
       - name: N71 serdev stop bit registration, errors and TTY readback
         run: python iphone-linux-tools/tests/run_n71_serdev_stop_bits_mutations.py
+      - name: N71 source bundle worktree boundaries and exact patch application
+        run: python iphone-linux-tools/tests/run_kernel_bundle_mutations.py
       - name: N71 link identity, bus mastering and reset mutations
         run: python iphone-linux-tools/tests/run_n71_pcie_link_mutations.py
       - name: N71 REG_ON register scope and drive mode mutations
