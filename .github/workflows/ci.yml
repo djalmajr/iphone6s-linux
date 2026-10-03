@@ -85,6 +85,8 @@ jobs:
         run: python iphone-linux-tools/tests/run_n71_hdq_mutations.py
       - name: N71 HDQ handshake ordering, timeout and cleanup obligations
         run: python iphone-linux-tools/tests/run_n71_hdq_handshake_mutations.py
+      - name: N71 HDQ GPIO2 mux scope and bit preservation
+        run: python iphone-linux-tools/tests/run_n71_hdq_pinmux_mutations.py
       - name: N71 link identity, bus mastering and reset mutations
         run: python iphone-linux-tools/tests/run_n71_pcie_link_mutations.py
       - name: N71 REG_ON register scope and drive mode mutations

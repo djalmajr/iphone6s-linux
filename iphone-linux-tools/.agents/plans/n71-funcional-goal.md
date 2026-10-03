@@ -275,3 +275,8 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Operador informou console disponível, mas SSH/USB não apareceram; nenhum módulo carregado. Solicitada somente reconexão Lightning, sem novo DFU. Continuar pesquisa enquanto aguarda.
 - Gates Mac/ARM64: baseline e dez mutações compiladas morreram por SIGABRT/asserção. Conferência privada dos seis trechos binários, SHA integral e ausência de glitchless no nó runtime passou; hashes/offsets publicados permitem reprodução sem publicar firmware. AST/JSON/public-tree/diff-check passaram. Nenhum typechecker Python configurado; lint remoto fica no CI existente.
 - Objeto probe.o compilou em contexto __KERNEL__ com Werror na VM preservada; fonte funcional manteve diff vazio. Sem módulo carregável ou teste físico de GPIO2 nesta fase.
+
+### Incremento 36 — gate contínuo e reprodução GPIO2
+
+- Três arquivos: CI, guia HDQ e plano. Runner GPIO2 entra nos jobs fonte Ubuntu/macOS; guia explica classes, bytes config102, ramificação glitchless, máscara270/valor220 e diferença do seletor Linux. Conferência por hashes de trechos reproduzível, firmware privado.
+- Validação nativa Mac/ARM64/kernel e referência integral já passou na fase35; reutilizar enquanto entradas preservadas. Rodar reprodução documental/AST/JSON/guard/diff e aguardar lint/testes remotos. Typechecker Python não configurado. Não solicitar novo DFU nem senha para esta publicação.
