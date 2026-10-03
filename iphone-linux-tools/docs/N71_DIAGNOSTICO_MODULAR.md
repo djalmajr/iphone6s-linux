@@ -216,10 +216,11 @@ sete mutações também passou. Módulo Werror/modpost compilado na mesma ABI,
 hash02cb9f6b6c9395addcca5c98f90f7657bf12c20c97d6c8a6b56aaf71ad41d1c7.
 Fontes funcionais preservadas sem diff. Isso ainda não prova ativação física.
 
-A próxima sessão começa por leitura914/level187, sem valor escrito no insmod.
-Ativação permanece condicionada ao guard de modo e proprietário MFD;
-identificação PCIe somente após control readback e nível alto confirmados.
-Não retirar essas verificações para fazer o experimento passar.
+Naquela etapa, a sessão foi preparada com leitura914/level187, sem valor
+escrito no insmod, e exigência de nível alto antes de PCIe. O gate bloqueou
+o treinamento no teste seguinte. A revisão de interpretação abaixo e o
+experimento delimitado mais recente mantêm modo/owner/readback/cleanup;
+não rebatizam a amostra0 como power-good.
 
 Consultas iOS somente leitura `ioregentry AppleD2255PMU` e `ioregentry pmu`
 não retornaram gpio-activate-defaults, gpio-suspend-defaults,
@@ -285,3 +286,11 @@ O bloqueio PCIe do teste anterior foi mantido. Antes de outro boot,
 precisamos qualificar a configuração/amostragem ou definir um teste de
 link delimitado que trate latch e alimentação como provas separadas,
 preserve reset/ownership/cleanup e permaneça sem DMA/firmware/rádio.
+
+O próximo caminho foi delimitado em [descoberta PCIe](N71_LINK_EXPERIMENT.md):
+uma tentativa de identidade após latch81 fresco, preservando amostragem
+como observação e sem mudança de modo PMIC. Getters/registros de cleanup
+foram compilados, sem alterar a sequência dos headers. O [bundle agregado](N71_KERNEL_BUNDLE.md)
+agora tem Image e módulos da ABI distinta conferidos; isso não é boot físico.
+Não reutilizar os módulos baseline no bundle, nem ativar DMA/rádio com
+base somente em leitura de controle ou identidade.
