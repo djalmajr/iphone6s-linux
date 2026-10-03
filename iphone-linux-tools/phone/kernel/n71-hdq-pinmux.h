@@ -21,7 +21,7 @@ struct n71_hdq_pinmux_plan {
 };
 
 /* AppleS5L8960XGPIOIC mode2: glitchless selects bit4, otherwise bit5.
- * Both branches set input-enable and clear the other mux/direction bits.
+ * Both branches set input-enable and replace only the qualified mask bits.
  * This is a reference calculation, not a qualified hardware transaction.
  */
 static inline bool n71_hdq_pinmux(const struct n71_hdq_pinmux_request *request,

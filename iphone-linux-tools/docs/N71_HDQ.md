@@ -123,3 +123,25 @@ PY
 
 Os hashes confirmam os trechos analisados; não substituem a análise das
 instruções nem comprovam comportamento elétrico no aparelho.
+
+## Redução de reinicializações — recursos já presentes
+
+A configuração preservada7.2 inclui `CONFIG_OF_DYNAMIC=y`,
+`CONFIG_OF_OVERLAY=y` e `CONFIG_CONFIGFS_FS=y`. A fonte fixada exporta
+`of_overlay_fdt_apply` e `of_overlay_remove` para módulos GPL. A existência
+de configfs não comprova um carregador de overlays por arquivos; não foi
+encontrada uma opção `CONFIG_OF_CONFIGFS` nessa configuração.
+
+Essas APIs oferecem um caminho a investigar para habilitar recursos no
+mesmo boot, por módulo próprio e alvo estritamente qualificado. Remover
+um overlay não comprova restauração elétrica: os callbacks de driver e
+propriedade dos pinos/clocks ainda precisam ser delimitados. Não foi
+aplicado overlay no aparelho. Manter UART5/I2C1 desativados até qualificar
+cleanup, em vez de habilitar nós pela presença da API.
+
+Na cadeia `s8000.dtsi` → `s800-0-3.dtsi` → `s800-0-3-pmgr.dtsi`,
+`ps_uart5` usa reg80200 e depende de `ps_sio_p`; `ps_i2c1` usa reg801a0
+com o mesmo pai. O ADT runtime declara `clock-gates=0x55` para UART5
+(**85 decimal**, não55 decimal). O ID do gate não foi convertido em
+offset por aritmética presumida. O papel isolado do bit4 na máscara270
+também não foi classificado como direção GPIO genérica.

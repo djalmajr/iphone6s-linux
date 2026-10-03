@@ -280,3 +280,9 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 
 - Três arquivos: CI, guia HDQ e plano. Runner GPIO2 entra nos jobs fonte Ubuntu/macOS; guia explica classes, bytes config102, ramificação glitchless, máscara270/valor220 e diferença do seletor Linux. Conferência por hashes de trechos reproduzível, firmware privado.
 - Validação nativa Mac/ARM64/kernel e referência integral já passou na fase35; reutilizar enquanto entradas preservadas. Rodar reprodução documental/AST/JSON/guard/diff e aguardar lint/testes remotos. Typechecker Python não configurado. Não solicitar novo DFU nem senha para esta publicação.
+
+### Incremento 37 — esclarecer limites da configuração dinâmica
+
+- Três arquivos: comentário do contrato GPIO2, guia HDQ e plano. Não chamar bit4 de direção GPIO sem qualificação: preservar descrição apenas como bit da máscara do setter N71. Nenhuma expressão executável alterada; reutilizar gates Mac/ARM64/kernel/10 mutações do incremento35.
+- Configuração7.2 contém OF_DYNAMIC/OF_OVERLAY/CONFIGFS, API overlay apply/remove exportadaGPL; configfs não prova carregador por arquivos. Não houve overlay/clock/UART/I2C1 no aparelho. Estudar loader com alvo/ownership/cleanup qualificados para reduzir DFUs.
+- Cadeia específica s800-0-3-pmgr confirma ps_uart5@80200 e ps_i2c1@801a0, pai ps_sio_p. ADT clock-gates UART5 é55 hexadecimal (85decimal); não presumir conversão ID→offset. SSH/USB ainda indisponível; solicitação de reconexão permanece pendente, sem nova pergunta.
