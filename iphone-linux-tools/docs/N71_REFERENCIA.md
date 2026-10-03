@@ -67,3 +67,46 @@ python3 iphone-linux-tools/tests/run_n71_pcie_mutations.py
 ```
 
 Fixtures do decoder são sintéticas e incluem referências sobrepostas, seed, truncamento, excesso de saída, checksum e DER. A referência real privada é conferida separadamente por hashes fixados; firmware não faz parte dos testes/CI. As primitivas também foram compiladas como objeto no contexto `__KERNEL__` da fonte `958481f87fee0949ff6a9a4af77f7eb6dac8a149`, usando GCC13.3.0 na VM dedicada. Nenhum módulo foi carregado, nenhuma candidata mudou e nenhum pacote foi instalado no Mac.
+
+## Conferência independente do mapper GPIO D2255
+
+O opcode `1a8a3129` em006933aa4 é `csel w9,w9,w10,lo`:
+condição verdadeira seleciona o primeiro registrador fonte, w9. A documentação
+[Arm sobre CSEL (R17166)](https://documentation-service.arm.com/static/60082ae0773bb020e3de6c10) confirma essa seleção; [LO significa comparação sem sinal menor](https://developer.arm.com/community/arm-community-blogs/b/architectures-and-processors-blog/posts/condition-codes-1-condition-flags-and-codes).
+
+Nesta referência, w9=900+2*pin, w10=8c0+6*pin e a comparação é pin<17.
+A interpretação anterior inverteu esses operandos. GPIO10 é914, não8fc.
+Os pinos17..20 usam a outra fórmula; acima20 o helper retornaFFFF.
+
+Reproduza a conferência **somente nesse Mach-O já decodificado**. O offset
+foi traduzido pelos load commands do arquivo fixado; não reutilizá-lo em
+outra versão. O comando lê dados locais, não executa instruções Apple:
+
+```sh
+python3 - iphone-linux-tools/runtime/n71-driver-reference-20261002/kernelcache.n71.macho <<'PY'
+import hashlib
+from pathlib import Path
+import struct
+import sys
+raw = Path(sys.argv[1]).read_bytes()
+assert len(raw) == 42827776
+assert hashlib.sha256(raw).hexdigest() == '0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a'
+words = struct.unpack_from('<11I', raw, 0x1dffa88)
+assert words == (
+    0x529fffe8, 0x7100443f, 0x531f7829, 0x11240129,
+    0x528000ca, 0x1b0a7c2a, 0x1123014a, 0x1a8a3129,
+    0x7100503f, 0x1a898100, 0xd65f03c0,
+)
+csel = words[7]
+assert (csel & 31) == 9  # destination
+assert ((csel >> 5) & 31) == 9  # first source, selected when LO is true
+assert ((csel >> 16) & 31) == 10  # second source
+assert ((csel >> 12) & 15) == 3  # LO
+print('N71_GPIO10_REGISTER_REFERENCE_OK 0914')
+PY
+```
+
+A conferência binária passou no insumo privado real. Contratos e mutações
+de software continuam separados de prova elétrica no iPhone; os resultados
+físicos antigos8fc não validam GPIO10. Firmware, dumps e disassembly bruto
+continuam fora do GitHub.

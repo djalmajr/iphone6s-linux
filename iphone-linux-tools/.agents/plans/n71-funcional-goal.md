@@ -250,3 +250,8 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Runbook atualizado e os dois JSON físicos anotados sem apagar fatos: leitura/tentativa8fc não foi controleGPIO10, logo não qualifica seu modo ou falha. Referência de status187/bit2 permanece separada. Queries iOS de serviço/provider não apresentaram as quatro propriedades opcionais de GPIO; não extrapolar para toda a IORegistry.
 - ABI7.2.0-iphone6s-source SMP preempt mod_unload aarch64, ELF64/AArch64 e hash02cb9f6b6c9395addcca5c98f90f7657bf12c20c97d6c8a6b56aaf71ad41d1c7 conferidos no guest/host. Fonte funcional gitdiff limpa; nenhuma nova imagem ou driver carregado no hardware. Quatro arquivos documentais nesta fase.
 - Decisão: observar914 antes de escrita e exigir também nível187/bit2 alto antes de PCIe. Agrupar novas leituras/ativação qualificada/PCIe em uma sessão, com módulos atualizáveis por SSH. Não repetir diagnóstico com módulo antigo ou afrouxar guard de modo.
+
+### Incremento 32 — reprodução da conferência binária GPIO
+
+- Documentado comando Python padrão somente leitura, fixando tamanho/hash/offset e11 opcodes do mapper. Verifica campos CSEL e referência Arm primária para seleção/LO; comando executado no insumo privado real. Dois arquivos nesta fase: N71_REFERENCIA e plano. Nenhum reboot adicional ou execução de firmware.
+- Candidata/coletores privados e snapshot44entradas verificados; iOS informou100%/FullyCharged/ExternalConnected. Aguardando disponibilidade física do operador para um único boot curto; não iniciar recuperação sem quem possa fazer o DFU. CI da correção em execução em handles37083135609/37083133659.
