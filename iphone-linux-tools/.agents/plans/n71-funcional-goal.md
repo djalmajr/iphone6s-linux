@@ -570,3 +570,52 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Atualizar issues9/12 com links e escopo, sem criar pendências duplicadas.
 - Não pedir DFU nesta fatia. A candidata do inventário e os drivers externos
   ficam preparados; host PCI, BAR/IRQ e DART seguem o próximo desenvolvimento.
+
+### Incremento 64 — contrato de escrita para varredura pelo núcleo PCI
+
+- Cinco arquivos: `phone/kernel/n71-pcie-scan-config.h`, teste C, wrapper
+  Python, mutações e plano. Capturar IDs, classes, COMMAND, BARs, ROM e
+  bridge-control dos dois dispositivos; exigir bus0/1, DMA desativado e ROM
+  desativada antes de qualquer escrita. Falha de captura não altera a saída.
+- Autorizar somente suspensão/restauração de decode, sizing/restauração dos
+  BARs/ROM com decode suspenso e o bit MASTER_ABORT do bridge-control.
+  Escritas iguais ao valor atual ficam sem I/O; outras mudanças, inclusive
+  bus-master, status W1C e reconfiguração de barramento, são recusadas e
+  registradas. Aplicar limite de tentativas e falha persistente.
+- Remover o barramento antes da restauração final; restauração independe da
+  falha persistente e verifica cada valor por readback, com COMMAND por
+  escrita de 16 bits para preservar STATUS. Testar falhas em cada etapa,
+  recusas e mutações reais, sem acesso ao aparelho.
+- Decisão D6: usar `pci_scan_root_bus_bridge`, sem `pci_bus_add_devices` ou
+  atribuição de recursos, no próximo incremento. A fonte fixada impede bind
+  antes de PCI_DEV_ALLOW_BINDING; a varredura publica dispositivos temporários
+  em sysfs e pode tentar alterações adicionais, por isso precisa do contrato
+  e de cleanup. Alternativa: sizing próprio não exercitaria a integração do
+  host PCI. Reversão baixa: parâmetro explícito, perfil privado separado.
+
+- Gate64: harness C compilado com Wall/Wextra/Werror/pedantic passou no Mac;
+  14 mutações morreram por SIGABRT/asserção. Injeção cobre todas as leituras
+  de captura e escritas de restauração. A mutação de bus-master inicialmente
+  sobreviveu por recusa redundante; acrescentado o caso de valor perigoso
+  igual ao atual, que comprova a recusa antes da emulação de no-op. Não houve
+  I/O no aparelho. Prova ARM64 será agrupada com a compilação do adaptador.
+
+### Incremento 65 — adaptador real de host PCI para sizing temporário
+
+- Até cinco arquivos: `phone/kernel/n71-pcie-scan.h`, integração no módulo
+  diagnóstico, testes de integração, guia de reprodução e plano. Criar
+  bridge privado com callbacks ECAM fixados, janelas ADT traduzidas e faixa
+  bus0..1; recusar dispositivos/classe/cabos ABI divergentes no preflight.
+- Parâmetro `host_scan` exige run/enumerate/config_inventory. Executar somente
+  `pci_scan_root_bus_bridge` sob o lock de rescan; não habilitar bind, DMA,
+  MSI, MMIO dos BARs ou atribuição de recursos. Auditar a fonte PCI fixada e
+  manter todas as escritas adicionais atrás do contrato do incremento64.
+- Reportar os dois dispositivos, recursos BAR do endpoint, COMMAND e
+  refusals. Sempre stop/remove/free do bridge, depois restauração de config
+  com readback, antes de PERST/power/REG_ON. Erro de varredura continua sendo
+  erro mesmo que o núcleo PCI retorne sucesso. Compilar módulo externo na VM
+  preservando configuração/Image/exports; não alterar o perfil padrão.
+- Após os gates, compor e selecionar explicitamente uma candidata privada
+  para uma sessão física agregada. Não afirmar BAR/host/DART/radio funcionais
+  com base somente na compilação. Não solicitar DFU enquanto houver trabalho
+  independente útil para preparar esta candidata.
