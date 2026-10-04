@@ -1,0 +1,97 @@
+{
+  "format": 1,
+  "status": "offline_i2c_probe_cleanup_reference_no_activation",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "selected_sources_clean_against_head": true,
+  "sources": {
+    "drivers/i2c/busses/i2c-pasemi-platform.c": {
+      "sha256": "39c368ba1d90b872dadbac150716d5bf2b42cd034eee39cbe278eb91c148edf6",
+      "probe_lines": [
+        45,
+        89
+      ],
+      "remove_line": 92,
+      "name": "i2c-apple",
+      "of_compatible_fallback": "apple,i2c"
+    },
+    "drivers/i2c/busses/i2c-pasemi-core.c": {
+      "sha256": "79fba3545729becc1c42f9706f01e5fd782dc06b152a219739d07ca5eeb98181",
+      "reset_lines": [
+        80,
+        88
+      ],
+      "probe_lines": [
+        423,
+        449
+      ],
+      "irq_lines": [
+        453,
+        459
+      ]
+    },
+    "arch/arm64/boot/dts/apple/s800-0-3.dtsi": {
+      "sha256": "7dea8e989e58b12b56a33f127b40b332814fa78d46ae4c11ac57bcc0e2f30525",
+      "i2c1_lines": [
+        106,
+        117
+      ],
+      "pinmux_lines": [
+        245,
+        247
+      ]
+    }
+  },
+  "config": {
+    "CONFIG_I2C_APPLE": "y",
+    "CONFIG_I2C_CHARDEV": "y",
+    "CONFIG_PINCTRL_APPLE_GPIO": "y"
+  },
+  "linux_i2c1": {
+    "path": "/soc/i2c@20a111000",
+    "status": "disabled",
+    "physical_base": "0x20a111000",
+    "resource_size": "0x1000",
+    "interrupt_hardware_aic": 207,
+    "interrupt_type": "level high",
+    "clock": "clkref",
+    "power_domain": "ps_i2c1",
+    "linux_pinmux_pins": [
+      115,
+      114
+    ],
+    "linux_pinmux_selector": 1,
+    "apple_runtime_pinmux_physical_qualification": false
+  },
+  "probe": {
+    "default_bus_frequency_hz": 100000,
+    "clock_enabled": true,
+    "controller_revision_read": "0x28",
+    "writes": {
+      "interrupt_mask": "0x18 = 0",
+      "control": "0x1c = FIFO resets | UJM | divisor; EN additionally for revision >=6"
+    },
+    "adapter_registration": "devm_i2c_add_adapter",
+    "irq_requested_after_adapter": true,
+    "irq_request_error_falls_back_to_polling": true
+  },
+  "cleanup": {
+    "platform_remove_empty": true,
+    "explicit_initial_ctl_imask_restore_in_remove": false,
+    "pinmux_restoration_verified": false,
+    "fifo_state_restoration_verified": false,
+    "controller_cycle_ready": false,
+    "adapter_clock_irq_handler_mmio_devres": true,
+    "irq_domain_mapping_ownership_and_disposal_qualified": false
+  },
+  "next_adapter": {
+    "first_stage": "passive DT/owner/child/client/clock/domain/IRQ and pinmux inventory",
+    "later_stage": "bounded temporary platform device cycle only after idle and cleanup qualification",
+    "charger_access_separate": true,
+    "i2c_scan_permitted": false,
+    "rebind_i2c0_permitted": false
+  },
+  "physical_controller_activated": false,
+  "charger_io_performed": false,
+  "charging_linux_validated": false,
+  "limits": "Existing driver and source resources are not physical I2C1 proof. Do not enable controller/client or replay charger settings without qualified pin ownership, power/idle state, read effects and cleanup."
+}

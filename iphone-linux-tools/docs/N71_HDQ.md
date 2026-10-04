@@ -342,3 +342,43 @@ pronto. O timer seleciona modo software1/0, não qualifica watchdog de hardware.
 O adapter futuro precisa coordenar controle de carga e ownership HDQ, conservar
 estado físico e provar cleanup. Não enviar UART, fazer scanI2C ou programar
 limites apenas porque o encoder ou a referência está presente.
+
+## I2C1: driver existente, aquisição ainda não qualificada
+
+`CONFIG_I2C_APPLE=y` seleciona `i2c-pasemi-core.c` e
+`i2c-pasemi-platform.c`; não existe um arquivo `i2c-apple.c` nessa fonte.
+O driver se chama `i2c-apple` e casa com `apple,i2c`, presente no nó S8000.
+A configuração também tem I2C_CHARDEV e o GPIO provider. Isso evita depender
+de instalar pacotes ou reconstruir kernel apenas para a existência do driver,
+mas não valida funcionamento físico do I2C1 desativado.
+
+Na DTS S8000 fixada, I2C1 tem base20a111000/1000, AIC207 level-high,
+clkref, domínio ps_i2c1 e pinctrl114/115 seletor1. O include6s só habilita
+I2C0. Esses pinos são da fonte Linux: comparar routing/mux com a referência
+Apple/runtime antes de ativar, sem tratá-los como prova física.
+[Hashes e fatos selecionados](evidence/n71-i2c-acquisition-reference.json).
+
+O probe habilita clock, calcula divisor (frequência padrão100kHz), lê revisão
+do controlador, escreve IMASK0 e CTL com reset de FIFO/divisor; para revisão
+maior ou igual6 também seta CTL_EN. Registra o adapter com devm_i2c_add_adapter
+e depois tenta IRQ; falha de requestIRQ mantém polling e ainda retorna sucesso.
+Não confundir esse sucesso com IRQdelivery comprovada.
+
+Remove é vazio. Adapter, clock, handlerIRQ e MMIO são geridos por devres, porém
+não há restore explícito dos valores iniciais de CTL/IMASK nessa função.
+A propriedade e a remoção do mapping AIC são um gate separado do handlerIRQ;
+não presumir que devm_request_irq o destrói.
+A remoção de device/overlay não é prova de restauração dos pinos, FIFO,
+interrupções ou estado elétrico. Não fazer bind/rebind do I2C0 para testar.
+
+O próximo adapter deve começar pelo inventário passivo de I2C1/owners,
+child-clients, domínio/clock/IRQ e mux114/115, sem registrar controlador nem
+acessar seus FIFOs. Após qualificar idle e cleanup, preparar dispositivo de
+plataforma temporário com recursos do nó original para um ciclo limitado no
+mesmo boot. Separar isso do cliente SN2400@75 e de qualquer leitura/escrita
+do carregador; não usar varredura I2C ou probe A10 automático. Testes futuros
+podem ser agrupados com o candidato PCI somente após recarga suficiente.
+
+Não houve ativação/overlay/cliente/transmissão nesta análise; carga e gauge
+permanecem pendentes. As duas fontes I2C e a DTS foram conferidas limpas
+contra HEAD958481f, independentemente dos patches DART/serdev do bundle.

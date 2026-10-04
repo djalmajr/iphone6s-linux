@@ -1351,3 +1351,28 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   marca Linux offline e identifica seções anteriores como históricas.
   O primeiro patch documental foi recusado por contexto divergente, sem
   alterar o plano; leitura e aplicação com contexto atual passaram.
+
+### Incremento 103 — qualificar aquisição I2C1 offline para o próximo adapter
+
+- Três arquivos: plano, HDQ e referência selecionada I2C. Conferir fonte
+  fixada/limpa de platform/core e DTS, driver/config existentes, recursos e
+  writes do probe. Não executar bind, scanI2C, MMIO ou transmissão.
+- Registrar devres de adapter/clock/IRQ separadamente de restauração elétrica:
+  remove vazio não restaura CTL/IMASK/pinos. Planejar primeiro inventário
+  passivo/ownership/idle; depois ciclo de plataforma temporária no mesmo boot,
+  somente quando recurso/pinos/cleanup forem qualificados.
+- Não assumir pin114/115 Linux como pinmux Apple runtime validado nem que
+  enabled config prova funcionamento. Conservar a candidata PCI sem carga.
+
+- Gate103: hashes das duas fontes e DTS conferidos, diff desses arquivos
+  contra HEAD958481f vazio. Probe/reset/adapterdevres/IRQfallback observados;
+  nenhuma restauração explícita CTL/IMASK. HandlerIRQ devres é distinto da
+  propriedade/disposal do mapping AIC; este gate permanece pendente.
+  JSON/links/diff aprovados; nenhum bind, MMIO, overlay ou cliente novo.
+- CI do código+documentação102 no SHA47c0611 terminal aprovado: PR37227269013
+  e push37227266273, seis jobs Ubuntu/macOS/Windows. A mudança103 é documental
+  e reutiliza esses gates de código, sem afirmar prova física ou CI do novo head.
+- Logs ARM64/contexto e unidade de compilação foram preservados no Mac,
+  digests conferidos. Primeira leitura local precedeu conclusão dos quatro
+  transfers assíncronos e falhou por arquivo ausente; esperar todos os exits0
+  e repetir somente o gate de hashes resolveu. Nenhum teste/hardware repetido.
