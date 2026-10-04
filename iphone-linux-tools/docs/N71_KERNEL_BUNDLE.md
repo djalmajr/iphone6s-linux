@@ -306,3 +306,84 @@ O Mac tinha215GiB livres; nenhum processo make estava ativo. Foram executados
 manualmente nem se instalou pacote/configuração global. Config/Image/exports
 do rollback conservaram seus hashes. A próxima build usa output novo e
 mantém o requisito de8GiB livres antes de iniciá-lo.
+
+## Image completo da candidata GPIO/PMGR — 2026-10-04
+
+[Registro separado](evidence/kernel-n71-power-bundle-build.json):
+`7.2.0-iphone6s-dart-serdev-power1`, Image ARM64/16KiB de52.070.912 bytes,
+configuração embutida exata, modpost e export GPL serdev conferidos.
+GPIO/PMGR compilados como objetos incorporados, sem MODULE. A configuração
+só mudou LOCALVERSION; DTB conservou o hash do bundle anterior.
+Config/Image/exports e source do rollback foram preservados.
+
+A conclusão levou761s (12min41s), incluindo prepare, Image/DTB, verificações,
+gzip e modules_prepare; exclui preparo inicial da configuração e transferências.
+O primeiro script parou antes de Image por ler kernel.release antes de prepare.
+O output próprio já configurado foi reutilizado, com logs v2 novos;
+nenhuma falha foi apagada ou contada como build aprovada.
+
+Para reproduzir, use o source aplicado acima e um output novo. Abaixo,
+os caminhos correspondem à execução registrada; não sobrescreva os resultados.
+
+```sh
+set -eu
+umask 077
+work_dir=/home/ubuntu/kernel-n71-power-source-20261004
+build_dir=/home/ubuntu/kernel-n71-power-build-20261004
+legacy_build=/home/ubuntu/kernel-n71-bundle-build-20261002
+test ! -e "$build_dir" && test ! -L "$build_dir"
+python3 scripts/build/kernel_bundle.py check "$work_dir" \
+  --profile n71-dart-serdev-power-v1
+python3 - "$build_dir" <<'PY'
+from pathlib import Path
+import shutil
+import sys
+assert shutil.disk_usage(Path(sys.argv[1]).parent).free >= 8 * 1024**3
+PY
+mkdir -m 700 "$build_dir"
+cp "$legacy_build/.config" "$build_dir/.config"
+"$work_dir/scripts/config" --file "$build_dir/.config" \
+  --set-str LOCALVERSION -iphone6s-dart-serdev-power1
+epoch=$(git -C "$work_dir" show -s --format=%ct HEAD)
+export SOURCE_DATE_EPOCH="$epoch"
+export KBUILD_BUILD_TIMESTAMP="$(date -u -d "@$epoch" '+%a %b %e %T %Y')"
+export KBUILD_BUILD_USER=build KBUILD_BUILD_HOST=iphone6s-kernel-source KBUILD_BUILD_VERSION=1
+export LC_ALL=C LOCALVERSION=
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror olddefconfig
+python3 - "$legacy_build/.config" "$build_dir/.config" <<'PY'
+from pathlib import Path
+import sys
+before, after = [Path(name).read_text() for name in sys.argv[1:]]
+assert after == before.replace('CONFIG_LOCALVERSION="-iphone6s-dart-serdev1"',
+                               'CONFIG_LOCALVERSION="-iphone6s-dart-serdev-power1"')
+PY
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror prepare
+test "$(cat "$build_dir/include/config/kernel.release")" = 7.2.0-iphone6s-dart-serdev-power1
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror Image apple/s8000-n71.dtb
+python3 scripts/build/kernel_bundle.py check "$work_dir" \
+  --profile n71-dart-serdev-power-v1
+"$work_dir/scripts/extract-ikconfig" "$build_dir/arch/arm64/boot/Image" \
+  > "$build_dir/config-embedded-checked"
+cmp "$build_dir/.config" "$build_dir/config-embedded-checked"
+cmp "$build_dir/arch/arm64/boot/dts/apple/s8000-n71.dtb" \
+  "$legacy_build/arch/arm64/boot/dts/apple/s8000-n71.dtb"
+nm "$build_dir/vmlinux" | sed -n '/ serdev_device_set_stop_bits$/p'
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror modules_prepare
+sha256sum "$build_dir/.config" "$build_dir/arch/arm64/boot/Image" "$build_dir/vmlinux.symvers"
+sha256sum "$legacy_build/.config" "$legacy_build/arch/arm64/boot/Image" "$legacy_build/vmlinux.symvers"
+```
+
+A prova registrada exigiu símbolo T único, export GPL único e hashes antes/
+depois do legado; a linha nm isolada não substitui essas validações. Os cinco
+artefatos e logs foram empacotados/transferidos com SHA e recalculados no Mac,
+em `runtime/kernel-n71-power-artifacts-20261004/`. O validador real
+`kernel_inputs(..., 'n71-dart-serdev-power-v1')` aceitou esse conjunto.
+Nada foi instalado no telefone ou escolhido como default.
+
+Módulos da release antiga precisam ser recompilados. Composição de perfil,
+boot/restore/SSH/HTTP/snapshot e comportamento físico continuam gates futuros.
+Esse Image ainda não habilita I2C1/HDQ/SN2400 nem comprova carga ou Wi-Fi.

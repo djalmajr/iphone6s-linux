@@ -10,6 +10,14 @@ Linux não está online. Nenhum novo DFU foi solicitado nesta rodada;
 desenvolvimento segue no Mac/VM para implementar carga/telemetria N71.
 [Evidência e limites](ALIMENTACAO.md), [issue P0](https://github.com/djalmajr/iphone6s-linux/issues/2).
 
+Image separado `7.2.0-iphone6s-dart-serdev-power1` compilou com as patches
+DART/serdev/GPIO/PMGR001→006, em12min41s. Config só difere na identidade;
+config embutida, modpost, export serdev, objetos builtin e DTB preservado
+conferidos. Fonte/config/Image/exports do rollback intactos; artefatos no Mac
+passaram por SHA e pelo integrador real. [Reprodução e limites](N71_KERNEL_BUNDLE.md#image-completo-da-candidata-gpiopmgr--2026-10-04).
+Rebuild de módulos, perfil/boot/restore e acesso físico ao carregador seguem
+pendentes. O Image novo ainda não habilita carga, telemetria ou Wi-Fi.
+
 No boot anterior, DART provider/INTx/probes de ponte tiveram cleanup verificado
 e SSH/HTTP/snapshot preservados. Scan PCI ainda negativo; primeira recusa
 seguinte é SERR. A candidata controls/SERR compilada não foi carregada por

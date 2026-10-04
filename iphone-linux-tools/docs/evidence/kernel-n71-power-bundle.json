@@ -74,7 +74,7 @@
     "arm64-legacy-gate-private.log": "ebd8f1f992c3ef92b33317db6cb3dc24d809f91f4e92e3e1331f12beddb193d9",
     "source-apply-private.log": "1cb8d811bcc6bcf901137ea694f2b23a0f1d493fe464955b12a856a903402a6e"
   },
-  "status": "selected_six_patch_source_verified_full_image_pending",
+  "status": "selected_source_verified_full_image_linked_separate_record",
   "native_platforms": [
     "macOS ARM64",
     "Ubuntu ARM64"
@@ -84,11 +84,20 @@
   "legacy_tests": 3,
   "legacy_compiled_source_mutations": 11,
   "mac_power_gate_sha256": "24d7b1bcde975e6f0f858cc18d8631b6d3fed9831209607cb9b8c46e0a4e608f",
-  "full_kernel_link_performed": false,
+  "full_kernel_link_performed": true,
   "physical_boot_tested": false,
   "phone_driver_modified": false,
   "linux_charging_validated": false,
   "charger_io_performed": false,
   "new_dfu_or_reboot": false,
-  "limits": "Selected source only. Full Image, module ABI rebuild, deployment profile, physical boot, I2C1/HDQ/charger and sustained charging remain pending. Existing functional profile preserved."
+  "limits": "Source and full Image verified in separate records. Module ABI rebuild, private deployment, physical boot, I2C1/HDQ/charger and sustained charging remain pending. Existing functional profile preserved.",
+  "full_build_record": "kernel-n71-power-bundle-build.json",
+  "code_commit": "274ae009fb5caec44e33b7ace4450d86f2b84c1b",
+  "ci": {
+    "code_head": "274ae009fb5caec44e33b7ace4450d86f2b84c1b",
+    "pull_request_run": 37241800486,
+    "push_run": 37241797831,
+    "conclusion": "success",
+    "jobs_total": 6
+  }
 }

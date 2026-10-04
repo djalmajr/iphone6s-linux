@@ -1908,3 +1908,14 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Perfil real/default/telefone não foram alterados. Link118 continua em curso.
 - CI274ae00 aprovado PR37241800486/push37241797831, seis jobs, antes de
   publicar integradorf80e27e. CI desse integrador em acompanhamento.
+
+- Gate118 completo: Image ARM64/16KiB52.070.912B,
+  SHA278feceeffcd552dadc23a165f62d3f420199d63d453d457e06d54a36667798e,
+  release7.2.0-iphone6s-dart-serdev-power1. Full make/Werror/modpost terminou0
+  em761s (12m41s), partindo da configuração preparada após falha v1.
+  Fonte intacta, config delta somente LOCALVERSION e config embutida exata.
+- Serdev T/export GPL e objetos GPIO/PMGR builtin conferidos; DTB permaneceu
+  SHA b25b2b74 igual ao legado. modules_prepare passou sem mudar Image/config/
+  exports. Rollback source/config/Image/exports mantido. Tar/outputs/logs
+  transferidos conferidos por SHA no Mac e kernel_inputs(power) real aprovado.
+  Módulos/perfil/boot físicos continuam pendentes; carga/Wi-Fi não habilitados.
