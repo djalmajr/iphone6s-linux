@@ -672,3 +672,28 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   lifecycle fazem parte da suíte de testes. Recipe e prova nativa são públicas;
   binários, payload, chaves e logs continuam privados. Não há type checker
   Python configurado; validar AST/lint no CI e conferir a árvore pública.
+
+### Incremento 68 — sizing direto após a recusa física do PCI core
+
+- Inventário físico comprovou 14e4:43a3, revisão PCI8, BAR0/2 de64 bits.
+  O scan recusou a primeira alteração COMMAND/INTx(0→400); houve dois
+  dispositivos temporários, sem bind. Remoção, restauração/readback e unload
+  passaram. Não houve sizing aceito; SSH/HTTP continuam e snapshot foi salvo.
+- Decisão: medir somente BARs do endpoint via contrato já validado. O PCI
+  core também tenta IRQ, bridge windows, PM e AER; não ampliar a whitelist
+  para satisfazer essas tentativas sem qualificação. Alternativa: auditar e
+  restaurar cada alteração do core antes de repetir a integração completa.
+  Reversão baixa: modos separados e sem alterar o Image. Status: em curso.
+- Até cinco arquivos por fatia. Header puro, harness C, wrapper com mutações,
+  este plano e evidência física selecionada. Suspender decode, medir seis
+  palavras BAR, validar pares64/máscaras/tamanhos, restaurar toda a captura
+  com readback inclusive em erro. Publicar resultado só após restore aprovado.
+- Próximas fatias: integração externa/build Werror; seleção e continuidade
+  explícita após cleanup privado verificado, sem limpar dmesg ou reutilizar
+  registros históricos como sucesso. Carregar módulo no mesmo boot por SSH.
+  Continuar sem DMA, BAR MMIO, firmware ou rádio. Não pedir DFU adicional.
+
+- Gate68: harness C passou no Mac com Wall/Wextra/Werror/pedantic; seis
+  mutações compiladas falharam por asserção, incluindo erro de restore e
+  publicação prematura. Falhas são injetadas em todas as leituras/escritas
+  do caminho completo; tamanhos32/64 e palavras superiores são verificados.
