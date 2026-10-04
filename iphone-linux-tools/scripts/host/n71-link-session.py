@@ -6,11 +6,13 @@ import json
 import os
 from pathlib import Path
 import re
+import secrets
 import struct
 import subprocess
 import sys
 import device_profile
 import n71_scan_result
+import n71_session_history
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = '7.2.0-iphone6s-dart-serdev1'
@@ -83,11 +85,13 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False, host_scan=False):
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, history=None):
         self.output = output
         self.modules = modules
         self.config_inventory = config_inventory or host_scan
         self.host_scan = host_scan
+        self.history = history
+        self.module_directory = '/run/n71-link-' + secrets.token_hex(12) if history else '/run'
         self.ssh = device_profile.ssh_options() + ['root@' + device_profile.PHONE]
         self.reg_attempted = False
         self.activation_attempted = False
@@ -108,14 +112,17 @@ class Session:
                 raise ValueError('SSH stage timed out: ' + stage) from error
             log.write(process.stdout + b'\nSTDERR\n' + process.stderr)
         process.stdout = process.stdout.decode(errors='replace')
+        if self.history and stage != 'preflight':
+            process.stdout = self.history.fresh(process.stdout)
         for line in process.stdout.splitlines():
-            if 'N71_' in line or line.startswith('bound='):
+            if ('N71_' in line or line.startswith('bound=')) and not (self.history and line in self.history.known):
                 print(line, flush=True)
         print('N71_STAGE', stage, 'exit', process.returncode, flush=True)
         return process
 
     def preflight(self):
         p = self.capture('preflight', 'set -e; uname -r; uptime; '
+                         'printf "N71_BOOT_ID "; cat /proc/sys/kernel/random/boot_id; '
                          'test ! -d /sys/module/n71_wlan_power_diagnostic; '
                          'test ! -d /sys/module/n71_pcie_diagnostic; '
                          'for n in i2c@20a111000 serial@20a0d4000; do '
@@ -124,12 +131,20 @@ class Session:
                          'test "$s" = disabled; echo "N71_DT_DISABLED $n"; done; dmesg')
         require(p.returncode == 0 and p.stdout.startswith(RELEASE + '\n'),
                 'Selected release and disabled HDQ resources not proved')
-        require('N71_PCIE_' not in p.stdout, 'A PCIe diagnostic already exists in this boot')
-        if self.host_scan:
+        boot = re.findall(r'^N71_BOOT_ID ([0-9a-f-]{36})$', p.stdout, re.M)
+        require(len(boot) == 1, 'Unique live boot identity required')
+        self.result['boot_id'] = boot[0]
+        if self.history:
+            self.history.verify_live(p.stdout)
+            p = self.capture('module-directory', 'umask 077; mkdir -m 700 ' + self.module_directory)
+            require(p.returncode == 0, 'Exclusive remote module directory not created')
+        else:
+            require('N71_PCIE_' not in p.stdout, 'A PCIe diagnostic already exists in this boot')
+        if self.host_scan or self.history:
             p = self.capture('pci-empty', 'set -e; test -z "$(ls /sys/bus/pci/devices)"; echo N71_PCI_PREFLIGHT_EMPTY')
             require(p.returncode == 0, 'Pre-existing PCI devices refused')
         for record, raw in self.modules:
-            target = '/run/' + record['module']
+            target = self.module_directory + '/' + record['module']
             p = self.capture('transfer-' + record['module'],
                              'umask 077; set -C; cat > ' + target, raw)
             require(p.returncode == 0, 'Module transfer failed')
@@ -140,7 +155,7 @@ class Session:
     def experiment(self):
         self.preflight()
         self.reg_attempted = True
-        p = self.capture('observe', 'set -e; insmod /run/n71-wlan-power-diagnostic.ko run=1; '
+        p = self.capture('observe', 'set -e; insmod ' + self.module_directory + '/n71-wlan-power-diagnostic.ko run=1; '
                          'cat ' + REG + 'state; cat ' + REG + 'control; dmesg')
         require(p.returncode == 0 and 'N71_REG_ON_OBSERVED control=80 bit0=0 compatible-plan=1' in p.stdout
                 and 'N71_REG_ON_PARENT simple-mfd-i2c shared-regmap; no rebind' in p.stdout
@@ -161,7 +176,7 @@ class Session:
         p = self.capture('pcie', 'set -e; '
                          'test "$(cat ' + REG + 'state)" = "' + STATE_ACTIVE + '"; '
                          'test "$(cat ' + REG + 'control)" = "N71_REG_ON_CONTROL_READBACK value=81"; '
-                         'insmod /run/n71-pcie-diagnostic.ko run=1 enumerate=1' + parameters + '; dmesg')
+                         'insmod ' + self.module_directory + '/n71-pcie-diagnostic.ko run=1 enumerate=1' + parameters + '; dmesg')
         require(p.returncode == 0, 'PCIe command did not complete')
         matches = re.findall(r'N71_PCIE_LINK_RESULT error=(-?\d+) port88=([0-9a-f]+) reads=(\d+)', p.stdout)
         require(len(matches) == 1, 'Exactly one completed link result required')
@@ -244,6 +259,7 @@ def main():
     parser.add_argument('--check', action='store_true', help='Local gates only, no SSH')
     parser.add_argument('--config-inventory', action='store_true', help='Require the separately recorded read-only inventory module')
     parser.add_argument('--host-scan', action='store_true', help='Select recorded PCI-core sizing module; implies inventory')
+    parser.add_argument('--previous-clean', type=Path, help='Continue only after matching private cleanup and this boot history')
     options = parser.parse_args()
     os.umask(0o077)
     os.environ['IPHONE_LINUX_PROFILE'] = str(options.profile.absolute())
@@ -258,6 +274,7 @@ def main():
     if options.config_inventory or options.host_scan:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record)) for record in records]
+    history = n71_session_history.History(options.previous_clean, ROOT, RELEASE) if options.previous_clean else None
     if options.check:
         print('N71_SESSION_LOCAL_GATE_OK; no SSH or USB action')
         return 0
@@ -267,7 +284,8 @@ def main():
             'Output must be new, directly under runtime')
     device_profile.protected(output.parent, directory=True)
     output.mkdir(mode=0o700)
-    return Session(output, modules, config_inventory=options.config_inventory, host_scan=options.host_scan).run()
+    return Session(output, modules, config_inventory=options.config_inventory,
+                   host_scan=options.host_scan, history=history).run()
 
 
 if __name__ == '__main__':

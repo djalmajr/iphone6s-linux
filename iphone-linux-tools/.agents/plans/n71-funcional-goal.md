@@ -714,3 +714,23 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Os dois testes anteriores do adaptador continuam passando (seis mutações).
   Guia distingue inventário físico aprovado, scan recusado e sizing ainda
   não carregado. O telefone continua acessível sem nova intervenção física.
+
+### Incremento 70 — continuar no mesmo boot após cleanup comprovado
+
+- Cinco arquivos: contrato de histórico privado, testes, coletor, testes do
+  coletor e plano. `--previous-clean` é opt-in, exige diretório próprio privado,
+  resultado com cleanup sem erros e logs finais positivos. Conferir todas as
+  linhas N71 com timestamp do kernel, na mesma ordem, contra dmesg fresco.
+  Se disponível, boot_id também deve coincidir; a primeira prova anterior não
+  o possui e não receberá valor retroativo inventado.
+- Recusar histórico faltante, truncado ou diferente, módulo carregado, PCI
+  ocupado e HDQ ativo. Manter logs completos privados; filtrar somente linhas
+  históricas exatas na interpretação dos resultados seguintes. Não limpar dmesg.
+  Transferir módulos a diretório novo/exclusivo em /run, sem sobrescrever o
+  módulo antigo. Gates de hash/ABI e REG_ON fresco permanecem obrigatórios.
+
+- Gate70: 24 testes passaram (cinco do histórico,19 do coletor), quatro
+  mutações de histórico falharam por asserção e12 mutações do coletor passaram.
+  A leitura física confirmou as108 linhas históricas exatas e módulos/PCI
+  ausentes, sem qualquer escrita de hardware ou novo boot. Logs históricos
+  continuam privados e intactos; ainda não foi repetido o experimento.

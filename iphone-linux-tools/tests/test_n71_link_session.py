@@ -246,6 +246,43 @@ class LinkSessionTests(unittest.TestCase):
         self.assertTrue(result['cleanup_verified'])
         self.assertIn('pcie-unload', calls)
 
+    def test_hot_preflight_requires_history_and_exclusive_module_destination(self):
+        with tempfile.TemporaryDirectory() as folder:
+            from n71_session_history import History
+            history = History.__new__(History)
+            history.lines = ['[ 10.123456] dev N71_PCIE_RESET_RESTORED asserted=1 readback=1']
+            history.known = frozenset(history.lines)
+            history.boot_id = None
+            with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
+                session = MODULE.Session(Path(folder), [({'module': 'n71-pcie-diagnostic.ko', 'sha256': 'a' * 64}, b'module')], history=history)
+            calls = []
+            live = MODULE.RELEASE + '\nN71_BOOT_ID 12345678-1234-1234-1234-123456789abc\n' + history.lines[0] + '\n'
+            def capture(stage, command, raw=None):
+                calls.append((stage, command))
+                return SimpleNamespace(returncode=0, stdout=live)
+            session.capture = capture
+            session.preflight()
+            self.assertIn('/run/n71-link-', dict(calls)['transfer-n71-pcie-diagnostic.ko'])
+            self.assertIn('set -C', dict(calls)['transfer-n71-pcie-diagnostic.ko'])
+            self.assertIn('test -z', dict(calls)['pci-empty'])
+            history.lines = []
+            with self.assertRaises(ValueError):
+                session.preflight()
+
+    def test_hot_capture_retains_raw_log_and_filters_only_prior_results(self):
+        with tempfile.TemporaryDirectory() as folder:
+            from n71_session_history import History
+            history = History.__new__(History)
+            old = '[ 10.123456] dev N71_PCIE_LINK_RESULT error=0'
+            new = '[ 12.123456] dev N71_PCIE_LINK_RESULT error=-5'
+            history.known = frozenset([old])
+            with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
+                session = MODULE.Session(Path(folder), [], history=history)
+            with patch.object(MODULE.subprocess, 'run', return_value=SimpleNamespace(returncode=0, stdout=(old + '\n' + new + '\n').encode(), stderr=b'')):
+                result = session.capture('pcie', 'dmesg')
+            self.assertEqual(result.stdout, new + '\n')
+            self.assertIn(old, (Path(folder) / 'pcie-private.log').read_text())
+
 
 if __name__ == '__main__':
     unittest.main()
