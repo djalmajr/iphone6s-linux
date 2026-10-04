@@ -27,8 +27,12 @@ via provider existente e nenhuma ativação ou escrita. Ainda não carregado no
 iPhone. [Reprodução e limites](N71_HDQ.md#observador-passivo-i2c1gpio114115--preparado-sem-teste-no-aparelho),
 [prova selecionada](evidence/n71-i2c-topology-observer.json). Continua pendente
 aquisição/restauração ativa do I2C1, HDQ e corrente líquida; #2 permanece aberta.
-CI do checkpoint documental anterior `54179b4` aprovado (PR37228026232 e
-push37228023723); essa aprovação não representa o CI do novo código `98bc26b`.
+CI do head `c683145`, que contém o código `98bc26b`, aprovado nas duas
+execuções PR 37230516183/push 37230513184, seis jobs Ubuntu/macOS/Windows.
+Referência Apple I2C1 confrontada: SCL 115/SDA 114 coincidem com o grupo Linux;
+descriptor de 12 bytes usa modo 2 e role `AP`, não phandle. Init/reset/unjam são
+operações ativas; ownership/idle/restauração e carga continuam pendentes.
+[Fatos e reprodução](N71_HDQ.md#i2c1-pinos-apple-e-abi-do-descriptor-confrontados).
 
 As seções anteriores abaixo são checkpoints históricos; afirmações sobre
 serviços ativos ou VM parada descrevem a data indicada em cada uma.

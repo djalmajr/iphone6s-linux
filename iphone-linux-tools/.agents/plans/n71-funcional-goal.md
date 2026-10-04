@@ -1455,3 +1455,31 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   bateria e digest sanitizado publicados; corrente Linux continua pendente.
   O primeiro patch documental foi recusado por contexto divergente, sem
   alterações; leitura atualizada e reaplicação passaram.
+
+### Incremento 107 — pin routing Apple I2C1 e sequência de referência
+
+- Contexto: o turno anterior alterou código e produziu prova nova, portanto
+  foi progresso. Confirmar os CI existentes por seus IDs, sem reiniciá-los.
+  O iPhone continua no iOS; este incremento é análise de dados já fixados.
+- Cinco arquivos: plano, `docs/N71_HDQ.md`, `docs/ALIMENTACAO.md`,
+  `docs/evidence/n71-i2c-acquisition-reference.json` e `docs/STATUS.md`.
+  Registrar SCL115/SDA114, descriptor12 bytes, papelAP, modo2, IRQ207,
+  clock-gate71 e janela do driver N71; não inferir estado físico da placa.
+- Conferir hashes IM4P/ADT/kernel, janelas de código/cstrings e cadeia de
+  factory GPIO: descriptor por role, init com modo2 e encaminhamento ao
+  slot5e8 do provider. Separar número de pino de ownership/drive/pull/idle.
+- Descrever init/unjam Apple como referência, sem replay: CTL/SMSTA/IMASK,
+  sequência GPIO e reset são operações ativas, não um read-only probe.
+- Verificação: digests/limites de janelas, metadados selecionados, JSON/links
+  e diff/guard. Código106 permanece inalterado; reutilizar seus gates e CI
+  exato. Nada de varredura I2C, transação, mux, firmware novo ou DFU.
+
+- Gate107: a reprodução documental conferiu dez janelas, bytes únicos dos
+  dois descriptors e hashes IM4P/ADT/kernel. JSON, links locais, diff e
+  fronteira pública passaram. CI c683145 aprovado em PR37230516183 e
+  push37230513184; seis jobs terminais. Código106 não mudou; seus gates
+  foram reutilizados, sem repetir suíte ou build por mudanças documentais.
+- Leitura local iOS sem PIN: 89% às 20:29:05 UTC, carregamento/alimentação
+  externos ativos; log privado preservado separado dos checkpoints anteriores.
+  Nenhuma ativação I2C, load, novo kernel ou DFU. Número/formato dos pinos
+  agora têm referência Apple; aquisição/restauração e corrente seguem pendentes.

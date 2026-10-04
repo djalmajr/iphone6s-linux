@@ -20,10 +20,15 @@ externa ativa. É uma leitura anterior registrada na
 [issue #2](https://github.com/djalmajr/iphone6s-linux/issues/2#issuecomment-5983537603),
 não medição de corrente ou atualização em tempo real.
 
-A leitura mais recente nesta rodada confirmou **79% às 19:58:58 UTC**, com
+Uma leitura nesta rodada confirmou **79% às 19:58:58 UTC**, com
 carregamento e alimentação externos ativos, sem PIN. Os quatro campos e
 digest do log privado estão no [checkpoint selecionado](evidence/n71-i2c-topology-observer.json).
 Isso confirma recarga no iOS; corrente líquida no Linux continua sem medição.
+
+O checkpoint seguinte confirmou **89% às 20:29:05 UTC**, com carregamento
+e alimentação externos ativos, sem PIN. [Campos e digest selecionados](evidence/n71-i2c-acquisition-reference.json).
+O telefone permanece no iOS; a subida do percentual não mede corrente de
+bateria nem valida o carregamento Linux.
 
 Isso reprova o uso contínuo na configuração atual. Não houve leitura de
 corrente de bateria no Linux, portanto não distingue carga zero, consumo

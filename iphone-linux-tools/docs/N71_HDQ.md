@@ -460,7 +460,74 @@ capturar novas linhas `N71_I2C1_GPIO`/`OBSERVED` desse load, descarregar com
 linhas antigas de `dmesg` como resultado do novo load. Logs completos ficam
 privados. Não pede novo DFU, autoload ou rebuild do kernel para esta coleta.
 
-Após a observação, ainda faltam referências Apple dos pinos, aquisição e
+Após a observação, ainda faltam comparação física dos pinos, aquisição e
 restauração do I2C1/IRQ/clocks, efeitos de leitura SN2400 e telemetria HDQ.
 Somente esses gates permitirão preparar o ciclo ativo do controlador e
 avaliar controle de carga. O aparelho continua no iOS recarregando nesta fase.
+
+## I2C1: pinos Apple e ABI do descriptor confrontados
+
+O ADT N71 fixado declara `gpio-iic_scl` como três palavras little-endian
+`115, 0x10102, 0x5041` e `gpio-iic_sda` como `114, 0x10102, 0x5041`.
+Os números coincidem com o grupo Linux I2C1; os descriptors têm 12 bytes.
+O mesmo nó declara base relativa a arm-io `0xa111000`, tamanho `0x1000`,
+IRQ 207, clock-gate 71 e clock-id 280. IDs Apple não foram convertidos em
+offsets PMGR ou frequência por aritmética presumida.
+[Trechos e hashes selecionados](evidence/n71-i2c-acquisition-reference.json).
+
+Na classe `AppleS5L8940XI2CController`, o start busca as duas propriedades
+pelo factory de `AppleGPIOICController`, conservando SCL em `object+0x100` e
+SDA em `object+0x108`. A terceira palavra é o papel `AP`, comparado ao campo obtido
+da propriedade `role`; não é um phandle ADT. A inicialização copia o pacote
+e escolhe modo pelo primeiro byte da segunda palavra. Para modo 2, o byte de valor
+inicial no bit 16 não seleciona uma escrita de nível; esse ramo é específico
+de modo 1. O modo é encaminhado ao slot `0x5e8` do provider.
+
+Isso qualifica a referência de número/formato/encaminhamento. Não transforma
+o descriptor em medição de pull, drive, clock, idle ou ownership Linux. O
+adapter ainda precisa comparar as leituras GPIO 114/115 com a máscara N71
+qualificada, adquirir os pinos pelo provider e conservar estado/cache.
+Não copiar a programação GPIO2 para os outros pinos só por semelhança.
+
+O init do controlador Apple escreve CTL (`0x1c`) com divisor nos oito bits
+baixos (fallback 4 para divisor menor que 2), SMSTA (`0x14`)=`0x0aa00040`,
+IMASK (`0x18`)=0 e offset `0x10`=`0x80000000`. Também pode aplicar tunables
+por máscara em `0x38/0x30/0x2c`; revisão maior ou igual a 6 acrescenta CTL_EN.
+Offset `0x10` não recebeu aqui um nome ou
+semântica inventada. Essa sequência difere do reset FIFO do driver Linux;
+não deve ser reexecutada como probe de leitura ou restore presumido.
+
+O caminho `_unjamBus` usa os dois objetos GPIO, inicia um laço com 9,
+chama a função `device_reset` e reinicializa o controlador. Desabilitar o
+adapter ou registrar/remover um dispositivo de plataforma não reproduz essa recuperação.
+Nenhum desses pulsos, resets ou writes foi executado no aparelho nesta fase.
+O próximo passo continua sendo aquisição/idle/restauração delimitados e
+coleta física agrupada do observador preparado, mantendo o carregador separado.
+
+Para reproduzir a conferência dos trechos, após decodificar as referências
+pelos procedimentos existentes de [ADT](../scripts/research/apple-n71-map.py)
+e [kernel](N71_REFERENCIA.md), use os arquivos privados locais:
+
+```sh
+python3 - <<'PY'
+import hashlib
+import json
+from pathlib import Path
+
+reference = json.loads(Path('docs/evidence/n71-i2c-acquisition-reference.json').read_text())['apple_i2c1_reference']
+for filename, digest, key in (
+    ('runtime/n71-reference-final3-20261002/n71-adt-private.bin', reference['adt_sha256'], 'descriptor_windows'),
+    ('runtime/n71-driver-reference-20261002/kernelcache.n71.macho', reference['kernel_sha256'], 'verification_windows'),
+):
+    raw = Path(filename).read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == digest
+    for window in reference[key]:
+        start, size = window['file_offset'], window['size']
+        assert 0 <= start < len(raw) and start + size <= len(raw)
+        assert hashlib.sha256(raw[start:start + size]).hexdigest() == window['sha256']
+print('APPLE_I2C1_REFERENCE_WINDOWS_OK')
+PY
+```
+
+Os hashes identificam os trechos; sua semântica vem da análise das instruções
+e dos metadados. Dumps/disassembly completos não são publicados nem executados.
