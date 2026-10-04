@@ -389,3 +389,40 @@ python3 -m unittest discover -s tests -p test_n71_pcie_bar_sizing.py -v
 # Na receita de módulo externo acima, usar um diretório M novo;
 # a execução registrada usou /home/ubuntu/n71-bar-inputs-20261004/phone/kernel.
 ```
+
+### Resultado físico e continuação no mesmo boot
+
+[A medição direta passou](evidence/n71-bar-sizing-first-physical.json):
+BAR0=32KiB(máscaraffff8004/ffffffff), BAR2=4MiB(ffc00004/ffffffff).
+BAR4/5 são não implementados. Foram66 leituras,13 pedidos,10 escritas de
+probe e zero recusas; restauração completa/readback, reset/domínios, REG_ON80,
+unload e PCI sysfs vazio passaram. SSH/HTTP continuaram e novo snapshot foi
+salvo. Esse experimento usou o boot já aberto: nenhum DFU/PIN adicional.
+Ainda não atribuiu BARs, acessou chip-MMIO ou habilitou DART/DMA/rádio.
+
+O coletor permite continuação somente com `--previous-clean` explícito:
+resultado privado com cleanup sem erros e endpoint/ABI exatos, logs finais
+positivos e todas as linhas N71 com timestamps iguais ao dmesg fresco, na
+mesma ordem. Se a prova anterior contém boot_id, deve coincidir também.
+Prova antiga sem boot_id precisa do histórico timestampado completo; nenhum
+valor é acrescentado retroativamente. Módulos carregados, PCI ocupado ou
+histórico divergente encerram a execução antes da aquisição de REG_ON.
+
+As linhas antigas ficam nos logs completos e são filtradas somente na
+interpretação da nova coleta. Não limpar dmesg. Módulos vão a diretório novo
+exclusivo em /run, com hashes conferidos, preservando os arquivos anteriores.
+Não existe retry automático: cada continuação é uma operação explícita.
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-bar-candidate-20261004/deployment.json" \
+  --bar-sizing \
+  --previous-clean "$PWD/runtime/n71-host-scan-session-20261004" --check
+```
+
+No boot correspondente já ativo, substituir --check por --output-dir em
+diretório novo diretamente sob runtime. A sessão anterior precisa pertencer
+a esse mesmo boot; não reutilizar a prova depois de retornar ao iOS.
+Os modos host_scan e bar_sizing são mutuamente exclusivos e implicam inventário.
+Antes de mudar os binários, compor perfil privado preservando payload/DTB/
+initramfs e identidades; os modos antigos mantêm seus hashes registrados.

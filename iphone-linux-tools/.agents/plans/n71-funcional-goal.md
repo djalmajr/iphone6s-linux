@@ -752,3 +752,12 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   de probe, zero refusals; BAR0=32KiB, BAR2=4MiB, superiores não são recursos
   separados. Config/REG_ON/reset/power/unload e PCI vazio comprovados. Não
   habilitou MMIO de BAR, DMA, DART ou rádio e não pediu outro DFU.
+
+### Incremento 72 — documentação e CI da continuação física
+
+- Até cinco arquivos: evidência selecionada física, guia LINK e plano.
+  Registrar sizing real, cleanup, SSH/HTTP e snapshot, sem boot_id, chaves,
+  firmware ou logs brutos. Incluir receita --previous-clean e diferença entre
+  sizing e acesso MMIO. Publicar no branch autorizado e acompanhar CI.
+- Atualizar #9/#34 com avanço e pendências; não encerrar Wi-Fi/DMA/gauge.
+  Preparar o contrato de roteamento/MMIO e chip-ID sem pedir outro DFU.
