@@ -531,3 +531,79 @@ PY
 
 Os hashes identificam os trechos; sua semântica vem da análise das instruções
 e dos metadados. Dumps/disassembly completos não são publicados nem executados.
+
+## Observador PMGR — I2C1 e domínios pais
+
+O [módulo separado](../phone/kernel/n71-pmgr-power-observe.c), código
+`80b3fe0`, limita-se ao PMGR `20e000000/8c000` e à cadeia
+`i2c1@801a0 → sio_p@80158 → sio_busif@80150`. Confere caminhos, recursos,
+compatible, labels, relações phandle e ausência de clock/reset no parent.
+Não aciona domínio, clock, reset, controlador ou cliente I2C.
+
+Antes de obter o syscon map, exige o domain já ligado ao driver
+`apple-pmgr-pwrstate`, com `of_node` correto, sob device lock. Na fonte
+fixada desse driver, seu probe só chega ao sucesso depois de obter o map
+do mesmo parent. Esse binding sob lock qualifica a precondição nesta build;
+`syscon_node_to_regmap` é uma API get-or-create no caso geral e não deve
+ser chamada como lookup passivo sem esses gates. Não copia structs privados
+do driver, registra provider ou acessa uma região MMIO alternativa.
+
+São duas leituras `regmap_read_bypassed` por domain, seis no total. Um lock
+por vez protege a conferência de binding; referências/locks são liberados
+em todos os caminhos. As três linhas `N71_PMGR domain=...` e o marcador
+`N71_PMGR_OBSERVED` só são emitidos depois de todas as leituras passarem.
+`stable` compara palavras completas. A cadeia é amostrada sequencialmente:
+não é um snapshot atômico, reserva de ownership ou prova de idle do I2C.
+
+No driver Linux fixado, alvo ocupa bits 3:0, estado real bits 7:4,
+auto-enable bit 28 e reset bit 31; os valores de estado usados são ativo
+`f`, clock-gated `4` e power-gated `0`. Isso explica a referência do software;
+as amostras não medem frequência, tensão, percentual ou corrente de bateria.
+Mesmo um estado ativo não comprova controlador/SN2400 funcional ou carga.
+
+[Prova selecionada](evidence/n71-pmgr-power-observer.json): módulo real
+executado em harness C, 88 cenários/16 mutações compiladas por asserção no
+Mac e ARM64; build externo Werror/modpost, 11.672 bytes, ELF64 LE/REL AArch64
+e ABI do bundle. Image/config/exports e fontes selecionadas preservados.
+Imports diretos não incluem escrita regmap, IRQ, DMA, clock/reset ou ioremap.
+O gate syscon descrito acima continua obrigatório apesar desse audit.
+**Nenhum load físico foi realizado.**
+
+Reproduzir os gates na raiz de `iphone-linux-tools`:
+
+```sh
+python3 -B tests/test_n71_pmgr_power_observe.py
+```
+
+Build isolado na VM dedicada, com source/output do bundle preservados:
+
+```sh
+umask 077
+mkdir -p runtime
+module_dir="$(mktemp -d "$PWD/runtime/pmgr-observe-build.XXXXXX")"
+cp phone/kernel/n71-pmgr-power-observe.c "$module_dir/"
+cat > "$module_dir/Makefile" <<'MAKEFILE'
+obj-m += n71-pmgr-power-observe.o
+ccflags-y += -Werror
+MAKEFILE
+env LOCALVERSION= make -C /home/ubuntu/kernel-n71-bundle-source-20261002 \
+  O=/home/ubuntu/kernel-n71-bundle-build-20261002 ARCH=arm64 -j2 \
+  KCFLAGS=-Werror M="$module_dir" \
+  KBUILD_EXTRA_SYMBOLS=/home/ubuntu/kernel-n71-bundle-build-20261002/vmlinux.symvers modules
+modinfo -F vermagic "$module_dir/n71-pmgr-power-observe.ko"
+sha256sum "$module_dir/n71-pmgr-power-observe.ko"
+```
+
+O aviso de `Module.symvers` global ausente é conhecido; são usados os exports
+preservados, sem suprimir erros modpost. Conferir hashes antes/depois e ABI.
+O caminho M/toolchain pode mudar o hash binário; selecionar a prova daquela build.
+
+Na próxima sessão física necessária, coletar no mesmo boot do bundle junto
+do [observador I2C1/GPIO](#observador-passivo-i2c1gpio114115--preparado-sem-teste-no-aparelho).
+Transferir o módulo PMGR para `/run` por SSH e conferir SHA no destino antes
+de `insmod /run/n71-pmgr-power-observe.ko run=1`. Guardar somente linhas desse
+load, remover com `rmmod n71_pmgr_power_observe`, conferir `N71_PMGR_UNLOADED`,
+ausência em `/sys/module/n71_pmgr_power_observe` e SSH/HTTP preservados.
+Não usar dmesg antigo como prova do load atual nem pedir DFU por módulo.
+Salvar snapshot e retornar ao iOS ao concluir a coleta curta, pois carga
+sustentada Linux continua sem comprovação. Nenhum usuário precisa operar o console.

@@ -4,7 +4,7 @@
 
 iPhone no iOS para recarga após relato de descarga quase completa durante
 Linux. Leituras locais sem PIN confirmaram5% e depois17%, com carga externa
-ativa; o último checkpoint verificado da recarga foi 79% às 19:58:58 UTC.
+ativa; o último checkpoint verificado da recarga foi 93% às 20:48:17 UTC.
 Linux não está online. Nenhum novo DFU foi solicitado nesta rodada;
 desenvolvimento segue no Mac/VM para implementar carga/telemetria N71.
 [Evidência e limites](ALIMENTACAO.md), [issue P0](https://github.com/djalmajr/iphone6s-linux/issues/2).
@@ -33,6 +33,19 @@ Referência Apple I2C1 confrontada: SCL 115/SDA 114 coincidem com o grupo Linux;
 descriptor de 12 bytes usa modo 2 e role `AP`, não phandle. Init/reset/unjam são
 operações ativas; ownership/idle/restauração e carga continuam pendentes.
 [Fatos e reprodução](N71_HDQ.md#i2c1-pinos-apple-e-abi-do-descriptor-confrontados).
+
+Correção GPIO `19f6129`: 816 cenários, 11 mutações e regressão compilada da
+fonte original aprovados no Mac/ARM64. CI desse head aprovado nos seis jobs
+PR 37233188196/push 37233183384. Integração no bundle permanece na
+[issue #35](https://github.com/djalmajr/iphone6s-linux/issues/35); erro propagado
+não comprova rollback ou carga funcional.
+
+Observador PMGR `80b3fe0` preparado: 88 cenários/16 mutações Mac/ARM64,
+build externo Werror, seis leituras de I2C1/sio_p/sio_busif via syscon existente
+qualificado pelo binding sob lock. Ainda sem load físico. Pode ser coletado
+junto do observador dos pinos no mesmo boot do bundle preservado.
+[Reprodução e limites](N71_HDQ.md#observador-pmgr--i2c1-e-domínios-pais),
+[prova e checkpoint iOS](evidence/n71-pmgr-power-observer.json).
 
 As seções anteriores abaixo são checkpoints históricos; afirmações sobre
 serviços ativos ou VM parada descrevem a data indicada em cada uma.

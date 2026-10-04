@@ -1565,3 +1565,30 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   metadados GPIO. Os originais continuavam preservados na VM: foram restaurados
   e seus digests conferidos contra a prova pública108. O PMGR agora tem pasta
   privada dedicada runtime/n71-pmgr-observer-20261004; nenhum log ficou perdido.
+
+### Incremento 110 — reprodução e limites da coleta PMGR agrupada
+
+- Cinco arquivos: plano, docs/N71_HDQ.md, docs/ALIMENTACAO.md, docs/STATUS.md
+  e docs/evidence/n71-pmgr-power-observer.json. Registrar source80b3fe0,
+  inputs/ABI/artifact/logs, syscon bound-guard e seis leituras restritas.
+- Separar estado PMGR de ownership/idle/corrente de bateria e de ativação I2C1.
+  A API syscon pode criar map no caso geral; qualificação do driver fixado
+  sob lock é precondição, não supor lookup sem efeitos em outros devices.
+- Documentar build separado e load/unload junto do observador GPIO98bc26b
+  no mesmo boot necessário; nenhum Image novo/DFU para cada módulo.
+  Selecionar logs só desse load; comparar SHA no destino e confirmar serviços.
+- Verificação: hashes/ELF/imports/links/JSON e sintaxe dos snippets; reutilizar
+  código109/gates inalterados. CI19f6129 aprovado; observar CI de80b3fe0 sem
+  atribuir prova anterior ao novo código. Sem nova ação física nesta fatia.
+
+- Gate110: JSON/inputs/logs/artifact, links locais e sintaxe dos dois snippets
+  shell aprovados. Quatro fontes selecionadas conferidas byte a byte contra
+  blobs HEAD958481f, não apenas status/diff. Código109 e gates inalterados
+  reutilizados. CI80b3fe0 observado em PR37234471571/push37234468352 ainda ativo.
+- Coleta física proposta somente após artefatos/gates/documentação preparados:
+  um DFU manual, observadores GPIO/PMGR juntos, snapshot e retorno em sessão
+  curta. Disponibilidade do operador perguntada; boot ainda não foi iniciado.
+- CI80b3fe0 terminou aprovado em PR37234471571 e push37234468352, seis
+  jobs. Checkpoint documental só foi publicado após esses jobs terminarem,
+  para não cancelá-los por concorrência cancel-in-progress. Ambos os módulos
+  passivos têm gates nativos/build e podem compor a mesma coleta física.

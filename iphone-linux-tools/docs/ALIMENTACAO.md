@@ -30,6 +30,11 @@ e alimentação externos ativos, sem PIN. [Campos e digest selecionados](evidenc
 O telefone permanece no iOS; a subida do percentual não mede corrente de
 bateria nem valida o carregamento Linux.
 
+Nova leitura sem PIN: **93% às 20:48:17 UTC**, ainda com carregamento e
+alimentação externos ativos. [Checkpoint e observador PMGR preparado](evidence/n71-pmgr-power-observer.json).
+Esse observador mede somente estados PMGR do I2C1 e seus pais; ainda não
+foi carregado e não fornece percentual/corrente da bateria no Linux.
+
 Isso reprova o uso contínuo na configuração atual. Não houve leitura de
 corrente de bateria no Linux, portanto não distingue carga zero, consumo
 superior à entrada ou falha específica do controle de carga. O orçamento
@@ -57,6 +62,12 @@ Não ativa o barramento nem aciona o carregador; passou 86 casos e 15 mutações
 Mac/ARM64 e build externo do bundle, ainda **sem teste no aparelho**.
 Esse módulo pode ser atualizado por SSH no mesmo boot, sem trocar kernel.
 Ele prepara aquisição/cleanup, sem resolver por si só a descarga no Linux.
+
+A coleta será agrupada com seis leituras PMGR de I2C1/sio_p/sio_busif no
+mesmo boot necessário. Os dois módulos externos usam o ABI preservado;
+nenhum Image novo é necessário para essa observação. A correção de erros
+GPIO tem [integração pendente](https://github.com/djalmajr/iphone6s-linux/issues/35)
+e não pode ser carregada como duplicata do provider embutido.
 
 ### Encoder SN2400 específico N71 — cálculo implementado, driver pendente
 
