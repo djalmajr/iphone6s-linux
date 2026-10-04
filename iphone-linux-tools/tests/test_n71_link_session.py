@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import tempfile
 import unittest
 from unittest.mock import patch
+from test_n71_bar_result import TEXT as SIZING, RAW as SIZING_RAW
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts/host'))
@@ -39,7 +40,7 @@ SCAN = ('N71_PCIE_SCAN_DEVICE bus=0 devfn=08 id=1004106b class=060400 command=01
 
 
 class LinkSessionTests(unittest.TestCase):
-    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False):
+    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False, bar_sizing=False):
         replies = {'observe': OBSERVE, 'activate': ACTIVE,
                    'pcie': 'N71_PCIE_LINK_RESULT error=-110 port88=0000880c reads=10000\n',
                    'pcie-cleanup': CLEANUP, 'pcie-unload': 'N71_PCIE_UNLOADED\n',
@@ -47,11 +48,14 @@ class LinkSessionTests(unittest.TestCase):
                    'reg-unload': 'N71_REG_ON_REMOVE error=0 restore_pending=0\nN71_REG_UNLOADED\n'}
         if host_scan:
             replies.update({'pcie-cleanup': CLEANUP + SCAN, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
+        if bar_sizing:
+            replies.update({'pcie-cleanup': CLEANUP + SIZING, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
         replies.update(overrides or {})
         calls = []
         with tempfile.TemporaryDirectory() as folder:
             with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
-                session = MODULE.Session(Path(folder), [], config_inventory=config_inventory, host_scan=host_scan)
+                session = MODULE.Session(Path(folder), [], config_inventory=config_inventory,
+                                         host_scan=host_scan, bar_sizing=bar_sizing)
 
             def capture(stage, command, raw=None):
                 calls.append((stage, command))
@@ -282,6 +286,26 @@ class LinkSessionTests(unittest.TestCase):
                 result = session.capture('pcie', 'dmesg')
             self.assertEqual(result.stdout, new + '\n')
             self.assertIn(old, (Path(folder) / 'pcie-private.log').read_text())
+
+    def test_direct_sizing_mode_and_cleanup(self):
+        inventory = INVENTORY
+        for index, raw in enumerate(SIZING_RAW):
+            inventory = inventory.replace(f'index={index} value=00000000', f'index={index} value={raw:08x}')
+        with patch.object(MODULE, 'ROOT', ROOT):
+            self.assertNotEqual(MODULE.selected_records(False, False, True)[0]['sha256'],
+                                MODULE.selected_records(False, True)[0]['sha256'])
+            with self.assertRaises(ValueError):
+                MODULE.selected_records(False, True, True)
+        code, proof, calls = self.run_session({'pcie': LINK + inventory + SIZING}, bar_sizing=True)
+        self.assertEqual(code, 0)
+        self.assertIn('config_inventory=1 bar_sizing=1;', calls['pcie'])
+        self.assertEqual(proof['bar_sizing']['bars'][0]['bytes'], 0x8000)
+        for cleanup in (CLEANUP, CLEANUP + SIZING.replace('RESTORED error=0', 'RESTORED error=-5')):
+            code, proof, calls = self.run_session({'pcie': LINK + inventory + SIZING,
+                                                  'pcie-cleanup': cleanup}, bar_sizing=True)
+            self.assertEqual(code, 1)
+            self.assertFalse(proof['cleanup_verified'])
+            self.assertNotIn('pcie-unload', calls)
 
 
 if __name__ == '__main__':

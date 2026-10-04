@@ -734,3 +734,21 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   A leitura física confirmou as108 linhas históricas exatas e módulos/PCI
   ausentes, sem qualquer escrita de hardware ou novo boot. Logs históricos
   continuam privados e intactos; ainda não foi repetido o experimento.
+
+### Incremento 71 — seleção e validação da medição física de BARs
+
+- Cinco arquivos: parser de sizing, testes, coletor, testes e plano. Selecionar
+  `--bar-sizing` com registro público exato; modo implica inventário e exclui
+  host_scan. Validar seis linhas únicas, máscaras/atributos/pares64 e tamanhos
+  recalculados, não somente texto de sucesso. Exigir restore/readback antes
+  do unload e PCI sysfs vazio. Testar erros e mutações de aceitação/cleanup.
+- Compor perfil privado com módulo novo e kernel/identidades preservados.
+  Executar continuação física explícita com prova70, mantendo o mesmo boot.
+  Guardar logs/resultados, verificar SSH/HTTP e snapshot após o cleanup.
+
+- Gate71: 24 testes passaram (quatro do parser com quatro mutações por
+  asserção,20 do coletor); perfil/hash/ABI e histórico passaram localmente.
+  A continuação física no mesmo boot passou:66 leituras,13 pedidos,10 escritas
+  de probe, zero refusals; BAR0=32KiB, BAR2=4MiB, superiores não são recursos
+  separados. Config/REG_ON/reset/power/unload e PCI vazio comprovados. Não
+  habilitou MMIO de BAR, DMA, DART ou rádio e não pediu outro DFU.
