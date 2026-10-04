@@ -53,9 +53,17 @@ regressão da fonte original detectada e arquivo completo compilado Werror
 como objeto embutido. Modpost externo recusou esse provider embutido;
 erros preservados e integração/link da imagem pendentes na
 [issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
-Probe/is_active e rollback de efeitos parciais não foram corrigidos.
+Essa patch004 isolada não corrige probe/is_active ou rollback de efeitos parciais.
 CI desse código aprovado em PR37236898569/push37236896067, seis jobs.
 [Reprodução e limites](N71_HDQ.md#erros-dos-callbacks-pmgr--correção-preparada).
+
+Correção inicial do probe PMGR `21a786c`, patch005 após004: 3.138 cenários,
+12 mutações Mac/ARM64 e arquivo completo obj-y/Werror. Primeiro erro de I/O
+chega ao caller antes de registrar domínio/provider/reset; bool de estado
+só muda após leitura válida. Cleanup após registro, efeitos parciais,
+ownership/idle e integração/link/boot seguem pendentes na issue #36.
+CI21a786c aprovado em PR37238520733/push37238517260, seis jobs.
+[Reprodução e limites](N71_HDQ.md#erros-iniciais-do-probe-pmgr--correção-preparada).
 
 As seções anteriores abaixo são checkpoints históricos; afirmações sobre
 serviços ativos ou VM parada descrevem a data indicada em cada uma.

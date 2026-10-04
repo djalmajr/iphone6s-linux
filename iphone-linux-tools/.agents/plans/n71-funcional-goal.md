@@ -1718,3 +1718,32 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - CI8ad5091 aprovado em PR37237523350/push37237521125, seis jobs. Zero
   reinicializações/carga/firmware no iPhone neste incremento; disponibilidade
   física continua sendo a única dependência da coleta passiva pronta.
+
+### Incremento 114 — reprodução das patches PMGR004+005
+
+- Cinco arquivos: plano, docs/N71_HDQ.md, docs/ALIMENTACAO.md,
+  docs/STATUS.md e docs/evidence/n71-pmgr-probe-errors.json. Código21a786c
+  publicado; observar seu CI terminal antes de publicar este checkpoint.
+- Atualizar receita canonical obj-y para aplicar004 e005 numa cópia do
+  provider fixado, conferindo os digests intermediário/final. Preservar a
+  prova histórica004 e explicar o delta do probe, sem repetir todo o build.
+- Separar I/O inicial corrigido de cleanup após registro, ownership/idle,
+  efeito parcial e carga/telemetria físicos ainda pendentes. Módulo duplicado
+  continua proibido; nenhum novo DFU por patch/commit.
+- Verificar JSON/inputs/logs/artefato e links locais, bash -n da receita.
+  Reutilizar gates113 e callbacks111 bytes inalterados, sem nova suíte local
+  apenas por documentação. CI8ad5091 terminal aprovado e preservado.
+
+- Gate114: JSON/digests e links locais aprovados; receita canonical004+005
+  passou bash -n e ordem das duas patches foi conferida. Código113/artefato
+  inalterados, gates nativos/ARM64/Werror reutilizados. CI21a786c confirmado
+  ativo nos handles PR37238520733/push37238517260; watchers específicos
+  iniciados sem refazer testes ou publicar docs antes do resultado terminal.
+
+- CI21a786c terminou aprovado em PR37238520733/push37238517260, seis
+  jobs Ubuntu/macOS/Windows; watchers encerraram exit0 e JSON terminal foi
+  conferido por job. Não se reiniciou gate nem cancelou CI por novo push.
+- Semântica child/parent confirmada no core fixado: parent_node fica na
+  lista parent_links do domínio pai, child_node na child_links do subdomain.
+  Assim a recusa de genpd_remove por parent_links não vazio é por filhos.
+  Esta leitura não prova exclusão de concorrência/cleanup no hardware.

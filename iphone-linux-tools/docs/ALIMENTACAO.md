@@ -79,8 +79,12 @@ Os callbacks de estado/reset PMGR também descartavam erros de I/O. A
 [patch preparada e seus limites](N71_HDQ.md#erros-dos-callbacks-pmgr--correção-preparada)
 passou 492 casos/14 mutações Mac/ARM64 e compilou como objeto embutido
 Werror. A integração está na [issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36);
-probe/is_active e rollback de efeitos parciais continuam pendentes antes
-de aquisição ativa do barramento. Isso ainda não implementa carga no Linux.
+os erros iniciais de probe/is_active foram corrigidos na
+[patch seguinte](N71_HDQ.md#erros-iniciais-do-probe-pmgr--correção-preparada),
+com 3.138 casos/12 mutações Mac/ARM64 e fonte completa004+005 obj-y/Werror.
+Cleanup após registro, ownership/idle e rollback de efeitos parciais continuam
+pendentes antes de aquisição ativa do barramento. Isso ainda não implementa
+carga no Linux; nenhum DFU foi realizado por esta entrega.
 
 ### Encoder SN2400 específico N71 — cálculo implementado, driver pendente
 

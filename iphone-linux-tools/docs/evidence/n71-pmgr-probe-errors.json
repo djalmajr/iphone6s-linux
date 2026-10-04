@@ -63,5 +63,18 @@
     "provider_add_failure_domain_cleanup_pending": true,
     "domain_remove_can_refuse_if_children_or_devices_or_provider_present": true
   },
-  "limits": "Early probe I/O errors are returned before domain publication, preserving success semantics. Post-registration lifecycle/iterator/provider cleanup, partial effects, full image link/integration and physical qualification remain pending. No active I2C1, charger or telemetry proof."
+  "limits": "Early probe I/O errors are returned before domain publication, preserving success semantics. Post-registration lifecycle/iterator/provider cleanup, partial effects, full image link/integration and physical qualification remain pending. No active I2C1, charger or telemetry proof.",
+  "code_commit": "21a786c8bfb018c82d2d3311b5dae1ae6cd77fd1",
+  "ci": {
+    "code_head": "21a786c8bfb018c82d2d3311b5dae1ae6cd77fd1",
+    "pull_request_run": 37238520733,
+    "push_run": 37238517260,
+    "conclusion": "success",
+    "jobs_total": 6,
+    "platforms": [
+      "Ubuntu",
+      "macOS",
+      "Windows"
+    ]
+  }
 }

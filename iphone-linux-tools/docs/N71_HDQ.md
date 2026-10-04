@@ -620,8 +620,11 @@ Status devolve erro de leitura, em vez de relatar reset inativo.
 
 Palavras, máscaras e ordem de sucesso são preservadas. Erro após efeito
 parcial **não** restaura hardware; cleanup continua obrigação do caller.
-`apple_pmgr_ps_is_active` e as operações do probe ainda descartam erros.
-Assim, esta patch não qualifica aquisição ativa I2C1 ou uso do carregador.
+Na patch004 isolada, `apple_pmgr_ps_is_active` e o probe ainda descartam
+erros. A [patch005 abaixo](#erros-iniciais-do-probe-pmgr--correção-preparada)
+propaga esses erros iniciais. Cleanup após registro e restauração de efeitos
+parciais continuam pendentes; as patches não qualificam aquisição ativa
+I2C1 ou uso do carregador.
 [Integração pendente #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
 
 [Prova selecionada](evidence/n71-pmgr-errors.json): 492 casos por baseline
@@ -653,17 +656,21 @@ repo_dir="$PWD/iphone-linux-tools"
 kernel_src=/home/ubuntu/kernel-n71-bundle-source-20261002
 kernel_out=/home/ubuntu/kernel-n71-bundle-build-20261002
 provider=drivers/pmdomain/apple/pmgr-pwrstate.c
-patch_file="$repo_dir/phone/kernel/patches/0004-apple-pmgr-errors.patch"
+patch_dir="$repo_dir/phone/kernel/patches"
 test "$(git -C "$kernel_src" rev-parse HEAD)" = 958481f87fee0949ff6a9a4af77f7eb6dac8a149
 python3 "$repo_dir/tests/test_n71_pmgr_errors.py"
+python3 "$repo_dir/tests/test_n71_pmgr_probe.py"
 sha256sum "$kernel_out/.config" "$kernel_out/arch/arm64/boot/Image" "$kernel_out/vmlinux.symvers"
 task_dir=$(mktemp -d /home/ubuntu/n71-pmgr-errors-check.XXXXXX)
 mkdir -p "$task_dir/$(dirname "$provider")" "$task_dir/builtin-object"
 cp "$kernel_src/$provider" "$task_dir/$provider"
 printf '%s  %s\n' 4b0adc3013e2fabe9ca1cb8228f8f6b7934af4b667f7f0f893b675102d8710df "$task_dir/$provider" | sha256sum -c -
-git -C "$task_dir" apply --check "$patch_file"
-git -C "$task_dir" apply "$patch_file"
+git -C "$task_dir" apply --check "$patch_dir/0004-apple-pmgr-errors.patch"
+git -C "$task_dir" apply "$patch_dir/0004-apple-pmgr-errors.patch"
 printf '%s  %s\n' cc65bad1b788c4fa1d6e374b236f1b27c840797b727a600035294f17b71433e9 "$task_dir/$provider" | sha256sum -c -
+git -C "$task_dir" apply --check "$patch_dir/0005-apple-pmgr-probe-errors.patch"
+git -C "$task_dir" apply "$patch_dir/0005-apple-pmgr-probe-errors.patch"
+printf '%s  %s\n' 7ad9c93264edbf3e42400ff7d654e0c143db68f4500b196a8ae6ee260e43b5a4 "$task_dir/$provider" | sha256sum -c -
 cp "$task_dir/$provider" "$task_dir/builtin-object/pmgr-pwrstate.c"
 printf 'obj-y += pmgr-pwrstate.o\n' > "$task_dir/builtin-object/Makefile"
 env LOCALVERSION= make -C "$kernel_src" O="$kernel_out" ARCH=arm64 -j2 \
@@ -679,3 +686,29 @@ com hashes; não publicar objetos, dumps ou chaves. A integração futura deve
 agrupar GPIO/PMGR/DART necessários numa candidata separada, preservando rollback.
 A observação passiva dos pinos/PMGR continua possível no bundle atual por SSH,
 com os dois módulos preparados no mesmo boot curto; nenhum `insmod` desta patch.
+
+## Erros iniciais do probe PMGR — correção preparada
+
+A [patch005](../phone/kernel/patches/0005-apple-pmgr-probe-errors.patch),
+código `21a786c`, aplica após004. O helper de estado passa a devolver erro
+e só escreve o bool de saída após leitura válida. Probe propaga falhas de
+min-state, leitura de estado, power-on de domínio always-on e auto-PM antes
+de registrar genpd/provider/reset. Propriedade min-state ausente ou fora do
+limite mantém a semântica anterior; máscaras/flags e sucesso são preservados.
+
+[Prova selecionada](evidence/n71-pmgr-probe-errors.json): 3.138 cenários,
+12 mutações compiladas detectadas por SIGABRT/asserção e predecessor004
+detectado no Mac/ARM64. Fixture compila funções reais, verificando domínio
+publicado/ausente, palavra final, primeiro erro e bool preservado na falha.
+Fonte completa004+005 compilou obj-y/Werror, objeto ARM64 de 11.424 bytes,
+sem MODULE; config/Image/exports preservados. Callbacks111 conferidos byte
+a byte iguais, com seus gates reutilizados. A receita acima reproduz as duas
+patches numa cópia, sem alterar o provider do bundle funcional.
+
+**Ainda pendente:** cleanup depois de registrar genpd/provider, validação
+do iterator e efeitos parciais; link completo da imagem e qualificação física.
+Na fonte genpd fixada, remover um domínio pode retornar EBUSY por provider,
+filhos ou dispositivos. A falha de add_provider no PMGR não remove o domínio
+já inicializado. Não presumir que um retorno de erro restaura hardware ou
+reserva ownership. [Issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
+Nenhuma aquisição ativa I2C1, operação do carregador ou leitura gauge foi feita.
