@@ -33,10 +33,13 @@ static int read32(void *context, u32 offset, u32 *value)
 
 static void initialize(struct mock *mock)
 {
+	unsigned int index;
 	memset(mock, 0, sizeof(*mock));
 	mock->failure = -EACCES;
 	mock->values[1] = 0x01800280;
 	mock->values[2] = 0x82000005;
+	for (index = 0; index < 16; index++)
+		mock->values[index + 3] = 0x01234000 + index;
 	mock->values[3] = 0x80123456;
 	mock->values[18] = 0x80abcdef;
 }
@@ -52,6 +55,9 @@ int main(void)
 	assert(mock.reads == 38 && mock.guards == 39);
 	assert(result.command == 0 && result.tcr == 0x01800280 &&
 	       result.error == 0x82000005 && result.enabled == 5 && result.valid_ttbrs == 0x8001);
+	/* Mutation captured: dropping, truncating or reordering any TTBR loses restore state. */
+	for (index = 0; index < 16; index++)
+		assert(result.ttbr[index] == mock.values[index + 3]);
 	memset(&sentinel, 0xa5, sizeof(sentinel));
 	for (index = 1; index <= 38; index++) {
 		initialize(&mock); result = sentinel; mock.fail_read = index;

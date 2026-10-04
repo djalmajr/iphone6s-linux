@@ -14,6 +14,8 @@ MUTATIONS = (
     ('ignore-busy', 'value & 8', 'value & 16'),
     ('ignore-instability', 'else if (value != first[index])', 'else if (value == first[index])'),
     ('wrong-ttbr-valid', '1U << 31', '1U << 30'),
+    ('truncate-ttbr', 'result.ttbr[index] = first[index + 3];',
+     'result.ttbr[index] = first[index + 3] & 0x80000000U;'),
 )
 
 

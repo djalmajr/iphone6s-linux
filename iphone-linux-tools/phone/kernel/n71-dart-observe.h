@@ -20,6 +20,7 @@ struct n71_dart_io {
 
 struct n71_dart_observation {
 	u32 command, tcr, error, enabled, valid_ttbrs;
+	u32 ttbr[16];
 };
 
 static inline u32 n71_dart_offset(unsigned int index)
@@ -64,9 +65,11 @@ static inline int n71_dart_observe(const struct n71_dart_io *io,
 	for (index = 0; index < 4; index++)
 		if ((result.tcr >> (index * 8)) & 0x80)
 			result.enabled |= 1U << index;
-	for (index = 0; index < 16; index++)
+	for (index = 0; index < 16; index++) {
+		result.ttbr[index] = first[index + 3];
 		if (first[index + 3] & (1U << 31))
 			result.valid_ttbrs |= 1U << index;
+	}
 	*out = result;
 	return 0;
 }

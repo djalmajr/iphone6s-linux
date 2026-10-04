@@ -922,3 +922,26 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Mac. Não há typechecker configurado; C/Werror e parsers compilados/testados.
   Atualizar #9/#34 com provas e próximos passos; continuar análise SID/IRQ
   no mesmo boot, preservando tabelas válidas antes de ativar um provider.
+
+- Gate80: CI push37217289672 e PR37217292953 concluídos com sucesso no
+  commit228582a; lint/testes Linux/macOS/Windows preservados. Não há
+  typechecker separado configurado; builds C/ARM64 e parsers são os gates.
+
+### Incremento 81 — conservar os 16 TTBRs estáveis antes de ativar DART
+
+- Quatro arquivos: plano, contrato puro, teste C e executor de mutações.
+  A observação atual publica somente valid-bits. Preservar todas as palavras
+  no resultado atômico, sem aumentar38 leituras/39 gates nem expor escrita.
+- O teste exige conteúdo/ordem integral, inclusive palavras sem valid-bit;
+  cada falha conserva a saída sentinela. Acrescentar mutante de truncamento
+  do ponteiro; compilação C11/Werror e morte por asserção obrigatórias.
+- Decisão: capturar antes do provider, pois probe/remove zeram as tabelas.
+  SID0 é qualificado pela cadeia ADT WLAN→mapper84/reg0 e pelo método
+  IODARTMapper::_registerMapper que passa reg como SID. DMA físico/IRQ
+  continuam pendentes; vm-offset Apple é par u32, não endereço FDT u64.
+  Alternativa: ativação imediata; descartada por perder estado não conservado.
+
+- Gate81: C11/Werror e sete mutantes compilados passaram; cada mutante morreu
+  por asserção.38 leituras/39 gates preservados; saída integral atômica nos
+  cenários de falha. SSH/HTTP confirmados novamente no endereço USB; o HTTP
+  não está vinculado a127.0.0.1, portanto essa sondagem inicial foi corrigida.
