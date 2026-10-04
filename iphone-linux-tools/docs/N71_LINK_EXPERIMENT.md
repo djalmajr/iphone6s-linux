@@ -276,7 +276,7 @@ python3 tests/run_n71_pcie_scan_mutations.py
 python3 -m unittest discover -s tests -p test_n71_scan_result.py -v
 python3 tests/run_n71_scan_result_mutations.py
 python3 scripts/host/n71-link-session.py \
-  --profile "$PWD/runtime/n71-pcie-intx-candidate-20261004/deployment.json" \
+  --profile "$PWD/runtime/n71-pcie-bridge-candidate-20261004/deployment.json" \
   --host-scan --check
 ```
 
@@ -369,7 +369,7 @@ REG_ON80 restabelecido e ambos os módulos removidos. Nenhuma escrita de probe
 foi aceita; a restauração fez escritas dos valores capturados. Tamanhos de BAR
 não foram comprovados nesse scan. SSH/HTTP e snapshot passaram depois dele.
 
-O coletor `--host-scan` agora seleciona o
+O coletor `--host-scan` selecionou nesta etapa o
 [build com probe INTx delimitado](evidence/n71-pcie-intx-scan-build.json),
 módulo57112 bytes, SHA256
 `f98869b246e582479302ddfbd1edc228adf515c09ec7e7517becfbdeab615a67`.
@@ -400,6 +400,32 @@ SSH/HTTP/snapshot passaram. Foram zero novos boots. Próxima qualificação:
 probes de janelas de ponte com decode desligado e restauração explícita,
 seguida dos controles de capabilities exigidos pelo core; não liberar writes
 arbitrários. O histórico privado diferencia esta prova do primeiro scan.
+
+O build atual do `--host-scan` é o
+[módulo de probes da ponte](evidence/n71-pcie-bridge-scan-build.json),57888 bytes,
+SHA256 `82228fa73c8f7808f531571226925755b4a41cf4e1ca2d3a6a1b0051099dde89`.
+Reproduzir o build com M novo
+`/home/ubuntu/n71-pcie-bridge-inputs-20261004/phone/kernel` e perfil privado
+`runtime/n71-pcie-bridge-candidate-20261004/deployment.json`. Contratos no
+Mac/ARM64 passaram20 mutações de config/6 de lifecycle; seleção passou25
+testes/16 mutações. O kernel/payload/identidades permanecem iguais.
+
+`pci_read_bridge_windows()` na fonte fixada exige probes IO1c/word/e0f0,
+prefetch24/dword/ffe0fff0 e upper28/dword/ffffffff. O contrato captura os
+três campos, aceita somente original/probe com decode/master desligados e
+restaura todos com readback antes de reativar o comando original. A escrita
+word em1c preserva secondary STATUS1e. Uma falha deixa decode desligado.
+[Referência e limites](evidence/n71-pcie-bridge-probe-reference.json).
+
+[A continuação física](evidence/n71-pcie-bridge-scan-first-physical.json) passou
+IO e upper-prefetch; o probe prefetch24 não foi solicitado pelo core neste
+aparelho.9 writes foram aceitas em13 tentativas até a nova recusa: root0:08,
+3e/word/value2, habilitação SERR forwarding da ponte. Isso continua um scan
+negativo. Os três campos foram restaurados/readback, bus removido e
+PCI/módulos ausentes. SSH/HTTP/snapshot passaram, mantendo o mesmo boot.
+Próxima fatia deve confrontar capabilities/controles reais e as exigências
+do core; pedidos posteriores ao primeiro erro são latched e não demonstram
+que todos esses registradores precisariam ser alterados.
 
 O próximo modo `bar_sizing=1` mede somente as seis palavras BAR do endpoint,
 sem registro de dispositivos PCI. Exige inventário, recusa host_scan simultâneo,

@@ -14,6 +14,12 @@ completo continua pendente. Bus/config foram retirados/restaurados e
 SSH/HTTP/snapshot permaneceram ativos, com zero novos boots.
 [Prova física e próxima operação](evidence/n71-pcie-intx-scan-first-physical.json).
 
+A continuação passou também probes I/O e upper-prefetch da ponte; o terceiro
+probe qualificado não foi solicitado neste aparelho. O core agora recusa
+SERR forwarding (3e/word/2). O scan completo continua negativo, com os três
+campos/config restaurados e bus/módulos removidos. SSH/HTTP/snapshot passaram
+sem novo boot. [Prova física da ponte](evidence/n71-pcie-bridge-scan-first-physical.json).
+
 ## Desenvolvimento contínuo S8000 — 2026-10-02
 
 O goal de implementação segue ativo, com gates físicos agrupados. Foram implementadas em `phone/kernel/n71-pcie-contract.h` primitivas específicas do controlador S8000: índices dos recursos, seis seletores de registradores e atualização de bits que preserva os demais campos. São funções puras; não há acesso MMIO nem controlador operacional neste header. [Proveniência e mapa selecionado](evidence/n71-driver-reference.json).

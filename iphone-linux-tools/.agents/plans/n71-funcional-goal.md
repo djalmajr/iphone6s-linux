@@ -1205,3 +1205,12 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   identificados por digests, e caminhos de logs/ponteiros privados excluídos.
 - Documentar perfil e diretório M atuais e próximo controle exigido, sem
   afirmar Wi-Fi/DMA/IRQdelivery. Publicar branch/issues/CI mantendo Linux ligado.
+
+- Gate94b/95: continuação física no mesmo boot passou IO/upper-prefetch;
+  prefetch24 não foi solicitado.9 writes/13 tentativas; próxima recusa3e/2
+  é SERR forwarding. Scan continua negativo, com bus removido, três campos
+  de ponte/config/readback/restauração/PCI vazio/módulos ausentes confirmados.
+  SSH/HTTP/snapshot passaram; Linux permanece ligado, zero novo DFU/PIN/boot.
+- Pedidos após a primeira recusa permanecem latched: sua presença no log
+  não é prova de que cada write seja necessário. Próxima coleta deve revelar
+  capabilities/controles reais antes de qualificar novos estados.
