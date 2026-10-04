@@ -846,3 +846,22 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   âncora estável de substituição do módulo. Evidência pública distingue
   chip-ID e sizing físicos de rádio/DMA ainda ausentes. Arquivos privados
   e histórico preservados; branch segue sem merge/main/release.
+
+### Incremento 77 — contrato de observação do DART separado
+
+- Até quatro arquivos: plano, contrato puro, teste C e executor de testes.
+  Coletar duas amostras dos19 registros S5L documentados (COMMAND,TCR,ERROR,
+  16TTBRs). Sem callback de escrita; publicar somente após igualdade das
+  amostras, COMMAND não ocupado e endpoint quieto antes de cada leitura.
+- Decisão: o DART é602008000, separado da NVMMU602004000 do recursoPCI4.
+  O resumo anterior confundia esses blocos; código/ADT/referência Apple
+  concordam que não são intercambiáveis. Não mapear o recurso4 como DART.
+  Alternativa: ativar imediatamente o provider; descartada porque probe/remove
+  resetam TCR/TTBR e limpam ERROR, antes de conhecer estado/posse/SID.
+- Verificar leitura/falha em cada posição, instabilidade, busy/all-ones e
+  gates do endpoint. Compilar original e seis mutantes; exigir falha por
+  asserção. Não há firmware, mapeamento DMA, interrupção nova ou reboot.
+
+- Gate77: contrato compilou no Mac com C11/Werror/pedantic; falhas em38
+  leituras e39 gates,19 instabilidades,19 all-ones e busy recusadas sem saída.
+  Seis mutantes compilados morreram por asserção; diff-check passou.
