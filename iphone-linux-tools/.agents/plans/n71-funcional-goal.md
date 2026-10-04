@@ -1265,3 +1265,25 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Executar uma continuação --host-scan com último cleanup; salvar controls
   reais antes de core/SERR. Qualificar avanço e eventuais recusas posteriores
   separadamente, com cleanup/serviços/snapshot e sem reboot/PIN/DFU.
+
+- Gate98: módulo60528 bytes/hash29e29fcd… passou Werror/modpost/ELF/ABI,
+  contratos ARM64 e22/7/6 mutações config/reference/lifecycle. Kernel e
+  módulos auxiliares mantiveram hashes.25 testes/16 mutações do coletor
+  passaram; uma execução inicial precedeu término da transferência/registro
+  e teve FileNotFoundError. Após conclusão, repetição em log v2 passou.
+- Perfil/local --check/identidades/histórico de cleanup passaram. **Não foi
+  carregado no iPhone:** operador informou quase descarga e retorno ao iOS.
+  SSH já ausente; tentativa de novo snapshot/reboot parou antes de execução.
+  Último snapshot válido é o do teste de ponte; nenhuma mudança posterior
+  no Linux foi realizada. Código/artefatos novos estão só no Mac/VM.
+
+### Incremento 99 — alimentação P0 e registro de descarga, sem novo boot
+
+- Até cinco arquivos: plano, ALIMENTACAO, WIFI, prova sanitizada de bateria
+  e documentação LINK. iOS foi confirmado pelo operador; leitura local sem
+  PIN informa5%/charging=true/external=true. Registrar timestamp/hash privados
+  e limites: não é leitura de corrente Linux nem prova de causa única.
+- Manter iOS carregando; desenvolvimento offline passa ao carregador SN2400
+  específico N71 e gauge/HDQ. Não prolongar Linux/forçar novo DFU para Wi-Fi
+  enquanto alimentação sustentada estiver pendente. Não pausar o goal;
+  continuar trabalho independente e registrar #2/#8 e progresso #9/#34.
