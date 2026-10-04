@@ -1062,3 +1062,21 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Cleanup negativo exige retirada e restore quando tentou start; gates de
   power/reset/REG_ON/PCI vazio/unload permanecem. Testar evidência incompleta,
   fault/busy/TCR, contagens/índices e estado privado inconsistente.
+
+- Gate87: cinco testes do parser/ciclo passaram, com quatro mutações reais
+  rejeitadas por asserção; validação dos logs/digest privados passou.13mutantes
+  existentes do coletor passaram; build/ELF/hashes novamente conferidos no Mac.
+  PUBLIC_TREE_OK e diff-check passaram. Gate do novo modo será adicionado antes
+  do insmod; nenhuma ativação física do provider nesta etapa.
+
+### Incremento 88 — gate do modo e sessão física do provider
+
+- Até quatro arquivos: plano, testes do coletor, runner de mutações e
+  evidência física. Exigir seleção diferente do observer, parâmetro exclusivo,
+  sucesso sanitizado e recusar falta de restore/remoção/PCI vazio antes de unload.
+- Compor perfil privado novo preservando payload/DTB/initramfs/chaves/pin,
+  conferir --check com captura integral anterior e repetir teste por SSH no
+  mesmo boot. Nenhum endpoint é registrado, nenhum DMA/firmware é habilitado.
+- Confirmar provider bound, quatro snapshots/restauração/controle estável,
+  recurso/IRQmapping retirados, reset/power/REG_ON/unload/PCI vazio e serviços.
+  Salvar snapshot mantendo Linux ligado; publicar somente prova sanitizada.
