@@ -1483,3 +1483,43 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   externos ativos; log privado preservado separado dos checkpoints anteriores.
   Nenhuma ativação I2C, load, novo kernel ou DFU. Número/formato dos pinos
   agora têm referência Apple; aquisição/restauração e corrente seguem pendentes.
+
+### Incremento 108 — propagar falhas de escrita do provider GPIO
+
+- Contexto: o helper apple_gpio_set_reg ignora regmap_update_bits na fonte
+  preservada; set_mux/set/direction e irq_set_type retornam sucesso mesmo
+  quando a escrita falha. O futuro acesso I2C1 não pode confiar nesse retorno.
+- Cinco arquivos: plano, phone/kernel/patches/0003-apple-gpio-write-errors.patch,
+  tests/test_n71_gpio_write_errors.py, tests/n71_gpio_write_errors.c e
+  docs/evidence/n71-gpio-write-errors.json. Não integrar automaticamente no
+  bundle nem modificar Image/fonte/output preservados ou pedir DFU.
+- Patch restrito ao helper e callbacks que retornam int: set_mux, set,
+  direction_input, direction_output e irq_set_type. Retornar o erro real;
+  irq_set_type só troca handler após escrita bem-sucedida. Callbacks IRQ
+  void/startup e leituras têm contratos distintos e permanecem fora desta fatia.
+- Gates: compilar rotinas reais reconstruídas do patch; testar retorno e
+  estado para sucesso, falha sem efeito e erro após efeito parcial, máscara,
+  pin/offset e handler. Mutações devem compilar e morrer por asserção.
+  Repetir Mac/ARM64; aplicar patch em cópia descartável completa do provider,
+  compilar objeto externo ARM64 Werror contra ABI preservado e conferir hashes.
+- Limites: erro propagado não prova rollback; o adapter ainda precisa snapshot,
+  readback e restauração verificada. Nenhum regmap do aparelho será acessado.
+
+- Gate108: Mac e ARM64 passaram 816 cenários, 11 mutações compiladas e
+  regressão da fonte original por asserção. Patch aplicado em cópia isolada;
+  build externo completo do provider passou Werror/modpost e ABI selecionado.
+  Fonte original, config, Image e exports preservados. Módulo serve somente
+  para verificação; não carregar duplicata do provider embutido.
+- Dois erros de preparação do harness foram corrigidos antes do gate: contexto
+  do patch não continha a rotina IRQ inteira e faltava typedef u32 na fixture.
+  Logs iniciais preservados, sem contar erro de compilação como mutation kill.
+  O marcador de aprovação agora só é emitido após todos os subtestes passarem.
+- Integração no patchset/novo Image e teste físico permanecem pendentes;
+  não foi habilitado I2C1 nem carregador. Não pedir DFU para esse objeto de ABI.
+- Pendência de integração registrada na issue35. Lint Python passou com
+  pyflakes já instalado e seleção de versão apenas no comando; o shim sem
+  versão havia recusado executar. Nenhum pacote ou configuração global mudou.
+- Check de diff aplicado normalmente a código/docs e ao source transformado.
+  No arquivo unified patch, prefixes de contexto produzem falso positivo de
+  whitespace; somente essa representação foi conferida com a opção de comando
+  correspondente, sem alterar configuração Git. Patch real aplicou limpo na VM.
