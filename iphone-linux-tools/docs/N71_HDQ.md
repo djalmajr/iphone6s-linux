@@ -741,6 +741,49 @@ A receita acima reproduz a sequência completa, sem módulo duplicado.
 
 A correção é limitada à falha antes de publicar o provider. Concorrência e
 cleanup pós-publicação, remoção recusada, iterator e rollback de efeitos
-parciais seguem pendentes. Link da imagem, ownership/idle I2C1, carregador
-e corrente líquida também não foram comprovados. [Issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
+parciais seguem pendentes. O [Image completo e os módulos da ABI power](N71_KERNEL_BUNDLE.md#image-completo-da-candidata-gpiopmgr--2026-10-04)
+já passaram os gates de build/composição; boot físico, ownership/idle I2C1,
+carregador e corrente líquida continuam sem prova. [Issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
 Nenhum DFU ou reboot do iPhone foi feito nesta entrega.
+
+## Coleta agrupada de energia na ABI power — preparada
+
+O [registro de preparação](evidence/n71-power-session-gate.json) seleciona
+o perfil base `7.2.0-iphone6s-dart-serdev-power1` e os dois observadores
+recompilados. Esse perfil conserva o DTB original, com PCIe, I2C1 e UART5
+desativados. Nenhum módulo é carregado automaticamente.
+
+A cópia privada do coletor anterior mudou somente seis constantes:
+release, perfil, dois caminhos de módulo e seus dois hashes. O corpo foi
+conferido byte a byte após desfazer essas substituições. Três fixtures
+externas de transporte passaram: sucesso, marcador de observação ausente
+e ring dmesg rotacionado. Cada comando gerado passou bash-n; falhas recusam
+a conclusão e removem os arquivos de staging. As fixtures simulam SSH e
+não são observações do telefone. A primeira execução dos testes usou um
+namespace compartilhado e falhou na contagem de resultados; o runner novo
+isola cada cenário e conserva as tentativas anteriores.
+
+O perfil real, os dois módulos e o snapshot local de44 entradas foram
+validados no Mac, sem USB. O fluxo físico preparado é:
+
+1. Ler a bateria no iOS imediatamente antes do boot; manter o cabo USB-A
+   traseiro e usar o perfil base explícito, restaurando o snapshot validado.
+2. Fazer um único DFU manual. Conferir kernel/placa/boot_id, SSH e HTTP.
+3. Transferir ambos os módulos por SSH para uma pasta própria sob `/run`,
+   verificando os hashes local/remoto e ausência de loads anteriores.
+4. Carregar e descarregar os observadores, um de cada vez, com `run=1`.
+   Exigir linhas novas OBSERVED/UNLOADED, mesmo boot e SSH/HTTP após cada um.
+   A coleta tem prazo de120s; não altera pins, PMGR, I2C ou carregador.
+5. Conferir ausência dos módulos e staging, salvar snapshot e retornar ao
+   iOS no mesmo boot, com alvo de até cinco minutos para a sessão inteira.
+
+Os scripts privados são `runtime/n71-power-session-20261004/collect-passive-power-v2-private.py`
+e `power-v2-preflight-private.json`; contêm caminhos/seleção da instalação
+local e permanecem fora do repositório público. Para reproduzir o procedimento
+em outra instalação, use os dois fontes públicos de observação e os gates
+de build acima, selecionando os hashes realmente produzidos nessa instalação.
+A chave SSH fica no Mac e os logs/resultados permanecem privados até sanitização.
+
+Ainda faltam o boot dessa ABI, restore e a coleta física. Mesmo um resultado
+OBSERVED válido não habilita carga: aquisição/restauração I2C1, semântica dos
+registradores SN2400 e medição da corrente líquida continuam gates separados.

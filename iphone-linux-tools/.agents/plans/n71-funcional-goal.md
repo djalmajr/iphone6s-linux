@@ -1953,3 +1953,31 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - CI c79e0a8 aprovado PR37243059356/push37243056409, seis jobs.
   Reprodução de módulos/composição registrada; gates121 de artefatos reais
   continuam separados dos gates físicos ainda não realizados.
+
+### Incremento 122 — preparar uma coleta curta na ABI power
+
+- Até três arquivos públicos: plano, docs/N71_HDQ.md e
+  docs/evidence/n71-power-session-gate.json. Adaptar a cópia privada do
+  coletor já qualificado apenas nas constantes de release/perfil/hash dos
+  dois observadores; preservar o anterior e provar corpo idêntico.
+- Selecionar base power sem DT PCIe ativo; observar I2C1/GPIO e PMGR no
+  mesmo boot, identidade/boot_id/SSH/HTTP antes/depois, módulos ausentes,
+  SHA do stream, load explícito/run e unload/cleanup dentro de120s.
+  Snapshot e retorno ao iOS serão etapas subsequentes, sem novo DFU.
+- Refazer somente fixtures de transporte externas sucesso, observação
+  ausente e ring rotacionado; bash-n dos comandos, nenhuma execução SSH.
+  Verificar perfil real e snapshot local sob lock, sem expor identidades.
+  Não iniciar boot ou pedir desbloqueio enquanto o aparelho carrega.
+- Integrar o registro de full Image/módulos já pronto na documentação
+  histórica PMGR; não apresentar preparação como carga física validada.
+
+- Gate122: delta de seis constantes conferido por inversão byte a byte;
+  três fixtures externas com bash-n aprovadas, cleanup confirmado e nenhuma
+  conexão SSH real. A primeira execução compartilhou namespace entre os
+  cenários paralelos e falhou na contagem dos outputs. Runner novo isola
+  cada cenário; tentativas v2 preservadas, corpo do coletor inalterado.
+- Perfil base real/módulos/SHA/snapshot44 sob lock conferidos; AST/lint
+  passaram. Preparação não iniciou boot/USB nem acessou carregador.
+  Leitura iOS separada em2026-10-04T23:29:04Z:100%, fonte externa conectada
+  e capaz de carregar, BatteryIsCharging=false. Não é leitura de saúde
+  nem prova de carga no Linux; nenhum PIN solicitado.

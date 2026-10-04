@@ -1,0 +1,67 @@
+{
+  "format": 1,
+  "status": "offline_transport_and_real_local_inputs_verified_physical_pending",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power1",
+  "profile_record": "n71-power-profile.json",
+  "profile_payload_sha256": "64df9ade75b07118c843cdb00a6f7cdf11403d6f3757a4beb0159b6feb03760a",
+  "collector_sha256": "1d5355d554178623f19cc126ab02b8a88267b7955140e2600e792bab5a36f851",
+  "previous_collector_sha256": "2e130cd4b97ff9a33a426bc0f1d4e4a07b6d36343d7ae12fc725d4aa157adb45",
+  "logic_body_unchanged": true,
+  "changed_constants": 6,
+  "fixture_transport_sha256": "480f75a76e5cf4946c4a61a9efbe63be71e1158bf5e868c9eb8c7e900b2156f3",
+  "fixture_results": [
+    {
+      "scenario": "success",
+      "expected_outcome_verified": true,
+      "cycles": 2,
+      "commands_syntax_checked": 23,
+      "owned_stage_removed": true,
+      "fixture_only": true,
+      "phone_commands_executed": false
+    },
+    {
+      "scenario": "missing-observation",
+      "expected_outcome_verified": true,
+      "cycles": 1,
+      "commands_syntax_checked": 12,
+      "owned_stage_removed": true,
+      "fixture_only": true,
+      "phone_commands_executed": false
+    },
+    {
+      "scenario": "ring-rotated",
+      "expected_outcome_verified": true,
+      "cycles": 1,
+      "commands_syntax_checked": 12,
+      "owned_stage_removed": true,
+      "fixture_only": true,
+      "phone_commands_executed": false
+    }
+  ],
+  "fixture_failure_retained": "First concurrent fixture runner shared its log namespace, so result-count assertions failed. A new runner isolates each scenario; the collector body was not changed. No failed gate was counted as pass.",
+  "local_snapshot": {
+    "verified_under_lock": true,
+    "members": 44,
+    "archive_sha256": "915190efef1a93b7e6115c8e35235e693d1e981ff0284a8de90bfba2c0eebc56",
+    "restore_on_new_kernel_verified": false
+  },
+  "modules": [
+    {
+      "name": "n71_i2c_topology_observe",
+      "sha256": "e5721476313cc6b91d898271189fbf8efff473bb3becddd06513b7629bc66292"
+    },
+    {
+      "name": "n71_pmgr_power_observe",
+      "sha256": "e55dd8304d7a30d1fd0980b57907e82ce84c600bd2c9cf8d3d4df1fec49e89e3"
+    }
+  ],
+  "deadline_seconds": 120,
+  "session_target_seconds": 300,
+  "real_profile_verified": true,
+  "physical_boot_started": false,
+  "physical_modules_loaded": false,
+  "phone_commands_executed": false,
+  "battery_charger_writes": false,
+  "linux_charging_validated": false,
+  "limits": "Only external simulated SSH processes, generated shell syntax and local profile/snapshot integrity are proved. Fresh boot identity, SSH/HTTP, observations, unload, snapshot and return to iOS require a single physical session. No I2C transfer, PMGR/GPIO write or charger access is enabled."
+}
