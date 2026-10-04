@@ -8,6 +8,8 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'scripts/host/n71-link-session.py'
 MUTATIONS = {
+    'cycle-mode': ("parameters += ' dart_cycle=1'", "parameters += ''"),
+    'cycle-cleanup': ('n71_dart_cycle_result.cleanup(p.stdout)', 'pass'),
     'private-ttbr-output': ("and 'N71_DART_TTBR ' not in line", ''),
     'original-latch': ("'N71_REG_ON_OBSERVED control=80 bit0=0 compatible-plan=1' in p.stdout",
                        "'N71_REG_ON_OBSERVED' in p.stdout"),

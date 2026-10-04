@@ -1080,3 +1080,24 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Confirmar provider bound, quatro snapshots/restauração/controle estável,
   recurso/IRQmapping retirados, reset/power/REG_ON/unload/PCI vazio e serviços.
   Salvar snapshot mantendo Linux ligado; publicar somente prova sanitizada.
+
+- Gate88:25 testes do coletor e15 mutações por asserção passaram. Perfil mantém
+  payload/initramfs/DTB/identidades; logs/digest integral anterior e --check
+  passaram. **Ciclo físico no mesmo boot passou**: provider apple-dart ligado,
+  pagesize1000/4streams/AS32→36;152 leituras/156gates internos/17 extras,
+  16 escrituras TTBR restauradas, controles iguais e hash integral anterior
+  idêntico. Device/IRQmapping novos retirados, recurso/map liberados e
+  reset/power/REG_ON80/PCI vazio/unload passaram.
+- SSH/HTTP, ausência posterior de device/handler e snapshot passaram.
+  Não houve endpoint attach, DMA, firmware, IRQdelivery ou novo DFU/PIN.
+  Prova física sanitizada separada do build; goal de Wi-Fi continua pendente.
+
+### Incremento 89 — documentação do ciclo e publicação dos gates
+
+- Até quatro arquivos: plano, LINK, WIFI e registro da próxima decisão PCI.
+  Corrigir estado atual para provider fisicamente inicializado/retirado,
+  preservando história do observer e limites DMA/IRQ/calibração.
+- Documentar seleção/compile/perfil/histórico e ciclo sem alterar DT; publicar
+  branch/CI e atualizar #9/#34. Próxima correção é COMMAND INTx-disable
+  rejeitado pelo guard no core scan; permissões continuam delimitadas ao
+  bit10, sem BAR assignment/IRQrouting/bus-master ou caps não qualificadas.
