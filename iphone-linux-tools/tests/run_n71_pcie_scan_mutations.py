@@ -9,6 +9,13 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
+    ('window-status-width', 'n71_scan_bridge_sizes[] = {2, 4, 4}',
+     'n71_scan_bridge_sizes[] = {4, 4, 4}'),
+    ('window-snapshot-lost', '&saved->bridge_windows[bar]);', '&buses);'),
+    ('window-probe-widened', 'request->value == n71_scan_bridge_probes[index]',
+     'request->value != original'),
+    ('window-restore-skipped', 'if (root) {\n\t\t\tfor (bar = 0; bar < 3; bar++)',
+     'if (root) {\n\t\t\tfor (bar = 3; bar < 3; bar++)'),
     ('wrong-intx-bit', 'command = request->value & ~0x400U;', 'command = request->value & ~0x800U;'),
     ('widen-intx-mask', 'command = request->value & ~0x400U;', 'command = request->value & ~0xc00U;'),
     ('wrong-endpoint', '0x1004106b : 0x43a314e4', '0x1004106b : 0x43a414e4'),

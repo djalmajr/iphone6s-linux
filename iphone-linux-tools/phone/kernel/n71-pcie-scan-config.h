@@ -6,6 +6,11 @@
 
 #define N71_SCAN_MAX_WRITES 128U
 
+/* pci_read_bridge_windows(): widths exclude adjacent secondary STATUS. */
+static const u32 n71_scan_bridge_offsets[] = {0x1c, 0x24, 0x28};
+static const unsigned int n71_scan_bridge_sizes[] = {2, 4, 4};
+static const u32 n71_scan_bridge_probes[] = {0xe0f0, 0xffe0fff0, 0xffffffff};
+
 struct n71_scan_io {
 	void *context;
 	int (*read)(void *context, bool root, u32 where, unsigned int size, u32 *value);
@@ -13,7 +18,7 @@ struct n71_scan_io {
 };
 
 struct n71_scan_function {
-	u32 identity, command, bars[6], rom, control;
+	u32 identity, command, bars[6], rom, control, bridge_windows[3];
 };
 
 struct n71_scan_config {
@@ -87,6 +92,12 @@ static inline int n71_scan_capture(const struct n71_scan_io *io,
 			return error;
 		if ((buses & 0xffffff) != 0x010100 || (saved->control & 0x40))
 			return -EINVAL;
+		for (bar = 0; bar < 3; bar++) {
+			error = n71_scan_read(io, true, n71_scan_bridge_offsets[bar],
+					      n71_scan_bridge_sizes[bar], &saved->bridge_windows[bar]);
+			if (error)
+				return error;
+		}
 	}
 	result.active = true;
 	*out = result;
@@ -142,6 +153,13 @@ static inline int n71_scan_write(const struct n71_scan_io *io,
 		bar = true;
 		original = saved->rom;
 		allowed = request->value == 0xfffff800 || request->value == original;
+	} else if (request->root &&
+		   ((request->where == 0x1c && request->size == 2) ||
+		    ((request->where == 0x24 || request->where == 0x28) && request->size == 4))) {
+		unsigned int index = request->where == 0x1c ? 0 : (request->where - 0x20) / 4;
+		bar = true; /* Window probing also requires all decode off. */
+		original = saved->bridge_windows[index];
+		allowed = request->value == original || request->value == n71_scan_bridge_probes[index];
 	} else if (request->root && request->where == 0x3e && request->size == 2) {
 		allowed = request->value == saved->control ||
 			request->value == (saved->control & ~0x20U);
@@ -217,6 +235,12 @@ static inline int n71_scan_restore(const struct n71_scan_io *io,
 		if (error && !function_error)
 			function_error = error;
 		if (root) {
+			for (bar = 0; bar < 3; bar++) {
+				error = n71_scan_restore_value(io, true, n71_scan_bridge_offsets[bar],
+						      n71_scan_bridge_sizes[bar], saved->bridge_windows[bar]);
+				if (error && !function_error)
+					function_error = error;
+			}
 			error = n71_scan_restore_value(io, true, 0x3e, 2, saved->control);
 			if (error && !function_error)
 				function_error = error;

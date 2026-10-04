@@ -1169,9 +1169,25 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 ### Incremento 93 — qualificar probes de janelas da ponte no PCI core
 
 - Até cinco arquivos: plano, contrato config, teste C, runner e registro de
-  fonte/referência. Ler pci_bridge_check_ranges/pci_scan_bridge_extend na
-  fonte fixada; qualificar dois probes com decode desligado, captura prévia,
+  fonte/referência. Ler pci_read_bridge_windows/pci_scan_bridge_extend na
+  fonte fixada; qualificar três probes com decode desligado, captura prévia,
   readback e restauração até em erro. Nenhuma atribuição ou BAR MMIO.
 - Não liberar PM/PCIe/AER por similaridade. O primeiro erro após os probes
   deve ser medido por nova continuação hot, sem novo DFU. Testar STATUS W1C,
   valores/campos proibidos, decode ligado e todas as falhas de restauração.
+
+- Gate93: fonte probe.c/UAPI fixados conferem os três offsets/probes. Contrato
+  passou no Mac e ARM64,20 mutações de configuração e6 de lifecycle/11 casos.
+  Capture/readback/STATUS W1C/decode ligado/valores estranhos/falhas de cada
+  restore foram exercitados. Build externo Werror/modpost/ELF/vermagic passou,
+  com hashes de config/Image/exports e módulos REG_ON/HDQ preservados.
+  Nenhum dos novos probes foi aplicado fisicamente nesta fatia.
+
+### Incremento 94 — seleção/build e continuação física da ponte
+
+- Até cinco arquivos: plano, build novo, seleção, teste de seleção e LINK.
+  Preservar INTx como histórico; compor perfil novo com artefato qualificado,
+  conferir --check e executar --host-scan com cleanup anterior no mesmo boot.
+- Uma recusa de capability/controle continua negativa; não ampliá-la durante
+  a execução. Confirmar remoção/restore/PCI vazio/serviços e snapshot antes
+  de publicar prova sanitizada em fatia própria. Sem reboot/PIN/DFU.
