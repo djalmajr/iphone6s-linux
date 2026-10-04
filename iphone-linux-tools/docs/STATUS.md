@@ -15,8 +15,12 @@ DART/serdev/GPIO/PMGR001→006, em12min41s. Config só difere na identidade;
 config embutida, modpost, export serdev, objetos builtin e DTB preservado
 conferidos. Fonte/config/Image/exports do rollback intactos; artefatos no Mac
 passaram por SHA e pelo integrador real. [Reprodução e limites](N71_KERNEL_BUNDLE.md#image-completo-da-candidata-gpiopmgr--2026-10-04).
-Rebuild de módulos, perfil/boot/restore e acesso físico ao carregador seguem
-pendentes. O Image novo ainda não habilita carga, telemetria ou Wi-Fi.
+Os cinco módulos também passaram rebuild Werror/modpost/ELF/vermagic.
+Perfis base e diagnóstico foram compostos/validados separadamente no Mac,
+com initramfs/identidades preservados e snapshot local de44 entradas validado.
+Boot/restore/SSH/HTTP na ABI nova e acesso físico ao carregador continuam
+pendentes. [Prova de composição](evidence/n71-power-profile.json).
+O Image novo ainda não habilita carga, telemetria ou Wi-Fi.
 
 No boot anterior, DART provider/INTx/probes de ponte tiveram cleanup verificado
 e SSH/HTTP/snapshot preservados. Scan PCI ainda negativo; primeira recusa

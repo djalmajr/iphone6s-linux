@@ -36,5 +36,14 @@
   "physical_boot_tested": false,
   "phone_driver_modified": false,
   "linux_charging_validated": false,
-  "limits": "Synthetic filesystem/process/SSH identity contract only. Real full Image link, rebuilt module ABI, private profile composition and physical behavior need independent gates. No USB, charger or GPIO operations."
+  "limits": "Synthetic filesystem/process/SSH identity contract only. Real full Image link, rebuilt module ABI, private profile composition and physical behavior need independent gates. No USB, charger or GPIO operations.",
+  "code_commit": "f80e27e71a255c1131c06e8eba8a47dadb565fab",
+  "ci": {
+    "code_head": "f80e27e71a255c1131c06e8eba8a47dadb565fab",
+    "pull_request_run": 37242336144,
+    "push_run": 37242333300,
+    "conclusion": "success",
+    "jobs_total": 6
+  },
+  "real_composition_record": "n71-power-profile.json"
 }

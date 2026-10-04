@@ -384,6 +384,82 @@ em `runtime/kernel-n71-power-artifacts-20261004/`. O validador real
 `kernel_inputs(..., 'n71-dart-serdev-power-v1')` aceitou esse conjunto.
 Nada foi instalado no telefone ou escolhido como default.
 
-Módulos da release antiga precisam ser recompilados. Composição de perfil,
-boot/restore/SSH/HTTP/snapshot e comportamento físico continuam gates futuros.
-Esse Image ainda não habilita I2C1/HDQ/SN2400 nem comprova carga ou Wi-Fi.
+## Módulos e perfis da ABI power — 2026-10-04
+
+Os cinco módulos foram recompilados contra esse Image, com Werror/modpost,
+ELF relocatable AArch64 e vermagic exato
+`7.2.0-iphone6s-dart-serdev-power1 SMP preempt mod_unload aarch64`.
+Os corpos das fontes permaneceram iguais; os gates de lógica anteriores
+continuam separados da prova de ABI. Os hashes, tamanhos e inputs estão no
+[registro de módulos e composição](evidence/n71-power-profile.json).
+
+Na VM, transfira somente `phone/kernel/` do checkout público para um diretório
+novo. O Makefile seleciona PCIe, WLAN, GPIO HDQ, topologia I2C e PMGR;
+nenhum provider incorporado ao Image é duplicado. A execução registrada usou
+`/home/ubuntu/n71-power-modules-v1-inputs-20261004/phone/kernel`.
+Para uma reprodução, a partir da raiz do checkout público na VM:
+
+```sh
+set -eu
+umask 077
+work_dir=/home/ubuntu/kernel-n71-power-source-20261004
+build_dir=/home/ubuntu/kernel-n71-power-build-20261004
+module_dir=/home/ubuntu/n71-power-modules-repro/phone/kernel
+test ! -e "$module_dir" && test ! -L "$module_dir"
+mkdir -p "$module_dir"
+cp phone/kernel/Makefile phone/kernel/*.c phone/kernel/*.h "$module_dir/"
+test "$(cat "$build_dir/include/config/kernel.release")" = 7.2.0-iphone6s-dart-serdev-power1
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror M="$module_dir" \
+  KBUILD_EXTRA_SYMBOLS="$build_dir/vmlinux.symvers" modules
+for name in n71-pcie-diagnostic n71-wlan-power-diagnostic n71-hdq-gpio-observe \
+            n71-i2c-topology-observe n71-pmgr-power-observe; do
+  test "$(modinfo -F vermagic "$module_dir/$name.ko")" = \
+    '7.2.0-iphone6s-dart-serdev-power1 SMP preempt mod_unload aarch64'
+  readelf -h "$module_dir/$name.ko"
+  sha256sum "$module_dir/$name.ko"
+done
+```
+
+Além dessas linhas de inspeção, a execução registrada validou os campos ELF,
+SHA de todos os inputs e config/Image/exports antes e depois da build.
+Os módulos e logs foram transferidos para
+`runtime/n71-power-module-artifacts-20261004/` no Mac e conferidos novamente.
+Não carregue módulos da release anterior no kernel power.
+
+No Mac, o integrador compôs um perfil base privado novo a partir do bundle
+anterior. O compositor criou outro perfil com o delta DT diagnóstico já
+validado e o módulo PCIe novo, fora do initramfs e sem autoload.
+Para reproduzir a composição, dentro de `iphone-linux-tools/`, escolha
+destinos novos diretamente sob `runtime/`:
+
+```sh
+set -eu
+umask 077
+kernel_dir="$PWD/runtime/kernel-n71-power-artifacts-20261004"
+base_dir="$PWD/runtime/n71-power-base-profile-repro"
+diagnostic_dir="$PWD/runtime/n71-power-diagnostic-profile-repro"
+IPHONE_LINUX_PROFILE="$PWD/runtime/n71-bundle-base-profile-20261003/deployment.json" \
+  python3 scripts/build/integrate-source-kernel.py \
+  --kernel-patchset n71-dart-serdev-power-v1 \
+  --kernel-dir "$kernel_dir" --output-dir "$base_dir"
+python3 scripts/build/compose-n71-diagnostic.py \
+  --kernel-patchset n71-dart-serdev-power-v1 \
+  --source-profile "$base_dir/deployment.json" --kernel-dir "$kernel_dir" \
+  --diagnostic-dir "$PWD/runtime/n71-pcie-diagnostic-20261002" \
+  --module "$PWD/runtime/n71-power-module-artifacts-20261004/n71-pcie-diagnostic.ko" \
+  --module-sha256 a2d77a6786e8837963602810df5e58618eaff817ac6b36648025f60bb179c532 \
+  --output-dir "$diagnostic_dir"
+```
+
+Esses caminhos dependem dos artefatos privados produzidos nas etapas
+documentadas; não são downloads do repositório público. As ferramentas
+recusam destinos existentes e artefatos divergentes. As identidades SSH
+ficaram somente no Mac: initramfs, chave cliente e known_hosts são idênticos
+entre o legado e os dois perfis novos, com diretórios700 e arquivos600.
+O snapshot local preservado passou digest/estrutura sob lock, com44 entradas.
+Nenhum perfil default foi alterado nem houve USB/DFU nessa preparação.
+
+Boot/restore/SSH/HTTP/snapshot na ABI nova e comportamento físico continuam
+gates futuros. Esse Image ainda não habilita I2C1/HDQ/SN2400 nem comprova
+carga ou Wi-Fi; a próxima sessão física deve agrupar as observações de energia.

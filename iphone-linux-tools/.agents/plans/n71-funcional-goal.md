@@ -1919,3 +1919,37 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   exports. Rollback source/config/Image/exports mantido. Tar/outputs/logs
   transferidos conferidos por SHA no Mac e kernel_inputs(power) real aprovado.
   Módulos/perfil/boot físicos continuam pendentes; carga/Wi-Fi não habilitados.
+
+### Incremento 121 — módulos e perfil privado da ABI power
+
+- Até cinco arquivos públicos: plano, docs/N71_KERNEL_BUNDLE.md,
+  docs/evidence/n71-power-profile.json, docs/evidence/n71-power-integration-gate.json
+  e docs/STATUS.md. Rebuild dos cinco módulos
+  públicos existentes em M novo contra source/output118 e exports reais;
+  fonte/body inalterados, reutilizar gates de lógica e verificar Werror/
+  modpost/ELF/vermagic/SHA novos. Sem provider duplicado, firmware/keys na VM.
+- Validar Image/record118, compor perfil base privado novo a partir do
+  bundle funcional; preservar initramfs e todas as identidades, não selecionar
+  default. Somente o delta DT diagnóstico existente será composto em outro
+  perfil com módulo PCIe da nova ABI e run explícito. Conferir digests/
+  proveniência/ausência de módulos no initramfs e snapshot local preservado.
+- Publicar somente campos selecionados. Nenhum USB, DFU ou ação do iPhone;
+  boot/restore/SSH/HTTP e observação I2C1/PMGR dependem de disponibilidade
+  física. Charger/Wi-Fi continuam sem qualificação, issues abertas.
+
+- Gate121: cinco módulos da fonte inalterada reconstruídos Werror/modpost
+  contra118; ELF/vermagic/SHA conferidos na VM e após transferência. Source/
+  Image/config/exports da candidata preservados. Perfil base e diagnóstico
+  reais compostos/validados no Mac, todos com modos700/600 e sem USB.
+- Initramfs/cliente/known_hosts byte a byte iguais entre legado/base/diag;
+  cinco entradas protegidas idênticas, módulo PCIe fora do initramfs sem
+  autoload. Snapshot local44 entradas/digest conferido sob lock; restore
+  na ABI nova não foi testado. Nenhuma chave/firmware enviado à VM.
+- Destino documental do quinto arquivo ajustado de proof diagnóstico para
+  STATUS, pois precisa remover a indicação antiga de rebuild/perfil pendentes.
+  CI f80e27e aprovado PR37242336144/push37242333300, seis jobs; antes do
+  pushc79e0a8. Esse head contém compositor70fc160 e está em acompanhamento.
+
+- CI c79e0a8 aprovado PR37243059356/push37243056409, seis jobs.
+  Reprodução de módulos/composição registrada; gates121 de artefatos reais
+  continuam separados dos gates físicos ainda não realizados.
