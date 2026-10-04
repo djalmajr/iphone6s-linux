@@ -63,5 +63,13 @@
   "phone_commands_executed": false,
   "battery_charger_writes": false,
   "linux_charging_validated": false,
-  "limits": "Only external simulated SSH processes, generated shell syntax and local profile/snapshot integrity are proved. Fresh boot identity, SSH/HTTP, observations, unload, snapshot and return to iOS require a single physical session. No I2C transfer, PMGR/GPIO write or charger access is enabled."
+  "limits": "Only external simulated SSH processes, generated shell syntax and local profile/snapshot integrity are proved. Fresh boot identity, SSH/HTTP, observations, unload, snapshot and return to iOS require a single physical session. No I2C transfer, PMGR/GPIO write or charger access is enabled.",
+  "ci": {
+    "code_head": "e0dc35599a4b2ce0796eaa66c75eb0934049f1dd",
+    "pull_request_run": 37244353678,
+    "push_run": 37244350765,
+    "conclusion": "success",
+    "jobs_total": 6
+  },
+  "ios_checkpoint_record": "n71-ios-battery-checkpoint-20261004.json"
 }

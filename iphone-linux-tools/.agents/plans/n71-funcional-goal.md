@@ -1981,3 +1981,23 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Leitura iOS separada em2026-10-04T23:29:04Z:100%, fonte externa conectada
   e capaz de carregar, BatteryIsCharging=false. Não é leitura de saúde
   nem prova de carga no Linux; nenhum PIN solicitado.
+
+### Incremento 123 — checkpoint físico iOS e CI terminal
+
+- Até quatro arquivos públicos: plano, docs/ALIMENTACAO.md,
+  docs/evidence/n71-ios-battery-checkpoint-20261004.json e
+  docs/evidence/n71-power-session-gate.json. Registrar somente escalares
+  selecionados de GasGauge/AppleARMPMUCharger; logs/identificadores privados.
+- Ambas as leituras iOS passaram sem PIN ou escrita:1465 ciclos,
+  DesignCapacity1690 e NominalChargeCapacity1130. Razão nominal/projeto
+  é estimativa, não saúde oficial nem unidade validada de todos os campos.
+  Não atribuir variação/ciclos exclusivamente ao Linux ou ao último boot.
+- Conferir SHA da resposta privada, seleção explícita, JSON/links/diff e
+  publicguard. Sem teste de código novo; reutilizar CIe0dc355 terminal com
+  seis jobs aprovados. Nenhum boot/DFU ou driver físico iniciado.
+
+- Gate123: GasGauge/PMU escalares selecionados, digests da resposta real
+  privados conferidos e sem publicação de identidade/raw logs. CIe0dc355
+  PR37244353678/push37244350765 terminal success, seis jobs; watchers
+  locais22406/32380 terminaram0. Pronto para a sessão única já solicitada;
+  disponibilidade física continua pendente, sem repetir pergunta ou boot.

@@ -191,6 +191,39 @@ A relação nominal/projeto é `1146 / 1690 ≈ 67,8%`: estimativa nominal de ca
 
 Contagem elevada e capacidade nominal reduzida sugerem desgaste importante. A Apple informa o projeto de retenção de 80% após 500 ciclos em condições ideais para essa geração; isso não estabelece a saúde exata deste exemplar. Avaliação/substituição da bateria continua uma alternativa para uso contínuo. A inspeção visual anterior não detectou anormalidade física, mas não mede capacidade.
 
+### Checkpoint no iOS — 2026-10-04, 23:45–23:47 UTC
+
+GasGauge e AppleARMPMUCharger responderam novamente, sem PIN, reboot ou
+escrita no telefone. [Campos selecionados e digests privados](evidence/n71-ios-battery-checkpoint-20261004.json):
+
+| Campo | Valor reportado |
+|---|---:|
+| CycleCount | 1465 |
+| DesignCapacity | 1690 |
+| NominalChargeCapacity | 1130 |
+| AppleRawMaxCapacity | 985 |
+| BatteryData.MaxCapacity | 985 |
+| BatteryData.BatteryHealthMetric | 793 |
+| CurrentCapacity | 100 |
+
+Nominal/projeto resulta em `1130 / 1690 ≈ 66,9%`. É uma estimativa a partir
+desses dois campos, **não a saúde oficial do iOS**. Os demais valores não
+devem ser combinados ou interpretados como porcentagens. A diferença entre
+as duas datas inclui usos e reinicializações distintos; não isola desgaste
+ou consumo causado pelo Linux.
+
+O iOS também informou alimentação externa conectada/capaz de carregar e
+`IsCharging=false`, com nível100%; Amperage/InstantAmperage reportaram0.
+Isso não mede entrada USB ou corrente líquida durante Linux. Voltage4195,
+BatteryData.Voltage4196 e Temperature3030 são mantidos como valores brutos,
+sem atribuir unidades ainda não verificadas. Nenhum limite de corrente,
+tensão ou temperatura foi programado a partir desta leitura.
+
+O [perfil power e os módulos](evidence/n71-power-profile.json) estão
+compostos/validados; a [coleta curta agrupada](N71_HDQ.md#coleta-agrupada-de-energia-na-abi-power--preparada)
+continua aguardando um único DFU manual. Os seis jobs da CIe0dc355 passaram;
+isso verifica software/documentação e não substitui carga física sustentada.
+
 ## Piloto com outro cabo — 2026-09-30
 
 A leitura inicial de 100% ocorreu às 11:07:57 UTC. Houve depois tentativas DFU/PongoOS e cerca de oito minutos de Linux via USB-A, antes da troca para o novo USB-C frontal. O piloto neste último cabo foi iniciado às 11:40:13 UTC, sem carga artificial de CPU. Portanto, a diferença entre as leituras iOS abrange também essas etapas anteriores: não isola o consumo nem o carregamento dos dez minutos no USB-C.
