@@ -794,3 +794,20 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Correção CI: runner passou a localizar a seleção com bar_sizing;12 mutações
   foram executadas de novo e falharam por asserção. Sem mudança executável do
   coletor/hardware. A CI remota permanece obrigatória no próximo head.
+
+### Incremento 74 — adaptador e build da leitura MMIO limitada
+
+- Cinco arquivos: header de adaptação MMIO, coletor BAR do módulo, integração
+  do parâmetro chip_id, registro de build e plano. Reivindicar32KiB de
+  7c0000000 via request_mem_region e mapear somente após sizing fresco.
+  Ler no máximo um dword em offset0, com predicate88 fresco e sem DMA.
+  Restaurar config antes de iounmap/release; emitir prova de cleanup mesmo
+  em falha de map/probe. Modo chip_id exclui host_scan/bar_sizing simultâneos.
+- Build externo em novo M da VM, harness C/mutações ARM64, modpost/Werror,
+  hash/ELF/ABI e Image/config/exports preservados. Firmware e BAR2 MMIO não
+  entram no experimento. Não selecionar binário sem proveniência e coletor.
+
+- Gate74: harness e seis mutações também passaram ARM64; módulo42008 bytes,
+  SHA8ade6fd8…b717941, compilou Werror/modpost com kernel preservado. ELF,
+  ABI e SHA recalculados no Mac. Testes anteriores do adaptador PCI passaram
+  após a assinatura BAR receber saída opcional. Ainda não carregou o módulo.

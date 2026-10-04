@@ -1,0 +1,46 @@
+{
+  "format": 1,
+  "status": "compiled_verified_not_phone_loaded",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "module": {
+    "bytes": 42008,
+    "sha256": "8ade6fd83a47df5e8bbb882fdbb53cd4ef118e3a6185274549f7b4b88b717941",
+    "module": "n71-pcie-diagnostic.ko"
+  },
+  "preserved_kernel_sha256": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "sources_sha256": {
+    "phone/kernel/n71-pcie-diagnostic.c": "3a516b92aee12c5deef3b35a1ccad18e6f65de7673770ba11ba4f3e33a14f91c",
+    "phone/kernel/n71-pcie-scan.h": "311dc6ab57c3430172f8ddbdc2d2b9229dc92b5fd76997ff89137418aadd182e",
+    "phone/kernel/n71-pcie-chip-id.h": "a71b62b785def3344b2539db660167f3adf2dd86ca1aa48d7743b5338a567405",
+    "phone/kernel/n71-pcie-chip-mmio.h": "e37a65f3e7b846937d84654180657c5a3981200ea470a5f571f867a719e7fe6c",
+    "tests/n71_pcie_chip_id.c": "77f9fc2c54f4d6dd613ff712d65aa97b406ba0bc9a3af93d3ef8889031422b83",
+    "tests/test_n71_pcie_chip_id.py": "28a9ddd173d970373505d6c64d67708a4e4bb52ab24c7497fd7945cb3c58111b"
+  },
+  "native_checks": {
+    "macos": true,
+    "linux_arm64": true,
+    "c_fault_test": true,
+    "assertion_mutations": 6,
+    "werror": true,
+    "modpost_fatal": true,
+    "elf_aarch64": true,
+    "exact_vermagic": true
+  },
+  "private_log_sha256": {
+    "contract-private.log": "9cee70b80c02e821fef6e880bb01153c60ff0c05435353fc213cb46dc6b299c4",
+    "module-private.log": "838871bb4659955a52df1aaeffeee4d8bd335141a873844d7167aa87b24dddef"
+  },
+  "chip_id_default": false,
+  "chip_id_mmio_read_limit": 1,
+  "bar0_cpu_base": "0x7c0000000",
+  "bar0_mapping_bytes": 32768,
+  "dma_enabled": false,
+  "physical_chip_id_verified": false,
+  "wifi_verified": false,
+  "firmware_loaded": false
+}

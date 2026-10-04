@@ -66,7 +66,8 @@ static int n71_scan_raw_write(void *context, bool root, u32 where,
 	return 0;
 }
 
-static inline int n71_pcie_size_bars(struct device *dev, struct n71_diagnostic *state)
+static inline int n71_pcie_size_bars(struct device *dev, struct n71_diagnostic *state,
+				    struct n71_bar_sizes *out)
 {
 	struct n71_scan_host host = {.dev = dev, .ecam = state->ecam, .port = state->port};
 	struct n71_scan_io io = {&host, n71_scan_raw_read, n71_scan_raw_write};
@@ -84,6 +85,8 @@ static inline int n71_pcie_size_bars(struct device *dev, struct n71_diagnostic *
 				 (unsigned long long)sizes.bytes[bar]);
 	dev_info(dev, "N71_PCIE_SIZING_RESULT error=%d reads=%u attempts=%u writes=%u refusals=%u; no DMA or radio\n",
 		 error, host.reads, host.config.attempts, host.config.writes, host.config.refusals);
+	if (!error && out)
+		*out = sizes;
 	return error;
 }
 
