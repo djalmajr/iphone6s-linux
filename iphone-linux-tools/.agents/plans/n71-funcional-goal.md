@@ -1137,3 +1137,22 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Sem rebuild de Image, instalação global ou novo boot do iPhone.
 - Compor perfil privado novo e exigir cleanup anterior do mesmo boot;
   próximo teste físico será delimitado a enumeração sem bind/DMA/IRQrouting.
+
+- Gate91: build externo ARM64 passou contrato,16 mutações de configuração,
+  11 cenários/6 mutações de lifecycle, Werror/modpost/ELF/vermagic. Kernel e
+  REG_ON módulo mantêm hashes anteriores.25 testes/15 mutações do coletor
+  passaram; seleção nova, perfil/proveniência e --check foram conferidos.
+- SSH confirmou o mesmo boot/PCI vazio/módulo ausente. A checagem inicial
+  tentou interpretar o status HTTP como JSON; o CGI responde HTML. O corpo
+  real foi retido e conferido com a release correta, sem mudar o servidor.
+  Payload/initramfs/chaves/pin permaneceram idênticos. Nenhum novo DFU.
+
+### Incremento 92 — prova física do core scan INTx no boot atual
+
+- Até quatro arquivos: plano, evidência sanitizada, LINK e WIFI. Executar
+  --host-scan com novo perfil e cleanup privado do ciclo DART anterior.
+  Qualificar sucesso somente com dois devices, nenhuma recusa, sizing,
+  remoção do bus e restauração/readback; uma nova recusa é prova negativa.
+- Confirmar PCI vazio, módulos removidos, REG_ON80, reset/power/serviços;
+  salvar snapshot sem reiniciar. Logs/payload/chaves permanecem privados.
+  Publicar no branch/CI e atualizar issues; manter Wi-Fi/DMA pendentes.

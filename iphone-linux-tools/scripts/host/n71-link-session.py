@@ -50,7 +50,7 @@ def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_i
                 'n71-dart-state-build.json' if dart_observe else
                 'n71-pcie-chip-id-build.json' if chip_id else
                 'n71-pcie-bar-sizing.json' if bar_sizing else
-                'n71-pcie-host-scan.json' if host_scan else 'n71-pcie-config-inventory.json')
+                'n71-pcie-intx-scan-build.json' if host_scan else 'n71-pcie-config-inventory.json')
         evidence = json.loads((ROOT / 'docs/evidence' / name).read_text())
         require(evidence['kernel_release'] == RELEASE, 'Inventory ABI differs')
         records = [dict(evidence['module'], module=record['module'])

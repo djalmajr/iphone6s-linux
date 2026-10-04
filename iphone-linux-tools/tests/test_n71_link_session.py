@@ -2,6 +2,7 @@
 import importlib.util
 import contextlib
 import io
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -227,6 +228,10 @@ class LinkSessionTests(unittest.TestCase):
     def test_host_scan_selects_new_module_and_requires_safe_result(self):
         with patch.object(MODULE, 'ROOT', ROOT):
             selected = MODULE.selected_records(False, True)
+            current = json.loads((ROOT / 'docs/evidence/n71-pcie-intx-scan-build.json').read_text())
+            previous = json.loads((ROOT / 'docs/evidence/n71-pcie-host-scan.json').read_text())
+            self.assertEqual(selected[0]['sha256'], current['module']['sha256'])
+            self.assertNotEqual(selected[0]['sha256'], previous['module']['sha256'])
             self.assertNotEqual(selected[0]['sha256'], MODULE.selected_records(True)[0]['sha256'])
         code, result, calls = self.run_session({'pcie': LINK + INVENTORY + SCAN}, host_scan=True)
         self.assertEqual(code, 0)

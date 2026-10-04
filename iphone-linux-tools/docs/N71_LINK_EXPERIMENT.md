@@ -238,7 +238,7 @@ independente do erro e do orçamento de leitura; não reativa decode quando
 BAR/ROM não foi restaurado. Endereços reportados pelo núcleo PCI são recursos
 descobertos, sem prova de mapeamento ativo, tradução NVMMU ou acesso ao chip.
 
-[Build selecionado](evidence/n71-pcie-host-scan.json): módulo35072 bytes,
+[Build inicial preservado](evidence/n71-pcie-host-scan.json): módulo35072 bytes,
 SHA256 `1fe1b30800e23b47a02dbc92996ac29326c3e60953abcf04cae2493d6d38f002`,
 mesma release7.2.0-iphone6s-dart-serdev1. Werror/modpost/ELF/vermagic e símbolos
 PCI scan/walk/stop/remove/free passaram; fonte/Image/config/exports ficaram
@@ -276,7 +276,7 @@ python3 tests/run_n71_pcie_scan_mutations.py
 python3 -m unittest discover -s tests -p test_n71_scan_result.py -v
 python3 tests/run_n71_scan_result_mutations.py
 python3 scripts/host/n71-link-session.py \
-  --profile "$PWD/runtime/n71-host-scan-candidate-20261004/deployment.json" \
+  --profile "$PWD/runtime/n71-pcie-intx-candidate-20261004/deployment.json" \
   --host-scan --check
 ```
 
@@ -368,6 +368,27 @@ foram removidos, configuração restaurada com readback, PERST/domínios liberad
 REG_ON80 restabelecido e ambos os módulos removidos. Nenhuma escrita de probe
 foi aceita; a restauração fez escritas dos valores capturados. Tamanhos de BAR
 não foram comprovados nesse scan. SSH/HTTP e snapshot passaram depois dele.
+
+O coletor `--host-scan` agora seleciona o
+[build com probe INTx delimitado](evidence/n71-pcie-intx-scan-build.json),
+módulo57112 bytes, SHA256
+`f98869b246e582479302ddfbd1edc228adf515c09ec7e7517becfbdeab615a67`.
+A única permissão nova é alternar COMMAND.bit10 mantendo os outros bits
+capturados, ou com decode desligado. Novo decode e bus-master continuam
+proibidos; escritas16 bits preservam STATUS W1C e a restauração é integral.
+O registro anterior continua como evidência histórica da recusa.
+
+Este build passou contratos no Mac/ARM64,16 mutações de configuração e6 de
+lifecycle, Werror/modpost/ELF/vermagic e preservação de config/Image/exports.
+O diretório M novo usado foi
+`/home/ubuntu/n71-pcie-intx-inputs-20261004/phone/kernel`; repetir o comando
+de build acima com esse caminho. Reutiliza o kernel já rodando; nenhuma nova
+imagem ou DFU é necessária. A compilação ainda não comprova core scan físico.
+
+Compor o perfil privado INTx pelo procedimento de composição de diagnósticos,
+com módulo/hash desse registro, e conferir `--host-scan --check`. Para continuar
+o mesmo boot, passar `--previous-clean` com o último diretório privado que
+comprovou cleanup e `--output-dir` novo. Não reutilizar diretórios de logs.
 
 O próximo modo `bar_sizing=1` mede somente as seis palavras BAR do endpoint,
 sem registro de dispositivos PCI. Exige inventário, recusa host_scan simultâneo,
