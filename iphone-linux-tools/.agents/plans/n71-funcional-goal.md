@@ -1408,3 +1408,38 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Log inicial preservado, sem tratar erro de compilação como prova de mutation.
   Artefatos/logs transferidos somente após exits0; hashes locais iguais.
   Nenhum módulo foi carregado e nenhum boot físico ocorreu nesta fatia.
+
+### Incremento 105 — reprodução e limites do observador passivo I2C1
+
+- Cinco arquivos: plano, HDQ, ALIMENTACAO, STATUS e
+  `docs/evidence/n71-i2c-topology-observer.json`. Registrar código4436af0,
+  hashes de fontes/artefato/logs, kernel preservado e gates83casos/14mutações.
+- Documentar build externo separado e futura coleta SSH/unload no mesmo
+  boot, sem autoload, scanI2C, ativação de controlador ou novo kernel/DFU.
+  Distinguir declaração DT, amostras GPIO e ausência momentânea de adapter
+  de ownership, pin routing qualificado, corrente e carregamento funcional.
+- Atualizar checkpoint51% iOS de leitura já verificada, sem apresentá-la
+  como nova medição. Conferir JSON/hashes/links/diff/guard e publicar na
+  branch/issue2. Reutilizar testes104 inalterados; conferir CI do head final.
+
+### Incremento 106 — corrigir identidade OF antes de concluir a documentação105
+
+- Quatro arquivos: plano, módulo I2C1, harnessC e runner. Revisão da fonte
+  OF fixada mostrou quefdt_get_name fornece nome local efull_name não é
+  contrato de caminho absoluto. A comparação de string em104 recusaria
+  nós válidos. Código4436af0 não foi publicado nem carregado no aparelho.
+- Usarof_find_node_by_path e identidade de ponteiro, liberando a referência
+  adicional. Harness deve reproduzir nomes locais e recusar nó homônimo
+  de outra hierarquia e lookup ausente; mutação real recupera a comparação
+  de string equivocada e deve morrer por asserção.
+- Reexecutar apenas testes alterados Mac/ARM64 e novo build externo M-v2;
+  preservar kernel/artefato antigo/logs. Atualizar hashes/contagens/doc105
+  após a correção, sem DFU. Essa correção precede a publicação do candidato.
+
+- Gate106: código corrigido passou86 casos e15 mutações por asserção Mac e
+  ARM64; nomes locais e três lookups ausentes estão cobertos. A fonte antiga
+  4436af0, compilada com o harness corrigido, morreu por asserção, não por
+  erro de build. Módulo v2 externo15768B compilouWerror/modpost no mesmo ABI;
+  SHA32b7e481c08a7dab1df7075b4a3079397c2c78d1bd8685b7949bee70f2cfd39c.
+  Image/config/exports preservados; fonteOFfdt.c limpa contraHEAD958481f.
+  Nenhum load/ativação/DFU; documentação105 deve selecionar apenasv2.

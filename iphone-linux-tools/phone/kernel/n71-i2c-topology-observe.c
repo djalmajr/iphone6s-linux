@@ -16,6 +16,15 @@ static bool run;
 module_param(run, bool, 0400);
 MODULE_PARM_DESC(run, "Observe N71 I2C1 DT and GPIO114/115; no activation or I2C I/O");
 
+static bool n71_observe_path(struct device_node *node, const char *path)
+{
+	struct device_node *expected = of_find_node_by_path(path);
+	bool matches = expected && node == expected;
+
+	of_node_put(expected);
+	return matches;
+}
+
 static int n71_observe_resource(struct device_node *node, u64 base, u64 size)
 {
 	struct resource resource;
@@ -60,7 +69,7 @@ static int n71_observe_clock(struct device_node *node)
 	error = of_parse_phandle_with_args(node, "clocks", "#clock-cells", 0, &clock);
 	if (error)
 		return error;
-	if (clock.args_count || strcmp(clock.np->full_name, "/clock-ref") ||
+	if (clock.args_count || !n71_observe_path(clock.np, "/clock-ref") ||
 	    !of_device_is_available(clock.np) ||
 	    !of_device_is_compatible(clock.np, "fixed-clock") ||
 	    of_property_count_u32_elems(clock.np, "clock-frequency") != 1 ||
@@ -83,7 +92,7 @@ static int n71_observe_domain(struct device_node *node)
 	if (error)
 		return error;
 	if (domain.args_count ||
-	    strcmp(domain.np->full_name, "/soc/power-management@20e000000/power-controller@801a0") ||
+	    !n71_observe_path(domain.np, "/soc/power-management@20e000000/power-controller@801a0") ||
 	    !of_device_is_available(domain.np) ||
 	    !of_device_is_compatible(domain.np, "apple,s8000-pmgr-pwrstate") ||
 	    of_property_count_u32_elems(domain.np, "reg") != 2 ||
@@ -112,7 +121,7 @@ static int n71_observe_pins(struct device_node *node, struct device_node *gpio)
 		return error;
 	parent = of_get_parent(pins.np);
 	if (pins.args_count || parent != gpio ||
-	    strcmp(pins.np->full_name, N71_GPIO_PATH "/i2c1-pins") ||
+	    !n71_observe_path(pins.np, N71_GPIO_PATH "/i2c1-pins") ||
 	    !of_device_is_available(pins.np) ||
 	    of_property_count_u32_elems(pins.np, "pinmux") != 2 ||
 	    of_property_read_u32_array(pins.np, "pinmux", mux, 2) ||

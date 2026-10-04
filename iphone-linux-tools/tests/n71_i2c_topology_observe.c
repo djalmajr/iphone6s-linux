@@ -45,7 +45,8 @@ enum fault_id {
 	PIN_NAME_WRONG, PIN_PARSE_ERROR, PIN_ARGS, PIN_PARENT, PIN_PATH,
 	PIN_UNAVAILABLE, PIN_WIDTH, PIN_READ_ERROR, PIN_FIRST, PIN_SECOND,
 	PROVIDER_MISSING, PROVIDER_NODE, DRIVER_MISSING, DRIVER_NAME, MAP_MISSING,
-	MAP_WIDTH, MAP_STRIDE, FAULT_COUNT
+	MAP_WIDTH, MAP_STRIDE, CLOCK_LOOKUP_MISSING, DOMAIN_LOOKUP_MISSING,
+	PIN_LOOKUP_MISSING, FAULT_COUNT
 };
 
 static enum fault_id fault;
@@ -95,8 +96,14 @@ static struct device_node *of_find_node_by_path(const char *path)
 {
 	if (!strcmp(path, "/soc/i2c@20a111000"))
 		return fault == I2C_MISSING ? NULL : get_node(I2C);
-	assert(!strcmp(path, "/soc/pinctrl@20f100000"));
-	return fault == GPIO_MISSING ? NULL : get_node(GPIO);
+	if (!strcmp(path, "/soc/pinctrl@20f100000"))
+		return fault == GPIO_MISSING ? NULL : get_node(GPIO);
+	if (!strcmp(path, "/clock-ref"))
+		return fault == CLOCK_LOOKUP_MISSING ? NULL : get_node(fault == CLOCK_PATH ? OTHER : CLOCK);
+	if (!strcmp(path, "/soc/power-management@20e000000/power-controller@801a0"))
+		return fault == DOMAIN_LOOKUP_MISSING ? NULL : get_node(fault == DOMAIN_PATH ? OTHER : DOMAIN);
+	assert(!strcmp(path, "/soc/pinctrl@20f100000/i2c1-pins"));
+	return fault == PIN_LOOKUP_MISSING ? NULL : get_node(fault == PIN_PATH ? OTHER : PINS);
 }
 
 static bool of_device_is_available(const struct device_node *node)
@@ -383,21 +390,21 @@ static int regmap_read_bypassed(struct regmap *value, unsigned int offset, unsig
 
 static void reset(enum fault_id selected)
 {
-	const char *paths[NODE_COUNT] = {
-		"/soc/i2c@20a111000", "/soc/pinctrl@20f100000", "/soc/interrupt-controller@20e100000",
-		"/clock-ref", "/soc/power-management@20e000000/power-controller@801a0",
-		"/soc/pinctrl@20f100000/i2c1-pins", "/other"
+	/* OF unflattening stores unit names here, not absolute paths. */
+	const char *names[NODE_COUNT] = {
+		"i2c@20a111000", "pinctrl@20f100000", "interrupt-controller@20e100000",
+		"clock-ref", "power-controller@801a0", "i2c1-pins", "other"
 	};
 	unsigned int i, pin, sample;
 
 	for (i = 0; i < NODE_COUNT; i++) {
 		nodes[i].refs = 0;
-		nodes[i].full_name = paths[i];
+		nodes[i].full_name = names[i];
 	}
 	fault = selected;
-	if (fault == CLOCK_PATH) nodes[CLOCK].full_name = "/other-clock";
-	if (fault == DOMAIN_PATH) nodes[DOMAIN].full_name = "/other-domain";
-	if (fault == PIN_PATH) nodes[PINS].full_name = "/other-pins";
+	if (fault == CLOCK_PATH) nodes[OTHER].full_name = names[CLOCK];
+	if (fault == DOMAIN_PATH) nodes[OTHER].full_name = names[DOMAIN];
+	if (fault == PIN_PATH) nodes[OTHER].full_name = names[PINS];
 	memset(&provider, 0, sizeof(provider));
 	memset(&controller, 0, sizeof(controller));
 	memset(&adapter_device, 0, sizeof(adapter_device));

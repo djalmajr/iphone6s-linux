@@ -15,6 +15,8 @@ MUTATIONS = (
     ('drop-resource-base', 'resource.start != base', '(resource.start != base && false)'),
     ('wrong-irq-scope', 'irq.args[1] != 207', 'irq.args[1] != 197'),
     ('drop-pin-parent', 'parent != gpio', '(parent != gpio && false)'),
+    ('confuse-unit-name-with-path', 'expected && node == expected',
+     'expected && !strcmp(node->full_name, path)'),
     ('accept-existing-platform', 'error = -EBUSY;\n\t\tgoto put_node;\n\t}\n\tadapter',
      'error = 0;\n\t\tgoto put_node;\n\t}\n\tadapter'),
     ('drop-provider-lock', 'device_lock(&provider->dev);', '(void)device_lock;'),
@@ -57,7 +59,7 @@ class I2cTopologyObserveTests(unittest.TestCase):
                 result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5, cwd=folder)
                 if before is None:
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertIn('N71_I2C_TOPOLOGY_OBSERVE_OK', result.stdout)
+                    self.assertIn('N71_I2C_TOPOLOGY_OBSERVE_OK cases=86', result.stdout)
                     print(result.stdout.strip())
                 else:
                     self.assertEqual(result.returncode, -6, name + result.stderr)
