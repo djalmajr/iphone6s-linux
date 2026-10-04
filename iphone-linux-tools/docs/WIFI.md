@@ -4,6 +4,8 @@ Estado atualizado em2026-10-04: **Wi-Fi nativo ainda não habilitado**. No mesmo
 
 O DART está com tradução desativada nos quatro streams, mas16TTBRs ainda têm valid-bit. **As16 palavras completas já foram conservadas privadamente no mesmo boot**, com duas amostras idênticas e cleanup verificado. A cadeia ADT WLAN→mapper84/reg0 e o método Apple `_registerMapper` qualificam o stream pretendido0; mapeamento Linux RID0100→SID0 e entrega IRQ/DMA ainda exigem prova. [Estado integral preservado](evidence/n71-dart-state-first-physical.json), [referência Apple de stream](evidence/n71-dart-apple-stream-reference.json).
 
+**O provider DART já iniciou fisicamente e foi removido no mesmo boot.** O driver Apple confirmou páginas de4KiB, quatro streams e endereçamento32→36bits. Quatro snapshots mostraram a limpeza das tabelas pelo provider e a restauração integral dos16 ponteiros pelo adaptador, com hash original idêntico e COMMAND/ERROR preservados. Device/IRQmapping/recurso foram retirados e SSH/HTTP/snapshot continuaram funcionando. Nenhum DT foi alterado ou endpoint DMA associado. [Ciclo físico e limites](evidence/n71-dart-cycle-first-physical.json).
+
 A tabela upstream para a revisão8 seleciona a família `brcmfmac4350-pcie`; firmware/calibração Apple ainda não foram qualificados. [Seleção fixada](evidence/n71-firmware-selection.json). As seções abaixo preservam a pesquisa e suas limitações históricas; build estático não equivale a DMA/rádio funcionando.
 
 ## Desenvolvimento contínuo S8000 — 2026-10-02

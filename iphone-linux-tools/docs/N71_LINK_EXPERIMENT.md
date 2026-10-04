@@ -573,3 +573,61 @@ randomização de128MiB. Não convertê-los em um u64 FDT nem copiar esse par
 para `apple,dma-range`. O provider atual reseta TCR/TTBR/ERROR em probe/remove;
 a integração deve conservar e restaurar estado integral sob posse/power,
 mesmo se probe falhar. Nenhum offset RID2SID/MSI M1 foi adotado no S8000.
+
+## Provider DART — ciclo físico reversível, sem DMA
+
+O [módulo do ciclo](evidence/n71-dart-cycle-build.json) usa
+`dart_cycle=1`, exclusivo dos demais modos e desativado por padrão. Foram
+compilados Mac/ARM64 o contrato de restauração e seis mutantes, além dos sete
+do observer. O módulo externo passou Werror/modpost fatal, ELF e vermagic;
+57112bytes, SHAe78a3c86…74ea. Image/DTB/initramfs não foram recompilados.
+O primeiro build identificou colisão com a macro kernel `current`; o nome
+foi corrigido para `observed` antes do build e da prova física.
+
+O adaptador conserva o nó disabled e cria um platform device temporário com
+o mesmo nó/recursos. A IRQ248 é traduzida pelo domain AIC real, sem copiar
+número virtual. Mapping anterior é conservado; só um mapping criado pelo
+experimento é descartado. O recurso passa do observador ao provider e volta
+ao restaurador depois de unregister. Os quatro domínios PCI permanecem
+adquiridos até encerrar o ciclo. Nenhum endpoint PCI é registrado/associado
+ao IOMMU e bus-master permanece desligado.
+
+[A prova física passou no boot existente](evidence/n71-dart-cycle-first-physical.json):
+
+- Snapshot1: COMMAND00000f02,TCR0,ERROR100,16TTBRs válidos conservados.
+- Provider `apple-dart` ligado: pagesize1000,4streams, AS32→36; snapshot2
+  confirma16TTBRs zerados e tradução desligada.
+- Unregister/removal do novo mapping e readquisição do recurso; snapshot3
+  confirma tradução desligada antes de restaurar.
+-16 escritas somente nos TTBRs; snapshot4 confirma todas as palavras iguais
+  às originais, hash idêntico, validffff e COMMAND/ERROR preservados.
+
+O observador fez152 leituras com156 gates internos, mais17 gates extras.
+Essas contagens excluem as operações próprias de reset do driver em
+probe/remove. O adaptador não escreve COMMAND/ERROR; qualquer mudança deles
+gera resultado negativo, mesmo se os ponteiros forem restaurados. Falha
+parcial do probe também executa unregister e restore; nunca há escrita de
+TTBR enquanto a tradução está ativa ou a retirada do provider é incerta.
+
+Após o ciclo passaram ausência de device/handler, reset/power/REG_ON80,
+PCI vazio/unload, SSH/HTTP e snapshot. IRQhandler registrado não comprova
+entrega física de interrupção; provider inicializado não comprova mapeamento
+DMA, isolamento, firmware, rádio ou alimentação sustentada.
+
+Reprodução por módulo externo: usar as fontes atuais de `phone/kernel/` e
+as mesmas regras de ABI/hash/.config/Image/exports descritas acima. Compor
+perfil privado novo com o módulo/hash do ciclo e o REG_ON fixado. A seleção
+exige prova integral privada anterior **do mesmo boot**, recalcada a partir
+dos logs e confrontada com o JSON; sem essa prova, o comando é recusado:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-dart-cycle-candidate-20261004/deployment.json" \
+  --dart-cycle --previous-clean "$PWD/runtime/n71-dart-state-session-20261004" --check
+```
+
+Trocar `--check` por uma nova pasta `--output-dir` sob runtime somente com
+esse boot ativo. Se o telefone reiniciar, o histórico anterior deixa de ser
+válido e deve ser refeita a captura completa; não basta copiar o JSON antigo.
+25 testes do coletor,15 mutações e quatro mutações do parser protegem essa
+seleção e o cleanup. Valores/identidades/logs permanecem privados.

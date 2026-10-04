@@ -1101,3 +1101,22 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   branch/CI e atualizar #9/#34. Próxima correção é COMMAND INTx-disable
   rejeitado pelo guard no core scan; permissões continuam delimitadas ao
   bit10, sem BAR assignment/IRQrouting/bus-master ou caps não qualificadas.
+
+- Gate89: documentação registra ciclo físico e limites, incluindo operações
+  do provider fora das contagens do observador. Histórico/identidades privados
+  preservados; publicação seguirá no branch. Primeira chamada PUBLIC_TREE
+  usou cwd da raiz com caminho relativo errado; repetida no diretório do
+  projeto antes de publicar. Nenhum pacote/configuração global foi alterado.
+
+### Incremento 90 — COMMAND INTx-disable do core scan, sem ampliar capacidades
+
+- Quatro arquivos: plano, contrato de config-scan, teste C e runner. A prova
+  física anterior recusou primeiro COMMAND004/size2/value400. Permitir somente
+  alternância do bit10 com os estados decode originais ou decode desligado;
+  preservar todos os outros bits e manter master4 proibido.
+- Captura/restauração continuam de COMMAND16bits, sem tocar STATUS W1C;
+  restore final devolve exatamente o comando original. Testar root/endpoint,
+  original bit10 ligado/desligado, falsos bits8/11, decode novo e master.
+- Alternativa: liberar todas as escritas do core; descartada porque windows,
+  PM/PCIe/AER e roteamento precisam de qualificação própria. Próxima recusa
+  deve ser medida e documentada como negativa, sem declará-la enumeração pronta.
