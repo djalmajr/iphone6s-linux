@@ -8,6 +8,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'scripts/host/n71-link-session.py'
 MUTATIONS = {
+    'host-selection': ("'n71-pcie-bridge-scan-build.json'", "'n71-pcie-intx-scan-build.json'"),
     'cycle-mode': ("parameters += ' dart_cycle=1'", "parameters += ''"),
     'cycle-cleanup': ('n71_dart_cycle_result.cleanup(p.stdout)', 'pass'),
     'private-ttbr-output': ("and 'N71_DART_TTBR ' not in line", ''),

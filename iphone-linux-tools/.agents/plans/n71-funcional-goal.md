@@ -1185,9 +1185,23 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 
 ### Incremento 94 — seleção/build e continuação física da ponte
 
-- Até cinco arquivos: plano, build novo, seleção, teste de seleção e LINK.
+- Até cinco arquivos: plano, build novo, seleção, teste de seleção e mutações.
   Preservar INTx como histórico; compor perfil novo com artefato qualificado,
   conferir --check e executar --host-scan com cleanup anterior no mesmo boot.
 - Uma recusa de capability/controle continua negativa; não ampliá-la durante
   a execução. Confirmar remoção/restore/PCI vazio/serviços e snapshot antes
   de publicar prova sanitizada em fatia própria. Sem reboot/PIN/DFU.
+
+- Gate94a: build57888 bytes/hash82228fa7… transferido e conferido.25 testes
+  do coletor e16 mutações passaram, incluindo seleção antiga recusada por
+  asserção. Perfil/proveniência/ELF/hash/--check e histórico de cleanup atual
+  passaram; payload/initramfs/identidades iguais. Teste físico segue abaixo.
+
+### Incremento 95 — evidência física/limites da ponte e reprodução
+
+- Até quatro arquivos: plano, prova sanitizada nova, LINK e WIFI. Separar
+  avanço em probes da ponte de eventual recusa posterior; exigir remoção
+  do bus/config/PCI vazio/módulos/serviços/snapshot. Fonte/build permanecem
+  identificados por digests, e caminhos de logs/ponteiros privados excluídos.
+- Documentar perfil e diretório M atuais e próximo controle exigido, sem
+  afirmar Wi-Fi/DMA/IRQdelivery. Publicar branch/issues/CI mantendo Linux ligado.
