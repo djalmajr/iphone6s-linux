@@ -92,6 +92,7 @@ static int n71_pcie_dart_observe(struct device *dev, struct n71_diagnostic *stat
 	struct n71_dart_io io = {&mmio, n71_dart_quiet, n71_dart_read32};
 	struct n71_dart_observation result;
 	struct resource *claimed = NULL;
+	unsigned int index;
 	int error;
 
 	if (state->powered != 4 || state->attached != 4)
@@ -112,9 +113,12 @@ static int n71_pcie_dart_observe(struct device *dev, struct n71_diagnostic *stat
 	dev_info(dev, "N71_DART_SOURCE physical=%016llx bytes=%08x irq=248 provider=disabled owner=none\n",
 		 N71_DART_CPU, N71_DART_BYTES);
 	error = n71_dart_observe(&io, &result);
-	if (!error)
+	if (!error) {
 		dev_info(dev, "N71_DART_STATE command=%08x tcr=%08x error=%08x enabled=%01x ttbr-valid=%04x; stable\n",
 			 result.command, result.tcr, result.error, result.enabled, result.valid_ttbrs);
+		for (index = 0; index < 16; index++)
+			dev_info(dev, "N71_DART_TTBR index=%02u value=%08x; stable\n", index, result.ttbr[index]);
+	}
 done:
 	if (mmio.regs)
 		iounmap(mmio.regs);

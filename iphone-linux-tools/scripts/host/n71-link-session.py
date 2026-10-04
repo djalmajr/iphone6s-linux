@@ -126,7 +126,7 @@ class Session:
         if self.history and stage != 'preflight':
             process.stdout = self.history.fresh(process.stdout)
         for line in process.stdout.splitlines():
-            if ('N71_' in line or line.startswith('bound=')) and not (self.history and line in self.history.known):
+            if ('N71_' in line or line.startswith('bound=')) and 'N71_DART_TTBR ' not in line and not (self.history and line in self.history.known):
                 print(line, flush=True)
         print('N71_STAGE', stage, 'exit', process.returncode, flush=True)
         return process

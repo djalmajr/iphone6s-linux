@@ -1,5 +1,7 @@
 """A stable DART snapshot proves observation, never DMA or stream routing."""
+import hashlib
 import re
+import struct
 
 
 def require(condition, message):
@@ -41,8 +43,17 @@ def parse(text):
             'Unavailable or busy DART state refused')
     expected = sum(1 << index for index in range(4) if (tcr >> (index * 8)) & 0x80)
     require(enabled == expected, 'Packed TCR enable mask differs')
+    rows = re.findall(r'N71_DART_TTBR index=(\d{2}) value=([0-9a-f]{8}); stable', text)
+    require([int(index) for index, _ in rows] == list(range(16)),
+            'Sixteen unique ordered stable TTBR words required')
+    words = [int(value, 16) for _, value in rows]
+    require(all(value != 0xffffffff for value in words), 'Unavailable TTBR refused')
+    expected = sum(1 << index for index, word in enumerate(words) if word & 0x80000000)
+    require(valid_ttbrs == expected, 'TTBR valid mask differs from preserved words')
     result.update(command=command, tcr=tcr, fault_raw=error, enabled_streams=enabled,
                   valid_ttbr_mask=valid_ttbrs, valid_ttbr_count=valid_ttbrs.bit_count(),
+                  ttbr_words_preserved=len(words),
+                  ttbr_sha256=hashlib.sha256(struct.pack('<16I', *words)).hexdigest(),
                   fault_flag=bool(error & 0x80000000), fault_stream=(error >> 24) & 3,
                   fault_code=error & 0xff)
     return result

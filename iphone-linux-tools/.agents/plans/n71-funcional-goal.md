@@ -945,3 +945,22 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   por asserção.38 leituras/39 gates preservados; saída integral atômica nos
   cenários de falha. SSH/HTTP confirmados novamente no endereço USB; o HTTP
   não está vinculado a127.0.0.1, portanto essa sondagem inicial foi corrigida.
+
+### Incremento 82 — captura privada integral e resumo público sanitizado
+
+- Cinco arquivos: plano, adaptador MMIO, parser/testes e coletor. Emitir16
+  palavras estáveis sem leituras novas. Guardar os registros somente nos
+  logs privados; retirar ponteiros da saída do terminal e do JSON sanitizado.
+- Parser exige índices0–15 únicos/ordenados, palavras não all-ones e máscara
+  valid consistente. Retorna contagem e SHA256 das16 palavras little-endian,
+  nunca seus endereços. Recusar ausência/duplicação/reordenação/truncamento.
+- O módulo atual e evidência histórica continuam intactos; após gates locais,
+  compilar nova seleção ABI na VM e aplicar por SSH com histórico de cleanup.
+  Provider/IRQ/DMA continuam desligados; nenhuma reinicialização requerida.
+
+- Gate82: cinco testes do parser passaram, com seis mutações de aceitação
+  rejeitadas por asserção;23 testes do coletor passaram. A primeira mutação
+  de índice usava ausência total e ainda era barrada pela máscara; corrigida
+  para duplicação de índice com máscara íntegra, comprovando o gate próprio.
+  Falhas do experimento continuam exigindo release; logs retêm palavras,
+  saída pública omite-as. Diff-check passou; build físico é o próximo gate.
