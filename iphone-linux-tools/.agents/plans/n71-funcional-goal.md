@@ -636,8 +636,8 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 
 ### Incremento 66 — seleção e cleanup físicos do adaptador de sizing
 
-- Cinco arquivos: coletor, testes do coletor, evidência selecionada de build,
-  guia LINK e plano. `--host-scan` implica inventário e fixa exclusivamente o
+- Cinco arquivos: coletor, testes do coletor, parser de scan, evidência
+  selecionada de build e plano. `--host-scan` implica inventário e fixa o
   módulo novo/proveniência; modos anteriores mantêm os hashes selecionados.
 - Validar resultado único, dois dispositivos, seis recursos BAR ordenados,
   COMMAND sem DMA, orçamento e ausência de refusals. Exigir remoção do bus e
@@ -649,3 +649,20 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - A próxima sessão agrupa inventário, sizing pelo PCI core, DART/HDQ somente
   leitura, serviços e snapshot. Firmware/calibração, atribuição de recursos,
   IRQ e DMA não são ativados nesta varredura temporária.
+
+- Gate66: 17 testes do coletor passaram; 12 mutações anteriores continuam
+  recusadas por asserção. Fixture nova recebeu ROOT explícito para funcionar
+  nas cópias descartáveis; runner teve ajuste de anchor em fatia de um arquivo.
+  Os três modos passaram seus gates locais. Perfil novo preservou payload,
+  DTB, initramfs e identidades byte a byte; somente módulo externo mudou.
+  Nenhuma ação USB/DFU. Logs e artefatos privados, registro público só hashes.
+
+### Incremento 67 — reprodução e gates contínuos do host temporário
+
+- Até cinco arquivos: guia LINK, CI, teste/mutações do parser de scan e plano.
+  Registrar receita de módulo externo, hash/ABI e limites reais de prova;
+  manter o Image anterior e modos padrão. Acrescentar as mutações de política
+  à matriz Linux/macOS e recusas de cleanup/topologia/BAR do parser.
+- Publicar no branch autorizado, conferir CI e atualizar #9/#34 com os fatos
+  selecionados. Depois iniciar um único boot para os novos gates físicos,
+  sem contador ou novo PIN; confirmar DFU USB antes de enviar a candidata.

@@ -30,26 +30,36 @@ INVENTORY = ('N71_PCIE_INVENTORY_RESULT error=0; no config writes\n'
              + ''.join('N71_PCIE_BAR_RAW index=' + str(index) + ' value=00000000; no sizing or MMIO access\n'
                        for index in range(6))
              + 'N71_PCIE_CAP_RAW express=40/00025010 msi=50/00806005 msix=60/00000011\n')
+SCAN = ('N71_PCIE_SCAN_DEVICE bus=0 devfn=08 id=1004106b class=060400 command=0103 driver=none\n'
+        'N71_PCIE_SCAN_DEVICE bus=1 devfn=00 id=43a314e4 class=028000 command=0103 driver=none\n'
+        + ''.join(f'N71_PCIE_SCAN_BAR index={index} start=0000000000000000 end=0000000000000000 flags=00000000; no MMIO\n' for index in range(6))
+        + 'N71_PCIE_SCAN_BUS_REMOVED bus-null=1\n'
+        'N71_PCIE_SCAN_CONFIG_RESTORED error=0; decode/readback checked\n'
+        'N71_PCIE_SCAN_RESULT error=0 devices=2 endpoints=1 reads=100 attempts=24 writes=20 refusals=0; no DMA or radio\n')
 
 
 class LinkSessionTests(unittest.TestCase):
-    def run_session(self, overrides=None, *, config_inventory=False):
+    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False):
         replies = {'observe': OBSERVE, 'activate': ACTIVE,
                    'pcie': 'N71_PCIE_LINK_RESULT error=-110 port88=0000880c reads=10000\n',
                    'pcie-cleanup': CLEANUP, 'pcie-unload': 'N71_PCIE_UNLOADED\n',
                    'restore': RESTORE,
                    'reg-unload': 'N71_REG_ON_REMOVE error=0 restore_pending=0\nN71_REG_UNLOADED\n'}
+        if host_scan:
+            replies.update({'pcie-cleanup': CLEANUP + SCAN, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
         replies.update(overrides or {})
         calls = []
         with tempfile.TemporaryDirectory() as folder:
             with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
-                session = MODULE.Session(Path(folder), [], config_inventory=config_inventory)
+                session = MODULE.Session(Path(folder), [], config_inventory=config_inventory, host_scan=host_scan)
 
             def capture(stage, command, raw=None):
                 calls.append((stage, command))
                 value = replies[stage]
                 if isinstance(value, Exception):
                     raise value
+                if isinstance(value, SimpleNamespace):
+                    return value
                 return SimpleNamespace(returncode=0, stdout=value)
 
             session.capture = capture
@@ -197,6 +207,44 @@ class LinkSessionTests(unittest.TestCase):
     def test_inventory_accepts_absent_optional_interrupt_capabilities(self):
         text = INVENTORY.replace('msi=50/00806005 msix=60/00000011', 'msi=00/00000000 msix=00/00000000')
         self.assertEqual(MODULE.inventory_result(text)['capability_headers_raw'][2:], (0, 0, 0, 0))
+
+    def test_host_scan_selects_new_module_and_requires_safe_result(self):
+        with patch.object(MODULE, 'ROOT', ROOT):
+            selected = MODULE.selected_records(False, True)
+            self.assertNotEqual(selected[0]['sha256'], MODULE.selected_records(True)[0]['sha256'])
+        code, result, calls = self.run_session({'pcie': LINK + INVENTORY + SCAN}, host_scan=True)
+        self.assertEqual(code, 0)
+        self.assertIn('config_inventory=1 host_scan=1;', calls['pcie'])
+        self.assertEqual(result['host_scan']['devices'], 2)
+        self.assertFalse(result['dma_enabled'])
+        altered = (SCAN + SCAN, SCAN.replace('command=0103', 'command=0107'),
+                   SCAN.replace('error=0 devices', 'error=-1 devices'),
+                   SCAN.replace('refusals=0', 'refusals=1'), SCAN.replace('attempts=24', 'attempts=130'),
+                   SCAN.replace('index=5', 'index=4'), SCAN.replace('class=028000', 'class=020000'),
+                   SCAN.replace('bus-null=1', 'bus-null=0'), SCAN.replace('RESTORED error=0', 'RESTORED error=-5'))
+        for text in altered:
+            with self.subTest(text=text):
+                code, result, calls = self.run_session({'pcie': LINK + INVENTORY + text}, host_scan=True)
+                self.assertEqual(code, 1)
+                self.assertNotIn('host_scan', result)
+                self.assertIn('reg-unload', calls)
+
+    def test_unproved_host_cleanup_or_nonempty_sysfs_prevents_unload(self):
+        for overrides in ({'pcie-cleanup': CLEANUP + SCAN.replace('RESTORED error=0', 'RESTORED error=-5')},
+                          {'pci-empty-after': SimpleNamespace(returncode=1, stdout='')}):
+            code, result, calls = self.run_session(dict(overrides, pcie=LINK + INVENTORY + SCAN), host_scan=True)
+            self.assertEqual(code, 1)
+            self.assertFalse(result['cleanup_verified'])
+            self.assertNotIn('pcie-unload', calls)
+            self.assertIn('reg-unload', calls)
+
+    def test_host_scan_failure_with_restoration_still_allows_cleanup(self):
+        failed = SCAN.replace('error=0 devices', 'error=-1 devices').replace('refusals=0', 'refusals=1')
+        code, result, calls = self.run_session({'pcie': LINK + INVENTORY + failed,
+                                              'pcie-cleanup': CLEANUP + failed}, host_scan=True)
+        self.assertEqual(code, 1)
+        self.assertTrue(result['cleanup_verified'])
+        self.assertIn('pcie-unload', calls)
 
 
 if __name__ == '__main__':

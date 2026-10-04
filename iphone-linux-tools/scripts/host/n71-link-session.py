@@ -10,6 +10,7 @@ import struct
 import subprocess
 import sys
 import device_profile
+import n71_scan_result
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = '7.2.0-iphone6s-dart-serdev1'
@@ -35,10 +36,11 @@ def module_bytes(profile, record):
     return raw
 
 
-def selected_records(config_inventory):
+def selected_records(config_inventory, host_scan=False):
     records = json.loads((ROOT / 'docs/evidence/kernel-n71-bundle-build.json').read_text())['diagnostic_modules']['modules']
-    if config_inventory:
-        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-config-inventory.json').read_text())
+    if config_inventory or host_scan:
+        name = 'n71-pcie-host-scan.json' if host_scan else 'n71-pcie-config-inventory.json'
+        evidence = json.loads((ROOT / 'docs/evidence' / name).read_text())
         require(evidence['kernel_release'] == RELEASE, 'Inventory ABI differs')
         records = [dict(evidence['module'], module=record['module'])
                    if record['module'] == 'n71-pcie-diagnostic.ko' else record for record in records]
@@ -81,10 +83,11 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False):
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False):
         self.output = output
         self.modules = modules
-        self.config_inventory = config_inventory
+        self.config_inventory = config_inventory or host_scan
+        self.host_scan = host_scan
         self.ssh = device_profile.ssh_options() + ['root@' + device_profile.PHONE]
         self.reg_attempted = False
         self.activation_attempted = False
@@ -122,6 +125,9 @@ class Session:
         require(p.returncode == 0 and p.stdout.startswith(RELEASE + '\n'),
                 'Selected release and disabled HDQ resources not proved')
         require('N71_PCIE_' not in p.stdout, 'A PCIe diagnostic already exists in this boot')
+        if self.host_scan:
+            p = self.capture('pci-empty', 'set -e; test -z "$(ls /sys/bus/pci/devices)"; echo N71_PCI_PREFLIGHT_EMPTY')
+            require(p.returncode == 0, 'Pre-existing PCI devices refused')
         for record, raw in self.modules:
             target = '/run/' + record['module']
             p = self.capture('transfer-' + record['module'],
@@ -150,6 +156,8 @@ class Session:
         # Repeat the fresh checks on the phone immediately before the single insmod.
         self.pcie_attempted = True
         parameters = ' config_inventory=1' if self.config_inventory else ''
+        if self.host_scan:
+            parameters += ' host_scan=1'
         p = self.capture('pcie', 'set -e; '
                          'test "$(cat ' + REG + 'state)" = "' + STATE_ACTIVE + '"; '
                          'test "$(cat ' + REG + 'control)" = "N71_REG_ON_CONTROL_READBACK value=81"; '
@@ -170,6 +178,8 @@ class Session:
         if self.config_inventory:
             require(int(error) == 0 and identities == ['43a314e4'], 'Measured inventory endpoint required')
             self.result['inventory'] = inventory_result(p.stdout)
+        if self.host_scan:
+            self.result['host_scan'] = n71_scan_result.parse(p.stdout)
 
     def cleanup(self):
         failures = []
@@ -180,6 +190,10 @@ class Session:
                         and 'N71_PCIE_RESET_RESTORED asserted=1 readback=1' in p.stdout
                         and 'N71_PCIE_POWER_RELEASED powered=0 attached=0' in p.stdout,
                         'PCIe reset/power cleanup not proved')
+                if self.host_scan:
+                    n71_scan_result.cleanup(p.stdout)
+                    p = self.capture('pci-empty-after', 'set -e; test -z "$(ls /sys/bus/pci/devices)"; echo N71_PCI_CLEANUP_EMPTY')
+                    require(p.returncode == 0, 'PCI devices remain after cleanup')
                 p = self.capture('pcie-unload', 'set -e; rmmod n71_pcie_diagnostic; '
                                  'test ! -d /sys/module/n71_pcie_diagnostic; echo N71_PCIE_UNLOADED')
                 require(p.returncode == 0, 'PCIe unload not proved')
@@ -229,6 +243,7 @@ def main():
     parser.add_argument('--output-dir', type=Path)
     parser.add_argument('--check', action='store_true', help='Local gates only, no SSH')
     parser.add_argument('--config-inventory', action='store_true', help='Require the separately recorded read-only inventory module')
+    parser.add_argument('--host-scan', action='store_true', help='Select recorded PCI-core sizing module; implies inventory')
     options = parser.parse_args()
     os.umask(0o077)
     os.environ['IPHONE_LINUX_PROFILE'] = str(options.profile.absolute())
@@ -239,8 +254,8 @@ def main():
     metadata = json.loads(provenance.read_text())
     require(metadata['kernel_release'] == RELEASE and metadata['kernel_patchset'] == 'n71-dart-serdev-v1'
             and metadata['payload_sha256'] == profile['sha256'], 'Selected profile provenance differs')
-    records = selected_records(options.config_inventory)
-    if options.config_inventory:
+    records = selected_records(options.config_inventory, options.host_scan)
+    if options.config_inventory or options.host_scan:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record)) for record in records]
     if options.check:
@@ -252,7 +267,7 @@ def main():
             'Output must be new, directly under runtime')
     device_profile.protected(output.parent, directory=True)
     output.mkdir(mode=0o700)
-    return Session(output, modules, config_inventory=options.config_inventory).run()
+    return Session(output, modules, config_inventory=options.config_inventory, host_scan=options.host_scan).run()
 
 
 if __name__ == '__main__':
