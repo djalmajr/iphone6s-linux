@@ -1523,3 +1523,45 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   No arquivo unified patch, prefixes de contexto produzem falso positivo de
   whitespace; somente essa representação foi conferida com a opção de comando
   correspondente, sem alterar configuração Git. Patch real aplicou limpo na VM.
+
+### Incremento 109 — observador PMGR para o acesso I2C1
+
+- Turno anterior foi progresso: patch GPIO, gates nativos/build ARM64 e issue35
+  publicados. CI19f6129 segue em processos confirmados; não reiniciar jobs.
+  Nova leitura iOS: 93% às 20:48:17 UTC, carregamento externo ativo.
+- Cinco arquivos: plano, phone/kernel/n71-pmgr-power-observe.c,
+  phone/kernel/Makefile, tests/n71_pmgr_power_observe.c e
+  tests/test_n71_pmgr_power_observe.py. Módulo separado atualizado por SSH,
+  sem kernel novo, autoload, reserva/ativação, reset, IRQ ou writes.
+- Limitar ao PMGR20e000000/8c000 e cadeia i2c1@801a0 → sio_p@80158 →
+  sio_busif@80150, com metadados/phandles/labels exatos. Não criar regmap
+  por conveniência: só chamar syscon após confirmar, sob device lock, um
+  domain ligado ao driver apple-pmgr-pwrstate; esse probe fixado só retorna
+  sucesso após criar/obter o map do mesmo parent. Rejeitar clocks/resets
+  no parent para evitar ativações implícitas na leitura regmap.
+- Ler duas amostras bypass por domain; liberar referências/lock em todos os
+  caminhos e emitir linhas completas só após as seis leituras passarem.
+  Estado alvo/real e flags são referências Linux, não medição de corrente,
+  frequência ou captura atômica/ownership da cadeia.
+- Gates: executar módulo real em harness C, erros de todos os metadados,
+  mapping, refs, locks e cada leitura; mutações compiladas por asserção.
+  Repetir Mac/ARM64 e build externo Werror no bundle preservado. Documentação
+  e prova selecionada em incremento separado antes de qualquer load físico.
+
+- Gate109: módulo real passou 88 cenários e 16 mutações por asserção no Mac
+  e ARM64. Build externo Werror/modpost passou; ELF64 LE/REL AArch64, ABI
+  preservado, módulo11672B e SHAbdf1afa5d631192716443c9c9595bab018706e2c657563b016a27e3d4bdcf257.
+  Fonte syscon/PMGR/DTS limpa contra HEAD958481f; config/Image/exports iguais.
+  Inputs, logs e módulo transferidos somente após exit0 e digests iguais.
+- Primeira rodada de mutações parou porque remover o único put_device
+  deixou o mock sem referência e Werror recusou compilar. O mutant corrigido
+  conserva referência à função sem chamá-la e morre por asserção de refs;
+  erro de compilação inicial não foi contado como prova. Lint Python passou.
+- CI19f6129 terminou aprovado nas duas execuções PR37233188196 e
+  push37233183384, seis jobs. Novo observador ainda não foi carregado;
+  inferência de syscon existente depende do binding do driver fixado sob lock,
+  não de tratar a API get-or-create como lookup sem efeitos em qualquer nó.
+- A primeira transferência PMGR reutilizou nomes genéricos de três logs/
+  metadados GPIO. Os originais continuavam preservados na VM: foram restaurados
+  e seus digests conferidos contra a prova pública108. O PMGR agora tem pasta
+  privada dedicada runtime/n71-pmgr-observer-20261004; nenhum log ficou perdido.
