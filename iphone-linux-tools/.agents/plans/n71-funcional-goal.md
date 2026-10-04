@@ -1747,3 +1747,40 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   lista parent_links do domínio pai, child_node na child_links do subdomain.
   Assim a recusa de genpd_remove por parent_links não vazio é por filhos.
   Esta leitura não prova exclusão de concorrência/cleanup no hardware.
+
+### Incremento 115 — cleanup do domínio antes de publicar o provider
+
+- A fonte genpd fixada só marca has_provider após sucesso completo de
+  of_genpd_add_provider_simple; caminhos de erro desfazem device_add/OPP.
+  No PMGR, erro de add_provider retorna sem remover domínio inicializado.
+  Corrigir esse vazamento sem apagar outro provider do mesmo nó.
+- Cinco arquivos: plano, phone/kernel/patches/0006-apple-pmgr-provider-cleanup.patch,
+  tests/n71_pmgr_provider_failure.c, tests/test_n71_pmgr_provider_failure.py e
+  docs/evidence/n71-pmgr-provider-cleanup.json. Patch006 aplica após004+005,
+  baseSHA7ad9c93264edbf3e42400ff7d654e0c143db68f4500b196a8ae6ee260e43b5a4.
+- Add-provider falho vai ao label de remoção do domínio sem chamar del-provider.
+  Erros posteriores já removem provider antes desse mesmo label. Preservar o
+  primeiro erro. Não declarar cleanup de concorrência/pós-publicação, refusal
+  de genpd_remove ou rollback de registradores como resolvidos por esta fatia.
+- Reutilizar API/fixture do probe113 sem editar os insumos históricos: fixture
+  composta renomeia apenas backends Kernel API e main; fonte real do probe
+  vem das patches005+006 aplicadas por Git em pasta descartável. Injetar
+  ENOMEM/EIO/EINVAL/EEXIST/EPROBE_DEFER, conferir domínio removido, reset ausente,
+  primeiro erro e provider alheio preservado. Predecessor005 deve morrer por
+  asserção; mutações compiladas de bypass/goto/ret/cleanup detectadas.
+- Gates Mac/ARM64, AST/lint e objeto completo obj-y/Werror, sem MODULE/load.
+  Preservar fonte/config/Image/exports; verificar todos os inputs compartilhados
+  por SHA. VM com5,49GiB disponíveis: integração futura usa worktree/output
+  separados e confere espaço antes do build; não remover baseline/rollback.
+- Depois: documentar reprodução e integrar GPIO/PMGR/DART/serdev numa candidata
+  separada. Coleta passiva mantém um DFU e depende de disponibilidade física.
+
+- Gate115: 3258 casos, seis mutações compiladas por asserção e predecessor005
+  aprovados Mac/ARM64. GCC detectou indentação ambígua num mutante de teste;
+  usar bloco explícito corrigiu a fixture, sem contar erro de compilação como kill.
+  Log da falha foi preservado; apenas gate afetado foi repetido.
+- Objeto completo obj-y ARM64/Werror11424B,
+  SHA4a07d023225611fc6045a18e2cfba627d44c2a7502a692c4173deaa289d38db4;
+  initcall presente, sem MODULE/__this_module. Insumos e logs transferidos
+  conferidos por SHA; fonte/config/Image/exports preservados. AST/lint aprovados.
+  Nenhuma carga/DFU/reinicialização do iPhone; iOS mantido para recarga.
