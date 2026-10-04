@@ -4,7 +4,8 @@
 
 iPhone no iOS para recarga após relato de descarga quase completa durante
 Linux. Leituras locais sem PIN confirmaram5% e depois17%, com carga externa
-ativa; o último checkpoint verificado da recarga foi 93% às 20:48:17 UTC.
+ativa; o último checkpoint verificado da recarga foi 100% às 21:23:03 UTC,
+com alimentação externa conectada/capaz e BatteryIsCharging=false.
 Linux não está online. Nenhum novo DFU foi solicitado nesta rodada;
 desenvolvimento segue no Mac/VM para implementar carga/telemetria N71.
 [Evidência e limites](ALIMENTACAO.md), [issue P0](https://github.com/djalmajr/iphone6s-linux/issues/2).
@@ -46,6 +47,15 @@ qualificado pelo binding sob lock. Ainda sem load físico. Pode ser coletado
 junto do observador dos pinos no mesmo boot do bundle preservado.
 [Reprodução e limites](N71_HDQ.md#observador-pmgr--i2c1-e-domínios-pais),
 [prova e checkpoint iOS](evidence/n71-pmgr-power-observer.json).
+
+Correção dos callbacks PMGR `301a61f`: 492 casos/14 mutações Mac/ARM64,
+regressão da fonte original detectada e arquivo completo compilado Werror
+como objeto embutido. Modpost externo recusou esse provider embutido;
+erros preservados e integração/link da imagem pendentes na
+[issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
+Probe/is_active e rollback de efeitos parciais não foram corrigidos.
+CI desse código aprovado em PR37236898569/push37236896067, seis jobs.
+[Reprodução e limites](N71_HDQ.md#erros-dos-callbacks-pmgr--correção-preparada).
 
 As seções anteriores abaixo são checkpoints históricos; afirmações sobre
 serviços ativos ou VM parada descrevem a data indicada em cada uma.

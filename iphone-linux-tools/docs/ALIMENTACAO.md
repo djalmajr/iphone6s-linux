@@ -35,6 +35,12 @@ alimentação externos ativos. [Checkpoint e observador PMGR preparado](evidence
 Esse observador mede somente estados PMGR do I2C1 e seus pais; ainda não
 foi carregado e não fornece percentual/corrente da bateria no Linux.
 
+Checkpoint seguinte: **100% às 21:23:03 UTC**, alimentação externa conectada
+e capaz de carregar; `BatteryIsCharging=false` nessa leitura. São os campos
+informados pelo iOS, sem leitura de corrente ou cálculo de saúde da bateria.
+[Registro sanitizado](evidence/n71-pmgr-errors.json). Nenhum boot Linux novo
+foi iniciado nesta etapa.
+
 Isso reprova o uso contínuo na configuração atual. Não houve leitura de
 corrente de bateria no Linux, portanto não distingue carga zero, consumo
 superior à entrada ou falha específica do controle de carga. O orçamento
@@ -68,6 +74,13 @@ mesmo boot necessário. Os dois módulos externos usam o ABI preservado;
 nenhum Image novo é necessário para essa observação. A correção de erros
 GPIO tem [integração pendente](https://github.com/djalmajr/iphone6s-linux/issues/35)
 e não pode ser carregada como duplicata do provider embutido.
+
+Os callbacks de estado/reset PMGR também descartavam erros de I/O. A
+[patch preparada e seus limites](N71_HDQ.md#erros-dos-callbacks-pmgr--correção-preparada)
+passou 492 casos/14 mutações Mac/ARM64 e compilou como objeto embutido
+Werror. A integração está na [issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36);
+probe/is_active e rollback de efeitos parciais continuam pendentes antes
+de aquisição ativa do barramento. Isso ainda não implementa carga no Linux.
 
 ### Encoder SN2400 específico N71 — cálculo implementado, driver pendente
 

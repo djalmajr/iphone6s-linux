@@ -607,3 +607,75 @@ ausência em `/sys/module/n71_pmgr_power_observe` e SSH/HTTP preservados.
 Não usar dmesg antigo como prova do load atual nem pedir DFU por módulo.
 Salvar snapshot e retornar ao iOS ao concluir a coleta curta, pois carga
 sustentada Linux continua sem comprovação. Nenhum usuário precisa operar o console.
+
+## Erros dos callbacks PMGR — correção preparada
+
+A [patch separada](../phone/kernel/patches/0004-apple-pmgr-errors.patch),
+código `301a61f`, propaga os erros de `apple_pmgr_ps_set`, assert/deassert,
+reset e status. A primeira escrita falha encerra a mudança de estado;
+um poll falho encerra antes de auto-enable; o erro da escrita de auto-enable
+chega ao caller. Reset interrompe a sequência no primeiro update falho,
+liberando o lock; reset completo não espera nem deasserta após assert falho.
+Status devolve erro de leitura, em vez de relatar reset inativo.
+
+Palavras, máscaras e ordem de sucesso são preservadas. Erro após efeito
+parcial **não** restaura hardware; cleanup continua obrigação do caller.
+`apple_pmgr_ps_is_active` e as operações do probe ainda descartam erros.
+Assim, esta patch não qualifica aquisição ativa I2C1 ou uso do carregador.
+[Integração pendente #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
+
+[Prova selecionada](evidence/n71-pmgr-errors.json): 492 casos por baseline
+Mac/ARM64, 14 mutações compiladas detectadas por SIGABRT/asserção e fonte
+original também detectada. O harness compila as funções reais da patch,
+incluindo falhas sintéticas com efeitos parciais, palavras/ordem/locks e
+limites do poll. Não é teste de transições físicas ou de corrente da bateria.
+
+O arquivo inteiro compilou Werror como **objeto embutido** ARM64 de 11.328
+bytes, sem `-DMODULE`, com initcall e sem `__this_module`. Modpost externo
+falhou: o driver embutido não declara MODULE_LICENSE e
+`of_phandle_iterator_args` não é exportado pelo bundle preservado.
+Os erros ficaram registrados sem supressão. Não acrescentar exports/licença
+para fabricar um módulo nem carregar um provider duplicado.
+Full link/Image e teste físico permanecem pendentes.
+
+### Reprodução do objeto embutido na VM
+
+Executar a partir da raiz do clone público na VM dedicada, com o source
+958481f e output do bundle já preparados. Não altera a fonte do bundle.
+Conferir antes/depois `.config`, Image e vmlinux.symvers pelos digests da prova.
+O hash do objeto pode depender do caminho/toolchain; selecionar o artefato
+produzido naquela execução. Não exige pacote novo no Mac ou DFU.
+
+```bash
+set -euo pipefail
+umask 077
+repo_dir="$PWD/iphone-linux-tools"
+kernel_src=/home/ubuntu/kernel-n71-bundle-source-20261002
+kernel_out=/home/ubuntu/kernel-n71-bundle-build-20261002
+provider=drivers/pmdomain/apple/pmgr-pwrstate.c
+patch_file="$repo_dir/phone/kernel/patches/0004-apple-pmgr-errors.patch"
+test "$(git -C "$kernel_src" rev-parse HEAD)" = 958481f87fee0949ff6a9a4af77f7eb6dac8a149
+python3 "$repo_dir/tests/test_n71_pmgr_errors.py"
+sha256sum "$kernel_out/.config" "$kernel_out/arch/arm64/boot/Image" "$kernel_out/vmlinux.symvers"
+task_dir=$(mktemp -d /home/ubuntu/n71-pmgr-errors-check.XXXXXX)
+mkdir -p "$task_dir/$(dirname "$provider")" "$task_dir/builtin-object"
+cp "$kernel_src/$provider" "$task_dir/$provider"
+printf '%s  %s\n' 4b0adc3013e2fabe9ca1cb8228f8f6b7934af4b667f7f0f893b675102d8710df "$task_dir/$provider" | sha256sum -c -
+git -C "$task_dir" apply --check "$patch_file"
+git -C "$task_dir" apply "$patch_file"
+printf '%s  %s\n' cc65bad1b788c4fa1d6e374b236f1b27c840797b727a600035294f17b71433e9 "$task_dir/$provider" | sha256sum -c -
+cp "$task_dir/$provider" "$task_dir/builtin-object/pmgr-pwrstate.c"
+printf 'obj-y += pmgr-pwrstate.o\n' > "$task_dir/builtin-object/Makefile"
+env LOCALVERSION= make -C "$kernel_src" O="$kernel_out" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror M="$task_dir/builtin-object" pmgr-pwrstate.o
+file "$task_dir/builtin-object/pmgr-pwrstate.o"
+sha256sum "$task_dir/builtin-object/pmgr-pwrstate.o"
+sha256sum "$kernel_out/.config" "$kernel_out/arch/arm64/boot/Image" "$kernel_out/vmlinux.symvers"
+```
+
+Conferir a primeira linha de `.pmgr-pwrstate.o.cmd`: sem `-DMODULE`.
+`nm` deve mostrar initcall e não `__this_module`. Conservar inputs/logs privados
+com hashes; não publicar objetos, dumps ou chaves. A integração futura deve
+agrupar GPIO/PMGR/DART necessários numa candidata separada, preservando rollback.
+A observação passiva dos pinos/PMGR continua possível no bundle atual por SSH,
+com os dois módulos preparados no mesmo boot curto; nenhum `insmod` desta patch.

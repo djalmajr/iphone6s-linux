@@ -68,5 +68,18 @@
     "source": "com.apple.mobile.battery",
     "raw_log_sha256": "b837009ce6800b1fe6db9748642e6869b5f5e54a429bf083006d212dc9888e80"
   },
-  "limits": "Callback error propagation does not roll back partial hardware effects or make I2C1 acquisition safe. Probe/is_active still discard I/O errors. Full image integration/link and physical qualification are pending. The built-in driver is not an external module deployment artifact."
+  "limits": "Callback error propagation does not roll back partial hardware effects or make I2C1 acquisition safe. Probe/is_active still discard I/O errors. Full image integration/link and physical qualification are pending. The built-in driver is not an external module deployment artifact.",
+  "code_commit": "301a61f9297df709ea1d63c3ed65c89ae27e52e0",
+  "ci": {
+    "code_head": "301a61f9297df709ea1d63c3ed65c89ae27e52e0",
+    "pull_request_run": 37236898569,
+    "push_run": 37236896067,
+    "conclusion": "success",
+    "jobs_total": 6,
+    "platforms": [
+      "Ubuntu",
+      "macOS",
+      "Windows"
+    ]
+  }
 }

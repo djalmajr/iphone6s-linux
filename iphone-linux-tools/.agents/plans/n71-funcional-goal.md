@@ -1639,3 +1639,33 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Probe/is_active ainda descartam erros; escrita parcial exige cleanup do
   caller. Esta patch sozinha não qualifica aquisição ativa de I2C1 nem carga.
   Zero DFU/reboot/I/O no aparelho; aguardar a disponibilidade física já pedida.
+
+### Incremento 112 — reprodução do objeto PMGR e limites de integração
+
+- Cinco arquivos: plano, docs/N71_HDQ.md, docs/ALIMENTACAO.md,
+  docs/STATUS.md e docs/evidence/n71-pmgr-errors.json. Código301a61f já
+  publicado; observar seu CI terminal antes de publicar docs, evitando cancel.
+- Documentar callbacks cobertos, primeiro erro/lock preservados, ausência de
+  rollback de efeito parcial e lacunas de probe/is_active. Registrar receita
+  obj-y/target direto, arquitetura e ausência de MODULE como prova de build
+  embutido. Não prescrever insmod do provider ou tratar modpost externo como
+  sucesso; full link/Image e qualificação permanecem na issue36.
+- Atualizar checkpoint100% iOS sem confundir percentual/charge-capable com
+  corrente ou saúde da bateria. Coleta passiva já preparada continua única;
+  nenhum DFU por incremento ou por patch.
+- Verificar JSON/identidades/digests, links locais e bash -n do snippet novo;
+  reutilizar gates111 porque patch/testes/config/artefato não mudaram.
+
+- Gate112 documental: JSON/digests dos inputs e links locais conferidos,
+  snippet novo passou bash -n. Código/testes111 inalterados, evidências
+  Mac/ARM64/Werror reutilizadas. CI301a61f em PR37236898569/push37236896067
+  ainda em execução; não publicar docs enquanto isso cancelaria o gate.
+- Roteiro privado de coleta agrupada preparado, sem autoiniciar boot/reboot.
+  Transporte falso em processo separado validou os comandos com bash -n,
+  transferiu os bytes selecionados dentro da fixture e detectou observação
+  ausente/ring truncado; três cenários com cleanup de staging. Não houve
+  SSH real, I/O do aparelho ou prova física. Logs/fixtures permanecem privados.
+
+- CI301a61f concluiu aprovado nos dois runs PR37236898569 e
+  push37236896067, seis jobs Ubuntu/macOS/Windows. Docs112 serão publicados
+  depois desses gates terminais, sem cancelamento das execuções de código.
