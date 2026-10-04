@@ -13,6 +13,7 @@ import sys
 import device_profile
 import n71_bar_result
 import n71_chip_result
+import n71_dart_result
 import n71_scan_result
 import n71_session_history
 
@@ -40,11 +41,12 @@ def module_bytes(profile, record):
     return raw
 
 
-def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False):
-    require(host_scan + bar_sizing + chip_id <= 1, 'Sizing modes are mutually exclusive')
+def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False):
+    require(host_scan + bar_sizing + chip_id + dart_observe <= 1, 'Diagnostic modes are mutually exclusive')
     records = json.loads((ROOT / 'docs/evidence/kernel-n71-bundle-build.json').read_text())['diagnostic_modules']['modules']
-    if config_inventory or host_scan or bar_sizing or chip_id:
-        name = ('n71-pcie-chip-id-build.json' if chip_id else
+    if config_inventory or host_scan or bar_sizing or chip_id or dart_observe:
+        name = ('n71-dart-observe-build.json' if dart_observe else
+                'n71-pcie-chip-id-build.json' if chip_id else
                 'n71-pcie-bar-sizing.json' if bar_sizing else
                 'n71-pcie-host-scan.json' if host_scan else 'n71-pcie-config-inventory.json')
         evidence = json.loads((ROOT / 'docs/evidence' / name).read_text())
@@ -90,14 +92,15 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, history=None):
-        require(host_scan + bar_sizing + chip_id <= 1, 'Sizing modes are mutually exclusive')
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, history=None):
+        require(host_scan + bar_sizing + chip_id + dart_observe <= 1, 'Diagnostic modes are mutually exclusive')
         self.output = output
         self.modules = modules
-        self.config_inventory = config_inventory or host_scan or bar_sizing or chip_id
+        self.config_inventory = config_inventory or host_scan or bar_sizing or chip_id or dart_observe
         self.host_scan = host_scan
         self.bar_sizing = bar_sizing or chip_id
         self.chip_id = chip_id
+        self.dart_observe = dart_observe
         self.history = history
         self.module_directory = '/run/n71-link-' + secrets.token_hex(12) if history else '/run'
         self.ssh = device_profile.ssh_options() + ['root@' + device_profile.PHONE]
@@ -148,7 +151,7 @@ class Session:
             require(p.returncode == 0, 'Exclusive remote module directory not created')
         else:
             require('N71_PCIE_' not in p.stdout, 'A PCIe diagnostic already exists in this boot')
-        if self.host_scan or self.bar_sizing or self.history:
+        if self.host_scan or self.bar_sizing or self.dart_observe or self.history:
             p = self.capture('pci-empty', 'set -e; test -z "$(ls /sys/bus/pci/devices)"; echo N71_PCI_PREFLIGHT_EMPTY')
             require(p.returncode == 0, 'Pre-existing PCI devices refused')
         for record, raw in self.modules:
@@ -185,6 +188,8 @@ class Session:
             parameters += ' chip_id=1'
         elif self.bar_sizing:
             parameters += ' bar_sizing=1'
+        elif self.dart_observe:
+            parameters += ' dart_observe=1'
         p = self.capture('pcie', 'set -e; '
                          'test "$(cat ' + REG + 'state)" = "' + STATE_ACTIVE + '"; '
                          'test "$(cat ' + REG + 'control)" = "N71_REG_ON_CONTROL_READBACK value=81"; '
@@ -211,6 +216,8 @@ class Session:
             self.result['bar_sizing'] = n71_bar_result.parse(p.stdout, self.result['inventory']['bars_raw'])
         if self.chip_id:
             self.result['chip_id'] = n71_chip_result.parse(p.stdout)
+        if self.dart_observe:
+            self.result['dart_observation'] = n71_dart_result.parse(p.stdout)
 
     def cleanup(self):
         failures = []
@@ -225,6 +232,9 @@ class Session:
                     (n71_bar_result if self.bar_sizing else n71_scan_result).cleanup(p.stdout)
                     if self.chip_id:
                         n71_chip_result.cleanup(p.stdout)
+                if self.dart_observe:
+                    n71_dart_result.cleanup(p.stdout)
+                if self.host_scan or self.bar_sizing or self.dart_observe:
                     p = self.capture('pci-empty-after', 'set -e; test -z "$(ls /sys/bus/pci/devices)"; echo N71_PCI_CLEANUP_EMPTY')
                     require(p.returncode == 0, 'PCI devices remain after cleanup')
                 p = self.capture('pcie-unload', 'set -e; rmmod n71_pcie_diagnostic; '
@@ -280,6 +290,7 @@ def main():
     modes.add_argument('--host-scan', action='store_true', help='Select recorded PCI-core sizing module; implies inventory')
     modes.add_argument('--bar-sizing', action='store_true', help='Select endpoint-only BAR sizing module; implies inventory')
     modes.add_argument('--chip-id', action='store_true', help='Read ChipCommon ID once via restored BAR0 route; implies sizing/inventory')
+    modes.add_argument('--dart-observe', action='store_true', help='Read stable DART state without provider activation; implies inventory')
     parser.add_argument('--previous-clean', type=Path, help='Continue only after matching private cleanup and this boot history')
     options = parser.parse_args()
     os.umask(0o077)
@@ -291,8 +302,9 @@ def main():
     metadata = json.loads(provenance.read_text())
     require(metadata['kernel_release'] == RELEASE and metadata['kernel_patchset'] == 'n71-dart-serdev-v1'
             and metadata['payload_sha256'] == profile['sha256'], 'Selected profile provenance differs')
-    records = selected_records(options.config_inventory, options.host_scan, options.bar_sizing, options.chip_id)
-    if options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id:
+    records = selected_records(options.config_inventory, options.host_scan, options.bar_sizing, options.chip_id,
+                               dart_observe=options.dart_observe)
+    if options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record)) for record in records]
     history = n71_session_history.History(options.previous_clean, ROOT, RELEASE) if options.previous_clean else None
@@ -307,7 +319,7 @@ def main():
     output.mkdir(mode=0o700)
     return Session(output, modules, config_inventory=options.config_inventory,
                    host_scan=options.host_scan, bar_sizing=options.bar_sizing,
-                   chip_id=options.chip_id, history=history).run()
+                   chip_id=options.chip_id, dart_observe=options.dart_observe, history=history).run()
 
 
 if __name__ == '__main__':

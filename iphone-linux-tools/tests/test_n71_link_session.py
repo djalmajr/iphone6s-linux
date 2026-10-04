@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 from test_n71_bar_result import TEXT as SIZING, RAW as SIZING_RAW
 from test_n71_chip_result import TEXT as CHIP_ID
+from test_n71_dart_result import TEXT as DART
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts/host'))
@@ -41,7 +42,7 @@ SCAN = ('N71_PCIE_SCAN_DEVICE bus=0 devfn=08 id=1004106b class=060400 command=01
 
 
 class LinkSessionTests(unittest.TestCase):
-    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False):
+    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False):
         replies = {'observe': OBSERVE, 'activate': ACTIVE,
                    'pcie': 'N71_PCIE_LINK_RESULT error=-110 port88=0000880c reads=10000\n',
                    'pcie-cleanup': CLEANUP, 'pcie-unload': 'N71_PCIE_UNLOADED\n',
@@ -53,12 +54,14 @@ class LinkSessionTests(unittest.TestCase):
             replies.update({'pcie-cleanup': CLEANUP + SIZING, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
         if chip_id:
             replies.update({'pcie-cleanup': CLEANUP + SIZING + CHIP_ID, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
+        if dart_observe:
+            replies.update({'pcie-cleanup': CLEANUP + DART, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
         replies.update(overrides or {})
         calls = []
         with tempfile.TemporaryDirectory() as folder:
             with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
                 session = MODULE.Session(Path(folder), [], config_inventory=config_inventory,
-                                         host_scan=host_scan, bar_sizing=bar_sizing, chip_id=chip_id)
+                                         host_scan=host_scan, bar_sizing=bar_sizing, chip_id=chip_id, dart_observe=dart_observe)
 
             def capture(stage, command, raw=None):
                 calls.append((stage, command))
@@ -327,6 +330,30 @@ class LinkSessionTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertFalse(proof['cleanup_verified'])
         self.assertNotIn('pcie-unload', calls)
+
+    def test_dart_mode_has_separate_module_and_no_sizing(self):
+        with patch.object(MODULE, 'ROOT', ROOT):
+            selected = MODULE.selected_records(False, dart_observe=True)
+            self.assertNotEqual(selected[0]['sha256'], MODULE.selected_records(False, chip_id=True)[0]['sha256'])
+            with self.assertRaises(ValueError):
+                MODULE.selected_records(False, chip_id=True, dart_observe=True)
+        code, proof, calls = self.run_session({'pcie': LINK + INVENTORY + DART}, dart_observe=True)
+        self.assertEqual(code, 0)
+        self.assertEqual(proof['dart_observation']['valid_ttbr_count'], 2)
+        self.assertFalse(proof['dma_enabled'])
+        self.assertIn('config_inventory=1 dart_observe=1;', calls['pcie'])
+        self.assertNotIn('bar_sizing=1', calls['pcie'])
+        self.assertIn('pci-empty-after', calls)
+
+    def test_dart_map_cleanup_or_pci_residue_prevents_unload(self):
+        for changed in ({'pcie-cleanup': CLEANUP},
+                        {'pcie-cleanup': CLEANUP + DART.replace('claimed=0', 'claimed=1')},
+                        {'pci-empty-after': SimpleNamespace(returncode=1, stdout='residue')}):
+            code, proof, calls = self.run_session(dict({'pcie': LINK + INVENTORY + DART}, **changed), dart_observe=True)
+            self.assertEqual(code, 1)
+            self.assertFalse(proof['cleanup_verified'])
+            self.assertNotIn('pcie-unload', calls)
+            self.assertIn('reg-unload', calls)
 
 
 if __name__ == '__main__':

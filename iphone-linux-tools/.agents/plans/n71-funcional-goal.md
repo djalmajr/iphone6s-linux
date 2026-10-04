@@ -882,3 +882,29 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Gate78: build externo e seis mutantes ARM64 passaram; módulo48208bytes,
   SHA0a91c840…e486, ABI/ELF/hashes recalculados no Mac. Config/Image/exports
   e quatro blobs do bundle preservados. Não carregado no iPhone nesta etapa.
+
+### Incremento 79 — coleta DART por continuação no mesmo boot
+
+- Cinco arquivos: plano, parser DART/testes, coletor/testes. Selecionar hash
+  explícito por `--dart-observe`, sem combinar com sizing/chip/core. Exigir
+  fonte602008000/4000, estado estável,38 leituras/39 gates e unmap/release
+  únicos. Calcular máscara enable do TCR e validar os limites independentemente.
+- Usar prova de cleanup anterior CHIP, conferir mesmo boot/histórico privado,
+  transferir módulo em diretório novo e repetir inventário/REG_ON fresco.
+  Cleanup exige reset/power/map/PCI vazio/REG_ON/unload positivos. Nenhuma
+  nova autenticação, DFU, alteração do DT ou limpeza do dmesg.
+- Verificar parser por quatro mutações reais e gates do coletor antes do
+  insmod. Registrar resultado físico separado de build; salvar snapshot
+  mantendo Linux ligado. TTBRs completos/endereços não são publicados.
+
+- Gate79: quatro testes/parser (quatro mutações por asserção),23 testes do
+  coletor e12 mutações do coletor passaram. Build/perfil/histórico privado
+  validaram seleção antes do insmod. Coleta física no mesmo boot passou:
+  COMMAND00000f02,TCR0,ERROR00000100, enable0/4,16/16TTBRs válidos. Duas
+  amostras idênticas,38 leituras/39 gates; fonte separada/posse/status
+  confirmados. Unmap/release/reset/power/PCI vazio/REG_ON/unload passaram.
+  SSH e HTTP `/cgi-bin/status` preservados; nenhum DFU/PIN adicional.
+- Não presumir tabelas vazias pelo TCR0: os16TTBRs continuam válidos e
+  desconhecidos. Antes de ativar provider, qualificar SID/IRQ e conservar
+  estado completo. A família upstream para4350/rev8 é4350-pcie (revisão8
+  pertence à máscaraFFFFFF00), sem prova de firmware/calibração compatível.
