@@ -1039,3 +1039,26 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   falhar. Quatro snapshots estáveis,152 leituras do observador e16 escritas
   somente de TTBR, após comprovar remoção/tradução desligada. Registrar
   mudanças COMMAND/ERROR sem escrever W1C. DMA/firmware/radio proibidos.
+
+- Gate86: ARM64/Werror/modpost fatal passou; módulo57112bytes,
+  SHAe78a3c86…74ea, ELF/vermagic e hashes da imagem preservados. Sete mutantes
+  do observer e seis do ciclo passaram na VM. Primeiro build revelou colisão
+  com macro kernel `current`; renomeado para `observed`, gates C e build
+  repetidos em diretório novo. Falha/log/archive anteriores conservados.
+- API platform release confirma of_node_put; IRQ traduzido pelo domain real,
+  wrappers/símbolos exportados conferidos. Sem segunda chamada device_attach:
+  platform add já executa probe síncrono, evitando repetir probe parcial.
+  CI do commit1236c98 passou; provider ainda não carregado no iPhone.
+
+### Incremento 87 — coletor do ciclo com prova prévia integral
+
+- Cinco arquivos: plano, evidência de build, parser/testes e coletor. Seleção
+  explícita `--dart-cycle` exclui outros modos e exige histórico do mesmo boot
+  com16 palavras conferidas novamente nos logs privados e digest do JSON.
+- Sucesso exige provider apple-dart ligado, quatro snapshots estáveis,
+  152 leituras/156 gates internos/17 gates extras,16 escritas de restore,
+  device/novo IRQmapping retirados e comparação integral restaurada. Nenhuma
+  mudança COMMAND/ERROR pode receber sucesso. Parser nunca publica palavras.
+- Cleanup negativo exige retirada e restore quando tentou start; gates de
+  power/reset/REG_ON/PCI vazio/unload permanecem. Testar evidência incompleta,
+  fault/busy/TCR, contagens/índices e estado privado inconsistente.

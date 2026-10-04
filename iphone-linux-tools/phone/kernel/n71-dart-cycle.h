@@ -34,7 +34,7 @@ static inline int n71_dart_cycle(const struct n71_dart_cycle_io *io,
 				struct n71_dart_cycle_result *out)
 {
 	struct n71_dart_cycle_result result = {0};
-	struct n71_dart_observation saved, current;
+	struct n71_dart_observation saved, observed;
 	unsigned int index;
 	int error;
 
@@ -53,11 +53,11 @@ static inline int n71_dart_cycle(const struct n71_dart_cycle_io *io,
 	error = n71_dart_error(io->start(io->context));
 	if (!error) {
 		result.snapshots++;
-		error = n71_dart_error(io->snapshot(io->context, &current));
-		if (!error && !n71_dart_idle(&current))
+		error = n71_dart_error(io->snapshot(io->context, &observed));
+		if (!error && !n71_dart_idle(&observed))
 			error = -EACCES;
 		for (index = 0; !error && index < 16; index++)
-			if (current.ttbr[index])
+			if (observed.ttbr[index])
 				error = -EIO;
 	}
 	result.operation_error = error;
@@ -67,8 +67,8 @@ static inline int n71_dart_cycle(const struct n71_dart_cycle_io *io,
 		goto restore_failed;
 	result.stopped = true;
 	result.snapshots++;
-	error = n71_dart_error(io->snapshot(io->context, &current));
-	if (!error && !n71_dart_idle(&current))
+	error = n71_dart_error(io->snapshot(io->context, &observed));
+	if (!error && !n71_dart_idle(&observed))
 		error = -EACCES;
 	if (error)
 		goto restore_failed;
@@ -82,16 +82,16 @@ static inline int n71_dart_cycle(const struct n71_dart_cycle_io *io,
 			result.restore_error = error;
 	}
 	result.snapshots++;
-	error = n71_dart_error(io->snapshot(io->context, &current));
-	if (!error && !n71_dart_idle(&current))
+	error = n71_dart_error(io->snapshot(io->context, &observed));
+	if (!error && !n71_dart_idle(&observed))
 		error = -EACCES;
 	for (index = 0; !error && index < 16; index++)
-		if (current.ttbr[index] != saved.ttbr[index])
+		if (observed.ttbr[index] != saved.ttbr[index])
 			error = -EIO;
 	if (error)
 		goto restore_failed;
 	result.restored = !result.restore_error;
-	result.control_changed = current.command != saved.command || current.error != saved.error;
+	result.control_changed = observed.command != saved.command || observed.error != saved.error;
 	if (result.control_changed && !result.operation_error)
 		result.operation_error = -EIO;
 	goto done;

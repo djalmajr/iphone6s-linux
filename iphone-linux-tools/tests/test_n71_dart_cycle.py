@@ -12,7 +12,7 @@ MUTATIONS = (
     ('ignore-busy', '!(state->command & 8)', '!(state->command & 16)'),
     ('skip-stop', 'n71_dart_error(io->stop(io->context))', '0'),
     ('restore-short', 'index < 16', 'index < 15'),
-    ('ignore-restore-word', 'current.ttbr[index] != saved.ttbr[index]', 'false'),
+    ('ignore-restore-word', 'observed.ttbr[index] != saved.ttbr[index]', 'false'),
     ('ignore-failed-write', 'result.restored = !result.restore_error;', 'result.restored = true;'),
 )
 
