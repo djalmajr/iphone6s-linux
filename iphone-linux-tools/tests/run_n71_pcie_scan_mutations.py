@@ -9,6 +9,8 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
+    ('wrong-intx-bit', 'command = request->value & ~0x400U;', 'command = request->value & ~0x800U;'),
+    ('widen-intx-mask', 'command = request->value & ~0x400U;', 'command = request->value & ~0xc00U;'),
     ('wrong-endpoint', '0x1004106b : 0x43a314e4', '0x1004106b : 0x43a414e4'),
     ('master-at-capture', 'saved->command & 4)', 'saved->command & 8)'),
     ('class-scope', '0x060400 : 0x028000', '0x060400 : 0x020000'),

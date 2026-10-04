@@ -71,6 +71,42 @@ static void capture_rejected(struct mock *mock, int expected)
 	assert(memcmp(&config, &sentinel, sizeof(config)) == 0 && mock->writes == 0);
 }
 
+static void check_intx(void)
+{
+	static const u32 commands[] = {0, 0x400, 0x103, 0x503};
+	struct mock mock, original;
+	struct n71_scan_io io = {&mock, read_config, write_config};
+	struct n71_scan_config config;
+	unsigned int function, index, bit;
+
+	/* Mutation captured: refusing INTx probing blocks the core; widening its mask changes unrelated bits. */
+	for (function = 0; function < 2; function++) {
+		bool root = function == 0;
+		for (index = 0; index < sizeof(commands) / sizeof(*commands); index++) {
+			initialize(&mock);
+			mock.config[function][1] = 0xa9000000 | commands[index];
+			original = mock;
+			assert(n71_scan_capture(&io, &config) == 0);
+			assert(request(&io, &config, root, 4, 2, commands[index] ^ 0x400) == 0);
+			assert(mock.config[function][1] == (0xa9000000 | (commands[index] ^ 0x400)));
+			assert(request(&io, &config, root, 4, 2, (commands[index] & ~3U) ^ 0x400) == 0);
+			assert(mock.config[function][1] == (0xa9000000 | ((commands[index] & ~3U) ^ 0x400)));
+			assert(n71_scan_restore(&io, &config) == 0);
+			assert(memcmp(mock.config, original.config, sizeof(mock.config)) == 0);
+			for (bit = 8; bit <= 11; bit += 3) {
+				mock = original;
+				assert(n71_scan_capture(&io, &config) == 0);
+				assert(request(&io, &config, root, 4, 2, commands[index] ^ (1U << bit)) < 0);
+				assert(memcmp(mock.config, original.config, sizeof(mock.config)) == 0);
+			}
+		}
+	}
+	initialize(&mock); mock.config[1][1] = 0xa9000000;
+	assert(n71_scan_capture(&io, &config) == 0);
+	assert(request(&io, &config, false, 4, 2, 0x402) == -EPERM);
+	assert(mock.config[1][1] == 0xa9000000); /* No new memory decode. */
+}
+
 int main(void)
 {
 	struct mock mock, original;
@@ -84,6 +120,7 @@ int main(void)
 		{false, 0x80, 1, 4}, {false, 0x1000, 0, 4},
 		{false, 0x80, 0x100, 1}, {false, 0x6, 0xffff, 2},
 	};
+	check_intx();
 
 	initialize(&mock);
 	assert(n71_scan_capture(&io, &config) == 0 && config.active);

@@ -129,8 +129,10 @@ static inline int n71_scan_write(const struct n71_scan_io *io,
 	if (request->where == 4 && request->size == 2) {
 		if (request->value & 4)
 			return n71_scan_refuse(config, -EACCES);
-		allowed = request->value == saved->command ||
-			request->value == (saved->command & ~3U);
+		/* The core probes INTx masking; no other saved COMMAND bit may change. */
+		command = request->value & ~0x400U;
+		allowed = command == (saved->command & ~0x400U) ||
+			command == (saved->command & ~0x403U);
 	} else if (request->size == 4 && request->where >= 0x10 &&
 		   request->where <= (request->root ? 0x14U : 0x24U)) {
 		bar = true;

@@ -599,7 +599,7 @@ ao IOMMU e bus-master permanece desligado.
   confirma16TTBRs zerados e tradução desligada.
 - Unregister/removal do novo mapping e readquisição do recurso; snapshot3
   confirma tradução desligada antes de restaurar.
--16 escritas somente nos TTBRs; snapshot4 confirma todas as palavras iguais
+- 16 escritas somente nos TTBRs; snapshot4 confirma todas as palavras iguais
   às originais, hash idêntico, validffff e COMMAND/ERROR preservados.
 
 O observador fez152 leituras com156 gates internos, mais17 gates extras.

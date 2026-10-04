@@ -1120,3 +1120,20 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Alternativa: liberar todas as escritas do core; descartada porque windows,
   PM/PCIe/AER e roteamento precisam de qualificação própria. Próxima recusa
   deve ser medida e documentada como negativa, sem declará-la enumeração pronta.
+
+- Gate90: contrato C e16 mutantes compilados morreram por asserção; harness
+  de lifecycle passou seus11 cenários e6 mutações. COMMAND/STATUS, restore
+  e recusas de novo decode/master/bits não autorizados foram exercitados.
+  Diff-check passou. A correção de espaçamento de um bullet LINK é incluída
+  como quinto arquivo desta fatia; nenhuma escrita física nova nesta etapa.
+
+### Incremento 91 — módulo externo do scan INTx e seleção reproduzível
+
+- Até cinco arquivos: plano, registro novo de build, seleção do coletor,
+  teste de seleção e documentação LINK. Preservar evidência do primeiro
+  scan recusado; selecionar explicitamente artefato novo somente no host-scan.
+- Compilar em diretório M novo na VM, com contratos/mutações ARM64, Werror,
+  modpost fatal, ELF/vermagic exatos e hashes do kernel/payload preservados.
+  Sem rebuild de Image, instalação global ou novo boot do iPhone.
+- Compor perfil privado novo e exigir cleanup anterior do mesmo boot;
+  próximo teste físico será delimitado a enumeração sem bind/DMA/IRQrouting.
