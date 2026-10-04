@@ -5,7 +5,7 @@ O codec já tem gates Mac, ARM64 e contexto kernel. UART, mux compartilhado,
 identificação do gauge e unidades físicas ainda não foram validados.
 
 **Estado físico em2026-10-04:** iPhone no iOS para recarga após descarga no
-Linux. Leitura local passou5%→17% com carga ativa, sem PIN. Alimentação #2
+Linux. Leituras locais passaram 5%→17%→51%→79% com carga ativa, sem PIN. Alimentação #2
 tem prioridade; novos probes Wi-Fi estão adiados. [Registro e implementação
 SN2400 sem I/O](ALIMENTACAO.md#encoder-sn2400-específico-n71--cálculo-implementado-driver-pendente).
 
@@ -382,3 +382,85 @@ podem ser agrupados com o candidato PCI somente após recarga suficiente.
 Não houve ativação/overlay/cliente/transmissão nesta análise; carga e gauge
 permanecem pendentes. As duas fontes I2C e a DTS foram conferidas limpas
 contra HEAD958481f, independentemente dos patches DART/serdev do bundle.
+
+## Observador passivo I2C1/GPIO114/115 — preparado, sem teste no aparelho
+
+O [módulo separado](../phone/kernel/n71-i2c-topology-observe.c) verifica N71,
+I2C1 disabled, sem filhos, plataforma ou adapter encontrados. Confere recurso
+20a111000/1000, IRQ bruto 0/207/4 e recurso AIC 20e100000/100000, clock fixo
+declarado de 24 MHz, domínio DT 801a0/4 e pinctrl 115/114 seletor 1. Esses dados são
+declarações Linux. Não mede clock/estado de energia, cria mapping IRQ, adquire clock,
+registra controlador/cliente, aplica overlay ou transmite I2C.
+
+A identidade dos nós usa lookup por caminho absoluto e comparação de ponteiro.
+Na fonte OF fixada, `full_name` recebe o nome local de `fdt_get_name`; ele
+não deve ser comparado diretamente a um caminho absoluto. O harness reproduz
+esses nomes e recusa nós homônimos de outra hierarquia. A primeira versão
+`4436af0` compilou, mas falhou por asserção contra esse contrato corrigido;
+a build selecionada é a v2 do código `98bc26b`. Nenhuma delas foi carregada.
+
+O GPIO provider existente deve corresponder ao nó/recurso 20f100000/100000,
+driver `apple-gpio-pinctrl` e regmap de 32 bits/stride 4. Device lock protege o regmap devm
+contra unbind durante a coleta. Para cada pino 114/115, registra cache inicial,
+duas leituras hardware via `regmap_read_bypassed` e cache final; oito leituras
+no total, offsets 1c8/1cc. Somente após todas passarem emite as duas linhas
+GPIO e o marcador `OBSERVED`; qualquer erro impede resultado parcial de sucesso.
+Não solicita/configura pinos nem escreve registradores.
+
+`stable` e `cache-matches` comparam palavras completas de duas amostras e
+cache final. Não provam dono dos pinos, idle elétrico, routing Apple, gauge
+ou carga. Ausência de platform/adapter é a observação naquele instante;
+não é reserva do controlador para uma operação futura. Referências/lock
+são liberados antes de terminar o init. O módulo não permanece como proprietário.
+
+[Prova de build e limites](evidence/n71-i2c-topology-observer.json): módulo
+real executado em harness C de APIs de kernel, 86 casos e 15 mutações por
+asserção no Mac/ARM64. Módulo externo de 15.768 bytes compilado com Werror/modpost,
+ELF64LE/REL AArch64 e vermagic do bundle preservado; Image/config/exports
+iguais antes/depois. As dependências externas não incluem escritas regmap,
+transferências I2C, solicitação GPIO/IRQ ou habilitação de clock. **Não foi carregado
+no telefone**; os testes sintéticos não validam leitura elétrica no hardware.
+
+Reprodução dos testes, na raiz de `iphone-linux-tools`:
+
+```sh
+python3 -B tests/test_n71_i2c_topology_observe.py
+```
+
+Build na VM dedicada, com fonte/output do bundle já preservados e um novo diretório M:
+
+```sh
+umask 077
+mkdir -p runtime
+module_dir="$(mktemp -d "$PWD/runtime/i2c-observe-build.XXXXXX")"
+cp phone/kernel/n71-i2c-topology-observe.c "$module_dir/"
+cat > "$module_dir/Makefile" <<'MAKEFILE'
+obj-m += n71-i2c-topology-observe.o
+ccflags-y += -Werror
+MAKEFILE
+env LOCALVERSION= make -C /home/ubuntu/kernel-n71-bundle-source-20261002 \
+  O=/home/ubuntu/kernel-n71-bundle-build-20261002 ARCH=arm64 -j2 \
+  KCFLAGS=-Werror M="$module_dir" \
+  KBUILD_EXTRA_SYMBOLS=/home/ubuntu/kernel-n71-bundle-build-20261002/vmlinux.symvers modules
+modinfo -F vermagic "$module_dir/n71-i2c-topology-observe.ko"
+sha256sum "$module_dir/n71-i2c-topology-observe.ko"
+```
+
+Conferir antes/depois os hashes preservados na prova. O aviso de `Module.symvers`
+global ausente permanece: este build usa explicitamente `vmlinux.symvers`;
+não suprimir erros de modpost nem habilitar `KBUILD_MODPOST_WARN`. Hash binário
+pode depender do caminho M/toolchain; ELF, ABI e proveniência devem coincidir
+com a build efetivamente selecionada antes de qualquer transferência.
+
+No próximo boot necessário do bundle, transferir por SSH para `/run` e comparar
+SHA no destino. Só então carregar `insmod /run/n71-i2c-topology-observe.ko run=1`,
+capturar novas linhas `N71_I2C1_GPIO`/`OBSERVED` desse load, descarregar com
+`rmmod n71_i2c_topology_observe` e conferir marcador `UNLOADED`, ausência em
+`/sys/module/n71_i2c_topology_observe` e SSH/HTTP ainda respondendo. Não usar
+linhas antigas de `dmesg` como resultado do novo load. Logs completos ficam
+privados. Não pede novo DFU, autoload ou rebuild do kernel para esta coleta.
+
+Após a observação, ainda faltam referências Apple dos pinos, aquisição e
+restauração do I2C1/IRQ/clocks, efeitos de leitura SN2400 e telemetria HDQ.
+Somente esses gates permitirão preparar o ciclo ativo do controlador e
+avaliar controle de carga. O aparelho continua no iOS recarregando nesta fase.

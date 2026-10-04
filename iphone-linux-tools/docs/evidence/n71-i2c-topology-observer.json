@@ -1,0 +1,153 @@
+{
+  "format": 1,
+  "status": "passive_external_module_prepared_no_physical_load",
+  "code_commit": "98bc26b",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "topology_source_record": "n71-i2c-acquisition-reference.json",
+  "inputs_sha256": {
+    "phone/kernel/n71-i2c-topology-observe.c": "5dc56e1dcbcc8e91b671ae4e6eeae53289550a6e7a7bdf42dfbdfc99ccf2223d",
+    "tests/n71_i2c_topology_observe.c": "a87df7409a100b08562620b46f9e50343370f409a4c8d56a512e62d390161f7e",
+    "tests/test_n71_i2c_topology_observe.py": "33d78d6e9273edaeaa0126eb597f4e5a60ca8d504bc63806fa6e3a17e9f6270e"
+  },
+  "preserved_kernel_sha256": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "declared_dt_scope": {
+    "board": "apple,n71",
+    "controller": "/soc/i2c@20a111000",
+    "status_required": "disabled",
+    "child_count_required": 0,
+    "platform_lookup_required": "absent",
+    "adapter_lookup_required": "absent",
+    "controller_resource": [
+      "0x20a111000",
+      "0x1000"
+    ],
+    "irq_raw": [
+      0,
+      207,
+      4
+    ],
+    "aic_resource": [
+      "0x20e100000",
+      "0x100000"
+    ],
+    "clock": "/clock-ref",
+    "fixed_clock_frequency_hz": 24000000,
+    "power_domain": "/soc/power-management@20e000000/power-controller@801a0",
+    "power_domain_reg": [
+      "0x801a0",
+      4
+    ],
+    "pinctrl": "/soc/pinctrl@20f100000/i2c1-pins",
+    "pinmux_words": [
+      "0x10073",
+      "0x10072"
+    ]
+  },
+  "gpio_observation": {
+    "provider": "/soc/pinctrl@20f100000",
+    "resource": [
+      "0x20f100000",
+      "0x100000"
+    ],
+    "driver": "apple-gpio-pinctrl",
+    "regmap_value_bytes": 4,
+    "regmap_stride": 4,
+    "device_lock_during_regmap_access": true,
+    "pins": [
+      114,
+      115
+    ],
+    "offsets": [
+      "0x1c8",
+      "0x1cc"
+    ],
+    "reads_per_pin": [
+      "cached",
+      "bypassed",
+      "bypassed",
+      "cached"
+    ],
+    "total_reads": 8,
+    "comparison": "whole word hardware sample equality and final cache equality",
+    "partial_success_output_permitted": false,
+    "ownership_reserved": false,
+    "apple_routing_physically_qualified": false
+  },
+  "native_gate": {
+    "test": "tests/test_n71_i2c_topology_observe.py",
+    "adapter": "actual module source included by C kernel API harness",
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "cases_per_baseline": 86,
+    "compiled_mutations_per_platform": 15,
+    "mutations_accepted_only_by_assertion_sigabrt": true,
+    "mac_log_sha256": "b529b5d08f7cf83923c451dccbd721c138ec8cd17bf8c93cab15184329b2e414",
+    "arm64_log_sha256": "e2c01ab64008ccf5abdae53128d38332d84793318229d9301572bfa6b5959ea5"
+  },
+  "build": {
+    "module": "n71-i2c-topology-observe.ko",
+    "size_bytes": 15768,
+    "sha256": "32b7e481c08a7dab1df7075b4a3079397c2c78d1bd8685b7949bee70f2cfd39c",
+    "elf_class": 64,
+    "elf_endianness": "little",
+    "elf_type": "REL",
+    "elf_machine": "AArch64",
+    "vermagic": "7.2.0-iphone6s-dart-serdev1 SMP preempt mod_unload aarch64",
+    "werror": true,
+    "modpost_exit": 0,
+    "modpost_errors_suppressed": false,
+    "extra_symbols": "preserved bundle vmlinux.symvers",
+    "global_module_symvers_missing_warning": true,
+    "image_config_exports_preserved": true,
+    "input_archive_sha256": "89d07195065073777b8cfd58bd499576b56dc247092a14256b3d316d084f64a6",
+    "build_log_sha256": "e258cc5ba898a57c1a50f1a7b622552c3ed18d846e3de1d51a6a1dbb76a81c68",
+    "transfer_hashes_match": true
+  },
+  "external_api_audit": {
+    "undefined_symbols_inspected": true,
+    "regmap_write_import": false,
+    "i2c_transfer_import": false,
+    "gpio_request_import": false,
+    "irq_request_or_mapping_creation_import": false,
+    "clock_enable_import": false,
+    "direct_mmio_mapping_import": false
+  },
+  "physical_module_loaded": false,
+  "controller_activated": false,
+  "charger_io_performed": false,
+  "linux_charging_validated": false,
+  "new_dfu_or_reboot": false,
+  "limits": "DT declarations and momentary absence of adapter/platform are not electrical state or ownership. Harness and external compilation are not physical GPIO, I2C, charger, HDQ, gauge or sustained-charge proof.",
+  "of_node_identity": {
+    "method": "absolute OF path lookup and pointer identity; reference released",
+    "full_name_assumed_absolute": false,
+    "source_file": "drivers/of/fdt.c",
+    "source_sha256": "40c4cf824782f8ffeb98780d2487a9f86aff6753f2bd3803dbc6026aba7bb5df",
+    "source_lines": [
+      202,
+      215,
+      217
+    ],
+    "source_clean_against_head": true,
+    "old_source_commit": "4436af0",
+    "old_source_regression_compiled": true,
+    "old_source_regression_runtime_exit": -6,
+    "regression_log_sha256": "66057c7f6eaabccde17ea32a7c7eb95bb764dc7bf82492975b0f312456a5a598"
+  },
+  "ios_checkpoint": {
+    "BatteryCurrentCapacity": 79,
+    "BatteryIsCharging": true,
+    "ExternalConnected": true,
+    "ExternalChargeCapable": true,
+    "utc": "2026-10-04T19:58:58.839982+00:00",
+    "source": "com.apple.mobile.battery",
+    "raw_log_sha256": "b4a62bae2e087e89c560587e7b69db882079476f6a2b6b424c93b1c5032e84b6",
+    "linux_charge_or_health_measurement": false
+  }
+}

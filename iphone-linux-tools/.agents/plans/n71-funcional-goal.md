@@ -1443,3 +1443,15 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   SHA32b7e481c08a7dab1df7075b4a3079397c2c78d1bd8685b7949bee70f2cfd39c.
   Image/config/exports preservados; fonteOFfdt.c limpa contraHEAD958481f.
   Nenhum load/ativação/DFU; documentação105 deve selecionar apenasv2.
+
+- Gate105, concluído após106: documentação/prova selecionam o código98bc26b
+  e módulo v2,86 casos/15mutações e o contrato OF real. Hashes de inputs/logs
+  e transfer iguais; JSON/links/AST/sintaxe shell/diff aprovados. Nenhum teste
+  anterior inalterado foi repetido por causa das mudanças documentais.
+- Novo checkpoint iOS:79% às19:58:58UTC, charging/external true, sem PIN.
+  Primeira leitura foi recusada pelo socket usbmux no sandbox; IORegistry
+  já viaiPhone. Repetição somente da leitura local com acesso ao socket
+  passou; não foi solicitada troca/reconexão de cabo. Apenas campos de
+  bateria e digest sanitizado publicados; corrente Linux continua pendente.
+  O primeiro patch documental foi recusado por contexto divergente, sem
+  alterações; leitura atualizada e reaplicação passaram.

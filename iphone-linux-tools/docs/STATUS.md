@@ -4,7 +4,8 @@
 
 iPhone no iOS para recarga após relato de descarga quase completa durante
 Linux. Leituras locais sem PIN confirmaram5% e depois17%, com carga externa
-ativa. Linux não está online. Nenhum novo DFU foi solicitado nesta rodada;
+ativa; o último checkpoint verificado da recarga foi 79% às 19:58:58 UTC.
+Linux não está online. Nenhum novo DFU foi solicitado nesta rodada;
 desenvolvimento segue no Mac/VM para implementar carga/telemetria N71.
 [Evidência e limites](ALIMENTACAO.md), [issue P0](https://github.com/djalmajr/iphone6s-linux/issues/2).
 
@@ -19,6 +20,15 @@ kernelWerror. É aritmética sem I/O, não um driver de carga. I2C1/HDQ/revisão
 cleanup e corrente líquida continuam na #2; teste prolongado #8 não começou.
 CI da correção das fixtures PCI aprovado no SHA85aa0f5 (PR37226272040 e
 push37226267211). Gates dos novos arquivos são registrados por SHA nas issues.
+
+Observador I2C1/GPIO114/115 preparado no código `98bc26b`: 86 casos e 15 mutações
+Mac/ARM64, módulo de 15.768 bytes Werror/modpost contra o bundle preservado, oito leituras
+via provider existente e nenhuma ativação ou escrita. Ainda não carregado no
+iPhone. [Reprodução e limites](N71_HDQ.md#observador-passivo-i2c1gpio114115--preparado-sem-teste-no-aparelho),
+[prova selecionada](evidence/n71-i2c-topology-observer.json). Continua pendente
+aquisição/restauração ativa do I2C1, HDQ e corrente líquida; #2 permanece aberta.
+CI do checkpoint documental anterior `54179b4` aprovado (PR37228026232 e
+push37228023723); essa aprovação não representa o CI do novo código `98bc26b`.
 
 As seções anteriores abaixo são checkpoints históricos; afirmações sobre
 serviços ativos ou VM parada descrevem a data indicada em cada uma.

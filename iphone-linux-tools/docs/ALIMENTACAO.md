@@ -15,6 +15,16 @@ Uma segunda leitura cerca de15 minutos depois confirmou **17%**, com carga
 e alimentação externas ativas. O cabo/porta repôs carga no iOS nessa condição;
 esse aumento não mede corrente nem comprova carregamento no Linux.
 
+Um checkpoint local desta recarga foi **51% às 19:23:44 UTC**, com carga
+externa ativa. É uma leitura anterior registrada na
+[issue #2](https://github.com/djalmajr/iphone6s-linux/issues/2#issuecomment-5983537603),
+não medição de corrente ou atualização em tempo real.
+
+A leitura mais recente nesta rodada confirmou **79% às 19:58:58 UTC**, com
+carregamento e alimentação externos ativos, sem PIN. Os quatro campos e
+digest do log privado estão no [checkpoint selecionado](evidence/n71-i2c-topology-observer.json).
+Isso confirma recarga no iOS; corrente líquida no Linux continua sem medição.
+
 Isso reprova o uso contínuo na configuração atual. Não houve leitura de
 corrente de bateria no Linux, portanto não distingue carga zero, consumo
 superior à entrada ou falha específica do controle de carga. O orçamento
@@ -35,6 +45,13 @@ corrente/tensão, mux, UART ou registrador do carregador foi alterado.
 Uma consulta de IORegistry pelo nome AppleSN2400Charger retornou metadados
 do serviço, mas não corrente, limites ou estado dos registradores. Não é
 prova de ausência de hardware ou de driver no iOS.
+
+Foi preparado um [observador passivo I2C1/GPIO114/115](N71_HDQ.md#observador-passivo-i2c1gpio114115--preparado-sem-teste-no-aparelho)
+para reunir metadados e oito leituras de GPIO no próximo boot necessário.
+Não ativa o barramento nem aciona o carregador; passou 86 casos e 15 mutações
+Mac/ARM64 e build externo do bundle, ainda **sem teste no aparelho**.
+Esse módulo pode ser atualizado por SSH no mesmo boot, sem trocar kernel.
+Ele prepara aquisição/cleanup, sem resolver por si só a descarga no Linux.
 
 ### Encoder SN2400 específico N71 — cálculo implementado, driver pendente
 
