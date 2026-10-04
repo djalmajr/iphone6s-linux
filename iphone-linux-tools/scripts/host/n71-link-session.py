@@ -45,7 +45,7 @@ def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_i
     require(host_scan + bar_sizing + chip_id + dart_observe <= 1, 'Diagnostic modes are mutually exclusive')
     records = json.loads((ROOT / 'docs/evidence/kernel-n71-bundle-build.json').read_text())['diagnostic_modules']['modules']
     if config_inventory or host_scan or bar_sizing or chip_id or dart_observe:
-        name = ('n71-dart-observe-build.json' if dart_observe else
+        name = ('n71-dart-state-build.json' if dart_observe else
                 'n71-pcie-chip-id-build.json' if chip_id else
                 'n71-pcie-bar-sizing.json' if bar_sizing else
                 'n71-pcie-host-scan.json' if host_scan else 'n71-pcie-config-inventory.json')

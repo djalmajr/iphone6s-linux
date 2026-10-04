@@ -964,3 +964,32 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   para duplicação de índice com máscara íntegra, comprovando o gate próprio.
   Falhas do experimento continuam exigindo release; logs retêm palavras,
   saída pública omite-as. Diff-check passou; build físico é o próximo gate.
+
+### Incremento 83 — build ARM64 da captura integral, com seleção explícita
+
+- Até quatro arquivos públicos: plano, nova evidência de build, seletor do
+  coletor e teste do isolamento dos logs. Preservar build/evidência anteriores;
+  nova seleção `n71-dart-state-build.json` fixa ABI, hash e fontes completas.
+- VM dedicada: arquivo público fixado, inspeção do bundle/hashes antes/depois,
+  sete mutantes ARM64, build externo Werror/modpost fatal, ELF e vermagic.
+  Sem rebuild de Image/DTB/initramfs; não instalar pacotes no Mac.
+- Teste real do capture mantém TTBR no arquivo privado e retira-o do stdout,
+  conserva estado do parser e detecta mutação de exposição. Perfil composto
+  novo deve manter payload/chaves/pin byte a byte antes de qualquer insmod.
+
+- Gate83: sete mutantes ARM64 e módulo Werror/modpost fatal passaram. Módulo
+ 48504bytes, SHAaf2663a4…5727; .config/Image/exports/blobs preservados.
+  ELF/vermagic/hashes conferidos no Mac; perfil mantém payload/initramfs/chaves
+  e pin byte a byte. Gate local/histórico passou;13 mutantes do coletor
+  morreram por asserção, incluindo exposição de TTBR. PUBLIC_TREE_OK.
+
+### Incremento 84 — preservar estado físico completo no boot existente
+
+- Até cinco arquivos: plano, evidência física nova, evidência Apple de SID,
+  LINK e WIFI. Usar seleção integral com cleanup anterior;38 leituras/39gates
+  sob posse dos quatro domínios, quieto antes de toda leitura e sem escrita.
+- Confirmar16 palavras privadas/contagem/hash e cleanup/unload/PCI vazio,
+  SSH/HTTP e snapshot. SID0/reg e vm-offset par u32 são provas de referência,
+  não DMA/IRQ físicos. Não copiar RID2SID de M1 nem tratar NVMMU como DART.
+- Após preservação, avançar na enumeração PCI (INTx disable recusado na
+  primeira tentativa) e no ciclo reversível do provider; não pedir novo DFU.

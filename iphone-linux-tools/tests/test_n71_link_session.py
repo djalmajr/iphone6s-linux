@@ -1,5 +1,7 @@
 """Failures must not bypass fresh activation gates or final restoration."""
 import importlib.util
+import contextlib
+import io
 import os
 from pathlib import Path
 import subprocess
@@ -285,13 +287,19 @@ class LinkSessionTests(unittest.TestCase):
             history = History.__new__(History)
             old = '[ 10.123456] dev N71_PCIE_LINK_RESULT error=0'
             new = '[ 12.123456] dev N71_PCIE_LINK_RESULT error=-5'
+            private = '[ 12.123457] dev N71_DART_TTBR index=00 value=80123456; stable'
             history.known = frozenset([old])
             with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
                 session = MODULE.Session(Path(folder), [], history=history)
-            with patch.object(MODULE.subprocess, 'run', return_value=SimpleNamespace(returncode=0, stdout=(old + '\n' + new + '\n').encode(), stderr=b'')):
+            stdout = io.StringIO()
+            with patch.object(MODULE.subprocess, 'run', return_value=SimpleNamespace(returncode=0, stdout=(old + '\n' + new + '\n' + private + '\n').encode(), stderr=b'')), contextlib.redirect_stdout(stdout):
                 result = session.capture('pcie', 'dmesg')
-            self.assertEqual(result.stdout, new + '\n')
+            self.assertEqual(result.stdout, new + '\n' + private + '\n')
             self.assertIn(old, (Path(folder) / 'pcie-private.log').read_text())
+            self.assertIn(private, (Path(folder) / 'pcie-private.log').read_text())
+            # Mutation captured: printing table pointers exposes private restoration state.
+            self.assertNotIn('N71_DART_TTBR', stdout.getvalue())
+            self.assertIn(new, stdout.getvalue())
 
     def test_direct_sizing_mode_and_cleanup(self):
         inventory = INVENTORY
