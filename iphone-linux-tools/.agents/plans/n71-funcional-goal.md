@@ -865,3 +865,20 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Gate77: contrato compilou no Mac com C11/Werror/pedantic; falhas em38
   leituras e39 gates,19 instabilidades,19 all-ones e busy recusadas sem saída.
   Seis mutantes compilados morreram por asserção; diff-check passou.
+
+### Incremento 78 — adaptador físico DART sem ativar provider
+
+- Até quatro arquivos: plano, adaptador kernel, seleção no diagnóstico e
+  evidência de build. Validar nó602008000/4000, compatíveis S8000/S5L,
+  IRQ248 level-high, domínio igual ao PCI e status literalmente disabled.
+  Recusar device existente/posse do recurso; mapear somente enquanto os quatro
+  domínios PCI estão adquiridos. Guardar link/IDs/COMMAND quietos em39 gates.
+- `dart_observe=1` exige run/enumerate/inventário e exclui sizing/chip/core.
+  Unmap/release antes do cleanup externo já comprovado. Sem alteração DT,
+  request_irq, DART reset/invalidate/escrita ou provider novo.
+- Build externo na VM dedicada com ABI/exposições/config/Image preservados,
+  Werror/modpost fatal e contrato compilado ARM64. Nenhum pacote no Mac.
+
+- Gate78: build externo e seis mutantes ARM64 passaram; módulo48208bytes,
+  SHA0a91c840…e486, ABI/ELF/hashes recalculados no Mac. Config/Image/exports
+  e quatro blobs do bundle preservados. Não carregado no iPhone nesta etapa.

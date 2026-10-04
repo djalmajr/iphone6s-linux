@@ -14,6 +14,7 @@
 #include "n71-pcie-mmio.h"
 #include "n71-pcie-scan.h"
 #include "n71-pcie-chip-mmio.h"
+#include "n71-dart-mmio.h"
 
 static bool run;
 module_param(run, bool, 0400);
@@ -33,6 +34,9 @@ MODULE_PARM_DESC(bar_sizing, "Size/restore endpoint BARs directly; no PCI device
 static bool chip_id;
 module_param(chip_id, bool, 0400);
 MODULE_PARM_DESC(chip_id, "Size BAR0 and read ChipCommon ID once; temporary route, no DMA or radio");
+static bool dart_observe;
+module_param(dart_observe, bool, 0400);
+MODULE_PARM_DESC(dart_observe, "Read two stable DART snapshots; no provider, DART writes, DMA or IRQ");
 
 static int n71_inventory_read32(void *context, u32 offset, u32 *value)
 {
@@ -246,6 +250,10 @@ static int n71_probe(struct platform_device *pdev)
 			stage = "chip-id";
 			error = n71_pcie_chip_id(dev, &state);
 		}
+		if (!error && dart_observe) {
+			stage = "dart-observe";
+			error = n71_pcie_dart_observe(dev, &state);
+		}
 		cleanup = n71_reset(&state, true);
 		if (!cleanup)
 			dev_info(dev, "N71_PCIE_RESET_RESTORED asserted=1 readback=1\n");
@@ -286,8 +294,9 @@ static int __init n71_init(void)
 {
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
-	if ((config_inventory && !enumerate) || ((host_scan || bar_sizing || chip_id) && !config_inventory) ||
-	    (host_scan + bar_sizing + chip_id > 1))
+	if ((config_inventory && !enumerate) ||
+	    ((host_scan || bar_sizing || chip_id || dart_observe) && !config_inventory) ||
+	    (host_scan + bar_sizing + chip_id + dart_observe > 1))
 		return -EINVAL;
 	return platform_driver_register(&n71_driver);
 }
