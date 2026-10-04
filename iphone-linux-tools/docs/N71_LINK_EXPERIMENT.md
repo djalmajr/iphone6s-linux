@@ -426,3 +426,45 @@ a esse mesmo boot; não reutilizar a prova depois de retornar ao iOS.
 Os modos host_scan e bar_sizing são mutuamente exclusivos e implicam inventário.
 Antes de mudar os binários, compor perfil privado preservando payload/DTB/
 initramfs e identidades; os modos antigos mantêm seus hashes registrados.
+
+## Identificação interna pelo BAR0 — 2026-10-04
+
+O driver brcmfmac fixado seleciona ChipCommon por configuração80 e lê chipid
+no offset0 de18000000. A [referência selecionada](evidence/n71-chip-id-reference.json)
+registra fontes, hashes e máscaras. O driver completo habilita bus-master ao
+adquirir recursos; não é usado para essa identificação limitada antes do DART.
+
+O modo `chip_id=1` exige inventário e sizing fresco32KiB/64-bit BAR0, sem
+decode/master inicial. Reivindica32KiB em CPU7c0000000, rota ADT PCIc0000000,
+e recusa região ocupada. Captura root memory-window20 e BAR0_WINDOW80; configura
+BAR0c0000004/high0, bridge memory-windowc000c000(1MiB), ChipCommon18000000 e
+apenas MEM-enable nos COMMAND de16 bits. Revalida COMMAND e link antes de
+uma leitura32. Restaura decode/janelas/BARs/config com readback e libera o mapa.
+Não toca BAR2 MMIO, core-reset, watchdog, OTP, IRQ, DMA ou firmware.
+
+[O teste físico passou](evidence/n71-chip-id-first-physical.json):
+raw17084350, **BCM4350 revisão interna8**, AXI; uma leitura MMIO e53 de config.
+Sizing, restore/readback da rota e config, unmap/release, reset/domínios,
+REG_ON80/unload e PCI vazio passaram. SSH/HTTP e snapshot passaram após
+cleanup. Foi continuação do mesmo boot, sem DFU/PIN adicional.
+
+[O módulo selecionado](evidence/n71-pcie-chip-id-build.json) tem42008 bytes,
+SHA256 `8ade6fd83a47df5e8bbb882fdbb53cd4ef118e3a6185274549f7b4b88b717941`.
+Kernel/payload/DTB/initramfs/identidades preservados. Harness C de falhas e seis
+mutações passaram no Mac/ARM64; Werror/modpost/ELF/ABI passaram. A leitura de
+chip-ID não demonstra EROM, BAR2/TCM, DART/DMA, IRQ, firmware ou associação Wi-Fi.
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-chip-candidate-20261004/deployment.json" \
+  --chip-id --previous-clean "$PWD/runtime/n71-bar-session-20261004" --check
+python3 -m unittest discover -s tests -p test_n71_pcie_chip_id.py -v
+python3 -m unittest discover -s tests -p test_n71_chip_result.py -v
+```
+
+No boot correspondente, usar saída nova em vez de --check. `--chip-id`
+exclui --bar-sizing/--host-scan, mas valida também o sizing. Cleanup é
+conservador: qualquer leitura de config exige registro positivo de restore;
+uma falha precoce de captura pode exigir análise antes de unload mesmo que
+a captura ainda não tenha escrito. Isso mantém uma recusa segura quando
+contagens não bastam para distinguir erro de captura e rota parcialmente alterada.

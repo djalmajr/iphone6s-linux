@@ -831,3 +831,18 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Sizing fresco também passou. Route/window/config readback, unmap/release,
   reset/power/REG_ON/unload e PCI vazio passaram; SSH/HTTP preservados.
   Sem DMA/firmware/rádio e sem intervenção/DFU/PIN adicional.
+
+### Incremento 76 — evidência física e continuidade dos gates
+
+- Até cinco arquivos: guia LINK, evidência física CHIP, runner de mutações e
+  plano. Registrar chip/revisão real, sizing, cleanup e limites sem publicar
+  boot_id/logs/firmware. Tornar âncora da mutação de seleção independente do
+  número de modos, verificar12 mortes por asserção e publicar no branch.
+- Conferir CI e atualizar #9/#34. Próximas dependências: associação de
+  SID/porta1/DART, IRQ/MSI e firmware/calibração adequados ao4350/rev8;
+  identificar essas referências sem habilitar DMA prematuramente.
+
+- Gate76: snapshot posterior concluído;12 mutações do coletor passaram com
+  âncora estável de substituição do módulo. Evidência pública distingue
+  chip-ID e sizing físicos de rádio/DMA ainda ausentes. Arquivos privados
+  e histórico preservados; branch segue sem merge/main/release.
