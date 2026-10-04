@@ -1,0 +1,72 @@
+{
+  "format": 1,
+  "input_hashes": {
+    "phone/kernel/patches/0004-apple-pmgr-errors.patch": "d8202c48516faec2bf4506af486ca2fd1b256360a41aad2d4df584c140d7e135",
+    "tests/n71_pmgr_errors.c": "5440993e62b0bc4fa511597b4a66290130aba2f0124f143aeeb1d722cf5e7323",
+    "tests/test_n71_pmgr_errors.py": "1eae5cc34492c947b213053ab9e428e8f332b52504f1cf9cc123d75e360c3e92"
+  },
+  "source_sha256": "4b0adc3013e2fabe9ca1cb8228f8f6b7934af4b667f7f0f893b675102d8710df",
+  "patched_sha256": "cc65bad1b788c4fa1d6e374b236f1b27c840797b727a600035294f17b71433e9",
+  "object_sha256": "0b75d8804d432558f4648f91974ed66bc23f19a508295ef21d81d611c3e1049d",
+  "object_size_bytes": 11328,
+  "elf": "ELF64 LE REL AArch64",
+  "built_in_object": true,
+  "module_macro_present": false,
+  "native_cases": 492,
+  "compiled_mutations": 14,
+  "original_regression_assertion_killed": true,
+  "werror": true,
+  "external_module_modpost_passed": false,
+  "external_module_modpost_errors": [
+    "missing MODULE_LICENSE in the pinned built-in driver",
+    "of_phandle_iterator_args is not exported in preserved vmlinux.symvers"
+  ],
+  "errors_suppressed": false,
+  "full_kernel_link_performed": false,
+  "integration_pending": true,
+  "preserved": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "logs": {
+    "arm64-gate-private.log": "67753d8fe408c386f339bcefa67df4b57158df7a1e7d0f23ae411a54e3ebc644",
+    "kernel-build-private.log": "6be5ffbecb5710bc50d2d0643c9af1710c300b158a20f40a4057b529d224839d",
+    "builtin-build-private.log": "ee01623f2e2f92bfb94c235d8b62282889fcdc3f19c664e40a6045aab99c510d"
+  },
+  "physical_driver_modified": false,
+  "status": "callbacks_fixed_builtin_object_verified_integration_pending",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/36",
+  "mac_gate_sha256": "d2d5f0a2cd6a2657dc67b1a9ccf885c6eacd73b40f453e23bc5f95a7f379b067",
+  "native_platforms": [
+    "macOS ARM64",
+    "Ubuntu ARM64"
+  ],
+  "callbacks": [
+    "apple_pmgr_ps_set",
+    "apple_pmgr_reset_assert",
+    "apple_pmgr_reset_deassert",
+    "apple_pmgr_reset_reset",
+    "apple_pmgr_reset_status"
+  ],
+  "first_error_preserved": true,
+  "no_auto_enable_after_failed_poll": true,
+  "reset_lock_released_after_failed_update": true,
+  "partial_effect_rollback_implemented": false,
+  "probe_and_is_active_errors_fixed": false,
+  "physical_driver_loaded": false,
+  "charger_io_performed": false,
+  "linux_charging_validated": false,
+  "new_dfu_or_reboot": false,
+  "ios_checkpoint": {
+    "BatteryCurrentCapacity": 100,
+    "BatteryIsCharging": false,
+    "ExternalConnected": true,
+    "ExternalChargeCapable": true,
+    "utc": "2026-10-04T21:23:03.583537+00:00",
+    "source": "com.apple.mobile.battery",
+    "raw_log_sha256": "b837009ce6800b1fe6db9748642e6869b5f5e54a429bf083006d212dc9888e80"
+  },
+  "limits": "Callback error propagation does not roll back partial hardware effects or make I2C1 acquisition safe. Probe/is_active still discard I/O errors. Full image integration/link and physical qualification are pending. The built-in driver is not an external module deployment artifact."
+}

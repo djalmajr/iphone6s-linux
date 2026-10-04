@@ -1592,3 +1592,50 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   jobs. Checkpoint documental só foi publicado após esses jobs terminarem,
   para não cancelá-los por concorrência cancel-in-progress. Ambos os módulos
   passivos têm gates nativos/build e podem compor a mesma coleta física.
+
+### Incremento 111 — propagar falhas dos callbacks PMGR antes do I2C ativo
+
+- Contexto: recarga iOS confirmou100% às21:23:03UTC, alimentação externa
+  conectada/capaz, sem nova solicitação de PIN. CIdecbe2d aprovado nos runs
+  PR37235115907/push37235111965. Disponibilidade para o DFU único ainda
+  pendente; não iniciar monitor ou reboot só porque a bateria está cheia.
+- Driver fixado drivers/pmdomain/apple/pmgr-pwrstate.c foi relido inteiro
+  e conferido byte a byte contra HEAD958481f. Callbacks de mudança de estado,
+  assert/deassert/reset e status descartam erros regmap. Corrigir somente
+  esses callbacks numa patch separada antes de acesso ativo I2C1.
+- Cinco arquivos: este plano, phone/kernel/patches/0004-apple-pmgr-errors.patch,
+  tests/n71_pmgr_errors.c, tests/test_n71_pmgr_errors.py e
+  docs/evidence/n71-pmgr-errors.json. Abrir issue de integração antes do código.
+- Preservar bits, ordem de sucesso, máscaras e lock IRQ-safe. Propagar primeiro
+  erro e interromper operações seguintes; não executar auto-enable após poll
+  falho. Garantir unlock em falhas, reset sem delay/deassert após assert falho,
+  status retorna erro de leitura. Não prometer rollback de escrita parcial.
+- Probe/is_active continuam fora desta patch; documentar essa lacuna antes de
+  uso ativo. Não trocar provider embutido por módulo duplicado. Integração
+  futura em candidata separada, com GPIO/DART e rollback, sem novo DFU por fix.
+- Gates: fixture C compila callbacks reais extraídos de patch com contexto
+  completo, injeta falhas e efeitos parciais, verifica palavras/ordem/locks;
+  baseline original deve falhar por asserção. Mutações devem compilar e morrer
+  por SIGABRT. Mac/Ubuntu ARM64, lint, AST e compilação completa Werror na VM.
+  Modpost externo é diagnóstico, não prova aplicável a um provider embutido;
+  não forçar exports/licença para contornar a fronteira. Preservar os insumos.
+- Depois: selecionar hashes/logs e documentar reprodução; coleta passiva
+  GPIO/PMGR segue agrupada e sem ativações ou I/O do carregador.
+
+- Gate111: 492 casos e 14 mutações compiladas morreram por asserção no Mac
+  e ARM64; fonte original também morreu por asserção. Primeira tentativa
+  do runner recusou anchor de mutação repetido antes de compilar; corrigido
+  para incluir início de linha. Não contou erro de harness como kill.
+- O arquivo completo compilou Werror como objeto embutido ARM64, sem
+  -DMODULE, com initcall e sem __this_module. Objeto11328B,
+  SHA0b75d8804d432558f4648f91974ed66bc23f19a508295ef21d81d611c3e1049d.
+  Fonte fixada, config/Image/exports preservados. Inputs/logs conferidos
+  após transferência, AST e pyflakes passaram. Issue36 aberta.
+- Modpost externo falhou: fonte embutida sem MODULE_LICENSE e referência
+  of_phandle_iterator_args não exportada. Erros preservados sem supressão.
+  Decisão: gate correto é objeto embutido; não fabricar módulo instalável
+  nem alterar exports/licença só para tornar verde um teste inadequado.
+  Full link/Image e integração/boot continuam explicitamente pendentes.
+- Probe/is_active ainda descartam erros; escrita parcial exige cleanup do
+  caller. Esta patch sozinha não qualifica aquisição ativa de I2C1 nem carga.
+  Zero DFU/reboot/I/O no aparelho; aguardar a disponibilidade física já pedida.
