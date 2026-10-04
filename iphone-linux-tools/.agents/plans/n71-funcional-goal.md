@@ -790,3 +790,7 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   revisão, publicação). Fonte e constantes foram conferidas no commit fixado.
   Ainda não há acesso MMIO físico. CI do head8865ea1 passou testes/lint mas
   falhou numa âncora antiga de seleção do coletor; corrigir em fatia própria.
+
+- Correção CI: runner passou a localizar a seleção com bar_sizing;12 mutações
+  foram executadas de novo e falharam por asserção. Sem mudança executável do
+  coletor/hardware. A CI remota permanece obrigatória no próximo head.

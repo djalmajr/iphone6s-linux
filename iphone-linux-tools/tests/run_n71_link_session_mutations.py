@@ -21,7 +21,7 @@ MUTATIONS = {
     'inventory-master': ('not (int(command, 16) & 4)', 'True'),
     'inventory-bars': ('[int(index) for index, _ in bars] == list(range(6))', 'len(bars) == 6'),
     'inventory-mode': ("' config_inventory=1' if self.config_inventory else ''", "''"),
-    'inventory-selection': ('if config_inventory or host_scan:\n        name =', 'if False:\n        name ='),
+    'inventory-selection': ('if config_inventory or host_scan or bar_sizing:\n        name =', 'if False:\n        name ='),
 }
 
 
