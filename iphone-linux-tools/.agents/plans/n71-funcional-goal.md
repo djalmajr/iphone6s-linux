@@ -1834,3 +1834,49 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Não usar seleção de hunk para inventar blob completo em futuros preflights.
 - CIf728099 terminal aprovado PR37240507287/push37240503704, seis jobs;
   depois foi publicado checkpoint5438ba9. #36 atualizada sem fechamento.
+
+### Incremento 118 — Image completo do bundle separado
+
+- Compilar em output novo kernel-n71-power-build-20261004 com fonte117,
+  config do bundle preservado e somente LOCALVERSION diferente. Guard8GiB,
+  metadata fixa de build, Image/DTB/Werror/modpost com logs privados.
+- Conferir config embutida, release sem +, símbolos/exports serdev e objetos
+  incorporados GPIO/PMGR. Hashes do legado intactos antes/depois e source
+  selecionado sem mutações. Preparar modules_prepare sem suprimir erros.
+- Até cinco arquivos públicos: plano, docs/N71_KERNEL_BUNDLE.md,
+  docs/evidence/kernel-n71-power-bundle-build.json, docs/STATUS.md e
+  docs/evidence/kernel-n71-power-bundle.json. Reutilizar gates117 de código.
+  Logs/artefatos/config privados; record público só digests/gates/resultados.
+- Full link não qualifica energia/Wi-Fi; não selecionar default/boot do iPhone.
+  Rebuild módulos/integração de perfil em fatias seguintes antes do boot.
+
+- Pré-Image118: olddefconfig passou e delta de config contém só LOCALVERSION,
+  mas kernel.release ainda não existe nesse estágio novo. Script v1 parou
+  antes de Image por FileNotFoundError; rollback conferido no finally.
+  Retomar output próprio (sem Image/vmlinux) com config exata, executar
+  prepare antes da leitura de release e guardar logs novos v2; não repetir
+  gate de config nem apagar diretório para esconder erro.
+
+### Incremento 119 — preparar seleção de integração durante o link118
+
+- Trabalho de código independente do resultado da build118: adaptar o
+  integrador para profile power explícito, exigindo record completo separado
+  kernel-n71-power-bundle-build.json, seis patches/blobs, nova release,
+  GPIO/PMGR incorporados e initramfs sem módulos de ABI anterior. Defaults
+  e records legados preservados. Composição real depende do gate118.
+- Até cinco arquivos: plano, scripts/build/integrate-source-kernel.py,
+  tests/test_kernel_integration.py, tests/run_kernel_integration_mutations.py
+  e docs/evidence/n71-power-integration-gate.json. Fixture sintética independente
+  usa filesystem/processos reais, SSH keys descartáveis; jamais chaves reais.
+- Provar seleção explícita, integridade/pins/config/release e recusa de
+  módulos antigos antes de criar destino; preservar identidade/source.
+  Atualizar três anchors de mutação para predicate selecionado e testar
+  guards novos por asserção. Mac/ARM64 com espera limitada, evitando
+  repetir Image ou realizar DFU. Nenhuma composição real antes do record118.
+
+- Gate119:17 testes e22 mutações de fonte por asserção aprovados Mac/ARM64,
+  com fixtures filesystem/CLI/SSH descartáveis e sem chaves reais. AST/lint
+  aprovados, inputs/digests conferidos e logs preservados. Whitelist de
+  profile power exige registro de full Image separado; fonte117/objetos não
+  substituem essa prova. Composição real continua bloqueada pelo link118
+  ainda em andamento, sem acionar o iPhone.

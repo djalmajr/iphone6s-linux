@@ -84,25 +84,27 @@ def migrate(raw, *, forbid_extra_modules=False):
 
 
 def kernel_inputs(folder, patchset=None):
-    if patchset not in (None, kernel_patchset.PATCHSET, kernel_bundle.BUNDLE):
+    if patchset not in (None, kernel_patchset.PATCHSET, kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE):
         raise ValueError('Patchset de integração desconhecido.')
-    bundle = patchset == kernel_bundle.BUNDLE
-    record_name = ('kernel-n71-bundle-build.json' if bundle else
-                   ('kernel-dart-build.json' if patchset else 'kernel-source-build.json'))
+    bundle = patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE)
+    record_name = ('kernel-n71-power-bundle-build.json' if patchset == kernel_bundle.POWER_BUNDLE else
+                   ('kernel-n71-bundle-build.json' if bundle else
+                    ('kernel-dart-build.json' if patchset else 'kernel-source-build.json')))
     record = json.loads((ROOT / 'docs/evidence' / record_name).read_text())
     if record['status'] != 'compiled_verified' or record['build']['exit_code'] != 0:
         raise ValueError('Registro público exige kernel compilado e verificado.')
     if bundle:
+        version, files, patches = kernel_bundle.bundle_spec(patchset)
         source = record['source']
         if record['build'].get('full_image_linked') is not True or record['build'].get('vmlinux_modpost_verified') is not True:
             raise ValueError('Bundle exige Image completo e modpost conferidos.')
         if source['commit'] != kernel_bundle.BASE:
             raise ValueError('Base do bundle de integração divergente.')
-        if source['bundle'] != kernel_bundle.BUNDLE or source['required_localversion'] != kernel_bundle.LOCALVERSION:
+        if source['bundle'] != patchset or source['required_localversion'] != version:
             raise ValueError('Identidade do bundle de integração divergente.')
-        if source['patches'] != kernel_bundle.PATCHES or source['files'] != {key: list(value) for key, value in kernel_bundle.FILES.items()}:
+        if source['patches'] != patches or source['files'] != {key: list(value) for key, value in files.items()}:
             raise ValueError('Patches ou blobs do bundle de integração divergentes.')
-        if record['build']['kernel_release'] != '7.2.0' + kernel_bundle.LOCALVERSION:
+        if record['build']['kernel_release'] != '7.2.0' + version:
             raise ValueError('Release do bundle exige ABI distinta.')
         if record['build'].get('serdev_stop_bits_export_verified') is not True:
             raise ValueError('Bundle exige export serdev conferido no kernel linkado.')
@@ -137,11 +139,14 @@ def kernel_inputs(folder, patchset=None):
     if patchset and 'CONFIG_APPLE_DART=y' not in config:
         raise ValueError('Patchset DART exige driver incorporado no kernel.')
     if bundle:
-        required = (f'CONFIG_LOCALVERSION="{kernel_bundle.LOCALVERSION}"',
+        required = (f'CONFIG_LOCALVERSION="{version}"',
                     '# CONFIG_LOCALVERSION_AUTO is not set',
                     'CONFIG_SERIAL_DEV_BUS=y', 'CONFIG_SERIAL_DEV_CTRL_TTYPORT=y')
         if any(line not in config for line in required):
             raise ValueError('Bundle exige identidade explícita e serdev incorporado.')
+    if patchset == kernel_bundle.POWER_BUNDLE and any(
+            line not in config for line in ('CONFIG_PINCTRL_APPLE_GPIO=y', 'CONFIG_APPLE_PMGR_PWRSTATE=y')):
+        raise ValueError('Bundle power exige GPIO e PMGR incorporados.')
     if 'apple,n71' not in record['build']['dtb_compatible'].split():
         raise ValueError('Registro público não identifica N71.')
     return blobs, record
@@ -165,7 +170,7 @@ def integrate(options):
     if not expected['matches_original'] or digest(m1n1) != expected['sha256']:
         raise ValueError('Hash do m1n1 preservado inesperado.')
     raw, changes = migrate(decompress(source['initramfs'].read_bytes()),
-                           forbid_extra_modules=options.kernel_patchset == kernel_bundle.BUNDLE)
+                           forbid_extra_modules=options.kernel_patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE))
     compressed = gzip.compress(raw, compresslevel=9, mtime=0)
     payload = m1n1 + BOOTARGS + blobs['s8000-n71.dtb'] + blobs['Image.gz'] + compressed
     os.umask(0o077)
@@ -206,7 +211,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--kernel-dir', required=True, type=Path)
     parser.add_argument('--output-dir', required=True, type=Path)
-    parser.add_argument('--kernel-patchset', choices=(kernel_patchset.PATCHSET, kernel_bundle.BUNDLE))
+    parser.add_argument('--kernel-patchset', choices=(kernel_patchset.PATCHSET, kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE))
     options = parser.parse_args()
     try:
         integrate(options)

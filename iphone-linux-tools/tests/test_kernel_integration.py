@@ -186,22 +186,30 @@ class KernelIntegrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertFalse(self.output.exists())
 
-    def save_bundle_record(self):
-        public_source = json.loads((ROOT / 'docs/evidence/kernel-n71-bundle.json').read_text())['source']
+    def save_bundle_record(self, *, power=False):
+        if power:
+            public_source = json.loads((ROOT / 'docs/evidence/kernel-n71-power-bundle.json').read_text())['source_report']
+        else:
+            public_source = json.loads((ROOT / 'docs/evidence/kernel-n71-bundle.json').read_text())['source']
+        version = '-iphone6s-dart-serdev-power1' if power else '-iphone6s-dart-serdev1'
+        profile = 'n71-dart-serdev-power-v1' if power else 'n71-dart-serdev-v1'
+        self.bundle_record_name = 'kernel-n71-power-bundle-build.json' if power else 'kernel-n71-bundle-build.json'
         self.bundle_record = json.loads(json.dumps(self.record))
         self.bundle_record['source'] = {
             'commit': '958481f87fee0949ff6a9a4af77f7eb6dac8a149',
-            'bundle': 'n71-dart-serdev-v1', 'required_localversion': '-iphone6s-dart-serdev1',
+            'bundle': profile, 'required_localversion': version,
             'patches': public_source['patches'], 'files': public_source['files']}
-        self.bundle_record['build'].update(kernel_release='7.2.0-iphone6s-dart-serdev1',
+        self.bundle_record['build'].update(kernel_release='7.2.0' + version,
                                             full_image_linked=True, vmlinux_modpost_verified=True,
                                             serdev_stop_bits_export_verified=True)
         image = (self.kernel / 'Image').read_bytes() + b'BUNDLE_IMAGE_NONBOOTABLE_SENTINEL'
         self.save(self.kernel / 'Image', image)
         self.save(self.kernel / 'Image.gz', gzip.compress(image, mtime=0))
         config = (self.kernel / 'config').read_bytes() + (
-            b'CONFIG_APPLE_DART=y\nCONFIG_SERIAL_DEV_BUS=y\nCONFIG_SERIAL_DEV_CTRL_TTYPORT=y\n'
-            b'CONFIG_LOCALVERSION="-iphone6s-dart-serdev1"\n# CONFIG_LOCALVERSION_AUTO is not set\n')
+            b'CONFIG_APPLE_DART=y\nCONFIG_SERIAL_DEV_BUS=y\nCONFIG_SERIAL_DEV_CTRL_TTYPORT=y\n' +
+            f'CONFIG_LOCALVERSION="{version}"\n# CONFIG_LOCALVERSION_AUTO is not set\n'.encode())
+        if power:
+            config += b'CONFIG_PINCTRL_APPLE_GPIO=y\nCONFIG_APPLE_PMGR_PWRSTATE=y\n'
         for name in ('config', 'config-embedded'):
             self.save(self.kernel / name, config)
         self.update_bundle_record()
@@ -211,7 +219,7 @@ class KernelIntegrationTests(unittest.TestCase):
             name: {'sha256': hashlib.sha256((self.kernel / name).read_bytes()).hexdigest(),
                    'bytes': (self.kernel / name).stat().st_size}
             for name in ('Image', 'Image.gz', 's8000-n71.dtb', 'config', 'config-embedded')}
-        (self.root / 'docs/evidence/kernel-n71-bundle-build.json').write_text(json.dumps(self.bundle_record))
+        (self.root / 'docs/evidence' / self.bundle_record_name).write_text(json.dumps(self.bundle_record))
 
     def test_bundle_requires_explicit_selection_preserving_profile_and_legacy_record(self):
         baseline_record = (self.root / 'docs/evidence/kernel-source-build.json').read_bytes()
@@ -279,6 +287,71 @@ class KernelIntegrationTests(unittest.TestCase):
                 result = self.run_cli('n71-dart-serdev-v1')
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertFalse(self.output.exists())
+
+    def test_power_bundle_explicit_selection_preserves_inputs_and_legacy_record(self):
+        # Kills selecting a legacy record for power or changing protected identities.
+        self.save_bundle_record(power=True)
+        legacy = self.root / 'docs/evidence/kernel-n71-bundle-build.json'
+        legacy.write_bytes(b'KEEP_LEGACY_RECORD')
+        before = {file: file.read_bytes() for file in self.source.iterdir()}
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(self.output.exists())
+        result = self.run_cli('n71-dart-serdev-power-v1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        provenance = json.loads((self.output / 'provenance.json').read_text())
+        self.assertEqual(provenance['kernel_patchset'], 'n71-dart-serdev-power-v1')
+        self.assertEqual(provenance['kernel_release'], '7.2.0-iphone6s-dart-serdev-power1')
+        self.assertFalse(provenance['physical_boot_tested'])
+        self.assertFalse(provenance['default_payload_changed'])
+        self.assertIn((self.kernel / 'Image.gz').read_bytes(), (self.output / 'payload.bin').read_bytes())
+        self.assertEqual(legacy.read_bytes(), b'KEEP_LEGACY_RECORD')
+        for path, raw in before.items():
+            self.assertEqual(path.read_bytes(), raw)
+        for target, source in (('client_ed25519', 'client'), ('known_hosts', 'known_hosts')):
+            self.assertEqual((self.output / target).read_bytes(), (self.source / source).read_bytes())
+
+    def test_power_bundle_rejects_wrong_identity_pins_and_unlinked_manifest(self):
+        # Kills shared manifest guards missing for the selected power profile.
+        self.save_bundle_record(power=True)
+        original = json.loads(json.dumps(self.bundle_record))
+        changes = [('source', key, 'changed') for key in ('commit', 'bundle', 'required_localversion')]
+        changes += [('source', 'patches', {}), ('source', 'files', {})]
+        changes += [('build', key, False) for key in (
+            'full_image_linked', 'vmlinux_modpost_verified', 'serdev_stop_bits_export_verified')]
+        changes += [('build', 'kernel_release', '7.2.0-iphone6s-dart-serdev1')]
+        for section, key, value in changes:
+            with self.subTest(section=section, key=key):
+                self.bundle_record = json.loads(json.dumps(original))
+                self.bundle_record[section][key] = value
+                self.update_bundle_record()
+                result = self.run_cli('n71-dart-serdev-power-v1')
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertFalse(self.output.exists())
+
+    def test_power_bundle_requires_builtin_providers_and_refuses_old_module_abi(self):
+        # Kills accepting modular GPIO/PMGR or carrying old modules across the ABI change.
+        self.save_bundle_record(power=True)
+        original = (self.kernel / 'config').read_bytes()
+        for key in ('PINCTRL_APPLE_GPIO', 'APPLE_PMGR_PWRSTATE'):
+            with self.subTest(key=key):
+                config = original.replace(('CONFIG_' + key + '=y').encode(),
+                                          ('CONFIG_' + key + '=m').encode())
+                for name in ('config', 'config-embedded'):
+                    self.save(self.kernel / name, config)
+                self.update_bundle_record()
+                result = self.run_cli('n71-dart-serdev-power-v1')
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertFalse(self.output.exists())
+        for name in ('config', 'config-embedded'):
+            self.save(self.kernel / name, original)
+        self.update_bundle_record()
+        self.members.append({'name': 'lib/modules/stale.ko.zst', 'mode': stat.S_IFREG | 0o600,
+                             'body': b'OLD_ABI_MODULE'})
+        self.save_source()
+        result = self.run_cli('n71-dart-serdev-power-v1')
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertFalse(self.output.exists())
 
     def refuse(self):
         result = self.run_cli()
