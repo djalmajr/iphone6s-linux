@@ -603,7 +603,7 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 ### Incremento 65 — adaptador real de host PCI para sizing temporário
 
 - Até cinco arquivos: `phone/kernel/n71-pcie-scan.h`, integração no módulo
-  diagnóstico, testes de integração, guia de reprodução e plano. Criar
+  diagnóstico, testes C/Python de integração e plano. Criar
   bridge privado com callbacks ECAM fixados, janelas ADT traduzidas e faixa
   bus0..1; recusar dispositivos/classe/cabos ABI divergentes no preflight.
 - Parâmetro `host_scan` exige run/enumerate/config_inventory. Executar somente
@@ -619,3 +619,33 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   para uma sessão física agregada. Não afirmar BAR/host/DART/radio funcionais
   com base somente na compilação. Não solicitar DFU enquanto houver trabalho
   independente útil para preparar esta candidata.
+
+- Gate65: três testes passam no Mac e ARM64, incluindo 11 cenários do
+  adaptador e seis mutações de lifecycle por asserção. Detectados e corrigidos
+  a sobrescrita do primeiro erro de leitura e o orçamento que poderia impedir
+  o readback no cleanup. Mutações de política64 continuam14/14.
+- O primeiro build do kernel detectou colisão do identificador `current` com
+  macro ARM64; renomeado para `observed` em fatia corretiva de dois arquivos,
+  sem alterar a política. Novo diretório M compilou Werror/modpost fatal,
+  módulo AArch64/ABI exata35072 bytes, SHA1fe1b308…d38f002. Símbolos PCI scan,
+  walk, stop, remove e free estão ligados; enable/bind/DMA ausentes. Hash,
+  ELF e vermagic recalculados no Mac. Fonte/Image/config/exports preservados.
+- As provas são de software e build: adaptador ainda não foi carregado no
+  telefone. Seleção explícita no coletor e registro reproduzível continuam
+  no próximo incremento, sem necessidade de recompilar o Image ou pedir PIN.
+
+### Incremento 66 — seleção e cleanup físicos do adaptador de sizing
+
+- Cinco arquivos: coletor, testes do coletor, evidência selecionada de build,
+  guia LINK e plano. `--host-scan` implica inventário e fixa exclusivamente o
+  módulo novo/proveniência; modos anteriores mantêm os hashes selecionados.
+- Validar resultado único, dois dispositivos, seis recursos BAR ordenados,
+  COMMAND sem DMA, orçamento e ausência de refusals. Exigir remoção do bus e
+  restauração de config antes de permitir unload; confirmar sysfs PCI vazio.
+  Resultado falho também passa por cleanup REG_ON/reset/power já existente.
+- Compor perfil privado idêntico ao payload/DTB/initramfs/identidades físicos,
+  somente trocando o módulo externo. Verificar CLI local dos três modos e
+  recusas/cleanup dos testes; CI e mutações entram na fatia documental seguinte.
+- A próxima sessão agrupa inventário, sizing pelo PCI core, DART/HDQ somente
+  leitura, serviços e snapshot. Firmware/calibração, atribuição de recursos,
+  IRQ e DMA não são ativados nesta varredura temporária.

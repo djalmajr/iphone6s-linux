@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Opt-in clock/reset diagnostic; no PCI host registration, DMA or radio firmware. */
+/* Opt-in clock/reset and temporary PCI sizing diagnostic; no DMA or radio. */
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
 #include <linux/io.h>
@@ -12,6 +12,7 @@
 #include "n71-pcie-link.h"
 #include "n71-pcie-inventory.h"
 #include "n71-pcie-mmio.h"
+#include "n71-pcie-scan.h"
 
 static bool run;
 module_param(run, bool, 0400);
@@ -22,6 +23,9 @@ MODULE_PARM_DESC(enumerate, "Also train WLAN1 and read identity, without DMA or 
 static bool config_inventory;
 module_param(config_inventory, bool, 0400);
 MODULE_PARM_DESC(config_inventory, "Read bounded endpoint config after enumeration; no BAR sizing");
+static bool host_scan;
+module_param(host_scan, bool, 0400);
+MODULE_PARM_DESC(host_scan, "Temporarily scan with PCI core; size/restore BARs, no binding or DMA");
 
 static int n71_inventory_read32(void *context, u32 offset, u32 *value)
 {
@@ -223,6 +227,10 @@ static int n71_probe(struct platform_device *pdev)
 			stage = "inventory";
 			error = n71_inventory_report(dev, &state);
 		}
+		if (!error && host_scan) {
+			stage = "host-scan";
+			error = n71_pcie_scan(dev, &state);
+		}
 		cleanup = n71_reset(&state, true);
 		if (!cleanup)
 			dev_info(dev, "N71_PCIE_RESET_RESTORED asserted=1 readback=1\n");
@@ -263,7 +271,7 @@ static int __init n71_init(void)
 {
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
-	if (config_inventory && !enumerate)
+	if ((config_inventory && !enumerate) || (host_scan && !config_inventory))
 		return -EINVAL;
 	return platform_driver_register(&n71_driver);
 }
