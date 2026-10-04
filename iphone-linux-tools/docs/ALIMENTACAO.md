@@ -4,6 +4,34 @@ Etapa [#2](https://github.com/djalmajr/iphone6s-linux/issues/2), iniciada em 202
 
 ## Evidência atual
 
+### Descarga no Linux e recarga no iOS — 2026-10-04
+
+O operador informou bateria quase descarregada durante o Linux e que o
+aparelho já havia voltado ao iOS. A leitura local, sem pedir PIN, confirmou
+**5%**, `BatteryIsCharging=true`, `ExternalConnected=true` e
+`ExternalChargeCapable=true`. [Registro sanitizado](evidence/n71-low-battery-ios-20261004.json).
+
+Isso reprova o uso contínuo na configuração atual. Não houve leitura de
+corrente de bateria no Linux, portanto não distingue carga zero, consumo
+superior à entrada ou falha específica do controle de carga. O orçamento
+USB500mA não é prova de corrente líquida nem implementação do carregador.
+O iPhone permanece no iOS para recarregar; novos testes físicos de Wi-Fi
+foram interrompidos, e o desenvolvimento segue offline na alimentação N71.
+
+O último snapshot válido foi salvo após os probes de ponte restaurados.
+As mudanças seguintes existem só no Mac/VM. Ao tentar novo snapshot, SSH
+já não estava disponível: o comando parou antes de backup/reboot, e não
+se atribui esse retorno ao script. O módulo novo de controls/SERR foi
+compilado/testado, **não carregado no iPhone**.
+
+Prioridade: confrontar SN2400@75/I2C1 da referência N71, identificar estados
+e efeitos dos registradores, implementar acesso/ownership/cleanup qualificados
+e telemetria gauge/HDQ. A DTS fixada deixa I2C1 desativado. Nenhum limite de
+corrente/tensão, mux, UART ou registrador do carregador foi alterado.
+Uma consulta de IORegistry pelo nome AppleSN2400Charger retornou metadados
+do serviço, mas não corrente, limites ou estado dos registradores. Não é
+prova de ausência de hardware ou de driver no iOS.
+
 ### Retorno do teste de latch WLAN — 2026-10-03 UTC
 
 O teste físico de controle GPIO10 terminou com restauração/readback de

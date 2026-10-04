@@ -1287,3 +1287,10 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   específico N71 e gauge/HDQ. Não prolongar Linux/forçar novo DFU para Wi-Fi
   enquanto alimentação sustentada estiver pendente. Não pausar o goal;
   continuar trabalho independente e registrar #2/#8 e progresso #9/#34.
+
+- Gate99: leitura iOS local confirmou5% e carga externa ativa, sem PIN.
+  IORegistry SN2400 retornou somente metadados de serviço; não fornece
+  corrente/limites. Prova sanitizada conserva digest do log privado, sem
+  identificadores. Documentação distingue descarga operacional de causa
+  ainda não isolada, mantém candidato PCI não carregado e último snapshot.
+  Nenhuma escrita de carregador/gauge ou novo DFU foi realizada.

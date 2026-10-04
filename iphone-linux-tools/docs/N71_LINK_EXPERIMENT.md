@@ -276,7 +276,7 @@ python3 tests/run_n71_pcie_scan_mutations.py
 python3 -m unittest discover -s tests -p test_n71_scan_result.py -v
 python3 tests/run_n71_scan_result_mutations.py
 python3 scripts/host/n71-link-session.py \
-  --profile "$PWD/runtime/n71-pcie-bridge-candidate-20261004/deployment.json" \
+  --profile "$PWD/runtime/n71-pcie-controls-candidate-20261004/deployment.json" \
   --host-scan --check
 ```
 
@@ -401,7 +401,7 @@ probes de janelas de ponte com decode desligado e restauração explícita,
 seguida dos controles de capabilities exigidos pelo core; não liberar writes
 arbitrários. O histórico privado diferencia esta prova do primeiro scan.
 
-O build atual do `--host-scan` é o
+O build usado nesta etapa do `--host-scan` foi o
 [módulo de probes da ponte](evidence/n71-pcie-bridge-scan-build.json),57888 bytes,
 SHA256 `82228fa73c8f7808f531571226925755b4a41cf4e1ca2d3a6a1b0051099dde89`.
 Reproduzir o build com M novo
@@ -426,6 +426,27 @@ PCI/módulos ausentes. SSH/HTTP/snapshot passaram, mantendo o mesmo boot.
 Próxima fatia deve confrontar capabilities/controles reais e as exigências
 do core; pedidos posteriores ao primeiro erro são latched e não demonstram
 que todos esses registradores precisariam ser alterados.
+
+A candidata atual do coletor é o
+[build de controls/SERR](evidence/n71-pcie-controls-scan-build.json),60528 bytes,
+SHA256 `29e29fcd005fb631b2a46375b8dba12d7f03a7eb21d76fc22a7b67738aa50e0f`.
+Captura somente campos conhecidos de PM/MSI/MSI-X/PCIe/AER/PTM antes do scan,
+sem write pelo helper e sem ler BAR/VPD/address payload. Limites por função:
+128 reads/16 capabilities/32 words, identidade/master off e output integral
+somente após sucesso; não é uma prova de estabilidade dos controles.
+SERR set fica limitado aos estados originais/master-abort-clear, preservando
+todos os outros bits. [Permissão qualificada](evidence/n71-pcie-serr-policy-reference.json).
+
+Gates Mac/ARM64 passaram22 mutações de config,7 de reference e6 de lifecycle;
+coletor25 testes/16 mutações. Reproduzir M novo
+`/home/ubuntu/n71-pcie-controls-v2-inputs-20261004/phone/kernel` e perfil
+`runtime/n71-pcie-controls-candidate-20261004/deployment.json`. Kernel/payload
+e identidades permanecem iguais. **Não foi carregada fisicamente:** bateria
+quase descarregada e retorno ao iOS mudaram a prioridade para alimentação.
+Linux não está mais online; `--previous-clean` também exige o mesmo boot,
+portanto esse histórico não autoriza continuação após um futuro DFU.
+Conservar o último snapshot e verificar um boot novo somente quando houver
+alimentação adequada e o módulo tiver sido selecionado deliberadamente.
 
 O próximo modo `bar_sizing=1` mede somente as seis palavras BAR do endpoint,
 sem registro de dispositivos PCI. Exige inventário, recusa host_scan simultâneo,
