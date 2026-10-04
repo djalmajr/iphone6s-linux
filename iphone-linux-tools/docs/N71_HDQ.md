@@ -4,6 +4,11 @@ Pendência [#2](https://github.com/djalmajr/iphone6s-linux/issues/2).
 O codec já tem gates Mac, ARM64 e contexto kernel. UART, mux compartilhado,
 identificação do gauge e unidades físicas ainda não foram validados.
 
+**Estado físico em2026-10-04:** iPhone no iOS para recarga após descarga no
+Linux. Leitura local passou5%→17% com carga ativa, sem PIN. Alimentação #2
+tem prioridade; novos probes Wi-Fi estão adiados. [Registro e implementação
+SN2400 sem I/O](ALIMENTACAO.md#encoder-sn2400-específico-n71--cálculo-implementado-driver-pendente).
+
 ## Referência verificável
 
 Usamos o kernel Apple N71 como dados, obtido pelo
@@ -296,3 +301,44 @@ Unload e ausência do módulo foram confirmados. [Evidência física selecionada
 Isso qualifica somente aquelas amostras; não demonstra owner, UART, handshake
 SN2400 ou sensor. Continua sem autoload no initramfs e sem alterar os dois
 módulos selecionados do experimento PCIe.
+
+## Reprodução da aritmética SN2400 — sem barramento/driver
+
+O [encoder](../phone/kernel/n71-sn2400-input-reference.h) distingue suspend
+de código0 e recusa calibração não modelada. Seus testes são executados por:
+
+```sh
+python3 -m unittest discover -s tests -p test_n71_sn2400_input_reference.py -v
+```
+
+Mac/ARM64 passaram oito mutações reais e um oracle multiply/shift derivado
+das instruções fixadas para todos os pedidos16bit. Objeto de verificação
+kernel compilou comWerror, sem módulos carregados ou alteração de imagem.
+Reproduzir na VM com diretório de entradas novo e `M` separado, conforme
+o [procedimento do bundle](N71_KERNEL_BUNDLE.md). Não há cliente I2C ativo.
+
+Os trechos do novo [registro de referência](evidence/n71-sn2400-input-reference.json)
+podem ser conferidos sem executar firmware:
+
+```sh
+python3 - <<'PY'
+import hashlib
+import json
+from pathlib import Path
+
+evidence = json.loads(Path('docs/evidence/n71-sn2400-input-reference.json').read_text())
+raw = Path('runtime/n71-driver-reference-20261002/kernelcache.n71.macho').read_bytes()
+assert hashlib.sha256(raw).hexdigest() == evidence['decoded_kernel_sha256']
+for window in evidence['verification_windows']:
+    start, size = window['file_offset'], window['size']
+    assert 0 <= start < len(raw) and start + size <= len(raw)
+    assert hashlib.sha256(raw[start:start + size]).hexdigest() == window['sha256']
+print('N71_SN2400_REFERENCE_WINDOWS_OK')
+PY
+```
+
+O setter Apple usa cache/ordem e tratamento de erros que não fornecem restore
+pronto. O timer seleciona modo software1/0, não qualifica watchdog de hardware.
+O adapter futuro precisa coordenar controle de carga e ownership HDQ, conservar
+estado físico e provar cleanup. Não enviar UART, fazer scanI2C ou programar
+limites apenas porque o encoder ou a referência está presente.

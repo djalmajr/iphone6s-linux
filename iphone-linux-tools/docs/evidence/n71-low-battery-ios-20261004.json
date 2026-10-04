@@ -16,5 +16,14 @@
   "script_reboot_executed": false,
   "private_ios_battery_log_sha256": "5f4632ad15a4cc03d25f9686107c01596dfae87a534071815069e8a9d51551dd",
   "charging_linux_validated": false,
-  "offline_development_priority": "N71-specific charger/gauge before sustained Linux or Wi-Fi hardware tests"
+  "offline_development_priority": "N71-specific charger/gauge before sustained Linux or Wi-Fi hardware tests",
+  "ios_followup": {
+    "observed_at_utc": "2026-10-04T18:52:43.379613+00:00",
+    "battery_percent": 17,
+    "charging": true,
+    "external_connected": true,
+    "private_log_sha256": "38b536e6c5c4aef32ab033d1650e70fb1ff1a6f014bd1695caa536902df9f745",
+    "capacity_increased_from_first_ios_reading": true,
+    "linux_charge_current_proof": false
+  }
 }

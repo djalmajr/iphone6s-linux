@@ -1333,3 +1333,21 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   selecionados têm digests para reprodução; nenhum charger I/O executado.
 - CI da correção100 aprovado no SHA85aa0f5: PR37226272040 e push37226267211,
   seis jobs Ubuntu/macOS/Windows. Novos arquivos101 ainda precisam de CI.
+
+### Incremento 102 — documentação de carga, limites e recarga iOS
+
+- Cinco arquivos: plano, ALIMENTACAO, HDQ, STATUS e prova de bateria.
+  Registrar follow-up17%/charging ativo com digest/timestamp; manter separada
+  da medição de carga Linux. Atualizar estado físico atual e candidato não usado.
+- Documentar encoder N71, divergência de ordem A10, erros do setter/cache,
+  timer software e gates restantes. Incluir reprodução privada dos trechos e
+  testes nativos; não apresentar matemática como driver/carga funcional.
+- Validar JSON/links/diff/árvore pública e CI do head publicado, atualizar #2
+  com implementação sem I/O. Sem instalação, DFU ou mudança do aparelho.
+
+- Gate102: JSON/AST/links locais e diff passaram. Follow-up confirma recarga
+  iOS5%→17%, sem PIN. Documentação distingue cálculo, timer de software,
+  limites não qualificados e driver ainda pendente. Checkpoint STATUS atual
+  marca Linux offline e identifica seções anteriores como históricas.
+  O primeiro patch documental foi recusado por contexto divergente, sem
+  alterar o plano; leitura e aplicação com contexto atual passaram.

@@ -1,4 +1,27 @@
-# iPhone 6s Linux — atualizado em 2026-10-02
+# iPhone 6s Linux — atualizado em 2026-10-04
+
+## Checkpoint atual — alimentação priorizada
+
+iPhone no iOS para recarga após relato de descarga quase completa durante
+Linux. Leituras locais sem PIN confirmaram5% e depois17%, com carga externa
+ativa. Linux não está online. Nenhum novo DFU foi solicitado nesta rodada;
+desenvolvimento segue no Mac/VM para implementar carga/telemetria N71.
+[Evidência e limites](ALIMENTACAO.md), [issue P0](https://github.com/djalmajr/iphone6s-linux/issues/2).
+
+No boot anterior, DART provider/INTx/probes de ponte tiveram cleanup verificado
+e SSH/HTTP/snapshot preservados. Scan PCI ainda negativo; primeira recusa
+seguinte é SERR. A candidata controls/SERR compilada não foi carregada por
+causa da bateria; Wi-Fi/DMA/IRQdelivery continuam pendentes. O último snapshot
+válido é posterior ao scan de ponte. [Estado e reprodução](N71_LINK_EXPERIMENT.md).
+
+Novo cálculo SN2400 específico N71 passou Mac/ARM64/oito mutações e contexto
+kernelWerror. É aritmética sem I/O, não um driver de carga. I2C1/HDQ/revisão,
+cleanup e corrente líquida continuam na #2; teste prolongado #8 não começou.
+CI da correção das fixtures PCI aprovado no SHA85aa0f5 (PR37226272040 e
+push37226267211). Gates dos novos arquivos são registrados por SHA nas issues.
+
+As seções anteriores abaixo são checkpoints históricos; afirmações sobre
+serviços ativos ou VM parada descrevem a data indicada em cada uma.
 
 ## Direção de desenvolvimento — 2026-10-02
 

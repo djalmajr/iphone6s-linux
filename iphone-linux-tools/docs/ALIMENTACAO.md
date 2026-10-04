@@ -11,6 +11,10 @@ aparelho já havia voltado ao iOS. A leitura local, sem pedir PIN, confirmou
 **5%**, `BatteryIsCharging=true`, `ExternalConnected=true` e
 `ExternalChargeCapable=true`. [Registro sanitizado](evidence/n71-low-battery-ios-20261004.json).
 
+Uma segunda leitura cerca de15 minutos depois confirmou **17%**, com carga
+e alimentação externas ativas. O cabo/porta repôs carga no iOS nessa condição;
+esse aumento não mede corrente nem comprova carregamento no Linux.
+
 Isso reprova o uso contínuo na configuração atual. Não houve leitura de
 corrente de bateria no Linux, portanto não distingue carga zero, consumo
 superior à entrada ou falha específica do controle de carga. O orçamento
@@ -31,6 +35,43 @@ corrente/tensão, mux, UART ou registrador do carregador foi alterado.
 Uma consulta de IORegistry pelo nome AppleSN2400Charger retornou metadados
 do serviço, mas não corrente, limites ou estado dos registradores. Não é
 prova de ausência de hardware ou de driver no iOS.
+
+### Encoder SN2400 específico N71 — cálculo implementado, driver pendente
+
+A referência Apple fixada mostra clamp90..2000mA e quantização10mA no caminho
+sem calibração de `getInputCurrentSetting`. O
+[header puro](../phone/kernel/n71-sn2400-input-reference.h) reproduz esse
+cálculo. Pedido0 resulta em suspend separado: código0 também representa90mA
+quando a entrada não está suspensa. Calibração habilitada é recusada porque
+sua tabela/interpolação não foi portada. Valores representam codificação,
+**não corrente medida nem limites seguros para esta bateria ou porta USB**.
+
+Mac e ARM64 passaram fronteiras, domínio16bit, extremosu32 e oito mutações
+compiladas por asserção. O header compilou em objeto kernel ARM64 comWerror;
+.config/Image/exports permaneceram iguais. Não foi criado ou carregado um
+driver de carregador. [Fatos, trechos verificáveis e gates](evidence/n71-sn2400-input-reference.json).
+
+O setter Apple N71 suspende escrevendo0 no registro09 e depois
+`(cached_control & ~3) | 8` no10. O caminho positivo usa controle em cache
+antes do limite09. O cache é inicializado em4, com bits3 opcionais por
+`spread-spectrum-enable`; não é snapshot vivo para restore. O retorno
+considera o segundo write, sem propagar diretamente a falha do primeiro.
+Não adotar esse tratamento de erro no futuro adapter.
+
+A [fonte Linux A10 fixada](https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/power/supply/apple_sn2400_charger.c)
+usa ordem contrária na suspensão e escreve limite de corrente da bateria
+no probe. Portanto, compartilharem SN2400 não qualifica copiar a inicialização.
+O timer Apple identificado chama modo de software1 e agenda o retorno
+pelo `IOTimerEventSource::setTimeout(interval,1e9)`, default8s; o callback
+seleciona modo0. Isso não identifica um watchdog físico como causa da descarga.
+A [API Apple](https://github.com/apple-oss-distributions/xnu/blob/main/iokit/IOKit/IOTimerEventSource.h)
+descreve intervalo/escala; o símbolo/slot da versão N71 foi conferido no binário.
+
+Próximos passos: qualificar I2C1/clocks/pinos e proprietário, efeitos de leitura
+e revisão do SN2400; implementar captura/readback/cleanup que trate escrita
+parcial; depois integrar gauge/HDQ e limites autorizados pela negociação USB
+e pela bateria identificada. A aritmética não autoriza aplicar os2000mA máximos.
+Preparar o adapter offline e agrupar os testes numa sessão curta, após recarga.
 
 ### Retorno do teste de latch WLAN — 2026-10-03 UTC
 
