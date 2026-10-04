@@ -1669,3 +1669,52 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - CI301a61f concluiu aprovado nos dois runs PR37236898569 e
   push37236896067, seis jobs Ubuntu/macOS/Windows. Docs112 serão publicados
   depois desses gates terminais, sem cancelamento das execuções de código.
+
+### Incremento 113 — falhas de leitura/escrita no probe PMGR
+
+- Próxima dependência da issue36: helper is_active e probe descartam erros
+  antes de registrar genpd. Disponibilidade física continua pendente; tratar
+  estes erros offline preservando os dois observadores já preparados.
+- Cinco arquivos: plano, phone/kernel/patches/0005-apple-pmgr-probe-errors.patch,
+  tests/n71_pmgr_probe.c, tests/test_n71_pmgr_probe.py e
+  docs/evidence/n71-pmgr-probe-errors.json. Patch005 aplica depois de004;
+  baseSHA cc65bad1b788c4fa1d6e374b236f1b27c840797b727a600035294f17b71433e9.
+- Converter is_active em retorno de erro e bool de saída escrito apenas
+  no sucesso. Probe propaga min-state update, leitura do estado, power_on
+  always-on e auto-PM update antes de registrar domínio/provider/reset.
+  Preservar semântica de propriedade min-state ausente/fora do limite,
+  masks/flags e caminho de sucesso. Não tentar rollback cego de efeito parcial.
+- Lifecycle genpd após registro não pertence a esta fatia; examinar cleanup
+  e erros de iterator/provider numa próxima fatia da mesma issue antes da
+  candidata ativa. Não afirmar segurança do I2C1 por estas patches isoladas.
+- Fixture C compila funções reais da patch004+005 e probe; verificar estados
+  de registro e palavras/ordem de I/O, leitura falha com efeitos parciais,
+  estado ativo/auto-PM e always-on. Baseline004 deve ser detectada por asserção.
+  Mutações precisam compilar e terminar por SIGABRT, Mac/ARM64.
+- Gates: AST/lint, C nativo, compilação completa obj-y ARM64/Werror na VM,
+  sem MODULE/insmod; original/config/Image/exports preservados. Fonte/gates
+  callbacks111 reutilizados quando bytes das funções permanecerem iguais.
+  Documentar metadados/reprodução em fatia seguinte e aguardar CI anterior
+  terminal antes de novo push. Nenhum DFU só para publicar o incremento.
+
+- Gate113: 3138 casos e 12 mutações compiladas por asserção passaram Mac e
+  ARM64. Predecessor004 também morreu por asserção, não erro de build.
+  Primeira fixture não definia EPROBE_DEFER: corrigida com errno Linux517;
+  compilação falha inicial preservada e não contada. Mutation de offset
+  foi movido após leitura da propriedade, pois o primeiro anchor seria
+  sobrescrito antes do I/O; não foi declarado como kill nessa forma.
+- Arquivo completo004+005 compilou obj-y ARM64/Werror, sem MODULE, com
+  initcall/sem __this_module. Objeto11424B,
+  SHA2becaff2ea85b73f4542c5cbde22157864dbe95ac7a8b633cc1bc1e6b347f8ea.
+  Callbacks111 conferidos byte a byte inalterados, gate correspondente
+  reutilizado; source/config/Image/exports preservados. Inputs/logs/objeto
+  conferidos após transferência. AST/lint aprovados; sem full link/Image.
+- Referência genpd está em drivers/pmdomain/core.c nesta árvore, não no
+  caminho antigo drivers/base/power/domain.c. Arquivo SHA32e2f6b0 conferido
+  contra HEAD. Remoção pode recusar provider/children/devices; falha de
+  add_provider no driver não remove domínio já inicializado. Metadata do
+  iterator e cleanup após publicação precisam de próxima análise, sem
+  prometer rollback cego ou reserva de ownership por esta patch.
+- CI8ad5091 aprovado em PR37237523350/push37237521125, seis jobs. Zero
+  reinicializações/carga/firmware no iPhone neste incremento; disponibilidade
+  física continua sendo a única dependência da coleta passiva pronta.
