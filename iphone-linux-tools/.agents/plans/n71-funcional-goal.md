@@ -1376,3 +1376,35 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   digests conferidos. Primeira leitura local precedeu conclusão dos quatro
   transfers assíncronos e falhou por arquivo ausente; esperar todos os exits0
   e repetir somente o gate de hashes resolveu. Nenhum teste/hardware repetido.
+
+### Incremento 104 — observador passivo da topologia I2C1 e GPIO114/115
+
+- Contexto: o aparelho está recarregando no iOS; Linux ainda não tem carga
+  sustentada comprovada. Preparar a coleta do carregador sem novo boot,
+  ativação do controlador, solicitação de pinos ou transmissão I2C.
+- Cinco arquivos: este plano, `phone/kernel/n71-i2c-topology-observe.c`,
+  `phone/kernel/Makefile`, `tests/n71_i2c_topology_observe.c` e
+  `tests/test_n71_i2c_topology_observe.py`.
+- Módulo explícito `run=1`, board N71, nó I2C1 desabilitado, sem filhos,
+  plataforma ou adapter existente. Validar apenas metadados DT de recurso,
+  IRQ bruto, clock fixo, domínio e grupo pinctrl; não criar IRQ nem clock.
+- GPIO114/115: usar somente o regmap do provider atual, com device lock,
+  quatro leituras por pino (cache, hardware duas vezes, cache). Emitir dados
+  completos apenas se todas passarem. Não interpretar estabilidade como
+  ownership nem como pinmux Apple fisicamente qualificado.
+- Verificação: compilar o módulo real dentro de harness C com falhas de
+  metadados, referências, locking e cada leitura; executar mutações reais.
+  Repetir no ARM64 e compilar módulo externo no kernel preservado com Werror.
+  Publicar prova/build/documentação em incremento separado; sem carregar no
+  telefone enquanto está no iOS. CI anterior54179b4 aprovado no PR37228026232.
+
+- Gate104: o módulo real passou83 casos e14 mutações compiladas por asserção
+  no Mac e ARM64. Build externo ARM64 comWerror/modpost passou; ELF64LE/REL
+  AArch64 e vermagic7.2.0-iphone6s-dart-serdev1 conferidos. Image/config/exports
+  permaneceram iguais. Módulo15696B, SHAe740e8dca37cc0e689a8d5877a8be3c16a17176be480ef21cb93c6e137c0a96f.
+- Primeira execução das mutações parou porque remover board check deixou
+  função mock sem referência eWerror impediu compilar. Corrigida a mutação
+  para manter referência sem validar; o mutant executou e morreu por asserção.
+  Log inicial preservado, sem tratar erro de compilação como prova de mutation.
+  Artefatos/logs transferidos somente após exits0; hashes locais iguais.
+  Nenhum módulo foi carregado e nenhum boot físico ocorreu nesta fatia.

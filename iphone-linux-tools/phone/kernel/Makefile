@@ -2,4 +2,5 @@
 obj-m += n71-pcie-diagnostic.o
 obj-m += n71-wlan-power-diagnostic.o
 obj-m += n71-hdq-gpio-observe.o
+obj-m += n71-i2c-topology-observe.o
 ccflags-y += -Werror
