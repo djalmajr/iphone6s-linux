@@ -2,7 +2,9 @@
 
 Estado atualizado em2026-10-04: **Wi-Fi nativo ainda não habilitado**. No mesmo boot, o projeto comprovou link/identidade PCI, BAR0 de32KiB/BAR2 de4MiB, leitura interna BCM4350/rev8 e observação estável do DART separado. SSH/HTTP e snapshots foram preservados após cada cleanup, sem novo DFU para essas continuações. [Procedimento e provas físicas](N71_LINK_EXPERIMENT.md).
 
-O DART está com tradução desativada nos quatro streams, mas16TTBRs ainda têm valid-bit; não presumir tabelas vazias nem ativar o provider antes de conservar estado e qualificar SID/IRQ. A tabela upstream para a revisão8 seleciona a família `brcmfmac4350-pcie`; firmware/calibração Apple ainda não foram qualificados. [Seleção fixada](evidence/n71-firmware-selection.json), [DART físico](evidence/n71-dart-first-physical.json). As seções abaixo preservam a pesquisa e suas limitações históricas; build estático não equivale a DMA/rádio funcionando.
+O DART está com tradução desativada nos quatro streams, mas16TTBRs ainda têm valid-bit. **As16 palavras completas já foram conservadas privadamente no mesmo boot**, com duas amostras idênticas e cleanup verificado. A cadeia ADT WLAN→mapper84/reg0 e o método Apple `_registerMapper` qualificam o stream pretendido0; mapeamento Linux RID0100→SID0 e entrega IRQ/DMA ainda exigem prova. [Estado integral preservado](evidence/n71-dart-state-first-physical.json), [referência Apple de stream](evidence/n71-dart-apple-stream-reference.json).
+
+A tabela upstream para a revisão8 seleciona a família `brcmfmac4350-pcie`; firmware/calibração Apple ainda não foram qualificados. [Seleção fixada](evidence/n71-firmware-selection.json). As seções abaixo preservam a pesquisa e suas limitações históricas; build estático não equivale a DMA/rádio funcionando.
 
 ## Desenvolvimento contínuo S8000 — 2026-10-02
 

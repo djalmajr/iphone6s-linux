@@ -536,3 +536,40 @@ BCM4350/rev0–7 (máscara000000ff, `brcmfmac4350c2-pcie`) e rev8–31
 segundo ramo. O nome identifica a família escolhida pelo código; não é prova
 de firmware/NVRAM/calibração Apple compatíveis. Nenhum firmware foi baixado
 ou carregado para essas experiências. SID/IRQ/DMA ainda precisam passar.
+
+## Estado DART integral conservado e SID Apple qualificado
+
+A seleção atual do modo `--dart-observe` é
+[n71-dart-state-build.json](evidence/n71-dart-state-build.json): módulo48504bytes,
+SHAaf2663a4…5727. A evidência anterior de48208bytes permanece histórica;
+seu perfil deixa de passar a seleção corrente. O novo perfil mantém payload,
+DTB, initramfs, chaves e pin; somente o módulo externo mudou.
+
+[A coleta integral no mesmo boot passou](evidence/n71-dart-state-first-physical.json).
+As16 palavras de40–7c foram guardadas nos logs privados com índices únicos
+0–15. O parser confronta valid-bits e calcula SHA256 das16 palavras u32
+little-endian. Valores não aparecem no terminal ou JSON público. O orçamento
+permanece38 leituras/39 gates; não houve escrita DART, IRQ/provider ou DMA.
+SSH/HTTP e snapshot após cleanup passaram. Sete mutantes C e seis do parser,
+mais13 do coletor (incluindo exposição de ponteiros), falham por asserção.
+
+Reproduzir com perfil novo, seleção atual e histórico anterior válido:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-dart-state-candidate-20261004/deployment.json" \
+  --dart-observe --previous-clean "$PWD/runtime/n71-dart-session-20261004" --check
+```
+
+O [ADT e método Apple](evidence/n71-dart-apple-stream-reference.json) associam
+WLAN iommu-parent84 ao mapper-apcie1/phandle84/reg0. `_registerMapper` lê
+`reg`, conserva-o no campo SID e passa o mesmo valor ao DART emw2. Isso
+qualifica SID0 na referência de placa; não comprova ainda o roteamento do
+requester Linux0100, isolamento DMA ou entrega de interrupção.
+
+Apple `vm-offset` contém **dois u32 little-endian**,80000000 e08000000. O
+primeiro vira offset em páginas após shift12; o segundo é janela de
+randomização de128MiB. Não convertê-los em um u64 FDT nem copiar esse par
+para `apple,dma-range`. O provider atual reseta TCR/TTBR/ERROR em probe/remove;
+a integração deve conservar e restaurar estado integral sob posse/power,
+mesmo se probe falhar. Nenhum offset RID2SID/MSI M1 foi adotado no S8000.

@@ -993,3 +993,12 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   não DMA/IRQ físicos. Não copiar RID2SID de M1 nem tratar NVMMU como DART.
 - Após preservação, avançar na enumeração PCI (INTx disable recusado na
   primeira tentativa) e no ciclo reversível do provider; não pedir novo DFU.
+
+- Gate84: captura física integral passou no mesmo boot:16 palavras conservadas
+  privadamente, duas amostras estáveis/38 leituras/39 gates. COMMAND00000f02,
+  TCR0,ERROR100,16valid; unmap/release/reset/power/REG_ON80/unload/PCI vazio
+  passaram; SSH/HTTP e snapshot posterior passaram. SID0 qualificado por
+  ADT e método Apple; nenhuma prova DMA/IRQ/rádio ainda. Sem novo DFU/PIN.
+- Preparação do perfil tentou copiar HDQ, ausente/não selecionado no perfil
+  anterior; arquivo vazio criado somente nesta operação foi removido após
+  conferir tamanho/tipo. Os módulos selecionados e identidades passaram o gate.
