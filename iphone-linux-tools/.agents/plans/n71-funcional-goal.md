@@ -908,3 +908,17 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   desconhecidos. Antes de ativar provider, qualificar SID/IRQ e conservar
   estado completo. A família upstream para4350/rev8 é4350-pcie (revisão8
   pertence à máscaraFFFFFF00), sem prova de firmware/calibração compatível.
+
+### Incremento 80 — documentar DART físico e seleção correta de firmware
+
+- Cinco arquivos: plano, LINK, WIFI, evidência física DART e seleção upstream
+  por revisão. Preservar logs/boot_id/tabelas/identidades privadamente; publicar
+  valores de controle/máscaras/contagens e hashes, distinguindo fontes/builds
+  de recursos físicos ainda ausentes. Snapshot posterior passou.
+- Registrar que4350/rev8 seleciona `brcmfmac4350-pcie`, não o ramo4350c2
+  destinado a revisões0–7. Isso identifica família de nomes; compatibilidade
+  Apple/calibração não foi comprovada. Não obter firmware antes desses gates.
+- CI novo deve incluir lint/testes Mac/Linux/Windows, sem instalar lint no
+  Mac. Não há typechecker configurado; C/Werror e parsers compilados/testados.
+  Atualizar #9/#34 com provas e próximos passos; continuar análise SID/IRQ
+  no mesmo boot, preservando tabelas válidas antes de ativar um provider.

@@ -468,3 +468,71 @@ conservador: qualquer leitura de config exige registro positivo de restore;
 uma falha precoce de captura pode exigir análise antes de unload mesmo que
 a captura ainda não tenha escrito. Isso mantém uma recusa segura quando
 contagens não bastam para distinguir erro de captura e rota parcialmente alterada.
+
+## DART separado — observação física no mesmo boot
+
+O [DART S5L do bundle fixado](evidence/n71-dart-observe-build.json) tem COMMAND0,
+TCRc (quatro bytes/streams), ERROR10 e16TTBRs em40–7c. Na N71, o nó DART é
+**602008000**, distinto da NVMMU602004000 do recursoPCI4. O modo
+`dart_observe=1` valida endereço/tamanho, compatíveis, IRQ248, status disabled,
+domínio de energia e ausência de device/posse antes de mapear. Mantém os quatro
+domínios PCI adquiridos; link/IDs/COMMAND sem decode/master são conferidos
+antes de cada leitura e novamente ao terminar. Não ativa provider, cria IRQ,
+escreve DART, invalida TLB ou limpa ERROR.
+
+[A observação física passou](evidence/n71-dart-first-physical.json), como quarta
+experiência do mesmo boot supervisionado:38 leituras/39 gates, duas amostras idênticas,
+COMMAND00000f02,TCR00000000,ERROR00000100 (fault flag desativada), quatro
+streams com tradução desativada e16/16TTBRs com valid-bit definido. Unmap,
+release, reset/domínios, PCI vazio e REG_ON80/unload passaram. SSH, HTTP
+`/cgi-bin/status` e snapshot posterior passaram. Nenhum DFU/PIN/reboot adicional.
+
+TCR0 **não significa tabelas vazias**. Os ponteiros completos não foram
+publicados. O probe/remove do driver upstream desativa streams, limpa TTBRs e
+limpa ERROR; ativá-lo agora apagaria esse estado antes da qualificação de
+SID/IRQ e da conservação das tabelas. Este teste confirma acesso estável aos
+registros selecionados; não comprova stream routing, DMA, IRQ, rádio ou carga.
+
+Reprodução do módulo externo na mesma VM/kernel/bundle: usar diretório `M=`
+novo com Makefile e fontes atuais de `phone/kernel/`, preservar `.config`,
+Image e `vmlinux.symvers` pelos hashes registrados e compilar:
+
+```sh
+env LOCALVERSION= make -C "$N71_KERNEL_SOURCE" O="$N71_KERNEL_BUILD" \
+  ARCH=arm64 -j2 KCFLAGS=-Werror M="$N71_MODULE_SOURCE" \
+  KBUILD_EXTRA_SYMBOLS="$N71_KERNEL_BUILD/vmlinux.symvers" modules
+python3 -m unittest discover -s tests -p test_n71_dart_observe.py -v
+python3 -m unittest discover -s tests -p test_n71_dart_result.py -v
+python3 tests/run_n71_link_session_mutations.py
+```
+
+Os nomes de variáveis apontam, respectivamente, para a cópia de fonte do
+bundle, seu build preservado e a nova pasta externa de fontes. Exige1GiB
+livre para esse build de módulos, ABI7.2.0-iphone6s-dart-serdev1 e modpost fatal;
+não baixar a reserva8GiB exigida para um Image completo. Werror/ELF/vermagic,
+contrato e seis mutantes compilados passaram em ARM64/Mac. O módulo registrado
+tem48208bytes, SHA0a91c840…e486; o coletor usa esse registro explícito.
+
+Compor perfil com `compose-n71-diagnostic.py` conforme os perfis anteriores,
+selecionando esse módulo e hash completos. Payload/DTB/initramfs/identidades
+precisam permanecer idênticos. Copiar o módulo REG_ON já registrado para o
+perfil privado, verificar permissões600/700 e executar primeiro:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-dart-candidate-20261004/deployment.json" \
+  --dart-observe --previous-clean "$PWD/runtime/n71-chip-session-20261004" --check
+```
+
+Só no boot correspondente já ativo, substituir `--check` por `--output-dir`
+novo diretamente sob runtime. O modo exclui sizing/chip/core e exige
+inventário. Não reutilizar histórico privado após reiniciar.
+
+## Seleção upstream para o BCM4350 revisão8
+
+A [tabela fixada de firmware](evidence/n71-firmware-selection.json) distingue
+BCM4350/rev0–7 (máscara000000ff, `brcmfmac4350c2-pcie`) e rev8–31
+(máscaraffffff00, `brcmfmac4350-pcie`). A leitura física rev8 pertence ao
+segundo ramo. O nome identifica a família escolhida pelo código; não é prova
+de firmware/NVRAM/calibração Apple compatíveis. Nenhum firmware foi baixado
+ou carregado para essas experiências. SID/IRQ/DMA ainda precisam passar.

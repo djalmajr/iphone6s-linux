@@ -1,0 +1,27 @@
+{
+  "format": 1,
+  "status": "upstream_selector_matched_to_physical_revision_no_firmware_loaded",
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "source_file": "drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c",
+  "source_sha256": "2bc4ff2f06eb515b404e08973a39c029ec975155a17a7baaf6f62e76ca181b4c",
+  "chip": 17232,
+  "physical_chip_revision": 8,
+  "firmware_table": [
+    {
+      "chip": 17232,
+      "revision_mask": "0x000000ff",
+      "family": "brcmfmac4350c2-pcie"
+    },
+    {
+      "chip": 17232,
+      "revision_mask": "0xffffff00",
+      "family": "brcmfmac4350-pcie"
+    }
+  ],
+  "revision_bit": "0x00000100",
+  "selected_family": "brcmfmac4350-pcie",
+  "firmware_downloaded": false,
+  "firmware_loaded": false,
+  "apple_board_calibration_qualified": false,
+  "compatibility_physically_verified": false
+}
