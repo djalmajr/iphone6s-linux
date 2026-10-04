@@ -63,6 +63,12 @@ chega ao caller antes de registrar domínio/provider/reset; bool de estado
 só muda após leitura válida. Cleanup após registro, efeitos parciais,
 ownership/idle e integração/link/boot seguem pendentes na issue #36.
 CI21a786c aprovado em PR37238520733/push37238517260, seis jobs.
+
+Cleanup PMGR006 `f728099`: 3.258 casos/seis mutações Mac/ARM64 e objeto
+completo004+005+006 obj-y/Werror. Falha de add_provider remove domínio sem
+apagar provider alheio; primeiro erro preservado. Integração/link/boot,
+pós-publicação/iterator e efeitos parciais continuam na #36. Não habilita
+carga no Linux e não motivou DFU. [Reprodução](N71_HDQ.md#falha-de-publicação-do-provider-pmgr--cleanup-preparado).
 [Reprodução e limites](N71_HDQ.md#erros-iniciais-do-probe-pmgr--correção-preparada).
 
 As seções anteriores abaixo são checkpoints históricos; afirmações sobre

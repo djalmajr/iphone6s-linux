@@ -60,5 +60,6 @@
     "source_clean_against_head": true
   },
   "limits": "Provider publication failure removes the initialized domain without deleting a foreign provider. Earlier hardware effects, removal refusal, post-publication concurrency, full image link and physical charging/telemetry remain unqualified.",
-  "status": "provider_add_failure_cleanup_fixed_builtin_object_verified_integration_pending"
+  "status": "provider_add_failure_cleanup_fixed_builtin_object_verified_integration_pending",
+  "code_commit": "f728099a2b3e19e47375ce066bd99eb1b6367a85"
 }

@@ -86,6 +86,13 @@ Cleanup após registro, ownership/idle e rollback de efeitos parciais continuam
 pendentes antes de aquisição ativa do barramento. Isso ainda não implementa
 carga no Linux; nenhum DFU foi realizado por esta entrega.
 
+A [patch006](N71_HDQ.md#falha-de-publicação-do-provider-pmgr--cleanup-preparado)
+corrige a remoção do domínio quando add_provider falha, preservando provider
+alheio e primeiro erro. Passou3.258 casos/seis mutações Mac/ARM64 e objeto
+completo004+005+006 obj-y/Werror. Pós-publicação, efeitos parciais e aquisição
+ativa continuam pendentes. Essa correção ainda não habilita o carregador;
+o iPhone foi mantido no iOS para recarga durante o trabalho offline.
+
 ### Encoder SN2400 específico N71 — cálculo implementado, driver pendente
 
 A referência Apple fixada mostra clamp90..2000mA e quantização10mA no caminho

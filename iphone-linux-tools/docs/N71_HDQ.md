@@ -660,6 +660,7 @@ patch_dir="$repo_dir/phone/kernel/patches"
 test "$(git -C "$kernel_src" rev-parse HEAD)" = 958481f87fee0949ff6a9a4af77f7eb6dac8a149
 python3 "$repo_dir/tests/test_n71_pmgr_errors.py"
 python3 "$repo_dir/tests/test_n71_pmgr_probe.py"
+python3 "$repo_dir/tests/test_n71_pmgr_provider_failure.py"
 sha256sum "$kernel_out/.config" "$kernel_out/arch/arm64/boot/Image" "$kernel_out/vmlinux.symvers"
 task_dir=$(mktemp -d /home/ubuntu/n71-pmgr-errors-check.XXXXXX)
 mkdir -p "$task_dir/$(dirname "$provider")" "$task_dir/builtin-object"
@@ -671,6 +672,9 @@ printf '%s  %s\n' cc65bad1b788c4fa1d6e374b236f1b27c840797b727a600035294f17b71433
 git -C "$task_dir" apply --check "$patch_dir/0005-apple-pmgr-probe-errors.patch"
 git -C "$task_dir" apply "$patch_dir/0005-apple-pmgr-probe-errors.patch"
 printf '%s  %s\n' 7ad9c93264edbf3e42400ff7d654e0c143db68f4500b196a8ae6ee260e43b5a4 "$task_dir/$provider" | sha256sum -c -
+git -C "$task_dir" apply --check "$patch_dir/0006-apple-pmgr-provider-cleanup.patch"
+git -C "$task_dir" apply "$patch_dir/0006-apple-pmgr-provider-cleanup.patch"
+printf '%s  %s\n' ec4841316d8c3a8dad7ac44d93edac0209c581b4e4c0d2fb9dcfb89853754414 "$task_dir/$provider" | sha256sum -c -
 cp "$task_dir/$provider" "$task_dir/builtin-object/pmgr-pwrstate.c"
 printf 'obj-y += pmgr-pwrstate.o\n' > "$task_dir/builtin-object/Makefile"
 env LOCALVERSION= make -C "$kernel_src" O="$kernel_out" ARCH=arm64 -j2 \
@@ -702,13 +706,41 @@ detectado no Mac/ARM64. Fixture compila funções reais, verificando domínio
 publicado/ausente, palavra final, primeiro erro e bool preservado na falha.
 Fonte completa004+005 compilou obj-y/Werror, objeto ARM64 de 11.424 bytes,
 sem MODULE; config/Image/exports preservados. Callbacks111 conferidos byte
-a byte iguais, com seus gates reutilizados. A receita acima reproduz as duas
-patches numa cópia, sem alterar o provider do bundle funcional.
+a byte iguais, com seus gates reutilizados. A receita acima reproduz agora
+as três patches004+005+006 numa cópia, sem alterar o provider funcional.
 
 **Ainda pendente:** cleanup depois de registrar genpd/provider, validação
 do iterator e efeitos parciais; link completo da imagem e qualificação física.
 Na fonte genpd fixada, remover um domínio pode retornar EBUSY por provider,
-filhos ou dispositivos. A falha de add_provider no PMGR não remove o domínio
-já inicializado. Não presumir que um retorno de erro restaura hardware ou
+filhos ou dispositivos. A patch005 isolada não remove o domínio quando
+add_provider falha; a patch006 abaixo corrige esse caminho. Não presumir
+que um retorno de erro restaura hardware ou
 reserva ownership. [Issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
 Nenhuma aquisição ativa I2C1, operação do carregador ou leitura gauge foi feita.
+
+## Falha de publicação do provider PMGR — cleanup preparado
+
+A [patch006](../phone/kernel/patches/0006-apple-pmgr-provider-cleanup.patch),
+código `f728099`, aplica depois de004+005. Se add_provider falhar, remove
+o domínio já inicializado e preserva o primeiro erro, sem chamar del_provider.
+Na fonte genpd fixada, has_provider só é marcado após sucesso completo;
+apagar um provider alheio nessa falha seria incorreto. Os erros posteriores
+mantêm a ordem existente: del_provider antes de remover o domínio.
+
+[Prova selecionada](evidence/n71-pmgr-provider-cleanup.json): 3.258 casos,
+incluindo120 novos cenários de falha de publicação, seis mutações compiladas
+e predecessor005 detectados por asserção no Mac/ARM64. As funções reais da
+patch são compiladas; a fixture controla somente dependências Kernel API.
+Confere domínio ausente, provider alheio preservado, primeiro erro e efeitos
+das escritas anteriores preservados. Compilação falha nunca conta como kill.
+
+Fonte completa004+005+006 compilou obj-y ARM64/Werror, objeto11.424 bytes
+com initcall e sem MODULE; config/Image/exports preservados. Os gates dos
+callbacks anteriores foram reutilizados sem alteração dessas funções.
+A receita acima reproduz a sequência completa, sem módulo duplicado.
+
+A correção é limitada à falha antes de publicar o provider. Concorrência e
+cleanup pós-publicação, remoção recusada, iterator e rollback de efeitos
+parciais seguem pendentes. Link da imagem, ownership/idle I2C1, carregador
+e corrente líquida também não foram comprovados. [Issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
+Nenhum DFU ou reboot do iPhone foi feito nesta entrega.

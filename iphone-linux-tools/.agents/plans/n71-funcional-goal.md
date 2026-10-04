@@ -1784,3 +1784,22 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   initcall presente, sem MODULE/__this_module. Insumos e logs transferidos
   conferidos por SHA; fonte/config/Image/exports preservados. AST/lint aprovados.
   Nenhuma carga/DFU/reinicialização do iPhone; iOS mantido para recarga.
+
+### Incremento 116 — reprodução do cleanup PMGR006
+
+- Cinco arquivos: plano, docs/N71_HDQ.md, docs/ALIMENTACAO.md, docs/STATUS.md
+  e docs/evidence/n71-pmgr-provider-cleanup.json. Registrar commitf728099,
+  recipe004→005→006, gate Mac/ARM64 e limites ainda sem teste físico.
+- Reutilizar gates115; validar JSON/digests, links e bash -n da receita.
+  Esperar CI115 terminal antes do push116; não pedir DFU por documentação.
+- Próxima integração em worktree/output próprios requer espaço. VM20GiB
+  tem5,49GiB livres, abaixo do guard8GiB para output novo; aumentar apenas
+  seu disco para32GiB pelo Multipass oficial. Mac215GiB disponíveis.
+  Preservar versões/config/imagens e não instalar pacote ou mudar config global.
+
+- Gate116: JSON/digests, links e receita004→005→006 bash -n aprovados.
+  Gates115 de código reutilizados; nenhum teste físico por documentação.
+- Disco da VM ampliado de20 para32GiB pelo CLI oficial, sem processo make
+  ativo. Guest expandiu automaticamente:18360807424 bytes livres, guard8GiB
+  atendido. Config/Image/exports do rollback mantêm digests originais.
+  Mac tem215GiB livres; nenhum pacote ou configuração global alterado.
