@@ -252,3 +252,57 @@ na validação do armazenamento local. Isso comprova composição e disponibilid
 de restauração, sem comprovar restore no kernel novo. Nenhum perfil padrão
 foi alterado e nenhuma ação USB ocorreu nessa etapa. O coletor e o boot físico
 agrupado passaram depois, conforme o [registro físico](N71_LINK_EXPERIMENT.md).
+
+## Candidata GPIO/PMGR separada — preparação da fonte
+
+O profile explícito `n71-dart-serdev-power-v1` reúne as patches001 a006:
+DART, serdev, propagação de erros GPIO, callbacks/probe PMGR e cleanup da
+falha de publicação. Exige LOCALVERSION `-iphone6s-dart-serdev-power1`.
+O default `n71-dart-serdev-v1` e o perfil físico funcional são preservados.
+Não altera DT nem habilita I2C1, HDQ ou carregador. O nome identifica as
+correções de providers; **não significa carregamento funcional**.
+
+O helper confere hashes das seis patches e seis arquivos completos na
+mesma base958481f. Uma aplicação parcial do bundle legado é recusada
+quando se seleciona power. Todas as patches passam pelo Git --check antes
+do apply conjunto, incluindo o encadeamento004→005→006 sobre o mesmo arquivo.
+Erro de patch tardia deixa o candidato intacto. Os gates sintéticos usam
+Git real; não qualificam hardware, Image ou módulos para a ABI futura.
+
+Na VM dedicada, a partir do diretório público do projeto:
+
+```sh
+set -eu
+umask 077
+work_dir=/home/ubuntu/kernel-n71-power-source-20261004
+legacy_src=/home/ubuntu/kernel-n71-bundle-source-20261002
+test ! -e "$work_dir" && test ! -L "$work_dir"
+git -C "$legacy_src" worktree add --detach "$work_dir" \
+  958481f87fee0949ff6a9a4af77f7eb6dac8a149
+python3 scripts/build/kernel_bundle.py apply "$work_dir" \
+  --profile n71-dart-serdev-power-v1
+python3 scripts/build/kernel_bundle.py check "$work_dir" \
+  --profile n71-dart-serdev-power-v1
+python3 -B -m unittest discover -s tests -p test_kernel_power_bundle.py -v
+python3 tests/run_kernel_bundle_mutations.py
+```
+
+Escolha nomes novos ao reproduzir: o worktree acima não deve ser apagado
+para permitir nova execução. A fonte aplicada terá somente seis mudanças
+esperadas. A [prova selecionada](evidence/kernel-n71-power-bundle.json)
+registra gates e digests. Full Image/link, rebuild de módulos, integração
+de perfil e boot permanecem etapas separadas. Nenhum novo DFU é necessário
+para conferir essa fonte.
+
+### Espaço da VM
+
+A VM dedicada foi ampliada de20 para32GiB com o [procedimento oficial do
+Multipass](https://canonical.com/multipass/docs/latest/how-to-guides/manage-instances/modify-an-instance/).
+O Mac tinha215GiB livres; nenhum processo make estava ativo. Foram executados
+`multipass stop iphone6s-kernel-20261001`,
+`multipass set local.iphone6s-kernel-20261001.disk=32G` e
+`multipass start iphone6s-kernel-20261001`. O filesystem expandiu automaticamente:
+18.360.807.424 bytes livres antes do checkout novo. Não se modificou partição
+manualmente nem se instalou pacote/configuração global. Config/Image/exports
+do rollback conservaram seus hashes. A próxima build usa output novo e
+mantém o requisito de8GiB livres antes de iniciá-lo.

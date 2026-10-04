@@ -1,0 +1,94 @@
+{
+  "format": 1,
+  "input_hashes": {
+    "scripts/build/kernel_bundle.py": "9aa13bc126ff7776261e542185ba9db2d17be3a1e7516ebf4e4e1f55e6b4143a",
+    "scripts/build/kernel_patchset.py": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817",
+    "tests/test_kernel_bundle.py": "3477cabcbb9c7f18c9a5bafdf1e35d87a856160ef67e065285f63144afa6bda8",
+    "tests/test_kernel_power_bundle.py": "9815c0558a312578cf4bcf77915688e121a2b04b4d2d2e54c5107e4afb3a1ecf",
+    "tests/run_kernel_bundle_mutations.py": "ab1a6ac5979e303c797fcc2206ce709c3cd83fe44054f8f246aa6cacdcb50c2e",
+    "phone/kernel/patches/0001-s5l8960x-dart-stream-tcr.patch": "da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74",
+    "phone/kernel/patches/0002-serdev-stop-bits.patch": "f987f64912a410d588ac0d1d9a47c7cc275a0dc234fbe27549011255e98e0d11",
+    "phone/kernel/patches/0003-apple-gpio-write-errors.patch": "739b9fc44bec4bad00bea367af70decef5fb56248a636d822d51396343088094",
+    "phone/kernel/patches/0004-apple-pmgr-errors.patch": "d8202c48516faec2bf4506af486ca2fd1b256360a41aad2d4df584c140d7e135",
+    "phone/kernel/patches/0005-apple-pmgr-probe-errors.patch": "b005ddf799b9cdea7149b38d850936c30c16342af47d11a61595157d14e24b2f",
+    "phone/kernel/patches/0006-apple-pmgr-provider-cleanup.patch": "e0159ec77cec26beafb1332526f9ba7f287f53c05f70a6dcd2376abca6dc445b"
+  },
+  "source_report": {
+    "format": 1,
+    "base_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "bundle": "n71-dart-serdev-power-v1",
+    "required_localversion": "-iphone6s-dart-serdev-power1",
+    "stage": "patched",
+    "patches": {
+      "0001-s5l8960x-dart-stream-tcr.patch": "da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74",
+      "0002-serdev-stop-bits.patch": "f987f64912a410d588ac0d1d9a47c7cc275a0dc234fbe27549011255e98e0d11",
+      "0003-apple-gpio-write-errors.patch": "739b9fc44bec4bad00bea367af70decef5fb56248a636d822d51396343088094",
+      "0004-apple-pmgr-errors.patch": "d8202c48516faec2bf4506af486ca2fd1b256360a41aad2d4df584c140d7e135",
+      "0005-apple-pmgr-probe-errors.patch": "b005ddf799b9cdea7149b38d850936c30c16342af47d11a61595157d14e24b2f",
+      "0006-apple-pmgr-provider-cleanup.patch": "e0159ec77cec26beafb1332526f9ba7f287f53c05f70a6dcd2376abca6dc445b"
+    },
+    "files": {
+      "drivers/iommu/apple-dart.c": [
+        "f19d3c2a7ada7451956f2a87fea09c174584bfd68ba7a1f6e8793db653047f85",
+        "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc"
+      ],
+      "include/linux/serdev.h": [
+        "54a3e78e8ca0e29311070c87b6811e486a15453b1b938f221655a1ed3278e2c3",
+        "fbf86a763c535f07646beb49c14ac3582e7ba2f4d9a7bd0b680aecf32d11dd0c"
+      ],
+      "drivers/tty/serdev/core.c": [
+        "b3130abc6078d5353c38a0ef029c7afee4989cbccbb784e785dc7ebefa882e6c",
+        "fefe1fdbc17a0c7239df964ba0eee7fd8ec95f2e7ee157be451630c167e9d340"
+      ],
+      "drivers/tty/serdev/serdev-ttyport.c": [
+        "e4c9d73545e27fe8c995ef7a0d8ae23381fede11909f4b250c34a8004b1a437d",
+        "4643ddeac9973176346c04dd7054027153d49291960f1d89cd8e7280e45e7068"
+      ],
+      "drivers/pinctrl/pinctrl-apple-gpio.c": [
+        "9e387713c4443d0af50fde108ae46d35e2f57adc2738c005b3de5bf8d4c7533c",
+        "81767e760802ce9fc1a9d9383268ccefd930aff821e59f414d2f8e99193e603a"
+      ],
+      "drivers/pmdomain/apple/pmgr-pwrstate.c": [
+        "4b0adc3013e2fabe9ca1cb8228f8f6b7934af4b667f7f0f893b675102d8710df",
+        "ec4841316d8c3a8dad7ac44d93edac0209c581b4e4c0d2fb9dcfb89853754414"
+      ]
+    },
+    "physical_boot_tested": false,
+    "kernel_image_linked": false
+  },
+  "free_guest_bytes_before_checkout": 18360336384,
+  "free_guest_bytes_after_checkout": 16481615872,
+  "legacy_source_preserved": {
+    "drivers/iommu/apple-dart.c": "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc",
+    "include/linux/serdev.h": "fbf86a763c535f07646beb49c14ac3582e7ba2f4d9a7bd0b680aecf32d11dd0c",
+    "drivers/tty/serdev/core.c": "fefe1fdbc17a0c7239df964ba0eee7fd8ec95f2e7ee157be451630c167e9d340",
+    "drivers/tty/serdev/serdev-ttyport.c": "4643ddeac9973176346c04dd7054027153d49291960f1d89cd8e7280e45e7068"
+  },
+  "legacy_output_preserved": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "logs": {
+    "arm64-power-gate-private.log": "1b150b33ec1ca041086f12a0485c48d7c839a1591264d33777b6a2e9663c72fd",
+    "arm64-legacy-gate-private.log": "ebd8f1f992c3ef92b33317db6cb3dc24d809f91f4e92e3e1331f12beddb193d9",
+    "source-apply-private.log": "1cb8d811bcc6bcf901137ea694f2b23a0f1d493fe464955b12a856a903402a6e"
+  },
+  "status": "selected_six_patch_source_verified_full_image_pending",
+  "native_platforms": [
+    "macOS ARM64",
+    "Ubuntu ARM64"
+  ],
+  "power_tests": 4,
+  "power_compiled_source_mutations": 8,
+  "legacy_tests": 3,
+  "legacy_compiled_source_mutations": 11,
+  "mac_power_gate_sha256": "24d7b1bcde975e6f0f858cc18d8631b6d3fed9831209607cb9b8c46e0a4e608f",
+  "full_kernel_link_performed": false,
+  "physical_boot_tested": false,
+  "phone_driver_modified": false,
+  "linux_charging_validated": false,
+  "charger_io_performed": false,
+  "new_dfu_or_reboot": false,
+  "limits": "Selected source only. Full Image, module ABI rebuild, deployment profile, physical boot, I2C1/HDQ/charger and sustained charging remain pending. Existing functional profile preserved."
+}

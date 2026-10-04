@@ -1803,3 +1803,34 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   ativo. Guest expandiu automaticamente:18360807424 bytes livres, guard8GiB
   atendido. Config/Image/exports do rollback mantêm digests originais.
   Mac tem215GiB livres; nenhum pacote ou configuração global alterado.
+
+### Incremento 117 — bundle separado DART/serdev/GPIO/PMGR
+
+- Objetivo: preparar fonte candidata com patches001→006 e identidade
+  n71-dart-serdev-power-v1/-iphone6s-dart-serdev-power1, preservando o default
+  legado. Não habilitar DT I2C1/HDQ/charger. Até cinco arquivos: plano,
+  scripts/build/kernel_bundle.py, tests/test_kernel_power_bundle.py,
+  docs/N71_KERNEL_BUNDLE.md e docs/evidence/kernel-n71-power-bundle.json.
+- Seleção explícita por profile; hashes de seis patches e seis blobs completos,
+  base958481f. Reutilizar guards do helper, recusar mistura parcial/legacy.
+  Git --check conjunto antes de apply; patch tardia incompatível deve deixar
+  candidato intacto. Git real/mutações por asserção Mac/ARM64 e gates legados.
+- Preparar worktree/output novos na VM32GiB, que agora tem17GiB livres,
+  conferir blobs reais/config preservada e LOCALVERSION única. Guard8GiB
+  antes de Image/DTB/Werror; perfis/artefatos físicos separados em próximas
+  fatias. Não alterar iPhone até disponibilidade física e gates apropriados.
+- O preflight Mac tentou reconstruir arquivo completo pela patch004; hash
+  divergiu antes de executar Git. Não declarar layering qualificado por esse
+  caminho; usar fonte real fixada na VM e inspecionar framing antes de repetir.
+
+- Gate117: quatro testes/oito mutações do profile power aprovados Mac/ARM64;
+  três testes/11 mutações legadas seguem aprovados. AST/lint/recipe bash -n
+  e todos os inputs/logs transferidos conferidos por SHA. Worktree real novo
+  aplicado com Git --check conjunto e seis blobs corretos;15GiB livres depois
+  do checkout. Source/config/Image/exports legados preservados.
+- Patch004 contém somente as255 linhas iniciais no hunk, não arquivo inteiro;
+  duas reconstruções tentadas no preflight Mac recusaram antes de Git.
+  Fonte real completa fixada na VM qualificou layering004→006 no apply117.
+  Não usar seleção de hunk para inventar blob completo em futuros preflights.
+- CIf728099 terminal aprovado PR37240507287/push37240503704, seis jobs;
+  depois foi publicado checkpoint5438ba9. #36 atualizada sem fechamento.
