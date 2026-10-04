@@ -19,7 +19,7 @@ MUTATIONS = (
     ('lost-latch', 'if (config->error)\n\t\treturn config->error;',
      'if (config->error == -E2BIG)\n\t\treturn config->error;'),
     ('decode-on-sizing', '(command & 7)', '(command & 4)'),
-    ('secondary-status-clear', '!(current & mask)', '!(current & (mask & ~0x800U))'),
+    ('secondary-status-clear', '!(observed & mask)', '!(observed & (mask & ~0x800U))'),
     ('arbitrary-change', 'if (!allowed)', 'if (!allowed && request->where == 0x1000)'),
     ('reenable-failed-bar', 'if (!function_error)\n\t\t\tfunction_error =',
      'if (function_error)\n\t\t\tfunction_error ='),

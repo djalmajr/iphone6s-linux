@@ -108,7 +108,7 @@ static inline int n71_scan_write(const struct n71_scan_io *io,
 {
 	struct n71_pcie_ecam_location location;
 	const struct n71_scan_function *saved;
-	u32 current, command, original = 0, mask;
+	u32 observed, command, original = 0, mask;
 	bool bar = false, allowed = false;
 	int error;
 
@@ -144,15 +144,15 @@ static inline int n71_scan_write(const struct n71_scan_io *io,
 		allowed = request->value == saved->control ||
 			request->value == (saved->control & ~0x20U);
 	}
-	error = n71_scan_read(io, request->root, request->where, request->size, &current);
+	error = n71_scan_read(io, request->root, request->where, request->size, &observed);
 	if (error)
 		return n71_scan_refuse(config, error);
 	/* No-op emulation avoids writing W1C bits and unsupported capabilities. */
-	if (current == request->value)
+	if (observed == request->value)
 		return 0;
 	mask = 0xf900; /* Secondary STATUS error bits, all write-one-to-clear. */
 	if (request->root && request->where == 0x1e && request->size == 2 &&
-	    request->value == 0xffff && !(current & mask))
+	    request->value == 0xffff && !(observed & mask))
 		return 0;
 	if (!allowed)
 		return n71_scan_refuse(config, -EPERM);
