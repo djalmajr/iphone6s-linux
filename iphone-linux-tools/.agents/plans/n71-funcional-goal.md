@@ -761,3 +761,32 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   sizing e acesso MMIO. Publicar no branch autorizado e acompanhar CI.
 - Atualizar #9/#34 com avanço e pendências; não encerrar Wi-Fi/DMA/gauge.
   Preparar o contrato de roteamento/MMIO e chip-ID sem pedir outro DFU.
+
+### Incremento 73 — leitura limitada de chip-ID pelo BAR0
+
+- Até cinco arquivos: contrato puro, harness C, wrapper/mutações, registro
+  de referência selecionada e plano. A fonte brcmfmac fixada usa BAR0_WINDOW80
+  e offset0 de18000000 para chip-ID; pci_enable_device/set_master do driver
+  completo impede usá-lo só como identificador antes da qualificação DMA.
+- Decisão: rota temporária somente BAR0, PCIc0000000→CPU7c0000000 da ADT
+  oficial já correlacionada. Exigir sizing fresco32KiB, identidade/classe,
+  decode/master inicialmente limpos, BAR0/upper4/0. Capturar também a janela
+  root20 e BAR0_WINDOW80. Preservar IRQ/PM/ROM/BAR2 e não tocar core resets/OTP.
+- Escrever valores fixos com readback: BAR0c0000004/high0, bridge memory
+  c000c000(1MiB) e chip-window18000000; somente MEM-enable nos dois COMMAND.
+  Revalidar COMMAND antes de uma leitura32 de chip-ID. Nunca bus-master.
+  Desabilitar decode e restaurar janelas/BARs/config com readback em todo erro;
+  falha de restore deixa decode desligado e impede publicação/unload.
+- Inferência a testar: a janela CPU fornecida pelo ADT roteia a transação
+  após config PCI. Tamanho confirmado não prova esse roteamento. Mapear e
+  reivindicar somente32KiB com APIs kernel, recusar região ocupada. Próximas
+  fatias: adaptador/build e coletor/prova física no mesmo boot, após gates.
+  Alternativa: finalizar o host/DART/IRQ primeiro; ampliaria o experimento.
+  Reversão baixa: opt-in separado, valores restaurados, Image preservado.
+
+- Gate73: harness C Mac/Werror passou com falhas em todas as leituras e
+  escritas, saída intacta em erro, uma única leitura de ID e config restaurada.
+  Seis mutações compiladas falharam por asserção (rota, DMA, janela, restore,
+  revisão, publicação). Fonte e constantes foram conferidas no commit fixado.
+  Ainda não há acesso MMIO físico. CI do head8865ea1 passou testes/lint mas
+  falhou numa âncora antiga de seleção do coletor; corrigir em fatia própria.
