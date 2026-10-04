@@ -1156,3 +1156,22 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Confirmar PCI vazio, módulos removidos, REG_ON80, reset/power/serviços;
   salvar snapshot sem reiniciar. Logs/payload/chaves permanecem privados.
   Publicar no branch/CI e atualizar issues; manter Wi-Fi/DMA pendentes.
+
+- Gate92: teste físico no mesmo boot passou INTx e5 writes/9 tentativas;
+  primeira recusa agora é ponte1c/size2/e0f0. Scan permaneceu negativo, com
+  dois devices mas nenhuma prova completa de sizing/core. Bus removido,
+  config/readback/PCI vazio/reset/power/REG_ON/unload passaram. SSH/HTTP e
+  snapshot passaram; Linux continua ligado, zero novos boots/PIN/DFU.
+- Logs completos retêm história anterior; prova nova foi extraída pelo
+  History.fresh do cleanup anterior, evitando tratar recusas antigas como
+  atuais. Somente contagens/offsets/digests sanitizados são publicados.
+
+### Incremento 93 — qualificar probes de janelas da ponte no PCI core
+
+- Até cinco arquivos: plano, contrato config, teste C, runner e registro de
+  fonte/referência. Ler pci_bridge_check_ranges/pci_scan_bridge_extend na
+  fonte fixada; qualificar dois probes com decode desligado, captura prévia,
+  readback e restauração até em erro. Nenhuma atribuição ou BAR MMIO.
+- Não liberar PM/PCIe/AER por similaridade. O primeiro erro após os probes
+  deve ser medido por nova continuação hot, sem novo DFU. Testar STATUS W1C,
+  valores/campos proibidos, decode ligado e todas as falhas de restauração.

@@ -390,6 +390,17 @@ com módulo/hash desse registro, e conferir `--host-scan --check`. Para continua
 o mesmo boot, passar `--previous-clean` com o último diretório privado que
 comprovou cleanup e `--output-dir` novo. Não reutilizar diretórios de logs.
 
+[A continuação física INTx](evidence/n71-pcie-intx-scan-first-physical.json)
+passou o probe COMMAND e realizou5 escritas aceitas em9 tentativas antes da
+primeira recusa: root0:08/offset1c/size2/valuee0f0, medição da janela I/O da
+ponte. Não é atribuição de recursos. O erro continuou latched; o core encontrou
+dois dispositivos, mas o resultado completo de scan permaneceu negativo.
+Bus/config foram retirados/restaurados, PCI vazio e ambos os módulos ausentes;
+SSH/HTTP/snapshot passaram. Foram zero novos boots. Próxima qualificação:
+probes de janelas de ponte com decode desligado e restauração explícita,
+seguida dos controles de capabilities exigidos pelo core; não liberar writes
+arbitrários. O histórico privado diferencia esta prova do primeiro scan.
+
 O próximo modo `bar_sizing=1` mede somente as seis palavras BAR do endpoint,
 sem registro de dispositivos PCI. Exige inventário, recusa host_scan simultâneo,
 suspende decode por COMMAND de16 bits, mede máscaras FFFFFFFF e restaura os

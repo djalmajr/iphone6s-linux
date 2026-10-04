@@ -8,6 +8,12 @@ O DART está com tradução desativada nos quatro streams, mas16TTBRs ainda têm
 
 A tabela upstream para a revisão8 seleciona a família `brcmfmac4350-pcie`; firmware/calibração Apple ainda não foram qualificados. [Seleção fixada](evidence/n71-firmware-selection.json). As seções abaixo preservam a pesquisa e suas limitações históricas; build estático não equivale a DMA/rádio funcionando.
 
+O probe INTx do PCI core também passou no mesmo boot. A continuação recusou
+a medição da janela I/O da ponte antes de permitir outras operações; o scan
+completo continua pendente. Bus/config foram retirados/restaurados e
+SSH/HTTP/snapshot permaneceram ativos, com zero novos boots.
+[Prova física e próxima operação](evidence/n71-pcie-intx-scan-first-physical.json).
+
 ## Desenvolvimento contínuo S8000 — 2026-10-02
 
 O goal de implementação segue ativo, com gates físicos agrupados. Foram implementadas em `phone/kernel/n71-pcie-contract.h` primitivas específicas do controlador S8000: índices dos recursos, seis seletores de registradores e atualização de bits que preserva os demais campos. São funções puras; não há acesso MMIO nem controlador operacional neste header. [Proveniência e mapa selecionado](evidence/n71-driver-reference.json).
