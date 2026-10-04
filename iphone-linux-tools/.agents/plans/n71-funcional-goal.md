@@ -1002,3 +1002,40 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Preparação do perfil tentou copiar HDQ, ausente/não selecionado no perfil
   anterior; arquivo vazio criado somente nesta operação foi removido após
   conferir tamanho/tipo. Os módulos selecionados e identidades passaram o gate.
+
+### Incremento 85 — contrato reversível de teste do provider DART
+
+- Quatro arquivos: plano, contrato puro, teste C e runner. Preservar16TTBRs,
+  exigir TCR0 e ausência de fault/busy, iniciar provider somente quieto e
+  removê-lo em todo caminho após tentativa. Antes de restaurar, comprovar
+  provider removido e tradução desligada; verificar todas as palavras depois.
+- Não há attach de endpoint, domínio DMA ou bus-master. Snapshot observa
+  COMMAND/ERROR também, mas não escreve registros de comando/W1C; mudanças
+  nesses valores são relatadas, sem alegar restauração deles por TTBR.
+- Alternativas: mutar status DT e deixar provider ativo; usar platform device
+  temporário com nó original/recursos qualificados evita notifier/changeset e
+  permite unregister antes do restore. IRQmapping novo só é descartado após
+  remover o device; mappings anteriores permanecem. Power PCI fica adquirido.
+- Testar start parcial, stop/fault/busy, todas falhas de snapshot/write/gate,
+  restore incorreto e saída/publicação; mutantes reais por asserção.
+
+- Gate85: C11/Werror e seis mutantes compilados passaram; todos morreram
+  por asserção. Start parcial sempre chama stop e conserva16 palavras; stop
+  falho/tradução ativa impede escrita. Falhas nos quatro snapshots,17 gates e
+  16 escritas cobertas; erro após escrita efetiva também impede sucesso falso.
+  EUCLEAN específico Linux foi substituído por EIO +flag control_changed para
+  portabilidade Mac; não altera os registradores tratados no experimento.
+
+### Incremento 86 — platform device temporário com recursos originais
+
+- Três arquivos: plano, adaptador de provider e seleção opt-in no diagnóstico.
+  Reutilizar qualificador DART disabled/sem device, capturar antes do probe e
+  manter ioremap apenas para observação/restauração. Transferir a posse do
+  recurso ao platform device e readquirir depois de unregister.
+- Traduzir IRQ pelo domain AIC real; conservar mapping anterior e descartar
+  somente mapping criado nesta tentativa, após unregister. Nó original fica
+  disabled; não usar changeset, alterar DT global ou registrar endpoint PCI.
+- Exigir driver apple-dart e drvdata; sempre retirar device mesmo se probe
+  falhar. Quatro snapshots estáveis,152 leituras do observador e16 escritas
+  somente de TTBR, após comprovar remoção/tradução desligada. Registrar
+  mudanças COMMAND/ERROR sem escrever W1C. DMA/firmware/radio proibidos.
