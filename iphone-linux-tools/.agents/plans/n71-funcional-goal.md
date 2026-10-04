@@ -1309,3 +1309,27 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   recusadas por asserção. Fixtures delimitam janelas/root/width/valor/decode;
   memcmp integral comprova preservação do STATUS secundário e demais campos.
   Só fixtures/plano mudaram; hash do módulo físico continua válido.
+
+### Incremento 101 — aritmética N71 de limite USB sem I/O
+
+- Cinco arquivos: plano, header puro SN2400, fixture C, runner de testes
+  e prova primária selecionada. Conferir kernel Apple fixado, funções/cstrings
+  e digests dos trechos; separar encoder sem calibração do setter com I/O.
+- Reproduzir clamp90..2000mA e quantização10mA da referência, com pedido0
+  marcado como suspend separado do código0. Recusar calibração não modelada,
+  entrada ausente e output parcial. Não gerar sequência de registradores.
+- Testes de fronteira, intervalo16bit, valores u32 extremos e mutações
+  compiladas no Mac/ARM64. Só cálculo: não valida limites físicos, efeito de
+  leitura, ownership I2C1/HDQ ou corrente de carga. Documentar em fatia seguinte.
+
+- Gate101: referência Apple e fonte A10 fixadas/hashes conferidos; encoder
+  N71 sem calibração passou domínio16bit/u32 extremos e8 mutações por
+  asserção no Mac/ARM64. Header compilou em objeto kernel ARM64 comWerror;
+  .config/Image/exports preservados. Não foi criado/carregado driver físico.
+- Setter N71 usa ordem diferente da fonte A10 ao suspender e cache de
+  software, não snapshot vivo; primeiro erro de write não é propagado.
+  Timer usa setTimeout(interval,1e9), default8s, após software_mode1;
+  isso não comprova watchdog físico nem a causa da descarga. Oito trechos
+  selecionados têm digests para reprodução; nenhum charger I/O executado.
+- CI da correção100 aprovado no SHA85aa0f5: PR37226272040 e push37226267211,
+  seis jobs Ubuntu/macOS/Windows. Novos arquivos101 ainda precisam de CI.
