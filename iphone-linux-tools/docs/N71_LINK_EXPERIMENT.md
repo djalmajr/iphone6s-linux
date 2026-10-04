@@ -213,6 +213,88 @@ coleta deve selecionar manifesto, perfil e coletor compatíveis, com snapshot
 e restore verificados, e agrupar inventário com novos gates de host/DART/HDQ.
 Não pedir DFU só para confirmar fatos já obtidos.
 
+## Candidata de sizing pelo núcleo PCI — 2026-10-04
+
+O novo `host_scan=1` exige run, enumerate e config_inventory. Depois do
+inventário, cria bridge temporário com ECAM fixado, bus0..1 e janelas ADT
+selecionadas; chama `pci_scan_root_bus_bridge` sob o lock de rescan. A fonte
+fixada só permite bind depois de PCI_DEV_ALLOW_BINDING; esta operação não
+chama `pci_bus_add_devices`, `pci_host_probe` ou atribuição de recursos.
+Os dispositivos aparecem temporariamente em sysfs. Não há driver de rádio,
+DMA, MSI configurado, BAR mapeado ou firmware nesta candidata.
+
+`n71-pcie-scan-config.h` captura IDs/classes, COMMAND, BARs/ROM e
+bridge-control antes de escrever. Exige DMA e ROM desativados, bus0/1 e reset
+secundário livre. Só permite suspender/restaurar decode, sizing/restauração
+de BARs/ROM com decode suspenso e MASTER_ABORT do bridge-control. COMMAND usa
+writew para preservar STATUS. Requisições iguais ao valor atual são no-op;
+clear de Secondary STATUS só é emulado se não há erro pendente. Outras
+mudanças são recusadas, com erro persistente e limite de tentativas.
+
+O adaptador reporta dispositivos/recursos, faz stop/remove do bus e restaura
+configuração com readback antes de PERST/power/REG_ON. Erro de configuração
+permanece falha mesmo se a função PCI retornar0. A restauração tem caminho
+independente do erro e do orçamento de leitura; não reativa decode quando
+BAR/ROM não foi restaurado. Endereços reportados pelo núcleo PCI são recursos
+descobertos, sem prova de mapeamento ativo, tradução NVMMU ou acesso ao chip.
+
+[Build selecionado](evidence/n71-pcie-host-scan.json): módulo35072 bytes,
+SHA256 `1fe1b30800e23b47a02dbc92996ac29326c3e60953abcf04cae2493d6d38f002`,
+mesma release7.2.0-iphone6s-dart-serdev1. Werror/modpost/ELF/vermagic e símbolos
+PCI scan/walk/stop/remove/free passaram; fonte/Image/config/exports ficaram
+iguais. O primeiro build revelou colisão com a macro ARM64 `current`, corrigida
+para `observed`; a build válida foi feita em diretório novo. Logs anteriores
+foram preservados. Isso ainda é prova de compilação, não sizing físico.
+
+Na VM dedicada, reproduzir após os gates do [bundle](N71_KERNEL_BUNDLE.md),
+usando M novo com cópia das fontes públicas `phone/kernel/*.c`, `*.h` e
+Makefile. A execução registrada usou o caminho abaixo, que já existe:
+
+```sh
+set -eu
+umask 077
+work_dir=/home/ubuntu/kernel-n71-bundle-source-20261002
+build_dir=/home/ubuntu/kernel-n71-bundle-build-20261002
+module_dir=/home/ubuntu/n71-scan-inputs-20261004-v2/phone/kernel
+python3 scripts/build/kernel_bundle.py check "$work_dir"
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror M="$module_dir" \
+  KBUILD_EXTRA_SYMBOLS="$build_dir/vmlinux.symvers" modules
+python3 scripts/build/kernel_bundle.py check "$work_dir"
+```
+
+Conferir os hashes de config/Image/exports e do módulo contra o registro
+antes/depois; não instalar ou forçar símbolos. O módulo externo requer1GiB
+livre; isso não altera o gate8GiB para um Image novo. Os testes do contrato
+passaram no Mac e ARM64: três testes compilados, 11 cenários de lifecycle,
+14 mutações de configuração e seis de lifecycle por asserção. O backend/API
+PCI das fixtures é sintético; a build nativa usa headers/exports reais.
+
+```sh
+python3 -m unittest discover -s tests -p 'test_n71_pcie_scan_*.py' -v
+python3 tests/run_n71_pcie_scan_mutations.py
+python3 -m unittest discover -s tests -p test_n71_scan_result.py -v
+python3 tests/run_n71_scan_result_mutations.py
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-host-scan-candidate-20261004/deployment.json" \
+  --host-scan --check
+```
+
+Esse perfil preserva payload/DTB/initramfs/identidades do boot físico anterior
+byte a byte, troca somente o módulo externo e não muda o perfil padrão. O
+coletor exige proveniência/hash novos, inventário, resultado PCI único,
+COMMAND sem bus-master, seis recursos BAR e cleanup comprovado. Sysfs PCI
+deve estar vazio antes/depois; falha impede unload sem apagar os logs.
+Para executar depois de boot/restore/SSH confirmados, substituir `--check`
+por `--output-dir` novo diretamente em runtime. Não repetir no mesmo boot.
+O script não reinicia o telefone. A primeira sessão física deve reunir esses
+gates com serviços, snapshot e observações sem escrita dos recursos HDQ/DART.
+
+O próximo host funcional ainda precisa de atribuição/restauração de recursos,
+NVMMU/DART com identidade de stream e IRQ qualificados, depois identificação
+interna do chip, firmware/calibração e testes Wi-Fi. Esse sizing temporário
+nunca habilita bus-master para contornar uma dessas etapas.
+
 ## Base do host — ECAM e janelas de referência
 
 `n71-pcie-ecam.h` preserva as coordenadas observadas: raiz bus0/devfn08 em

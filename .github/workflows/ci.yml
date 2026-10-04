@@ -85,6 +85,10 @@ jobs:
         run: python iphone-linux-tools/tests/run_n71_pcie_inventory_mutations.py
       - name: N71 ECAM function, bounds and byte extraction mutations
         run: python iphone-linux-tools/tests/run_n71_pcie_ecam_mutations.py
+      - name: N71 PCI scan config writes, DMA refusal and verified restoration mutations
+        run: python iphone-linux-tools/tests/run_n71_pcie_scan_mutations.py
+      - name: N71 PCI scan physical result acceptance and cleanup mutations
+        run: python iphone-linux-tools/tests/run_n71_scan_result_mutations.py
       - name: N71 HDQ reference threshold and frame mutations
         run: python iphone-linux-tools/tests/run_n71_hdq_mutations.py
       - name: N71 HDQ handshake ordering, timeout and cleanup obligations

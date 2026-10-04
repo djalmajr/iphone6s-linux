@@ -666,3 +666,9 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Publicar no branch autorizado, conferir CI e atualizar #9/#34 com os fatos
   selecionados. Depois iniciar um único boot para os novos gates físicos,
   sem contador ou novo PIN; confirmar DFU USB antes de enviar a candidata.
+
+- Gate67 local: seis testes de aceitação de resultados e oito mutações por
+  asserção passaram. CI recebe também as14 mutações de política; as seis de
+  lifecycle fazem parte da suíte de testes. Recipe e prova nativa são públicas;
+  binários, payload, chaves e logs continuam privados. Não há type checker
+  Python configurado; validar AST/lint no CI e conferir a árvore pública.
