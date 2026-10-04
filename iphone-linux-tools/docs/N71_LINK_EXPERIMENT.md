@@ -177,7 +177,7 @@ Mac e ARM64: erros em cada leitura, listas malformadas, mudanças tardias,
 limite de 63 leituras e dez mutações por asserção. O módulo novo compilou com
 Werror/modpost e os exports do bundle; ELF, vermagic e hash foram recalculados
 no Mac. Default false; Image, perfis e módulos físicos anteriores preservados.
-**O inventário ainda não foi carregado no telefone.** O modo padrão do coletor
+**O inventário foi confirmado na coleta de 2026-10-04, registrada abaixo.** O modo padrão do coletor
 continua fixando o módulo físico anterior. O modo `--config-inventory` seleciona
 o hash novo registrado, exige sua procedência no perfil e valida o resultado
 completo: endpoint observado, COMMAND sem bus-master, seis BARs ordenados,
@@ -196,7 +196,7 @@ python3 scripts/host/n71-link-session.py \
 
 Depois do próximo boot agrupado, com serviços e restauração confirmados, usar
 o mesmo comando substituindo `--check` por `--output-dir` em diretório novo.
-Não executar os dois modos no mesmo boot: o coletor recusa diagnóstico prévio.
+Sem uma continuação explicitamente verificada, o coletor recusa diagnóstico prévio.
 Os 14 testes do coletor e 12 mutações executadas provam os contratos sintéticos;
 não representam uma coleta física do inventário.
 
@@ -354,3 +354,38 @@ assert len(list(struct.iter_unpack('<IQQQ', chunk))) == 2
 
 A captura bruta, tabelas, logs e firmware continuam privados. Não há changeset
 de DT, configuração de IOMMU ou ativação de rádio nesta implementação.
+
+## Inventário físico e sizing direto — 2026-10-04
+
+[A primeira coleta](evidence/n71-inventory-and-scan-first-physical.json)
+confirmou link, endpoint14e4:43a3, revisão PCI8, subsystem106b:10fe,
+BAR0/2 do tipo64 bits, PCIe/MSI presentes e MSI-X ausente. A revisão PCI
+não identifica a revisão interna usada para selecionar firmware.
+
+O núcleo PCI tentou alterar COMMAND0→400(INTx disable) antes do sizing;
+o contrato recusou e manteve o primeiro erro. Os dois dispositivos temporários
+foram removidos, configuração restaurada com readback, PERST/domínios liberados,
+REG_ON80 restabelecido e ambos os módulos removidos. Nenhuma escrita de probe
+foi aceita; a restauração fez escritas dos valores capturados. Tamanhos de BAR
+não foram comprovados nesse scan. SSH/HTTP e snapshot passaram depois dele.
+
+O próximo modo `bar_sizing=1` mede somente as seis palavras BAR do endpoint,
+sem registro de dispositivos PCI. Exige inventário, recusa host_scan simultâneo,
+suspende decode por COMMAND de16 bits, mede máscaras FFFFFFFF e restaura os
+valores capturados antes de divulgar tamanhos. Pares64, atributos, tamanhos
+potência de2 e limites das janelas selecionadas são validados. Em erro,
+restauração/readback continua obrigatória; tamanhos não são publicados.
+Não atribui endereços, acessa MMIO dos BARs, habilita DMA/IRQ ou carrega firmware.
+
+[Build externo selecionado](evidence/n71-pcie-bar-sizing.json):37824 bytes,
+SHA256 `11be3fc8ca8d74d80c9116f9c0133a25a2bfd39365aa3ae8aa6bf0246c73ae38`.
+Compilação ARM64/Werror/modpost, ELF/ABI e preservação do kernel passaram.
+Harness C no Mac e ARM64 injeta falhas em todas as leituras/escritas; seis
+mutações compiladas falham por asserção. Esta evidência ainda é de build.
+A seleção e continuação física serão explícitas, mantendo logs históricos.
+
+```sh
+python3 -m unittest discover -s tests -p test_n71_pcie_bar_sizing.py -v
+# Na receita de módulo externo acima, usar um diretório M novo;
+# a execução registrada usou /home/ubuntu/n71-bar-inputs-20261004/phone/kernel.
+```

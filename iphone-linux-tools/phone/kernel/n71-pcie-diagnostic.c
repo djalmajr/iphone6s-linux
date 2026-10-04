@@ -26,6 +26,9 @@ MODULE_PARM_DESC(config_inventory, "Read bounded endpoint config after enumerati
 static bool host_scan;
 module_param(host_scan, bool, 0400);
 MODULE_PARM_DESC(host_scan, "Temporarily scan with PCI core; size/restore BARs, no binding or DMA");
+static bool bar_sizing;
+module_param(bar_sizing, bool, 0400);
+MODULE_PARM_DESC(bar_sizing, "Size/restore endpoint BARs directly; no PCI devices, MMIO or DMA");
 
 static int n71_inventory_read32(void *context, u32 offset, u32 *value)
 {
@@ -231,6 +234,10 @@ static int n71_probe(struct platform_device *pdev)
 			stage = "host-scan";
 			error = n71_pcie_scan(dev, &state);
 		}
+		if (!error && bar_sizing) {
+			stage = "bar-sizing";
+			error = n71_pcie_size_bars(dev, &state);
+		}
 		cleanup = n71_reset(&state, true);
 		if (!cleanup)
 			dev_info(dev, "N71_PCIE_RESET_RESTORED asserted=1 readback=1\n");
@@ -271,7 +278,8 @@ static int __init n71_init(void)
 {
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
-	if ((config_inventory && !enumerate) || (host_scan && !config_inventory))
+	if ((config_inventory && !enumerate) || ((host_scan || bar_sizing) && !config_inventory) ||
+	    (host_scan && bar_sizing))
 		return -EINVAL;
 	return platform_driver_register(&n71_driver);
 }

@@ -5,6 +5,7 @@
 #include <linux/pci.h>
 #include <linux/spinlock.h>
 #include "n71-pcie-scan-config.h"
+#include "n71-pcie-bar-sizing.h"
 
 struct n71_scan_host {
 	struct device *dev;
@@ -63,6 +64,27 @@ static int n71_scan_raw_write(void *context, bool root, u32 where,
 	else
 		writel(value, address);
 	return 0;
+}
+
+static inline int n71_pcie_size_bars(struct device *dev, struct n71_diagnostic *state)
+{
+	struct n71_scan_host host = {.dev = dev, .ecam = state->ecam, .port = state->port};
+	struct n71_scan_io io = {&host, n71_scan_raw_read, n71_scan_raw_write};
+	struct n71_bar_sizes sizes;
+	unsigned int bar;
+	int error, restore;
+
+	error = n71_bar_collect(&io, &host.config, &sizes, &restore);
+	if (host.config.saved[0].identity)
+		dev_info(dev, "N71_PCIE_SIZING_CONFIG_RESTORED error=%d; decode/readback checked\n", restore);
+	if (!error)
+		for (bar = 0; bar < 6; bar++)
+			dev_info(dev, "N71_PCIE_SIZED_BAR index=%u raw=%08x mask=%08x bytes=%016llx; no MMIO\n",
+				 bar, host.config.saved[1].bars[bar], sizes.masks[bar],
+				 (unsigned long long)sizes.bytes[bar]);
+	dev_info(dev, "N71_PCIE_SIZING_RESULT error=%d reads=%u attempts=%u writes=%u refusals=%u; no DMA or radio\n",
+		 error, host.reads, host.config.attempts, host.config.writes, host.config.refusals);
+	return error;
 }
 
 static int n71_scan_config_read(struct pci_bus *bus, unsigned int devfn,

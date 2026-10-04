@@ -697,3 +697,20 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   mutações compiladas falharam por asserção, incluindo erro de restore e
   publicação prematura. Falhas são injetadas em todas as leituras/escritas
   do caminho completo; tamanhos32/64 e palavras superiores são verificados.
+
+### Incremento 69 — integração do sizing no módulo externo
+
+- Até cinco arquivos: adaptador, módulo, registro selecionado de build,
+  guia LINK e plano. Modo explícito bar_sizing exige inventário e exclui
+  host_scan. Reusar ECAM com link fresco e limite de leituras; medir somente
+  endpoint sem registrar bus. Reportar máscaras/tamanhos e restore separado.
+- Compilar em novo diretório M na VM dedicada, executar harness ARM64 com
+  mutações, verificar ELF/vermagic/modpost e preservar Image/config/exports.
+  Compor perfil privado com os mesmos payload/DTB/initramfs e identidades.
+
+- Gate69: módulo37824 bytes SHA11be3fc8…73ae38 compilou ARM64/Werror/modpost
+  em M novo; ELF/vermagic/hash recalculados no Mac. Harness e seis mutações
+  passaram também na VM. Image/config/exports e fonte do bundle preservados.
+  Os dois testes anteriores do adaptador continuam passando (seis mutações).
+  Guia distingue inventário físico aprovado, scan recusado e sizing ainda
+  não carregado. O telefone continua acessível sem nova intervenção física.
