@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from test_n71_bar_result import TEXT as SIZING, RAW as SIZING_RAW
+from test_n71_chip_result import TEXT as CHIP_ID
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts/host'))
@@ -40,7 +41,7 @@ SCAN = ('N71_PCIE_SCAN_DEVICE bus=0 devfn=08 id=1004106b class=060400 command=01
 
 
 class LinkSessionTests(unittest.TestCase):
-    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False, bar_sizing=False):
+    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False):
         replies = {'observe': OBSERVE, 'activate': ACTIVE,
                    'pcie': 'N71_PCIE_LINK_RESULT error=-110 port88=0000880c reads=10000\n',
                    'pcie-cleanup': CLEANUP, 'pcie-unload': 'N71_PCIE_UNLOADED\n',
@@ -50,12 +51,14 @@ class LinkSessionTests(unittest.TestCase):
             replies.update({'pcie-cleanup': CLEANUP + SCAN, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
         if bar_sizing:
             replies.update({'pcie-cleanup': CLEANUP + SIZING, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
+        if chip_id:
+            replies.update({'pcie-cleanup': CLEANUP + SIZING + CHIP_ID, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
         replies.update(overrides or {})
         calls = []
         with tempfile.TemporaryDirectory() as folder:
             with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
                 session = MODULE.Session(Path(folder), [], config_inventory=config_inventory,
-                                         host_scan=host_scan, bar_sizing=bar_sizing)
+                                         host_scan=host_scan, bar_sizing=bar_sizing, chip_id=chip_id)
 
             def capture(stage, command, raw=None):
                 calls.append((stage, command))
@@ -306,6 +309,24 @@ class LinkSessionTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertFalse(proof['cleanup_verified'])
             self.assertNotIn('pcie-unload', calls)
+
+    def test_chip_mode_requires_full_identity_and_mapping_cleanup(self):
+        inventory = INVENTORY
+        for index, raw in enumerate(SIZING_RAW):
+            inventory = inventory.replace(f'index={index} value=00000000', f'index={index} value={raw:08x}')
+        with patch.object(MODULE, 'ROOT', ROOT):
+            self.assertNotEqual(MODULE.selected_records(False, chip_id=True)[0]['sha256'],
+                                MODULE.selected_records(False, bar_sizing=True)[0]['sha256'])
+        code, proof, calls = self.run_session({'pcie': LINK + inventory + SIZING + CHIP_ID}, chip_id=True)
+        self.assertEqual(code, 0)
+        self.assertEqual(proof['chip_id']['revision'], 2)
+        self.assertIn('config_inventory=1 chip_id=1;', calls['pcie'])
+        self.assertNotIn('bar_sizing=1', calls['pcie'])
+        code, proof, calls = self.run_session({'pcie': LINK + inventory + SIZING + CHIP_ID,
+                                              'pcie-cleanup': CLEANUP + SIZING + CHIP_ID.replace('claimed=0', 'claimed=1')}, chip_id=True)
+        self.assertEqual(code, 1)
+        self.assertFalse(proof['cleanup_verified'])
+        self.assertNotIn('pcie-unload', calls)
 
 
 if __name__ == '__main__':

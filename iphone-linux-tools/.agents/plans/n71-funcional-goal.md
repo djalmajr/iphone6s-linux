@@ -811,3 +811,23 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   SHA8ade6fd8…b717941, compilou Werror/modpost com kernel preservado. ELF,
   ABI e SHA recalculados no Mac. Testes anteriores do adaptador PCI passaram
   após a assinatura BAR receber saída opcional. Ainda não carregou o módulo.
+
+### Incremento 75 — seleção e prova da identificação interna
+
+- Cinco arquivos: parser CHIP, testes, coletor, testes e plano. `--chip-id`
+  implica inventário e sizing fresco, escolhe hash separado e exclui outros
+  modos. Uma linha de ID, chip4350/tipoAXI, revisão calculada do raw, uma
+  leitura MMIO e restore de config/route/map precisam concordar.
+- Cleanup conservador: qualquer leitura de config exige restore positivo;
+  falha antes da captura pode impedir unload até análise mesmo sem escrita.
+  Isso evita presumir ausência de mudanças a partir de contagens incompletas.
+- Compor perfil privado preservando Image/payload/identidades; conferir gates
+  locais. Executar uma continuação explícita após a prova71 e confirmar
+  serviços/snapshot. Não iniciar driver completo, DMA ou firmware.
+
+- Gate75: 25 testes passaram (quatro do parser com quatro mutações por
+  asserção,21 do coletor). No mesmo boot, identificação física passou:
+  raw17084350, BCM4350 revisão interna8, uma leitura MMIO e53 de config.
+  Sizing fresco também passou. Route/window/config readback, unmap/release,
+  reset/power/REG_ON/unload e PCI vazio passaram; SSH/HTTP preservados.
+  Sem DMA/firmware/rádio e sem intervenção/DFU/PIN adicional.
