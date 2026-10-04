@@ -75,15 +75,21 @@ class N71DiagnosticPayload(unittest.TestCase):
         struct.pack_into('<HH', header, 16, 1, 183)
         baseline = '7.2.0-iphone6s-source'
         bundle = '7.2.0-iphone6s-dart-serdev1'
+        power = '7.2.0-iphone6s-dart-serdev-power1'
 
         def image(release):
             return bytes(header) + ('vermagic=' + release + ' SMP preempt mod_unload aarch64\0').encode()
 
-        MODULE.validate_module(image(bundle), kernel_release=bundle)
-        MODULE.validate_module(image(baseline), kernel_release=baseline)
-        for actual, selected in ((baseline, bundle), (bundle, baseline),
-                                 (bundle + '+', bundle), (baseline + '+', baseline + '+'),
-                                 ('7.0.12', '7.0.12')):
+        # Kills omission of a selected known ABI and mixing modules across all three releases.
+        for selected in (baseline, bundle, power):
+            try:
+                MODULE.validate_module(image(selected), kernel_release=selected)
+            except ValueError as error:
+                self.fail('Known selected ABI refused: ' + str(error))
+        crossed = [(actual, selected) for actual in (baseline, bundle, power)
+                   for selected in (baseline, bundle, power) if actual != selected]
+        for actual, selected in crossed + [(bundle + '+', bundle), (power + '+', power),
+                                            (baseline + '+', baseline + '+'), ('7.0.12', '7.0.12')]:
             with self.subTest(actual=actual, selected=selected), self.assertRaises(ValueError):
                 MODULE.validate_module(image(actual), kernel_release=selected)
 

@@ -61,7 +61,9 @@ def compose(original, loader, baseline_dtb, diagnostic_dtb, kernel, initramfs):
 
 
 def validate_module(raw, *, kernel_release='7.2.0-iphone6s-source'):
-    if kernel_release not in ('7.2.0-iphone6s-source', '7.2.0' + KERNEL.kernel_bundle.LOCALVERSION):
+    known = ('7.2.0-iphone6s-source', '7.2.0' + KERNEL.kernel_bundle.LOCALVERSION,
+             '7.2.0' + KERNEL.kernel_bundle.POWER_LOCALVERSION)
+    if kernel_release not in known:
         raise ValueError('Only a recorded baseline or explicit bundle ABI is accepted')
     vermagic = ('vermagic=' + kernel_release + ' SMP preempt mod_unload aarch64\0').encode()
     if (not 64 <= len(raw) <= 4 * 1024 * 1024 or raw[:7] != b'\x7fELF\x02\x01\x01' or
@@ -78,7 +80,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-profile', type=Path, required=True)
     parser.add_argument('--kernel-dir', type=Path, required=True)
-    parser.add_argument('--kernel-patchset', choices=(KERNEL.kernel_patchset.PATCHSET, KERNEL.kernel_bundle.BUNDLE))
+    parser.add_argument('--kernel-patchset', choices=(KERNEL.kernel_patchset.PATCHSET, KERNEL.kernel_bundle.BUNDLE,
+                                                     KERNEL.kernel_bundle.POWER_BUNDLE))
     parser.add_argument('--diagnostic-dir', type=Path, required=True)
     parser.add_argument('--module', type=Path, required=True)
     parser.add_argument('--module-sha256', required=True)

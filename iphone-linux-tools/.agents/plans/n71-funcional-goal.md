@@ -1880,3 +1880,31 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   profile power exige registro de full Image separado; fonte117/objetos não
   substituem essa prova. Composição real continua bloqueada pelo link118
   ainda em andamento, sem acionar o iPhone.
+
+### Incremento 120 — compositor com ABI power explícita
+
+- Até cinco arquivos: plano, scripts/build/compose-n71-diagnostic.py,
+  tests/test_n71_diagnostic_payload.py, tests/run_n71_diagnostic_payload_mutations.py
+  e docs/evidence/n71-power-diagnostic-gate.json. Somente reconhecer release
+ 7.2.0-iphone6s-dart-serdev-power1 e seleção explícita do record119; defaults
+  e delta DT limitado preservados. Não preparar perfil físico enquanto118
+  estiver em build ou usar módulos da ABI anterior.
+- Teste positivo das três ABIs registradas e recusa de todos os cruzamentos,
+  release com + e desconhecida; arquitetura/vermagic/delta DT permanecem gates.
+  Mutação que remove power da whitelist deve falhar por asserção, sem
+  mascarar import/syntax/runtime errors. Mac/ARM64 e AST/lint; composição
+  real/SSH/snapshot/charger continuam gates físicos separados.
+
+- Primeiro transporte120 omitiu test_n71_runtime_tunables, import transitivo
+  da fixture PCI. ARM64 recusou antes de rodar testes; nenhum ERROR contado
+  como mutação detectada. Bundle v2 inclui esse arquivo público e preserva
+  folder/log v1. Repetir só gate ARM64; gate Mac já cobre dependência local
+  inalterada. Não repetir compilação Image por falha de transporte de testes.
+
+- Gate120: cinco testes/seis mutações por asserção aprovados Mac/ARM64;
+  três ABIs aceitas e todos os cruzamentos recusados. Payload/delta DT
+  preservados; AST/lint e SHA dos inputs/logs aprovados. Falha de transporte
+  v1 não contou como kill; só ARM64 foi repetido após fixture completa.
+  Perfil real/default/telefone não foram alterados. Link118 continua em curso.
+- CI274ae00 aprovado PR37241800486/push37241797831, seis jobs, antes de
+  publicar integradorf80e27e. CI desse integrador em acompanhamento.

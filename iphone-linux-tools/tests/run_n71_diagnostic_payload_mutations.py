@@ -15,7 +15,9 @@ DEPENDENCIES = (
     'scripts/host/device_profile.py', 'scripts/host/profile_image.py',
 )
 MUTATIONS = (
-    ('known-abi', "if kernel_release not in ('7.2.0-iphone6s-source', '7.2.0' + KERNEL.kernel_bundle.LOCALVERSION):", 'if False:'),
+    ('known-abi', 'if kernel_release not in known:', 'if False:'),
+    ('selected-power-abi', "'7.2.0' + KERNEL.kernel_bundle.POWER_LOCALVERSION",
+     "'7.2.0' + KERNEL.kernel_bundle.LOCALVERSION"),
     ('cross-abi', 'raw.count(vermagic) != 1', 'False'),
     ('elf-machine', "struct.unpack_from('<HH', raw, 16) != (1, 183)", 'False'),
     ('payload-binding', 'if original != expected:', 'if False:'),
