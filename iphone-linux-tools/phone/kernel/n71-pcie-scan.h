@@ -6,6 +6,7 @@
 #include <linux/spinlock.h>
 #include "n71-pcie-scan-config.h"
 #include "n71-pcie-bar-sizing.h"
+#include "n71-pcie-control-reference.h"
 
 struct n71_scan_host {
 	struct device *dev;
@@ -190,6 +191,8 @@ static int n71_pcie_scan(struct device *dev, struct n71_diagnostic *state)
 	struct n71_scan_io io;
 	struct resource_entry *entry;
 	unsigned int windows = 0;
+	struct n71_control_reference reference;
+	unsigned int function, word;
 	int error, restore;
 
 	bridge = pci_alloc_host_bridge(sizeof(*host));
@@ -204,6 +207,18 @@ static int n71_pcie_scan(struct device *dev, struct n71_diagnostic *state)
 	error = n71_scan_capture(&io, &host->config);
 	if (error)
 		goto free;
+	for (function = 0; function < 2; function++) {
+		error = n71_control_capture(&io, function == 0, &reference);
+		if (error)
+			goto restore;
+		dev_info(dev, "N71_PCIE_CONTROL_CAPTURE root=%u reads=%u capabilities=%u words=%u; read-only reference\n",
+			 function == 0, reference.reads, reference.capabilities, reference.count);
+		for (word = 0; word < reference.count; word++) {
+			const struct n71_control_word *item = &reference.words[word];
+			dev_info(dev, "N71_PCIE_CONTROL_REFERENCE root=%u where=%03x size=%u value=%08x capability=%05x\n",
+				 function == 0, item->where, item->size, item->value, item->capability);
+		}
+	}
 	/* Selected ADT ranges. This scan neither claims nor maps these windows. */
 	host->windows[0] = (struct resource){.name = "N71 scan bus", .start = 0, .end = 1,
 		.flags = IORESOURCE_BUS};

@@ -1214,3 +1214,35 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Pedidos após a primeira recusa permanecem latched: sua presença no log
   não é prova de que cada write seja necessário. Próxima coleta deve revelar
   capabilities/controles reais antes de qualificar novos estados.
+
+### Incremento 96 — referência read-only de controles antes do core scan
+
+- Cinco arquivos: plano, contrato read-only, teste C, teste/mutações nativo
+  e integração no scan. Capturar campos PM/MSI/MSI-X/PCIe/AER/PTM selecionados,
+  com identidade/COMMAND master off, ciclos/alinhamento/limites/erro positivos
+  recusados. Nunca ler BAR/VPD/address payload nem executar write pelo helper.
+- Publicar output somente após leitura completa. Cada função tem limites
+  de128 reads/16 capabilities/32 controles; root/endpoint separados. A prova
+  é referência de um instante, não estabilidade/qualificação de nova escrita.
+- Integrar antes do registro PCI, sem novos modos/DFU. Falha usa restore
+  existente e mantém scan negativo. Testar backend real do adapter novamente.
+
+- Gate96: contrato C no Mac passou7 mutações/identidade/master/larguras,
+  todos os read faults de root/endpoint, callbacks positivos, cadeias cíclicas,
+  limites/capacity e output parcial. Uma mutação de alinhamento sobreviveu
+  inicialmente porque faltava ponteiro42; caso adicionou prova de recusa
+  antes do backend e a mutação passou a morrer por asserção. Logs preservados.
+- Link Capability DWORD foi incluído para confrontar speed/retraining na
+  fonte fixada. Harness real do adapter passou11 casos/6 mutações no Mac.
+  Não é prova ARM64/física ainda; nenhuma nova escrita foi permitida.
+
+### Incremento 97 — SERR forwarding delimitado e build agrupado com referência
+
+- Cinco arquivos: plano, contrato config, Ctest, runner e referência primária.
+  Qualificar somente set do bit1 de BRIDGE_CONTROL da raiz, combinado com
+  original/master-abort-clear já permitidos. Preservar parity/VGA/ISA/reset
+  e todos os demais bits; restore devolve o controle capturado, sem routing
+  de IRQ, bind, DMA ou novo decode.
+- Agrupar esta permissão com a coleta read-only de controls num módulo novo.
+  Testar valores capturados com SERR ligado/desligado, bits extras/reset
+  recusados e restauração exata. Compilar/selecionar em fatia seguinte.
