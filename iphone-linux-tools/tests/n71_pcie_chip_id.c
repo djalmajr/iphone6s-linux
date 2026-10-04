@@ -26,7 +26,9 @@ static int write_config(void *context, bool root, u32 where, unsigned int size, 
 {
 	struct mock *mock = context;
 	u32 *target = &mock->config[root ? 0 : 1][where / 4];
+	bool window = root && (where == 0x1c || where == 0x24 || where == 0x28);
 	assert(where == 4 || (root && (where == 0x20 || where == 0x3e)) ||
+	       window ||
 	       (!root && where == 0x80) ||
 	       (where >= 0x10 && where <= (root ? 0x14U : 0x24U)) ||
 	       where == (root ? 0x38U : 0x30U));
@@ -36,6 +38,11 @@ static int write_config(void *context, bool root, u32 where, unsigned int size, 
 		assert(size == 2 && !(value & 5)); /* No DMA or I/O decode. */
 	else
 		assert(!(mock->config[root ? 0 : 1][1] & 7));
+	if (window) {
+		/* These consumers restore windows; they must never probe or change them. */
+		assert(size == (where == 0x1c ? 2U : 4U));
+		assert(value == (*target & (size == 2 ? 0xffffU : 0xffffffffU)));
+	}
 	if (size == 4)
 		*target = value;
 	else {
@@ -66,6 +73,9 @@ static void initialize(struct mock *mock)
 	mock->config[1][2] = 0x02800008;
 	mock->config[0][3] = 0x10000;
 	mock->config[0][6] = 0x010100;
+	mock->config[0][0x1c / 4] = 0xa900ab12;
+	mock->config[0][0x24 / 4] = 0x98706543;
+	mock->config[0][0x28 / 4] = 0x22334455;
 	mock->config[0][8] = 0x12301230;
 	mock->config[1][4] = 4;
 	mock->config[1][6] = 4;

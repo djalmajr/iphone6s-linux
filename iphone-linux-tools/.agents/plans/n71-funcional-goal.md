@@ -1294,3 +1294,18 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   identificadores. Documentação distingue descarga operacional de causa
   ainda não isolada, mantém candidato PCI não carregado e último snapshot.
   Nenhuma escrita de carregador/gauge ou novo DFU foi realizada.
+
+### Incremento 100 — corrigir fixtures dos consumidores de restore PCI
+
+- Três arquivos: plano e fixtures C de BAR sizing/chip-id. CI do SHA d8e7422
+  revelou recusa dos novos restores de janela pelo backend sintético antigo.
+  Manter contrato/código de hardware e candidata intactos; fixtures aceitam
+  somente as três janelas da raiz, largura exata, valor original e decode off.
+- Inicializar valores distintos e STATUS secundário nãozero para comprovar
+  preservação, repetir apenas os dois gates com suas12 mutações compiladas.
+  Publicar e conferir CI final. Nenhuma execução no iPhone.
+
+- Gate100: os dois testes C passaram com as12 mutações executadas e
+  recusadas por asserção. Fixtures delimitam janelas/root/width/valor/decode;
+  memcmp integral comprova preservação do STATUS secundário e demais campos.
+  Só fixtures/plano mudaram; hash do módulo físico continua válido.
