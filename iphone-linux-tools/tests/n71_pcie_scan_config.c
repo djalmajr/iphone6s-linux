@@ -157,6 +157,38 @@ static void check_bridge_windows(void)
 	}
 }
 
+static void check_serr(void)
+{
+	static const u32 controls[] = {0, 2, 0x20, 0x22, 0x0d};
+	struct mock mock, original;
+	struct n71_scan_io io = {&mock, read_config, write_config};
+	struct n71_scan_config config;
+	unsigned int index, bit;
+
+	for (index = 0; index < sizeof(controls) / sizeof(*controls); index++) {
+		initialize(&mock);
+		mock.config[0][0x3c / 4] = (controls[index] << 16) | 0x01ab;
+		original = mock;
+		assert(n71_scan_capture(&io, &config) == 0);
+		assert(request(&io, &config, true, 0x3e, 2, controls[index] | 2) == 0);
+		assert(mock.config[0][0x3c / 4] == (((controls[index] | 2) << 16) | 0x01ab));
+		assert(request(&io, &config, true, 0x3e, 2, (controls[index] & ~0x20U) | 2) == 0);
+		assert(n71_scan_restore(&io, &config) == 0);
+		assert(memcmp(mock.config, original.config, sizeof(mock.config)) == 0);
+		for (bit = 0; bit < 16; bit++) {
+			if (bit == 1 || bit == 5)
+				continue;
+			mock = original;
+			assert(n71_scan_capture(&io, &config) == 0);
+			assert(request(&io, &config, true, 0x3e, 2, (controls[index] | 2) ^ (1U << bit)) == -EPERM);
+			assert(memcmp(mock.config, original.config, sizeof(mock.config)) == 0);
+		}
+	}
+	initialize(&mock); mock.config[0][0x3c / 4] = 0x000201ab;
+	assert(n71_scan_capture(&io, &config) == 0);
+	assert(request(&io, &config, true, 0x3e, 2, 0) == -EPERM); /* Never clear a pre-existing SERR bit. */
+}
+
 int main(void)
 {
 	struct mock mock, original;
@@ -172,6 +204,7 @@ int main(void)
 	};
 	check_intx();
 	check_bridge_windows();
+	check_serr();
 
 	initialize(&mock);
 	assert(n71_scan_capture(&io, &config) == 0 && config.active);

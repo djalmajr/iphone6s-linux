@@ -162,7 +162,9 @@ static inline int n71_scan_write(const struct n71_scan_io *io,
 		allowed = request->value == original || request->value == n71_scan_bridge_probes[index];
 	} else if (request->root && request->where == 0x3e && request->size == 2) {
 		allowed = request->value == saved->control ||
-			request->value == (saved->control & ~0x20U);
+			request->value == (saved->control & ~0x20U) ||
+			request->value == (saved->control | 2U) ||
+			request->value == ((saved->control & ~0x20U) | 2U);
 	}
 	error = n71_scan_read(io, request->root, request->where, request->size, &observed);
 	if (error)

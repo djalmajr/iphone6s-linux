@@ -1246,3 +1246,22 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Agrupar esta permissão com a coleta read-only de controls num módulo novo.
   Testar valores capturados com SERR ligado/desligado, bits extras/reset
   recusados e restauração exata. Compilar/selecionar em fatia seguinte.
+
+- Gate97: fonte probe.c/UAPI confirmou SERR=2 e port.mask104 escrito0 pelo
+  init existente. Contrato no Mac passou22 mutações de configuração,
+  combinações originais/SERR/master-abort e todos os bits extras recusados;
+  controle e interrupt line adjacente restaurados exatamente. Uma primeira
+  busca de macros não encontrou linhas por espaços duplos; parsing por
+  tokens confirmou os valores, sem assumir a ausência dos símbolos.
+- Archive46 fontes v2 reúne reference/SERR, com hashes e diretório M novos;
+  build ARM64 segue em andamento. Não há nova permissão de DMA/IRQrouting
+  ou novo decode; nenhuma nova escrita física nesta fatia.
+
+### Incremento 98 — build externo agrupado, seleção e sessão do mesmo boot
+
+- Cinco arquivos: plano, build novo, seleção, teste de seleção e mutações.
+  Exigir contratos ARM64/reference/config/lifecycle, Werror/modpost/ELF/ABI
+  e hashes do kernel preservados. Novo perfil mantém payload/identidades.
+- Executar uma continuação --host-scan com último cleanup; salvar controls
+  reais antes de core/SERR. Qualificar avanço e eventuais recusas posteriores
+  separadamente, com cleanup/serviços/snapshot e sem reboot/PIN/DFU.

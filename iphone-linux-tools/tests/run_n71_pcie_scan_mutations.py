@@ -9,6 +9,10 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
+    ('wrong-serr-bit', 'request->value == (saved->control | 2U)',
+     'request->value == (saved->control | 1U)'),
+    ('serr-reset-widened', 'request->value == ((saved->control & ~0x20U) | 2U)',
+     'request->value == ((saved->control & ~0x20U) | 2U) || request->value == (saved->control | 0x40U)'),
     ('window-status-width', 'n71_scan_bridge_sizes[] = {2, 4, 4}',
      'n71_scan_bridge_sizes[] = {4, 4, 4}'),
     ('window-snapshot-lost', '&saved->bridge_windows[bar]);', '&buses);'),
