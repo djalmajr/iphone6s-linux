@@ -734,3 +734,50 @@ No build realizado,12 testes/17 mutações por AssertionError passaram Mac/Ubunt
 Uma futura carga autorizada de `brcmfmac` requer rfkill → cfg80211 → brcmutil → brcmfmac; o build não executa essa carga. `rfkill-gpio` e os módulos auxiliares bca/cyw/wcc não são automaticamente carregados. A seleção dos auxiliares depende do chip/firmware reais, e não da presença de oito arquivos no build.
 
 Nenhum firmware foi selecionado e nenhum driver foi instalado ou carregado no telefone. O alias compilado não prova endpoint PCIe funcional: identidade/classe, BARs/roteamento, entrega de IRQ, associação/isolamento DART, revisão do chip e firmware/calibração compatíveis continuam gates físicos. O Image power2 ainda não foi testado no aparelho. Esta preparação elimina a recompilação dos módulos entre etapas do próximo boot; não comprova Wi-Fi, bateria ou carga no Linux.
+
+## Coletor de link na ABI power2 — continuação no mesmo boot
+
+O coletor `dfad0ff` aceita os dois pares exatos de patchset/release, selecionados pela provenance de um perfil privado explicitamente passado em `--profile`. Antes de qualquer SSH, verifica payload, módulos e identidades. A release selecionada também qualifica o preflight físico, o resultado e o histórico de continuação; um histórico legado não autoriza continuar em power2. [Prova sanitizada](evidence/n71-link-binding-session.json).
+
+Para power2, os hashes/sizes/vermagic de PCIe e REG_ON vêm do [build do perfil](evidence/n71-binding-profile.json), com Werror/modpost conferidos. O mesmo módulo PCIe compilado contém os modos existentes: descoberta, inventário, host-scan, sizing, chip-id, observação e ciclo DART. Cada modo mantém seus limites, seleção explícita, exclusividade, restauração e provas próprias; presença do parâmetro não significa êxito físico.
+
+Primeiro reproduza a composição do [perfil diagnóstico power2](N71_KERNEL_BUNDLE.md#image-power2-e-proteção-de-binding--2026-10-05). Ele já contém PCIe. Em uma pasta nova, acrescente REG_ON da mesma ABI e build qualificado, conservando os demais arquivos:
+
+```sh
+set -eu
+umask 077
+source_dir="$PWD/runtime/n71-binding-diagnostic-profile-repro"
+profile_dir="$PWD/runtime/n71-binding-link-profile-repro"
+module_dir="$PWD/runtime/n71-binding-module-artifacts-20261005"
+test ! -e "$profile_dir" && test ! -L "$profile_dir"
+cp -R "$source_dir" "$profile_dir"
+cp "$module_dir/n71-wlan-power-diagnostic.ko" "$profile_dir/"
+chmod 700 "$profile_dir"
+chmod 600 "$profile_dir"/*
+IPHONE_LINUX_PROFILE="$profile_dir/deployment.json" \
+  python3 scripts/host/device_profile.py check
+python3 scripts/host/n71-link-session.py \
+  --profile "$profile_dir/deployment.json" --config-inventory --check
+```
+
+Um novo build precisa de seus próprios hashes/provas; não substitua o hash publicado apenas para contornar uma recusa. O perfil local preparado é `runtime/n71-binding-link-profile-20261005/`. Os sete arquivos do perfil anterior foram conservados byte a byte; só o módulo REG_ON foi acrescentado. Os seis checks de seleção passaram sem USB/SSH. `--dart-cycle --check` sem histórico foi recusado, como esperado.
+
+Na raiz de `iphone-linux-tools`, a reprodução dos contratos é:
+
+```sh
+python3 -m unittest discover -s tests -p test_n71_link_session.py -v
+python3 tests/run_n71_link_session_mutations.py
+```
+
+31 testes/26 mutações por AssertionError passaram Mac/Ubuntu ARM64. Incluem CLI com arquivos reais temporários e transporte simulado, resultado/cleanup observáveis, módulos com hashes distintos, recusa de ABI/provenance cruzadas e histórico da outra release. Os checks do perfil real conferem somente inputs; nenhum comando foi enviado ao aparelho nessa preparação.
+
+Depois do único boot power2 e da coleta de energia, iniciar um diagnóstico explícito com uma pasta de saída nova sob `runtime`. Após resultado integral e cleanup confirmado, continuar com o próximo modo usando `--previous-clean` da sessão anterior. Exemplo de continuação para inventário, apenas com histórico compatível **do boot Linux ainda ativo**:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-binding-link-profile-20261005/deployment.json" \
+  --config-inventory --previous-clean "$PWD/runtime/n71-power2-link-first" \
+  --check
+```
+
+Para executar, substituir `--check` por uma nova `--output-dir "$PWD/runtime/n71-power2-link-inventory"`. Se reset, energia, REG_ON, ausência de PCI/módulos, logs frescos ou histórico não forem comprovados, conservar logs e interromper a próxima ação; não reiniciar automaticamente para mascarar a falha. O ciclo DART exige também a observação privada completa anterior. Reboot invalida a continuidade. Nenhum desses comandos instala firmware ou carrega os módulos Broadcom; Wi-Fi, IRQ/DMA, bateria e carga seguem pendentes de prova física.

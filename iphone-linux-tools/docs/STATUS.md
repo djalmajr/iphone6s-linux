@@ -2,7 +2,11 @@
 
 ## Checkpoint atual — alimentação priorizada
 
+Coletor Wi-Fi `dfad0ff`: qualifica os pares legados/power2 e propaga a release para módulo, preflight, resultado e histórico de continuação.31 testes/26 mutações passaram Mac/Ubuntu ARM64; perfil privado power2 com PCIe/REG_ON passou seis checks reais sem SSH/USB e recusou dart-cycle sem histórico. Payload/initramfs/identidades e perfil anterior intactos, nenhum Image/módulo recompilado ou DFU. [Reprodução e continuação](N71_LINK_EXPERIMENT.md#coletor-de-link-na-abi-power2--continuação-no-mesmo-boot), [prova selecionada](evidence/n71-link-binding-session.json). Teste físico aguarda USB; preparação não habilita rádio, telemetria ou carga.
+
 Módulos Wi-Fi `3ce8aaf`: seleção explícita `n71-dart-serdev-power-v2`, com release e hashes power2 conferidos; default e artefatos legados preservados. Oito módulos passaram build nativo ARM64/Werror/modpost e verificação independente SHA/ELF/vermagic/dependências no Mac. Os12 testes e17 mutações por asserção passaram nas duas plataformas. Preparação aproveita o Image existente, sem recompilar ou reiniciar o telefone; nenhum módulo/firmware foi instalado ou carregado. PCIe/DART/IRQ/chip/firmware, Wi-Fi, carga e telemetria continuam pendentes. [Reprodução](N71_LINK_EXPERIMENT.md#módulos-wi-fi-para-power2--preparados-sem-novo-image), [prova selecionada](evidence/n71-wifi-binding-modules.json).
+
+CI `38c5df6` do builder142/documentação143 terminou success em PR37265593416/push37265590595, três jobs cada. Esse head antecede a correção144 do coletor; CI nova deve ser vinculada ao seu próprio commit.
 
 CI anterior `6e37876` terminou success em PR37263273839/push37263270142, seis jobs. Logs reais Ubuntu/macOS do PR confirmam observador I2C37/18 e caller52/14. Esse resultado cobre a preparação I2C139–141; não prova hardware nem o builder Wi-Fi142, cuja evidência local/ARM64 está registrada acima.
 
