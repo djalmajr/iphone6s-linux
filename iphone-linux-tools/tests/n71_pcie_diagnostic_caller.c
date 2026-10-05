@@ -51,7 +51,9 @@ struct platform_driver {
 	struct { const char *name; const struct of_device_id *of_match_table; bool suppress_bind_attrs; } driver;
 };
 struct gpio_desc { int logical; };
-struct pci_host_bridge { bool alive; };
+struct n71_scan_host { bool bus_held; int held_stop_error; };
+struct pci_host_bridge { bool alive; void *bus; struct n71_scan_host private; };
+static void *pci_host_bridge_priv(struct pci_host_bridge *bridge) { return &bridge->private; }
 enum n71_pcie_region { N71_PCIE_COMMON, N71_PCIE_PHY };
 #define N71_PCIE_MAX_TUNABLES 512U
 struct n71_pcie_tunable { u32 offset, mask, value; };
@@ -79,13 +81,14 @@ struct n71_pcie_inventory {
 };
 enum fault { NONE, VALIDATE, TABLE, MAP, GPIO, ALLOC, GLOBAL, PORT, ROOT,
 	ENUMERATE, INVENTORY, SCAN_ERROR, SCAN_PENDING, RESET_WRITE, RESET_READ,
-	RESET_VALUE, PUT_ERROR, PUT_ACTIVE, PUT_ERROR_OFF };
+	RESET_VALUE, PUT_ERROR, PUT_ACTIVE, PUT_ERROR_OFF, HOLD_NO_OWNER, HOLD_NO_BUS,
+	HOLD_PENDING, HOLD_STOP_REFUSED, HOLD_STOP_AND_RESTORE };
 static struct {
 	enum fault fault;
 	int attach_fail, resume_fail, put_fail;
 	bool machine, live, reset_phase;
 	unsigned int refs, gets, puts, suspends, detaches, scans, enumerations, resets, registered;
-	unsigned int pme_scans;
+	unsigned int pme_scans, held_scans;
 	struct device domains[4];
 	struct gpio_desc gpio;
 	struct device_node node;
@@ -240,12 +243,32 @@ static int n71_pcie_scan_with_pme(struct device *dev, struct n71_diagnostic *sta
 	mock.pme_scans++;
 	return n71_pcie_scan(dev,state);
 }
+static int n71_pcie_scan_hold(struct device *dev, struct n71_diagnostic *state)
+{
+	int error;
+	mock.held_scans++;
+	error=n71_pcie_scan_with_pme(dev,state,true);
+	if (error || mock.fault==HOLD_NO_OWNER) return error;
+	mock.bridge.alive=true; state->scan_bridge=&mock.bridge;
+	mock.bridge.bus=mock.fault==HOLD_NO_BUS ? NULL : &mock.bridge;
+	mock.bridge.private.bus_held=true;
+	return 0;
+}
 static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 {
+	int stop_error;
 	if (!state->scan_bridge) return 0;
 	assert(mock.bridge.alive && mock.refs && state->powered==4 && state->attached==4);
 	if (mock.fault==SCAN_PENDING) return -EIO;
-	mock.bridge.alive=false; state->scan_bridge=NULL; return 0;
+	if (mock.bridge.bus) {
+		mock.bridge.bus=NULL;
+		mock.bridge.private.bus_held=false;
+		if (mock.fault==HOLD_STOP_REFUSED || mock.fault==HOLD_STOP_AND_RESTORE)
+			mock.bridge.private.held_stop_error=-EPERM;
+	}
+	if (mock.fault==HOLD_PENDING || mock.fault==HOLD_STOP_AND_RESTORE) return -EIO;
+	stop_error=mock.bridge.private.held_stop_error;
+	mock.bridge.alive=false; state->scan_bridge=NULL; return stop_error;
 }
 static int n71_pcie_size_bars(struct device *dev, struct n71_diagnostic *state, void *out) { (void)dev; (void)state; (void)out; return 0; }
 static int n71_pcie_chip_id(struct device *dev, struct n71_diagnostic *state) { (void)dev; (void)state; return 0; }
@@ -267,7 +290,7 @@ static struct platform_device setup(void)
 	for (index=0;index<11;index++) p.resources[index]=(struct resource){addresses[index],addresses[index]+(index==0 ? 0x1000000 : index==9 ? 0x8000 : 0x4000)-1};
 	p.dev.of_node=&mock.node;
 	run=enumerate=config_inventory=host_scan=true; bar_sizing=chip_id=dart_observe=dart_cycle=false;
-	scan_pme_disable=false;
+	scan_pme_disable=scan_hold=false;
 	return p;
 }
 static void finish(struct platform_device *p)
@@ -280,6 +303,113 @@ static void finish(struct platform_device *p)
 	assert(!session && !session_device && !session_lock);
 	for (index=0;index<mock.allocated;index++) free(mock.allocations[index]);
 	free(mock.ecam);
+}
+
+static struct platform_device setup_held(void)
+{
+	struct platform_device p=setup();
+	scan_pme_disable=scan_hold=true;
+	return p;
+}
+
+static unsigned int exercise_held_caller(void)
+{
+	const enum fault bad_proofs[]={HOLD_NO_OWNER,HOLD_NO_BUS};
+	const enum fault cleanup_faults[]={HOLD_PENDING,HOLD_STOP_REFUSED,
+		HOLD_STOP_AND_RESTORE,RESET_READ,PUT_ERROR};
+	const int cleanup_errors[]={-EIO,-EPERM,-EIO,-EIO,-ETIMEDOUT};
+	struct platform_device p;
+	char status[PAGE_SIZE], held[32];
+	u32 identity;
+	unsigned int index,cases=0;
+	int error;
+
+	/* Mutations killed: ignore hold opt-in, clean up before return, or report a stale held flag. */
+	p=setup_held();
+	assert(n71_held_status(held,NULL)>0 && !strcmp(held,"held=0\n"));
+	assert(n71_init()==0 && mock.registered==1 && !mock.scans);
+	assert(n71_probe(&p)==0 && session && session->module_retained && mock.refs==1);
+	assert(mock.bridge.alive && mock.bridge.bus && mock.held_scans==1 && mock.pme_scans==1);
+	assert(session->powered==4 && session->attached==4 && session->reset_pending);
+	assert(!mock.puts && !mock.detaches && !mock.resets && !session->cleanup_error && !session->primary_error);
+	assert(n71_held_status(held,NULL)>0 && !strcmp(held,"held=1\n"));
+	assert(n71_session_status(status,NULL)>0 && strstr(status,"retained=1 scan_pending=1") &&
+	       strstr(status,"powered=4 attached=4") && !strstr(status,"held="));
+	assert(n71_read_link(session,true,0,&identity)==0 && identity==0x1004106b);
+	mock.bridge.private.bus_held=false;
+	assert(n71_held_status(held,NULL)>0 && !strcmp(held,"held=0\n"));
+	mock.bridge.private.bus_held=true;
+	assert(n71_probe(&p)==-EBUSY && mock.refs==1 && mock.scans==1);
+	assert(n71_cleanup_action("scan",NULL)==-EINVAL && mock.refs==1 && mock.bridge.alive);
+	assert(n71_cleanup_action("cleanup",NULL)==0 && !mock.refs && !mock.bridge.alive);
+	assert(mock.scans==1 && mock.enumerations==1 && mock.resets==1 && mock.puts==4);
+	assert(n71_held_status(held,NULL)>0 && !strcmp(held,"held=0\n"));
+	assert(n71_cleanup_action("cleanup",NULL)==0 && mock.puts==4);
+	n71_exit(); finish(&p); cases++;
+	/* Mutation killed: trust a zero backend return without a live, owned bus. */
+	for (index=0;index<ARRAY_SIZE(bad_proofs);index++) {
+		p=setup_held(); mock.fault=bad_proofs[index];
+		assert(n71_probe(&p)==-ENODEV && !session && !mock.refs && !mock.bridge.alive);
+		assert(n71_held_status(held,NULL)>0 && !strcmp(held,"held=0\n"));
+		assert(mock.scans==1 && mock.puts==4); finish(&p); cases++;
+	}
+	/* Mutation killed: let hold overwrite a negative scan or abandon its pending owner. */
+	p=setup_held(); mock.fault=SCAN_ERROR;
+	assert(n71_probe(&p)==-EPERM && !session && !mock.refs); finish(&p); cases++;
+	p=setup_held(); mock.fault=SCAN_PENDING;
+	assert(n71_probe(&p)==0 && session->module_retained && mock.refs==1);
+	assert(session->primary_error==-EPERM && session->cleanup_error==-EIO);
+	assert(n71_held_status(held,NULL)>0 && !strcmp(held,"held=0\n"));
+	assert(n71_cleanup_action("cleanup",NULL)==-EIO && !mock.puts && !mock.resets);
+	mock.fault=NONE;
+	assert(n71_cleanup_action("cleanup",NULL)==0 && !mock.refs && mock.scans==1);
+	finish(&p); cases++;
+	/* Mutations killed: free power/reset before bus cleanup, lose stop refusal, or put twice on retry. */
+	for (index=0;index<ARRAY_SIZE(cleanup_faults);index++) {
+		unsigned int puts;
+		p=setup_held(); mock.fault=cleanup_faults[index]; mock.put_fail=3;
+		assert(n71_probe(&p)==0 && session->module_retained && mock.refs==1 && mock.bridge.bus);
+		assert(!mock.puts && !mock.resets);
+		assert(n71_cleanup_action("cleanup",NULL)==cleanup_errors[index] && mock.refs==1);
+		assert(n71_held_status(held,NULL)>0 && !strcmp(held,"held=0\n"));
+		assert(session->module_retained && !session->primary_error);
+		puts=mock.puts;
+		if (cleanup_faults[index]!=HOLD_STOP_REFUSED)
+			assert(n71_cleanup_action("cleanup",NULL)==cleanup_errors[index] && mock.refs==1 && mock.puts==puts);
+		mock.fault=NONE;
+		error=n71_cleanup_action("cleanup",NULL);
+		if (cleanup_faults[index]==HOLD_STOP_AND_RESTORE) {
+			assert(error==-EPERM && mock.refs==1 && !session->scan_bridge && !mock.puts && !mock.resets);
+			error=n71_cleanup_action("cleanup",NULL);
+		}
+		assert(error==0 && !mock.refs && !session->module_retained && !session->scan_bridge);
+		assert(mock.scans==1 && mock.held_scans==1 && mock.enumerations==1 && mock.puts==4);
+		assert(n71_cleanup_action("cleanup",NULL)==0 && mock.puts==4);
+		finish(&p); cases++;
+	}
+	/* Mutation killed: permit hold without PME or the existing N71/mode scope. */
+	for (index=0;index<10;index++) {
+		int expected=index>=8 ? -ENODEV : -EINVAL;
+		p=setup_held();
+		switch(index) {
+		case 0: scan_pme_disable=false; break;
+		case 1: host_scan=false; break;
+		case 2: enumerate=false; break;
+		case 3: config_inventory=false; break;
+		case 4: bar_sizing=true; break;
+		case 5: chip_id=true; break;
+		case 6: dart_observe=true; break;
+		case 7: dart_cycle=true; break;
+		case 8: run=false; break;
+		default: mock.machine=false; break;
+		}
+		assert(n71_init()==expected && !mock.registered && !mock.scans && !mock.refs && !mock.gets);
+		finish(&p); cases++;
+	}
+	p=setup_held(); mock.attach_fail=0;
+	assert(n71_probe(&p)==-ENODEV && !session && !mock.refs && !mock.scans);
+	finish(&p); cases++;
+	return cases;
 }
 int main(void)
 {
@@ -356,5 +486,8 @@ int main(void)
 	mock.fault=NONE;
 	assert(n71_cleanup_action("cleanup",NULL)==0 && !mock.refs && mock.pme_scans==1);
 	assert(mock.enumerations==1 && mock.resets==1 && mock.puts==4); finish(&p); cases++;
-	printf("N71_PCIE_CALLER_OK cases=%u\n",cases); return 0;
+	printf("N71_PCIE_CALLER_OK cases=%u\n",cases);
+	assert(exercise_held_caller()==21);
+	puts("N71_PCIE_HELD_CALLER_OK cases=21");
+	return 0;
 }

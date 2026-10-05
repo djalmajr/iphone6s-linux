@@ -34,6 +34,9 @@ MODULE_PARM_DESC(host_scan, "Temporarily scan with PCI core; size/restore BARs, 
 static bool scan_pme_disable;
 module_param(scan_pme_disable, bool, 0400);
 MODULE_PARM_DESC(scan_pme_disable, "Opt-in endpoint PME_ENABLE disable/restore for host_scan; no W1C");
+static bool scan_hold;
+module_param(scan_hold, bool, 0400);
+MODULE_PARM_DESC(scan_hold, "Keep the PME host scan and its owners until action=cleanup; no bind or DMA");
 static bool bar_sizing;
 module_param(bar_sizing, bool, 0400);
 MODULE_PARM_DESC(bar_sizing, "Size/restore endpoint BARs directly; no PCI devices, MMIO or DMA");
@@ -244,12 +247,36 @@ static int n71_session_status(char *buffer, const struct kernel_param *parameter
 	return length;
 }
 
+static bool n71_session_has_held_bus(const struct n71_diagnostic *state)
+{
+	struct n71_scan_host *host;
+
+	if (!state || !state->scan_bridge || !state->scan_bridge->bus)
+		return false;
+	host = pci_host_bridge_priv(state->scan_bridge);
+	return host->bus_held;
+}
+
+static int n71_held_status(char *buffer, const struct kernel_param *parameter)
+{
+	int length;
+
+	(void)parameter;
+	mutex_lock(&session_lock);
+	length = scnprintf(buffer, PAGE_SIZE, "held=%u\n", n71_session_has_held_bus(session));
+	mutex_unlock(&session_lock);
+	return length;
+}
+
 static const struct kernel_param_ops cleanup_ops = {.set = n71_cleanup_action};
 static const struct kernel_param_ops status_ops = {.get = n71_session_status};
+static const struct kernel_param_ops held_ops = {.get = n71_held_status};
 module_param_cb(action, &cleanup_ops, NULL, 0200);
 MODULE_PARM_DESC(action, "cleanup retries restoration only; never repeats enumeration or scan");
 module_param_cb(status, &status_ops, NULL, 0400);
 MODULE_PARM_DESC(status, "Inspect retained ownership and cleanup errors before normal unload");
+module_param_cb(held, &held_ops, NULL, 0400);
+MODULE_PARM_DESC(held, "Read live bus ownership; distinct from pending restoration");
 
 static int n71_power(struct device *dev, struct n71_diagnostic *state)
 {
@@ -353,9 +380,12 @@ static int n71_probe_locked(struct platform_device *pdev)
 			error = n71_inventory_report(dev, state);
 		}
 		if (!error && host_scan) {
-			stage = "host-scan";
-			error = scan_pme_disable ? n71_pcie_scan_with_pme(dev, state, true) :
-				n71_pcie_scan(dev, state);
+			stage = scan_hold ? "host-scan-hold" : "host-scan";
+			if (scan_hold)
+				error = n71_pcie_scan_hold(dev, state);
+			else
+				error = scan_pme_disable ? n71_pcie_scan_with_pme(dev, state, true) :
+					n71_pcie_scan(dev, state);
 		}
 		if (!error && bar_sizing) {
 			stage = "bar-sizing";
@@ -373,6 +403,17 @@ static int n71_probe_locked(struct platform_device *pdev)
 			stage = "dart-cycle";
 			error = n71_pcie_dart_cycle(dev, state);
 		}
+	}
+	if (scan_hold && !error) {
+		if (n71_session_has_held_bus(state)) {
+			dev_info(dev, "N71_PCIE_SESSION_HELD retained=%u scan_pending=%u reset_pending=%u powered=%u attached=%u power_put_pending=%u primary_error=%d cleanup_error=%d; no bind, DMA or radio\n",
+				 state->module_retained, !!state->scan_bridge, state->reset_pending,
+				 state->powered, state->attached, state->power_put_pending,
+				 state->primary_error, state->cleanup_error);
+			return 0;
+		}
+		error = -ENODEV;
+		stage = "host-scan-hold-proof";
 	}
 done:
 	state->primary_error = error;
@@ -430,7 +471,8 @@ static int __init n71_init(void)
 {
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
-	if ((scan_pme_disable && !host_scan) || (config_inventory && !enumerate) ||
+	if ((scan_hold && (!host_scan || !scan_pme_disable)) ||
+	    (scan_pme_disable && !host_scan) || (config_inventory && !enumerate) ||
 	    ((host_scan || bar_sizing || chip_id || dart_observe || dart_cycle) && !config_inventory) ||
 	    (host_scan + bar_sizing + chip_id + dart_observe + dart_cycle > 1))
 		return -EINVAL;

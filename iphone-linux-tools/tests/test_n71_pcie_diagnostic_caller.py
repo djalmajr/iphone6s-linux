@@ -34,6 +34,21 @@ MUTATIONS = (
      '(true || scan_pme_disable) ? n71_pcie_scan_with_pme(dev, state, true)'),
     ('allow-pme-without-scan', '(scan_pme_disable && !host_scan)',
      '(false && scan_pme_disable && !host_scan)'),
+    ('hold-by-default', 'if (scan_hold)\n\t\t\t\terror = n71_pcie_scan_hold',
+     'if (true || scan_hold)\n\t\t\t\terror = n71_pcie_scan_hold'),
+    ('ignore-hold-opt-in', 'if (scan_hold)\n\t\t\t\terror = n71_pcie_scan_hold',
+     'if (false && scan_hold)\n\t\t\t\terror = n71_pcie_scan_hold'),
+    ('allow-hold-without-pme', '(scan_hold && (!host_scan || !scan_pme_disable))',
+     '(false && scan_hold && (!host_scan || !scan_pme_disable))'),
+    ('held-success-without-proof', 'if (n71_session_has_held_bus(state)) {',
+     'if (state) {'),
+    ('held-open-on-negative', 'if (scan_hold && !error) {', 'if (scan_hold) {'),
+    ('cleanup-before-held-return', 'state->primary_error, state->cleanup_error);\n\t\t\treturn 0;',
+     'state->primary_error, state->cleanup_error);\n\t\t\tn71_finish_cleanup(state);\n\t\t\treturn 0;'),
+    ('held-getter-without-lock', 'mutex_lock(&session_lock);\n\tlength = scnprintf(buffer, PAGE_SIZE, "held=',
+     'if (false) mutex_lock(&session_lock);\n\tlength = scnprintf(buffer, PAGE_SIZE, "held='),
+    ('held-when-bus-gone', '!state->scan_bridge->bus', 'false'),
+    ('held-from-pending-owner', 'return host->bus_held;', 'return host->bus_held || true;'),
 )
 MMIO_MUTATIONS = (
     ('ignore-gpio-readback', 'return value < 0 ? value : value == asserted ? 0 : -EIO;',
@@ -81,6 +96,7 @@ class N71PcieCaller(unittest.TestCase):
                 if before is None:
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertIn('N71_PCIE_CALLER_OK cases=73', result.stdout)
+                    self.assertIn('N71_PCIE_HELD_CALLER_OK cases=21', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
