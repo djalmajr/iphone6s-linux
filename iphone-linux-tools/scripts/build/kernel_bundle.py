@@ -45,6 +45,16 @@ POWER_FILES = {
         '4b0adc3013e2fabe9ca1cb8228f8f6b7934af4b667f7f0f893b675102d8710df',
         'ec4841316d8c3a8dad7ac44d93edac0209c581b4e4c0d2fb9dcfb89853754414'),
 }
+BINDING_BUNDLE = 'n71-dart-serdev-power-v2'
+BINDING_LOCALVERSION = '-iphone6s-dart-serdev-power2'
+BINDING_PATCHES = {
+    '0007-apple-pmgr-no-manual-bind.patch': '3f5a3e4c97a6cf898eaf90d53fcdc45a9796707c4123a14b1d0e043b58934aaa',
+}
+BINDING_FILES = {
+    'drivers/pmdomain/apple/pmgr-pwrstate.c': (
+        '4b0adc3013e2fabe9ca1cb8228f8f6b7934af4b667f7f0f893b675102d8710df',
+        '0d84693ae4f5a24df9f8c9499ecd0f8f6725566223428dfe7af686cf7a21f5b2'),
+}
 
 
 def bundle_spec(profile):
@@ -52,6 +62,8 @@ def bundle_spec(profile):
         return LOCALVERSION, FILES, PATCHES
     if profile == POWER_BUNDLE:
         return POWER_LOCALVERSION, {**FILES, **POWER_FILES}, {**PATCHES, **POWER_PATCHES}
+    if profile == BINDING_BUNDLE:
+        return BINDING_LOCALVERSION, {**FILES, **POWER_FILES, **BINDING_FILES}, {**PATCHES, **POWER_PATCHES, **BINDING_PATCHES}
     raise ValueError('Unknown bundle profile.')
 
 
@@ -128,7 +140,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=('apply', 'check'))
     parser.add_argument('checkout', type=Path)
-    parser.add_argument('--profile', choices=(BUNDLE, POWER_BUNDLE), default=BUNDLE)
+    parser.add_argument('--profile', choices=(BUNDLE, POWER_BUNDLE, BINDING_BUNDLE), default=BUNDLE)
     options = parser.parse_args()
     try:
         if options.command == 'apply':

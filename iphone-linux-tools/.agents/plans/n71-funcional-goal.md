@@ -2246,3 +2246,30 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   excluindo essas regras de formatação de contexto. Nenhuma config Git global.
 - Validar JSON/hash/links/diff/publicguard; reutilizar os gates130 sem repetir.
   Próxima fatia: novo profile/power2 preservando001→006/power1 e rollback.
+
+
+### Incremento 132 — profile power2 sem reaproveitar worktree power1
+
+- Três arquivos: plano, scripts/build/kernel_bundle.py e
+  tests/test_kernel_binding_bundle.py. Novo profile n71-dart-serdev-power-v2
+  com LOCALVERSION -iphone6s-dart-serdev-power2, patches001→007 e full blob
+  PMGR007 fixado. Default e power-v1 permanecem com identidades/hashes antigos.
+- Aplicar somente em worktree novo do BASE limpo; não completar uma fonte
+  power1 já patchada. Preflight consolidado das sete patches antes de writes;
+  SHA/HEAD/files/aliases/staging/external work continuam obrigatórios.
+- Testar Git real: conteúdo exato/identidade/report/idempotência, fonte/power1
+  preservados, patch007 alterada/late-apply inválido e profile misto recusados,
+  CLI reconhece seleção. Mutações compiladas por AssertionError, Mac/ARM64.
+- Testar fonte real na VM com worktree/output novos e preparar Image power2
+  depois dos gates; não sobrescrever base/power1/bundle/rollback. Sem DFU.
+
+- Gate132:8 testes e6 mutações por AssertionError passaram Mac/ARM64. Helper
+  real aplicou sete patches em worktree novo da VM e conferiu full blobs;
+  configuração power2 só difere de power1 no LOCALVERSION. Power1 source/
+  config/Image/exports e inputs intactos, hashes dos logs transferidos iguais.
+- Mutação inicial que transformava preflight em writer também acionou erro
+  não tratado num teste legado; não contou como kill válido. Runner agora
+  seleciona o contrato correspondente por mutação, exige FAIL/AssertionError
+  sem ERROR e nomeia a mudança corretamente como duplicate-apply. Gate final
+  completo passou; não afirmar detecção de remoção pura de preflight.
+- AST/fatal-flake8/diff passaram; Image power2 ainda não compilado nem físico.
