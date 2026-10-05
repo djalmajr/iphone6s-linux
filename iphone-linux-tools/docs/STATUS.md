@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-05
 
-## Checkpoint atual — PME do endpoint e alimentação
+## Checkpoint atual — candidata PME/ASPM integrada offline
+
+Helper PME, adapter e caller integrados; opt-in `scan_pme_disable=1` e composer `--pcie-aspm-off` preparados para uma candidata agrupada. Helper 1/19, adapter 29/18, caller 73/21 e composer 7/13 passaram no Mac e Ubuntu ARM64. Os seis módulos passaram build real Werror/modpost/ELF/vermagic, com fonte, kernel, Image e exports preservados. PCIe novo: 73.576 bytes; REG_ON intacto. [Procedimento e limites](N71_PME_ASPM_CANDIDATE.md), [prova](evidence/n71-pcie-pme-aspm-build.json).
+
+Ainda não carregada no iPhone: falta integrar e verificar o coletor/perfil antes de outro DFU. ASPM off foi escolhido para agrupar common clock/retrain/L1SS com a correção PME; não comprova consumo, Wi-Fi ou carga. O aparelho permanece no iOS para recarga. CI do último head publicado `6f7cd02`: PR success nos três jobs; push cancelled, Ubuntu cancelado e Mac/Windows success. Essa CI não cobre as mudanças novas.
+
+### Checkpoint físico anterior — PME do endpoint e alimentação
 
 A candidata PME foi testada em um boot/um scan/zero reboots intermediários: root044 já não foi a primeira recusa; endpoint04c/wordc008 sobre4108 bloqueou. Scan negativo613/33/23/1; cleanup de bus/config/TLS/reset/power e REG_ON80 passou, serviços preservados. Snapshot44/sync íntegros; retorno automático não confirmado, fallback físico recuperou iOS99%/carregando. [Resultado e limites](N71_LINK_EXPERIMENT.md#pme-root-superado--endpoint-e-retorno-manual-delimitados), [prova selecionada](evidence/n71-pme-first-physical.json). Issue21 volta a acompanhar confiabilidade do retorno; Wi-Fi e carga Linux continuam abertos.
 
