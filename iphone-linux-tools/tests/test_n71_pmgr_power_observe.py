@@ -34,6 +34,12 @@ MUTATIONS = (
     ('leak-domain-ref', 'of_node_put(domain.np);', '(void)domain.np;'),
     ('leak-provider-ref', 'put_device(&provider->dev);', '(void)put_device; (void)provider;'),
     ('lie-stable', 'words[index][0] == words[index][1]', '1U'),
+    ('reject-valid-last-index', 'reference->index >= 3', 'reference->index >= 2'),
+    ('allow-open-handle-reentry', 'access->provider || access->map', 'false'),
+    ('keep-unlocked-map', 'access->map = NULL;', '(void)access->map;'),
+    ('keep-unlocked-provider', 'access->provider = NULL;', '(void)access->provider;'),
+    ('ignore-domain-path', 'node != expected', '(node != expected && false)'),
+    ('ignore-root-path', 'pmgr != expected', '(pmgr != expected && false)'),
 )
 
 
@@ -44,7 +50,11 @@ class PmgrPowerObserveTests(unittest.TestCase):
         limits = resource.getrlimit(resource.RLIMIT_CORE)
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
         self.addCleanup(resource.setrlimit, resource.RLIMIT_CORE, limits)
-        source = (ROOT / 'phone/kernel/n71-pmgr-power-observe.c').read_text()
+        module_source = (ROOT / 'phone/kernel/n71-pmgr-power-observe.c').read_text()
+        include = '#include "n71-pmgr-access.h"\n'
+        self.assertEqual(module_source.count(include), 1)
+        source = ((ROOT / 'phone/kernel/n71-pmgr-access.h').read_text() + '\n'
+                  + module_source.replace(include, '', 1))
         with tempfile.TemporaryDirectory(prefix='n71-pmgr-observe-') as directory:
             folder = Path(directory)
             (folder / 'linux/mfd').mkdir(parents=True)
@@ -64,7 +74,7 @@ class PmgrPowerObserveTests(unittest.TestCase):
                 result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5, cwd=folder)
                 if before is None:
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertIn('N71_PMGR_POWER_OBSERVE_OK cases=88', result.stdout)
+                    self.assertIn('N71_PMGR_POWER_OBSERVE_OK cases=97', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)

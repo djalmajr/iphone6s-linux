@@ -2085,3 +2085,32 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   compiladas de reboot passaram em ambas as plataformas. Só a fixture/teste
   mudou; fontes de runtime intactas. Digests/inputs/logs transferidos conferidos.
   Novo CI precisa provar o fix; falha anterior permanece no histórico.
+
+### Incremento 127 — acesso PMGR qualificado compartilhado
+
+- Até cinco arquivos: plano, phone/kernel/n71-pmgr-access.h,
+  phone/kernel/n71-pmgr-power-observe.c, tests/n71_pmgr_power_observe.c e
+  tests/test_n71_pmgr_power_observe.py. Extrair validação/root/domínio/lock/mapa
+  já qualificados para o futuro backend genpd; observador conserva seis
+  leituras, logs após sucesso completo e nenhum write/activation.
+- API por reference/access: índice e caminhos exatos antes de dereference,
+  metadata da cadeia e provider bound sob device_lock; referência própria
+  mantém device, lock mantém devm map durante a operação. Unlock limpa
+  handle/mapa e é idempotente; handle aberto recusa reentrada. Não guardar
+  lock entre tarefas/sysfs calls ou usar mapa depois de unlock.
+- Runner compila fonte real do header+observador em conjunto; preservar
+  88 cenários/16 mutações existentes e adicionar fronteiras dos handles,
+  caminhos/índice, lock simultâneo de providers distintos e cleanup sem
+  referências residuais. Mac/ARM64 e novo módulo Werror/modpost da ABI power.
+- Helper não reserva domínio/clock, não ativa I2C nem é backend genpd.
+  Nenhum novo boot/DFU; artefatos físico124 e source/input históricos intactos.
+
+- Gate127:97 cenários e22 mutações compiladas detectadas por SIGABRT/asserção
+  no Mac e Ubuntu ARM64. Módulo W=1/KCFLAGS=-Werror/modpost passou na ABI
+  power1; ELF AArch64/vermagic e SHA f420639720001871735879057be41909492983631ea14da8a224c019fe131056 conferidos.
+  Image/config/exports e inputs intactos; digests dos logs transferidos
+  conferidos. AST/fatal-flake8 e diff passaram; sem typechecker Python
+  configurado. O novo helper não foi carregado no telefone.
+- CI8974389: PR37251729490/push37251726729 terminaram success, seis jobs
+  Ubuntu/macOS/Windows. Issue37 concluída; a falha anterior permanece
+  no histórico. Próxima fatia registra evidência e reprodução do helper.

@@ -178,7 +178,7 @@ static struct regmap *syscon_node_to_regmap(struct device_node *node)
 		assert(dev->driver && !strcmp(dev->driver->name, "apple-pmgr-pwrstate"));
 		locked++;
 	}
-	assert(locked == 1);
+	assert(locked >= 1 && locked <= 3);
 	map_calls++;
 	if (fault == MAP_ERROR && (int)map_calls == fault_index + 1) return (void *)(intptr_t)-EIO;
 	if (fault == MAP_NULL && (int)map_calls == fault_index + 1) return NULL;
@@ -241,6 +241,80 @@ static void failed(void)
 	assert(n71_pmgr_power_observe_init() < 0);
 	assert(output_size == 0); balanced();
 }
+
+static unsigned int access_cases(void)
+{
+	struct n71_pmgr_reference reference;
+	struct n71_pmgr_access access = {0};
+	unsigned int count = 0, words[2] = {0xdeadbeef, 0xdeadbeef};
+
+	reset(NONE, 0);
+	reference = (struct n71_pmgr_reference) {
+		.index = 0, .node = get_node(0), .pmgr = get_node(PMGR),
+	};
+	assert(n71_pmgr_access_lock(&reference, &access) == 0);
+	assert(access.provider == &devices[0] && access.map == &map);
+	assert(n71_pmgr_access_lock(&reference, &access) == -EBUSY);
+	assert(map_calls == 1 && devices[0].dev.refs == 1 && devices[0].dev.locked);
+	n71_pmgr_access_unlock(&access);
+	assert(!access.provider && !access.map);
+	n71_pmgr_access_unlock(&access);
+	n71_pmgr_access_unlock(NULL);
+	of_node_put(reference.node); of_node_put(reference.pmgr); balanced(); count++;
+
+	reset(NONE, 0);
+	reference = (struct n71_pmgr_reference) {
+		.index = 0, .node = &nodes[0], .pmgr = &nodes[PMGR],
+	};
+	assert(n71_pmgr_access_lock(NULL, &access) == -EINVAL);
+	assert(n71_pmgr_access_lock(&reference, NULL) == -EINVAL);
+	assert(!access.provider && !access.map && !map_calls);
+	balanced(); count++;
+
+	reference.index = 3;
+	assert(n71_pmgr_access_lock(&reference, &access) == -EINVAL);
+	assert(!map_calls); balanced(); count++;
+	reference.index = 0; reference.node = NULL;
+	assert(n71_pmgr_access_lock(&reference, &access) == -EINVAL);
+	assert(!map_calls); balanced(); count++;
+	reference.node = &nodes[0]; reference.pmgr = NULL;
+	assert(n71_pmgr_access_lock(&reference, &access) == -EINVAL);
+	assert(!map_calls); balanced(); count++;
+	reference.pmgr = &nodes[PMGR]; reference.node = &nodes[OTHER];
+	assert(n71_pmgr_access_lock(&reference, &access) == -ENODEV);
+	assert(!map_calls); balanced(); count++;
+	reference.node = &nodes[0]; reference.pmgr = &nodes[OTHER];
+	assert(n71_pmgr_access_lock(&reference, &access) == -ENODEV);
+	assert(!map_calls); balanced(); count++;
+	reference.pmgr = &nodes[PMGR];
+	assert(n71_pmgr_sample(&reference, NULL) == -EINVAL);
+	assert(n71_pmgr_sample(NULL, words) == -EINVAL);
+	assert(words[0] == 0xdeadbeef && words[1] == 0xdeadbeef && !map_calls);
+	balanced(); count++;
+
+	{
+		struct n71_pmgr_reference references[3];
+		struct n71_pmgr_access held[3] = {0};
+		struct device_node *pmgr = get_node(PMGR);
+		unsigned int index;
+
+		for (index = 0; index < 3; index++) {
+			references[index] = (struct n71_pmgr_reference) {
+				.index = index, .node = get_node((int)index), .pmgr = pmgr,
+			};
+			assert(n71_pmgr_access_lock(&references[index], &held[index]) == 0);
+			assert(held[index].map == &map && devices[index].dev.locked);
+		}
+		assert(map_calls == 3 && !reads && !output_size);
+		for (index = 3; index > 0; index--) {
+			n71_pmgr_access_unlock(&held[index - 1]);
+			assert(!held[index - 1].provider && !held[index - 1].map);
+			of_node_put(references[index - 1].node);
+		}
+		of_node_put(pmgr); balanced(); count++;
+	}
+	return count;
+}
 int main(void)
 {
 	unsigned int cases = 0, n, id;
@@ -279,6 +353,7 @@ int main(void)
 	assert(n71_pmgr_power_observe_init() == 0);
 	assert(strstr(output, "domain=sio_p offset=80158 sample0=10000100 sample1=10000110 stable=0"));
 	balanced(); cases++;
+	cases += access_cases();
 	printf("N71_PMGR_POWER_OBSERVE_OK cases=%u\n", cases);
 	return 0;
 }
