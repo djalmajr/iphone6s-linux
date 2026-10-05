@@ -861,3 +861,70 @@ sha256sum "$module_dir/n71-link-target-contract.ko"
 Recalcule ELF/vermagic/SHA do seu gate; paths e código da translation unit mudam o hash. Nenhum install/load é parte dessa receita. A função é apenas um gate de compilação, não um caller operacional; integração real precisa de estado/lifetime e cleanup retido.
 
 Próxima integração: explicitar o ownership e a restauração retida no caller PCIe, qualificar remoção de callbacks/dispositivos antes de restore e testar falhas reais de configuração/cleanup. Só depois compilar uma candidata operacional nova para hotload no próximo boot agrupado. Outras operações do core continuam recusadas; o helper preparado não comprova scan completo, associação DART/IRQ/DMA, firmware, Wi-Fi ou carga.
+
+## Scan e caller integrados — cleanup sem novo boot
+
+Os commits `e03bdc9` e `cae5955` integram o helper anterior ao módulo operacional, mantendo o kernel power2 existente. [Prova sanitizada](evidence/n71-pcie-scan-target-build.json). O scan faz prepare antes do PCI core, remove o barramento mesmo quando o core falha após registro parcial e só libera o bridge depois do readback da config e do TLS original. Config/target pendentes bloqueiam outro scan; cleanup repete apenas restauração. A política genérica de PCI não ganhou permissão para retrain, LNKCTL, rádio, IRQ ou DMA.
+
+O caller guarda seu estado em memória devres, serializa probe/action/status, aceita só um dispositivo e suprime bind/unbind. Um pin de módulo mantém o código vivo enquanto há rollback, reset ou energia pendentes. O GPIO de reset exige leitura lógica correspondente ao valor escrito. Falha num put de runtime PM conserva a referência de attachment e a obrigação de suspensão; retry usa suspend, sem descontar novamente a referência de uso já consumida. Esse status de runtime PM não prova sozinho o estado elétrico nem carga da bateria.
+
+```mermaid
+flowchart TD
+  A["Capturar root/config"] --> B["TLS2 e readback"]
+  B --> C["PCI scan limitado"]
+  C --> D["Stop/remove do barramento"]
+  D --> E["Restaurar config e TLS1"]
+  E -->|"Falha"| F["Reter bridge/MMIO/energia/REG_ON/módulo"]
+  F --> G["Cleanup explícito no mesmo boot"]
+  G --> E
+  E -->|"Readback íntegro"| H["Reset com readback; suspensão e detach"]
+  H -->|"Cleanup íntegro"| I["Liberar pin; unload normal"]
+```
+
+O trecho REG_ON do fluxo é uma obrigação do coletor do Mac. A versão anterior ainda não implementa essa retenção; **não carregar esta candidata usando o coletor antigo**. O módulo pode permanecer carregado e bound após falha justamente para conservar devres e permitir recuperação. `insmod` retornar0 não comprova que o scan ou o cleanup passaram. Nunca usar unload forçado, unbind manual ou desligar REG_ON enquanto o status indicar retenção.
+
+Os parâmetros novos, lidos pelo Mac via SSH, são:
+
+```sh
+cat /sys/module/n71_pcie_diagnostic/parameters/status
+printf 'cleanup\n' > /sys/module/n71_pcie_diagnostic/parameters/action
+cat /sys/module/n71_pcie_diagnostic/parameters/status
+```
+
+`action` só aceita cleanup, nunca reinicia enumeração/scan. O status informa ready, retained, scan_pending, reset_pending, powered, attached, power_put_pending, primary_error e cleanup_error. Erro primário continua preservado depois de um cleanup bem-sucedido. Contagens do resultado do scan são amostradas antes do cleanup e identificadas dessa forma no log; os registros separados de restauração decidem se a limpeza passou.
+
+Reprodução dos gates nativos, na raiz pública de `iphone-linux-tools`:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pcie_scan_host.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pcie_diagnostic_caller.py -v
+```
+
+Scan21 cenários/13 mutações e caller67/18 passaram Mac/Ubuntu ARM64. O primeiro harness executa o scan/headers reais com PCI core/MMIO simulados; o segundo executa probe/action/cleanup e backend GPIO/MMIO reais com APIs kernel e helpers de descoberta/scan simulados. São provas complementares de contrato, não execução física integrada. Todos os mutantes contabilizados compilaram e abortaram por SIGABRT/asserção. O helper separado2/21 foi reutilizado sem alteração de seus inputs.
+
+Para compilar os seis módulos na VM ARM64 existente, sem instalar ou gerar outro Image:
+
+```sh
+set -eu
+umask 077
+mkdir -p runtime
+module_dir="$(mktemp -d "$PWD/runtime/n71-scan-caller.XXXXXX")"
+mkdir -p "$module_dir/phone/kernel"
+cp phone/kernel/Makefile phone/kernel/*.c phone/kernel/*.h "$module_dir/phone/kernel/"
+kernel_source=/home/ubuntu/kernel-n71-binding-source-20261005
+kernel_output=/home/ubuntu/kernel-n71-binding-build-20261005
+sha256sum "$kernel_output/.config" "$kernel_output/arch/arm64/boot/Image" \
+  "$kernel_output/vmlinux.symvers" > "$module_dir/before-private.txt"
+LOCALVERSION= make -C "$kernel_source" O="$kernel_output" ARCH=arm64 -j2 \
+  M="$module_dir/phone/kernel" W=1 KCFLAGS=-Werror \
+  KBUILD_EXTRA_SYMBOLS="$kernel_output/vmlinux.symvers" modules
+sha256sum "$kernel_output/.config" "$kernel_output/arch/arm64/boot/Image" \
+  "$kernel_output/vmlinux.symvers" > "$module_dir/after-private.txt"
+cmp "$module_dir/before-private.txt" "$module_dir/after-private.txt"
+modinfo -F vermagic "$module_dir/phone/kernel/n71-pcie-diagnostic.ko"
+sha256sum "$module_dir/phone/kernel/n71-pcie-diagnostic.ko"
+```
+
+O módulo PCIe qualificado tem69976 bytes/SHA `b3fc79aa86b2e291edea464851f028b4516ff7053f5cf20a48787170440096b1`; a ABI é `7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64`. Paths e detalhes de build podem mudar o hash de sua reprodução: conferir ELF/vermagic e registrar a nova provenance. W=1/KCFLAGS-Werror/modpost passaram; o aviso de Module.symvers global ausente foi conservado, com vmlinux.symvers exato fornecido. Nenhum erro modpost foi rebaixado. Os40 inputs e source/config/Image/exports permaneceram iguais; módulo anterior preservado.
+
+Ainda não houve load deste código no telefone, nova medição de capabilities pelo helper, scan concluído, driver Broadcom, IRQdelivery, DMA, firmware ou Wi-Fi. Não há prova de carga Linux. O próximo gate é o coletor qualificado com retenção REG_ON/staging e perfil separado, seguido de uma sessão agrupada no mesmo boot.
