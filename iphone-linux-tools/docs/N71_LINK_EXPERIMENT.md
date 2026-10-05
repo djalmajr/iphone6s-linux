@@ -1011,3 +1011,32 @@ Esse status é W1C: escrever1 o limpa; não há restauração comum por simples 
 O orçamento declarado do gadget permaneceu500mA; power_supply continuou sem dispositivos. iOS100→90% inclui boot, retorno e intervalos iOS; carregamento estava ativo após o retorno. Não mede corrente líquida, saúde da bateria ou carga Linux. Não houve Broadcom/firmware, IRQdelivery, DMA, HDQ, SN2400 ou novo Image. iOS foi mantido para recarga enquanto a implementação continua offline. Logs, UUID, perfis, chaves e snapshot ficam privados.
 
 CI do headd045d24 passou PR37330736713 e push37330728149; o push exigiu retry somente do job Ubuntu por timeout/backup ausente em dois testes antigos de return_ios. Os dois passaram isoladamente na VM;20 testes passaram no Mac sem alterações. A causa da intermitência continua pendente de investigação. Essa CI antecede a correção d1cee21; os gates locais/ARM64 e a recuperação física da correção estão registrados separadamente.
+
+
+## PME já inativo — candidata sem escrita W1C
+
+A correção `5bc966e` reconhece o pedido root044/word8008 somente quando PMCSR continua8: D0, PME_ENABLE e PME_STATUS já desligados. A escrita de1 em STATUS serve para limpar um evento; quando o evento já é zero, o resultado desejado já está satisfeito. O helper retorna sucesso **sem chamar o backend de escrita**, sem limpar eventos e sem alterar contadores de writes. [Proveniência, contratos e hashes](evidence/n71-pcie-pme-noop-build.json).
+
+Antes desse retorno, a leitura confirma identidade1004106b, COMMAND sem bus-master, STATUS com lista de capabilities, primeiro pointer40, capability PM id1/version1..3 e PMCSR8 novamente. PME ativo, outro controle/D-state/enable, identidade/capability divergente, falha de leitura ou mudança na releitura continuam recusados e latched. O guard roda antes da igualdade genérica: observed8008/request8008 não pode ser apresentado como no-op e ocultar um evento ativo. Cleanup preserva o evento se ele surgir. Nenhuma permissão nova para PME do endpoint foi introduzida.
+
+A [fonte PCI fixada](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/pci.c#L3205) chama pci_pme_active(false) em pci_pm_init. Isso explica a forma do pedido observado; não foi capturado um trace de call stack. O registro preserva os hashes das fontes e a prova física anterior, sem reclassificar o scan negativo como sucesso.
+
+Seis suítes consumidoras/8 testes Python compilaram os harnesses C no Mac e Ubuntu ARM64;36 mutações config morreram por SIGABRT/assertion, incluindo evento ativo pela igualdade, escopo/width, identidade/capabilities, race da releitura e escrita W1C indevida. Scan21 cenários/13 mutações passou. Caller67/18 foi reutilizado porque caller/MMIO/harness permanecem byte a byte iguais e sua fixture substitui o scan; o módulo real inteiro foi recompilado. O build ARM64 dos seis módulos passou W1/KCFLAGS-Werror/modpost/ELF/vermagic com51 inputs e kernel/fonte/config/Image/exports preservados. A primeira tentativa encontrou colisão de current com o macro do kernel; pmcsr_now corrigiu, outputv2 passou e a falha original foi preservada privadamente.
+
+Para reproduzir na cópia de trabalho isolada e no kernel power2 já preparado, execute as seis suítes indicadas no JSON e a mutation config, depois o build de módulos:
+
+```sh
+set -e
+for suite in scan_config scan_host bar_sizing chip_id control_reference scan_link_target; do
+  python3 -m unittest discover -s tests -p "test_n71_pcie_${suite}.py" -v
+done
+python3 tests/run_n71_pcie_scan_mutations.py
+make -C "$kernel_source" O="$kernel_output" ARCH=arm64 -j2 W=1 KCFLAGS=-Werror \
+  M="$PWD/phone/kernel" KBUILD_EXTRA_SYMBOLS="$kernel_output/vmlinux.symvers" modules
+```
+
+kernel_source/kernel_output são os diretórios privados da fonte/outputs power2 existentes; [preparação do kernel](N71_KERNEL_BUNDLE.md). Conferir fonte, .config, Image, vmlinux.symvers, ELF/vermagic e hashes antes/depois. Os paths/builds afetam hashes; a reprodução deve registrar nova provenance em vez de esperar identidade binária de outro path.
+
+O PCIe novo tem70424 bytes/SHA63ee7d460bf9161a2105108a98667cf5966a8b31fd02460559fadd762da25e07; REG_ON permanece17688 bytes/SHAfdf887e7572b70d09e76f770272bee5dc9ffcde799277e894ee8965007c5a8f1. Nenhum Image, payload, chave, firmware ou default foi trocado; a candidata ainda não foi carregada. A seleção/provenance do coletor precisa ser integrada explicitamente antes do próximo scan. Ele continuará delimitado e com cleanup no mesmo boot; Wi-Fi/IRQ/DMA/carga seguem pendentes.
+
+CI do checkpoint7adc falhou em duas simulações antigas de retorno no Ubuntu e o push foi cancelado; Mac/Windows passaram. A [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38) preserva as reproduções. `402943a` exige BACKUP_VERIFIED e mostra modo/eventos/erro da fixture quando o backup esperado não aparece;20 testes passaram nas duas plataformas e a recusa sintética SSH reproduziu o diagnóstico. Nenhum timeout operacional foi ampliado. Essa observabilidade ainda não determina a causa da intermitência; nova CI deverá ser vinculada ao head novo.
