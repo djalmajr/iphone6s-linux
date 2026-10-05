@@ -2127,3 +2127,59 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Validar JSON/hash/links/diff/publicguard; reutilizar gates127 inalterados.
   Próxima implementação: backend kernel qualificado de attach/runtime PM/
   detach verificado, ainda sem controlador I2C ou charger I/O.
+
+
+### Incremento 129 — backend genpd com remoção comprovada
+
+- Quatro arquivos públicos: plano, phone/kernel/n71-i2c-genpd.h,
+  tests/n71_i2c_genpd.c e tests/test_n71_i2c_genpd.py. Header implementa os
+  callbacks reais do lifecycle125 sobre um consumidor root do caller e
+  providers PMGR127. Não cria platform/controller, adapter, pinctrl ou
+  cliente I2C e não será carregado no telefone nesta etapa.
+- Validar board/consumer I2C1 disabled sem filhos, recurso exato e domínio
+  único, referências/metadata da cadeia e providers bound. Locks temporários
+  em ordem única protegem cada chamada genpd/runtime PM; nunca retê-los
+  entre callbacks. Caller conserva referências/serializa/retém módulo.
+- Attach virtual sem power_on; guardar referência própria antes de detach
+  void, conferir domínio removido e device unregistered antes de put/limpar.
+  Checar estado runtime sob power.lock. Resume/put/suspend preservam contrato
+  de uso; detach falho conserva objeto e estado pendente, retry não decrementa
+  uso novamente e só admite status suspended real, sem set_status artificial.
+- Verificação física pelo regmap bypassed: cadeia tem target active com
+  actual active ou auto-PM depois de resume; release exige leaf target/actual
+  powergate e auto desativado. Pais podem ser compartilhados: não forçar
+  desligamento nem afirmar restauração elétrica por retorno runtime PM.
+- Native Mac/ARM64/mutações de guards/referência/uso/detach/estado e objeto
+  kernel Werror/modpost contra Image power preservado. AST/fatal-flake8,
+  diff/publicguard e CI. Nenhum DFU ou acesso ao carregador nesta fatia.
+
+#### D129. Separar ownership do domínio e controlador
+
+- Decisão: backend em header, consumidor root e referências pertencem ao
+  caller; callbacks reais runtime PM/genpd e qualificações N71 testados
+  antes do módulo de controller. Pinos/IRQ/clock/I2C permanecem numa etapa
+  posterior, antes de qualquer SN2400.
+- Por quê: evita autoprobe e permite testar falhas/ownership sem gastar
+  bateria ou pedir DFU para validar somente ABI.
+- Alternativas: platform I2C desde já poderia acionar controlador/clients;
+  writes PMGR diretos ignorariam genpd e consumers compartilhados.
+- Reverter: baixo, interface isolada e sem mudança na candidata de boot.
+- Onde: incremento129, issue2, backend acima.
+- Status: em curso; validação física conjunta posterior.
+
+- Gate129:84 cenários e19 mutações compiladas por SIGABRT/asserção passaram
+  Mac/ARM64. Regressão genpd suspend-success/live-leaf mantém pending e
+  recusa detach em retry; perda do provider consome o uso por put_noidle
+  sem ativação e mantém o domínio para cleanup qualificado posterior.
+  Header real/callbacks linkados no gate externo W=1/Werror/modpost;
+  ELF/vermagic power1/SHA e11af59c4e8f006a47be5cafa7284c1105c002bd195d74e6077f18326df82fdd conferidos.
+  Image/config/exports/inputs preservados, SHA dos logs transferidos iguais.
+- Falhas durante desenvolvimento: colisão puts na fixture Mac e warning
+  misleading-indentation GCC na fixture ARM64 corrigidos. Gates v1 falhos
+  permanecem privados; somente v4 Mac/v2 ARM64 são a prova final. O primeiro
+  transporte procurou log de build inexistente após native falhar; v2 copia
+  somente logs efetivamente registrados. Nenhuma falha contou como mutation kill.
+- AST/fatal-flake8/diff passaram; sem typechecker Python configurado.
+  Sem novo boot, sysfs control, hardware activation ou SN2400/charger I/O.
+  Backend em header não é módulo operacional de diagnóstico; caller ainda
+  deve implementar lifetime/mutex/module retention e operações físicas reunidas.
