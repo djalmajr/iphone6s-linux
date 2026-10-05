@@ -31,6 +31,9 @@ MODULE_PARM_DESC(config_inventory, "Read bounded endpoint config after enumerati
 static bool host_scan;
 module_param(host_scan, bool, 0400);
 MODULE_PARM_DESC(host_scan, "Temporarily scan with PCI core; size/restore BARs, no binding or DMA");
+static bool scan_pme_disable;
+module_param(scan_pme_disable, bool, 0400);
+MODULE_PARM_DESC(scan_pme_disable, "Opt-in endpoint PME_ENABLE disable/restore for host_scan; no W1C");
 static bool bar_sizing;
 module_param(bar_sizing, bool, 0400);
 MODULE_PARM_DESC(bar_sizing, "Size/restore endpoint BARs directly; no PCI devices, MMIO or DMA");
@@ -351,7 +354,8 @@ static int n71_probe_locked(struct platform_device *pdev)
 		}
 		if (!error && host_scan) {
 			stage = "host-scan";
-			error = n71_pcie_scan(dev, state);
+			error = scan_pme_disable ? n71_pcie_scan_with_pme(dev, state, true) :
+				n71_pcie_scan(dev, state);
 		}
 		if (!error && bar_sizing) {
 			stage = "bar-sizing";
@@ -426,7 +430,7 @@ static int __init n71_init(void)
 {
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
-	if ((config_inventory && !enumerate) ||
+	if ((scan_pme_disable && !host_scan) || (config_inventory && !enumerate) ||
 	    ((host_scan || bar_sizing || chip_id || dart_observe || dart_cycle) && !config_inventory) ||
 	    (host_scan + bar_sizing + chip_id + dart_observe + dart_cycle > 1))
 		return -EINVAL;

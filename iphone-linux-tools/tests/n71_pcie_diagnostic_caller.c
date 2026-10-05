@@ -85,6 +85,7 @@ static struct {
 	int attach_fail, resume_fail, put_fail;
 	bool machine, live, reset_phase;
 	unsigned int refs, gets, puts, suspends, detaches, scans, enumerations, resets, registered;
+	unsigned int pme_scans;
 	struct device domains[4];
 	struct gpio_desc gpio;
 	struct device_node node;
@@ -233,6 +234,12 @@ static int n71_pcie_scan(struct device *dev, struct n71_diagnostic *state)
 	if (mock.fault==SCAN_PENDING) { mock.bridge.alive=true; state->scan_bridge=&mock.bridge; return -EPERM; }
 	return mock.fault==SCAN_ERROR ? -EPERM : 0;
 }
+static int n71_pcie_scan_with_pme(struct device *dev, struct n71_diagnostic *state, bool disable_pme)
+{
+	assert(disable_pme);
+	mock.pme_scans++;
+	return n71_pcie_scan(dev,state);
+}
 static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 {
 	if (!state->scan_bridge) return 0;
@@ -260,12 +267,14 @@ static struct platform_device setup(void)
 	for (index=0;index<11;index++) p.resources[index]=(struct resource){addresses[index],addresses[index]+(index==0 ? 0x1000000 : index==9 ? 0x8000 : 0x4000)-1};
 	p.dev.of_node=&mock.node;
 	run=enumerate=config_inventory=host_scan=true; bar_sizing=chip_id=dart_observe=dart_cycle=false;
+	scan_pme_disable=false;
 	return p;
 }
 static void finish(struct platform_device *p)
 {
 	unsigned int index;
 	assert(!mock.refs && !mock.node.refs && !mock.bridge.alive && mock.puts==mock.gets);
+	assert(mock.pme_scans==(scan_pme_disable ? mock.scans : 0));
 	for (index=0;index<4;index++) assert(!mock.domains[index].attached && !mock.domains[index].usage);
 	if (session) n71_remove(p);
 	assert(!session && !session_device && !session_lock);
@@ -325,5 +334,27 @@ int main(void)
 	p=setup(); enumerate=false; assert(n71_init()==-EINVAL); finish(&p); cases++;
 	p=setup(); config_inventory=false; assert(n71_init()==-EINVAL); finish(&p); cases++;
 	p=setup(); chip_id=true; assert(n71_init()==-EINVAL); finish(&p); cases++;
+	/* PME is an explicit caller mode; registration alone never scans hardware. */
+	p=setup(); scan_pme_disable=true;
+	assert(n71_init()==0 && mock.registered==1 && !mock.scans);
+	assert(n71_probe(&p)==0 && mock.pme_scans==1 && mock.enumerations==1);
+	assert(n71_cleanup_action("cleanup",NULL)==0 && mock.pme_scans==1);
+	n71_exit(); finish(&p); cases++;
+	p=setup(); scan_pme_disable=true; host_scan=false;
+	assert(n71_init()==-EINVAL && !mock.registered && !mock.scans); finish(&p); cases++;
+	p=setup(); scan_pme_disable=true; enumerate=false;
+	assert(n71_init()==-EINVAL && !mock.registered && !mock.scans); finish(&p); cases++;
+	p=setup(); scan_pme_disable=true; config_inventory=false;
+	assert(n71_init()==-EINVAL && !mock.registered && !mock.scans); finish(&p); cases++;
+	p=setup(); scan_pme_disable=true; bar_sizing=true;
+	assert(n71_init()==-EINVAL && !mock.registered && !mock.scans); finish(&p); cases++;
+	p=setup(); scan_pme_disable=true; mock.fault=SCAN_PENDING;
+	assert(n71_probe(&p)==0 && session->module_retained && mock.refs==1 && mock.bridge.alive);
+	assert(session->primary_error==-EPERM && session->cleanup_error==-EIO && !mock.puts);
+	assert(n71_cleanup_action("cleanup",NULL)==-EIO && mock.refs==1 && mock.pme_scans==1);
+	assert(mock.enumerations==1 && !mock.resets && !mock.puts);
+	mock.fault=NONE;
+	assert(n71_cleanup_action("cleanup",NULL)==0 && !mock.refs && mock.pme_scans==1);
+	assert(mock.enumerations==1 && mock.resets==1 && mock.puts==4); finish(&p); cases++;
 	printf("N71_PCIE_CALLER_OK cases=%u\n",cases); return 0;
 }

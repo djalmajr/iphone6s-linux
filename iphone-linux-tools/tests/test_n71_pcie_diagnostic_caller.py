@@ -28,6 +28,12 @@ MUTATIONS = (
     ('expose-unbind', '.suppress_bind_attrs = true', '.suppress_bind_attrs = false'),
     ('missing-action-lock', 'mutex_lock(&session_lock);\n\terror = session ? n71_finish_cleanup',
      'if (false) mutex_lock(&session_lock);\n\terror = session ? n71_finish_cleanup'),
+    ('ignore-pme-opt-in', 'scan_pme_disable ? n71_pcie_scan_with_pme(dev, state, true)',
+     '(false && scan_pme_disable) ? n71_pcie_scan_with_pme(dev, state, true)'),
+    ('enable-pme-by-default', 'scan_pme_disable ? n71_pcie_scan_with_pme(dev, state, true)',
+     '(true || scan_pme_disable) ? n71_pcie_scan_with_pme(dev, state, true)'),
+    ('allow-pme-without-scan', '(scan_pme_disable && !host_scan)',
+     '(false && scan_pme_disable && !host_scan)'),
 )
 MMIO_MUTATIONS = (
     ('ignore-gpio-readback', 'return value < 0 ? value : value == asserted ? 0 : -EIO;',
@@ -74,7 +80,7 @@ class N71PcieCaller(unittest.TestCase):
                 result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5, cwd=folder)
                 if before is None:
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertIn('N71_PCIE_CALLER_OK cases=67', result.stdout)
+                    self.assertIn('N71_PCIE_CALLER_OK cases=73', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
