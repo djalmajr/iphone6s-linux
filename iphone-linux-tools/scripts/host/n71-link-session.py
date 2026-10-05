@@ -19,6 +19,8 @@ import n71_scan_result
 import n71_scan_target_result
 import n71_scan_pme_result
 import n71_session_history
+import n71_scan_held_result
+import n71_held_session
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = '7.2.0-iphone6s-dart-serdev1'
@@ -68,11 +70,16 @@ def aspm_payload(profile, metadata):
             'Exact ASPM payload bootargs and loader required')
 
 
-def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False):
+def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False, scan_hold=False):
     require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
     require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
     require(not scan_pme_noop or scan_link_target, 'PME no-op scan requires target scan')
     require(not scan_pme_disable or (scan_link_target and not scan_pme_noop), 'Endpoint PME requires its own target candidate')
+    require(not scan_hold or (host_scan and scan_link_target and scan_pme_disable
+                              and not scan_pme_noop and release == BINDING_RELEASE),
+            'Held scan requires its explicit power2 host/target/PME candidate')
+    if scan_hold:
+        return n71_scan_held_result.selected_records(ROOT, release=release)
     if scan_link_target:
         require(host_scan and release == BINDING_RELEASE, 'Target scan requires host-scan and power2')
         name = 'n71-pcie-pme-noop-build.json' if scan_pme_noop else 'n71-pcie-scan-target-build.json'
@@ -165,14 +172,19 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE, scan_pme_disable=False):
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE, scan_pme_disable=False, scan_hold=False):
         require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
         require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
         require(not scan_link_target or (host_scan and release == BINDING_RELEASE), 'Target session requires host-scan and power2')
         require(not scan_pme_disable or scan_link_target, 'Endpoint PME session requires target mode')
+        require(not scan_hold or (host_scan and scan_link_target and scan_pme_disable and release == BINDING_RELEASE),
+                'Held session requires its explicit power2 host/target/PME candidate')
+        self.scan_hold = scan_hold
         self.scan_link_target = scan_link_target
         self.scan_pme_disable = scan_pme_disable
         self.scan_parser = n71_scan_pme_result if scan_pme_disable else n71_scan_target_result if scan_link_target else n71_scan_result
+        if scan_hold:
+            self.scan_parser = n71_scan_held_result
         self.release = release
         self.output = output
         self.modules = modules
@@ -183,7 +195,8 @@ class Session:
         self.dart_observe = dart_observe
         self.dart_cycle = dart_cycle
         self.history = history
-        self.module_directory = '/run/n71-link-' + secrets.token_hex(12) if history else '/run'
+        self.module_directory = '/run/n71-link-' + secrets.token_hex(12) if history or scan_hold else '/run'
+        self.before_effect = lambda: None
         self.ssh = device_profile.ssh_options() + ['root@' + device_profile.PHONE]
         self.reg_attempted = False
         self.activation_attempted = False
@@ -237,10 +250,11 @@ class Session:
             self.result['aspm_off_verified'] = True
         if self.history:
             self.history.verify_live(preflight_text)
-            p = self.capture('module-directory', 'umask 077; mkdir -m 700 ' + self.module_directory)
-            require(p.returncode == 0, 'Exclusive remote module directory not created')
         else:
             require('N71_PCIE_' not in preflight_text, 'A PCIe diagnostic already exists in this boot')
+        if self.history or self.scan_hold:
+            p = self.capture('module-directory', 'umask 077; mkdir -m 700 ' + self.module_directory)
+            require(p.returncode == 0, 'Exclusive remote module directory not created')
         if self.host_scan or self.bar_sizing or self.dart_observe or self.dart_cycle or self.history:
             p = self.capture('pci-empty', 'set -e; test -z "$(ls /sys/bus/pci/devices)"; echo N71_PCI_PREFLIGHT_EMPTY')
             require(p.returncode == 0, 'Pre-existing PCI devices refused')
@@ -256,6 +270,7 @@ class Session:
     def experiment(self):
         self.preflight()
         self.reg_attempted = True
+        self.before_effect()
         p = self.capture('observe', 'set -e; insmod ' + self.module_directory + '/n71-wlan-power-diagnostic.ko run=1; '
                          'cat ' + REG + 'state; cat ' + REG + 'control; dmesg')
         require(p.returncode == 0 and 'N71_REG_ON_OBSERVED control=80 bit0=0 compatible-plan=1' in p.stdout
@@ -264,6 +279,7 @@ class Session:
                 and 'N71_REG_ON_CONTROL_READBACK value=80' in p.stdout,
                 'Exact original latch and owner not proved')
         self.activation_attempted = True
+        self.before_effect()
         p = self.capture('activate', 'set -e; printf "1\n" > ' + REG + 'power; '
                          'cat ' + REG + 'state; cat ' + REG + 'control; cat ' + REG + 'level; dmesg')
         require(p.returncode == 0 and STATE_ACTIVE in p.stdout
@@ -271,11 +287,14 @@ class Session:
                 'Fresh acquired latch not proved')
         # Repeat the fresh checks on the phone immediately before the single insmod.
         self.pcie_attempted = True
+        self.before_effect()
         parameters = ' config_inventory=1' if self.config_inventory else ''
         if self.host_scan:
             parameters += ' host_scan=1'
         if self.scan_pme_disable:
             parameters += ' scan_pme_disable=1'
+        if self.scan_hold:
+            parameters += ' scan_hold=1'
         if self.chip_id:
             parameters += ' chip_id=1'
         elif self.bar_sizing:
@@ -285,6 +304,8 @@ class Session:
         elif self.dart_cycle:
             parameters += ' dart_cycle=1'
         status = 'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; ' if self.scan_link_target else ''
+        if self.scan_hold:
+            status += 'printf "N71_PCIE_HELD "; cat ' + PCIE + 'held; '
         p = self.capture('pcie', 'set -e; '
                          'test "$(cat ' + REG + 'state)" = "' + STATE_ACTIVE + '"; '
                          'test "$(cat ' + REG + 'control)" = "N71_REG_ON_CONTROL_READBACK value=81"; '
@@ -388,6 +409,7 @@ class Session:
         self.result['reg_on_release_skipped'] = self.reg_attempted and not pcie_released
 
     def run(self):
+        require(not self.scan_hold, 'Held session requires its durable coordinator')
         try:
             self.experiment()
         except (ValueError, OSError, KeyboardInterrupt) as error:
@@ -412,12 +434,16 @@ def main():
     parser.add_argument('--scan-link-target', action='store_true', help='Explicit power2 host-scan candidate with retained TLS/caller cleanup')
     parser.add_argument('--scan-pme-noop', action='store_true', help='Explicit target candidate with inactive root PME acknowledgement without a write')
     parser.add_argument('--scan-pme-disable', action='store_true', help='Explicit endpoint PME disable/restore candidate; requires ASPM off')
+    parser.add_argument('--scan-hold', action='store_true', help='Retain the qualified PCI bus and power owners until explicit same-boot release')
+    parser.add_argument('--release-held', type=Path, help='Release owners from a private held session in this exact boot; requires --scan-hold')
     modes.add_argument('--bar-sizing', action='store_true', help='Select endpoint-only BAR sizing module; implies inventory')
     modes.add_argument('--chip-id', action='store_true', help='Read ChipCommon ID once via restored BAR0 route; implies sizing/inventory')
     modes.add_argument('--dart-observe', action='store_true', help='Read stable DART state without provider activation; implies inventory')
     modes.add_argument('--dart-cycle', action='store_true', help='Test temporary provider and restore tables; requires prior complete private observation')
     parser.add_argument('--previous-clean', type=Path, help='Continue only after matching private cleanup and this boot history')
     options = parser.parse_args()
+    require(not options.release_held or (options.scan_hold and options.previous_clean is None),
+            'Held release requires held mode without previous-clean')
     os.umask(0o077)
     os.environ['IPHONE_LINUX_PROFILE'] = str(options.profile.absolute())
     profile = device_profile.verify()
@@ -430,20 +456,26 @@ def main():
     require(metadata.get('pcie_scan_pme_noop', False) is options.scan_pme_noop, 'PME profile selection differs')
     require(metadata.get('pcie_scan_pme_disable', False) is options.scan_pme_disable, 'Endpoint PME profile selection differs')
     require(metadata.get('pcie_aspm_off', False) is options.scan_pme_disable, 'ASPM profile selection differs')
+    require(metadata.get('pcie_scan_hold', False) is options.scan_hold, 'Held profile selection differs')
     if options.scan_pme_disable:
         aspm_payload(profile, metadata)
     records = selected_records(options.config_inventory, options.host_scan, options.bar_sizing, options.chip_id,
                                dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release,
                                scan_link_target=options.scan_link_target, scan_pme_noop=options.scan_pme_noop,
-                               scan_pme_disable=options.scan_pme_disable)
+                               scan_pme_disable=options.scan_pme_disable, scan_hold=options.scan_hold)
     if release == BINDING_RELEASE or options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe or options.dart_cycle:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record, release=release)) for record in records]
+    held_identity = n71_held_session.identity(options.profile.absolute(), profile, modules) if options.scan_hold else None
     history = n71_session_history.History(options.previous_clean, ROOT, release) if options.previous_clean else None
     if options.dart_cycle:
         require(history is not None, 'Provider cycle requires prior private same-boot cleanup')
         n71_dart_cycle_result.previous(options.previous_clean.absolute())
     if options.check:
+        if options.release_held:
+            session = Session(ROOT / 'runtime', modules, host_scan=True, scan_link_target=True,
+                              scan_pme_disable=True, scan_hold=True, release=release)
+            n71_held_session.load_source(session, ROOT, options.release_held, held_identity)
         print('N71_SESSION_LOCAL_GATE_OK; no SSH or USB action')
         return 0
     require(options.output_dir is not None, 'New private output required')
@@ -452,6 +484,10 @@ def main():
             'Output must be new, directly under runtime')
     device_profile.protected(output.parent, directory=True)
     output.mkdir(mode=0o700)
+    if options.scan_hold:
+        session = Session(output, modules, host_scan=options.host_scan, scan_link_target=options.scan_link_target,
+                          scan_pme_disable=options.scan_pme_disable, scan_hold=True, release=release, history=history)
+        return n71_held_session.run(session, held_identity, root=ROOT, source=options.release_held)
     return Session(output, modules, config_inventory=options.config_inventory,
                    host_scan=options.host_scan, bar_sizing=options.bar_sizing,
                    chip_id=options.chip_id, dart_observe=options.dart_observe,
