@@ -31,6 +31,15 @@ Em 2026-10-02 o operador pediu novo goal e execução contínua, sem paradas ao 
 - **Onde:** este plano e #17.
 - **Status:** aplicada.
 
+### D3 — preparar target temporário sem liberar retrain
+
+- **Decisão:** qualificar um helper separado TLS1→2→1 para um link Gen1 já ativo, antes do scan, sem escrever LNKCTL/retrain. Integrar somente depois de definir retenção/cleanup do caller e gates de fonte/fixture/build; não carregar o helper isolado no aparelho.
+- **Por quê:** a primeira recusa física pertence ao quirk de levantar o limite de velocidade; liberar apenas0a0 aciona outra sequência que ainda não tem rollback qualificado. TLS2 temporário permite preparar um scan que conserva o link negociado e confere o readback real.
+- **Alternativas:** permitir TLS+retrain do core exige qualificar todas as mudanças de link/status/cleanup; falsificar a leitura de TLS esconderia o estado real; alterar o kernel para um quirk de plataforma exigiria outro Image/boot.
+- **Reverter:** baixo na preparação offline, com helper independente e artefatos anteriores preservados; falha física futura precisará de ownership retido até restauração comprovada.
+- **Onde:** incrementos147/148, phone/kernel/n71-pcie-scan-link-target.h, docs/N71_LINK_EXPERIMENT.md, issue#9.
+- **Status:** preparada; integração e carga física pendentes.
+
 ## Arquivos, fases e tarefas sequenciais
 
 Cada item é uma fase com no máximo cinco arquivos públicos; scripts auxiliares de pesquisa/dumps/logs temporários ficam em runtime privado. Antes de editar fonte, leitura integral e revisão das referências; artefatos externos fixados por commit/hash.
@@ -2416,3 +2425,11 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Gates nativos Mac/Ubuntu ARM64 e mutações compiladas por SIGABRT/asserção; objeto/módulo de contrato na ABI power2, sem novo Image/instalação/load. Registrar fontes primárias/hashes e limites em fatia documental seguinte. A decisão é temporária e reversível; alternativa de permitir o retrain do core exigiria controlar mais operações, link e rollback ainda não qualificados. Wi-Fi e carga continuam abertos; nenhum DFU nesta implementação.
 
 - Gate147: dois testes nativos e21 mutações compiladas por SIGABRT/asserção passaram Mac/Ubuntu ARM64. Regressões exercitam a word TLS, estado de link, capability/vector (6 ou fallback0), cada falha de leitura antes/depois da escrita/restauração, erro com efeito físico, obrigação retida e retry sem duplicar escrita. Módulo de contrato6432 bytes passou W=1/KCFLAGS-Werror/modpost/ELF/vermagic power2; inputs/logs/ELF recalculados no Mac. Image/config/exports e fontes PCI preservados. AST/fatal-flake8/diff íntegros. Helper não foi integrado ao scan, carregado no iPhone nem contado como correção física; mudanças posteriores do core continuam recusadas. Publicação documental/hash em fatia seguinte.
+
+### Incremento 148 — prova e reprodução do helper separado
+
+- Quatro arquivos: plano, docs/N71_LINK_EXPERIMENT.md, docs/STATUS.md e docs/evidence/n71-pcie-scan-link-target.json. Registrar commita548fda, cinco inputs idênticos Mac/VM, dois testes/21 mutações, módulo de contrato e fontes PCI fixadas por SHA/linhas. Preservar a sessão física146 como prova distinta; helper separado não resolve por si só o scan, IRQ, DMA ou firmware.
+- Documentar reprodução nativa/compilação, a razão para target temporário e os gates de integração: callbacks/devices removidos antes de restore, root/decode qualificados e ownership/MMIO/energia/módulo retidos quando pending. Não inserir um helper com cleanup pendente em caller que libera incondicionalmente seus recursos. LNKCAP2/vector/headers/estado frescos ainda precisarão de prova no aparelho.
+- Reusar gates147 inalterados, conferir JSON/inputs/logs/ELF/links/publictree/diff e registrar avisos modpost do módulo de contrato (Module.symvers global ausente com vmlinux.symvers fornecido; MODULE_DESCRIPTION ausente). Não são falhas de compilação/mutação nem um módulo operacional. Commit/push e comentário#9 já autorizados, sem novo DFU ou instalação/configuração global. CI vinculada ao novo head será acompanhada separadamente.
+
+- Gate148: JSON bate com cinco inputs, logs nativos/compilação e ELF/vermagic/SHA reais; todos os limites físicos/integrados false. Referências locais e dois blocos do runbook passaram links/bash-n/diff. Reutilizados dois testes/21 mutações de147 nas duas plataformas, com código e inputs idênticos; nenhum build/load/reboot novo para documentação. A receita mostra a translation unit exata e checagem before/after de config/Image/exports, sem install. Integração com retenção do caller e scan completo continuam próximos passos, sem confundir contrato compilado com Wi-Fi funcional.

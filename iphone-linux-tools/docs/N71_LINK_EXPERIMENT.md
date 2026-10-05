@@ -797,3 +797,67 @@ O head `70d4736` passou um boot físico power2 em2026-10-05. Depois dos observad
 A primeira recusa do scan mudou de SERR para root0:08, offset0a0, word, valor2. A captura física read-only identifica capability PCIe em70 e Link Control2 em0a0 com valor original1. As recusas seguintes foram latched após esse primeiro erro; não comprovam que todos os pedidos posteriores precisem de novas permissões. A próxima fatia deve confrontar esse pedido com a fonte PCI fixada e implementar somente a alteração delimitada e sua restauração, com gates offline antes de um eventual load por SSH.
 
 Logs integrais, boot UUID, tabelas DART, perfis, módulos e snapshots ficam privados. Não foram carregados rfkill/cfg80211/Broadcom ou firmware. SSH/HTTP/Herdr finais, snapshot/sync e retorno ao iOS por software passaram. O histórico desta sessão não autoriza continuar depois do retorno ao iOS: um futuro boot terá seu próprio preflight e descoberta. Wi-Fi funcional/IRQ/DMA continuam pendentes; a identificação física do chip permite preparar a seleção de firmware, sem publicar firmware ou calibração.
+
+## Target temporário do scan — contrato separado, sem retrain
+
+O código `a548fda` prepara `phone/kernel/n71-pcie-scan-link-target.h`, ainda sem integração ao scan ou carga no telefone. [Prova sanitizada](evidence/n71-pcie-scan-link-target.json). A fonte fixada executa `pcie_failed_link_retrain()` durante `pci_device_add()`: com link ativo e TLS1, tenta levantar o limite por `pcie_set_target_speed()`, que escreve TLS e pede retrain. Liberar apenas a primeira recusa0a0 não qualifica essa sequência. [Chamada no probe](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/probe.c#L2743), [quirk](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/quirks.c#L95), [alteração de velocidade](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/pcie/bwctrl.c#L111). Trechos/hashes foram confrontados na cópia local exata da VM.
+
+A abordagem preparada escreve temporariamente TLS2 **antes** de registrar o root no core. Com DLLLA ativo e TLS2, aquele quirk não solicita levantar TLS1. Depois do scan e da remoção dos devices/callbacks, o helper restaura TLS1. Não emula leituras nem escreve LNKCTL/retrain, status W1C ou capabilities. A permanência do link é uma condição verificada após a escrita, não uma promessa de comportamento físico ainda não observado.
+
+O helper exige acesso exclusivo ao root N71 já qualificado pelo caller: ID/class/header/buses, decode/master off, lista de capabilities limitada/sem loops/PCIe única em70, versão2/root-port, LNKCAP max2/reporting, LNKCTL0, DLLLA/Gen1 sem training e TLS original1. LNKCAP2 aceita somente vector6 ou fallback0 qualificado pelo [core PCI](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/pci.c#L6020). Campos/headers/vector completos precisam coincidir no snapshot fresco antes da única escrita word em0a0 e depois do readback. Esses novos guards ainda não foram medidos pelo helper no telefone.
+
+Uma escrita que retorna erro pode ter alterado o registrador: `pending` é marcado antes dela. Prepare falho conserva a obrigação; cleanup falho também. Restore recusa owner/link desconhecidos e evita outra escrita se o original já foi restaurado numa tentativa cujo readback falhou. O handle precisa ser inicializado a zero. Captura recusa sobrescrever um handle pending/prepared; o caller deve serializar operações e conservar MMIO, energia, estado e módulo enquanto a obrigação existir. **Não integrar este helper a um caller que faz unwind/free incondicional em erro.** O módulo diagnóstico atual não ganhou essa integração ou novos parâmetros.
+
+Reprodução dos contratos, na raiz de `iphone-linux-tools`:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pcie_scan_link_target.py -v
+```
+
+Dois testes e21 mutações compiladas por SIGABRT/asserção passaram Mac/Ubuntu ARM64. O harness usa o helper real com I/O de configuração simulado; verifica word/bytes vizinhos/link, snapshots frescos, cada falha de leitura antes/depois da escrita/restauração, erro com efeito, pending retido e retry sem duplicação. Erros de compilação não contam como kills. Cópias isoladas dos cinco inputs foram conferidas por SHA nas duas plataformas.
+
+O gate de tipos/ABI foi um módulo **somente de compilação**,6432 bytes, com função não executada que referencia capture/prepare/restore. Compilou na fonte/output power2 preservados com W=1/KCFLAGS-Werror/modpost e passou ELF AArch64/vermagic/SHA no Mac. Foram conservados os avisos de Module.symvers global ausente (vmlinux.symvers exato fornecido; erros modpost não rebaixados) e MODULE_DESCRIPTION ausente no gate. Não é o módulo operacional, não altera Image/config/exports e não pode ser usado como prova de load ou de scan corrigido.
+
+Para reproduzir a compilação na VM ARM64, com a cópia pública e o output power2 já preparado, crie um M novo sob runtime privado:
+
+```sh
+set -eu
+umask 077
+mkdir -p runtime
+chmod 700 runtime
+module_dir="$(mktemp -d "$PWD/runtime/n71-link-target-gate.XXXXXX")"
+kernel_source=/home/ubuntu/kernel-n71-binding-source-20261005
+kernel_output=/home/ubuntu/kernel-n71-binding-build-20261005
+sha256sum "$kernel_output/.config" "$kernel_output/arch/arm64/boot/Image" \
+  "$kernel_output/vmlinux.symvers" > "$module_dir/before-private.txt"
+cp phone/kernel/n71-pcie-contract.h phone/kernel/n71-pcie-ecam.h \
+  phone/kernel/n71-pcie-scan-link-target.h "$module_dir/"
+printf 'obj-m += n71-link-target-contract.o\n' > "$module_dir/Makefile"
+cat > "$module_dir/n71-link-target-contract.c" <<'C'
+#include <linux/module.h>
+#include "n71-pcie-scan-link-target.h"
+int n71_link_target_contract_compile(const struct n71_link_target_io *, struct n71_link_target *);
+int n71_link_target_contract_compile(const struct n71_link_target_io *io, struct n71_link_target *state)
+{
+    int error = n71_link_target_capture(io, state);
+    if (!error) error = n71_link_target_prepare(io, state);
+    if (state->pending) {
+        int cleanup = n71_link_target_restore(io, state);
+        if (!error) error = cleanup;
+    }
+    return error;
+}
+MODULE_LICENSE("GPL");
+C
+make -C "$kernel_source" O="$kernel_output" M="$module_dir" \
+  W=1 KCFLAGS=-Werror KBUILD_EXTRA_SYMBOLS="$kernel_output/vmlinux.symvers" modules
+sha256sum "$kernel_output/.config" "$kernel_output/arch/arm64/boot/Image" \
+  "$kernel_output/vmlinux.symvers" > "$module_dir/after-private.txt"
+cmp "$module_dir/before-private.txt" "$module_dir/after-private.txt"
+modinfo -F vermagic "$module_dir/n71-link-target-contract.ko"
+sha256sum "$module_dir/n71-link-target-contract.ko"
+```
+
+Recalcule ELF/vermagic/SHA do seu gate; paths e código da translation unit mudam o hash. Nenhum install/load é parte dessa receita. A função é apenas um gate de compilação, não um caller operacional; integração real precisa de estado/lifetime e cleanup retido.
+
+Próxima integração: explicitar o ownership e a restauração retida no caller PCIe, qualificar remoção de callbacks/dispositivos antes de restore e testar falhas reais de configuração/cleanup. Só depois compilar uma candidata operacional nova para hotload no próximo boot agrupado. Outras operações do core continuam recusadas; o helper preparado não comprova scan completo, associação DART/IRQ/DMA, firmware, Wi-Fi ou carga.

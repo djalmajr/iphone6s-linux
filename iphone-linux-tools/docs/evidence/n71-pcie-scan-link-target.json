@@ -1,0 +1,148 @@
+{
+  "format": 1,
+  "status": "standalone_contract_native_and_kernel_compiled_not_integrated_or_loaded",
+  "code_commit": "a548fdae67acbe7085ab18a7e35ddd9d8e524f58",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "physical_trigger_record": "n71-power2-first-physical.json",
+  "physical_trigger": {
+    "root_id": "1004106b",
+    "endpoint_id": "43a314e4",
+    "first_refused_offset": "0a0",
+    "size": 2,
+    "requested": 2,
+    "measured_original": 1,
+    "subsequent_refusals_latched": true
+  },
+  "primary_sources": {
+    "drivers/pci/probe.c": {
+      "sha256": "c14188e7d25a8a33d09bd415c50f70c62be91ebb3a240627fee6c6c5298765d6",
+      "lines": [
+        2743,
+        2743
+      ]
+    },
+    "drivers/pci/quirks.c": {
+      "sha256": "5036b96bfa30e01f4b0985eccc805e9b8f77c506cca81f8392c95b9ba67c9aac",
+      "lines": [
+        95,
+        130
+      ]
+    },
+    "drivers/pci/pcie/bwctrl.c": {
+      "sha256": "8a570d6787a69cc83b03c94eec2c407cb7afc1189271c8ed5b3efc18093a4d31",
+      "lines": [
+        111,
+        120
+      ]
+    },
+    "drivers/pci/pci.c": {
+      "sha256": "4e726a79c54736f8c58166dc4af0a19a0001ce20e476686efa1975e61d318ad4",
+      "retrain_lines": [
+        4573,
+        4619
+      ],
+      "supported_speeds_lines": [
+        6020,
+        6047
+      ]
+    },
+    "include/uapi/linux/pci_regs.h": {
+      "sha256": "51d2a1344da2a56e913e9d69b3b5d90eaaf4fb0bf96e672a5674ea819182c69b"
+    }
+  },
+  "inputs": {
+    "phone/kernel/n71-pcie-contract.h": {
+      "bytes": 2529,
+      "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8"
+    },
+    "phone/kernel/n71-pcie-ecam.h": {
+      "bytes": 1977,
+      "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3"
+    },
+    "phone/kernel/n71-pcie-scan-link-target.h": {
+      "bytes": 5822,
+      "sha256": "1af47829908937d28de30b5a05c10ca406a08db22c7657c642e94f3e71534dea"
+    },
+    "tests/n71_pcie_scan_link_target.c": {
+      "bytes": 9794,
+      "sha256": "b9c32d182f71689e912624c745aee307dac5632bae197990c168e82979fced36"
+    },
+    "tests/test_n71_pcie_scan_link_target.py": {
+      "bytes": 4572,
+      "sha256": "79942f7976204c03f8f83393372db3a15c38afc341988d252e288394182dac5d"
+    }
+  },
+  "native": {
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "tests_per_platform": 2,
+    "compiled_assertion_mutations_per_platform": 21,
+    "mutant_required_exit": "SIGABRT with assertion",
+    "compile_failures_counted_as_kills": false,
+    "mac_log_sha256": "01ff83dad84f3a84e2468bec70b359a091c30bf1de2c5b60f2bc244f6d81f702",
+    "arm64_log_sha256": "a043124a6acc8b446df128996ad82b5020133af6499ba53b5baa9a905cd96490",
+    "contract_scenarios": [
+      "exact root/class/header/buses and decode/master off",
+      "bounded unique capability chain and version/type/offset",
+      "Gen1 active, no training; max Gen2/vector6 or legacy fallback0",
+      "capture retains outputs on error; refuses pending/prepared overwrite",
+      "fresh snapshot before write and after readback",
+      "only word writes TLS1 to2 then original1; adjacent state preserved",
+      "every read fault before/after prepare and restore",
+      "failed write with and without physical effect retains pending",
+      "restore retry avoids duplicate write when target already original",
+      "unknown owner/link state refuses new write without losing pending"
+    ]
+  },
+  "kernel_compile": {
+    "w_level": 1,
+    "kcflags_werror": true,
+    "modpost_passed": true,
+    "module": {
+      "bytes": 6432,
+      "sha256": "7d3cb039b815d709feb81b9774d3829f42019444d3b3b056636e6550d67f5287",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "elf_machine": 183
+    },
+    "log_sha256": "57b8e6131cc25b53b5fc36702f10237313474fba517e7c900df47ccb702f36d5",
+    "kernel_config_image_exports_and_primary_sources_preserved": true,
+    "warnings": [
+      "Global Module.symvers absent; exact vmlinux.symvers supplied; modpost errors not demoted",
+      "Compile-only contract gate lacks MODULE_DESCRIPTION"
+    ],
+    "operational_phone_module": false
+  },
+  "contract": {
+    "root_config_callback_requires_exclusive_owned_N71_root0_08": true,
+    "fresh_read_before_write": true,
+    "write_offset": "0a0",
+    "write_width": 2,
+    "temporary_target": 2,
+    "original_target": 1,
+    "lnkctl_retrain_writes": 0,
+    "status_w1c_writes": 0,
+    "capability_value_emulation": false,
+    "prepared_requires_postwrite_state_and_readback": true,
+    "pending_set_before_write_attempt": true,
+    "failed_cleanup_retains_obligation": true,
+    "caller_must_remove_PCI_devices_callbacks_before_restore": true,
+    "caller_must_retain_MMIO_energy_module_and_state_while_pending": true
+  },
+  "limits": {
+    "scan_caller_integrated": false,
+    "operational_module_built": false,
+    "phone_loaded": false,
+    "physical_target_or_restore_proven": false,
+    "complete_scan_proven": false,
+    "radio_or_firmware_loaded": false,
+    "irq_delivery_proven": false,
+    "dma_enabled": false,
+    "wifi_functional": false,
+    "charging_functional": false,
+    "new_image_built": false,
+    "new_phone_reboot": false
+  }
+}
