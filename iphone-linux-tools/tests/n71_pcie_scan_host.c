@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-/* Exercise the unchanged adapter against a fault-injected PCI API/backend. */
+/* Exercise scan/held-bus callbacks against a fault-injected PCI API/backend. */
 #include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -62,7 +62,8 @@ enum fault { NONE, CAP_WRITE, STOP_WRITE, SCAN_FAIL, MISSING_ENDPOINT, MASTER,
 	TARGET_LINK_CHANGED, ROOT_DECODE, SCAN_PARTIAL_FAIL, TARGET_VERIFY_CHANGED,
 	REFUSAL_AND_RESTORE_DROP, BRIDGE_ALLOC_FAIL, SCAN_NO_BUS,
 	PME_NONE, PME_PREPARE_DROP, PME_RESTORE_DROP, PME_CORE_EVENT,
-	PME_DISABLE_EVENT, PME_CAP_BAD, PME_CORE_LATCHED, PME_LINK_LOST };
+	PME_DISABLE_EVENT, PME_CAP_BAD, PME_CORE_LATCHED, PME_LINK_LOST,
+	STOP_AND_RESTORE };
 static struct {
 	enum fault fault;
 	u32 *ecam, port[4096];
@@ -98,7 +99,8 @@ static void writew(u16 value, void *address)
 {
 	if (mock.returned) {
 		assert(!mock.scans || mock.removes == 1);
-		if (mock.fault == RESTORE_DROP && address == (void *)&mock.ecam[0x100004 / 4] && value == 0x100)
+		if ((mock.fault == RESTORE_DROP || mock.fault == STOP_AND_RESTORE) &&
+		    address == (void *)&mock.ecam[0x100004 / 4] && value == 0x100)
 			return;
 	}
 	if (address == (void *)&mock.ecam[0x10004c / 4]) {
@@ -275,7 +277,7 @@ static void pci_walk_bus(struct pci_bus *bus, int (*callback)(struct pci_dev *, 
 static void pci_stop_root_bus(struct pci_bus *bus)
 {
 	assert(bus && mock.locked && !mock.removes); mock.stops++;
-	if (mock.fault == STOP_WRITE)
+	if (mock.fault == STOP_WRITE || mock.fault == STOP_AND_RESTORE)
 		assert(mock.bridge->ops->write(bus, 8, 0x80, 4, 1) == PCIBIOS_SET_FAILED);
 }
 static void pci_remove_root_bus(struct pci_bus *bus)
@@ -286,6 +288,115 @@ static void pci_remove_root_bus(struct pci_bus *bus)
 		mock.port[0x88 / 4] = 0;
 }
 #include "n71-pcie-scan.h"
+
+static void initialize_case(enum fault index, bool pme)
+{
+	memset(&mock, 0, sizeof(mock)); mock.fault = index;
+	mock.pme = pme;
+	mock.ecam = calloc(0x1000000 / 4, sizeof(u32)); assert(mock.ecam);
+	mock.ecam[0x8000 / 4] = 0x1004106b; mock.ecam[0x100000 / 4] = 0x43a314e4;
+	mock.ecam[0x8004 / 4] = 0xa9100000;
+	mock.ecam[0x100004 / 4] = 0xa9000103;
+	mock.ecam[0x8008 / 4] = 0x06040001; mock.ecam[0x100008 / 4] = 0x02800002;
+	mock.ecam[0x800c / 4] = 0x00010000; mock.ecam[0x8018 / 4] = 0x44010100;
+	mock.ecam[0x100010 / 4] = 0xc0000004;
+	mock.ecam[0x8034 / 4] = 0x70;
+	mock.ecam[0x8070 / 4] = 0x00420010;
+	mock.ecam[0x807c / 4] = 0x00100002;
+	mock.ecam[0x809c / 4] = 6;
+	mock.ecam[0x8080 / 4] = 0x20010000;
+	mock.ecam[0x80a0 / 4] = 0x5a5a0001;
+	if (mock.pme) {
+		mock.ecam[0x100004 / 4] |= 0x100000;
+		mock.ecam[0x100034 / 4] = 0x48;
+		mock.ecam[0x100048 / 4] = index == PME_CAP_BAD ? 0x40001 : 0x30001;
+		mock.ecam[0x10004c / 4] = 0xabc04108;
+	}
+	if (index == ROOT_DECODE)
+		mock.ecam[0x8004 / 4] |= 1;
+	mock.port[0x88 / 4] = index == LINK_DOWN ? 0 : 5;
+}
+
+static unsigned int exercise_held_bus(void)
+{
+	const enum fault faults[] = {PME_NONE, STOP_WRITE, RESTORE_DROP,
+		PME_RESTORE_DROP, TARGET_RESTORE_DROP, PME_LINK_LOST, STOP_AND_RESTORE};
+	const int cleanup_errors[] = {0, -EPERM, -EIO, -EIO, -EIO, -ENOLINK, -EIO};
+	const enum fault scan_faults[] = {CAP_WRITE, SCAN_FAIL, SCAN_NO_BUS,
+		SCAN_PARTIAL_FAIL, MISSING_ENDPOINT, MASTER, PME_PREPARE_DROP, PME_CORE_EVENT};
+	const int scan_errors[] = {-EPERM, -ENOMEM, -ENODEV, -ENOMEM,
+		-ENODEV, -EACCES, -EAGAIN, -EPERM};
+	struct device dev = {0};
+	struct n71_diagnostic state;
+	unsigned int index, cases = 0;
+
+	for (index = 0; index < sizeof(faults) / sizeof(*faults); index++) {
+		struct n71_scan_host *host;
+		u32 identity;
+		initialize_case(faults[index], true);
+		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
+		assert(n71_pcie_scan_hold(&dev, &state) == 0);
+		assert(state.scan_bridge && state.scan_bridge->bus && mock.allocations == 1);
+		host = pci_host_bridge_priv(state.scan_bridge);
+		assert(host->bus_held && host->config_pending && host->config.active);
+		assert(host->pme.pending && host->pme.prepared && host->target.pending);
+		assert(!mock.locked && !mock.stops && !mock.removes && !mock.target_restores && !mock.pme_restores);
+		assert(state.scan_bridge->enable_device(state.scan_bridge, &mock.endpoint) == -EPERM);
+		assert(state.scan_bridge->ops->read(&mock.endpoint_bus, 0, 0, 4, &identity) == 0);
+		assert(identity == 0x43a314e4);
+		assert(n71_pcie_scan_hold(&dev, &state) == -EBUSY && mock.scans == 1);
+		assert(n71_pcie_scan(&dev, &state) == -EBUSY && mock.allocations == 1);
+		assert(strstr(mock.log, "N71_PCIE_SCAN_HELD devices=2 endpoints=1"));
+		assert(!strstr(mock.log, "N71_PCIE_SCAN_CLEANUP"));
+		if (index == 0) {
+			/* A bus with unproved ownership cannot be removed or restored. */
+			unsigned int writes = mock.writes;
+			host->bus_held = false;
+			assert(n71_pcie_scan_cleanup(&state) == -EBUSY && state.scan_bridge);
+			assert(mock.writes == writes && !mock.stops && !mock.removes);
+			host->bus_held = true;
+		}
+		assert(n71_pcie_scan_cleanup(&state) == cleanup_errors[index]);
+		assert(mock.stops == 1 && mock.removes == 1 && !mock.locked);
+		if (index >= 2) {
+			assert(state.scan_bridge && !state.scan_bridge->bus && mock.allocations == 1);
+			host = pci_host_bridge_priv(state.scan_bridge);
+			assert(!host->bus_held);
+			assert(host->config_pending || host->pme.pending || host->target.pending);
+			assert(n71_pcie_scan_hold(&dev, &state) == -EBUSY && mock.scans == 1);
+			assert(n71_pcie_scan_cleanup(&state) == cleanup_errors[index]);
+			mock.fault = NONE;
+			mock.port[0x88 / 4] = 5;
+			assert(n71_pcie_scan_cleanup(&state) == (faults[index] == STOP_AND_RESTORE ? -EPERM : 0));
+		}
+		assert(!state.scan_bridge && !mock.allocations);
+		assert(n71_pcie_scan_cleanup(&state) == 0 && mock.scans == 1);
+		assert(mock.stops == 1 && mock.removes == 1 && !mock.locked);
+		assert(mock.ecam[0x80a0 / 4] == 0x5a5a0001);
+		assert(mock.ecam[0x10004c / 4] == 0xabc04108);
+		assert(mock.ecam[0x100010 / 4] == 0xc0000004);
+		free(mock.ecam);
+		cases++;
+	}
+	for (index = 0; index < sizeof(scan_faults) / sizeof(*scan_faults); index++) {
+		initialize_case(scan_faults[index], true);
+		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
+		assert(n71_pcie_scan_hold(&dev, &state) == scan_errors[index]);
+		assert(!state.scan_bridge && !mock.allocations && !mock.locked);
+		assert(!strstr(mock.log, "N71_PCIE_SCAN_HELD"));
+		assert(n71_pcie_scan_cleanup(&state) == 0);
+		if (mock.scans)
+			assert(mock.stops == 1 && mock.removes == 1);
+		free(mock.ecam);
+		cases++;
+	}
+	initialize_case(PME_NONE, true);
+	state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
+	assert(n71_pcie_scan_with_mode(&dev, &state, false, true) == -EINVAL);
+	assert(!state.scan_bridge && !mock.allocations && !mock.scans && !mock.writes);
+	free(mock.ecam);
+	return cases + 1;
+}
 
 int main(void)
 {
@@ -298,30 +409,7 @@ int main(void)
 	for (index = 0; index < sizeof(expected) / sizeof(*expected); index++) {
 		struct n71_diagnostic state;
 		struct device device = {0};
-		memset(&mock, 0, sizeof(mock)); mock.fault = index;
-		mock.pme = index >= PME_NONE;
-		mock.ecam = calloc(0x1000000 / 4, sizeof(u32)); assert(mock.ecam);
-		mock.ecam[0x8000 / 4] = 0x1004106b; mock.ecam[0x100000 / 4] = 0x43a314e4;
-		mock.ecam[0x8004 / 4] = 0xa9100000;
-		mock.ecam[0x100004 / 4] = 0xa9000103;
-		mock.ecam[0x8008 / 4] = 0x06040001; mock.ecam[0x100008 / 4] = 0x02800002;
-		mock.ecam[0x800c / 4] = 0x00010000; mock.ecam[0x8018 / 4] = 0x44010100;
-		mock.ecam[0x100010 / 4] = 0xc0000004;
-		mock.ecam[0x8034 / 4] = 0x70;
-		mock.ecam[0x8070 / 4] = 0x00420010;
-		mock.ecam[0x807c / 4] = 0x00100002;
-		mock.ecam[0x809c / 4] = 6;
-		mock.ecam[0x8080 / 4] = 0x20010000;
-		mock.ecam[0x80a0 / 4] = 0x5a5a0001;
-		if (mock.pme) {
-			mock.ecam[0x100004 / 4] |= 0x100000;
-			mock.ecam[0x100034 / 4] = 0x48;
-			mock.ecam[0x100048 / 4] = index == PME_CAP_BAD ? 0x40001 : 0x30001;
-			mock.ecam[0x10004c / 4] = 0xabc04108;
-		}
-		if (index == ROOT_DECODE)
-			mock.ecam[0x8004 / 4] |= 1;
-		mock.port[0x88 / 4] = index == LINK_DOWN ? 0 : 5;
+		initialize_case(index, index >= PME_NONE);
 		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
 		{
 			int result = mock.pme ? n71_pcie_scan_with_pme(&device, &state, true) : n71_pcie_scan(&device, &state);
@@ -379,5 +467,7 @@ int main(void)
 		free(mock.ecam);
 	}
 	puts("N71_PCIE_SCAN_HOST_OK cases=29");
+	assert(exercise_held_bus() == 16);
+	puts("N71_PCIE_HELD_BUS_OK cases=16");
 	return 0;
 }

@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-/* Temporary PCI-core sizing only; remove the bus before reset/power-off. */
+/* PCI-core sizing; an explicitly held bus must be removed before power-off. */
 #ifndef N71_PCIE_SCAN_H
 #define N71_PCIE_SCAN_H
 #include <linux/pci.h>
@@ -18,9 +18,10 @@ struct n71_scan_host {
 	struct n71_link_target target;
 	struct n71_pme_state pme;
 	bool config_pending;
+	bool bus_held;
 	struct resource windows[3];
 	unsigned int reads, devices, endpoints;
-	int io_error;
+	int io_error, held_stop_error;
 };
 
 static int n71_scan_raw_read(void *context, bool root, u32 where,
@@ -189,6 +190,13 @@ static int n71_scan_report_device(struct pci_dev *dev, void *context)
 	return 0;
 }
 
+static int n71_scan_validate_result(const struct n71_scan_host *host)
+{
+	if (host->config.error || host->io_error)
+		return host->config.error ? host->config.error : host->io_error;
+	return host->devices == 2 && host->endpoints == 1 ? 0 : -ENODEV;
+}
+
 static int n71_scan_target_read(void *context, u32 where, unsigned int size, u32 *value)
 {
 	return n71_scan_raw_read(context, true, where, size, value);
@@ -202,19 +210,38 @@ static int n71_scan_target_write(void *context, u32 where, unsigned int size, u3
 	return n71_scan_raw_write(context, true, where, size, value);
 }
 
+/* Caller holds the rescan lock and retains all MMIO/power owners. */
+static void n71_scan_remove_bus(struct pci_host_bridge *bridge)
+{
+	pci_stop_root_bus(bridge->bus);
+	pci_remove_root_bus(bridge->bus);
+}
+
 static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 {
 	struct pci_host_bridge *bridge = state->scan_bridge;
 	struct n71_scan_host *host;
 	struct n71_scan_io io;
 	struct n71_link_target_io target_io;
-	int error;
+	int error, stop_error = 0;
 
 	if (!bridge)
 		return 0;
 	host = pci_host_bridge_priv(bridge);
-	if (bridge->bus)
-		return -EBUSY;
+	stop_error = host->held_stop_error;
+	if (bridge->bus) {
+		if (!host->bus_held)
+			return -EBUSY;
+		pci_lock_rescan_remove();
+		n71_scan_remove_bus(bridge);
+		pci_unlock_rescan_remove();
+		if (bridge->bus)
+			return -EBUSY;
+		host->bus_held = false;
+		stop_error = host->config.error ? host->config.error : host->io_error;
+		host->held_stop_error = stop_error;
+		dev_info(host->dev, "N71_PCIE_SCAN_BUS_REMOVED bus-null=1 stop-error=%d\n", stop_error);
+	}
 	io = (struct n71_scan_io){host, n71_scan_raw_read, n71_scan_raw_write};
 	target_io = (struct n71_link_target_io){host, n71_scan_target_read, n71_scan_target_write};
 	if (host->config_pending) {
@@ -242,11 +269,11 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 	}
 	state->scan_bridge = NULL;
 	pci_free_host_bridge(bridge);
-	return 0;
+	return stop_error;
 }
 
-static int n71_pcie_scan_with_pme(struct device *dev, struct n71_diagnostic *state,
-				 bool disable_pme)
+static int n71_pcie_scan_with_mode(struct device *dev, struct n71_diagnostic *state,
+				  bool disable_pme, bool hold_bus)
 {
 	struct pci_host_bridge *bridge;
 	struct n71_scan_host *host;
@@ -261,6 +288,8 @@ static int n71_pcie_scan_with_pme(struct device *dev, struct n71_diagnostic *sta
 
 	if (state->scan_bridge)
 		return -EBUSY;
+	if (hold_bus && !disable_pme)
+		return -EINVAL;
 	bridge = pci_alloc_host_bridge(sizeof(*host));
 	if (!bridge)
 		return -ENOMEM;
@@ -338,13 +367,19 @@ static int n71_pcie_scan_with_pme(struct device *dev, struct n71_diagnostic *sta
 	if (!error && bridge->bus)
 		pci_walk_bus(bridge->bus, n71_scan_report_device, host);
 	if (bridge->bus) {
-		pci_stop_root_bus(bridge->bus);
-		pci_remove_root_bus(bridge->bus);
+		if (!error)
+			error = n71_scan_validate_result(host);
+		if (hold_bus && !error) {
+			host->bus_held = true;
+			pci_unlock_rescan_remove();
+			dev_info(dev, "N71_PCIE_SCAN_HELD devices=%u endpoints=%u; no bind, DMA or radio\n",
+				 host->devices, host->endpoints);
+			return 0;
+		}
+		n71_scan_remove_bus(bridge);
 		dev_info(dev, "N71_PCIE_SCAN_BUS_REMOVED bus-null=%u\n", !bridge->bus);
-		if (!error && (host->config.error || host->io_error))
-			error = host->config.error ? host->config.error : host->io_error;
-		else if (!error && (host->devices != 2 || host->endpoints != 1))
-			error = -ENODEV;
+		if (!error)
+			error = n71_scan_validate_result(host);
 	}
 	pci_unlock_rescan_remove();
 restore:
@@ -358,6 +393,18 @@ restore:
 		 error, report.devices, report.endpoints, report.reads,
 		 report.config.attempts, report.config.writes, report.config.refusals);
 	return error;
+}
+
+static int n71_pcie_scan_with_pme(struct device *dev, struct n71_diagnostic *state,
+				 bool disable_pme)
+{
+	return n71_pcie_scan_with_mode(dev, state, disable_pme, false);
+}
+
+/* Caller integration must retain its own module, MMIO and power references. */
+static inline int n71_pcie_scan_hold(struct device *dev, struct n71_diagnostic *state)
+{
+	return n71_pcie_scan_with_mode(dev, state, true, true);
 }
 
 static int n71_pcie_scan(struct device *dev, struct n71_diagnostic *state)

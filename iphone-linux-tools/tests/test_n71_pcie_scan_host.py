@@ -40,18 +40,19 @@ class N71PcieScanHost(unittest.TestCase):
         result = self.compile_and_run()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('N71_PCIE_SCAN_HOST_OK cases=29', result.stdout)
+        self.assertIn('N71_PCIE_HELD_BUS_OK cases=16', result.stdout)
 
     def test_lifecycle_mutations_die_by_assertion(self):
         mutations = (
             ('missing-remove', 'pci_remove_root_bus(bridge->bus);', '(void)pci_remove_root_bus;'),
-            ('early-restore', 'pci_stop_root_bus(bridge->bus);',
-             'n71_scan_restore(&io, &host->config);\n\t\tpci_stop_root_bus(bridge->bus);'),
+            ('early-restore', '\t\tn71_scan_remove_bus(bridge);\n\t\tdev_info(dev,',
+             '\t\tn71_scan_restore(&io, &host->config);\n\t\tn71_scan_remove_bus(bridge);\n\t\tdev_info(dev,'),
             ('ignored-refusal', 'host->config.error || host->io_error',
              'host->config.error && host->io_error'),
             ('restore-starved', '> 4096 && host->config.active', '> 4096'),
             ('enable-allowed', '(void)dev;\n\treturn -EPERM;', '(void)dev;\n\treturn 0;'),
-            ('forgot-stop-error', 'if (!error && (host->config.error || host->io_error))',
-             'if (!error && host->devices != 2 && (host->config.error || host->io_error))'),
+            ('forgot-stop-error', ' !bridge->bus);\n\t\tif (!error)',
+             ' !bridge->bus);\n\t\tif (!error && host->devices != 2)'),
             ('skip-target-prepare', 'error = n71_link_target_prepare(&target_io, &host->target);',
              'error = 0;'),
             ('skip-target-restore', 'if (host->target.pending) {', 'if (false) {'),
@@ -60,7 +61,9 @@ class N71PcieScanHost(unittest.TestCase):
             ('release-after-target-failure', 'if (error)\n\t\t\treturn error;\n\t}\n\tstate->scan_bridge',
              'if (false)\n\t\t\treturn error;\n\t}\n\tstate->scan_bridge'),
             ('lose-retained-bridge', 'state->scan_bridge = bridge;', 'state->scan_bridge = NULL;'),
-            ('skip-partial-bus-removal', 'if (bridge->bus) {', 'if (!error && bridge->bus) {'),
+            ('skip-partial-bus-removal',
+             'pci_walk_bus(bridge->bus, n71_scan_report_device, host);\n\tif (bridge->bus) {',
+             'pci_walk_bus(bridge->bus, n71_scan_report_device, host);\n\tif (!error && bridge->bus) {'),
             ('overwrite-pending-bridge', 'if (state->scan_bridge)\n\t\treturn -EBUSY;',
              'if (false)\n\t\treturn -EBUSY;'),
             ('skip-pme-prepare', 'error = n71_pme_disable(&io, &host->pme);', 'error = 0;'),
@@ -71,6 +74,20 @@ class N71PcieScanHost(unittest.TestCase):
              'error = n71_scan_write(&io, &host->config, &request);'),
             ('lose-pme-ownership', 'error = n71_pme_restore(&io, &host->pme);',
              'error = n71_pme_restore(&io, &host->pme);\n\t\thost->pme.pending = false;'),
+            ('hold-without-pme', 'if (hold_bus && !disable_pme)', 'if (false && !disable_pme)'),
+            ('hold-negative-scan', 'if (hold_bus && !error)', 'if (hold_bus)'),
+            ('hold-invalid-topology', 'host->devices == 2 && host->endpoints == 1',
+             'host->devices >= 1 && host->endpoints <= 1'),
+            ('lose-held-owner', 'host->bus_held = true;', 'host->bus_held = false;'),
+            ('held-cleanup-without-lock',
+             'pci_lock_rescan_remove();\n\t\tn71_scan_remove_bus(bridge);',
+             'n71_scan_remove_bus(bridge);\n\t\tpci_lock_rescan_remove();'),
+            ('held-cleanup-before-remove', 'if (bridge->bus) {\n\t\tif (!host->bus_held)',
+             'if (false && bridge->bus) {\n\t\tif (!host->bus_held)'),
+            ('ignore-held-stop-refusal', 'pci_free_host_bridge(bridge);\n\treturn stop_error;',
+             'pci_free_host_bridge(bridge);\n\treturn 0;'),
+            ('forget-held-stop-refusal-on-retry', 'stop_error = host->held_stop_error;',
+             'stop_error = 0;'),
         )
         limits = resource.getrlimit(resource.RLIMIT_CORE)
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
