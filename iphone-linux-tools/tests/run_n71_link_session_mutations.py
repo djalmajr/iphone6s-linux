@@ -8,6 +8,12 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'scripts/host/n71-link-session.py'
 MUTATIONS = {
+    'pme-target-scope': ('not scan_pme_noop or scan_link_target', 'True'),
+    'pme-profile-flag': ("metadata.get('pcie_scan_pme_noop', False) is options.scan_pme_noop", 'True'),
+    'pme-no-write-contract': ("evidence['contract']['pme_noop_without_write'] is True", 'True'),
+    'pme-active-contract': ("and evidence['contract']['active_pme_status_refused'] is True", ''),
+    'pme-reread-contract': ("and evidence['contract']['same_word_rechecked'] is True", ''),
+    'pme-root-contract': ("and evidence['contract']['pme_root_only'] is True", ''),
     'profile-release-pair': ("metadata.get('kernel_release') == release", 'True'),
     'profile-payload': ("metadata.get('payload_sha256') == payload_sha256", 'True'),
     'binding-build-flags': ("and build['werror'] is True and build['modpost_passed'] is True", ''),

@@ -54,17 +54,24 @@ def module_bytes(profile, record, *, release=RELEASE):
     return raw
 
 
-def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False):
+def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False):
     require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
     require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
+    require(not scan_pme_noop or scan_link_target, 'PME no-op scan requires target scan')
     if scan_link_target:
         require(host_scan and release == BINDING_RELEASE, 'Target scan requires host-scan and power2')
-        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-scan-target-build.json').read_text())
+        name = 'n71-pcie-pme-noop-build.json' if scan_pme_noop else 'n71-pcie-scan-target-build.json'
+        evidence = json.loads((ROOT / 'docs/evidence' / name).read_text())
         build = evidence['module_build']
         require(evidence['kernel_release'] == release and evidence['kernel_patchset'] == 'n71-dart-serdev-power-v2'
                 and build['modpost_passed'] is True and build['werror'] is True
                 and evidence['contract']['module_pin_while_pending'] is True
                 and evidence['contract']['bind_attributes_suppressed'] is True, 'Target scan build differs')
+        if scan_pme_noop:
+            require(evidence['contract']['pme_noop_without_write'] is True
+                    and evidence['contract']['active_pme_status_refused'] is True
+                    and evidence['contract']['same_word_rechecked'] is True
+                    and evidence['contract']['pme_root_only'] is True, 'PME no-op contract differs')
         records = [dict(evidence['selected_modules'][name], module=name)
                    for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko')]
         require(all(r['vermagic'] == release + ' SMP preempt mod_unload aarch64' for r in records),
@@ -363,6 +370,7 @@ def main():
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--host-scan', action='store_true', help='Select recorded PCI-core sizing module; implies inventory')
     parser.add_argument('--scan-link-target', action='store_true', help='Explicit power2 host-scan candidate with retained TLS/caller cleanup')
+    parser.add_argument('--scan-pme-noop', action='store_true', help='Explicit target candidate with inactive root PME acknowledgement without a write')
     modes.add_argument('--bar-sizing', action='store_true', help='Select endpoint-only BAR sizing module; implies inventory')
     modes.add_argument('--chip-id', action='store_true', help='Read ChipCommon ID once via restored BAR0 route; implies sizing/inventory')
     modes.add_argument('--dart-observe', action='store_true', help='Read stable DART state without provider activation; implies inventory')
@@ -378,8 +386,10 @@ def main():
     metadata = json.loads(provenance.read_text())
     release = selected_release(metadata, profile['sha256'])
     require(metadata.get('pcie_scan_link_target', False) is options.scan_link_target, 'Target profile selection differs')
+    require(metadata.get('pcie_scan_pme_noop', False) is options.scan_pme_noop, 'PME profile selection differs')
     records = selected_records(options.config_inventory, options.host_scan, options.bar_sizing, options.chip_id,
-                               dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release, scan_link_target=options.scan_link_target)
+                               dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release,
+                               scan_link_target=options.scan_link_target, scan_pme_noop=options.scan_pme_noop)
     if release == BINDING_RELEASE or options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe or options.dart_cycle:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record, release=release)) for record in records]

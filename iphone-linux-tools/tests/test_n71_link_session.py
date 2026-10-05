@@ -623,6 +623,34 @@ class LinkSessionTests(unittest.TestCase):
                 with patch.object(MODULE, 'ROOT', root), self.assertRaises(ValueError):
                     MODULE.selected_records(False, host_scan=True, release=MODULE.BINDING_RELEASE, scan_link_target=True)
 
+    @patch.object(MODULE, 'ROOT', ROOT)
+    def test_pme_noop_selection_preserves_target_default_and_reg_on(self):
+        # Mutation captured: weaken no-write/event/root/readback contracts.
+        mode = dict(host_scan=True, release=MODULE.BINDING_RELEASE, scan_link_target=True)
+        selected = MODULE.selected_records(False, **mode, scan_pme_noop=True)
+        self.assertEqual(selected[0]['bytes'], 70424)
+        self.assertEqual(selected[0]['sha256'], '63ee7d460bf9161a2105108a98667cf5966a8b31fd02460559fadd762da25e07')
+        target = MODULE.selected_records(False, **mode)
+        self.assertNotEqual(selected[0], target[0])
+        self.assertEqual(selected[1], target[1])
+        for invalid in (dict(host_scan=True, release=MODULE.BINDING_RELEASE),
+                        dict(host_scan=False, release=MODULE.BINDING_RELEASE, scan_link_target=True),
+                        dict(host_scan=True, release=MODULE.RELEASE, scan_link_target=True)):
+            with self.assertRaises(ValueError):
+                MODULE.selected_records(False, **invalid, scan_pme_noop=True)
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-pme-noop-build.json').read_text())
+        fields = ('pme_noop_without_write', 'active_pme_status_refused', 'same_word_rechecked', 'pme_root_only')
+        for field in fields:
+            for altered in (False, 1, 'true'):
+                changed = copy.deepcopy(evidence)
+                changed['contract'][field] = altered
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    (root / 'docs/evidence').mkdir(parents=True)
+                    (root / 'docs/evidence/n71-pcie-pme-noop-build.json').write_text(json.dumps(changed))
+                    with patch.object(MODULE, 'ROOT', root), self.assertRaises(ValueError):
+                        MODULE.selected_records(False, **mode, scan_pme_noop=True)
+
     def test_target_scan_success_and_missing_rollback_proof(self):
         code, result, calls = self.run_session(host_scan=True, scan_link_target=True)
         self.assertEqual(code, 0)
@@ -752,6 +780,50 @@ class LinkSessionTests(unittest.TestCase):
                         MODULE.main()
                 metadata['pcie_scan_link_target'] = True; provenance.write_text(json.dumps(metadata))
                 with patch.object(sys, 'argv', [x for x in argv if x != '--scan-link-target']), self.assertRaises(ValueError):
+                    MODULE.main()
+
+
+    def test_pme_cli_profile_selection_and_tampered_module_never_use_ssh(self):
+        # Mutation captured: accept a nonboolean/crossed profile flag or omit the recorded module hash.
+        release = MODULE.BINDING_RELEASE
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-pme-noop-build.json').read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / 'runtime/profile'
+            folder.mkdir(parents=True, mode=0o700); folder.parent.chmod(0o700)
+            (root / 'docs/evidence').mkdir(parents=True)
+            for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko'):
+                raw = self.module_fixture(release) + name.encode() + b'\0'
+                (folder / name).write_bytes(raw); (folder / name).chmod(0o600)
+                evidence['selected_modules'][name] = dict(bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest(), vermagic=release + ' SMP preempt mod_unload aarch64')
+            (root / 'docs/evidence/n71-pcie-pme-noop-build.json').write_text(json.dumps(evidence))
+            metadata = dict(kernel_patchset='n71-dart-serdev-power-v2', kernel_release=release,
+                            payload_sha256='a' * 64, module_sha256=evidence['selected_modules']['n71-pcie-diagnostic.ko']['sha256'],
+                            pcie_scan_link_target=True, pcie_scan_pme_noop=True)
+            provenance = folder / 'provenance.json'
+            provenance.write_text(json.dumps(metadata)); provenance.chmod(0o600)
+            profile = dict(payload=folder / 'payload.bin', sha256='a' * 64)
+            argv = ['n71-link-session.py', '--profile', str(folder / 'deployment.json'), '--host-scan', '--scan-link-target', '--scan-pme-noop', '--check']
+            with patch.object(MODULE, 'ROOT', root), patch.object(MODULE.device_profile, 'verify', return_value=profile), patch.dict(os.environ), \
+                    patch.object(MODULE.subprocess, 'run', side_effect=AssertionError('Unexpected SSH')), contextlib.redirect_stdout(io.StringIO()):
+                with patch.object(sys, 'argv', argv):
+                    try:
+                        self.assertEqual(MODULE.main(), 0)
+                    except (ValueError, OSError) as error:
+                        self.fail(str(error))
+                for altered in (False, 1, 'true'):
+                    metadata['pcie_scan_pme_noop'] = altered; provenance.write_text(json.dumps(metadata))
+                    with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
+                        MODULE.main()
+                metadata['pcie_scan_pme_noop'] = True; provenance.write_text(json.dumps(metadata))
+                with patch.object(sys, 'argv', [x for x in argv if x != '--scan-pme-noop']), self.assertRaises(ValueError):
+                    MODULE.main()
+                metadata['module_sha256'] = '0' * 64; provenance.write_text(json.dumps(metadata))
+                with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
+                    MODULE.main()
+                metadata['module_sha256'] = evidence['selected_modules']['n71-pcie-diagnostic.ko']['sha256']; provenance.write_text(json.dumps(metadata))
+                path = folder / 'n71-pcie-diagnostic.ko'; raw = path.read_bytes(); path.write_bytes(raw[:-1] + b'x')
+                with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
                     MODULE.main()
 
 
