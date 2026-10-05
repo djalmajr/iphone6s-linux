@@ -781,3 +781,19 @@ python3 scripts/host/n71-link-session.py \
 ```
 
 Para executar, substituir `--check` por uma nova `--output-dir "$PWD/runtime/n71-power2-link-inventory"`. Se reset, energia, REG_ON, ausência de PCI/módulos, logs frescos ou histórico não forem comprovados, conservar logs e interromper a próxima ação; não reiniciar automaticamente para mascarar a falha. O ciclo DART exige também a observação privada completa anterior. Reboot invalida a continuidade. Nenhum desses comandos instala firmware ou carrega os módulos Broadcom; Wi-Fi, IRQ/DMA, bateria e carga seguem pendentes de prova física.
+
+## Primeira sessão power2 — link, chip, DART e scan agrupados
+
+O head `70d4736` passou um boot físico power2 em2026-10-05. Depois dos observadores e ciclos I2C1, os cinco modos abaixo usaram o mesmo boot e continuidade por `--previous-clean`, sem outro DFU. [Resultado sanitizado e hashes privados](evidence/n71-power2-first-physical.json). Todos concluíram com reset/power/REG_ON restaurados e módulos temporários removidos.
+
+| Modo | Resultado físico | Limite |
+| --- | --- | --- |
+| Descoberta | Link erro0/12 reads; endpoint43a314e4 | Sem rádio ou DMA |
+| Chip/BARs | BCM4350rev8; BAR0=32KiB/BAR2=4MiB; uma leitura ChipCommon | BARs/rota restaurados; sem firmware |
+| Observação DART | TCR0,16 words preservados, sem fault flag | Sem ativar streams/DMA |
+| Ciclo DART | Provider inicializado/removido;16 words restaurados; controles preservados | Sem attachment DMA/IRQdelivery |
+| Scan PCI | Negativo: erro-1,2 devices/1 endpoint,556 reads,14 attempts/10 writes/1 refusal | Barramento removido/config restaurada; nenhum driver Broadcom |
+
+A primeira recusa do scan mudou de SERR para root0:08, offset0a0, word, valor2. A captura física read-only identifica capability PCIe em70 e Link Control2 em0a0 com valor original1. As recusas seguintes foram latched após esse primeiro erro; não comprovam que todos os pedidos posteriores precisem de novas permissões. A próxima fatia deve confrontar esse pedido com a fonte PCI fixada e implementar somente a alteração delimitada e sua restauração, com gates offline antes de um eventual load por SSH.
+
+Logs integrais, boot UUID, tabelas DART, perfis, módulos e snapshots ficam privados. Não foram carregados rfkill/cfg80211/Broadcom ou firmware. SSH/HTTP/Herdr finais, snapshot/sync e retorno ao iOS por software passaram. O histórico desta sessão não autoriza continuar depois do retorno ao iOS: um futuro boot terá seu próprio preflight e descoberta. Wi-Fi funcional/IRQ/DMA continuam pendentes; a identificação física do chip permite preparar a seleção de firmware, sem publicar firmware ou calibração.

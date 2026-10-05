@@ -1165,3 +1165,13 @@ test ! -e /sys/devices/n71-i2c1-power
 ```
 
 Antes de aceitar resultado, correlacione somente linhas frescas desse load/boot e confirme continuidade SSH/HTTP. Salve snapshot/sync e retorne ao iOS para recarga enquanto carga Linux não estiver qualificada. Ainda faltam pinos/linhas, clock/IRQ/controller reset/restauração, SN2400/HDQ/gauge e corrente líquida. #2/#8/#9/#36 e o goal permanecem abertos.
+
+## Primeira sessão física power2 — ciclos e inspeção verificados
+
+Em2026-10-05 o perfil power2 já preparado iniciou no aparelho N71 real. Boot/restore de44 entradas, SSH com identidade fixada, HTTP e Herdr passaram. O Image, initramfs e módulos não foram recompilados para essa sessão. [Registro sanitizado com hashes e amostras](evidence/n71-power2-first-physical.json). Os registros de preparação acima permanecem históricos; a execução física seguinte é uma prova separada.
+
+Os observadores passivos confirmaram GPIO114/115 estáveis/cache coerente e PMGR estável. A ausência de bind/unbind no provider foi conferida antes do caller. Dois `cycle` explícitos retornaram erro0 e estado totalmente limpo; depois `inspect` leu `REV=00000002`, `SMSTA=08010100` e `XFSTA=00000000` duas vezes. O resultado completo/estável/idle foi recalculado pelo coletor. Módulo, consumidor, reserva MMIO e staging próprios foram liberados; nenhum reset, FIFO, adapter, IRQ, pinctrl, transferência I2C ou comando SN2400 foi executado.
+
+Na mesma sessão foram coletados PCIe/chip/BARs/DART/scan, sem reiniciar entre etapas. Aos712s de uptime, módulos diagnósticos e dispositivos PCI temporários estavam ausentes; SSH/HTTP/Herdr continuavam respondendo. Snapshot de44 entradas foi validado sob lock, sync confirmou e o retorno ao iOS por software passou. A bateria iOS estava em91% antes do boot e81% após o retorno, quando carregamento e alimentação externos estavam ativos. A diferença inclui transições e não mede corrente líquida ou saúde da bateria; carga Linux continua sem comprovação.
+
+A próxima implementação de energia deve adquirir/restaurar pinos e qualificar clock, IRQ e lifecycle do controlador antes de qualquer transferência. As words estáveis/idle e os ciclos genpd comprovados não autorizam automaticamente reset ou I/O. SN2400, HDQ/gauge e teste sustentado continuam nas #2/#8; o aparelho foi deixado no iOS para recarga, sem necessidade de PIN, contador ou operação do console nesta coleta.
