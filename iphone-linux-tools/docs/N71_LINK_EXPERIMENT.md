@@ -1040,3 +1040,31 @@ kernel_source/kernel_output são os diretórios privados da fonte/outputs power2
 O PCIe novo tem70424 bytes/SHA63ee7d460bf9161a2105108a98667cf5966a8b31fd02460559fadd762da25e07; REG_ON permanece17688 bytes/SHAfdf887e7572b70d09e76f770272bee5dc9ffcde799277e894ee8965007c5a8f1. Nenhum Image, payload, chave, firmware ou default foi trocado; a candidata ainda não foi carregada. A seleção/provenance do coletor precisa ser integrada explicitamente antes do próximo scan. Ele continuará delimitado e com cleanup no mesmo boot; Wi-Fi/IRQ/DMA/carga seguem pendentes.
 
 CI do checkpoint7adc falhou em duas simulações antigas de retorno no Ubuntu e o push foi cancelado; Mac/Windows passaram. A [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38) preserva as reproduções. `402943a` exige BACKUP_VERIFIED e mostra modo/eventos/erro da fixture quando o backup esperado não aparece;20 testes passaram nas duas plataformas e a recusa sintética SSH reproduziu o diagnóstico. Nenhum timeout operacional foi ampliado. Essa observabilidade ainda não determina a causa da intermitência; nova CI deverá ser vinculada ao head novo.
+
+
+## Coletor PME — perfil separado e continuação no mesmo boot
+
+O coletor `4cea1ce` exige `--scan-pme-noop` junto de `--host-scan --scan-link-target`, release power2 e flag pcie_scan_pme_noop booleano exato na provenance. Seleciona o registro PME acima, confere SHA/size/ELF/vermagic dos dois módulos e exige no-op sem write, evento ativo recusado, root-only e releitura. O target anterior continua selecionado pelas opções anteriores, com seu perfil/binário preservado. [Gates e reprodução](evidence/n71-pme-scan-session.json).
+
+39 testes/53 mutações por AssertionError passaram Mac/Ubuntu ARM64;26 inputs/logs conferidos e dez comandos gerados passaram bash-n. Defaults/REG_ON e o mecanismo de cleanup não mudaram. O check real do perfil separado passou payload/initramfs/identidades/módulos sem SSH/USB; seis arquivos anteriores estão byte a byte iguais, apenas PCIe/provenance foram trocados. Flags físicas da sessão antiga foram mantidas em prior_profile, para não apresentar a candidata nova como testada. O build C/kernel acima foi reutilizado com inputs e binários idênticos.
+
+Na pasta iphone-linux-tools, valide primeiro o perfil privado específico:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-binding-pme-noop-profile-20261005/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-noop --check
+```
+
+Depois de um único boot supervisionado e restore/SSH/HTTP/Herdr confirmados, a tentativa delimitada utiliza uma pasta nova diretamente em runtime:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-binding-pme-noop-profile-20261005/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-noop \
+  --output-dir "$PWD/runtime/n71-pme-first-scan"
+```
+
+Se uma outra candidata for qualificada offline durante esse boot, conserve o Linux e passe `--previous-clean` apontando a pasta da sessão anterior **somente quando** seu cleanup/ABI/endpoint/reset/power/REG_ON e história timestamped estiverem comprovados. O coletor confere a mesma identidade de boot e remove do parsing apenas as linhas já conhecidas. Módulos pendentes, história divergente ou limpeza incompleta bloqueiam a continuação; não repetir scan ou force unload para esconder o erro. Snapshot/sync e retorno ao iOS para recarga devem respeitar o limite de alimentação.
+
+A candidata ainda não foi carregada. Nenhum firmware, driver Broadcom, IRQ/DMA, telemetria ou carregador foi ativado por essa preparação. CI do head final será acompanhada separadamente; a issue38 de retorno sintético segue aberta. Sem instalação/configuração global no Mac e sem novo Image/payload/chaves/default.
