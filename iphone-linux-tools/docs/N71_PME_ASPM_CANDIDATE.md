@@ -332,6 +332,65 @@ seleção explícita, validação de hold e cleanup/REG_ON no mesmo boot.
 Recursos PCI, bind, IRQ/DMA/IOMMU, firmware/radio e carga Linux continuam
 pendentes. Nenhum DFU, PIN, firmware ou Image novo foi necessário.
 
+## Parser held — aquisição e limpeza separadas
+
+O parser `49d2158` usa o protocolo emitido pelo módulo caller acima. O scan
+positivo retido retorna antes de `SCAN_RESULT`, portanto não exige ou cria
+esse resumo temporário. Valida um `SCAN_HELD`, um `SESSION_HELD`, getter vivo
+`held=1`, status completo, TLS/PME preparados e todos os dispositivos/BARs
+antes do hold. COMMAND permanece zero e os BARs medidos permanecem sem
+atribuição, com32KiB e4MiB. Binding/MMIO, pin do módulo, reset e quatro
+domínios ativos precisam estar comprovados; uma falha não vira retenção válida.
+
+O resultado inclui somente campos observados: topology/BARs, ownership e
+preparações. Não declara contagens de reads/writes/refusals nem cleanup
+que esse caminho ainda não emitiu. `device_resources()` compartilha a
+validação existente de topologia/BAR; `restore_owned()` compartilha os
+registros e a ordem de restauração PME. Os modos anteriores continuam usando
+suas próprias APIs e módulos.
+
+Cleanup held exige getter0 e caller bound sem owners pendentes, remoção única,
+config→PME→TLS→reset→energia→caller final. Registros truncados, duplicados,
+campos adicionais, restore fora de ordem ou retry indevidamente positivo são
+recusados. Uma recusa no stop conserva o mesmo errno da primeira escrita
+recusada, inclusive depois da restauração; prova de cleanup não apaga erro do
+experimento. Se o hold nunca foi adquirido, a prova negativa e a limpeza PME
+anterior são necessárias; ausência de owners sozinha não prova esse caminho.
+
+Seleção local usa a prova `n71-pci-held-caller.json`, somente ABI power2,
+flags booleanas exatas, Werror/modpost/ELF e módulos de nomes fixos. Os hashes
+e o vermagic ainda precisam passar pelo integrador e pelo perfil privado
+antes de qualquer transferência. Esta função não chama USB, SSH ou insmod.
+
+Na cópia descartável do código público, em Mac e Ubuntu ARM64:
+
+```sh
+set -e
+python3 -B -m unittest discover -s tests -p test_n71_scan_held_result.py -v
+python3 -B -m unittest discover -s tests -p test_n71_scan_result.py -v
+python3 -B tests/run_n71_scan_result_mutations.py
+python3 -B -m unittest discover -s tests -p test_n71_link_session.py -v
+python3 -B tests/run_n71_link_session_mutations.py
+```
+
+Novo parser12 testes/29 mutações por AssertionError; scan6/8 e coletor45/81
+foram requalificados pela mudança compartilhada: total63 testes/118 mutações
+por plataforma,34 inputs iguais e preservados, cinco logs/hash por plataforma.
+Compilação/import/timeout não contam como mutation kill.
+[Inputs e provas selecionadas](evidence/n71-pci-held-parser.json).
+
+Os inputs C e46 inputs de build permaneceram intactos; suas provas anteriores
+foram reutilizadas, sem outro build ou Image. CLI de aquisição/retomada,
+provenance/perfil e prova física continuam pendentes. O módulo não foi
+carregado no telefone, e nenhuma nova intervenção DFU/PIN/console foi pedida.
+Wi-Fi, recursos PCI/IRQ/DMA/firmware e telemetria/carga continuam abertos.
+
+CI do caller `6e26fac`: [PR37374903992](https://github.com/djalmajr/iphone6s-linux/actions/runs/37374903992)
+passou nos três jobs; [push37374896899](https://github.com/djalmajr/iphone6s-linux/actions/runs/37374896899)
+terminou cancelled, com Mac/Windows success e Ubuntu cancelled. Causa não
+confirmada; não tratar esse cancelamento como aprovação. Essa CI antecede
+o parser `49d2158`, que conserva seus próprios gates Mac/ARM64 acima.
+
 ## Próximos gates
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os

@@ -16,4 +16,4 @@
 - **Alternativas:** remover o bus ao terminar cada coletor exige outra aquisição PCI para continuar; acrescentar logs sintéticos para reutilizar o parser temporário mistura prova de ownership com prova de cleanup. Uma migração completa do protocolo pode vir depois, com custo maior para os perfis anteriores.
 - **Reverter:** baixo para o opt-in; os caminhos anteriores continuam selecionando seus próprios builds. A retomada deverá conservar o contrato de cleanup mesmo se o comando CLI mudar.
 - **Onde:** incremento177 e integração posterior de [n71-funcional-goal.md](n71-funcional-goal.md), parser/coletor host; [issue39](https://github.com/djalmajr/iphone6s-linux/issues/39).
-- **Status:** em curso; parser/seleção, integração CLI/retomada, perfil e prova física pendentes. Manter iOS para recarga durante desenvolvimento offline.
+- **Status:** parser e seleção local aplicados em `49d2158`; 12 testes/29 mutações novos passaram Mac/Ubuntu ARM64, com scan6/8 e coletor45/81 requalificados,34 inputs iguais. Integração CLI/retomada, perfil e prova física continuam pendentes. Manter iOS para recarga durante desenvolvimento offline.

@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-05
 
-## Checkpoint atual — caller PCI retido integrado e compilado
+## Checkpoint atual — contrato held e seleção de build qualificados
+
+Parser `49d2158` valida `SCAN_HELD`/`SESSION_HELD` e getter vivo, com módulo/reset/quatro domínios de energia ativos e preparações TLS/PME ordenadas. Topologia/BAR e restore PME compartilham os validadores anteriores; não fabrica resumo temporário, contagens ou limpeza. A limpeza é comprovada separadamente, com remoção→config→PME→TLS→reset→energia→caller e stop-error preservado. Seleção local aceita somente o build caller abaixo, flags booleanas exatas e ABI power2. Novo parser12 testes/29 mutações por AssertionError, scan anterior6/8 e coletor45/81 requalificados nas duas plataformas: total63/118,34 inputs iguais e logs conferidos por SHA/preservados. [Reprodução](N71_PME_ASPM_CANDIDATE.md#parser-held--aquisição-e-limpeza-separadas), [prova](evidence/n71-pci-held-parser.json), [decisão D2](../.agents/plans/n71-funcional-goal-decisoes.md#d2-aquisição-held-e-limpeza-com-contratos-próprios).
+
+CLI/retomada/perfil ainda não selecionam hold; nenhum load, DFU, PIN ou console adicional. C/build anteriores foram reutilizados com hashes intactos, sem outra compilação ou Image. Wi-Fi, IRQ/DMA e telemetria/carga continuam pendentes. A próxima fatia integra seleção explícita e retenção/retomada para limpeza no mesmo boot. CI do caller `6e26fac`: [PR37374903992](https://github.com/djalmajr/iphone6s-linux/actions/runs/37374903992) success nos três jobs; [push37374896899](https://github.com/djalmajr/iphone6s-linux/actions/runs/37374896899) cancelled, Mac/Windows success e Ubuntu cancelled, sem causa confirmada. Esse resultado não cobre o parser novo.
+
+### Caller PCI retido anterior — integrado e compilado
 
 Caller `3d410c7`: `scan_hold=1` explícito exige host-scan/PME e conserva bus, callbacks, binding/MMIO, módulo/reset/energia até `action=cleanup`. Getter `held` lê o ownership real sob lock; o formato de `status` foi preservado. Caller real/MMIO com dependências de kernel/scan simuladas passou94 cenários e30 mutações compiladas por SIGABRT/assertion no Mac e Ubuntu ARM64, cinco inputs iguais. Build real de seis módulos Werror/modpost/ELF/vermagic passou com46 inputs, somente caller alterado desde o build abaixo; PCIe76.112 bytes/SHA b7e51d4d, REG_ON e fonte/config/Image/exports intactos. [Reprodução e limites](N71_PME_ASPM_CANDIDATE.md#caller-retido--integração-e-build-offline), [prova](evidence/n71-pci-held-caller.json), [issue39](https://github.com/djalmajr/iphone6s-linux/issues/39).
 
