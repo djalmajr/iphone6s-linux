@@ -676,6 +676,31 @@ class LinkSessionTests(unittest.TestCase):
         self.assertIn('experiment_error', result)
         self.assertIn('reg-unload', calls)
 
+    def test_target_unbound_negative_probe_requires_complete_matching_cleanup(self):
+        # Mutation captured: accepting success or mismatched probe errors without an owner releases REG_ON.
+        unbound = 'N71_PCIE_STATUS ready=0 retained=0\n'
+        failed = TARGET.replace(STATUS, unbound).replace('error=0 devices', 'error=-1 devices').replace('primary_error=0\n', 'primary_error=-1\n')
+        code, result, calls = self.run_session({'pcie': LINK + INVENTORY + failed, 'pcie-status': unbound,
+                                              'pcie-cleanup': CLEANUP + failed}, host_scan=True, scan_link_target=True)
+        self.assertEqual(code, 1)
+        self.assertTrue(result['cleanup_verified'])
+        self.assertIn('experiment_error', result)
+        self.assertIn('reg-unload', calls)
+        self.assertNotIn('pcie-retry', calls)
+        for text in (TARGET.replace(STATUS, unbound),
+                     failed.replace('error=-1 devices', 'error=0 devices'),
+                     failed.replace('primary_error=-1', 'primary_error=-2'),
+                     failed.replace('CONFIG_RESTORED error=0', 'CONFIG_RESTORED error=-5'),
+                     failed.replace('SESSION_CLEANUP error=0', 'SESSION_CLEANUP error=-5'),
+                     failed.replace('TARGET_RESTORED error=0 pending=0', 'TARGET_RESTORED error=-5 pending=1')):
+            with self.subTest(unbound=text):
+                code, result, calls = self.run_session({'pcie': LINK + INVENTORY + failed, 'pcie-status': unbound,
+                                                      'pcie-cleanup': CLEANUP + text}, host_scan=True, scan_link_target=True)
+                self.assertEqual(code, 1)
+                self.assertFalse(result['cleanup_verified'])
+                self.assertNotIn('pcie-unload', calls)
+                self.assertNotIn('restore', calls)
+
     def test_target_unknown_live_state_or_changed_boot_retains_everything(self):
         for status in ('', STATUS + STATUS, STATUS.replace('ready=1', 'ready=2'),
                        STATUS.replace('powered=0', 'powered=5'),

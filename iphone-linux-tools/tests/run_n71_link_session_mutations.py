@@ -60,6 +60,8 @@ TARGET_MUTATIONS = {
     'final-target': ("restored[-1] == ('0', '0')", 'True'),
     'bus-removed': ("require(removed == ['1'],", 'require(True,'),
     'caller-primary': ("live_status(text).get('primary_error') == 0", 'True'),
+    'unbound-success': ("result['error'] < 0", 'True'),
+    'unbound-primary': ("int(sessions[-1][7]) == result['error']", 'True'),
 }
 
 

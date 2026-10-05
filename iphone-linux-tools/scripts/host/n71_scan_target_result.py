@@ -37,16 +37,18 @@ def normalize(text):
 def cleanup(text):
     status = live_status(text)
     require(is_clean(status), 'PCIe caller still owns pending cleanup')
-    if not status['ready']:
-        require('N71_PCIE_SCAN_RESULT ' not in text, 'Unbound caller cannot own a completed scan')
+    if not status['ready'] and 'N71_PCIE_SCAN_RESULT ' not in text:
         return
     sessions = re.findall(r'N71_PCIE_SESSION_CLEANUP error=(-?\d+) retained=(\d+) scan_pending=(\d+) reset_pending=(\d+) powered=(\d+) attached=(\d+) power_put_pending=(\d+) primary_error=(-?\d+)', text)
     require(sessions and tuple(map(int, sessions[-1][:7])) == (0, 0, 0, 0, 0, 0, 0)
-            and int(sessions[-1][7]) == status['primary_error'], 'Final caller cleanup proof required')
+            and (not status['ready'] or int(sessions[-1][7]) == status['primary_error']), 'Final caller cleanup proof required')
     if 'N71_PCIE_SCAN_RESULT ' not in text:
         n71_scan_result.cleanup(text)
         return
     result = n71_scan_result.summary(normalize(text))
+    if not status['ready']:
+        require(result['error'] < 0 and int(sessions[-1][7]) == result['error'],
+                'Unbound scan requires a matching negative probe and complete cleanup')
     removed = re.findall(r'N71_PCIE_SCAN_BUS_REMOVED bus-null=(\d+)', text)
     require(removed in ([], ['1']), 'PCI bus removal differs')
     if result['devices'] or result['attempts'] or result['error'] == 0:
