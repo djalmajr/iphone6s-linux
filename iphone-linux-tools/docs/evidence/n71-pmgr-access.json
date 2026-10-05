@@ -1,0 +1,57 @@
+{
+  "format": 1,
+  "status": "shared_access_native_and_kernel_module_verified_no_new_physical_load",
+  "code_commit": "152e07bf53c4682101f40f7beb989dfd3199d681",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power1",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "input_sha256": {
+    "phone/kernel/n71-pmgr-access.h": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae",
+    "phone/kernel/n71-pmgr-power-observe.c": "fec9d8d28ae34deef0c0da1528f0b341a1dd043e4917b3677c789a182070fc99",
+    "tests/n71_pmgr_power_observe.c": "6fe14a98da6acef2c915983e1800e59b8cd923ec00fa659eaf3d735488be3091",
+    "tests/test_n71_pmgr_power_observe.py": "fc6831e7403bfd4fa4eb342aee38d9417ef73485a6dff1fd6795dd7cb4ec1fd4"
+  },
+  "native": {
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "scenarios_per_platform": 97,
+    "compiled_assertion_mutations_per_platform": 22,
+    "kill_requires_sigabrt_and_assertion": true,
+    "mac_log_sha256": "3192f6237304fa7f2642ef3b75397d3cf39355625547568d59e73debc658a9b3",
+    "arm64_log_sha256": "3f0577baa1f99db540bca22d9fff7f1ee59bdde346ed28791a58f2a347ccfe0e"
+  },
+  "kernel_module": {
+    "werror": true,
+    "modpost_passed": true,
+    "elf_aarch64_and_vermagic_verified": true,
+    "sha256": "f420639720001871735879057be41909492983631ea14da8a224c019fe131056",
+    "log_sha256": "20e2ab99788ccbc7513af459b2a5fe2b77e7d46d80cc4a912dc600bd651b2163",
+    "image_config_exports_preserved": true,
+    "inputs_unchanged": true,
+    "global_module_symvers_missing_warning_preserved": true,
+    "actual_vmlinux_exports_supplied": true,
+    "modpost_errors_suppressed": false
+  },
+  "contract": {
+    "exact_board_root_domain_index_required": true,
+    "bound_provider_qualified_under_device_lock": true,
+    "caller_holds_of_references": true,
+    "fresh_regmap_valid_only_while_lock_held": true,
+    "same_task_unlock_required": true,
+    "open_handle_reentry_refused": true,
+    "unlock_clears_handle_and_map": true,
+    "distinct_provider_locks_tested": true,
+    "no_genpd_ownership_or_activation": true
+  },
+  "lint": {
+    "fatal_flake8": "passed",
+    "ast": "passed",
+    "python_typechecker_configured": false
+  },
+  "phone_commands_executed": false,
+  "linux_charging_validated": false,
+  "wifi_validated": false,
+  "ci_pending": true,
+  "limits": "Shared access helper only. No new module load, genpd domain cycle, controller activation or charger I/O. Earlier physical observations used their preserved historical modules. Native fixtures and ABI compilation do not prove hardware energy, charging or Wi-Fi."
+}

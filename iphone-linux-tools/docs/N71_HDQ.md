@@ -581,7 +581,7 @@ Build isolado na VM dedicada, com source/output do bundle preservados:
 umask 077
 mkdir -p runtime
 module_dir="$(mktemp -d "$PWD/runtime/pmgr-observe-build.XXXXXX")"
-cp phone/kernel/n71-pmgr-power-observe.c "$module_dir/"
+cp phone/kernel/n71-pmgr-power-observe.c phone/kernel/n71-pmgr-access.h "$module_dir/"
 cat > "$module_dir/Makefile" <<'MAKEFILE'
 obj-m += n71-pmgr-power-observe.o
 ccflags-y += -Werror
@@ -859,3 +859,54 @@ por SIGABRT/asserção. Objeto do header inteiro __KERNEL__/Werror compilou
 na ABI power; Image/config/exports/inputs/fontes ficaram intactos. O runner
 está no CI Ubuntu/macOS. A compilação não é um backend genpd executado;
 acesso ao controlador, registro SN2400, HDQ/gauge e carga continuam pendentes.
+
+
+## Acesso PMGR compartilhado — qualificado sem ativação
+
+O código `152e07b` extraiu para `phone/kernel/n71-pmgr-access.h` as validações
+usadas pelo observador. [Evidência selecionada](evidence/n71-pmgr-access.json).
+O observador mantém seis leituras bypassed e publica resultados somente
+após sucesso completo. Não ganha ativação, ownership genpd ou escrita.
+
+O caller conserva referências OF, começa com um handle vazio e desbloqueia
+na mesma tarefa. Caminhos e índice são validados antes de usar metadata.
+Provider bound e mapa são conferidos sob device_lock; a referência própria
+mantém o device enquanto o lock protege seus recursos. O mapa só vale até
+unlock, que limpa ambos os campos e pode ser repetido. Handle aberto recusa
+reentrada. Não manter esses locks entre callbacks de tarefas diferentes.
+
+Gates Mac/ARM64:97 cenários/22 mutações compiladas por SIGABRT/asserção,
+com reentrada, índice/caminhos, mapa/ref inválidos e três providers distintos.
+O módulo externo power1 passou W=1/Werror/modpost/ELF/vermagic. Aviso de
+Module.symvers global ausente preservado; vmlinux.symvers real fornecido,
+sem suprimir erros modpost. Image/config/exports e inputs ficaram intactos.
+Nenhum novo load físico: a prova da sessão anterior mantém seus próprios
+módulos/hashes e não se transfere automaticamente para este rebuild.
+
+Reprodução nativa na raiz do projeto:
+
+```sh
+python3 -m unittest discover -s tests -p test_n71_pmgr_power_observe.py -v
+```
+
+Build isolado na VM com o Image power1 já preparado:
+
+```sh
+umask 077
+module_dir="$(mktemp -d "$PWD/runtime/pmgr-access-build.XXXXXX")"
+cp phone/kernel/n71-pmgr-power-observe.c phone/kernel/n71-pmgr-access.h "$module_dir/"
+printf 'obj-m += n71-pmgr-power-observe.o\n' > "$module_dir/Makefile"
+make -C /home/ubuntu/kernel-n71-power-source-20261004 \
+  O=/home/ubuntu/kernel-n71-power-build-20261004 M="$module_dir" \
+  W=1 KCFLAGS=-Werror \
+  KBUILD_EXTRA_SYMBOLS=/home/ubuntu/kernel-n71-power-build-20261004/vmlinux.symvers modules
+modinfo -F vermagic "$module_dir/n71-pmgr-power-observe.ko"
+sha256sum "$module_dir/n71-pmgr-power-observe.ko"
+```
+
+O caminho M/toolchain pode mudar o hash binário. Conferir inputs e
+Image/config/exports antes/depois; não escolher um `.ko` só pela release.
+Esse helper será usado pelo backend genpd em construção. Runtime PM
+suspenso não equivale por si só a energia elétrica desligada; erros fatais
+podem impedir novas chamadas. [Referência do kernel](https://docs.kernel.org/power/runtime_pm.html).
+Carga, corrente líquida, HDQ, SN2400 e Wi-Fi continuam sem prova funcional.

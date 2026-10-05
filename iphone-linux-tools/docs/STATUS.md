@@ -35,7 +35,15 @@ em ambos os runs do código29e61ec. O run
 push falhou depois por PID vazio numa fixture antiga de cancelamento do
 reboot. Publicação atômica corrigida somente no teste, com regressão de
 escrita incompleta e mutação por asserção Mac/ARM64; gate afetado passou
-20 testes/11 mutações em ambas as plataformas. Novo CI do fix ainda pendente.
+20 testes/11 mutações em ambas as plataformas. CI8974389 terminou success
+em PR37251729490/push37251726729, seis jobs; issue37 concluída.
+
+Acesso PMGR compartilhado `152e07b`:97 cenários/22 mutações por asserção
+Mac/ARM64 e módulo Werror/modpost/ELF/vermagic power1 passaram. Mantém
+validação N71/caminhos/metadata/provider sob lock e limpa o handle no unlock.
+Não foi carregado no aparelho nem implementa backend genpd ou carga.
+[Contrato e reprodução](N71_HDQ.md#acesso-pmgr-compartilhado--qualificado-sem-ativação),
+[prova selecionada](evidence/n71-pmgr-access.json).
 
 No boot anterior, DART provider/INTx/probes de ponte tiveram cleanup verificado
 e SSH/HTTP/snapshot preservados. Scan PCI ainda negativo; primeira recusa

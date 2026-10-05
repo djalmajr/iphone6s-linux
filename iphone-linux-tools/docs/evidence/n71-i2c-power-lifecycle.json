@@ -90,7 +90,14 @@
     "mac_full_gate_log_sha256": "d755a597b100411bc247f72a65dc2178bed00fe6f06962f04f1136da16d4e7ce",
     "arm64_full_gate_log_sha256": "d755a597b100411bc247f72a65dc2178bed00fe6f06962f04f1136da16d4e7ce",
     "arm64_pid_mutation_log_sha256": "59738f06f78a8ec47c1e1d8cff9b5178d44cdc0bef57a0601ea0fa2c95ba15bf",
-    "corrected_remote_ci_pending": true,
-    "phone_commands_executed": false
+    "corrected_remote_ci_pending": false,
+    "phone_commands_executed": false,
+    "corrected_code_commit": "8974389559dd5a7b76a2946e8e4f3fea8e3e46f0",
+    "corrected_pr_run": 37251729490,
+    "corrected_push_run": 37251726729,
+    "corrected_ci_conclusion": "success",
+    "corrected_successful_jobs": 6,
+    "tracking_issue": 37,
+    "tracking_issue_status": "closed"
   }
 }

@@ -2114,3 +2114,16 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - CI8974389: PR37251729490/push37251726729 terminaram success, seis jobs
   Ubuntu/macOS/Windows. Issue37 concluída; a falha anterior permanece
   no histórico. Próxima fatia registra evidência e reprodução do helper.
+
+
+### Incremento 128 — reprodução do acesso PMGR e CI corrigido
+
+- Cinco arquivos: plano, docs/N71_HDQ.md, docs/STATUS.md,
+  docs/evidence/n71-pmgr-access.json e docs/evidence/n71-i2c-power-lifecycle.json.
+- Registrar gates127/hashes/reprodução, corrigir comando para incluir o
+  header compartilhado e manter separadas as provas físicas históricas.
+  CI8974389 terminal success nos seis jobs; issue37 concluída. CI152e07b
+  em acompanhamento; não afirmar genpd/carga/Wi-Fi pelo build do helper.
+- Validar JSON/hash/links/diff/publicguard; reutilizar gates127 inalterados.
+  Próxima implementação: backend kernel qualificado de attach/runtime PM/
+  detach verificado, ainda sem controlador I2C ou charger I/O.
