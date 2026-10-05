@@ -1,10 +1,16 @@
 # iPhone 6s Linux — atualizado em 2026-10-05
 
-## Checkpoint atual — lifecycle PCI retido qualificado offline
+## Checkpoint atual — caller PCI retido integrado e compilado
+
+Caller `3d410c7`: `scan_hold=1` explícito exige host-scan/PME e conserva bus, callbacks, binding/MMIO, módulo/reset/energia até `action=cleanup`. Getter `held` lê o ownership real sob lock; o formato de `status` foi preservado. Caller real/MMIO com dependências de kernel/scan simuladas passou94 cenários e30 mutações compiladas por SIGABRT/assertion no Mac e Ubuntu ARM64, cinco inputs iguais. Build real de seis módulos Werror/modpost/ELF/vermagic passou com46 inputs, somente caller alterado desde o build abaixo; PCIe76.112 bytes/SHA b7e51d4d, REG_ON e fonte/config/Image/exports intactos. [Reprodução e limites](N71_PME_ASPM_CANDIDATE.md#caller-retido--integração-e-build-offline), [prova](evidence/n71-pci-held-caller.json), [issue39](https://github.com/djalmajr/iphone6s-linux/issues/39).
+
+Coletor/perfil ainda não selecionam esse build ou hold; nenhum módulo novo foi carregado no telefone. Próxima fatia integra seleção/provenance e retenção REG_ON/staging antes de recursos PCI/IRQ/IOMMU. Wi-Fi, telemetria/carga e hardware persistente seguem pendentes. Telefone mantido no iOS para recarga, zero DFU/PIN/console adicional. CI da integração será vinculada ao próprio head; o checkpoint anterior `fa53768` terminou cancelled nos dois eventos, Mac/Windows success e Ubuntu cancelled: [PR37363958817](https://github.com/djalmajr/iphone6s-linux/actions/runs/37363958817), [push37363951510](https://github.com/djalmajr/iphone6s-linux/actions/runs/37363951510). Causa não confirmada, sem tratar cancelamento como aprovação.
+
+### Lifecycle PCI retido anterior — adapter qualificado offline
 
 Adapter `b0c0933`: API interna hold mantém bridge/bus/callbacks e owners depois de scan positivo com PME, ainda sem bind, atribuição de recursos ou DMA. Cleanup faz stop/remove sob rescan lock antes de restore config/PME/TLS; falhas conservam owner e permitem retry sem novo scan. Dois testes C/45 cenários e26 mutações compiladas por SIGABRT/assertion passaram Mac/Ubuntu ARM64, dez inputs iguais. Seis módulos Werror/modpost/ELF/vermagic passaram com46 inputs; PCIe74008 bytes, REG_ON e fonte/config/Image/exports preservados. [Reprodução e limites](N71_PME_ASPM_CANDIDATE.md#lifecycle-do-bus-retido--preparação-offline), [prova](evidence/n71-pci-held-bus.json), [issue39](https://github.com/djalmajr/iphone6s-linux/issues/39).
 
-Caller/coletor/perfil ainda não selecionam hold, e o módulo novo não foi carregado no telefone. Próxima etapa integra retenção de MMIO/energia/módulo e seleção explícita, antes de recursos PCI/IRQ/IOMMU. Gates físicos e CI anteriores não cobrem esta alteração; CI do novo head será registrada separadamente. Nenhum DFU/PIN adicional, firmware ou Image novo; telefone no iOS para recarga.
+Naquele checkpoint, caller/coletor/perfil ainda não selecionavam hold e o módulo novo não foi carregado no telefone. Seus dez inputs e provas45/26 continuam iguais, reutilizados na integração acima. Gates físicos e CI anteriores não comprovam esse hardware persistente. Nenhum DFU/PIN adicional, firmware ou Image novo; telefone no iOS para recarga.
 
 ### Última sessão física — quatro etapas no mesmo boot PME/ASPM
 

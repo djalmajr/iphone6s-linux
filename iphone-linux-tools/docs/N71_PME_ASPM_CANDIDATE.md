@@ -234,9 +234,10 @@ positiva. Causa não confirmada; timeout não contou como mutation kill.
 
 O adapter `b0c0933` acrescenta a API interna `n71_pcie_scan_hold()`, somente
 com PME e scan completamente positivo. Bridge, bus, config/PME/TLS e callbacks
-permanecem válidos entre chamadas. Os wrappers usados pelo caller atual
-continuam removendo o bus imediatamente. Nenhum parâmetro de módulo, CLI ou
-perfil seleciona hold nesta etapa.
+permanecem válidos entre chamadas. Os wrappers usados pelo caller daquele
+checkpoint continuavam removendo o bus imediatamente. Nenhum parâmetro de
+módulo, CLI ou perfil selecionava hold nessa etapa; a integração posterior
+está descrita abaixo e tem prova própria.
 
 Cleanup de bus retido faz stop/remove sob o lock de rescan antes de restaurar
 config, PME e TLS e liberar o bridge. Uma falha de restore conserva owner para
@@ -280,10 +281,62 @@ A [issue39](https://github.com/djalmajr/iphone6s-linux/issues/39) acompanha esse
 desenvolvimento. Esta prova é offline; o resultado físico acima continua
 pertencendo ao módulo PME/ASPM anterior. Nenhum novo DFU foi solicitado.
 
+## Caller retido — integração e build offline
+
+O caller `3d410c7` expõe `scan_hold`, desativado por padrão, somente com
+`run=1 enumerate=1 config_inventory=1 host_scan=1 scan_pme_disable=1`.
+Os guards de N71 e modos exclusivos permanecem. Depois de scan positivo,
+exige bridge, bus e ownership reais antes de retornar com binding/MMIO,
+referência do módulo, reset e quatro domínios de energia vivos.
+
+O getter separado `held`, modo0400, retorna `held=1` somente enquanto o bus
+estiver presente e retido pelo adapter, sob `session_lock`. Não há flag
+espelhada no diagnóstico, e o formato do getter `status` permanece igual.
+`scan_pending=1` indica bridge presente, não necessariamente bus ativo:
+após remoção do bus, uma falha de restore pode deixar `held=0` com owner
+pendente. O coletor precisa verificar os dois contratos.
+
+`action=cleanup` remove o bus antes de config/PME/TLS, reset e energia.
+Os recursos e o pin do módulo somente são liberados depois de todos os
+owners terem sido encerrados. Stop refusal conserva a saída negativa;
+se o bridge já foi liberado após rollback, o caller conserva reset/energia
+até a próxima limpeza comprovada. Retry não enumera, não faz outro scan
+e não descarta duas vezes a mesma referência de uso.
+
+O caller real e o MMIO real, com APIs do kernel e dependência scan simuladas,
+passaram73 cenários anteriores e21 de hold, com30 mutações compiladas por
+SIGABRT/assertion no Mac e Ubuntu ARM64, cinco inputs idênticos/preservados.
+A prova isolada do adapter45/26 foi reutilizada após conferir seus dez inputs
+sem alterações. O build kernel integra os headers reais; não substitui uma
+prova física dos callbacks no telefone.
+
+Na cópia descartável do código público:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pcie_diagnostic_caller.py -v
+```
+
+O build ARM64 usa a receita W=1/KCFLAGS=-Werror acima, em M novo
+`/home/ubuntu/n71-held-caller-modules-20261005/phone/kernel`. Os46 inputs
+diferem do build174 somente em `n71-pcie-diagnostic.c`. Os seis módulos
+passaram modpost/ELF/vermagic; PCIe76.112 bytes, SHA
+`b7e51d4d8ee281ace121c11dc60af04265a63c7395613fa8503af590927520b3`.
+REG_ON conserva o SHA anterior. Fonte/bundle/config/Image/exports foram
+conferidos antes/depois; os módulos PCIe e REG_ON copiados para o Mac também
+passaram SHA/ELF/vermagic. [Inputs, logs e limites](evidence/n71-pci-held-caller.json).
+
+Nenhum perfil funcional foi trocado e o coletor ainda não seleciona esse build
+ou hold. Não use provenance antiga com o binário novo nem carregue o módulo
+diretamente para contornar os checks do coletor. A próxima fatia implementa
+seleção explícita, validação de hold e cleanup/REG_ON no mesmo boot.
+Recursos PCI, bind, IRQ/DMA/IOMMU, firmware/radio e carga Linux continuam
+pendentes. Nenhum DFU, PIN, firmware ou Image novo foi necessário.
+
 ## Próximos gates
 
-O coletor seleciona o novo build e exige os opt-ins exatos, SHA/ABI do módulo
-e bootargs literais no payload. No telefone, antes de transferir módulos,
+O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os
+opt-ins exatos, SHA/ABI do módulo e bootargs literais no payload. No telefone,
+antes de transferir módulos,
 exige um único `pcie_aspm=off` no cmdline e o marcador de suporte ASPM
 desativado. O parser exige prepare/restore PME completos e conserva REG_ON
 se não houver prova de cleanup. Retry de restauração não executa novo scan.
