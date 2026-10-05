@@ -1121,7 +1121,7 @@ O driver PASemi fixado lê REV no probe, SMSTA no polling e XFSTA nos diagnósti
 
 ### Provas e reprodução
 
-Observador real:37 cenários/18 mutações por SIGABRT/asserção. Caller + observador + backend reais juntos:52 cenários/14 mutações. Ambos passaram macOS/Ubuntu ARM64; cada mutação compila com Werror antes de executar. Foram observadas limpeza MMIO, seis offsets permitidos, ausência de reads em init/falha genpd, erro primário e retenção em cleanup pendente. O erro GCC inicial era disposição ambígua dos ifs da fixture; foi corrigida sem mudar as asserções. Um resumo privado do wrapper herdou a contagem11; os logs nativos e JSON recalculados provam14. Erros de compilação não contam como mutações detectadas.
+Observador real:37 cenários/18 mutações por SIGABRT/asserção. Caller + observador + backend reais juntos:52 cenários/14 mutações. Ambos passaram macOS/Ubuntu ARM64; cada mutação compila com Werror antes de executar. Foram observadas limpeza MMIO, seis leituras nos três offsets permitidos, ausência de reads em init/falha genpd, erro primário e retenção em cleanup pendente. O erro GCC inicial era disposição ambígua dos ifs da fixture; foi corrigida sem mudar as asserções. Um resumo privado do wrapper herdou a contagem11; os logs nativos e JSON recalculados provam14. Erros de compilação não contam como mutações detectadas.
 
 Na raiz da cópia pública do projeto:
 
