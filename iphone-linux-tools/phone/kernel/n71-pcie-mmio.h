@@ -10,6 +10,7 @@ struct n71_diagnostic {
 	unsigned int attached, powered;
 	u32 last_link_status;
 	unsigned int link_status_reads;
+	struct pci_host_bridge *scan_bridge;
 };
 
 static int n71_read(void *context, enum n71_pcie_region region, u32 offset, u32 *value)

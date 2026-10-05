@@ -40,6 +40,15 @@ Em 2026-10-02 o operador pediu novo goal e execução contínua, sem paradas ao 
 - **Onde:** incrementos147/148, phone/kernel/n71-pcie-scan-link-target.h, docs/N71_LINK_EXPERIMENT.md, issue#9.
 - **Status:** preparada; integração e carga física pendentes.
 
+### D4 — reter o scan quando o rollback falhar
+
+- **Decisão:** manter o bridge, snapshots e MMIO no estado persistente, impedir um novo scan e oferecer cleanup explícito no mesmo boot. O caller mantém energia/reset/módulo até confirmar a restauração; bind/unbind e unload forçado ficam fora do procedimento.
+- **Por quê:** devolver erro sem reter esses recursos deixa a obrigação de rollback sem um dono e impede retry seguro por SSH.
+- **Alternativas:** liberar incondicionalmente exigiria novo boot mesmo numa falha transitória e abandonaria o rollback; fazer retries ilimitados bloquearia o caller; implementar um driver operacional completo agora ampliaria o escopo para IRQ/DMA ainda não qualificados.
+- **Reverter:** baixo na preparação; preservar módulo/perfis anteriores e não mudar Image/default. Uma sessão pendente exige cleanup confirmado antes de unload.
+- **Onde:** incrementos149/150, scan e caller PCIe, issue#9.
+- **Status:** em implementação; nenhum teste físico desta mudança.
+
 ## Arquivos, fases e tarefas sequenciais
 
 Cada item é uma fase com no máximo cinco arquivos públicos; scripts auxiliares de pesquisa/dumps/logs temporários ficam em runtime privado. Antes de editar fonte, leitura integral e revisão das referências; artefatos externos fixados por commit/hash.
@@ -2433,3 +2442,17 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Reusar gates147 inalterados, conferir JSON/inputs/logs/ELF/links/publictree/diff e registrar avisos modpost do módulo de contrato (Module.symvers global ausente com vmlinux.symvers fornecido; MODULE_DESCRIPTION ausente). Não são falhas de compilação/mutação nem um módulo operacional. Commit/push e comentário#9 já autorizados, sem novo DFU ou instalação/configuração global. CI vinculada ao novo head será acompanhada separadamente.
 
 - Gate148: JSON bate com cinco inputs, logs nativos/compilação e ELF/vermagic/SHA reais; todos os limites físicos/integrados false. Referências locais e dois blocos do runbook passaram links/bash-n/diff. Reutilizados dois testes/21 mutações de147 nas duas plataformas, com código e inputs idênticos; nenhum build/load/reboot novo para documentação. A receita mostra a translation unit exata e checagem before/after de config/Image/exports, sem install. Integração com retenção do caller e scan completo continuam próximos passos, sem confundir contrato compilado com Wi-Fi funcional.
+
+### Incremento 149 — target temporário no scan com cleanup retido
+
+- Cinco arquivos: plano, phone/kernel/n71-pcie-scan.h, n71-pcie-mmio.h, tests/n71_pcie_scan_host.c e test_n71_pcie_scan_host.py. Integrar o helper147 sem alterar sua política: target real1→2 antes do PCI core e2→1 somente depois de stop/remove. Manter acesso PCI genérico restrito e nenhuma escrita LNKCTL/retrain.
+- Guardar bridge/config/target no estado persistente; cleanup só libera o bridge quando config e TLS tiverem readback íntegro. Falha mantém ponteiro/obrigação para retry explícito, recusa outro scan e conserva erro primário. Remover também bus parcialmente registrado numa falha do core. Esta fatia ainda não qualifica o caller externo: não carregar o módulo antes de150.
+- Fixture executa os headers reais e modela MMIO/PCI core: target2 observado pelo core, vizinhos preservados, restauração depois da remoção, falhas de prepare/restore/config, retry sem novo scan e retenção de allocation. Cada mutante precisa compilar e morrer por SIGABRT/asserção; Mac/ARM64. Caller externo e build operacional seguem150; nenhum DFU agora.
+
+- Gate149 Mac:21 cenários e13 mutações compiladas por SIGABRT/asserção passaram; bridge/config/TLS permanecem retidos em falha e cleanup posterior libera sem novo scan. AST/fatal-flake8/diff passaram. Ubuntu ARM64 e build conjunto seguem150; caller externo ainda não qualificado, sem load/DFU. O resultado final conserva erro primário; contagens são amostradas antes do cleanup e identificadas no log.
+
+### Incremento 150 — ownership persistente no caller operacional
+
+- Até cinco arquivos por fatia: plano, caller, header de lifecycle e harness/runner. Estado não pode ficar na stack do probe. Desabilitar bind/unbind, serializar ações e conservar módulo/devres/energia/reset enquanto o scan estiver pendente; ação cleanup não executa novo scan.
+- Só liberar o pin após cleanup completo; status deve distinguir erro primário e erro de limpeza. Recusar ação precoce/concorrente e outro dispositivo. Gates do caller real/lifecycle, mutações compiladas, módulos Werror/modpost/ARM64/vermagic power2 em output privado separado, Image/config/exports preservados.
+- Documentar/pin/compor coletor numa fatia posterior, ainda sem autoload/default. Candidata física apenas após gates completos e coleta agrupada pronta. Wi-Fi/carga seguem pendentes.

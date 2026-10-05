@@ -39,7 +39,7 @@ class N71PcieScanHost(unittest.TestCase):
     def test_pci_scan_errors_and_removal_before_restore(self):
         result = self.compile_and_run()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('N71_PCIE_SCAN_HOST_OK cases=11', result.stdout)
+        self.assertIn('N71_PCIE_SCAN_HOST_OK cases=21', result.stdout)
 
     def test_lifecycle_mutations_die_by_assertion(self):
         mutations = (
@@ -50,8 +50,19 @@ class N71PcieScanHost(unittest.TestCase):
              'host->config.error && host->io_error'),
             ('restore-starved', '> 4096 && host->config.active', '> 4096'),
             ('enable-allowed', '(void)dev;\n\treturn -EPERM;', '(void)dev;\n\treturn 0;'),
-            ('forgot-stop-error', 'if (host->config.error || host->io_error)',
-             'if (host->devices != 2 && (host->config.error || host->io_error))'),
+            ('forgot-stop-error', 'if (!error && (host->config.error || host->io_error))',
+             'if (!error && host->devices != 2 && (host->config.error || host->io_error))'),
+            ('skip-target-prepare', 'error = n71_link_target_prepare(&target_io, &host->target);',
+             'error = 0;'),
+            ('skip-target-restore', 'if (host->target.pending) {', 'if (false) {'),
+            ('release-after-config-failure', 'if (error)\n\t\t\treturn error;\n\t\thost->config_pending',
+             'if (false)\n\t\t\treturn error;\n\t\thost->config_pending'),
+            ('release-after-target-failure', 'if (error)\n\t\t\treturn error;\n\t}\n\tstate->scan_bridge',
+             'if (false)\n\t\t\treturn error;\n\t}\n\tstate->scan_bridge'),
+            ('lose-retained-bridge', 'state->scan_bridge = bridge;', 'state->scan_bridge = NULL;'),
+            ('skip-partial-bus-removal', 'if (bridge->bus) {', 'if (!error && bridge->bus) {'),
+            ('overwrite-pending-bridge', 'if (state->scan_bridge)\n\t\treturn -EBUSY;',
+             'if (false)\n\t\treturn -EBUSY;'),
         )
         limits = resource.getrlimit(resource.RLIMIT_CORE)
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
@@ -61,6 +72,7 @@ class N71PcieScanHost(unittest.TestCase):
                     result = self.compile_and_run(mutation=(before, after))
                     self.assertEqual(result.returncode, -6, result.stderr)
                     self.assertIn('assert', result.stderr.lower())
+                    print(f'N71_SCAN_HOST_ASSERTION_KILL {name}', flush=True)
         finally:
             resource.setrlimit(resource.RLIMIT_CORE, limits)
 
