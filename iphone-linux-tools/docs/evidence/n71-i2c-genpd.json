@@ -125,6 +125,18 @@
     "cycle_requires_explicit_action": true,
     "pending_cleanup_retains_module_and_objects": true,
     "force_unload_supported": false,
-    "controller_or_charger_io_performed": false
+    "controller_or_charger_io_performed": false,
+    "historical_cycle_only_caller": true
+  },
+  "controller_inspection": {
+    "evidence_record": "n71-i2c-controller-inspection.json",
+    "code_commit": "14117a4fa385def86f7b0ee366c843b04d88b48b",
+    "observer_scenarios_per_platform": 37,
+    "observer_compiled_assertion_mutations_per_platform": 18,
+    "caller_scenarios_per_platform": 52,
+    "caller_compiled_assertion_mutations_per_platform": 14,
+    "loaded_on_phone": false,
+    "controller_inspection_executed": false,
+    "charger_io_performed": false
   }
 }

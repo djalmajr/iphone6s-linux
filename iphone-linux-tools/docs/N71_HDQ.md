@@ -1110,3 +1110,58 @@ O coletor genpd confere placa/release/mesmo boot, SSH/HTTP, ausência de bind/un
 Gate local: dois comandos gerados passaram bash-n; oito contratos do resultado recusam erro, estado pendente, marcador ausente ou duplicado. Três guards de unload foram executados em filesystem Bash temporário (limpo, boot alterado e cleanup pendente); duas mutações falharam por AssertionError. São provas limitadas de geração/parser/guards, sem teste completo do transporte ativo nem hardware. A CI do código6a66ff5 terminou success em PR37258928814/push37258925978, seis jobs. [Registro consolidado](evidence/n71-binding-profile.json).
 
 A consulta atual do Mac não detectou iPhone no IOUSB nem um único alvo iOS. O operador foi solicitado a reconectar o USB-A traseiro; nenhum monitor/recovery/DFU foi iniciado nessa preparação. Após a reconexão, registrar bateria e executar a sessão agrupada; salvar snapshot e retornar ao iOS ao final. O goal e #2/#8/#9/#36 permanecem abertos.
+
+## Inspeção do controlador I2C1 — preparada sem reset
+
+`186f73e` acrescenta `n71-i2c-controller-observe.h`; `14117a4` integra `action=inspect` ao caller. Após aquisição genpd verificada, o helper reserva exclusivamente20a111000/1000 e faz seis leituras: REV28, SMSTA14 e XFSTA0c, duas amostras. Desfaz mapping/reserva antes de retornar; o caller sempre tenta release genpd, inclusive em erro da inspeção, preservando o erro primário e o de cleanup separadamente. [Registro de fontes, módulos, inputs e limites](evidence/n71-i2c-controller-inspection.json).
+
+O driver PASemi fixado lê REV no probe, SMSTA no polling e XFSTA nos diagnósticos. Seu probe também escreve IMASK18/CTL1c, reseta FIFOs e registra o adapter; por isso não é usado como inspeção. A ação nova **não lê FIFO04 nem escreve registradores**. Não cria adapter, IRQ, clock ou pinctrl. Energia genpd é ativada, portanto essa ação não é uma observação passiva do aparelho inteiro.
+
+`complete` indica seis words capturadas; all-ones é recusado. `stable` compara as duas amostras de cada word. `idle_status` somente classifica flags SMSTA: transfer/jam/erro/RX ausentes e TX FIFO empty presente, com as três words estáveis. Não prova níveis SCL/SDA, ownership dos pinos, ausência de outros mestres, restauração CTL/IMASK ou permissão para transacionar. Instabilidade e status ocupado são registrados sem reset/retry do controlador.
+
+### Provas e reprodução
+
+Observador real:37 cenários/18 mutações por SIGABRT/asserção. Caller + observador + backend reais juntos:52 cenários/14 mutações. Ambos passaram macOS/Ubuntu ARM64; cada mutação compila com Werror antes de executar. Foram observadas limpeza MMIO, seis offsets permitidos, ausência de reads em init/falha genpd, erro primário e retenção em cleanup pendente. O erro GCC inicial era disposição ambígua dos ifs da fixture; foi corrigida sem mudar as asserções. Um resumo privado do wrapper herdou a contagem11; os logs nativos e JSON recalculados provam14. Erros de compilação não contam como mutações detectadas.
+
+Na raiz da cópia pública do projeto:
+
+```sh
+set -eu
+python3 -B -m unittest discover -s tests -p test_n71_i2c_controller_observe.py -v
+python3 -B -m unittest discover -s tests -p test_n71_i2c_power_diagnostic.py -v
+```
+
+Build real usou a mesma fonte/output power2, sem reconstruir ou trocar o Image, em uma pasta nova de módulos. Fonte/config/Image/exports e40 inputs foram preservados; seis módulos passaram W=1/KCFLAGS-Werror/modpost/ELF relocatable AArch64/vermagic, com SHA/ELF/vermagic recalculados no Mac. Artefatos privados: `runtime/n71-controller-module-artifacts-20261005/`,700/600. O módulo anterior permanece separado para rollback. Para repetir, use o [build de módulos acima](#reprodução-dos-módulos), trocando apenas `module_dir` para uma pasta nova e rodando também os dois testes deste trecho. Recalcule hashes da sua execução; não misture módulos de outras releases.
+
+### Próxima coleta: dois cycles e inspect no mesmo boot
+
+O novo coletor privado `runtime/n71-power2-session-20261005/collect-controller-power2-private.py` seleciona esse módulo e o perfil diagnóstico power2 explícito. Reúne dois cycles completos e depois inspect, com estado limpo entre ações e continuidade de boot/SSH/HTTP. São três ciclos do **domínio de energia**, sem reiniciar o iPhone entre eles. O passivo GPIO/PMGR, backup/restore e essas ações cabem em uma única entrada DFU. Nenhum comando precisa ser digitado no console do telefone.
+
+O coletor só permite inspect após os dois cycles terem retornado sucesso/estado limpo; exige SHA do módulo, placa/release/boot, bind/unbind PMGR ausentes, linhas novas de dmesg e módulo/consumer ausentes ao final. Recalcula stable/idle_status das seis words e recusa incoerência, all-ones, erro ou marcadores duplicados. Limpeza pendente conserva módulo/objetos/staging; não existe unload forçado. O guard de unload anterior está preservado byte a byte.
+
+Gate limitado do transporte:16 contratos de resultado, dois comandos bash-n, cinco cenários Bash em filesystem temporário (sucesso, cycle recusado/pendente e inspect recusado/pendente) e duas mutações do guard mortas por AssertionError. São simulações dos comandos/estados; não verificam SSH completo, callbacks no aparelho ou MMIO físico. Nenhum privilégio do Mac, reboot ou comando no telefone foi usado nesses gates.
+
+Comandos futuros pelo SSH do Mac, **somente** após os preflights, observadores passivos e transferência/SHA do módulo correto. Interrompa em falha: guarde status/dmesg e use cleanup limitado; nunca force a remoção. Os comandos abaixo ainda não foram executados fisicamente:
+
+```sh
+set -eu
+test "$(uname -r)" = 7.2.0-iphone6s-dart-serdev-power2
+provider=/sys/bus/platform/drivers/apple-pmgr-pwrstate
+test -d "$provider" && test ! -e "$provider/bind" && test ! -e "$provider/unbind"
+insmod /run/SEU_STAGING/n71-i2c-power-diagnostic.ko run=1
+control=/sys/module/n71_i2c_power_diagnostic/parameters
+clean='ready=1 active=0 attached=0 cleanup_pending=0 usage_held=0 module_retained=0 cleanup_error=0'
+test "$(cat "$control/status")" = "$clean"
+for index in 1 2; do
+  printf 'cycle\n' > "$control/action"
+  test "$(cat "$control/status")" = "$clean"
+done
+printf 'inspect\n' > "$control/action"
+test "$(cat "$control/status")" = "$clean"
+dmesg
+rmmod n71_i2c_power_diagnostic
+test ! -e /sys/module/n71_i2c_power_diagnostic
+test ! -e /sys/devices/n71-i2c1-power
+```
+
+Antes de aceitar resultado, correlacione somente linhas frescas desse load/boot e confirme continuidade SSH/HTTP. Salve snapshot/sync e retorne ao iOS para recarga enquanto carga Linux não estiver qualificada. Ainda faltam pinos/linhas, clock/IRQ/controller reset/restauração, SN2400/HDQ/gauge e corrente líquida. #2/#8/#9/#36 e o goal permanecem abertos.

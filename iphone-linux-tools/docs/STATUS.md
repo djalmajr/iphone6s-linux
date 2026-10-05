@@ -2,6 +2,8 @@
 
 ## Checkpoint atual — alimentação priorizada
 
+Nova preparação `14117a4`: ação explícita `inspect` integrada ao caller power2. Reserva MMIO e lê REV/SMSTA/XFSTA duas vezes, sem reset, FIFO ou comandos ao carregador; sempre tenta encerrar genpd e conserva referências em cleanup pendente. Observador37 cenários/18 mutações e caller52/14 passaram Mac/Ubuntu ARM64; módulo real Werror/modpost/ELF/vermagic conferido. Coletor agrupa dois cycles e uma inspeção no mesmo boot, com guards/fixtures locais. Nenhum desses ciclos ou leituras foi executado no telefone; carga, telemetria e Wi-Fi continuam pendentes. [Reprodução e próximos gates](N71_HDQ.md#inspeção-do-controlador-i2c1--preparada-sem-reset), [prova selecionada](evidence/n71-i2c-controller-inspection.json).
+
 iPhone no iOS para recarga depois de uma sessão curta power1. Um DFU
 manual reuniu restore, SSH/HTTP/Herdr e os dois observadores I2C1/GPIO/PMGR;
 módulos/staging removidos, snapshot/sync e retorno por software verificados.
@@ -28,8 +30,8 @@ O Image novo ainda não habilita carga, telemetria ou Wi-Fi.
 Lifecycle runtime PM `29e61ec`:12 cenários/13 mutações compiladas por asserção
 Mac/ARM64 e objeto kernel/Werror passaram. Contrato retém cleanup pendente,
 preserva erro primário e impede novo put após uma falha que já consumiu uso.
-O backend genpd agora está compilado no checkpoint abaixo; pinctrl/controller
-e a operação física ainda não estão associados a um módulo operacional.
+O backend genpd e o caller operacional agora estão compilados no checkpoint
+acima; ativação/inspeção físicas e acesso a pinos/carregador seguem pendentes.
 [Reprodução e limites](N71_HDQ.md#lifecycle-runtime-pm-i2c1--sequência-testada-backend-pendente).
 Nenhum novo DFU nessa implementação. O passo novo passou Ubuntu/macOS
 em ambos os runs do código29e61ec. O run
