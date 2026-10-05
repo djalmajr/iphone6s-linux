@@ -8,11 +8,33 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'scripts/host/n71-link-session.py'
 MUTATIONS = {
+    'endpoint-pme-scope': ('not scan_pme_disable or (scan_link_target and not scan_pme_noop)', 'True'),
+    'endpoint-pme-mode': ("parameters += ' scan_pme_disable=1'", "parameters += ''"),
+    'endpoint-pme-parser': ('n71_scan_pme_result if scan_pme_disable else', 'n71_scan_target_result if scan_pme_disable else'),
+    'endpoint-pme-profile': ("metadata.get('pcie_scan_pme_disable', False) is options.scan_pme_disable", 'True'),
+    'aspm-profile': ("metadata.get('pcie_aspm_off', False) is options.scan_pme_disable", 'True'),
+    'aspm-payload': ("prefix[loader['bytes']:] == ASPM_BOOTARGS", 'True'),
+    'aspm-loader': ("hashlib.sha256(prefix[:loader['bytes']]).hexdigest() == loader['sha256']", 'True'),
+    'aspm-bootargs-hash': ("metadata.get('bootargs_sha256') == hashlib.sha256(ASPM_BOOTARGS).hexdigest()", 'True'),
+    'aspm-live-option': ("[arg for arg in rows[0].split() if arg.startswith('pcie_aspm=')] == ['pcie_aspm=off']", 'True'),
+    'aspm-live-marker': ("p.stdout.splitlines().count('N71_PCIE_ASPM_DISABLED') == 1", 'True'),
+    'endpoint-pme-disable-contract': ("evidence['contract']['endpoint_pme_disable_restore'] is True", 'True'),
+    'endpoint-pme-enable-only': ("evidence['contract']['pme_enable_only'] is True", 'True'),
+    'endpoint-pme-no-w1c': ("evidence['contract']['raw_pme_w1c_writes'] is False", 'True'),
+    'endpoint-pme-active': ("and evidence['contract']['raw_pme_w1c_writes'] is False\n                    and evidence['contract']['active_pme_status_refused'] is True",
+                            "and evidence['contract']['raw_pme_w1c_writes'] is False"),
+    'endpoint-pme-reread': ("and evidence['contract']['same_word_rechecked'] is True\n                    and evidence['contract']['caller_opt_in_required'] is True",
+                            "and evidence['contract']['caller_opt_in_required'] is True"),
+    'endpoint-pme-opt-in': ("evidence['contract']['caller_opt_in_required'] is True", 'True'),
+    'endpoint-pme-owner': ("evidence['contract']['bridge_retained_until_config_pme_tls_verified'] is True", 'True'),
+    'aspm-contract': ("evidence['contract']['aspm_off_required'] is True", 'True'),
     'pme-target-scope': ('not scan_pme_noop or scan_link_target', 'True'),
     'pme-profile-flag': ("metadata.get('pcie_scan_pme_noop', False) is options.scan_pme_noop", 'True'),
     'pme-no-write-contract': ("evidence['contract']['pme_noop_without_write'] is True", 'True'),
-    'pme-active-contract': ("and evidence['contract']['active_pme_status_refused'] is True", ''),
-    'pme-reread-contract': ("and evidence['contract']['same_word_rechecked'] is True", ''),
+    'pme-active-contract': ("evidence['contract']['pme_noop_without_write'] is True\n                    and evidence['contract']['active_pme_status_refused'] is True",
+                            "evidence['contract']['pme_noop_without_write'] is True"),
+    'pme-reread-contract': ("and evidence['contract']['same_word_rechecked'] is True\n                    and evidence['contract']['pme_root_only'] is True",
+                            "and evidence['contract']['pme_root_only'] is True"),
     'pme-root-contract': ("and evidence['contract']['pme_root_only'] is True", ''),
     'profile-release-pair': ("metadata.get('kernel_release') == release", 'True'),
     'profile-payload': ("metadata.get('payload_sha256') == payload_sha256", 'True'),
@@ -69,6 +91,18 @@ TARGET_MUTATIONS = {
     'unbound-success': ("result['error'] < 0", 'True'),
     'unbound-primary': ("int(sessions[-1][7]) == result['error']", 'True'),
 }
+PME_MUTATIONS = {
+    'pme-complete-records': ("len(prepared) == text.count('N71_PCIE_SCAN_PME_PREPARED ')", 'True'),
+    'pme-unique-prepare': ('len(prepared) <= 1', 'len(prepared) <= 2'),
+    'pme-prepare-state': ('((pending, ready) == (1, 1) if error == 0 else ready == 0)', 'True'),
+    'pme-final-restore': ("restored[-1].groups() == ('0', '0')", 'True'),
+    'pme-retry-state': ("all(int(row.group(1)) < 0 and row.group(2) == '1' for row in restored[:-1])", 'True'),
+    'pme-after-config': ('config[-1].start() < restored[0].start()', 'True'),
+    'pme-after-bus-removal': ('removed[0].start() < restored[0].start()', 'True'),
+    'pme-before-tls': ('restored[-1].start() < target[0].start()', 'True'),
+    'pme-after-prepare': ('prepared[0].start() < restored[0].start()', 'True'),
+    'pme-before-scan': ('prepared[0].start() < device', 'True'),
+}
 
 
 def main():
@@ -77,12 +111,15 @@ def main():
         variants = [(SOURCE, 'N71_LINK_SESSION_SCRIPT', name, values) for name, values in MUTATIONS.items()]
         variants += [(ROOT / 'scripts/host/n71_scan_target_result.py', 'N71_SCAN_TARGET_RESULT_SCRIPT', name, values)
                      for name, values in TARGET_MUTATIONS.items()]
+        variants += [(ROOT / 'scripts/host/n71_scan_pme_result.py', 'N71_SCAN_PME_RESULT_SCRIPT', name, values)
+                     for name, values in PME_MUTATIONS.items()]
         for source, variable, name, (before, after) in variants:
             text = source.read_text()
             if text.count(before) != 1:
                 raise SystemExit('Mutation anchor differs: ' + name)
             mutated = folder / (name + '.py')
             mutated.write_text(text.replace(before, after))
+            compile(mutated.read_text(), str(mutated), 'exec')
             environment = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')
             environment[variable] = str(mutated)
             process = subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', str(ROOT / 'tests'),

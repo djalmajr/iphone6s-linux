@@ -17,6 +17,7 @@ import n71_dart_result
 import n71_dart_cycle_result
 import n71_scan_result
 import n71_scan_target_result
+import n71_scan_pme_result
 import n71_session_history
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -26,6 +27,7 @@ PROFILE_RELEASES = {'n71-dart-serdev-v1': RELEASE, 'n71-dart-serdev-power-v2': B
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
 STATE_ACTIVE = 'bound=1 active=1 restore_pending=1 original=80'
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
+ASPM_BOOTARGS = b'chosen.bootargs=rdinit=/init console=ttySAC0,115200 loglevel=7 pcie_aspm=off\n'
 
 
 def require(condition, message):
@@ -54,13 +56,28 @@ def module_bytes(profile, record, *, release=RELEASE):
     return raw
 
 
-def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False):
+def aspm_payload(profile, metadata):
+    loader = json.loads((ROOT / 'docs/evidence/m1n1-rebuild.json').read_text())['shallow_clone']
+    require(loader['matches_original'] is True and 64 <= loader['bytes'] <= 2 * 1024 * 1024,
+            'Recorded loader required for ASPM payload')
+    with profile['payload'].open('rb') as stream:
+        prefix = stream.read(loader['bytes'] + len(ASPM_BOOTARGS))
+    require(hashlib.sha256(prefix[:loader['bytes']]).hexdigest() == loader['sha256']
+            and prefix[loader['bytes']:] == ASPM_BOOTARGS
+            and metadata.get('bootargs_sha256') == hashlib.sha256(ASPM_BOOTARGS).hexdigest(),
+            'Exact ASPM payload bootargs and loader required')
+
+
+def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False):
     require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
     require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
     require(not scan_pme_noop or scan_link_target, 'PME no-op scan requires target scan')
+    require(not scan_pme_disable or (scan_link_target and not scan_pme_noop), 'Endpoint PME requires its own target candidate')
     if scan_link_target:
         require(host_scan and release == BINDING_RELEASE, 'Target scan requires host-scan and power2')
         name = 'n71-pcie-pme-noop-build.json' if scan_pme_noop else 'n71-pcie-scan-target-build.json'
+        if scan_pme_disable:
+            name = 'n71-pcie-pme-aspm-build.json'
         evidence = json.loads((ROOT / 'docs/evidence' / name).read_text())
         build = evidence['module_build']
         require(evidence['kernel_release'] == release and evidence['kernel_patchset'] == 'n71-dart-serdev-power-v2'
@@ -72,6 +89,15 @@ def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_i
                     and evidence['contract']['active_pme_status_refused'] is True
                     and evidence['contract']['same_word_rechecked'] is True
                     and evidence['contract']['pme_root_only'] is True, 'PME no-op contract differs')
+        if scan_pme_disable:
+            require(evidence['contract']['endpoint_pme_disable_restore'] is True
+                    and evidence['contract']['pme_enable_only'] is True
+                    and evidence['contract']['raw_pme_w1c_writes'] is False
+                    and evidence['contract']['active_pme_status_refused'] is True
+                    and evidence['contract']['same_word_rechecked'] is True
+                    and evidence['contract']['caller_opt_in_required'] is True
+                    and evidence['contract']['bridge_retained_until_config_pme_tls_verified'] is True
+                    and evidence['contract']['aspm_off_required'] is True, 'Endpoint PME/ASPM contract differs')
         records = [dict(evidence['selected_modules'][name], module=name)
                    for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko')]
         require(all(r['vermagic'] == release + ' SMP preempt mod_unload aarch64' for r in records),
@@ -139,11 +165,14 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE):
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE, scan_pme_disable=False):
         require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
         require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
         require(not scan_link_target or (host_scan and release == BINDING_RELEASE), 'Target session requires host-scan and power2')
+        require(not scan_pme_disable or scan_link_target, 'Endpoint PME session requires target mode')
         self.scan_link_target = scan_link_target
+        self.scan_pme_disable = scan_pme_disable
+        self.scan_parser = n71_scan_pme_result if scan_pme_disable else n71_scan_target_result if scan_link_target else n71_scan_result
         self.release = release
         self.output = output
         self.modules = modules
@@ -197,12 +226,21 @@ class Session:
         boot = re.findall(r'^N71_BOOT_ID ([0-9a-f-]{36})$', p.stdout, re.M)
         require(len(boot) == 1, 'Unique live boot identity required')
         self.result['boot_id'] = boot[0]
+        preflight_text = p.stdout
+        if self.scan_pme_disable:
+            p = self.capture('aspm', 'set -e; printf "N71_PCIE_CMDLINE "; cat /proc/cmdline; '
+                             'dmesg | grep -F "PCIe ASPM is disabled" >/dev/null; echo N71_PCIE_ASPM_DISABLED')
+            rows = re.findall(r'^N71_PCIE_CMDLINE (.*)$', p.stdout, re.M)
+            require(p.returncode == 0 and len(rows) == 1
+                    and [arg for arg in rows[0].split() if arg.startswith('pcie_aspm=')] == ['pcie_aspm=off']
+                    and p.stdout.splitlines().count('N71_PCIE_ASPM_DISABLED') == 1, 'Live ASPM off not proved')
+            self.result['aspm_off_verified'] = True
         if self.history:
-            self.history.verify_live(p.stdout)
+            self.history.verify_live(preflight_text)
             p = self.capture('module-directory', 'umask 077; mkdir -m 700 ' + self.module_directory)
             require(p.returncode == 0, 'Exclusive remote module directory not created')
         else:
-            require('N71_PCIE_' not in p.stdout, 'A PCIe diagnostic already exists in this boot')
+            require('N71_PCIE_' not in preflight_text, 'A PCIe diagnostic already exists in this boot')
         if self.host_scan or self.bar_sizing or self.dart_observe or self.dart_cycle or self.history:
             p = self.capture('pci-empty', 'set -e; test -z "$(ls /sys/bus/pci/devices)"; echo N71_PCI_PREFLIGHT_EMPTY')
             require(p.returncode == 0, 'Pre-existing PCI devices refused')
@@ -236,6 +274,8 @@ class Session:
         parameters = ' config_inventory=1' if self.config_inventory else ''
         if self.host_scan:
             parameters += ' host_scan=1'
+        if self.scan_pme_disable:
+            parameters += ' scan_pme_disable=1'
         if self.chip_id:
             parameters += ' chip_id=1'
         elif self.bar_sizing:
@@ -266,7 +306,7 @@ class Session:
             require(int(error) == 0 and identities == ['43a314e4'], 'Measured inventory endpoint required')
             self.result['inventory'] = inventory_result(p.stdout)
         if self.host_scan:
-            parser = n71_scan_target_result if self.scan_link_target else n71_scan_result
+            parser = self.scan_parser
             self.result['host_scan'] = parser.parse(p.stdout)
         if self.bar_sizing:
             self.result['bar_sizing'] = n71_bar_result.parse(p.stdout, self.result['inventory']['bars_raw'])
@@ -305,7 +345,7 @@ class Session:
                         and 'N71_PCIE_POWER_RELEASED powered=0 attached=0' in p.stdout,
                         'PCIe reset/power cleanup not proved')
                 if self.host_scan or self.bar_sizing:
-                    parser = n71_bar_result if self.bar_sizing else n71_scan_target_result if self.scan_link_target else n71_scan_result
+                    parser = n71_bar_result if self.bar_sizing else self.scan_parser
                     parser.cleanup(p.stdout)
                     if self.chip_id:
                         n71_chip_result.cleanup(p.stdout)
@@ -371,6 +411,7 @@ def main():
     modes.add_argument('--host-scan', action='store_true', help='Select recorded PCI-core sizing module; implies inventory')
     parser.add_argument('--scan-link-target', action='store_true', help='Explicit power2 host-scan candidate with retained TLS/caller cleanup')
     parser.add_argument('--scan-pme-noop', action='store_true', help='Explicit target candidate with inactive root PME acknowledgement without a write')
+    parser.add_argument('--scan-pme-disable', action='store_true', help='Explicit endpoint PME disable/restore candidate; requires ASPM off')
     modes.add_argument('--bar-sizing', action='store_true', help='Select endpoint-only BAR sizing module; implies inventory')
     modes.add_argument('--chip-id', action='store_true', help='Read ChipCommon ID once via restored BAR0 route; implies sizing/inventory')
     modes.add_argument('--dart-observe', action='store_true', help='Read stable DART state without provider activation; implies inventory')
@@ -387,9 +428,14 @@ def main():
     release = selected_release(metadata, profile['sha256'])
     require(metadata.get('pcie_scan_link_target', False) is options.scan_link_target, 'Target profile selection differs')
     require(metadata.get('pcie_scan_pme_noop', False) is options.scan_pme_noop, 'PME profile selection differs')
+    require(metadata.get('pcie_scan_pme_disable', False) is options.scan_pme_disable, 'Endpoint PME profile selection differs')
+    require(metadata.get('pcie_aspm_off', False) is options.scan_pme_disable, 'ASPM profile selection differs')
+    if options.scan_pme_disable:
+        aspm_payload(profile, metadata)
     records = selected_records(options.config_inventory, options.host_scan, options.bar_sizing, options.chip_id,
                                dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release,
-                               scan_link_target=options.scan_link_target, scan_pme_noop=options.scan_pme_noop)
+                               scan_link_target=options.scan_link_target, scan_pme_noop=options.scan_pme_noop,
+                               scan_pme_disable=options.scan_pme_disable)
     if release == BINDING_RELEASE or options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe or options.dart_cycle:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record, release=release)) for record in records]
@@ -409,7 +455,8 @@ def main():
     return Session(output, modules, config_inventory=options.config_inventory,
                    host_scan=options.host_scan, bar_sizing=options.bar_sizing,
                    chip_id=options.chip_id, dart_observe=options.dart_observe,
-                   dart_cycle=options.dart_cycle, history=history, scan_link_target=options.scan_link_target, release=release).run()
+                   dart_cycle=options.dart_cycle, scan_pme_disable=options.scan_pme_disable,
+                   history=history, scan_link_target=options.scan_link_target, release=release).run()
 
 
 if __name__ == '__main__':

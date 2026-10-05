@@ -29,6 +29,12 @@ if os.environ.get('N71_SCAN_TARGET_RESULT_SCRIPT'):
     TARGET_MODULE = importlib.util.module_from_spec(TARGET_SPEC)
     TARGET_SPEC.loader.exec_module(TARGET_MODULE)
     MODULE.n71_scan_target_result = TARGET_MODULE
+    MODULE.n71_scan_pme_result.n71_scan_target_result = TARGET_MODULE
+if os.environ.get('N71_SCAN_PME_RESULT_SCRIPT'):
+    PME_SPEC = importlib.util.spec_from_file_location('scan_pme_result', os.environ['N71_SCAN_PME_RESULT_SCRIPT'])
+    PME_MODULE = importlib.util.module_from_spec(PME_SPEC)
+    PME_SPEC.loader.exec_module(PME_MODULE)
+    MODULE.n71_scan_pme_result = PME_MODULE
 
 OBSERVE = ('N71_REG_ON_PARENT simple-mfd-i2c shared-regmap; no rebind\n'
            'N71_REG_ON_OBSERVED control=80 bit0=0 compatible-plan=1\n'
@@ -58,10 +64,14 @@ TARGET = ('N71_PCIE_SCAN_TARGET_PREPARED error=0 pending=1 prepared=1; no retrai
           + 'N71_PCIE_SCAN_TARGET_RESTORED error=0 pending=0; no retrain\n'
           'N71_PCIE_SESSION_CLEANUP error=0 retained=0 scan_pending=0 reset_pending=0 powered=0 attached=0 power_put_pending=0 primary_error=0\n'
           + STATUS)
+PME_PREPARED = 'N71_PCIE_SCAN_PME_PREPARED error=0 pending=1 prepared=1; no W1C\n'
+PME_RESTORED = 'N71_PCIE_SCAN_PME_RESTORED error=0 pending=0; no W1C\n'
+PME = TARGET.replace('N71_PCIE_SCAN_DEVICE bus=0', PME_PREPARED + 'N71_PCIE_SCAN_DEVICE bus=0').replace(
+    'N71_PCIE_SCAN_TARGET_RESTORED ', PME_RESTORED + 'N71_PCIE_SCAN_TARGET_RESTORED ')
 
 
 class LinkSessionTests(unittest.TestCase):
-    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, scan_link_target=False):
+    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, scan_link_target=False, scan_pme_disable=False):
         replies = {'observe': OBSERVE, 'activate': ACTIVE,
                    'pcie': 'N71_PCIE_LINK_RESULT error=-110 port88=0000880c reads=10000\n',
                    'pcie-cleanup': CLEANUP, 'pcie-unload': 'N71_PCIE_UNLOADED\n',
@@ -80,6 +90,8 @@ class LinkSessionTests(unittest.TestCase):
         if scan_link_target:
             replies.update({'pcie': LINK + INVENTORY + TARGET, 'pcie-cleanup': CLEANUP + TARGET,
                             'pcie-status': STATUS, 'pcie-retry': STATUS})
+        if scan_pme_disable:
+            replies.update({'pcie': LINK + INVENTORY + PME, 'pcie-cleanup': CLEANUP + PME})
         replies.update(overrides or {})
         calls = []
         with tempfile.TemporaryDirectory() as folder:
@@ -88,6 +100,7 @@ class LinkSessionTests(unittest.TestCase):
                                          host_scan=host_scan, bar_sizing=bar_sizing, chip_id=chip_id,
                                          dart_observe=dart_observe, dart_cycle=dart_cycle,
                                          scan_link_target=scan_link_target,
+                                         scan_pme_disable=scan_pme_disable,
                                          release=MODULE.BINDING_RELEASE if scan_link_target else MODULE.RELEASE)
 
             def capture(stage, command, raw=None):
@@ -782,6 +795,215 @@ class LinkSessionTests(unittest.TestCase):
                 with patch.object(sys, 'argv', [x for x in argv if x != '--scan-link-target']), self.assertRaises(ValueError):
                     MODULE.main()
 
+
+    @patch.object(MODULE, 'ROOT', ROOT)
+    def test_endpoint_pme_selection_contracts_and_scope(self):
+        mode = dict(host_scan=True, release=MODULE.BINDING_RELEASE, scan_link_target=True, scan_pme_disable=True)
+        selected = MODULE.selected_records(False, **mode)
+        self.assertEqual(selected[0]['bytes'], 73576)
+        self.assertEqual(selected[0]['sha256'], '828b1ae2aa5de0deea412d3fe8bb1abcfe7ac820e9a94bbcadb5263a0141b008')
+        self.assertEqual(selected[1], MODULE.selected_records(False, release=MODULE.BINDING_RELEASE)[1])
+        for changed in (dict(scan_link_target=False), dict(host_scan=False), dict(release=MODULE.RELEASE),
+                        dict(scan_pme_noop=True)):
+            with self.assertRaises(ValueError):
+                MODULE.selected_records(False, **dict(mode, **changed))
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-pme-aspm-build.json').read_text())
+        fields = ('endpoint_pme_disable_restore', 'pme_enable_only', 'raw_pme_w1c_writes',
+                  'active_pme_status_refused', 'same_word_rechecked', 'caller_opt_in_required',
+                  'bridge_retained_until_config_pme_tls_verified', 'aspm_off_required')
+        for field in fields:
+            for value in ((True, 0, 'false') if field == 'raw_pme_w1c_writes' else (False, 1, 'true')):
+                altered = copy.deepcopy(evidence); altered['contract'][field] = value
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory); (root / 'docs/evidence').mkdir(parents=True)
+                    (root / 'docs/evidence/n71-pcie-pme-aspm-build.json').write_text(json.dumps(altered))
+                    with patch.object(MODULE, 'ROOT', root), self.assertRaises(ValueError):
+                        MODULE.selected_records(False, **mode)
+
+    def test_endpoint_pme_preflight_requires_live_aspm_before_effects(self):
+        good = 'N71_PCIE_CMDLINE rdinit=/init pcie_aspm=off\nN71_PCIE_ASPM_DISABLED\n'
+        for text in (good, '', good.replace('off', 'force'), good.replace('off', 'off pcie_aspm=off'),
+                     good.replace('off', 'off pcie_aspm=on'), good.replace('N71_PCIE_ASPM_DISABLED\n', ''), good + good):
+            with self.subTest(text=text), tempfile.TemporaryDirectory() as directory:
+                with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
+                    session = MODULE.Session(Path(directory), [({'module': 'synthetic.ko', 'sha256': 'a' * 64}, b'fixture')],
+                                             host_scan=True, scan_link_target=True, scan_pme_disable=True,
+                                             release=MODULE.BINDING_RELEASE)
+                calls = []
+                def capture(stage, command, raw=None):
+                    calls.append((stage, command))
+                    return SimpleNamespace(returncode=0, stdout=text if stage == 'aspm' else
+                                           MODULE.BINDING_RELEASE + '\nN71_BOOT_ID 12345678-1234-1234-1234-123456789abc\n')
+                session.capture = capture
+                if text == good:
+                    try:
+                        session.preflight()
+                    except ValueError as error:
+                        self.fail(str(error))
+                    self.assertTrue(session.result['aspm_off_verified'])
+                    self.assertIn('transfer-synthetic.ko', dict(calls))
+                    self.assertIn('cat /proc/cmdline', dict(calls)['aspm'])
+                    self.assertIn('grep -F "PCIe ASPM is disabled"', dict(calls)['aspm'])
+                    for _, command in calls:
+                        syntax = subprocess.run(['/bin/bash', '-n', '-c', command], capture_output=True, text=True)
+                        self.assertEqual(syntax.returncode, 0, syntax.stderr)
+                else:
+                    with self.assertRaises(ValueError):
+                        session.preflight()
+                    self.assertEqual([stage for stage, _ in calls], ['preflight', 'aspm'])
+
+    def test_endpoint_pme_success_and_incomplete_cleanup_retains_reg_on(self):
+        mode = dict(host_scan=True, scan_link_target=True, scan_pme_disable=True)
+        code, result, calls = self.run_session(**mode)
+        self.assertEqual(code, 0)
+        self.assertTrue(result['host_scan'].get('pme_prepare_verified'))
+        self.assertTrue(result['host_scan'].get('pme_cleanup_verified'))
+        self.assertIn('host_scan=1 scan_pme_disable=1;', calls['pcie'])
+        self.assertNotIn('scan_pme_disable=', self.run_session(host_scan=True, scan_link_target=True)[2]['pcie'])
+        malformed = (PME.replace(PME_PREPARED, ''), PME.replace(PME_RESTORED, ''), PME + PME_PREPARED,
+                     PME.replace(PME_PREPARED, PME_PREPARED.replace('pending=1', 'pending=2')),
+                     PME.replace(PME_PREPARED, PME_PREPARED.replace('error=0', 'error=-5')),
+                     PME.replace(PME_RESTORED, PME_RESTORED.replace('pending=0', 'pending=1')),
+                     PME.replace(PME_RESTORED, PME_RESTORED.replace('error=0', 'error=-5')),
+                     PME.replace(PME_RESTORED, '') + PME_RESTORED,
+                     PME.replace(PME_RESTORED, '').replace('N71_PCIE_SCAN_BUS_REMOVED', PME_RESTORED + 'N71_PCIE_SCAN_BUS_REMOVED'),
+                     PME.replace(PME_RESTORED, '').replace('N71_PCIE_SCAN_CONFIG_RESTORED', PME_RESTORED + 'N71_PCIE_SCAN_CONFIG_RESTORED'),
+                     PME + PME_RESTORED, PME.replace(PME_RESTORED, PME_RESTORED + PME_RESTORED),
+                     PME.replace(PME_PREPARED, '') + PME_PREPARED,
+                     PME.replace(PME_PREPARED, '').replace('N71_PCIE_SCAN_BUS_REMOVED', PME_PREPARED + 'N71_PCIE_SCAN_BUS_REMOVED'),
+                     PME.replace('N71_PCIE_SCAN_CONFIG_RESTORED error=0; decode/readback checked\n', '').replace(
+                         PME_RESTORED, '').replace('N71_PCIE_SCAN_BUS_REMOVED',
+                                                  'N71_PCIE_SCAN_CONFIG_RESTORED error=0; decode/readback checked\n'
+                                                  + PME_RESTORED + 'N71_PCIE_SCAN_BUS_REMOVED'))
+        for text in malformed:
+            with self.subTest(text=text):
+                with self.assertRaises(ValueError):
+                    MODULE.n71_scan_pme_result.parse(text)
+                code, result, calls = self.run_session({'pcie-cleanup': CLEANUP + text}, **mode)
+                self.assertEqual(code, 1)
+                self.assertFalse(result['cleanup_verified'])
+                self.assertNotIn('pcie-unload', calls)
+                self.assertNotIn('restore', calls)
+
+    def test_endpoint_pme_prepare_refusal_cleans_without_claiming_success(self):
+        early = ('N71_PCIE_SCAN_TARGET_PREPARED error=0 pending=1 prepared=1; no retrain\n'
+                 'N71_PCIE_SCAN_PME_PREPARED error=-1 pending=0 prepared=0; no W1C\n'
+                 'N71_PCIE_SCAN_CONFIG_RESTORED error=0; decode/readback checked\n'
+                 'N71_PCIE_SCAN_TARGET_RESTORED error=0 pending=0; no retrain\n'
+                 'N71_PCIE_SCAN_RESULT error=-1 devices=0 endpoints=0 reads=20 attempts=0 writes=0 refusals=0; counts before cleanup, no DMA or radio\n'
+                 'N71_PCIE_SESSION_CLEANUP error=0 retained=0 scan_pending=0 reset_pending=0 powered=0 attached=0 power_put_pending=0 primary_error=-1\n'
+                 'N71_PCIE_STATUS ready=0 retained=0\n')
+        code, result, calls = self.run_session({'pcie': LINK + INVENTORY + early, 'pcie-status': 'N71_PCIE_STATUS ready=0 retained=0\n',
+                                              'pcie-cleanup': CLEANUP + early}, host_scan=True, scan_link_target=True, scan_pme_disable=True)
+        self.assertEqual(code, 1)
+        self.assertTrue(result['cleanup_verified'])
+        self.assertIn('reg-unload', calls)
+        self.assertNotIn('host_scan', result)
+        for changed in (early.replace('prepared=0', 'prepared=1'), early + PME_RESTORED,
+                        early.replace('pending=0 prepared=0', 'pending=2 prepared=0')):
+            with self.assertRaises(ValueError):
+                MODULE.n71_scan_pme_result.cleanup(changed)
+        # A failed registration has no device reports; cleanup must still prove ownership came first.
+        before_scan = early.replace('N71_PCIE_SCAN_PME_PREPARED error=-1 pending=0 prepared=0; no W1C\n', PME_PREPARED).replace(
+            'N71_PCIE_SCAN_TARGET_RESTORED ', PME_RESTORED + 'N71_PCIE_SCAN_TARGET_RESTORED ')
+        MODULE.n71_scan_pme_result.cleanup(before_scan)
+        reordered = before_scan.replace(PME_PREPARED, '').replace(PME_RESTORED, PME_RESTORED + PME_PREPARED)
+        with self.assertRaises(ValueError):
+            MODULE.n71_scan_pme_result.cleanup(reordered)
+
+    def test_endpoint_pme_retry_restores_without_another_scan(self):
+        pending = STATUS.replace('retained=0 scan_pending=0 reset_pending=0 powered=0 attached=0',
+                                 'retained=1 scan_pending=1 reset_pending=1 powered=4 attached=4').replace(
+                                     'primary_error=0 cleanup_error=0', 'primary_error=-5 cleanup_error=-5')
+        failed = PME.replace(STATUS, pending).replace('error=0 devices', 'error=-5 devices').replace(
+            PME_RESTORED, PME_RESTORED.replace('error=0 pending=0', 'error=-5 pending=1')).replace(
+                'N71_PCIE_SCAN_TARGET_RESTORED error=0 pending=0; no retrain\n', '').replace(
+                    'SESSION_CLEANUP error=0 retained=0 scan_pending=0 reset_pending=0 powered=0 attached=0',
+                    'SESSION_CLEANUP error=-5 retained=1 scan_pending=1 reset_pending=1 powered=4 attached=4').replace('primary_error=0\n', 'primary_error=-5\n')
+        mode = dict(host_scan=True, scan_link_target=True, scan_pme_disable=True)
+        code, result, calls = self.run_session({'pcie': LINK + INVENTORY + failed, 'pcie-status': pending, 'pcie-retry': pending}, **mode)
+        self.assertEqual(code, 1)
+        self.assertTrue(result.get('reg_on_release_skipped'))
+        self.assertEqual(list(calls).count('pcie-retry'), 1)
+        cleaned = (PME_RESTORED + 'N71_PCIE_SCAN_TARGET_RESTORED error=0 pending=0; no retrain\n'
+                   'N71_PCIE_SESSION_CLEANUP error=0 retained=0 scan_pending=0 reset_pending=0 powered=0 attached=0 power_put_pending=0 primary_error=-5\n'
+                   + STATUS.replace('primary_error=0', 'primary_error=-5'))
+        history = failed.replace(pending, '') + cleaned
+        code, result, calls = self.run_session({'pcie': LINK + INVENTORY + failed, 'pcie-status': pending,
+                                              'pcie-retry': cleaned, 'pcie-cleanup': CLEANUP + history}, **mode)
+        self.assertEqual(code, 1)
+        self.assertTrue(result['cleanup_verified'])
+        self.assertIn('experiment_error', result)
+        self.assertIn('reg-unload', calls)
+        self.assertEqual(sum('insmod /run/n71-pcie-diagnostic.ko' in command for command in calls.values()), 1)
+
+    def test_endpoint_pme_cli_checks_payload_and_flags_before_ssh(self):
+        release = MODULE.BINDING_RELEASE
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-pme-aspm-build.json').read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); folder = root / 'runtime/profile'
+            folder.mkdir(parents=True, mode=0o700); folder.parent.chmod(0o700)
+            doc = root / 'docs/evidence'; doc.mkdir(parents=True)
+            for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko'):
+                raw = self.module_fixture(release) + name.encode() + b'\0'
+                (folder / name).write_bytes(raw); (folder / name).chmod(0o600)
+                evidence['selected_modules'][name] = dict(bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest(), vermagic=release + ' SMP preempt mod_unload aarch64')
+            (doc / 'n71-pcie-pme-aspm-build.json').write_text(json.dumps(evidence))
+            loader = b'L' * 64
+            (doc / 'm1n1-rebuild.json').write_text(json.dumps({'shallow_clone': dict(bytes=64, matches_original=True, sha256=hashlib.sha256(loader).hexdigest())}))
+            payload = loader + b'chosen.bootargs=rdinit=/init console=ttySAC0,115200 loglevel=7 pcie_aspm=off\n' + b'SYNTHETIC_DT_KERNEL_USERS'
+            (folder / 'payload.bin').write_bytes(payload)
+            metadata = dict(kernel_patchset='n71-dart-serdev-power-v2', kernel_release=release, payload_sha256='a' * 64,
+                            module_sha256=evidence['selected_modules']['n71-pcie-diagnostic.ko']['sha256'],
+                            pcie_scan_link_target=True, pcie_scan_pme_noop=False, pcie_scan_pme_disable=True, pcie_aspm_off=True,
+                            bootargs_sha256=hashlib.sha256(payload[64:-len(b'SYNTHETIC_DT_KERNEL_USERS')]).hexdigest())
+            provenance = folder / 'provenance.json'; provenance.write_text(json.dumps(metadata)); provenance.chmod(0o600)
+            profile = dict(payload=folder / 'payload.bin', sha256='a' * 64)
+            argv = ['n71-link-session.py', '--profile', str(folder / 'deployment.json'), '--host-scan', '--scan-link-target', '--scan-pme-disable', '--check']
+            with patch.object(MODULE, 'ROOT', root), patch.object(MODULE.device_profile, 'verify', return_value=profile), patch.dict(os.environ), \
+                    patch.object(MODULE.subprocess, 'run', side_effect=AssertionError('Unexpected SSH')), contextlib.redirect_stdout(io.StringIO()):
+                with patch.object(sys, 'argv', argv):
+                    try:
+                        self.assertEqual(MODULE.main(), 0)
+                    except (ValueError, OSError) as error:
+                        self.fail(str(error))
+                for field in ('pcie_scan_pme_disable', 'pcie_aspm_off'):
+                    for value in (False, 1, 'true'):
+                        metadata[field] = value; provenance.write_text(json.dumps(metadata))
+                        with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
+                            MODULE.main()
+                    metadata[field] = True
+                for altered in (payload.replace(b'pcie_aspm=off', b'pcie_aspm=on '), b'X' + payload[1:]):
+                    (folder / 'payload.bin').write_bytes(altered); provenance.write_text(json.dumps(metadata))
+                    with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
+                        MODULE.main()
+                (folder / 'payload.bin').write_bytes(payload)
+                metadata['bootargs_sha256'] = '0' * 64; provenance.write_text(json.dumps(metadata))
+                with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
+                    MODULE.main()
+                metadata['bootargs_sha256'] = hashlib.sha256(payload[64:-len(b'SYNTHETIC_DT_KERNEL_USERS')]).hexdigest()
+                provenance.write_text(json.dumps(metadata))
+                with patch.object(sys, 'argv', [arg for arg in argv if arg != '--scan-pme-disable']), self.assertRaises(ValueError):
+                    MODULE.main()
+                replies = {'preflight': release + '\nN71_BOOT_ID 12345678-1234-1234-1234-123456789abc\n',
+                           'aspm': 'N71_PCIE_CMDLINE rdinit=/init pcie_aspm=off\nN71_PCIE_ASPM_DISABLED\n',
+                           'observe': OBSERVE, 'activate': ACTIVE, 'pcie': LINK + INVENTORY + PME,
+                           'pcie-status': STATUS, 'pcie-cleanup': CLEANUP + PME,
+                           'restore': RESTORE, 'reg-unload': 'N71_REG_ON_REMOVE error=0 restore_pending=0\nN71_REG_UNLOADED\n'}
+                commands = []
+                def capture(session, stage, command, raw=None):
+                    commands.append((stage, command)); return SimpleNamespace(returncode=0, stdout=replies.get(stage, ''))
+                destination = root / 'runtime/session'
+                with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]), patch.object(MODULE.Session, 'capture', capture), \
+                        patch.object(sys, 'argv', argv[:-1] + ['--output-dir', str(destination)]):
+                    try:
+                        self.assertEqual(MODULE.main(), 0)
+                    except (ValueError, OSError) as error:
+                        self.fail(str(error))
+                result = json.loads((destination / 'result-private.json').read_text())
+                self.assertTrue(result['aspm_off_verified'])
+                self.assertTrue(result['host_scan'].get('pme_cleanup_verified'))
+                self.assertIn('scan_pme_disable=1;', dict(commands)['pcie'])
 
     def test_pme_cli_profile_selection_and_tampered_module_never_use_ssh(self):
         # Mutation captured: accept a nonboolean/crossed profile flag or omit the recorded module hash.
