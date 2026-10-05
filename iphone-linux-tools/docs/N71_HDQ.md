@@ -1024,3 +1024,78 @@ Não usar seu `.ko` como módulo de diagnóstico operacional nem carregá-lo.
 O caminho de build/toolchain pode mudar o hash binário; conferir a prova
 selecionada e preservar o Image/config/exports antes/depois.
 HDQ, acesso SN2400, telemetria/corrente líquida, carga e Wi-Fi seguem abertos.
+
+
+## Caller genpd operacional power2 — preparado em2026-10-05
+
+`phone/kernel/n71-i2c-power-diagnostic.c` implementa o caller do backend qualificado. A inicialização conserva um root consumer e referências OF, valida o controlador disabled/sem adapter, os três providers protegidos e duas amostras de quiescência do leaf. Não ativa energia nessa etapa. `action=cycle` faz attach/resume/verificação ativa e release/verificação física/detach no mesmo callback; `action=cleanup` repete somente a restauração pendente. [Código e prova selecionada](evidence/n71-binding-profile.json).
+
+Todos os controles usam o mesmo mutex. Uma referência adicional do módulo permanece enquanto objetos ou cleanup estão pendentes; isso impede unload normal e novo cycle. Um put já consumido não é repetido. Falhas conservam erro primário e `cleanup_error`; suspend com domínio ainda ligado não autoriza detach. Retry não garante recuperar hardware. Remoção forçada não é suportada. Parâmetros de ação anteriores à inicialização são recusados e não há autoload ou cycle no initramfs.
+
+**Provas atuais:** caller e backend reais compilados com fixtures das APIs kernel,39 cenários/11 mutações compiladas por SIGABRT/asserção no Mac/Ubuntu ARM64. O primeiro harness reutilizava estado RPM do device já removido no segundo attach; foi corrigido para modelar a alocação de um novo device. Seis módulos passaram W=1/Werror/modpost/ELF/vermagic power2; SHA, ELF e vermagic foram recalculados no Mac. São provas de código/build, sem ciclo físico, I2C/SN2400, HDQ ou carga.
+
+### Reprodução dos módulos
+
+Na VM, a partir da cópia pública do projeto, use a fonte/output power2 preparados conforme o [runbook do Image](N71_KERNEL_BUNDLE.md#image-power2-e-proteção-de-binding--2026-10-05). O diretório abaixo corresponde à execução registrada e já existe; escolha outro nome ao repetir. Hashes de módulos de um build novo devem ser recalculados e vinculados à sua própria prova; não use módulos de outra release.
+
+```sh
+set -eu
+umask 077
+work_dir=/home/ubuntu/kernel-n71-binding-source-20261005
+build_dir=/home/ubuntu/kernel-n71-binding-build-20261005
+module_dir=/home/ubuntu/n71-i2c-power-control-inputs-20261005-v1/phone/kernel
+test ! -e "$module_dir" && test ! -L "$module_dir"
+python3 -B -m unittest discover -s tests -p test_n71_i2c_power_diagnostic.py -v
+python3 scripts/build/kernel_bundle.py check "$work_dir" \
+  --profile n71-dart-serdev-power-v2
+mkdir -p "$module_dir"
+cp phone/kernel/Makefile phone/kernel/*.c phone/kernel/*.h "$module_dir/"
+sha256sum "$build_dir/.config" "$build_dir/arch/arm64/boot/Image" \
+  "$build_dir/vmlinux.symvers" > "$module_dir/kernel-before.sha256"
+test "$(cat "$build_dir/include/config/kernel.release")" = 7.2.0-iphone6s-dart-serdev-power2
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  W=1 KCFLAGS=-Werror M="$module_dir" \
+  KBUILD_EXTRA_SYMBOLS="$build_dir/vmlinux.symvers" modules
+for name in n71-pcie-diagnostic n71-wlan-power-diagnostic n71-hdq-gpio-observe \
+            n71-i2c-topology-observe n71-pmgr-power-observe n71-i2c-power-diagnostic; do
+  test "$(modinfo -F vermagic "$module_dir/$name.ko")" = \
+    '7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64'
+  readelf -h "$module_dir/$name.ko"
+  sha256sum "$module_dir/$name.ko"
+done
+sha256sum -c "$module_dir/kernel-before.sha256"
+python3 scripts/build/kernel_bundle.py check "$work_dir" \
+  --profile n71-dart-serdev-power-v2
+```
+
+A execução registrada validou os campos ELF relocatable/AArch64 e preservou os37 inputs por SHA. Os seis módulos e logs ficam privadamente no Mac, em `runtime/n71-binding-module-artifacts-20261005/` e `runtime/n71-i2c-power-control-20261005/`,700/600. Nenhuma chave ou payload privado foi enviado à VM.
+
+### Próxima sessão física: uma entrada DFU, operação pelo Mac
+
+1. Manter USB-A → Lightning traseiro. Registrar bateria iOS imediatamente antes do boot; usar um snapshot validado e um perfil power2 explícito. Um único DFU manual; nenhum PIN ou comando no console Linux.
+2. Conferir placa N71, release power2, boot_id, SSH/HTTP/Herdr/restore. Antes de carregar o caller, conferir que o driver `apple-pmgr-pwrstate` existe e **não expõe bind/unbind**. Guard do caller também exige a flag do driver em cada operação.
+3. Observar GPIO114/115 e PMGR com os módulos recompilados; transferências usam pasta própria sob `/run`, hashes local/remoto e módulos inicialmente ausentes. Não misturar com módulos power1.
+4. Carregar o caller com `run=1`; exigir `N71_I2C_POWER_READY`, estado pronto/limpo e ausência de attach/ativação automática. Só então enviar `cycle`, coletando estado, linhas novas de dmesg e continuidade do mesmo boot/SSH/HTTP.
+5. Cleanup pendente exige diagnóstico e `cleanup`; não repetir cycle, descartar referências ou forçar rmmod. Somente estado limpo e módulo não retido permitem unload e remoção do staging. Salvar snapshot/sync e retornar ao iOS para medir bateria ao final. Um resultado negativo não vira prova de carga.
+
+Comandos do **lado Linux, pelo SSH do Mac**, após os preflights e transferência verificada para uma pasta própria. O nome `n71_i2c_power_diagnostic` usa underscores em sysfs. Estes comandos são procedimento futuro, ainda não executado fisicamente:
+
+```sh
+set -eu
+test "$(uname -r)" = 7.2.0-iphone6s-dart-serdev-power2
+provider=/sys/bus/platform/drivers/apple-pmgr-pwrstate
+test -d "$provider" && test ! -e "$provider/bind" && test ! -e "$provider/unbind"
+# Use o caminho exato do módulo transferido e conferido por SHA:
+insmod /run/SEU_STAGING/n71-i2c-power-diagnostic.ko run=1
+control=/sys/module/n71_i2c_power_diagnostic/parameters
+cat "$control/status"
+printf 'cycle\n' > "$control/action"
+cat "$control/status"
+# Se a ação falhar, inspecione o estado e logs; cleanup pode ser tentado:
+# printf 'cleanup\n' > "$control/action"
+# Só com active=0, attached=0, cleanup_pending=0, usage_held=0,
+# module_retained=0 e cleanup_error=0:
+# rmmod n71_i2c_power_diagnostic
+```
+
+Ligar/desligar genpd comprova uma pré-condição do acesso I2C1. Ainda faltam aquisição/idle/restauração de pinos/controlador/clock/IRQ/adapter, identificação/register map SN2400, HDQ e medição da corrente líquida. O comando acima não liga um servidor carregando pela tomada; #2/#8/#9/#36 continuam abertas.

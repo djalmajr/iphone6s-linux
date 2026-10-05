@@ -1,4 +1,4 @@
-# iPhone 6s Linux — atualizado em 2026-10-04
+# iPhone 6s Linux — atualizado em 2026-10-05
 
 ## Checkpoint atual — alimentação priorizada
 
@@ -49,14 +49,16 @@ Não foi carregado no aparelho nem implementa backend genpd ou carga.
 Backend genpd `1cdfa72`:87 cenários/20 mutações Mac/ARM64, callbacks reais
 linkados Werror/modpost e patch007 aplicada/compilada em cópia do provider.
 Proteção suppress_bind_attrs obrigatória: power1 atual recusa esse backend;
-Image power2 passou o link separado; módulo operacional e teste físico ainda pendentes. Suspend
+Image power2 e caller operacional passaram build separado; teste físico ainda pendente. Suspend
 com domínio ligado mantém cleanup pendente, sem detach nem outro put.
 [Contrato/reprodução](N71_HDQ.md#backend-genpd-i2c1--compilado-proteção-de-binding-pendente-no-image),
 [prova selecionada](evidence/n71-i2c-genpd.json). CI da primeira versão
 `a476729` terminou verde nos seis jobs; guard e seletor power2 passaram nos seis jobs de `a684a93`.
 Nenhum DFU, acesso ao carregador ou configuração global do Mac nesta rodada.
 
-Image separado `7.2.0-iphone6s-dart-serdev-power2` compilou em19min06s com001→007. Patch007 integra a proteção de binding exigida pelo backend. Image/config/gzip/DTB/logs passaram SHA no Mac; config só difere de power1 na identidade e fonte/config/Image/exports anteriores ficaram intactos. Nenhum boot ou perfil default alterado. Integração, rebuild dos módulos e controles operacionais seguem antes de um único teste agrupado. [Reprodução](N71_KERNEL_BUNDLE.md#image-power2-e-proteção-de-binding--2026-10-05), [prova de link](evidence/kernel-n71-binding-build.json). Ausência física de bind/unbind, carga, telemetria e Wi-Fi continuam sem comprovação.
+Image separado `7.2.0-iphone6s-dart-serdev-power2` compilou em19min06s com001→007. Patch007 integra a proteção de binding exigida pelo backend. Image/config/gzip/DTB/logs passaram SHA no Mac; config só difere de power1 na identidade e fonte/config/Image/exports anteriores ficaram intactos. Nenhum boot ou perfil default alterado. Integração real, seis módulos e controles operacionais passaram; falta a sessão física agrupada. [Reprodução](N71_KERNEL_BUNDLE.md#image-power2-e-proteção-de-binding--2026-10-05), [prova de link](evidence/kernel-n71-binding-build.json). Ausência física de bind/unbind, carga, telemetria e Wi-Fi continuam sem comprovação.
+
+Perfis power2 base/diagnóstico preparados: initramfs e identidades byte a byte iguais, fonte preservada,700/600 e nenhum autoload. Integrador22 testes/25 mutações; compositor6/8; caller genpd39 cenários/11 mutações, todos Mac/ARM64. Seis módulos W=1/Werror/modpost/ELF/vermagic e hashes conferidos no Mac. Caller permite cycle explícito e cleanup retido, preservando módulo/referências se a restauração falhar. CI5fa terminou success nos seis jobs para integração; caller/compositor aguardam o próximo run. Nenhum novo DFU ou I/O do carregador. [Prova selecionada](evidence/n71-binding-profile.json), [procedimento da próxima sessão](N71_HDQ.md#próxima-sessão-física-uma-entrada-dfu-operação-pelo-mac).
 
 No boot anterior, DART provider/INTx/probes de ponte tiveram cleanup verificado
 e SSH/HTTP/snapshot preservados. Scan PCI ainda negativo; primeira recusa

@@ -2320,3 +2320,12 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Registro genpd identifica o novo caller preparado e o gate power1 anterior como histórico; carga/ciclo físico continuam pendentes. Nada de key/firmware/calibração no público ou na VM.
 
 - Gate136:6 testes/8 mutações por AssertionError passaram Mac/ARM64; quatro releases selecionáveis e12 pares cruzados recusados, help real da CLI conferido. AST/fatal-flake8/diff passaram; inputs e fontes/config/Image/exports power1/power2 intactos. Empacotador privado inicialmente tentou literal_eval de Name SUBJECT e a transferência seguinte encontrou arquivo ausente; corrigida resolução literal explícita e etapas dependentes agora têm gate de exit0. Isso não é falha ou kill dos testes; logs/inputs finais transferidos por SHA. Nenhuma ação USB/default ou boot.
+
+
+### Incremento 137 — reprodução power2 e sessão operacional agrupada
+
+- Cinco arquivos: plano, docs/N71_HDQ.md, docs/N71_KERNEL_BUNDLE.md, docs/STATUS.md e novo docs/evidence/n71-binding-profile.json. Registrar gates134/135/136, hashes/input commits, seis módulos, integração real e perfis separados700/600.
+- Documentar comandos de build/integração e cycle/cleanup somente após confirmar release power2 e bind/unbind PMGR ausentes. Não registrar hardware funcional sem coletas físicas; não remover módulo retido com força. Preservar snapshot/mínimo DFU, nenhuma operação do console.
+- Atualizar estado: power2 completo/preparado, caller operacional testado e compositor aprovado, ainda não bootado. CI5fa PR37257225731/push37257222417 terminalsuccess seis jobs para integração; caller/compositor aguardam próximo run. Verificar todos os digests/protected modes/JSON/links/publicguard/diff e publicar somente prova/código sanitizados.
+
+- Gate137: composição real do perfil diagnóstico power2 passou; base/diagnóstico mantêm kernel/initramfs/identidades, source e700/600. JSON/provenances,37 inputs e seis módulos conferidos por SHA; links locais e diff estrito passaram. Prova distingue gates sintéticos/build/composição de hardware ainda não testado. Nenhum binário/key/firmware ou dado pessoal incluído no público.

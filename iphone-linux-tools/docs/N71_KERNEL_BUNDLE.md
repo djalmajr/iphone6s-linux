@@ -565,3 +565,40 @@ sha256sum -c "$build_dir/power1-before.sha256"
 ```
 
 A execução registrada também conferiu config/Image/exports novos depois de `modules_prepare`; empacotou os cinco artefatos e logs com SHA e os recalculou no Mac, em `runtime/kernel-n71-binding-artifacts-20261005/`, com diretórios700/arquivos600. Não reutilize módulos power1 nesta ABI. Integração do perfil, módulo operacional, controles de lifetime e sessão física agrupada são os próximos gates; nenhum perfil default ou boot foi alterado nesta build.
+
+
+## Perfis power2 e módulos preparados — 2026-10-05
+
+O integrador aceita explicitamente `n71-dart-serdev-power-v2`, seleciona `kernel-n71-binding-build.json` e exige as sete patches/full blobs, Image linkado/modpost/export/config/GPIO/PMGR e ABI próprios. Não aceita módulos da ABI anterior no initramfs. Vinte e dois testes/25 mutações por asserção passaram Mac/ARM64; CI `5fa140a` terminou success nos seis jobs. O compositor passou seis testes/oito mutações nas duas plataformas, com quatro releases conhecidas,12 pares cruzados recusados e help real da CLI conferido.
+
+No Mac, integração e composição reais criaram perfis separados power2, preservando fonte, initramfs, chave cliente e known_hosts byte a byte,700/600. O perfil diagnóstico muda somente o DT autorizado e adiciona o módulo PCIe fora do initramfs, sem autoload. Os seis módulos foram recompilados para a ABI nova. [Prova consolidada](evidence/n71-binding-profile.json), [caller genpd e reprodução](N71_HDQ.md#caller-genpd-operacional-power2--preparado-em2026-10-05).
+
+Para repetir no Mac, use artefatos privados produzidos/verificados nas etapas anteriores e destinos novos. Os caminhos registrados abaixo já existem. O SHA informado ao compositor deve corresponder ao módulo recompilado e à prova do seu build:
+
+```sh
+set -eu
+umask 077
+kernel_dir="$PWD/runtime/kernel-n71-binding-artifacts-20261005"
+base_dir="$PWD/runtime/n71-binding-base-profile-repro"
+diagnostic_dir="$PWD/runtime/n71-binding-diagnostic-profile-repro"
+module_path="$PWD/runtime/n71-binding-module-artifacts-20261005/n71-pcie-diagnostic.ko"
+module_sha=$(python3 - "$module_path" <<'PY'
+import hashlib
+from pathlib import Path
+import sys
+print(hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest())
+PY
+)
+IPHONE_LINUX_PROFILE="$PWD/runtime/n71-power-base-profile-20261004/deployment.json" \
+  python3 scripts/build/integrate-source-kernel.py \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --kernel-dir "$kernel_dir" --output-dir "$base_dir"
+python3 scripts/build/compose-n71-diagnostic.py \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --source-profile "$base_dir/deployment.json" --kernel-dir "$kernel_dir" \
+  --diagnostic-dir "$PWD/runtime/n71-pcie-diagnostic-20261002" \
+  --module "$module_path" --module-sha256 "$module_sha" \
+  --output-dir "$diagnostic_dir"
+```
+
+O rootfs já migrado não mudou nenhum caminho no novo integrador; o payload conserva m1n1, bootargs, kernel e identidades verificados. Os perfis locais efetivos são `runtime/n71-binding-base-profile-20261005/` e `runtime/n71-binding-diagnostic-profile-20261005/`. Nenhum default, reboot ou load ocorreu nessa preparação. Boot, ausência física de bind/unbind, ciclo genpd e diagnósticos seguintes devem ser agrupados; carga, telemetria e Wi-Fi não estão habilitados por essas provas.
