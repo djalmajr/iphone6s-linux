@@ -13,6 +13,8 @@ DEPENDENCIES = (
     'scripts/build/kernel_bundle.py', 'scripts/build/prepare-n71-pcie-diagnostic.py',
     'scripts/build/prepare-n71-topology.py', 'scripts/research/n71_runtime_tunables.py',
     'scripts/host/device_profile.py', 'scripts/host/profile_image.py',
+    'scripts/host/n71_scan_held_result.py', 'scripts/host/n71_scan_pme_result.py',
+    'scripts/host/n71_scan_target_result.py', 'scripts/host/n71_scan_result.py',
 )
 MUTATIONS = (
     ('known-abi', 'if kernel_release not in known:', 'if False:'),
@@ -31,16 +33,33 @@ MUTATIONS = (
     ('wrong-aspm-token', "b' pcie_aspm=off\\n'", "b' pcie_aspm=on\\n'"),
     ('ignore-aspm-flag-type', 'if type(pcie_aspm_off) is not bool:', 'if False:'),
     ('omit-aspm-cli', "parser.add_argument('--pcie-aspm-off',", "parser.add_argument('--aspm-hidden',"),
+    ('held-aspm-scope', 'not options.pcie_aspm_off or', 'False or'),
+    ('held-binding-scope', 'options.kernel_patchset != KERNEL.kernel_bundle.BINDING_BUNDLE', 'False'),
+    ('held-reg-required', 'options.reg_on_module is None', 'False'),
+    ('held-reg-explicit', 'elif options.reg_on_module is not None:', 'elif False:'),
+    ('held-pcie-size', "len(driver) != pcie['bytes']", 'False'),
+    ('held-pcie-hash', "hashlib.sha256(driver).hexdigest() != pcie['sha256']", 'False'),
+    ('held-reg-size', "path.stat().st_size != reg['bytes']", 'False'),
+    ('held-reg-hash', "hashlib.sha256(raw).hexdigest() != reg['sha256']", 'False'),
+    ('held-reg-abi', 'validate_module(raw, kernel_release=kernel_release)', 'pass'),
+    ('held-reg-private-path', 'DIAGNOSTIC.TUNABLES.private_path(options.reg_on_module)', 'options.reg_on_module'),
+    ('held-reg-copy', 'if reg_driver is not None:', 'if False:'),
+    ('held-profile-flag', "'pcie_scan_hold': options.pcie_scan_hold", "'pcie_scan_hold': False"),
+    ('held-profile-target', 'pcie_scan_link_target=True', 'pcie_scan_link_target=False'),
+    ('held-profile-noop', 'pcie_scan_pme_noop=False', 'pcie_scan_pme_noop=True'),
+    ('held-profile-pme', 'pcie_scan_pme_disable=True', 'pcie_scan_pme_disable=False'),
+    ('held-build-contract', 'records = n71_scan_held_result.selected_records(ROOT, release=kernel_release)',
+     "records = [dict(json.loads((ROOT / 'docs/evidence/n71-pci-held-caller.json').read_text())['kernel_build']['modules'][name], module=name) for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko')]"),
 )
 
 
-def run(subject=None):
+def run(subject=None, *, pattern='test_n71_diagnostic_*.py'):
     environment = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')
     environment.pop('N71_DIAGNOSTIC_COMPOSER_SCRIPT', None)
     if subject is not None:
         environment['N71_DIAGNOSTIC_COMPOSER_SCRIPT'] = str(subject)
     return subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', str(ROOT / 'tests'),
-                           '-p', 'test_n71_diagnostic_payload.py', '-v'], env=environment,
+                           '-p', pattern, '-v'], env=environment,
                           capture_output=True, text=True, timeout=30)
 
 
@@ -62,7 +81,8 @@ def main():
                 raise ValueError('Mutation anchor changed: ' + name)
             target.write_text(text.replace(before, after, 1))
             compile(target.read_text(), str(target), 'exec')
-            result = run(target)
+            pattern = 'test_n71_diagnostic_held_profile.py' if name.startswith('held-') else 'test_n71_diagnostic_payload.py'
+            result = run(target, pattern=pattern)
             if (not result.returncode or 'FAIL:' not in result.stderr
                     or 'AssertionError' not in result.stderr or 'ERROR:' in result.stderr):
                 print('SURVIVED_OR_INFRA_ERROR ' + name, file=sys.stderr)

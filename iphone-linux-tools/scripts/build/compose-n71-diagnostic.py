@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts/host'))
 import device_profile
 import profile_image
+import n71_scan_held_result
 
 
 def module(name, path):
@@ -83,6 +84,21 @@ def private_write(path, raw):
         file.write(raw)
 
 
+def held_reg_module(options, driver, *, kernel_release):
+    records = n71_scan_held_result.selected_records(ROOT, release=kernel_release)
+    pcie, reg = records
+    if len(driver) != pcie['bytes'] or hashlib.sha256(driver).hexdigest() != pcie['sha256']:
+        raise ValueError('Held PCI module differs from the qualified build')
+    path = DIAGNOSTIC.TUNABLES.private_path(options.reg_on_module)
+    if path.stat().st_size != reg['bytes']:
+        raise ValueError('Held REG_ON module size differs')
+    raw = path.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != reg['sha256']:
+        raise ValueError('Held REG_ON module hash differs')
+    validate_module(raw, kernel_release=kernel_release)
+    return raw
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-profile', type=Path, required=True)
@@ -94,7 +110,15 @@ def main():
     parser.add_argument('--module-sha256', required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--pcie-aspm-off', action='store_true', help='Disable ASPM only in this diagnostic RAM boot candidate')
+    parser.add_argument('--pcie-scan-hold', action='store_true', help='Compose the qualified power2 held PCI/REG_ON candidate')
+    parser.add_argument('--reg-on-module', type=Path, help='Qualified private REG_ON module; required only with --pcie-scan-hold')
     options = parser.parse_args()
+    if options.pcie_scan_hold:
+        if (not options.pcie_aspm_off or options.kernel_patchset != KERNEL.kernel_bundle.BINDING_BUNDLE
+                or options.reg_on_module is None):
+            raise ValueError('Held profile requires explicit ASPM off, power2 and REG_ON module')
+    elif options.reg_on_module is not None:
+        raise ValueError('REG_ON selection requires explicit held profile')
     previous = os.environ.get('IPHONE_LINUX_PROFILE')
     try:
         os.environ['IPHONE_LINUX_PROFILE'] = str(options.source_profile.absolute())
@@ -122,6 +146,7 @@ def main():
     if hashlib.sha256(driver).hexdigest() != options.module_sha256:
         raise ValueError('Module differs from recorded build hash')
     validate_module(driver, kernel_release=record['build']['kernel_release'])
+    reg_driver = held_reg_module(options, driver, kernel_release=record['build']['kernel_release']) if options.pcie_scan_hold else None
     loader = (ROOT / 'artifacts/m1n1.bin').read_bytes()
     expected = json.loads((ROOT / 'docs/evidence/m1n1-rebuild.json').read_text())['shallow_clone']
     if not expected['matches_original'] or KERNEL.digest(loader) != expected['sha256']:
@@ -142,6 +167,8 @@ def main():
                        ('known_hosts', source['known_hosts'].read_bytes()),
                        ('n71-pcie-diagnostic.ko', driver)):
         private_write(destination / name, data)
+    if reg_driver is not None:
+        private_write(destination / 'n71-wlan-power-diagnostic.ko', reg_driver)
     profile = {'format': 1, 'payload': 'payload.bin', 'sha256': KERNEL.digest(payload),
                'initramfs': 'initramfs.gz', 'initramfs_sha256': KERNEL.digest(initramfs),
                'client_key': 'client_ed25519', 'known_hosts': 'known_hosts',
@@ -157,16 +184,21 @@ def main():
         else:
             os.environ['IPHONE_LINUX_PROFILE'] = previous
     pending.rename(destination / 'deployment.json')
-    private_write(destination / 'provenance.json', (json.dumps({
+    provenance = {
         'format': 1, 'kernel_source_commit': record['source']['commit'],
         'kernel_patchset': options.kernel_patchset,
         'kernel_release': record['build']['kernel_release'],
         'payload_sha256': KERNEL.digest(payload), 'dtb_sha256': KERNEL.digest(dtb),
         'module_sha256': options.module_sha256, 'kernel_initramfs_identities_preserved': True,
         'pcie_aspm_off': options.pcie_aspm_off, 'bootargs_sha256': KERNEL.digest(bootargs(options.pcie_aspm_off)),
+        'pcie_scan_hold': options.pcie_scan_hold,
         'module_automatic_load': False, 'requires_explicit_run': True,
         'requires_explicit_enumerate': True, 'physical_boot_tested': False,
-        'default_profile_changed': False, 'wifi_verified': False}, indent=2) + '\n').encode())
+        'default_profile_changed': False, 'wifi_verified': False}
+    if options.pcie_scan_hold:
+        provenance.update(pcie_scan_link_target=True, pcie_scan_pme_noop=False, pcie_scan_pme_disable=True,
+                          reg_on_module_sha256=hashlib.sha256(reg_driver).hexdigest())
+    private_write(destination / 'provenance.json', (json.dumps(provenance, indent=2) + '\n').encode())
     print('N71_DIAGNOSTIC_PROFILE_VERIFIED; no USB action; not boot qualified')
 
 
