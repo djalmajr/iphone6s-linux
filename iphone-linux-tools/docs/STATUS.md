@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-05
 
-## Checkpoint atual — alimentação priorizada
+## Checkpoint atual — PME do endpoint e alimentação
+
+A candidata PME foi testada em um boot/um scan/zero reboots intermediários: root044 já não foi a primeira recusa; endpoint04c/wordc008 sobre4108 bloqueou. Scan negativo613/33/23/1; cleanup de bus/config/TLS/reset/power e REG_ON80 passou, serviços preservados. Snapshot44/sync íntegros; retorno automático não confirmado, fallback físico recuperou iOS99%/carregando. [Resultado e limites](N71_LINK_EXPERIMENT.md#pme-root-superado--endpoint-e-retorno-manual-delimitados), [prova selecionada](evidence/n71-pme-first-physical.json). Issue21 volta a acompanhar confiabilidade do retorno; Wi-Fi e carga Linux continuam abertos.
+
+Helper PME `0098def` qualificado offline: baseline C/14 mutações SIGABRT/assertion nas duas plataformas, sete inputs; disable/restore somente bit0100, sem W1C e owner retido em falhas. Ainda não integrado ao scan/caller, módulo ou telefone. Próxima etapa reúne integração/retention e controles PCI antes de outro DFU. GasGauge1465 ciclos; saúde percentual não derivada de FullChargeCapacity100. Nenhum Image novo, rádio/firmware/DMA ou configuração global do Mac.
+
+CI c08c PR success/push failure pré-enumeração sintética; fixture shell d5ead20/11/4 Mac/ARM64, PR success nos três jobs e push cancelled com Ubuntu cancelado/Mac/Windows success. Issue38 permanece aberta; CI do helper será registrada separadamente.
+
+### Preparação PME anterior à sessão
 
 Coletor PME `4cea1ce` pronto para perfil separado:39 testes/53 mutações Mac/ARM64,26 inputs e dez comandos bash-n; check real de payload/initramfs/identidades/SHA/ELF/vermagic sem SSH/USB. Seleção explícita `--host-scan --scan-link-target --scan-pme-noop`, provenance booleano exato e contratos no-write/evento/root/releitura obrigatórios. Seis arquivos anteriores preservados, somente PCIe/provenance novos, default intacto. [Receita e continuação sem outro boot](N71_LINK_EXPERIMENT.md#coletor-pme--perfil-separado-e-continuação-no-mesmo-boot), [prova selecionada](evidence/n71-pme-scan-session.json). Candidata ainda não carregada; CI do head publicado e gates USB/carga frescos precedem próximo boot agrupado.
 
