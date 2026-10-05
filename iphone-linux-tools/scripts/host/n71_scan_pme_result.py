@@ -9,8 +9,8 @@ def require(condition, message):
 
 
 def records(text):
-    prepared = list(re.finditer(r'N71_PCIE_SCAN_PME_PREPARED error=(-?\d+) pending=([01]) prepared=([01]); no W1C', text))
-    restored = list(re.finditer(r'N71_PCIE_SCAN_PME_RESTORED error=(-?\d+) pending=([01]); no W1C', text))
+    prepared = list(re.finditer(r'N71_PCIE_SCAN_PME_PREPARED error=(-?\d+) pending=([01]) prepared=([01]); no W1C(?=\n|$)', text))
+    restored = list(re.finditer(r'N71_PCIE_SCAN_PME_RESTORED error=(-?\d+) pending=([01]); no W1C(?=\n|$)', text))
     require(len(prepared) == text.count('N71_PCIE_SCAN_PME_PREPARED ')
             and len(restored) == text.count('N71_PCIE_SCAN_PME_RESTORED '), 'Complete PME records required')
     require(len(prepared) <= 1, 'Unique PME preparation required')
@@ -20,6 +20,10 @@ def records(text):
 def cleanup(text):
     n71_scan_target_result.cleanup(text)
     prepared, restored = records(text)
+    restore_owned(text, prepared, restored)
+
+
+def restore_owned(text, prepared, restored):
     if not prepared:
         require(not restored, 'PME restoration without preparation')
         result = n71_scan_target_result.n71_scan_result.summary(n71_scan_target_result.normalize(text)) if 'N71_PCIE_SCAN_RESULT ' in text else None

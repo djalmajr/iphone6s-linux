@@ -40,12 +40,18 @@ def parse(text):
             and 1 <= result['attempts'] <= 128 and result['refusals'] == 0,
             'Successful PCI-core scan with no refused writes required')
     cleanup(text)
-    devices = re.findall(r'N71_PCIE_SCAN_DEVICE bus=(\d+) devfn=([0-9a-f]{2}) id=([0-9a-f]{8}) class=([0-9a-f]{6}) command=([0-9a-f]{4}) driver=none', text)
+    result.update(device_resources(text))
+    return result
+
+
+def device_resources(text):
+    result = {}
+    devices = re.findall(r'N71_PCIE_SCAN_DEVICE bus=(\d+) devfn=([0-9a-f]{2}) id=([0-9a-f]{8}) class=([0-9a-f]{6}) command=([0-9a-f]{4}) driver=none(?=\n|$)', text)
     require([row[:4] for row in devices] == [('0', '08', '1004106b', '060400'),
                                            ('1', '00', '43a314e4', '028000')]
             and all(not (int(row[4], 16) & 4) for row in devices),
             'Exact PCI topology, class and bus-master clear required')
-    bars = re.findall(r'N71_PCIE_SCAN_BAR index=(\d+) start=([0-9a-f]{16}) end=([0-9a-f]{16}) flags=([0-9a-f]{8,16}); no MMIO', text)
+    bars = re.findall(r'N71_PCIE_SCAN_BAR index=(\d+) start=([0-9a-f]{16}) end=([0-9a-f]{16}) flags=([0-9a-f]{8,16}); no MMIO(?=\n|$)', text)
     require([int(row[0]) for row in bars] == list(range(6)), 'Six ordered unique sized BAR resources required')
     result['bars'] = []
     for index, start, end, flags in bars:
