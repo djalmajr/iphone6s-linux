@@ -150,11 +150,14 @@ class ReturnIOSTests(unittest.TestCase):
 
     def assert_return_refused(self, mode):
         result = self.run_cli(mode)
+        phase_proof = (f'mode={mode}; events={self.events()!r}\n'
+                       f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertNotIn('RETURN_IOS_VERIFIED', result.stdout)
         self.assertIn('RETURN_IOS_FAILED', result.stderr)
         self.assertNotIn('SYNTHETIC-USB-ID', result.stdout + result.stderr)
-        self.assertEqual(len(list((self.root / 'backups').glob('*/files.tar.gz'))), 1)
+        self.assertIn('BACKUP_VERIFIED', result.stdout, phase_proof)
+        self.assertEqual(len(list((self.root / 'backups').glob('*/files.tar.gz'))), 1, phase_proof)
 
     def test_sync_failure_never_reports_success(self):
         self.assert_return_refused('sync-error')
