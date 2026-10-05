@@ -26,6 +26,11 @@ MUTATIONS = (
     ('elf-machine', "struct.unpack_from('<HH', raw, 16) != (1, 183)", 'False'),
     ('payload-binding', 'if original != expected:', 'if False:'),
     ('dt-mask', 'value & ~mask', 'False'),
+    ('omit-aspm-opt-in', 'if pcie_aspm_off else KERNEL.BOOTARGS', 'if False else KERNEL.BOOTARGS'),
+    ('enable-aspm-off-by-default', 'if pcie_aspm_off else KERNEL.BOOTARGS', 'if True else KERNEL.BOOTARGS'),
+    ('wrong-aspm-token', "b' pcie_aspm=off\\n'", "b' pcie_aspm=on\\n'"),
+    ('ignore-aspm-flag-type', 'if type(pcie_aspm_off) is not bool:', 'if False:'),
+    ('omit-aspm-cli', "parser.add_argument('--pcie-aspm-off',", "parser.add_argument('--aspm-hidden',"),
 )
 
 

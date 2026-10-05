@@ -52,12 +52,18 @@ def validate_dtb(baseline, candidate):
     TOPOLOGY.verify_delta(before, restored)
 
 
-def compose(original, loader, baseline_dtb, diagnostic_dtb, kernel, initramfs):
+def bootargs(pcie_aspm_off):
+    if type(pcie_aspm_off) is not bool:
+        raise ValueError('ASPM selection must be an explicit boolean')
+    return KERNEL.BOOTARGS.rstrip(b'\n') + b' pcie_aspm=off\n' if pcie_aspm_off else KERNEL.BOOTARGS
+
+
+def compose(original, loader, baseline_dtb, diagnostic_dtb, kernel, initramfs, *, pcie_aspm_off=False):
     validate_dtb(baseline_dtb, diagnostic_dtb)
     expected = loader + KERNEL.BOOTARGS + baseline_dtb + kernel + initramfs
     if original != expected:
         raise ValueError('Source payload is not the exact preserved layout')
-    return loader + KERNEL.BOOTARGS + diagnostic_dtb + kernel + initramfs
+    return loader + bootargs(pcie_aspm_off) + diagnostic_dtb + kernel + initramfs
 
 
 def validate_module(raw, *, kernel_release='7.2.0-iphone6s-source'):
@@ -87,6 +93,7 @@ def main():
     parser.add_argument('--module', type=Path, required=True)
     parser.add_argument('--module-sha256', required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--pcie-aspm-off', action='store_true', help='Disable ASPM only in this diagnostic RAM boot candidate')
     options = parser.parse_args()
     previous = os.environ.get('IPHONE_LINUX_PROFILE')
     try:
@@ -123,7 +130,7 @@ def main():
     if source['payload'].stat().st_size > profile_image.MAX_IMAGE_BYTES:
         raise ValueError('Payload size refused')
     payload = compose(source['payload'].read_bytes(), loader, kernel['s8000-n71.dtb'],
-                      dtb, kernel['Image.gz'], initramfs)
+                      dtb, kernel['Image.gz'], initramfs, pcie_aspm_off=options.pcie_aspm_off)
     destination = options.output_dir.absolute()
     runtime = DIAGNOSTIC.TUNABLES.private_path(ROOT / 'runtime', directory=True)
     if destination.parent != runtime or destination.exists() or destination.is_symlink():
@@ -156,6 +163,7 @@ def main():
         'kernel_release': record['build']['kernel_release'],
         'payload_sha256': KERNEL.digest(payload), 'dtb_sha256': KERNEL.digest(dtb),
         'module_sha256': options.module_sha256, 'kernel_initramfs_identities_preserved': True,
+        'pcie_aspm_off': options.pcie_aspm_off, 'bootargs_sha256': KERNEL.digest(bootargs(options.pcie_aspm_off)),
         'module_automatic_load': False, 'requires_explicit_run': True,
         'requires_explicit_enumerate': True, 'physical_boot_tested': False,
         'default_profile_changed': False, 'wifi_verified': False}, indent=2) + '\n').encode())

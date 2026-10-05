@@ -1,4 +1,4 @@
-"""Diagnostic payload may change DT only; ABI and identity bindings stay exact."""
+"""Diagnostic DT and explicit ASPM boot option preserve ABI and identities."""
 import importlib.util
 import os
 from pathlib import Path
@@ -24,6 +24,26 @@ def inputs():
 
 
 class N71DiagnosticPayload(unittest.TestCase):
+    def test_explicit_aspm_off_changes_only_bootargs_and_diagnostic_dtb(self):
+        baseline, candidate = inputs()
+        prefix, kernel, initramfs = b'LOADER', b'KERNEL', b'PRIVATE_USERS'
+        original_args = b'chosen.bootargs=rdinit=/init console=ttySAC0,115200 loglevel=7\n'
+        off_args = b'chosen.bootargs=rdinit=/init console=ttySAC0,115200 loglevel=7 pcie_aspm=off\n'
+        source = prefix + original_args + baseline + kernel + initramfs
+        self.assertEqual(MODULE.compose(source, prefix, baseline, candidate, kernel, initramfs,
+                                        pcie_aspm_off=True), prefix + off_args + candidate + kernel + initramfs)
+        self.assertEqual(MODULE.compose(source, prefix, baseline, candidate, kernel, initramfs,
+                                        pcie_aspm_off=False), prefix + original_args + candidate + kernel + initramfs)
+        for selection in (1, 0, None, 'off', 'false'):
+            with self.subTest(selection=selection), self.assertRaises(ValueError):
+                MODULE.compose(source, prefix, baseline, candidate, kernel, initramfs,
+                               pcie_aspm_off=selection)
+        for altered in (source + b'extra', source.replace(original_args, off_args),
+                        source.replace(b'PRIVATE_USERS', b'CHANGED_USERS')):
+            with self.assertRaises(ValueError):
+                MODULE.compose(altered, prefix, baseline, candidate, kernel, initramfs,
+                               pcie_aspm_off=True)
+
     def test_exact_payload_delta_preserves_kernel_userspace_and_loader(self):
         baseline, candidate = inputs()
         prefix, kernel, initramfs = b'LOADER', b'KERNEL', b'PRIVATE_USERS'
@@ -103,6 +123,7 @@ class N71DiagnosticPayload(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('n71-dart-serdev-power-v2', result.stdout)
         self.assertIn('--kernel-patchset', result.stdout)
+        self.assertIn('--pcie-aspm-off', result.stdout)
 
 
 if __name__ == '__main__':
