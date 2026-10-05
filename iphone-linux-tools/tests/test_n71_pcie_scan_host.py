@@ -39,7 +39,7 @@ class N71PcieScanHost(unittest.TestCase):
     def test_pci_scan_errors_and_removal_before_restore(self):
         result = self.compile_and_run()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('N71_PCIE_SCAN_HOST_OK cases=21', result.stdout)
+        self.assertIn('N71_PCIE_SCAN_HOST_OK cases=29', result.stdout)
 
     def test_lifecycle_mutations_die_by_assertion(self):
         mutations = (
@@ -63,6 +63,14 @@ class N71PcieScanHost(unittest.TestCase):
             ('skip-partial-bus-removal', 'if (bridge->bus) {', 'if (!error && bridge->bus) {'),
             ('overwrite-pending-bridge', 'if (state->scan_bridge)\n\t\treturn -EBUSY;',
              'if (false)\n\t\treturn -EBUSY;'),
+            ('skip-pme-prepare', 'error = n71_pme_disable(&io, &host->pme);', 'error = 0;'),
+            ('skip-pme-restore', 'if (host->pme.pending) {', 'if (false) {'),
+            ('release-after-pme-failure', 'if (error)\n\t\t\treturn error;\n\t}\n\tif (host->target.pending)',
+             'if (false)\n\t\t\treturn error;\n\t}\n\tif (host->target.pending)'),
+            ('generic-pme-callback', 'error = n71_pme_scan_write(&io, &host->config, &host->pme, &request);',
+             'error = n71_scan_write(&io, &host->config, &request);'),
+            ('lose-pme-ownership', 'error = n71_pme_restore(&io, &host->pme);',
+             'error = n71_pme_restore(&io, &host->pme);\n\t\thost->pme.pending = false;'),
         )
         limits = resource.getrlimit(resource.RLIMIT_CORE)
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))

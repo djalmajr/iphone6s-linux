@@ -8,6 +8,7 @@
 #include "n71-pcie-bar-sizing.h"
 #include "n71-pcie-control-reference.h"
 #include "n71-pcie-scan-link-target.h"
+#include "n71-pcie-pme-control.h"
 
 struct n71_scan_host {
 	struct device *dev;
@@ -15,6 +16,7 @@ struct n71_scan_host {
 	spinlock_t lock;
 	struct n71_scan_config config;
 	struct n71_link_target target;
+	struct n71_pme_state pme;
 	bool config_pending;
 	struct resource windows[3];
 	unsigned int reads, devices, endpoints;
@@ -130,7 +132,7 @@ static int n71_scan_config_write(struct pci_bus *bus, unsigned int devfn,
 		n71_scan_refuse(&host->config, error);
 	} else {
 		request = (struct n71_scan_request){location.root, where, value, size};
-		error = n71_scan_write(&io, &host->config, &request);
+		error = n71_pme_scan_write(&io, &host->config, &host->pme, &request);
 	}
 	spin_unlock_irqrestore(&host->lock, flags);
 	if (error)
@@ -224,6 +226,13 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 			return error;
 		host->config_pending = false;
 	}
+	if (host->pme.pending) {
+		error = n71_pme_restore(&io, &host->pme);
+		dev_info(host->dev, "N71_PCIE_SCAN_PME_RESTORED error=%d pending=%u; no W1C\n",
+			 error, host->pme.pending);
+		if (error)
+			return error;
+	}
 	if (host->target.pending) {
 		error = n71_link_target_restore(&target_io, &host->target);
 		dev_info(host->dev, "N71_PCIE_SCAN_TARGET_RESTORED error=%d pending=%u; no retrain\n",
@@ -236,7 +245,8 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 	return 0;
 }
 
-static int n71_pcie_scan(struct device *dev, struct n71_diagnostic *state)
+static int n71_pcie_scan_with_pme(struct device *dev, struct n71_diagnostic *state,
+				 bool disable_pme)
 {
 	struct pci_host_bridge *bridge;
 	struct n71_scan_host *host;
@@ -313,6 +323,15 @@ static int n71_pcie_scan(struct device *dev, struct n71_diagnostic *state)
 		pci_unlock_rescan_remove();
 		goto restore;
 	}
+	if (disable_pme) {
+		error = n71_pme_disable(&io, &host->pme);
+		dev_info(dev, "N71_PCIE_SCAN_PME_PREPARED error=%d pending=%u prepared=%u; no W1C\n",
+			 error, host->pme.pending, host->pme.prepared);
+		if (error) {
+			pci_unlock_rescan_remove();
+			goto restore;
+		}
+	}
 	error = pci_scan_root_bus_bridge(bridge);
 	if (!error && !bridge->bus)
 		error = -ENODEV;
@@ -339,5 +358,10 @@ restore:
 		 error, report.devices, report.endpoints, report.reads,
 		 report.config.attempts, report.config.writes, report.config.refusals);
 	return error;
+}
+
+static int n71_pcie_scan(struct device *dev, struct n71_diagnostic *state)
+{
+	return n71_pcie_scan_with_pme(dev, state, false);
 }
 #endif /* N71_PCIE_SCAN_H */

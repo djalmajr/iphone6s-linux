@@ -60,7 +60,9 @@ enum fault { NONE, CAP_WRITE, STOP_WRITE, SCAN_FAIL, MISSING_ENDPOINT, MASTER,
 	WINDOW_ALLOC, LINK_DOWN, RESTORE_DROP, READ_BUDGET, WRONG_FUNCTION,
 	TARGET_PREPARE_DROP, TARGET_RESTORE_DROP, TARGET_OWNER_CHANGED,
 	TARGET_LINK_CHANGED, ROOT_DECODE, SCAN_PARTIAL_FAIL, TARGET_VERIFY_CHANGED,
-	REFUSAL_AND_RESTORE_DROP, BRIDGE_ALLOC_FAIL, SCAN_NO_BUS };
+	REFUSAL_AND_RESTORE_DROP, BRIDGE_ALLOC_FAIL, SCAN_NO_BUS,
+	PME_NONE, PME_PREPARE_DROP, PME_RESTORE_DROP, PME_CORE_EVENT,
+	PME_DISABLE_EVENT, PME_CAP_BAD, PME_CORE_LATCHED, PME_LINK_LOST };
 static struct {
 	enum fault fault;
 	u32 *ecam, port[4096];
@@ -69,7 +71,8 @@ static struct {
 	struct pci_bus endpoint_bus;
 	unsigned int allocations, scans, stops, removes, writes, bars_after_scan;
 	unsigned int target_prepares, target_restores;
-	bool locked, returned;
+	unsigned int pme_prepares, pme_restores, pme_reads;
+	bool locked, returned, pme;
 	char log[16384];
 	size_t used;
 } mock;
@@ -77,6 +80,8 @@ static struct {
 static u32 readl(const void *address)
 {
 	u32 value;
+	if (mock.ecam && address == &mock.ecam[0x10004c / 4])
+		mock.pme_reads++;
 	memcpy(&value, address, sizeof(value));
 	return value;
 }
@@ -95,6 +100,26 @@ static void writew(u16 value, void *address)
 		assert(!mock.scans || mock.removes == 1);
 		if (mock.fault == RESTORE_DROP && address == (void *)&mock.ecam[0x100004 / 4] && value == 0x100)
 			return;
+	}
+	if (address == (void *)&mock.ecam[0x10004c / 4]) {
+		u16 original;
+		memcpy(&original, address, sizeof(original));
+		assert(mock.pme && !(value & 0x8000));
+		assert((value & ~0x8100U) == (original & ~0x8100U));
+		if (value & 0x100) {
+			assert(!mock.scans || mock.removes == 1);
+			mock.pme_restores++;
+			if (mock.fault == PME_RESTORE_DROP)
+				return;
+		} else {
+			assert(!mock.scans);
+			mock.pme_prepares++;
+			if (mock.fault == PME_PREPARE_DROP)
+				return;
+		}
+		value = (value & ~0x8000U) | (original & 0x8000U);
+		if (mock.fault == PME_DISABLE_EVENT)
+			value |= 0x8000;
 	}
 	if (address == (void *)mock.ecam + 0x80a0) {
 		if (value == 2) {
@@ -145,6 +170,8 @@ static void pci_free_host_bridge(struct pci_host_bridge *bridge)
 	while (entry) { struct resource_entry *next = entry->next; free(entry); entry = next; }
 	assert(mock.allocations == 1 && (!mock.scans || mock.removes == 1));
 	assert((mock.ecam[0x80a0 / 4] & 0xffff) == 1);
+	if (mock.pme)
+		assert(mock.ecam[0x10004c / 4] & 0x100);
 	free(bridge); mock.allocations--;
 }
 static void pci_add_resource_offset(struct resource_list *list, struct resource *res, uint64_t offset)
@@ -169,6 +196,8 @@ static int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
 	assert(bridge->no_ext_tags && !bridge->native_aer && !bridge->native_pme);
 	/* Regression: letting core see TLS1 triggers its unqualified retrain path. */
 	assert((mock.ecam[0x80a0 / 4] & 0xffff) == 2);
+	if (mock.pme)
+		assert((mock.ecam[0x10004c / 4] & 0xffff) == 0x4008);
 	if (mock.fault == SCAN_FAIL)
 		return -ENOMEM;
 	if (mock.fault == SCAN_NO_BUS)
@@ -200,6 +229,18 @@ static int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
 			assert(bridge->ops->write(bus, devfn, 0x10 + index * 4, 4, original) == 0);
 		}
 		assert(bridge->ops->write(bus, devfn, 4, 2, function ? 0x103 : 0) == 0);
+	}
+	if (mock.pme) {
+		unsigned int reads;
+		if (mock.fault == PME_CORE_EVENT)
+			mock.ecam[0x10004c / 4] |= 0x8000;
+		if (mock.fault == PME_CORE_LATCHED)
+			assert(bridge->ops->write(&mock.endpoint_bus, 0, 0x80, 4, 1) == PCIBIOS_SET_FAILED);
+		reads = mock.pme_reads;
+		assert(bridge->ops->write(&mock.endpoint_bus, 0, 0x4c, 2, 0xc008) ==
+		       (mock.fault == PME_CORE_EVENT || mock.fault == PME_CORE_LATCHED ? PCIBIOS_SET_FAILED : 0));
+		if (mock.fault == PME_CORE_LATCHED)
+			assert(mock.pme_reads == reads);
 	}
 	if (mock.fault == CAP_WRITE || mock.fault == REFUSAL_AND_RESTORE_DROP)
 		assert(bridge->ops->write(&mock.endpoint_bus, 0, 0x80, 4, 1) == PCIBIOS_SET_FAILED);
@@ -241,6 +282,8 @@ static void pci_remove_root_bus(struct pci_bus *bus)
 {
 	assert(mock.stops == 1 && mock.locked); mock.removes++;
 	free(bus); mock.bridge->bus = NULL;
+	if (mock.fault == PME_LINK_LOST)
+		mock.port[0x88 / 4] = 0;
 }
 #include "n71-pcie-scan.h"
 
@@ -249,12 +292,14 @@ int main(void)
 	const int expected[] = {0, -EPERM, -EPERM, -ENOMEM, -ENODEV, -EACCES,
 		-ENOMEM, -ENOLINK, -EIO, -E2BIG, -ENODEV,
 		-EIO, -EIO, -ENODEV, -EACCES, -EACCES, -ENOMEM, -EACCES,
-		-EPERM, -ENOMEM, -ENODEV};
+		-EPERM, -ENOMEM, -ENODEV,
+		0, -EAGAIN, -EIO, -EPERM, -EAGAIN, -EPERM, -EPERM, -ENOLINK};
 	unsigned int index;
 	for (index = 0; index < sizeof(expected) / sizeof(*expected); index++) {
 		struct n71_diagnostic state;
 		struct device device = {0};
 		memset(&mock, 0, sizeof(mock)); mock.fault = index;
+		mock.pme = index >= PME_NONE;
 		mock.ecam = calloc(0x1000000 / 4, sizeof(u32)); assert(mock.ecam);
 		mock.ecam[0x8000 / 4] = 0x1004106b; mock.ecam[0x100000 / 4] = 0x43a314e4;
 		mock.ecam[0x8004 / 4] = 0xa9100000;
@@ -268,28 +313,43 @@ int main(void)
 		mock.ecam[0x809c / 4] = 6;
 		mock.ecam[0x8080 / 4] = 0x20010000;
 		mock.ecam[0x80a0 / 4] = 0x5a5a0001;
+		if (mock.pme) {
+			mock.ecam[0x100004 / 4] |= 0x100000;
+			mock.ecam[0x100034 / 4] = 0x48;
+			mock.ecam[0x100048 / 4] = index == PME_CAP_BAD ? 0x40001 : 0x30001;
+			mock.ecam[0x10004c / 4] = 0xabc04108;
+		}
 		if (index == ROOT_DECODE)
 			mock.ecam[0x8004 / 4] |= 1;
 		mock.port[0x88 / 4] = index == LINK_DOWN ? 0 : 5;
 		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
 		{
-			int result = n71_pcie_scan(&device, &state);
+			int result = mock.pme ? n71_pcie_scan_with_pme(&device, &state, true) : n71_pcie_scan(&device, &state);
 			if (result != expected[index])
 				fprintf(stderr, "case=%u actual=%d expected=%d\n%s", index, result, expected[index], mock.log);
 			assert(result == expected[index]);
 		}
 		if (index == RESTORE_DROP || index == TARGET_RESTORE_DROP ||
 		    index == TARGET_OWNER_CHANGED || index == TARGET_LINK_CHANGED ||
-		    index == TARGET_VERIFY_CHANGED || index == REFUSAL_AND_RESTORE_DROP) {
+		    index == TARGET_VERIFY_CHANGED || index == REFUSAL_AND_RESTORE_DROP ||
+		    index == PME_RESTORE_DROP || index == PME_LINK_LOST) {
 			unsigned int prepares = mock.target_prepares, restores = mock.target_restores;
+			unsigned int pme_prepares = mock.pme_prepares;
 			assert(state.scan_bridge && mock.allocations == 1 && !mock.locked);
 			assert(n71_pcie_scan(&device, &state) == -EBUSY && mock.allocations == 1);
 			assert(n71_pcie_scan_cleanup(&state) < 0 && state.scan_bridge);
+			if (mock.pme) {
+				struct n71_scan_host *host = pci_host_bridge_priv(state.scan_bridge);
+				assert(host->pme.pending && host->target.pending);
+				assert((mock.ecam[0x80a0 / 4] & 0xffff) == 2);
+			}
 			mock.fault = NONE;
 			mock.ecam[0x8008 / 4] = 0x06040001;
 			mock.ecam[0x8080 / 4] = 0x20010000;
+			mock.port[0x88 / 4] = 5;
 			assert(n71_pcie_scan_cleanup(&state) == 0 && !state.scan_bridge);
 			assert(mock.target_prepares == prepares);
+			assert(mock.pme_prepares == pme_prepares);
 			if (index == TARGET_VERIFY_CHANGED)
 				assert(mock.target_restores == restores);
 		}
@@ -299,9 +359,16 @@ int main(void)
 			assert(mock.stops == 1 && mock.removes == 1);
 		assert(mock.ecam[0x100010 / 4] == 0xc0000004);
 		assert((mock.ecam[0x8004 / 4] & 0xffff0000) == 0xa9100000);
-		assert((mock.ecam[0x100004 / 4] & 0xffff0000) == 0xa9000000);
+		assert((mock.ecam[0x100004 / 4] & 0xffff0000) ==
+		       (mock.pme ? 0xa9100000U : 0xa9000000U));
 		assert(mock.ecam[0x80a0 / 4] == 0x5a5a0001);
 		assert(mock.ecam[0x8080 / 4] == 0x20010000);
+		if (mock.pme) {
+			bool event = index == PME_CORE_EVENT || index == PME_DISABLE_EVENT;
+			assert(mock.ecam[0x10004c / 4] == (event ? 0xabc0c108U : 0xabc04108U));
+			if (index != PME_CAP_BAD)
+				assert(mock.pme_prepares == 1);
+		}
 		if (index != BRIDGE_ALLOC_FAIL)
 			assert(strstr(mock.log, "N71_PCIE_SCAN_RESULT error="));
 		if (!index) {
@@ -311,6 +378,6 @@ int main(void)
 		}
 		free(mock.ecam);
 	}
-	puts("N71_PCIE_SCAN_HOST_OK cases=21");
+	puts("N71_PCIE_SCAN_HOST_OK cases=29");
 	return 0;
 }
