@@ -4,9 +4,10 @@
 
 O helper PME, o adapter e o caller estão integrados e compilados para a ABI
 `7.2.0-iphone6s-dart-serdev-power2`. O composer oferece `--pcie-aspm-off`
-explicitamente. Esta candidata **ainda não foi carregada no iPhone**; o coletor
-e o perfil privado precisam da integração correspondente antes do teste.
-[Hashes, inputs e provas](evidence/n71-pcie-pme-aspm-build.json).
+explicitamente. O coletor e o perfil privado real foram integrados e verificados.
+Esta candidata **ainda não foi carregada no iPhone**.
+[Build e inputs](evidence/n71-pcie-pme-aspm-build.json),
+[coletor e perfil](evidence/n71-pme-aspm-session.json).
 
 A última sessão física continua sendo a
 [tentativa PME anterior](evidence/n71-pme-first-physical.json): um boot,
@@ -58,6 +59,7 @@ DMA, firmware, telemetria e carga continuam pendentes nas issues
 | Adapter | 29 cenários; 18 mutações compiladas por SIGABRT/assertion |
 | Caller | 73 cenários; 21 mutações compiladas por SIGABRT/assertion |
 | Composer | 7 testes; 13 mutações por AssertionError |
+| Coletor PME/ASPM | 45 testes; 81 mutações por AssertionError; 29 inputs |
 | Build real na VM ARM64 | 6 módulos; Werror, modpost, ELF AArch64 e vermagic |
 
 As quatro provas têm inputs e logs por SHA. O build usa 46 inputs e conserva
@@ -80,6 +82,8 @@ python3 -B -m unittest discover -s tests -p test_n71_pcie_scan_host.py -v
 python3 -B -m unittest discover -s tests -p test_n71_pcie_diagnostic_caller.py -v
 python3 -B -m unittest discover -s tests -p test_n71_diagnostic_payload.py -v
 python3 -B tests/run_n71_diagnostic_payload_mutations.py
+python3 -B -m unittest discover -s tests -p test_n71_link_session.py -v
+python3 -B tests/run_n71_link_session_mutations.py
 ```
 
 Na VM, depois de conferir a fonte e os outputs power2 existentes:
@@ -104,12 +108,52 @@ kernel, DT e módulo já descritos em [N71_LINK_EXPERIMENT.md](N71_LINK_EXPERIME
 A saída exige uma pasta privada nova. A provenance registra o booleano e o
 hash de bootargs. A composição não inicia USB, SSH ou load de módulo.
 
+### Perfil privado real
+
+A composição desta sessão usou o perfil base power2, o DT diagnóstico existente
+e o módulo do build acima. Os argumentos podem ser reproduzidos no Mac:
+
+```sh
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile "$base_profile/deployment.json" \
+  --kernel-dir "$kernel_artifacts" \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir "$diagnostic_dt" \
+  --module "$pcie_module" --module-sha256 "$pcie_sha256" \
+  --output-dir "$candidate" --pcie-aspm-off
+```
+
+Essas variáveis apontam para diretórios/artefatos privados verificados pelas
+receitas anteriores. `candidate` deve ser uma pasta nova diretamente em
+`runtime`. Copie o REG_ON verificado da candidata anterior para essa pasta,
+como `n71-wlan-power-diagnostic.ko`, com modo 600. Na `provenance.json`,
+registre booleanos JSON exatos: `pcie_scan_link_target: true`,
+`pcie_scan_pme_noop: false`, `pcie_scan_pme_disable: true`; o composer já
+registra `pcie_aspm_off: true` e o SHA de bootargs. Não use strings ou números.
+
+Confira novamente os hashes da fonte e da saída e execute:
+
+```sh
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-disable --check
+python3 -B scripts/boot/boot_tools.py palera1n-macos-arm64 pongoterm
+python3 -B scripts/host/persist.py verify "$snapshot_id"
+```
+
+O perfil real passou esses checks. O payload mudou apenas pela adição de
+14 bytes de bootargs em relação ao diagnóstico anterior. Loader, DT, kernel
+comprimido e descomprimido, initramfs, identidades e REG_ON foram conferidos
+por igualdade/hash; fonte anterior e default permaneceram intactos. Nenhum
+perfil, chave, alias SSH ou snapshot é publicado no GitHub.
+
 ## Próximo gate físico
 
-Integrar o coletor para selecionar o novo build e exigir os opt-ins exatos,
-SHA/ABI do módulo, layout do payload e `pcie_aspm=off` no cmdline real antes
-de qualquer insmod. O parsing deve exigir prepare/restore PME completos e
-conservar REG_ON se não houver prova de cleanup.
+O coletor seleciona o novo build e exige os opt-ins exatos, SHA/ABI do módulo
+e bootargs literais no payload. No telefone, antes de transferir módulos,
+exige um único `pcie_aspm=off` no cmdline e o marcador de suporte ASPM
+desativado. O parser exige prepare/restore PME completos e conserva REG_ON
+se não houver prova de cleanup. Retry de restauração não executa novo scan.
 
 Depois dos checks locais e CI, fazer um único boot com restore e serviços
 confirmados. Continuar os testes compatíveis por SSH, sem desbloquear o iOS

@@ -1,10 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-05
 
-## Checkpoint atual — candidata PME/ASPM integrada offline
+## Checkpoint atual — candidata PME/ASPM e perfil qualificados offline
 
 Helper PME, adapter e caller integrados; opt-in `scan_pme_disable=1` e composer `--pcie-aspm-off` preparados para uma candidata agrupada. Helper 1/19, adapter 29/18, caller 73/21 e composer 7/13 passaram no Mac e Ubuntu ARM64. Os seis módulos passaram build real Werror/modpost/ELF/vermagic, com fonte, kernel, Image e exports preservados. PCIe novo: 73.576 bytes; REG_ON intacto. [Procedimento e limites](N71_PME_ASPM_CANDIDATE.md), [prova](evidence/n71-pcie-pme-aspm-build.json).
 
-Ainda não carregada no iPhone: falta integrar e verificar o coletor/perfil antes de outro DFU. ASPM off foi escolhido para agrupar common clock/retrain/L1SS com a correção PME; não comprova consumo, Wi-Fi ou carga. O aparelho permanece no iOS para recarga. CI do último head publicado `6f7cd02`: PR success nos três jobs; push cancelled, Ubuntu cancelado e Mac/Windows success. Essa CI não cobre as mudanças novas.
+Coletor `7708a5c`:45 testes/81 mutações por AssertionError passaram Mac/Ubuntu ARM64,29 inputs/hash e sintaxe Bash conferidos. Novo perfil privado passou checks reais de identidade/payload/ABI/módulo, ferramentas e snapshot44; somente bootargs, PCIe, deployment SHA e provenance mudaram, com kernel/DT/initramfs/identidades/REG_ON preservados. [Prova do coletor e perfil](evidence/n71-pme-aspm-session.json). Ainda não carregada no iPhone; permanece no iOS para recarga. ASPM off reúne common clock/retrain/L1SS com PME, sem comprovar consumo, Wi-Fi ou carga.
+
+CI do checkpoint `120352c`: push success; PR failure no Ubuntu, com dois timeouts de fixtures anteriores e duas recusas Pongo encerradas por SIGTERM no deadline sintético. Mac/Windows passaram nos dois eventos. Esses resultados não cobrem o novo coletor; o próximo head precisa de CI própria. A falha continua registrada para análise na [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38), sem atribuição causal confirmada.
 
 ### Checkpoint físico anterior — PME do endpoint e alimentação
 
