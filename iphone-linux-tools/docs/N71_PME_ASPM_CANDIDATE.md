@@ -230,6 +230,56 @@ falhou somente no Ubuntu por timeout de10s num mutante PMGR após baseline
 positiva. Causa não confirmada; timeout não contou como mutation kill.
 [#38](https://github.com/djalmajr/iphone6s-linux/issues/38) permanece aberta.
 
+## Lifecycle do bus retido — preparação offline
+
+O adapter `b0c0933` acrescenta a API interna `n71_pcie_scan_hold()`, somente
+com PME e scan completamente positivo. Bridge, bus, config/PME/TLS e callbacks
+permanecem válidos entre chamadas. Os wrappers usados pelo caller atual
+continuam removendo o bus imediatamente. Nenhum parâmetro de módulo, CLI ou
+perfil seleciona hold nesta etapa.
+
+Cleanup de bus retido faz stop/remove sob o lock de rescan antes de restaurar
+config, PME e TLS e liberar o bridge. Uma falha de restore conserva owner para
+retry, sem outro scan. Uma recusa de callback durante stop é conservada
+inclusive depois de retry de restore; se todo o rollback passou, o bridge pode
+ser liberado mesmo com essa saída negativa. Não confundir erro do experimento
+com owner ainda pendente: a integração do caller precisa tratar ambos.
+
+A fonte PCI fixada confirma o guard de binding em `pci_bus_match()` e a
+liberação explícita em `pci_bus_add_device()`. O adapter não chama essa API,
+`pci_host_probe()` ou atribuição de recursos, e continua negando enable_device.
+`pci_remove_root_bus()` limpa `host_bridge->bus` depois de remover o bus.
+Arquivos e hashes estão na [prova do lifecycle](evidence/n71-pci-held-bus.json).
+Isso qualifica o contrato desta fonte, sem comprovar IRQ/DMA/driver no aparelho.
+
+Dois testes C com45 cenários (29 anteriores e16 de hold) e26 mutações compiladas
+por SIGABRT/assertion passaram no Mac e Ubuntu ARM64, com dez inputs iguais.
+Cobrem callback após retorno hold, novo scan recusado, scan negativo/parcial,
+stop-refusal, os três restores e link perdido no teardown; retries não repetem
+scan. Timeout ou falha de compilação não contam como mutation kill.
+
+Na cópia descartável do código público:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pcie_scan_host.py -v
+```
+
+O build real usou M novo `/home/ubuntu/n71-held-bus-modules-20261005/phone/kernel`,
+com os46 inputs do JSON. Somente `n71-pcie-scan.h` mudou desde o build PME/ASPM
+anterior. Reproduza com a mesma receita W=1/KCFLAGS=-Werror desta página, depois
+de validar o bundle power2, usando um novo diretório M. Os seis módulos passaram
+modpost/ELF/vermagic; PCIe74008 bytes, REG_ON idêntico e fonte/config/Image/exports
+preservados. PCIe e REG_ON copiados para o Mac tiveram hashes/ELF/vermagic
+conferidos independentemente.
+
+Não substitua módulos nos perfis físicos anteriores mantendo seus manifests:
+o hash novo é distinto e não foi integrado à seleção do coletor. Caller deve
+reter referências de módulo/MMIO/energia enquanto houver bus ou restore
+pendente; depois virão seleção/provenance/coletor e recursos PCI/IRQ/IOMMU.
+A [issue39](https://github.com/djalmajr/iphone6s-linux/issues/39) acompanha esse
+desenvolvimento. Esta prova é offline; o resultado físico acima continua
+pertencendo ao módulo PME/ASPM anterior. Nenhum novo DFU foi solicitado.
+
 ## Próximos gates
 
 O coletor seleciona o novo build e exige os opt-ins exatos, SHA/ABI do módulo

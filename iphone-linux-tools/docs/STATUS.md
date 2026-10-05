@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-05
 
-## Checkpoint atual — quatro etapas físicas no mesmo boot PME/ASPM
+## Checkpoint atual — lifecycle PCI retido qualificado offline
+
+Adapter `b0c0933`: API interna hold mantém bridge/bus/callbacks e owners depois de scan positivo com PME, ainda sem bind, atribuição de recursos ou DMA. Cleanup faz stop/remove sob rescan lock antes de restore config/PME/TLS; falhas conservam owner e permitem retry sem novo scan. Dois testes C/45 cenários e26 mutações compiladas por SIGABRT/assertion passaram Mac/Ubuntu ARM64, dez inputs iguais. Seis módulos Werror/modpost/ELF/vermagic passaram com46 inputs; PCIe74008 bytes, REG_ON e fonte/config/Image/exports preservados. [Reprodução e limites](N71_PME_ASPM_CANDIDATE.md#lifecycle-do-bus-retido--preparação-offline), [prova](evidence/n71-pci-held-bus.json), [issue39](https://github.com/djalmajr/iphone6s-linux/issues/39).
+
+Caller/coletor/perfil ainda não selecionam hold, e o módulo novo não foi carregado no telefone. Próxima etapa integra retenção de MMIO/energia/módulo e seleção explícita, antes de recursos PCI/IRQ/IOMMU. Gates físicos e CI anteriores não cobrem esta alteração; CI do novo head será registrada separadamente. Nenhum DFU/PIN adicional, firmware ou Image novo; telefone no iOS para recarga.
+
+### Última sessão física — quatro etapas no mesmo boot PME/ASPM
 
 Um DFU manual reuniu scan PCI-core, leitura ChipCommon/BAR, observação DART e ciclo temporário do provider DART, sem reinícios intermediários. O scan passou com dois dispositivos, um endpoint, 660 leituras/40 tentativas/23 escritas/zero recusas. BCM4350 revisão8, BAR0 de32KiB e BAR2 de4MiB confirmados; as quatro etapas concluíram cleanup e conservaram SSH/HTTP/Bash/Herdr. Snapshot44/sync e retorno automático ao iOS passaram. Uptime final506,59s; iOS100→100% e carregamento ativo após retorno. Esses percentuais não comprovam carga no Linux. [Resultado e reprodução](N71_PME_ASPM_CANDIDATE.md#sessão-física--quatro-etapas-sem-reiniciar), [prova selecionada](evidence/n71-pme-aspm-physical.json).
 
