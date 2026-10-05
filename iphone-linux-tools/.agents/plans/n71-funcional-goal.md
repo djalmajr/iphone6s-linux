@@ -2311,3 +2311,12 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Harness compila o caller real com fixtures das APIs kernel, reutiliza backend real/testado, cobre init/qualificação/referências, comando antecipado/inválido, ciclo íntegro, falhas com cleanup íntegro, cleanup pendente/repetido/detach, refcount e status. Mutações compiladas têm que abortar por asserção, Mac/ARM64; build Werror/modpost/ELF/vermagic contra power2 e fonte/config/Image/exports preservados.
 
 - Gate135:39 cenários/11 mutações compiladas por SIGABRT/asserção passaram Mac/ARM64. Harness inicial reutilizava disable_depth do virtual device já detached no segundo ciclo; fixture agora modela alocação nova com power state limpo por attach. Caller real completo e seis módulos passaram W=1/Werror/modpost/ELF/vermagic power2; source/config/Image/exports preservados. SHA/ELF/vermagic dos módulos e logs recalculados no Mac,700/600. AST/fatal-flake8/diff passaram; nenhum load/USB/DFU ou charger I/O.
+
+
+### Incremento 136 — compositor diagnóstico aceita somente a ABI power2 selecionada
+
+- Cinco arquivos: plano, scripts/build/compose-n71-diagnostic.py, tests/test_n71_diagnostic_payload.py, runner de mutações e registro n71-i2c-genpd.json. Acrescentar power2 às releases conhecidas/CLI mantendo delta DT/payload/loader/initramfs/identidades e vermagic exatos.
+- Teste verifica seleção das quatro releases, todas as combinações cruzadas recusadas e help real da CLI. Oito mutações: seis existentes mais omissão power2 e seletor CLI. Mac/ARM64; composição real só usa DT/módulos privados já compilados, sem autoload/USB/default.
+- Registro genpd identifica o novo caller preparado e o gate power1 anterior como histórico; carga/ciclo físico continuam pendentes. Nada de key/firmware/calibração no público ou na VM.
+
+- Gate136:6 testes/8 mutações por AssertionError passaram Mac/ARM64; quatro releases selecionáveis e12 pares cruzados recusados, help real da CLI conferido. AST/fatal-flake8/diff passaram; inputs e fontes/config/Image/exports power1/power2 intactos. Empacotador privado inicialmente tentou literal_eval de Name SUBJECT e a transferência seguinte encontrou arquivo ausente; corrigida resolução literal explícita e etapas dependentes agora têm gate de exit0. Isso não é falha ou kill dos testes; logs/inputs finais transferidos por SHA. Nenhuma ação USB/default ou boot.

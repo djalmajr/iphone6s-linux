@@ -101,6 +101,25 @@
   "linux_charging_validated": false,
   "wifi_validated": false,
   "new_dfu_or_reboot": false,
-  "limits": "Compiled header backend with mocked kernel APIs plus real kernel callback linkage. Patch007 is now integrated into a separate fully linked power2 Image, not booted. No operational module, active controller, clock/pinctrl/IRQ/adapter, charger I/O or physical domain cycle. Current physical power1 deliberately fails the suppress_bind_attrs guard. Caller lifetime/control and grouped physical evidence, including absent bind/unbind attributes, remain required before hardware activation.",
-  "binding_image_record": "docs/evidence/kernel-n71-binding-build.json"
+  "limits": "Original backend module gate is historical compile-only linkage against power1. Patch007 is integrated into a separate fully linked power2 Image. An operational explicit cycle/cleanup caller is compiled and tested separately against power2; none of these new artifacts has booted or loaded on the phone. Kernel APIs remain fixtures in native tests. No active controller, clock/pinctrl/IRQ/adapter, charger I/O or physical domain cycle. Runtime release and absent PMGR bind/unbind attributes must be confirmed before loading the operational caller. Current physical power1 deliberately fails the suppress_bind_attrs guard.",
+  "binding_image_record": "docs/evidence/kernel-n71-binding-build.json",
+  "operational_control": {
+    "code_commit": "3e0bebb5abac59cc842758faf90def29706982f2",
+    "source_file": "phone/kernel/n71-i2c-power-diagnostic.c",
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "scenarios_per_platform": 39,
+    "compiled_assertion_mutations_per_platform": 11,
+    "real_caller_and_backend_with_kernel_api_fixtures": true,
+    "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+    "werror_modpost_elf_vermagic_passed": true,
+    "loaded_on_phone": false,
+    "initialization_does_not_activate_domain": true,
+    "cycle_requires_explicit_action": true,
+    "pending_cleanup_retains_module_and_objects": true,
+    "force_unload_supported": false,
+    "controller_or_charger_io_performed": false
+  }
 }

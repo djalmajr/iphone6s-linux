@@ -3,6 +3,8 @@ import importlib.util
 import os
 from pathlib import Path
 import struct
+import subprocess
+import sys
 import unittest
 from test_n71_pcie_diagnostic import fixture, pin, MODULE as DT
 from test_n71_topology import encode
@@ -76,22 +78,31 @@ class N71DiagnosticPayload(unittest.TestCase):
         baseline = '7.2.0-iphone6s-source'
         bundle = '7.2.0-iphone6s-dart-serdev1'
         power = '7.2.0-iphone6s-dart-serdev-power1'
+        binding = '7.2.0-iphone6s-dart-serdev-power2'
 
         def image(release):
             return bytes(header) + ('vermagic=' + release + ' SMP preempt mod_unload aarch64\0').encode()
 
-        # Kills omission of a selected known ABI and mixing modules across all three releases.
-        for selected in (baseline, bundle, power):
+        # Kills omission of a selected known ABI and mixing modules across all four releases.
+        for selected in (baseline, bundle, power, binding):
             try:
                 MODULE.validate_module(image(selected), kernel_release=selected)
             except ValueError as error:
                 self.fail('Known selected ABI refused: ' + str(error))
-        crossed = [(actual, selected) for actual in (baseline, bundle, power)
-                   for selected in (baseline, bundle, power) if actual != selected]
-        for actual, selected in crossed + [(bundle + '+', bundle), (power + '+', power),
+        crossed = [(actual, selected) for actual in (baseline, bundle, power, binding)
+                   for selected in (baseline, bundle, power, binding) if actual != selected]
+        for actual, selected in crossed + [(bundle + '+', bundle), (power + '+', power), (binding + '+', binding),
                                             (baseline + '+', baseline + '+'), ('7.0.12', '7.0.12')]:
             with self.subTest(actual=actual, selected=selected), self.assertRaises(ValueError):
                 MODULE.validate_module(image(actual), kernel_release=selected)
+
+
+    def test_cli_exposes_explicit_power2_without_implicit_selection(self):
+        result = subprocess.run([sys.executable, MODULE.__file__, '--help'],
+                                capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('n71-dart-serdev-power-v2', result.stdout)
+        self.assertIn('--kernel-patchset', result.stdout)
 
 
 if __name__ == '__main__':
