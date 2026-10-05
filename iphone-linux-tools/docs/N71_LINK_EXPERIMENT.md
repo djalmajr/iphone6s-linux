@@ -710,3 +710,27 @@ esse boot ativo. Se o telefone reiniciar, o histórico anterior deixa de ser
 válido e deve ser refeita a captura completa; não basta copiar o JSON antigo.
 25 testes do coletor,15 mutações e quatro mutações do parser protegem essa
 seleção e o cleanup. Valores/identidades/logs permanecem privados.
+
+## Módulos Wi-Fi para power2 — preparados sem novo Image
+
+O builder `3ce8aaf` aceita seleção explícita de `n71-dart-serdev-power-v2` e verifica a fonte com patches001→007, a release `7.2.0-iphone6s-dart-serdev-power2` e os hashes de config/Image/exports. O perfil padrão continua `n71-dart-serdev-v1`; os módulos legados não são compatíveis com power2. [Prova sanitizada do build novo](evidence/n71-wifi-binding-modules.json); [registro legado preservado](evidence/n71-wifi-modules.json).
+
+Preparar primeiro o kernel conforme [N71_KERNEL_BUNDLE.md](N71_KERNEL_BUNDLE.md), na VM ARM64 dedicada. Na raiz de `iphone-linux-tools`, reproduzir os contratos e compilar em uma pasta nova, pertencente ao usuário da VM:
+
+```sh
+python3 tests/test_n71_wifi_modules.py
+python3 tests/run_n71_wifi_modules_mutations.py
+python3 scripts/build/build-n71-wifi-modules.py \
+  --profile n71-dart-serdev-power-v2 \
+  --source /home/ubuntu/kernel-n71-binding-source-20261005 \
+  --kernel-output /home/ubuntu/kernel-n71-binding-build-20261005 \
+  --output-dir /home/ubuntu/n71-wifi-binding-module-build-REPRODUCTION
+```
+
+O diretório de saída precisa ser inexistente e separado da fonte/output do kernel. O build usa o Image existente e o export real em três pacotes externos: rfkill, cfg80211 e Broadcom. Mantém `KCFLAGS=-Werror` e modpost fatal, orçamento de1GiB para módulos e8GiB para novo Image. As macros PCIe/MSGBUF são aplicadas somente ao pacote Broadcom externo; a config do kernel permanece inalterada.
+
+No build realizado,12 testes/17 mutações por AssertionError passaram Mac/Ubuntu ARM64. Oito arquivos `.ko` passaram ELF ARM64 e vermagic exato, SHA/tamanho e fechamento de dependências, recalculados no Mac. `brcmfmac` contém `brcmf_pcie_register` e `brcmf_proto_msgbuf_attach`; seu alias exige14e4:43a3 e classe02:80. Fonte/config/Image/exports power2 e legados permaneceram intactos. Os binários, manifests integrais e logs ficam privados em `runtime/`; somente hashes, contratos e receita são publicados.
+
+Uma futura carga autorizada de `brcmfmac` requer rfkill → cfg80211 → brcmutil → brcmfmac; o build não executa essa carga. `rfkill-gpio` e os módulos auxiliares bca/cyw/wcc não são automaticamente carregados. A seleção dos auxiliares depende do chip/firmware reais, e não da presença de oito arquivos no build.
+
+Nenhum firmware foi selecionado e nenhum driver foi instalado ou carregado no telefone. O alias compilado não prova endpoint PCIe funcional: identidade/classe, BARs/roteamento, entrega de IRQ, associação/isolamento DART, revisão do chip e firmware/calibração compatíveis continuam gates físicos. O Image power2 ainda não foi testado no aparelho. Esta preparação elimina a recompilação dos módulos entre etapas do próximo boot; não comprova Wi-Fi, bateria ou carga no Linux.

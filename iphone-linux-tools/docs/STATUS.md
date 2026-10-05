@@ -2,6 +2,10 @@
 
 ## Checkpoint atual — alimentação priorizada
 
+Módulos Wi-Fi `3ce8aaf`: seleção explícita `n71-dart-serdev-power-v2`, com release e hashes power2 conferidos; default e artefatos legados preservados. Oito módulos passaram build nativo ARM64/Werror/modpost e verificação independente SHA/ELF/vermagic/dependências no Mac. Os12 testes e17 mutações por asserção passaram nas duas plataformas. Preparação aproveita o Image existente, sem recompilar ou reiniciar o telefone; nenhum módulo/firmware foi instalado ou carregado. PCIe/DART/IRQ/chip/firmware, Wi-Fi, carga e telemetria continuam pendentes. [Reprodução](N71_LINK_EXPERIMENT.md#módulos-wi-fi-para-power2--preparados-sem-novo-image), [prova selecionada](evidence/n71-wifi-binding-modules.json).
+
+CI anterior `6e37876` terminou success em PR37263273839/push37263270142, seis jobs. Logs reais Ubuntu/macOS do PR confirmam observador I2C37/18 e caller52/14. Esse resultado cobre a preparação I2C139–141; não prova hardware nem o builder Wi-Fi142, cuja evidência local/ARM64 está registrada acima.
+
 Nova preparação `14117a4`: ação explícita `inspect` integrada ao caller power2. Reserva MMIO e lê REV/SMSTA/XFSTA duas vezes, sem reset, FIFO ou comandos ao carregador; sempre tenta encerrar genpd e conserva referências em cleanup pendente. Observador37 cenários/18 mutações e caller52/14 passaram Mac/Ubuntu ARM64; módulo real Werror/modpost/ELF/vermagic conferido. Coletor agrupa dois cycles e uma inspeção no mesmo boot, com guards/fixtures locais. Nenhum desses ciclos ou leituras foi executado no telefone; carga, telemetria e Wi-Fi continuam pendentes. [Reprodução e próximos gates](N71_HDQ.md#inspeção-do-controlador-i2c1--preparada-sem-reset), [prova selecionada](evidence/n71-i2c-controller-inspection.json).
 
 iPhone no iOS para recarga depois de uma sessão curta power1. Um DFU
