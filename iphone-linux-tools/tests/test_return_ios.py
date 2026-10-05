@@ -14,67 +14,6 @@ import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-STUB = r'''#!/usr/bin/env python3
-import os,pathlib,plistlib,sys,time
-base=pathlib.Path(__file__).resolve().parents[1]
-name=pathlib.Path(sys.argv[0]).name
-mode=(base/'mode').read_text()
-phase=(base/'phase').exists()
-with (base/'events').open('a') as f: f.write(name+'\n')
-if name=='idevice_id':
-    assert sys.argv[1:]==['-l']
-    if mode=='usb-error': sys.exit(1)
-    if phase or mode=='already-ios': print('SYNTHETIC-USB-ID-NOT-FOR-LOGS')
-    if phase and mode=='multiple': print('SECOND-USB-ID')
-elif name=='ioreg':
-    if mode=='bad-plist': print('invalid plist')
-    else:
-        returning=mode=='linux-returns' and (base/'events').read_text().splitlines().count('ioreg')>=2
-        sys.stdout.buffer.write(plistlib.dumps([{}] if mode=='linux-stays' or returning else []))
-elif name=='ideviceinfo':
-    assert sys.argv[1:]==['-u','SYNTHETIC-USB-ID-NOT-FOR-LOGS','-k','ProductType']
-    if mode=='info-error': sys.exit(1)
-    print('iPhone99,9' if mode=='wrong-model' else 'iPhone8,1')
-elif name=='ssh':
-    assert 'StrictHostKeyChecking=yes' in sys.argv and 'IdentitiesOnly=yes' in sys.argv
-    if (base/'expect-alias').exists():
-        assert 'HostKeyAlias=candidate-test' in sys.argv
-        assert 'GlobalKnownHostsFile=/dev/null' in sys.argv
-    command=sys.argv[-1]
-    if 'IPHONE_LINUX_READY' in command:
-        if mode=='pin-error': sys.exit(255)
-        print('IPHONE_LINUX_READY')
-    elif 'tar -czf' in command:
-        if mode=='slow-backup':
-            pid_temp=base/'owned.pid.tmp'
-            with pid_temp.open('w') as f:
-                if (base/'hold-pid-publication').exists():
-                    (base/'pid-opened').touch()
-                    deadline=time.monotonic()+10
-                    while not (base/'release-pid-publication').exists():
-                        if time.monotonic()>=deadline: sys.exit(1)
-                        time.sleep(0.01)
-                f.write(str(os.getpid()))
-            os.replace(pid_temp,base/'owned.pid')
-            time.sleep(60)
-        sys.stdout.buffer.write((base/'incoming.tar.gz').read_bytes())
-    elif 'IPHONE_SYNC_COMPLETE' in command and 'reboot' not in command:
-        with (base/'events').open('a') as f: f.write('SYNC\n')
-        assert 'sync;' in command
-        if mode=='sync-error': sys.exit(1)
-        if mode=='sync-disconnect': sys.exit(255)
-        if mode!='missing-sync': print('IPHONE_SYNC_COMPLETE',flush=True)
-    else:
-        with (base/'events').open('a') as f: f.write('REBOOT\n')
-        assert 'reboot -f' in command
-        if 'sync;' not in command:
-            assert 'SYNC' in (base/'events').read_text().splitlines()
-        if mode=='sync-error': sys.exit(1)
-        if mode not in ('missing-sync','fast-reboot'): print('IPHONE_SYNC_COMPLETE',flush=True)
-        (base/'phase').touch()
-        if mode=='request-error': sys.exit(1)
-        sys.exit(255 if mode in ('ssh-disconnect','fast-reboot') else 0)
-'''
 
 
 class ReturnIOSTests(unittest.TestCase):
@@ -91,10 +30,10 @@ class ReturnIOSTests(unittest.TestCase):
         tools.mkdir()
         for name in ('ssh', 'idevice_id', 'ideviceinfo', 'ioreg'):
             path = tools / name
-            path.write_text(STUB)
+            shutil.copy(ROOT / 'tests/fixtures/return-ios-stub.sh', path)
             path.chmod(0o700)
         self.environment = dict(os.environ, PATH=os.pathsep.join(
-            (str(tools), str(Path(sys.executable).parent), os.environ['PATH'])))
+            (str(tools), os.environ['PATH'])))
         self.environment.pop('IPHONE_LINUX_PROFILE', None)
         self.archive()
 
@@ -108,7 +47,6 @@ class ReturnIOSTests(unittest.TestCase):
         (self.root / 'mode').write_text(mode)
         (self.root / 'phase').unlink(missing_ok=True)
         (self.root / 'events').unlink(missing_ok=True)
-        # Four fresh synthetic Python executables can exceed one second on macOS.
         wait = '10'
         return subprocess.run([sys.executable, str(self.host / 'return_ios.py'),
                                '--wait', wait, *arguments], env=self.environment,
