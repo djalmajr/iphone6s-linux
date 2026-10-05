@@ -391,6 +391,80 @@ terminou cancelled, com Mac/Windows success e Ubuntu cancelled. Causa não
 confirmada; não tratar esse cancelamento como aprovação. Essa CI antecede
 o parser `49d2158`, que conserva seus próprios gates Mac/ARM64 acima.
 
+## CLI retido — aquisição e retomada no mesmo boot
+
+O CLI `36c7f53` seleciona o módulo caller de 76.112 bytes somente com
+`--host-scan --scan-link-target --scan-pme-disable --scan-hold`.
+Exige `pcie_scan_hold: true` na provenance, os opt-ins PME/ASPM anteriores
+e SHA/ELF/vermagic exatos. `--check` verifica somente arquivos locais.
+O composer/perfil físico correspondente ainda precisa ser preparado;
+não altere um perfil já testado para fingir essa seleção.
+
+Com a candidata privada qualificada e um boot Linux já estabelecido:
+
+```sh
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" --output-dir "$held_result" \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold
+```
+
+Uma aquisição positiva conserva bus, módulo, reset/energia, REG_ON e staging.
+O resultado declara `held_verified=true` e `cleanup_verified=false`.
+Estado de tentativa é reservado antes dos efeitos; depois, o checkpoint
+privado registra histórico completo, getters e hashes. As identidades ligam
+deployment, payload, initramfs e os dois módulos; esses dados não são publicados.
+
+Para liberar os recursos posteriormente, usando saída privada nova:
+
+```sh
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" --output-dir "$released_result" \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --release-held "$held_result"
+```
+
+Antes da escrita, o comando exige o mesmo boot e histórico, staged hashes,
+parâmetros imutáveis reais, bind/unbind ausentes e ownership PCI/REG_ON.
+Booleanos sysfs são lidos como `Y/N`, conforme a fonte kernel fixada.
+Diretório PCI ausente não equivale a barramento vazio. Remoção/config/PME/TLS,
+reset/energia e unload PCI precedem restore/unload REG_ON.
+
+Em falha, o resultado conserva o erro e as provas das etapas concluídas.
+Retome com `--release-held "$released_result"` e outra saída privada nova.
+Cleanup já comprovado não é solicitado novamente; unload PCI concluído
+permite retomar somente REG_ON, e restore REG_ON concluído permite repetir
+apenas seu unload. A saída continua negativa se o stop teve erro, mesmo
+quando `cleanup_verified=true`. Não há rescan ou puts duplicados nesses caminhos.
+
+Tentativas sem checkpoint não autorizam escrita. Mudanças de boot, perfil,
+histórico, módulos, parâmetros ou estado vivo recusam a retomada.
+Novos coletores que alterem o histórico/estado deverão participar do protocolo
+de checkpoint antes de serem agrupados; esta versão não aceita eventos
+arbitrários como continuação válida. Falta de evidência não é limpeza concluída.
+
+Na cópia descartável do código público:
+
+```sh
+set -e
+python3 -B -m unittest discover -s tests -p test_n71_held_session.py -v
+python3 -B -m unittest discover -s tests -p test_n71_link_session.py -v
+python3 -B tests/run_n71_link_session_mutations.py
+```
+
+Mac/Ubuntu ARM64 passaram 18 testes/22 mutações novos e compatibilidade45/81:
+total63/103 por plataforma, 36 inputs finais preservados e logs por SHA.
+Os comandos snapshot foram executados contra sysfs sintético; 17 comandos
+gerados passaram `bash -n`, AST e lint de erros fatais passaram.
+A correção isolada do diretório PCI repetiu somente os gates novos;
+os inputs relevantes do caminho legado permaneceram iguais.
+[Prova sanitizada e inputs](evidence/n71-pci-held-session.json).
+
+Parser e C/build anteriores foram reutilizados por hashes; nenhum módulo foi
+transferido ou carregado no iPhone nesta integração. Não comprova retenção
+física, recursos atribuídos, bind, entrega IRQ, DMA/IOMMU, rádio, telemetria
+ou carregamento Linux. O próximo passo prepara o perfil e controles
+compatíveis antes de uma sessão física agrupada.
+
 ## Próximos gates
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os
