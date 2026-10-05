@@ -40,6 +40,10 @@ static inline int n71_genpd_lock(struct n71_i2c_genpd *backend,
 		error = n71_pmgr_access_lock(&backend->references[index], &access[index]);
 		if (error)
 			goto unlock;
+		if (!access[index].provider->dev.driver->suppress_bind_attrs) {
+			error = -ENODEV;
+			goto unlock;
+		}
 	}
 	return 0;
 unlock:

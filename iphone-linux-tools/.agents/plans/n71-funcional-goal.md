@@ -2183,3 +2183,50 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Sem novo boot, sysfs control, hardware activation ou SN2400/charger I/O.
   Backend em header não é módulo operacional de diagnóstico; caller ainda
   deve implementar lifetime/mutex/module retention e operações físicas reunidas.
+
+
+### Incremento 130 — binding PMGR estável antes de ownership genpd
+
+- Cinco arquivos: plano, phone/kernel/patches/0007-apple-pmgr-no-manual-bind.patch,
+  phone/kernel/n71-i2c-genpd.h, tests/n71_i2c_genpd.c e tests/test_n71_i2c_genpd.py.
+- A fonte PMGR fixada não tem remove nem suppress_bind_attrs. Device reference
+  mantém o device, não seus recursos devm depois de unbind. Locks por callback
+  protegem só a chamada; não afirmar que excluem unbind entre acquire/release.
+- Patch007 marca suppress_bind_attrs no driver desde o registro, impedindo
+  bind/unbind manual via sysfs. Backend recusa provider que não declare essa
+  proteção antes de qualquer attach/energia. Providers são builtin no Image
+  dedicado; driver_unregister arbitrário por outro código kernel fica fora
+  do contrato e não é tratado como recuperação automática.
+- Native verifica recusa de provider desprotegido em qualquer uma das três
+  posições, sem attach, read ou referência perdida. Mutação retira o guard e
+  precisa falhar por asserção. Mac/ARM64; callback/backend kernel Werror;
+  patch007 aplica só em cópia do provider006 e arquivo completo obj-y/Werror.
+  Profile/power2/Image físico serão integrados depois; não alterar power1.
+- Nenhum novo DFU; driver/config/binding do Mac intactos. Não criar módulo
+  operacional enquanto o Image carregado não contiver007 e tiver sysfs
+  bind/unbind ausentes comprovados na sessão física agrupada.
+
+#### D130. Proteger o lifetime dos providers entre callbacks
+
+- Decisão: suppress_bind_attrs estático e exigido pelo backend; Image power2
+  separado antes da operação física. A auto-probe normal permanece possível.
+- Por quê: o driver PMGR fixa genpd callbacks em memória devm e não tem
+  remoção. Só get_device/device_lock por operação não reserva esse binding
+  para todo o lifetime do consumidor virtual.
+- Alternativas: um worker mantendo todos os locks seria mais complexo e
+  poderia bloquear unbind indefinidamente; confiar só na ausência de ação
+  manual deixaria o diagnóstico acessível com um lifetime não protegido.
+- Reverter: baixo antes do boot; manter power1/rollback intactos.
+- Onde: incremento130, patch007, próxima integração do Image, issue36.
+- Status: em curso; proteção runtime ainda não instalada no telefone.
+
+- Gate130:87 cenários/20 mutações compiladas por SIGABRT/asserção passaram
+  Mac/ARM64; inclui três recusas de binding não protegido. Backend completo
+  linkou W=1/Werror/modpost/ELF/vermagic power1. Patch007 aplicou em cópia
+  do provider006 e arquivo inteiro compilou obj-y/Werror, SHA fonte final
+  0d84693ae4f5a24df9f8c9499ecd0f8f6725566223428dfe7af686cf7a21f5b2.
+  Image/config/exports/provider006 e inputs preservados; logs transferidos
+  com SHA conferido. Provider007 não foi integrado ao Image nem carregado.
+- CIa476729 PR37253810597/push37253807827 terminal success. Backend130
+  exige flag007, portanto deliberadamente recusa operar sobre power1 atual.
+  Novo Image/power2 e ausência física de bind/unbind continuam pendentes.

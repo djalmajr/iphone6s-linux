@@ -16,8 +16,9 @@ typedef uint64_t u64;
 #define ERR_PTR(e) ((void *)(intptr_t)(e))
 enum { RPM_SUSPENDED, RPM_ACTIVE, RPM_RESUMING };
 struct device_node { int index, refs; };
+struct device_driver { bool suppress_bind_attrs; };
 struct power { int lock, usage_count, child_count, runtime_status, runtime_error, request_pending, disable_depth; };
-struct device { struct device_node *of_node; void *bus, *driver, *pm_domain; int refs; bool registered; struct power power; };
+struct device { struct device_node *of_node; void *bus, *pm_domain; struct device_driver *driver; int refs; bool registered; struct power power; };
 struct platform_device { struct device dev; };
 struct i2c_adapter { struct device dev; };
 struct of_phandle_args { struct device_node *np; int args_count; };
@@ -33,6 +34,7 @@ enum fault { NONE, WRONG_PATH, AVAILABLE, CHILDREN, STATUS_ERROR, STATUS_WRONG, 
 static enum fault fault;
 static struct device_node nodes[NODE_COUNT];
 static struct device consumer, virtual_device;
+static struct device_driver drivers[3];
 static struct platform_device providers[3], controller;
 static struct i2c_adapter adapter;
 static struct regmap maps[3];
@@ -157,7 +159,10 @@ static void reset(void)
 	memset(nodes,0,sizeof(nodes)); memset(&virtual_device,0,sizeof(virtual_device));
 	memset(&consumer,0,sizeof(consumer)); memset(held,0,sizeof(held)); memset(samples,0,sizeof(samples));
 	for (unsigned int index=0;index<NODE_COUNT;index++) { nodes[index].index=(int)index; nodes[index].refs=1; }
-	for (unsigned int index=0;index<3;index++) { maps[index].index=index; backend.references[index]=(struct n71_pmgr_reference){index,&nodes[LEAF_NODE+index],&nodes[ROOT_NODE]}; }
+	for (unsigned int index=0;index<3;index++) {
+		maps[index].index=index; drivers[index].suppress_bind_attrs=true; providers[index].dev.driver=&drivers[index];
+		backend.references[index]=(struct n71_pmgr_reference){index,&nodes[LEAF_NODE+index],&nodes[ROOT_NODE]};
+	}
 	consumer.of_node=&nodes[CONSUMER_NODE]; consumer.refs=1; consumer.registered=true; backend.consumer=&consumer;
 	io=n71_i2c_genpd_io(&backend); fault=NONE; lock_fail=-1; resume_error=suspend_error=read_fail=0;
 	detach_fail=detach_registered=suspend_keeps_power=false; reads=attaches=put_calls=suspends=detaches=noidles=0;
@@ -185,11 +190,17 @@ int main(void)
 		reset(); lock_fail=index; assert(n71_i2c_power_acquire(&io,&state)==-ENODEV);
 		assert(!attaches && !backend.domain); balanced(); cases++;
 	}
+	/* Kills accepting a provider whose binding can disappear between callbacks. */
+	for (int index=0;index<3;index++) {
+		reset(); drivers[index].suppress_bind_attrs=false;
+		assert(n71_i2c_power_acquire(&io,&state)==-ENODEV);
+		assert(!attaches && !reads && !backend.domain && !state.attached); balanced(); cases++;
+	}
 	for (int id=0;id<7;id++) {
 		reset();
 		switch(id) {
 		case 0: consumer.of_node=NULL; break; case 1: consumer.bus=&consumer; break;
-		case 2: consumer.driver=&consumer; break; case 3: consumer.pm_domain=&consumer; break;
+		case 2: consumer.driver=&drivers[0]; break; case 3: consumer.pm_domain=&consumer; break;
 		case 4: consumer.registered=false; break; case 5: backend.references[1].index=0; break;
 		case 6: backend.references[1].pmgr=&nodes[OTHER_NODE]; break;
 		}

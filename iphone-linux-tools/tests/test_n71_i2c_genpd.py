@@ -9,6 +9,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
+    ('ignore-binding-lifetime', '!access[index].provider->dev.driver->suppress_bind_attrs', 'false'),
     ('ignore-controller', 'if (controller) {', 'if (controller && false) {'),
     ('ignore-adapter', 'if (adapter) {', 'if (adapter && false) {'),
     ('wrong-resource', 'resource.start != 0x20a111000ULL', 'false'),
@@ -60,7 +61,7 @@ class N71GenpdTests(unittest.TestCase):
                 result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5, cwd=folder)
                 if before is None:
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertIn('N71_I2C_GENPD_OK cases=84', result.stdout)
+                    self.assertIn('N71_I2C_GENPD_OK cases=87', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
