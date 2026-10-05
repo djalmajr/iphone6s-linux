@@ -294,7 +294,12 @@
     "integration_push_run": 37257222417,
     "integration_conclusion": "success",
     "integration_successful_jobs": 6,
-    "operational_control_and_compositor_ci_pending": true
+    "operational_control_and_compositor_ci_pending": false,
+    "operational_control_and_compositor_head": "6a66ff51bf8740782a4777beec8e73ecdd4dea67",
+    "operational_control_and_compositor_pr_run": 37258928814,
+    "operational_control_and_compositor_push_run": 37258925978,
+    "operational_control_and_compositor_conclusion": "success",
+    "operational_control_and_compositor_successful_jobs": 6
   },
   "physical_boot_tested": false,
   "operational_control_loaded_on_phone": false,
@@ -304,5 +309,23 @@
   "linux_charging_validated": false,
   "wifi_validated": false,
   "new_dfu_or_reboot": false,
-  "limits": "Preparation only: synthetic contract tests and real kernel module builds plus private profile composition. All six modules remain outside the initramfs without autoload. Runtime power2 release and absent PMGR bind/unbind attributes must be confirmed before loading the explicit cycle/cleanup caller. Pending cleanup retains objects and a module reference; retry cannot guarantee hardware recovery. No controller/adapter/pinctrl/clock/IRQ, SN2400 I/O, HDQ telemetry or Wi-Fi qualification."
+  "limits": "Preparation only: synthetic contract tests and real kernel module builds plus private profile composition. All six modules remain outside the initramfs without autoload. Runtime power2 release and absent PMGR bind/unbind attributes must be confirmed before loading the explicit cycle/cleanup caller. Pending cleanup retains objects and a module reference; retry cannot guarantee hardware recovery. No controller/adapter/pinctrl/clock/IRQ, SN2400 I/O, HDQ telemetry or Wi-Fi qualification.",
+  "grouped_collection_preparation": {
+    "passive_collector_legacy_body_preserved": true,
+    "passive_transport_fixtures": 3,
+    "passive_fixture_command_syntax_counts": [
+      23,
+      12,
+      12
+    ],
+    "genpd_command_syntax_cases": 2,
+    "genpd_outcome_contract_cases": 8,
+    "actual_temporary_shell_unload_guard_cases": 3,
+    "assertion_killed_shell_guard_mutations": 2,
+    "genpd_collector_sha256": "74a620b5cb11285e308ccb9ef4484941b4021d221dd60f15f1d90a4e4549f3cc",
+    "fixture_only": true,
+    "complete_active_transport_tested": false,
+    "phone_commands_executed": false,
+    "requires_usb_reconnection": true
+  }
 }

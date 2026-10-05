@@ -1099,3 +1099,14 @@ cat "$control/status"
 ```
 
 Ligar/desligar genpd comprova uma pré-condição do acesso I2C1. Ainda faltam aquisição/idle/restauração de pinos/controlador/clock/IRQ/adapter, identificação/register map SN2400, HDQ e medição da corrente líquida. O comando acima não liga um servidor carregando pela tomada; #2/#8/#9/#36 continuam abertas.
+
+
+## Transporte da sessão power2 — preparado sem ação no telefone
+
+Os coletores privados são `runtime/n71-power2-session-20261005/collect-passive-power2-private.py` e `collect-genpd-power2-private.py`. Selecionam o perfil diagnóstico power2 e hashes dos módulos recompilados. O passivo conserva byte a byte o corpo anterior após desfazer as constantes; três fixtures SSH passaram (sucesso, marcador ausente e ring rotacionado), com23/12/12 comandos conferidos por bash-n e remoção de staging próprio. Não foram comandos no telefone.
+
+O coletor genpd confere placa/release/mesmo boot, SSH/HTTP, ausência de bind/unbind e de módulo prévio, transfere por SHA para diretório próprio sob `/run` e pede dois cycles. Resultado só passa com estado limpo, dois logs novos de sucesso, unload e consumer ausente. Erro permite uma tentativa de cleanup; guarda estado/logs e retém staging se o módulo não puder ser removido. O guard exige boot e status exatos com retorno explícito, inclusive no trap; não depende de set-e para essas recusas. Não usa unload forçado.
+
+Gate local: dois comandos gerados passaram bash-n; oito contratos do resultado recusam erro, estado pendente, marcador ausente ou duplicado. Três guards de unload foram executados em filesystem Bash temporário (limpo, boot alterado e cleanup pendente); duas mutações falharam por AssertionError. São provas limitadas de geração/parser/guards, sem teste completo do transporte ativo nem hardware. A CI do código6a66ff5 terminou success em PR37258928814/push37258925978, seis jobs. [Registro consolidado](evidence/n71-binding-profile.json).
+
+A consulta atual do Mac não detectou iPhone no IOUSB nem um único alvo iOS. O operador foi solicitado a reconectar o USB-A traseiro; nenhum monitor/recovery/DFU foi iniciado nessa preparação. Após a reconexão, registrar bateria e executar a sessão agrupada; salvar snapshot e retornar ao iOS ao final. O goal e #2/#8/#9/#36 permanecem abertos.

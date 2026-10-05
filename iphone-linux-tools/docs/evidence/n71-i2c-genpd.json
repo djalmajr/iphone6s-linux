@@ -94,7 +94,12 @@
     "binding_guard_pr_run": 37255423107,
     "binding_guard_push_run": 37255420563,
     "binding_guard_conclusion": "success",
-    "binding_guard_successful_jobs": 6
+    "binding_guard_successful_jobs": 6,
+    "operational_control_head": "6a66ff51bf8740782a4777beec8e73ecdd4dea67",
+    "operational_control_pr_run": 37258928814,
+    "operational_control_push_run": 37258925978,
+    "operational_control_conclusion": "success",
+    "operational_control_successful_jobs": 6
   },
   "physical_domain_cycle_executed": false,
   "charger_io_performed": false,

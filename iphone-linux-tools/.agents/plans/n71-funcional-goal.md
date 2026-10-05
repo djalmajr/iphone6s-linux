@@ -2329,3 +2329,12 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - Atualizar estado: power2 completo/preparado, caller operacional testado e compositor aprovado, ainda não bootado. CI5fa PR37257225731/push37257222417 terminalsuccess seis jobs para integração; caller/compositor aguardam próximo run. Verificar todos os digests/protected modes/JSON/links/publicguard/diff e publicar somente prova/código sanitizados.
 
 - Gate137: composição real do perfil diagnóstico power2 passou; base/diagnóstico mantêm kernel/initramfs/identidades, source e700/600. JSON/provenances,37 inputs e seis módulos conferidos por SHA; links locais e diff estrito passaram. Prova distingue gates sintéticos/build/composição de hardware ainda não testado. Nenhum binário/key/firmware ou dado pessoal incluído no público.
+
+
+### Incremento 138 — transporte agrupado qualificado e CI concluída
+
+- Cinco arquivos: plano, docs/STATUS.md, docs/N71_HDQ.md, registros n71-binding-profile.json e n71-i2c-genpd.json. Nenhum código de kernel novo. CI6a66ff5 terminou success em PR37258928814/push37258925978, seis jobs; registrar head real, sem atribuir esse run à futura documentação.
+- Coletor passivo privado power2 preserva corpo legado após desfazer constantes. Três fixtures SSH (sucesso, marcador ausente, ring rotacionado) passaram;23/12/12 comandos bash-n, estágio próprio removido e nenhuma chamada no telefone.
+- Coletor ativo privado qualifica release/placa/boot/SSH/HTTP, ausência bind/unbind e módulos, SHA antes do load; executa dois cycles, recusa conclusão com erro/estado pendente, exige logs novos/unload/consumer ausente. Retry/cleanup limitado; nunca forçar rmmod ou apagar staging sob retenção/boot diferente.
+- Gate do coletor: dois comandos bash-n, oito contratos do parser, três guards de unload executados em filesystem Bash temporário e duas mutações mortas por AssertionError. Fixtures não validam todo transporte ou hardware; esse é gate físico pendente. Corrigido guard de boot/state para retorno explícito; não depender apenas de set-e dentro de trap.
+- Mac não detectou alvo no IOUSB nem único iOS em libimobiledevice na leitura atual. Consulta inicial ioreg no sandbox falhou; leitura autorizada fora dele executou sem escrita/identificadores e confirmou ausência. Pergunta de reconexão enviada ao operador; nenhum monitor/recovery/DFU iniciado. Não marcar goal completo ou carga/Wi-Fi funcionais.
