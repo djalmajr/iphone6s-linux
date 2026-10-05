@@ -2021,3 +2021,35 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Próximo avanço: aquisição/restauração do domínio I2C1 e controlador com
   APIs do kernel, antes de acessar SN2400; desenvolver no Mac/VM enquanto
   o aparelho recarrega. Nenhum segundo DFU para repetir observações aprovadas.
+
+### Incremento 125 — ciclo de ownership runtime PM antes do adapter I2C1
+
+- Cinco arquivos: plano, phone/kernel/n71-i2c-power-lifecycle.h,
+  tests/n71_i2c_power_lifecycle.c, tests/run_n71_i2c_power_lifecycle_mutations.py
+  e .github/workflows/ci.yml. Gate contínuo entra no mesmo incremento de código;
+  o JSON público e o procedimento serão registrados na fatia documental126.
+  Implementar sequência por
+  callbacks qualificados; nenhum controller, pin, domínio ou charger ligado
+  por esse header. O backend kernel é uma etapa seguinte.
+- Fonte fixada: attach_by_id cria dispositivo virtual sem power_on;
+  runtime resume_and_get retorna0 com referência ou erro sem referência.
+  Suspend aceita resultado positivo; put_sync_suspend consome uso inclusive
+  em erro, logo retry usa suspend
+  sem novo decremento. Detach é void, pode falhar e enfileira poweroff;
+  callback de detach deve verificar remoção mantendo referência própria.
+- Contrato: verificar energia após resume, quiescência antes de detach;
+  cleanup pendente desde antes do resume, release de uso exatamente uma vez,
+  retry sem reentrada/reattach e erro primário preservado com cleanup_error
+  separado. Não liberar objeto/module enquanto ownership pendente.
+- Gate C Mac/ARM64, mutações compiladas mortas somente por SIGABRT/asserção,
+  objeto __KERNEL__/Werror na ABI power e hashes dos inputs/fontes/provas.
+  Não refazer full Image, gates124 ou DFU. Prova física/backend seguem abertos.
+
+- Gate125:12 cenários e13 mutações compiladas morreram por SIGABRT/asserção
+  no Mac/ARM64; objeto __KERNEL__/Werror passou na ABI power. Inputs/fontes/
+  Image/config/exports preservados e logs transferidos com SHA conferido.
+  O transporte local v1 falhou ao concatenar Path/string depois do sucesso
+  dos gates; somente a cópia dos três resultados foi repetida, sem novo teste.
+  Header não implementa backend genpd, pinctrl ou controller/charger I/O.
+- Decisão de arquivo: CI é o quinto arquivo público para que o novo gate
+  execute em Ubuntu/macOS; a evidência detalhada fica na próxima fase.

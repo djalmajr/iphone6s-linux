@@ -107,6 +107,8 @@ jobs:
         run: python iphone-linux-tools/tests/run_n71_wlan_power_mutations.py
       - name: N71 REG_ON partial writes and verified restoration mutations
         run: python iphone-linux-tools/tests/run_n71_wlan_power_sequence_mutations.py
+      - name: N71 I2C runtime PM usage, pending cleanup and verified detach
+        run: python iphone-linux-tools/tests/run_n71_i2c_power_lifecycle_mutations.py
       - name: Profile security mutations
         run: python iphone-linux-tools/tests/run_profile_mutations.py
       - name: Reboot verification mutations
