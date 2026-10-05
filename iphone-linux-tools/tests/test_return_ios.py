@@ -46,7 +46,16 @@ elif name=='ssh':
         print('IPHONE_LINUX_READY')
     elif 'tar -czf' in command:
         if mode=='slow-backup':
-            (base/'owned.pid').write_text(str(os.getpid()))
+            pid_temp=base/'owned.pid.tmp'
+            with pid_temp.open('w') as f:
+                if (base/'hold-pid-publication').exists():
+                    (base/'pid-opened').touch()
+                    deadline=time.monotonic()+10
+                    while not (base/'release-pid-publication').exists():
+                        if time.monotonic()>=deadline: sys.exit(1)
+                        time.sleep(0.01)
+                f.write(str(os.getpid()))
+            os.replace(pid_temp,base/'owned.pid')
             time.sleep(60)
         sys.stdout.buffer.write((base/'incoming.tar.gz').read_bytes())
     elif 'IPHONE_SYNC_COMPLETE' in command and 'reboot' not in command:
@@ -265,6 +274,37 @@ class ReturnIOSTests(unittest.TestCase):
                     os.kill(child, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
+
+    def test_owned_pid_is_published_only_after_complete_write(self):
+        (self.root / 'mode').write_text('slow-backup')
+        (self.root / 'hold-pid-publication').touch()
+        job = subprocess.Popen([str(self.root / 'bin/ssh'), '-o', 'StrictHostKeyChecking=yes',
+                                '-o', 'IdentitiesOnly=yes', 'tar -czf synthetic-archive'],
+                               env=self.environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            deadline = time.monotonic() + 10
+            marker = self.root / 'pid-opened'
+            while not marker.exists() and time.monotonic() < deadline and job.poll() is None:
+                time.sleep(0.01)
+            self.assertTrue(marker.exists(), 'Synthetic PID producer never reached the write barrier')
+            path = self.root / 'owned.pid'
+            self.assertFalse(path.exists(), 'An unfinished PID was visible to the cancellation reader')
+            self.assertEqual((self.root / 'owned.pid.tmp').read_text(), '')
+            (self.root / 'release-pid-publication').touch()
+            deadline = time.monotonic() + 10
+            while not path.exists() and time.monotonic() < deadline and job.poll() is None:
+                time.sleep(0.01)
+            self.assertTrue(path.exists(), 'Synthetic PID was not published')
+            self.assertEqual(path.read_text(), str(job.pid))
+            self.assertFalse((self.root / 'owned.pid.tmp').exists())
+        finally:
+            if job.poll() is None:
+                job.terminate()
+            try:
+                job.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                job.kill()
+                job.communicate()
 
     def test_cancellation_stops_owned_backup_ssh_without_reboot(self):
         (self.root / 'mode').write_text('slow-backup')

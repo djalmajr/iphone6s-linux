@@ -801,3 +801,61 @@ As preparações históricas acima referem-se aos artefatos de ABI anterior;
 os hashes efetivamente carregados estão no registro da sessão power1.
 OBSERVED não habilita carga: aquisição/restauração I2C1, semântica dos
 registradores SN2400 e medição da corrente líquida continuam gates separados.
+
+## Lifecycle runtime PM I2C1 — sequência testada, backend pendente
+
+`phone/kernel/n71-i2c-power-lifecycle.h` organiza ownership, uso runtime PM
+e cleanup. [Fontes e provas selecionadas](evidence/n71-i2c-power-lifecycle.json).
+É um contrato por callbacks: não registra dispositivo, ativa domínio ou
+controlador, programa pinctrl ou acessa I2C/SN2400.
+
+O backend deverá validar N71/recursos/owner/idle antes de criar um consumidor
+virtual com `dev_pm_domain_attach_by_id`. A fonte fixada desse caminho faz
+attach sem power_on e habilita runtime PM. Não criar um platform device
+I2C que possa acionar automaticamente o driver do controlador.
+
+Na ABI conferida, `pm_runtime_resume_and_get` retorna0 com uma referência
+ou erro sem essa referência. A sequência marca cleanup antes do resume e
+exige verificação de energia antes de expor active. Um erro pode deixar
+efeitos físicos mesmo sem referência de uso; cleanup continua obrigatório.
+
+`pm_runtime_put_sync_suspend` consome a referência inclusive em erro;
+o retry usa suspend sem novo put. Retorno1 de suspend significa sucesso.
+Quiescência precisa ser verificada antes de detach. Detach é void, pode
+falhar e enfileira poweroff: o backend deve manter referência própria ao
+objeto até conferir que ele realmente deixou o domínio. Nunca tomar o
+retorno da chamada como prova de remoção ou liberação elétrica.
+
+```mermaid
+flowchart LR
+  F["Livre"] --> A["Attach<br>cleanup pendente"]
+  A --> R["Resume e verificar energia"]
+  R --> V["Uso retido<br>active"]
+  V --> S["Consumir uso uma vez<br>suspend"]
+  S --> Q["Verificar quiescência"]
+  Q --> D["Detach e verificar remoção"]
+  D --> F
+  R --> E["Erro<br>reter ownership pendente"]
+  S --> E
+  Q --> E
+  D --> E
+  E --> T["Retry de release<br>sem outro put"]
+  T --> Q
+```
+
+O erro de aquisição permanece primário; `cleanup_error` expõe a falha de
+liberação separadamente. Ownership pendente recusa nova aquisição. O caller
+deve serializar operações e reter objeto/module enquanto isso persistir.
+As fixtures provam esse contrato; não prometem que repetir suspend recuperará
+um genpd com erro físico. Não mascarar esse erro alterando manualmente o
+estado de runtime PM para conseguir descarregar o módulo.
+
+```sh
+python3 iphone-linux-tools/tests/run_n71_i2c_power_lifecycle_mutations.py
+```
+
+Doze cenários/13 mutações compiladas passaram no Mac/ARM64, com kills somente
+por SIGABRT/asserção. Objeto do header inteiro __KERNEL__/Werror compilou
+na ABI power; Image/config/exports/inputs/fontes ficaram intactos. O runner
+está no CI Ubuntu/macOS. A compilação não é um backend genpd executado;
+acesso ao controlador, registro SN2400, HDQ/gauge e carga continuam pendentes.

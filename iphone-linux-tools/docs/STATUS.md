@@ -25,6 +25,18 @@ acesso físico ao carregador continua pendente.
 [sessão física](evidence/n71-power-session-gate.json).
 O Image novo ainda não habilita carga, telemetria ou Wi-Fi.
 
+Lifecycle runtime PM `29e61ec`:12 cenários/13 mutações compiladas por asserção
+Mac/ARM64 e objeto kernel/Werror passaram. Contrato retém cleanup pendente,
+preserva erro primário e impede novo put após uma falha que já consumiu uso.
+Ainda não há backend genpd/pinctrl/controller associado ao header.
+[Reprodução e limites](N71_HDQ.md#lifecycle-runtime-pm-i2c1--sequência-testada-backend-pendente).
+Nenhum novo DFU nessa implementação. O passo novo passou Ubuntu/macOS
+em ambos os runs do código29e61ec. O run
+push falhou depois por PID vazio numa fixture antiga de cancelamento do
+reboot. Publicação atômica corrigida somente no teste, com regressão de
+escrita incompleta e mutação por asserção Mac/ARM64; gate afetado passou
+20 testes/11 mutações em ambas as plataformas. Novo CI do fix ainda pendente.
+
 No boot anterior, DART provider/INTx/probes de ponte tiveram cleanup verificado
 e SSH/HTTP/snapshot preservados. Scan PCI ainda negativo; primeira recusa
 seguinte é SERR. A candidata controls/SERR compilada não foi carregada por

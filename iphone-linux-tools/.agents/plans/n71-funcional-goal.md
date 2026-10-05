@@ -2053,3 +2053,35 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   Header não implementa backend genpd, pinctrl ou controller/charger I/O.
 - Decisão de arquivo: CI é o quinto arquivo público para que o novo gate
   execute em Ubuntu/macOS; a evidência detalhada fica na próxima fase.
+
+### Incremento 126 — reprodução I2C1 e corrigir corrida de fixture no CI
+
+- Até cinco arquivos: plano, docs/N71_HDQ.md,
+  docs/evidence/n71-i2c-power-lifecycle.json, docs/STATUS.md e
+  tests/test_return_ios.py. Registrar
+  fontes/pins, contrato do backend, comandos e provas125; não implementar
+  driver ou mudar critérios físicos pela publicação do header.
+- Validar SHA dos inputs/logs reais, JSON/links/diff/publicguard. Reutilizar
+  C/mutações Mac/ARM64 e objeto kernel/Werror125. Lint Python local passou
+  com ASDF_PYTHON_VERSION=3.12.6 só no processo; path Frameworks não existia
+  e shim python3.12 não tinha versão selecionada. Sem instalar ou mudar config.
+- CI9d122a7 terminal success PR37249701527/push37249698819, seis jobs.
+  CI29e61ec: passo novo lifecycle passou Ubuntu/macOS em ambos os runs;
+  PR terminou success, push falhou no baseline antigo de reboot Ubuntu.
+  ValueError na leitura de owned.pid vazio revelou publicação não atômica
+  da fixture, sem alteração/erro do runtime real. Não registrar push verde.
+- Corrigir somente publicação do PID sintético via tmp/close/replace;
+  regressão pausa o produtor com o arquivo ainda vazio para verificar que
+  o PID final só aparece completo. Mutação que escreve direto no destino
+  deve morrer por AssertionError. Rodar regressão/cancelamento no Mac/ARM64
+  e gate de reboot afetado; sem novo teste de telefone ou full Image.
+- Próximo backend deve manter referências/serialização, verificar domínio
+  e remoção apesar de detach void, e reter ownership quando a API não
+  comprovar cleanup. Retry do contrato não promete recuperar genpd após erro
+  físico. Controller/pinctrl/HDQ/SN2400 ainda não são implementados por ele.
+
+- Gate126: regressão com barreira de escrita e mutação direct-final-path
+  morreram por AssertionError no Mac/ARM64; baseline20 testes e11 mutações
+  compiladas de reboot passaram em ambas as plataformas. Só a fixture/teste
+  mudou; fontes de runtime intactas. Digests/inputs/logs transferidos conferidos.
+  Novo CI precisa provar o fix; falha anterior permanece no histórico.
