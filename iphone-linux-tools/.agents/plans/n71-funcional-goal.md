@@ -2291,3 +2291,13 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   permitindo reunir gates num DFU. Nenhuma intervenção do operador agora.
 
 - Gate133: Image completo power2 terminal0 em1146s, Werror/modpost, ARM64/16KiB, config embutida, GPIO/PMGR builtin, export serdev e DTB preservado; modules_prepare não mudou config/Image/exports. Artefatos/logs transferidos com SHA recalculado no Mac,700/600. Power1 source/config/Image/exports intactos. CIa684 PR37255423107/push37255420563 terminal success, seis jobs. Patch007 está no Image separado; não foi bootado, não há prova física de ausência bind/unbind nem carga/telemetria/Wi-Fi.
+
+
+### Incremento 134 — integração explícita do Image power2
+
+- Quatro arquivos: plano, scripts/build/integrate-source-kernel.py, tests/test_kernel_binding_integration.py e tests/run_kernel_integration_mutations.py. Selecionar registro kernel-n71-binding-build.json e ABI power2 mantendo os seletores/defaults anteriores.
+- Reutilizar todas as validações de hashes/tamanhos/ARM64/config/serdev/base/patches/full blobs; exigir GPIO/PMGR builtin para power2 e recusar módulos de ABI antiga antes de criar output. Preservar initramfs/m1n1/SSH/inputs,700/600, sem USB ou default.
+- Cinco contratos adicionais reais de filesystem/CLI com artefatos sintéticos não bootáveis. Runner amplia descoberta para ambos os arquivos e acrescenta três mutações específicas: seletor do registro, providers e módulos antigos de power2. Mantém as22 mutações anteriores; nenhuma compile/import/infra error conta como kill.
+- Cópia privada passou22 testes/25 mutações no Mac durante a build. Publicar os mesmos bytes, verificar igualdade e repetir a plataforma ARM64 na VM com inputs públicos. Integrar artefatos reais só depois desses gates; não enviar chaves à VM.
+
+- Gate134:22 testes/25 mutações por AssertionError passaram Mac/ARM64; cópia publicada idêntica à preview testada. AST/fatal-flake8/diff passaram. Primeira chamada flake8 selecionou Python Homebrew sem módulo; resolvido com shim asdf absoluto por processo, sem instalar ou alterar configuração global. Fonte/config/Image/exports power1 e power2 intactos. Integrador real compôs perfil base power2 com initramfs/chave/known_hosts byte a byte iguais ao power1, source preservada e700/600. Nenhum USB/default/boot, firmware ou chave enviada à VM.

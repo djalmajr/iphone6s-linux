@@ -37,11 +37,17 @@ MUTATIONS = [
      'if False:'),
     ('bundle-config', 'if any(line not in config for line in required):', 'if False:'),
     ('bundle-old-module', 'if forbid_extra_modules and normalized != MODULE:', 'if False:'),
+    ('binding-record-selection', "'kernel-n71-binding-build.json' if patchset == kernel_bundle.BINDING_BUNDLE",
+     "'kernel-n71-power-bundle-build.json' if patchset == kernel_bundle.BINDING_BUNDLE"),
+    ('binding-builtin-providers', 'if patchset in (kernel_bundle.POWER_BUNDLE, kernel_bundle.BINDING_BUNDLE) and any(',
+     'if patchset == kernel_bundle.POWER_BUNDLE and any('),
+    ('binding-old-module', 'forbid_extra_modules=options.kernel_patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE, kernel_bundle.BINDING_BUNDLE)',
+     'forbid_extra_modules=options.kernel_patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE)'),
     ('power-record-selection', "'kernel-n71-power-bundle-build.json' if patchset == kernel_bundle.POWER_BUNDLE",
      "'kernel-n71-bundle-build.json' if patchset == kernel_bundle.POWER_BUNDLE"),
-    ('power-builtin-providers', 'if patchset == kernel_bundle.POWER_BUNDLE and any(', 'if False and any('),
-    ('power-old-module', 'forbid_extra_modules=options.kernel_patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE)',
-     'forbid_extra_modules=options.kernel_patchset == kernel_bundle.BUNDLE'),
+    ('power-builtin-providers', 'if patchset in (kernel_bundle.POWER_BUNDLE, kernel_bundle.BINDING_BUNDLE) and any(', 'if False and any('),
+    ('power-old-module', 'forbid_extra_modules=options.kernel_patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE, kernel_bundle.BINDING_BUNDLE)',
+     'forbid_extra_modules=options.kernel_patchset in (kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE)'),
 ]
 
 
@@ -51,7 +57,7 @@ def run(source=None, *, timeout=60):
     if source is not None:
         environment['KERNEL_INTEGRATION_SCRIPT'] = str(source)
     return subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', str(ROOT / 'tests'),
-                           '-p', 'test_kernel_integration.py', '-v'], env=environment,
+                           '-p', 'test_kernel*integration.py', '-v'], env=environment,
                           capture_output=True, text=True, timeout=timeout)
 
 

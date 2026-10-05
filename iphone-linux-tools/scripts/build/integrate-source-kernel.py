@@ -84,12 +84,13 @@ def migrate(raw, *, forbid_extra_modules=False):
 
 
 def kernel_inputs(folder, patchset=None):
-    if patchset not in (None, kernel_patchset.PATCHSET, kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE):
+    if patchset not in (None, kernel_patchset.PATCHSET, kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE, kernel_bundle.BINDING_BUNDLE):
         raise ValueError('Patchset de integração desconhecido.')
-    bundle = patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE)
-    record_name = ('kernel-n71-power-bundle-build.json' if patchset == kernel_bundle.POWER_BUNDLE else
+    bundle = patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE, kernel_bundle.BINDING_BUNDLE)
+    record_name = ('kernel-n71-binding-build.json' if patchset == kernel_bundle.BINDING_BUNDLE else
+                   ('kernel-n71-power-bundle-build.json' if patchset == kernel_bundle.POWER_BUNDLE else
                    ('kernel-n71-bundle-build.json' if bundle else
-                    ('kernel-dart-build.json' if patchset else 'kernel-source-build.json')))
+                    ('kernel-dart-build.json' if patchset else 'kernel-source-build.json'))))
     record = json.loads((ROOT / 'docs/evidence' / record_name).read_text())
     if record['status'] != 'compiled_verified' or record['build']['exit_code'] != 0:
         raise ValueError('Registro público exige kernel compilado e verificado.')
@@ -144,7 +145,7 @@ def kernel_inputs(folder, patchset=None):
                     'CONFIG_SERIAL_DEV_BUS=y', 'CONFIG_SERIAL_DEV_CTRL_TTYPORT=y')
         if any(line not in config for line in required):
             raise ValueError('Bundle exige identidade explícita e serdev incorporado.')
-    if patchset == kernel_bundle.POWER_BUNDLE and any(
+    if patchset in (kernel_bundle.POWER_BUNDLE, kernel_bundle.BINDING_BUNDLE) and any(
             line not in config for line in ('CONFIG_PINCTRL_APPLE_GPIO=y', 'CONFIG_APPLE_PMGR_PWRSTATE=y')):
         raise ValueError('Bundle power exige GPIO e PMGR incorporados.')
     if 'apple,n71' not in record['build']['dtb_compatible'].split():
@@ -170,7 +171,7 @@ def integrate(options):
     if not expected['matches_original'] or digest(m1n1) != expected['sha256']:
         raise ValueError('Hash do m1n1 preservado inesperado.')
     raw, changes = migrate(decompress(source['initramfs'].read_bytes()),
-                           forbid_extra_modules=options.kernel_patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE))
+                           forbid_extra_modules=options.kernel_patchset in (kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE, kernel_bundle.BINDING_BUNDLE))
     compressed = gzip.compress(raw, compresslevel=9, mtime=0)
     payload = m1n1 + BOOTARGS + blobs['s8000-n71.dtb'] + blobs['Image.gz'] + compressed
     os.umask(0o077)
@@ -211,7 +212,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--kernel-dir', required=True, type=Path)
     parser.add_argument('--output-dir', required=True, type=Path)
-    parser.add_argument('--kernel-patchset', choices=(kernel_patchset.PATCHSET, kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE))
+    parser.add_argument('--kernel-patchset', choices=(kernel_patchset.PATCHSET, kernel_bundle.BUNDLE, kernel_bundle.POWER_BUNDLE, kernel_bundle.BINDING_BUNDLE))
     options = parser.parse_args()
     try:
         integrate(options)
