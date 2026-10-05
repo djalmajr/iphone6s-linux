@@ -2001,3 +2001,23 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   PR37244353678/push37244350765 terminal success, seis jobs; watchers
   locais22406/32380 terminaram0. Pronto para a sessão única já solicitada;
   disponibilidade física continua pendente, sem repetir pergunta ou boot.
+
+### Incremento 124 — sessão física agrupada da ABI power
+
+- Até cinco arquivos: plano, docs/evidence/n71-power-session-gate.json,
+  docs/N71_HDQ.md, docs/ALIMENTACAO.md e docs/STATUS.md. Publicar somente
+  amostras GPIO/PMGR e resultados selecionados; logs, boot_id, identidades
+  e snapshots continuam privados. Gates de software inalterados reutilizados.
+- Um DFU manual com USB-A traseiro: wrapper terminou0, restore44 entradas,
+  SSH/HTTP/Herdr passaram na release power1. Ambos os observadores passaram
+  SHA remoto/load/unload e mesmo boot/SSH/HTTP antes/depois; staging removido.
+  GPIO114/115 estáveis e cache coerente; seis amostras PMGR estáveis.
+- Snapshot final verificado, sync e retorno ao iOS por software terminaram0.
+  Leituras iOS100% às00:53:51UTC e99% às00:56:31UTC, carga ativa no retorno.
+  O intervalo total entre essas leituras foi160s, incluindo DFU/reboot/iOS;
+  não mede corrente ou tempo exclusivamente em Linux. Nenhuma escrita
+  GPIO/PMGR/I2C/carregador foi executada pelos dois observadores.
+- Boot físico das correções builtin qualificado, sem injeção de falha física.
+  Próximo avanço: aquisição/restauração do domínio I2C1 e controlador com
+  APIs do kernel, antes de acessar SN2400; desenvolver no Mac/VM enquanto
+  o aparelho recarrega. Nenhum segundo DFU para repetir observações aprovadas.

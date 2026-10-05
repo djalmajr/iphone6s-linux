@@ -746,7 +746,7 @@ já passaram os gates de build/composição; boot físico, ownership/idle I2C1,
 carregador e corrente líquida continuam sem prova. [Issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
 Nenhum DFU ou reboot do iPhone foi feito nesta entrega.
 
-## Coleta agrupada de energia na ABI power — preparada
+## Coleta agrupada de energia na ABI power — verificada
 
 O [registro de preparação](evidence/n71-power-session-gate.json) seleciona
 o perfil base `7.2.0-iphone6s-dart-serdev-power1` e os dois observadores
@@ -784,6 +784,20 @@ em outra instalação, use os dois fontes públicos de observação e os gates
 de build acima, selecionando os hashes realmente produzidos nessa instalação.
 A chave SSH fica no Mac e os logs/resultados permanecem privados até sanitização.
 
-Ainda faltam o boot dessa ABI, restore e a coleta física. Mesmo um resultado
-OBSERVED válido não habilita carga: aquisição/restauração I2C1, semântica dos
+Em2026-10-05UTC (2026-10-04 no horário local), um DFU manual concluiu esse
+fluxo: wrapper0, restore44 entradas, SSH/HTTP/Herdr e ambos os observadores
+com load/unload aprovados. Mesmo boot e serviços foram conferidos antes e
+depois de cada módulo; a pasta própria foi removida. O snapshot final,
+sync e retorno ao iOS por software passaram, sem intervenção no console.
+
+GPIO114/115: cached-before, duas leituras de hardware e cached-after
+foram `00076221`, com stable/cache-matches=1 nos dois pinos. O controlador
+continua disabled, sem filhos, platform device ou adapter. PMGR: I2C1
+`00000200`, sio_p `000000ff` e sio_busif `1400024f`, cada um repetido sem
+diferença. São amostras sequenciais, sem reserva da cadeia ou prova de
+idle elétrico. Nenhum pin, domínio, controlador ou carregador foi ativado.
+
+As preparações históricas acima referem-se aos artefatos de ABI anterior;
+os hashes efetivamente carregados estão no registro da sessão power1.
+OBSERVED não habilita carga: aquisição/restauração I2C1, semântica dos
 registradores SN2400 e medição da corrente líquida continuam gates separados.

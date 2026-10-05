@@ -455,3 +455,23 @@ O [bundle DART/serdev](N71_KERNEL_BUNDLE.md) prepara uma ABI distinta para
 os dois stop bits necessários ao HDQ; sua prova atual é de fonte/objetos,
 sem Image linkado ou deployment. Ambos são preparação de suporte, não
 telemetria física nem controle de carga habilitado.
+
+## Sessão curta da ABI power — 2026-10-05 UTC
+
+Um DFU manual, no mesmo USB-A traseiro, carregou
+`7.2.0-iphone6s-dart-serdev-power1`. Restore, SSH/HTTP/Herdr e os dois
+observadores passivos I2C1/GPIO/PMGR passaram no mesmo boot; módulos e
+staging removidos. Snapshot/sync e retorno ao iOS por software foram
+verificados. [Amostras e limites](evidence/n71-power-session-gate.json),
+[procedimento](N71_HDQ.md#coleta-agrupada-de-energia-na-abi-power--verificada).
+
+Antes:100% às00:53:51UTC, fonte externa conectada/capaz e fully charged.
+Depois:99% às00:56:31UTC, BatteryIsCharging=true e fonte externa
+conectada/capaz. O intervalo entre leituras foi160s e inclui DFU, Linux,
+retorno e iOS. A queda de um ponto não mede corrente líquida nem prova
+carregamento Linux. O aparelho permanece no iOS para recarga; #2/#8
+continuam abertas, sem novo teste prolongado.
+
+Não houve acesso SN2400, transferência I2C ou escrita GPIO/PMGR pelos
+observadores. As correções builtin bootaram; aquisição/restauração I2C1,
+HDQ/gauge e carga sustentada ainda precisam de implementação e prova.

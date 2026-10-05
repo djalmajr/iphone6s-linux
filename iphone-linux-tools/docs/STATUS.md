@@ -2,12 +2,13 @@
 
 ## Checkpoint atual — alimentação priorizada
 
-iPhone no iOS para recarga após relato de descarga quase completa durante
-Linux. Leituras locais sem PIN confirmaram5% e depois17%, com carga externa
-ativa; o último checkpoint verificado da recarga foi 100% às 21:23:03 UTC,
-com alimentação externa conectada/capaz e BatteryIsCharging=false.
-Linux não está online. Nenhum novo DFU foi solicitado nesta rodada;
-desenvolvimento segue no Mac/VM para implementar carga/telemetria N71.
+iPhone no iOS para recarga depois de uma sessão curta power1. Um DFU
+manual reuniu restore, SSH/HTTP/Herdr e os dois observadores I2C1/GPIO/PMGR;
+módulos/staging removidos, snapshot/sync e retorno por software verificados.
+Leituras iOS100→99% em160s incluindo DFU/reboot/iOS; carregamento ativo
+no retorno às00:56:31UTC de2026-10-05. Isso não prova carga no Linux.
+Linux não está online; desenvolvimento segue no Mac/VM para implementar
+aquisição/restauração I2C1 e carga/telemetria N71, sem repetir esse DFU.
 [Evidência e limites](ALIMENTACAO.md), [issue P0](https://github.com/djalmajr/iphone6s-linux/issues/2).
 
 Image separado `7.2.0-iphone6s-dart-serdev-power1` compilou com as patches
@@ -18,8 +19,10 @@ passaram por SHA e pelo integrador real. [Reprodução e limites](N71_KERNEL_BUN
 Os cinco módulos também passaram rebuild Werror/modpost/ELF/vermagic.
 Perfis base e diagnóstico foram compostos/validados separadamente no Mac,
 com initramfs/identidades preservados e snapshot local de44 entradas validado.
-Boot/restore/SSH/HTTP na ABI nova e acesso físico ao carregador continuam
-pendentes. [Prova de composição](evidence/n71-power-profile.json).
+Boot/restore/SSH/HTTP na ABI nova e observadores passivos passaram;
+acesso físico ao carregador continua pendente.
+[Prova de composição](evidence/n71-power-profile.json),
+[sessão física](evidence/n71-power-session-gate.json).
 O Image novo ainda não habilita carga, telemetria ou Wi-Fi.
 
 No boot anterior, DART provider/INTx/probes de ponte tiveram cleanup verificado
@@ -36,8 +39,9 @@ push37226267211). Gates dos novos arquivos são registrados por SHA nas issues.
 
 Observador I2C1/GPIO114/115 preparado no código `98bc26b`: 86 casos e 15 mutações
 Mac/ARM64, módulo de 15.768 bytes Werror/modpost contra o bundle preservado, oito leituras
-via provider existente e nenhuma ativação ou escrita. Ainda não carregado no
-iPhone. [Reprodução e limites](N71_HDQ.md#observador-passivo-i2c1gpio114115--preparado-sem-teste-no-aparelho),
+via provider existente e nenhuma ativação ou escrita. O rebuild power1 foi
+carregado/descarregado: GPIO114/115 estáveis/cache coerente, controller disabled
+sem adapter. [Reprodução e limites](N71_HDQ.md#coleta-agrupada-de-energia-na-abi-power--verificada),
 [prova selecionada](evidence/n71-i2c-topology-observer.json). Continua pendente
 aquisição/restauração ativa do I2C1, HDQ e corrente líquida; #2 permanece aberta.
 CI do head `c683145`, que contém o código `98bc26b`, aprovado nas duas
@@ -55,15 +59,15 @@ não comprova rollback ou carga funcional.
 
 Observador PMGR `80b3fe0` preparado: 88 cenários/16 mutações Mac/ARM64,
 build externo Werror, seis leituras de I2C1/sio_p/sio_busif via syscon existente
-qualificado pelo binding sob lock. Ainda sem load físico. Pode ser coletado
-junto do observador dos pinos no mesmo boot do bundle preservado.
+qualificado pelo binding sob lock. Rebuild power1 passou load/unload no mesmo
+boot dos pinos; seis amostras estáveis, sem ativação ou ownership da cadeia.
 [Reprodução e limites](N71_HDQ.md#observador-pmgr--i2c1-e-domínios-pais),
 [prova e checkpoint iOS](evidence/n71-pmgr-power-observer.json).
 
 Correção dos callbacks PMGR `301a61f`: 492 casos/14 mutações Mac/ARM64,
 regressão da fonte original detectada e arquivo completo compilado Werror
 como objeto embutido. Modpost externo recusou esse provider embutido;
-erros preservados e integração/link da imagem pendentes na
+erros preservados; a sequência004→006 agora passou integração/link/boot na
 [issue #36](https://github.com/djalmajr/iphone6s-linux/issues/36).
 Essa patch004 isolada não corrige probe/is_active ou rollback de efeitos parciais.
 CI desse código aprovado em PR37236898569/push37236896067, seis jobs.
@@ -72,13 +76,13 @@ CI desse código aprovado em PR37236898569/push37236896067, seis jobs.
 Correção inicial do probe PMGR `21a786c`, patch005 após004: 3.138 cenários,
 12 mutações Mac/ARM64 e arquivo completo obj-y/Werror. Primeiro erro de I/O
 chega ao caller antes de registrar domínio/provider/reset; bool de estado
-só muda após leitura válida. Cleanup após registro, efeitos parciais,
-ownership/idle e integração/link/boot seguem pendentes na issue #36.
+só muda após leitura válida. Integração/link/boot passou com004→006;
+cleanup após registro, efeitos parciais e ownership/idle seguem na issue #36.
 CI21a786c aprovado em PR37238520733/push37238517260, seis jobs.
 
 Cleanup PMGR006 `f728099`: 3.258 casos/seis mutações Mac/ARM64 e objeto
 completo004+005+006 obj-y/Werror. Falha de add_provider remove domínio sem
-apagar provider alheio; primeiro erro preservado. Integração/link/boot,
+apagar provider alheio; primeiro erro preservado. Integração/link/boot passou;
 pós-publicação/iterator e efeitos parciais continuam na #36. Não habilita
 carga no Linux e não motivou DFU. [Reprodução](N71_HDQ.md#falha-de-publicação-do-provider-pmgr--cleanup-preparado).
 [Reprodução e limites](N71_HDQ.md#erros-iniciais-do-probe-pmgr--correção-preparada).
