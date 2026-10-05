@@ -1,12 +1,20 @@
 # iPhone 6s Linux — atualizado em 2026-10-05
 
-## Checkpoint atual — candidata PME/ASPM e perfil qualificados offline
+## Checkpoint atual — quatro etapas físicas no mesmo boot PME/ASPM
+
+Um DFU manual reuniu scan PCI-core, leitura ChipCommon/BAR, observação DART e ciclo temporário do provider DART, sem reinícios intermediários. O scan passou com dois dispositivos, um endpoint, 660 leituras/40 tentativas/23 escritas/zero recusas. BCM4350 revisão8, BAR0 de32KiB e BAR2 de4MiB confirmados; as quatro etapas concluíram cleanup e conservaram SSH/HTTP/Bash/Herdr. Snapshot44/sync e retorno automático ao iOS passaram. Uptime final506,59s; iOS100→100% e carregamento ativo após retorno. Esses percentuais não comprovam carga no Linux. [Resultado e reprodução](N71_PME_ASPM_CANDIDATE.md#sessão-física--quatro-etapas-sem-reiniciar), [prova selecionada](evidence/n71-pme-aspm-physical.json).
+
+ASPM off foi conferido no payload, cmdline e marcador kernel antes da transferência. PME prepare/restore e restauração de config/TLS/reset/power/REG_ON passaram. A enumeração ainda é temporária: recursos PCI persistentes, entrega IRQ, DMA/IOMMU do endpoint, firmware/radio e telemetria/carga continuam pendentes. O telefone voltou ao iOS para recarga; o próximo desenvolvimento é offline.
+
+CI do código físico `dd2b0da`: [PR37356247973](https://github.com/djalmajr/iphone6s-linux/actions/runs/37356247973) success nos três jobs, com81 mutações por AssertionError do coletor nos logs Mac/Ubuntu. [Push37356242967](https://github.com/djalmajr/iphone6s-linux/actions/runs/37356242967) failure somente no Ubuntu: baseline PMGR passou, mas um binário mutante excedeu10s; Mac/Windows passaram. A causa segue não confirmada na [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38); timeout não foi contado como mutation kill.
+
+### Preparação offline da candidata testada
 
 Helper PME, adapter e caller integrados; opt-in `scan_pme_disable=1` e composer `--pcie-aspm-off` preparados para uma candidata agrupada. Helper 1/19, adapter 29/18, caller 73/21 e composer 7/13 passaram no Mac e Ubuntu ARM64. Os seis módulos passaram build real Werror/modpost/ELF/vermagic, com fonte, kernel, Image e exports preservados. PCIe novo: 73.576 bytes; REG_ON intacto. [Procedimento e limites](N71_PME_ASPM_CANDIDATE.md), [prova](evidence/n71-pcie-pme-aspm-build.json).
 
-Coletor `7708a5c`:45 testes/81 mutações por AssertionError passaram Mac/Ubuntu ARM64,29 inputs/hash e sintaxe Bash conferidos. Novo perfil privado passou checks reais de identidade/payload/ABI/módulo, ferramentas e snapshot44; somente bootargs, PCIe, deployment SHA e provenance mudaram, com kernel/DT/initramfs/identidades/REG_ON preservados. [Prova do coletor e perfil](evidence/n71-pme-aspm-session.json). Ainda não carregada no iPhone; permanece no iOS para recarga. ASPM off reúne common clock/retrain/L1SS com PME, sem comprovar consumo, Wi-Fi ou carga.
+Coletor `7708a5c`:45 testes/81 mutações por AssertionError passaram Mac/Ubuntu ARM64,29 inputs/hash e sintaxe Bash conferidos. Novo perfil privado passou checks reais de identidade/payload/ABI/módulo, ferramentas e snapshot44; somente bootargs, PCIe, deployment SHA e provenance mudaram, com kernel/DT/initramfs/identidades/REG_ON preservados. [Prova do coletor e perfil](evidence/n71-pme-aspm-session.json). A prova offline foi preservada separadamente da sessão física acima. ASPM off reúne common clock/retrain/L1SS com PME, sem comprovar consumo, Wi-Fi ou carga.
 
-CI do checkpoint `120352c`: push success; PR failure no Ubuntu, com dois timeouts de fixtures anteriores e duas recusas Pongo encerradas por SIGTERM no deadline sintético. Mac/Windows passaram nos dois eventos. Esses resultados não cobrem o novo coletor; o próximo head precisa de CI própria. A falha continua registrada para análise na [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38), sem atribuição causal confirmada.
+CI anterior do checkpoint `120352c`: push success; PR failure no Ubuntu, com dois timeouts de fixtures anteriores e duas recusas Pongo encerradas por SIGTERM no deadline sintético. Mac/Windows passaram nos dois eventos. Esses resultados não cobrem o novo coletor; sua CI própria está registrada acima. A falha continua registrada para análise na [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38), sem atribuição causal confirmada.
 
 ### Checkpoint físico anterior — PME do endpoint e alimentação
 

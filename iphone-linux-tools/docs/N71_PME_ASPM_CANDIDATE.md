@@ -5,11 +5,13 @@
 O helper PME, o adapter e o caller estão integrados e compilados para a ABI
 `7.2.0-iphone6s-dart-serdev-power2`. O composer oferece `--pcie-aspm-off`
 explicitamente. O coletor e o perfil privado real foram integrados e verificados.
-Esta candidata **ainda não foi carregada no iPhone**.
+Esta candidata passou uma sessão física com quatro etapas no mesmo boot,
+cleanup completo e retorno automático ao iOS.
 [Build e inputs](evidence/n71-pcie-pme-aspm-build.json),
-[coletor e perfil](evidence/n71-pme-aspm-session.json).
+[coletor e perfil](evidence/n71-pme-aspm-session.json),
+[sessão física](evidence/n71-pme-aspm-physical.json).
 
-A última sessão física continua sendo a
+A sessão física anterior foi a
 [tentativa PME anterior](evidence/n71-pme-first-physical.json): um boot,
 um scan, primeira recusa no endpoint `04c/c008` e cleanup verificado.
 O retorno automático não foi confirmado; o fallback físico recuperou o iOS,
@@ -44,7 +46,9 @@ Os pedidos posteriores `bc/40`, `80/40`, retrain e L1SS da sessão anterior
 foram latched após a primeira recusa PME. A sequência é compatível com os
 caminhos da fonte, por inferência; não é um trace independente nem autorização
 para liberar cada write. O parâmetro permite reunir esse obstáculo e PME numa
-única próxima candidata. Seu efeito físico ainda precisa de confirmação.
+única candidata. Nesta sessão, a opção foi verificada antes dos módulos e o
+scan PCI-core terminou sem recusas. Não houve comparação A/B no mesmo boot
+para atribuir individualmente o resultado a ASPM ou PME.
 
 ASPM off não comprova menor consumo ou carregamento sustentado. Wi-Fi, IRQ,
 DMA, firmware, telemetria e carga continuam pendentes nas issues
@@ -147,7 +151,86 @@ comprimido e descomprimido, initramfs, identidades e REG_ON foram conferidos
 por igualdade/hash; fonte anterior e default permaneceram intactos. Nenhum
 perfil, chave, alias SSH ou snapshot é publicado no GitHub.
 
-## Próximo gate físico
+## Sessão física — quatro etapas sem reiniciar
+
+O código `dd2b0da` e os módulos qualificados não mudaram antes do load.
+O primeiro monitor expirou antes de transferir o payload; o segundo reutilizou
+o DFU já estabelecido, sem outra sequência de botões. Houve um DFU manual,
+um boot Linux, restore de44 entradas e zero reinícios intermediários.
+
+| Etapa | Resultado físico |
+|---|---|
+| PCI-core com PME/ASPM | error0; dois dispositivos/um endpoint; 660 leituras,40 tentativas,23 escritas,zero recusas |
+| BAR/ChipCommon direto | BAR0 de32KiB/BAR2 de4MiB; BCM4350 revisão8; uma leitura MMIO ChipCommon |
+| DART passivo | 38 leituras;16 words TTBR preservadas; sem DMA |
+| Provider DART temporário | error0; quatro snapshots/152 leituras;16 words restauradas; nenhuma mudança de controle; sem DMA |
+
+Cada etapa terminou com bus removido, config/PME/TLS/reset/power e REG_ON
+restaurados quando aplicáveis, módulos ausentes e sem erro de cleanup.
+Boot ID e histórico de cleanup foram conferidos antes das continuações.
+O provider temporário foi inicializado, mas isso não comprova entrega de IRQ,
+attachment IOMMU do endpoint ou DMA.
+
+### Reprodução da continuação por SSH
+
+Depois de boot/restore e serviços confirmados, execute o scan com o perfil
+PME/ASPM explícito:
+
+```sh
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" \
+  --output-dir "$scan_result" \
+  --host-scan --scan-link-target --scan-pme-disable
+```
+
+Para as três etapas seguintes foi selecionado o módulo diagnóstico anterior
+qualificado, SHA `e715ad64013eb0238c9074dba9b05157d2a7153835fd4a800bd53adb0e170785`,
+com REG_ON presente, através de seu perfil privado. **O payload desse perfil
+anterior não foi bootado.** Kernel/DT/initramfs/identidades/REG_ON são iguais;
+seus bootargs diferem somente pela opção ASPM. O payload efetivamente em
+execução continuou PME/ASPM, com ASPM off já verificado. Não modifique a
+metadata para fingir igualdade: confira artefatos, ABI e diferença literal,
+conservando o registro privado da seleção.
+
+```sh
+set -e
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$hot_module_profile/deployment.json" \
+  --previous-clean "$scan_result" --output-dir "$chip_result" --chip-id
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$hot_module_profile/deployment.json" \
+  --previous-clean "$chip_result" --output-dir "$dart_result" --dart-observe
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$hot_module_profile/deployment.json" \
+  --previous-clean "$dart_result" --output-dir "$cycle_result" --dart-cycle
+```
+
+Os diretórios de resultado são novos e privados. Os checks `--check` com os
+mesmos argumentos precedem cada execução. Continue somente com histórico
+completo do mesmo boot, sem owner/cleanup pendente; uma recusa não autoriza
+repetir probes ou substituir o histórico. Um perfil antigo sem REG_ON foi
+recusado no check local, antes de qualquer transferência; o perfil correto
+passou sem mudança de código ou reinício.
+
+Ao final, SSH/HTTP/Bash/Herdr foram conferidos, com uptime506,59s, PCI vazio
+e módulos ausentes. `return_ios.py --wait 90`, usando o perfil PME/ASPM,
+salvou/verificou snapshot44 e sync, encerrou Linux e confirmou iOS pelo USB.
+Não precisou de fallback físico. iOS100→100%, carregando às19:00:58UTC;
+nenhuma corrente líquida foi medida no Linux, que continua com zero entradas
+`power_supply` e MaxPower USB declarado de500mA. Não derivar saúde ou carga
+sustentada desses dados. Logs/identidades/snapshot ficam privados; o JSON
+público conserva contagens, estados e hashes.
+
+### CI do código testado
+
+[PR37356247973](https://github.com/djalmajr/iphone6s-linux/actions/runs/37356247973)
+passou nos três jobs; Mac/Ubuntu executaram81 mutações por AssertionError do
+coletor. [Push37356242967](https://github.com/djalmajr/iphone6s-linux/actions/runs/37356242967)
+falhou somente no Ubuntu por timeout de10s num mutante PMGR após baseline
+positiva. Causa não confirmada; timeout não contou como mutation kill.
+[#38](https://github.com/djalmajr/iphone6s-linux/issues/38) permanece aberta.
+
+## Próximos gates
 
 O coletor seleciona o novo build e exige os opt-ins exatos, SHA/ABI do módulo
 e bootargs literais no payload. No telefone, antes de transferir módulos,
@@ -155,8 +238,15 @@ exige um único `pcie_aspm=off` no cmdline e o marcador de suporte ASPM
 desativado. O parser exige prepare/restore PME completos e conserva REG_ON
 se não houver prova de cleanup. Retry de restauração não executa novo scan.
 
-Depois dos checks locais e CI, fazer um único boot com restore e serviços
-confirmados. Continuar os testes compatíveis por SSH, sem desbloquear o iOS
-entre passos. Ao final, snapshot/sync e retorno para recarga; o fallback
-físico continua necessário quando o retorno automático não for confirmado
-([#21](https://github.com/djalmajr/iphone6s-linux/issues/21)).
+O scan atual enumera e remove o bus; os BARs ainda não têm endereços
+persistentes atribuídos. Para Wi-Fi, preparar offline o lifecycle do host PCI,
+atribuição de recursos, IRQ/IOMMU do endpoint e depois driver/firmware/radio.
+Esses passos não estão habilitados pela prova diagnóstica. Alimentação e
+telemetria precisam de acesso HDQ/charger e medição própria.
+
+Manter o telefone no iOS para recarga durante desenvolvimento/build. Reunir
+checks e módulos compatíveis para a próxima sessão por SSH; novo DFU somente
+quando uma candidata agrupada exigir boot novo. Snapshot/sync e retorno
+automático devem ser verificados novamente ao final. Um retorno positivo não
+fecha a confiabilidade de [#21](https://github.com/djalmajr/iphone6s-linux/issues/21);
+o fallback físico continua disponível quando USB não confirmar o iOS.
