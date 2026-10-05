@@ -28,7 +28,8 @@ O Image novo ainda não habilita carga, telemetria ou Wi-Fi.
 Lifecycle runtime PM `29e61ec`:12 cenários/13 mutações compiladas por asserção
 Mac/ARM64 e objeto kernel/Werror passaram. Contrato retém cleanup pendente,
 preserva erro primário e impede novo put após uma falha que já consumiu uso.
-Ainda não há backend genpd/pinctrl/controller associado ao header.
+O backend genpd agora está compilado no checkpoint abaixo; pinctrl/controller
+e a operação física ainda não estão associados a um módulo operacional.
 [Reprodução e limites](N71_HDQ.md#lifecycle-runtime-pm-i2c1--sequência-testada-backend-pendente).
 Nenhum novo DFU nessa implementação. O passo novo passou Ubuntu/macOS
 em ambos os runs do código29e61ec. O run
@@ -44,6 +45,16 @@ validação N71/caminhos/metadata/provider sob lock e limpa o handle no unlock.
 Não foi carregado no aparelho nem implementa backend genpd ou carga.
 [Contrato e reprodução](N71_HDQ.md#acesso-pmgr-compartilhado--qualificado-sem-ativação),
 [prova selecionada](evidence/n71-pmgr-access.json).
+
+Backend genpd `1cdfa72`:87 cenários/20 mutações Mac/ARM64, callbacks reais
+linkados Werror/modpost e patch007 aplicada/compilada em cópia do provider.
+Proteção suppress_bind_attrs obrigatória: power1 atual recusa esse backend;
+Image power2, módulo operacional e teste físico ainda pendentes. Suspend
+com domínio ligado mantém cleanup pendente, sem detach nem outro put.
+[Contrato/reprodução](N71_HDQ.md#backend-genpd-i2c1--compilado-proteção-de-binding-pendente-no-image),
+[prova selecionada](evidence/n71-i2c-genpd.json). CI da primeira versão
+`a476729` terminou verde nos seis jobs; guard de binding aguarda novo CI.
+Nenhum DFU, acesso ao carregador ou configuração global do Mac nesta rodada.
 
 No boot anterior, DART provider/INTx/probes de ponte tiveram cleanup verificado
 e SSH/HTTP/snapshot preservados. Scan PCI ainda negativo; primeira recusa

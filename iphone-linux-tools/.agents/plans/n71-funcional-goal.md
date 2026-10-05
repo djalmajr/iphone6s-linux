@@ -2230,3 +2230,19 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
 - CIa476729 PR37253810597/push37253807827 terminal success. Backend130
   exige flag007, portanto deliberadamente recusa operar sobre power1 atual.
   Novo Image/power2 e ausência física de bind/unbind continuam pendentes.
+
+
+### Incremento 131 — reprodução do backend e condição de binding
+
+- Cinco arquivos: plano, docs/N71_HDQ.md, docs/STATUS.md,
+  docs/evidence/n71-i2c-genpd.json e docs/evidence/n71-pmgr-access.json.
+- Registrar gates129/130, código/hashes/CI, distinção entre fixture/kernel
+  linkage e operação física, erro power-off ignorado por genpd, uso consumido
+  em provider loss e lifetime/binding estável exigido. Não afirmar funcionamento
+  sobre power1 ou integração007. Cópia de compilação do provider documentada.
+- Whitespace da patch007: git --check padrão apontou marcadores de contexto
+  unified diff (space+tab e linha vazia), não C gerado. Conferência estrita
+  dos demais arquivos passou; check da patch usa configuração só no processo
+  excluindo essas regras de formatação de contexto. Nenhuma config Git global.
+- Validar JSON/hash/links/diff/publicguard; reutilizar os gates130 sem repetir.
+  Próxima fatia: novo profile/power2 preservando001→006/power1 e rollback.

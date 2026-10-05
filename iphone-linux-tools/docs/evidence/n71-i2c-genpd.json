@@ -1,0 +1,100 @@
+{
+  "format": 1,
+  "status": "qualified_genpd_backend_and_binding_patch_compiled_not_physically_executed",
+  "code_commit": "1cdfa72e35ae090455ccffac08804fb277dce0dc",
+  "prior_backend_commit": "a476729dcc170401daa43bcdc0e009855e6b029d",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "compiled_kernel_release": "7.2.0-iphone6s-dart-serdev-power1",
+  "source_sha256": {
+    "drivers/pmdomain/core.c": "32e2f6b0988eba52a2f662fdc2d7132022fbe980f281b2a82babcf3d7f46e18a",
+    "drivers/base/power/common.c": "5f902397c11504c95036463353a6a9513ab0f9ba3378579a956274389f2c1158",
+    "drivers/base/power/runtime.c": "86a4ab8982d610b0ff1a1eb998adaf99a5f914833a56e70fb62efda2764af566",
+    "include/linux/pm_runtime.h": "1c1383101d72ce3028df6d9ad3640c2020a041f5c1820b1698d1657b648b04f6",
+    "drivers/pmdomain/apple/pmgr-pwrstate.c": "ec4841316d8c3a8dad7ac44d93edac0209c581b4e4c0d2fb9dcfb89853754414"
+  },
+  "input_sha256": {
+    "phone/kernel/n71-i2c-genpd.h": "6d772609640235a03b381ca0c7bcd49eb2d2cbbe5ef053ca1844bcf3b2488fea",
+    "phone/kernel/n71-i2c-power-lifecycle.h": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2",
+    "phone/kernel/n71-pmgr-access.h": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae",
+    "tests/n71_i2c_genpd.c": "99fcf7964a8387487c5cae757ccf52c641ad6a5a61db53dc7e9a5a0d98f9c935",
+    "tests/test_n71_i2c_genpd.py": "1eefba6d6e32e32bee0a95c7e70560439f1b7670585beedd2d97d46f4ce22bc7",
+    "phone/kernel/patches/0007-apple-pmgr-no-manual-bind.patch": "3f5a3e4c97a6cf898eaf90d53fcdc45a9796707c4123a14b1d0e043b58934aaa"
+  },
+  "native": {
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "scenarios_per_platform": 87,
+    "compiled_assertion_mutations_per_platform": 20,
+    "kill_requires_sigabrt_and_assertion": true,
+    "mac_log_sha256": "ccc5bbd08044b94f1d46980f8a8b79337f76ce41b3611065f1fbf52c6fa3baaf",
+    "arm64_log_sha256": "7472d5f759bfbdb7d9629bb26e999171e744af3be772ce62f323b62eedd29e36",
+    "kernel_api_fixtures_not_physical_genpd": true,
+    "real_pmgr_access_qualification_separately_tested": true
+  },
+  "backend_module_gate": {
+    "actual_callbacks_compiled_and_linked": true,
+    "werror": true,
+    "modpost_passed": true,
+    "elf_aarch64_and_vermagic_verified": true,
+    "sha256": "6ca6a466e44e77afce407aec9cb2c00b81bf65a1fa43ee93b0cebca6e49c357f",
+    "log_sha256": "a517d8efca7e3533e39a9dd23c6b78ff22ca0c935ebeca1520a9381ee556eb48",
+    "no_operational_module_entrypoint_or_sysfs_control": true,
+    "loaded_on_phone": false
+  },
+  "binding_patch": {
+    "number": 7,
+    "manual_bind_unbind_suppressed": true,
+    "backend_requires_protection_before_attach": true,
+    "patch_applied_to_isolated_provider006_copy": true,
+    "full_provider_obj_y_werror_passed": true,
+    "patched_source_sha256": "0d84693ae4f5a24df9f8c9499ecd0f8f6725566223428dfe7af686cf7a21f5b2",
+    "object_sha256": "579f6af9f2b7ce4892216e760d9777817cf79b48ad441153eff2ff21ca24ccf3",
+    "log_sha256": "6339bd351bc1df4f2a4447ef26175966079bf14774ccaa3a9c3c8771785a5c70",
+    "integrated_into_image": false,
+    "physical_bind_unbind_absence_verified": false,
+    "direct_driver_unregister_by_other_kernel_code_supported": false
+  },
+  "contract": {
+    "caller_owns_root_consumer_and_of_refs": true,
+    "caller_serializes_and_retains_pending_module_and_objects": true,
+    "no_platform_controller_or_i2c_client_registered": true,
+    "attach_without_power_on": true,
+    "own_device_reference_survives_void_detach": true,
+    "usage_consumed_once_even_after_provider_loss": true,
+    "provider_loss_put_noidle_does_not_activate_hardware": true,
+    "runtime_state_checked_under_power_lock": true,
+    "active_chain_samples_required": true,
+    "leaf_powergate_and_auto_disabled_required_for_release": true,
+    "shared_parents_not_forced_off": true,
+    "failed_detach_keeps_object_and_pending_state": true,
+    "known_disabled_suspended_retry_does_not_set_runtime_status": true,
+    "successful_suspend_with_live_leaf_refuses_detach": true,
+    "retry_guarantees_hardware_recovery": false
+  },
+  "preservation": {
+    "image_config_exports_and_provider006_unchanged": true,
+    "inputs_unchanged": true
+  },
+  "lint": {
+    "ast": "passed",
+    "fatal_flake8": "passed",
+    "python_typechecker_configured": false,
+    "unified_diff_context_whitespace_handled_as_patch_format": true
+  },
+  "ci": {
+    "prior_backend_head": "a476729dcc170401daa43bcdc0e009855e6b029d",
+    "prior_backend_pr_run": 37253810597,
+    "prior_backend_push_run": 37253807827,
+    "prior_backend_conclusion": "success",
+    "prior_successful_jobs": 6,
+    "binding_guard_ci_pending": true
+  },
+  "physical_domain_cycle_executed": false,
+  "charger_io_performed": false,
+  "linux_charging_validated": false,
+  "wifi_validated": false,
+  "new_dfu_or_reboot": false,
+  "limits": "Compiled header backend with mocked kernel APIs plus real kernel callback linkage and full provider object compilation. No operational module, active controller, clock/pinctrl/IRQ/adapter, charger I/O or physical domain cycle. Current power1 deliberately fails the new suppress_bind_attrs guard. A separate Image containing patch007, then caller lifetime/control and grouped physical evidence are required before hardware activation."
+}

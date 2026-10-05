@@ -910,3 +910,117 @@ Esse helper será usado pelo backend genpd em construção. Runtime PM
 suspenso não equivale por si só a energia elétrica desligada; erros fatais
 podem impedir novas chamadas. [Referência do kernel](https://docs.kernel.org/power/runtime_pm.html).
 Carga, corrente líquida, HDQ, SN2400 e Wi-Fi continuam sem prova funcional.
+
+
+## Backend genpd I2C1 — compilado, proteção de binding pendente no Image
+
+`phone/kernel/n71-i2c-genpd.h`, código `1cdfa72`, implementa callbacks reais
+para o lifecycle125. [Hashes/gates/limites](evidence/n71-i2c-genpd.json).
+O caller cria e conserva um consumidor root, mantém referências OF e
+serializa operações. Não criar um platform device I2C para isso.
+Antes de attach, o backend exige N71/providers qualificados, consumidor
+root no I2C1 disabled, sem filhos/controller/adapter, recurso correto e
+power-domain único para a leaf. Cada callback qualifica e trava os três
+providers na mesma ordem, liberando os locks antes de retornar.
+
+Attach usa a API genpd sem power_on e conserva referência própria ao
+virtual device. Resume exige estado/uso coerente, depois verifica duas
+amostras bypassed de cada domínio: target active e actual active ou auto-PM,
+sem RESET/DEV_DISABLE. Release exige runtime suspended/uso zero, leaf
+powergate sem auto-PM e detach realmente concluído com domínio removido e
+device unregistered. Pais compartilhados não são forçados a desligar.
+
+A fonte genpd fixada ignora o retorno de power_off em runtime suspend.
+Portanto retorno0 não substitui a leitura de hardware: o teste de suspend
+bem-sucedido com leaf ligada retém cleanup e referência, sem detach. Retry
+não decrementa o uso outra vez nem inventa um runtime status. Após falha de
+detach, só o estado realmente suspended com disable_depth1 causado pela
+própria tentativa admite retry sem nova chamada PM desabilitada.
+Quando perde a qualificação dos providers, put_noidle consome o uso sem
+callbacks de hardware e mantém o domínio para cleanup posterior.
+
+### Binding do provider precisa durar todo o ownership
+
+O provider006 fixado não tem remove e permitia bind/unbind manual.
+Get_device mantém o device, mas não conserva devm/driver depois de unbind.
+Os locks do helper127 só excluem unbind durante cada callback.
+A [patch007](../phone/kernel/patches/0007-apple-pmgr-no-manual-bind.patch)
+marca suppress_bind_attrs desde o registro do driver. O backend recusa
+qualquer um dos três providers sem essa proteção antes de attach.
+Providers serão builtin no Image dedicado; driver_unregister arbitrário
+por outro código kernel fica fora do contrato. Não chamar isso de proteção
+contra todas as formas possíveis de remoção ou de recuperação garantida.
+
+Patch007 aplicou em cópia exata do provider006 e o arquivo completo passou
+obj-y/Werror. O backend inteiro compilou/linkou num gate externo, com ELF
+AArch64/vermagic power1 conferidos. Esse gate não tem entrada operacional
+ou sysfs control e não foi carregado no iPhone. Power1 existente continua
+intacto e deliberadamente não passa o novo guard. Próxima integração cria
+power2 separado com007; a ausência de bind/unbind precisa ser observada
+fisicamente antes de qualquer ciclo de domínio/controlador/charger.
+
+### Reproduzir sem usar o aparelho
+
+Na raiz de `iphone-linux-tools`:
+
+```sh
+python3 -m unittest discover -s tests -p test_n71_i2c_genpd.py -v
+```
+
+87 cenários/20 mutações compiladas morreram somente por SIGABRT/asserção
+Mac/ARM64. Fixtures de APIs kernel não são execução de genpd físico; a
+qualificação PMGR real é coberta separadamente pelo gate127. Fontes,
+Image/config/exports e inputs preservados, logs transferidos com SHA.
+
+Para compilar o provider007 em cópia isolada na VM, mantendo power1:
+
+```sh
+umask 077
+mkdir -p runtime
+repo_dir="$PWD"
+task_dir="$(mktemp -d "$PWD/runtime/pmgr-binding-build.XXXXXX")"
+provider=drivers/pmdomain/apple/pmgr-pwrstate.c
+mkdir -p "$task_dir/source/$(dirname "$provider")" "$task_dir/object"
+cp "/home/ubuntu/kernel-n71-power-source-20261004/$provider" "$task_dir/source/$provider"
+printf '%s  %s\n' ec4841316d8c3a8dad7ac44d93edac0209c581b4e4c0d2fb9dcfb89853754414 "$task_dir/source/$provider" | sha256sum -c -
+git -C "$task_dir/source" apply --check "$repo_dir/phone/kernel/patches/0007-apple-pmgr-no-manual-bind.patch"
+git -C "$task_dir/source" apply "$repo_dir/phone/kernel/patches/0007-apple-pmgr-no-manual-bind.patch"
+printf '%s  %s\n' 0d84693ae4f5a24df9f8c9499ecd0f8f6725566223428dfe7af686cf7a21f5b2 "$task_dir/source/$provider" | sha256sum -c -
+cp "$task_dir/source/$provider" "$task_dir/object/pmgr-pwrstate.c"
+printf 'obj-y += pmgr-pwrstate.o\n' > "$task_dir/object/Makefile"
+make -C /home/ubuntu/kernel-n71-power-source-20261004 \
+  O=/home/ubuntu/kernel-n71-power-build-20261004 M="$task_dir/object" \
+  W=1 KCFLAGS=-Werror pmgr-pwrstate.o
+```
+
+Compilar e linkar os callbacks num gate C sem registrar driver:
+
+```sh
+module_dir="$task_dir/backend"
+mkdir -p "$module_dir"
+cp phone/kernel/n71-i2c-genpd.h phone/kernel/n71-i2c-power-lifecycle.h \
+  phone/kernel/n71-pmgr-access.h "$module_dir/"
+cat > "$module_dir/n71-i2c-genpd-gate.c" <<'SOURCE'
+#include <linux/module.h>
+#include "n71-i2c-genpd.h"
+int n71_genpd_kernel_gate(struct n71_i2c_genpd *backend, struct n71_i2c_power_state *state);
+int n71_genpd_kernel_gate(struct n71_i2c_genpd *backend, struct n71_i2c_power_state *state)
+{
+ struct n71_i2c_power_io io = n71_i2c_genpd_io(backend);
+ return state->attached ? n71_i2c_power_release(&io, state) : n71_i2c_power_acquire(&io, state);
+}
+MODULE_LICENSE("GPL");
+SOURCE
+printf 'obj-m += n71-i2c-genpd-gate.o\n' > "$module_dir/Makefile"
+make -C /home/ubuntu/kernel-n71-power-source-20261004 \
+  O=/home/ubuntu/kernel-n71-power-build-20261004 M="$module_dir" \
+  W=1 KCFLAGS=-Werror \
+  KBUILD_EXTRA_SYMBOLS=/home/ubuntu/kernel-n71-power-build-20261004/vmlinux.symvers modules
+modinfo -F vermagic "$module_dir/n71-i2c-genpd-gate.ko"
+sha256sum "$module_dir/n71-i2c-genpd-gate.ko"
+```
+
+Não usar seu `.ko` como módulo de diagnóstico operacional nem carregá-lo.
+O caminho de build/toolchain pode mudar o hash binário; conferir a prova
+selecionada e preservar o Image/config/exports antes/depois.
+HDQ, acesso SN2400, telemetria/corrente líquida, carga e Wi-Fi seguem abertos.

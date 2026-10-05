@@ -52,6 +52,15 @@
   "phone_commands_executed": false,
   "linux_charging_validated": false,
   "wifi_validated": false,
-  "ci_pending": true,
-  "limits": "Shared access helper only. No new module load, genpd domain cycle, controller activation or charger I/O. Earlier physical observations used their preserved historical modules. Native fixtures and ABI compilation do not prove hardware energy, charging or Wi-Fi."
+  "ci_pending": false,
+  "limits": "Shared access helper only. No new module load, genpd domain cycle, controller activation or charger I/O. Earlier physical observations used their preserved historical modules. Native fixtures and ABI compilation do not prove hardware energy, charging or Wi-Fi.",
+  "ci": {
+    "validated_head": "a476729dcc170401daa43bcdc0e009855e6b029d",
+    "pr_run": 37253810597,
+    "push_run": 37253807827,
+    "conclusion": "success",
+    "successful_jobs": 6,
+    "helper_inputs_unchanged_since_code_commit": true,
+    "earlier_runs_for_152e07b_cancelled_by_later_push": true
+  }
 }
