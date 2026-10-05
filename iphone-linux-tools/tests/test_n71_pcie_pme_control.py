@@ -25,6 +25,14 @@ MUTATIONS = (
      'state->pending = false;\n\tvalue = (observed & ~0x8100U)'),
     ('restore-enable', '(state->original & 0x100U);', '(state->original & 0x200U);'),
     ('lost-event', '((observed & 0x8000U) && !(actual & 0x8000U))', 'false'),
+    ('unowned-core', '!state->pending || !state->prepared ||', 'false ||'),
+    ('core-original', 'state->original != 0x4108 || request->value != 0xc008',
+     'false || request->value != 0xc008'),
+    ('core-request', 'state->original != 0x4108 || request->value != 0xc008',
+     'state->original != 0x4108 || false'),
+    ('core-active-event', 'error || observed != 0x4008', 'error || false'),
+    ('core-width', 'request->where != 0x4c || request->size != 2',
+     'request->where != 0x4c || false'),
 )
 
 

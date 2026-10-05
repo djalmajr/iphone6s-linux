@@ -223,9 +223,79 @@ static void preserve_events(void)
 	assert(n71_pme_restore(&io, &state) == -EPERM && state.pending && mock.writes == reads);
 }
 
+static void core_noop(void)
+{
+	struct mock mock;
+	struct n71_scan_io io = {&mock, read_config, write_config};
+	struct n71_pme_state state = {0};
+	struct n71_scan_config config = {.active = true};
+	struct n71_scan_request request = {false, 0x4c, 0xc008, 2};
+	unsigned int reads, writes, index, event;
+
+	/* Mutation captured: an unowned/core W1C request cannot masquerade as a verified disable. */
+	initialize(&mock);
+	assert(n71_pme_scan_write(&io, &config, &state, &request) == -EPERM);
+	assert(mock.reads == 0 && mock.writes == 0);
+	config.error = 0; config.refusals = 0;
+	assert(n71_pme_disable(&io, &state) == 0);
+	reads = mock.reads; writes = mock.writes;
+	assert(n71_pme_scan_write(&io, &config, &state, &request) == 0);
+	assert(mock.writes == writes && mock.config[0x4c / 4] == 0xabc04008);
+	assert(config.attempts == 1 && config.writes == 0 && config.error == 0);
+	reads = mock.reads - reads;
+	for (index = 0; index < 16; index++) {
+		config.error = 0; request.value = 0xc008 ^ (1U << index);
+		assert(n71_pme_scan_write(&io, &config, &state, &request) == (index == 15 ? 0 : -EPERM));
+		assert(mock.writes == writes && state.pending && state.prepared);
+	}
+	request.value = 0xc008;
+	for (index = 1; index <= 4; index++) {
+		if (index == 2) continue;
+		request.size = index; config.error = 0;
+		assert(n71_pme_scan_write(&io, &config, &state, &request) == -EPERM);
+		assert(mock.writes == writes);
+	}
+	request.where = 0x4d; request.size = 1; request.value = 0x40; config.error = 0;
+	assert(n71_pme_scan_write(&io, &config, &state, &request) == -EPERM);
+	request.where = 0x4c; request.size = 2; request.value = 0xc008;
+	for (index = 0; index < 3; index++) {
+		struct n71_pme_state bad = state;
+		if (index == 0) bad.pending = false;
+		if (index == 1) bad.prepared = false;
+		if (index == 2) bad.original ^= 0x100;
+		config.error = 0;
+		assert(n71_pme_scan_write(&io, &config, &bad, &request) == -EPERM);
+		assert(mock.writes == writes);
+	}
+	for (event = 1; event <= reads; event++) {
+		initialize(&mock); memset(&state, 0, sizeof(state));
+		assert(n71_pme_disable(&io, &state) == 0);
+		mock.event_read = mock.reads + event; config.error = 0;
+		assert(n71_pme_scan_write(&io, &config, &state, &request) < 0);
+		assert(mock.writes == 1 && state.pending);
+		mock.event_read = 0;
+		assert(n71_pme_restore(&io, &state) == 0 && !state.pending);
+		assert(mock.config[0x4c / 4] == 0xabc0c108);
+	}
+	initialize(&mock); memset(&state, 0, sizeof(state));
+	assert(n71_pme_disable(&io, &state) == 0);
+	mock.config[0x4c / 4] |= 0x8000;
+	mock.clear_event_read = mock.reads + reads; config.error = 0;
+	assert(n71_pme_scan_write(&io, &config, &state, &request) == -EPERM);
+	assert(mock.config[0x4c / 4] == 0xabc0c008 && state.pending && mock.writes == 1);
+	mock.clear_event_read = 0;
+	assert(n71_pme_restore(&io, &state) == 0 && !state.pending);
+	config.error = -ENOLINK; reads = mock.reads;
+	assert(n71_pme_scan_write(&io, &config, &state, &request) == -ENOLINK);
+	assert(mock.reads == reads);
+	config.error = 0; config.active = false;
+	assert(n71_pme_scan_write(&io, &config, &state, &request) == -EPERM);
+	assert(mock.reads == reads);
+}
+
 int main(void)
 {
-	lifecycle(); scope_and_faults(); partial_and_retry(); preserve_events();
+	lifecycle(); scope_and_faults(); partial_and_retry(); preserve_events(); core_noop();
 	puts("N71_PME_CONTROL_OK");
 	return 0;
 }

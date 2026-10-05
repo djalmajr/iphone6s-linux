@@ -107,4 +107,36 @@ static inline int n71_pme_restore(const struct n71_scan_io *io,
 	state->prepared = false;
 	return 0;
 }
+
+/* Only an owned, verified disable can satisfy the core's PME_STATUS request. */
+static inline int n71_pme_scan_write(const struct n71_scan_io *io,
+				     struct n71_scan_config *config,
+				     const struct n71_pme_state *state,
+				     const struct n71_scan_request *request)
+{
+	struct n71_scan_request noop;
+	u32 observed;
+	int error;
+
+	if (!io || !io->read || !io->write || !config || !state || !request)
+		return -EINVAL;
+	if (request->root || (request->where != 0x4c && request->where != 0x4d))
+		return n71_scan_write(io, config, request);
+	if (config->error)
+		return config->error;
+	if (!config->active || request->where != 0x4c || request->size != 2)
+		return n71_scan_refuse(config, -EPERM);
+	if (!(request->value & 0x8000))
+		return n71_scan_write(io, config, request);
+	if (!state->pending || !state->prepared ||
+	    state->original != 0x4108 || request->value != 0xc008)
+		return n71_scan_refuse(config, -EPERM);
+	error = n71_pme_observe(io, &observed);
+	if (error || observed != 0x4008)
+		return n71_scan_refuse(config, error ? error : -EPERM);
+	noop = *request;
+	noop.value = 0x4008;
+	/* The existing policy performs one more fresh read; no W1C write occurs. */
+	return n71_scan_write(io, config, &noop);
+}
 #endif
