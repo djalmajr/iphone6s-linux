@@ -8,6 +8,16 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'scripts/host/n71-link-session.py'
 MUTATIONS = {
+    'profile-release-pair': ("metadata.get('kernel_release') == release", 'True'),
+    'profile-payload': ("metadata.get('payload_sha256') == payload_sha256", 'True'),
+    'binding-build-flags': ("and build['werror'] is True and build['modpost_passed'] is True", ''),
+    'binding-module-abi': ("all(record['vermagic'] == release + ' SMP preempt mod_unload aarch64' for record in records)", 'True'),
+    'selected-elf-release': ("magic = ('vermagic=' + release +", "magic = ('vermagic=' + RELEASE +"),
+    'selected-live-release': ("p.stdout.startswith(self.release + '\\n')", "p.stdout.startswith(RELEASE + '\\n')"),
+    'selected-result-release': ("{'kernel_release': self.release,", "{'kernel_release': RELEASE,"),
+    'selected-history-release': ('History(options.previous_clean, ROOT, release)', 'History(options.previous_clean, ROOT, RELEASE)'),
+    'binding-profile-module-hash': ("metadata['module_sha256'] == records[0]['sha256']", 'True'),
+    'selected-session-release': ('history=history, release=release).run()', 'history=history).run()'),
     'host-selection': ("'n71-pcie-controls-scan-build.json'", "'n71-pcie-bridge-scan-build.json'"),
     'cycle-mode': ("parameters += ' dart_cycle=1'", "parameters += ''"),
     'cycle-cleanup': ('n71_dart_cycle_result.cleanup(p.stdout)', 'pass'),

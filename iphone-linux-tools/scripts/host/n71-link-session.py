@@ -20,6 +20,8 @@ import n71_session_history
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = '7.2.0-iphone6s-dart-serdev1'
+BINDING_RELEASE = '7.2.0-iphone6s-dart-serdev-power2'
+PROFILE_RELEASES = {'n71-dart-serdev-v1': RELEASE, 'n71-dart-serdev-power-v2': BINDING_RELEASE}
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
 STATE_ACTIVE = 'bound=1 active=1 restore_pending=1 original=80'
 
@@ -29,21 +31,42 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def module_bytes(profile, record):
+def selected_release(metadata, payload_sha256):
+    release = PROFILE_RELEASES.get(metadata.get('kernel_patchset'))
+    require(release is not None and metadata.get('kernel_release') == release
+            and metadata.get('payload_sha256') == payload_sha256, 'Selected profile provenance differs')
+    return release
+
+
+def module_bytes(profile, record, *, release=RELEASE):
+    require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
     path = profile / record['module']
     device_profile.protected(path)
     require(path.stat().st_size == record['bytes'], 'Module size differs')
     raw = path.read_bytes()
     require(hashlib.sha256(raw).hexdigest() == record['sha256'], 'Module hash differs')
-    magic = ('vermagic=' + RELEASE + ' SMP preempt mod_unload aarch64\0').encode()
+    magic = ('vermagic=' + release + ' SMP preempt mod_unload aarch64\0').encode()
     require(raw[:7] == b'\x7fELF\x02\x01\x01' and
             struct.unpack_from('<HH', raw, 16) == (1, 183) and raw.count(magic) == 1,
             'Module requires the selected AArch64 ABI')
     return raw
 
 
-def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False):
+def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE):
     require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
+    require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
+    if release == BINDING_RELEASE:
+        evidence = json.loads((ROOT / 'docs/evidence/n71-binding-profile.json').read_text())
+        build = evidence['module_build']
+        require(evidence['diagnostic_profile']['kernel_release'] == release
+                and evidence['diagnostic_profile']['kernel_patchset'] == 'n71-dart-serdev-power-v2'
+                and build['werror'] is True and build['modpost_passed'] is True,
+                'Binding diagnostic build identity differs')
+        records = [dict(build['modules'][name], module=name)
+                   for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko')]
+        require(all(record['vermagic'] == release + ' SMP preempt mod_unload aarch64' for record in records),
+                'Binding diagnostic module ABI differs')
+        return records
     records = json.loads((ROOT / 'docs/evidence/kernel-n71-bundle-build.json').read_text())['diagnostic_modules']['modules']
     if config_inventory or host_scan or bar_sizing or chip_id or dart_observe or dart_cycle:
         name = ('n71-dart-cycle-build.json' if dart_cycle else
@@ -94,8 +117,10 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None):
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, release=RELEASE):
         require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
+        require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
+        self.release = release
         self.output = output
         self.modules = modules
         self.config_inventory = config_inventory or host_scan or bar_sizing or chip_id or dart_observe or dart_cycle
@@ -110,7 +135,7 @@ class Session:
         self.reg_attempted = False
         self.activation_attempted = False
         self.pcie_attempted = False
-        self.result = {'kernel_release': RELEASE, 'endpoint_identified': False,
+        self.result = {'kernel_release': self.release, 'endpoint_identified': False,
                        'cleanup_verified': False, 'wifi_verified': False,
                        'hdq_io_performed': False, 'dma_enabled': False}
 
@@ -143,7 +168,7 @@ class Session:
                          'test -f /sys/firmware/devicetree/base/soc/$n/status; '
                          's=$(tr "\\000" "\\n" </sys/firmware/devicetree/base/soc/$n/status); '
                          'test "$s" = disabled; echo "N71_DT_DISABLED $n"; done; dmesg')
-        require(p.returncode == 0 and p.stdout.startswith(RELEASE + '\n'),
+        require(p.returncode == 0 and p.stdout.startswith(self.release + '\n'),
                 'Selected release and disabled HDQ resources not proved')
         boot = re.findall(r'^N71_BOOT_ID ([0-9a-f-]{36})$', p.stdout, re.M)
         require(len(boot) == 1, 'Unique live boot identity required')
@@ -310,14 +335,13 @@ def main():
     device_profile.protected(provenance)
     require(provenance.stat().st_size <= 8192, 'Provenance size refused')
     metadata = json.loads(provenance.read_text())
-    require(metadata['kernel_release'] == RELEASE and metadata['kernel_patchset'] == 'n71-dart-serdev-v1'
-            and metadata['payload_sha256'] == profile['sha256'], 'Selected profile provenance differs')
+    release = selected_release(metadata, profile['sha256'])
     records = selected_records(options.config_inventory, options.host_scan, options.bar_sizing, options.chip_id,
-                               dart_observe=options.dart_observe, dart_cycle=options.dart_cycle)
-    if options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe or options.dart_cycle:
+                               dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release)
+    if release == BINDING_RELEASE or options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe or options.dart_cycle:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
-    modules = [(record, module_bytes(profile['payload'].parent, record)) for record in records]
-    history = n71_session_history.History(options.previous_clean, ROOT, RELEASE) if options.previous_clean else None
+    modules = [(record, module_bytes(profile['payload'].parent, record, release=release)) for record in records]
+    history = n71_session_history.History(options.previous_clean, ROOT, release) if options.previous_clean else None
     if options.dart_cycle:
         require(history is not None, 'Provider cycle requires prior private same-boot cleanup')
         n71_dart_cycle_result.previous(options.previous_clean.absolute())
@@ -333,7 +357,7 @@ def main():
     return Session(output, modules, config_inventory=options.config_inventory,
                    host_scan=options.host_scan, bar_sizing=options.bar_sizing,
                    chip_id=options.chip_id, dart_observe=options.dart_observe,
-                   dart_cycle=options.dart_cycle, history=history).run()
+                   dart_cycle=options.dart_cycle, history=history, release=release).run()
 
 
 if __name__ == '__main__':

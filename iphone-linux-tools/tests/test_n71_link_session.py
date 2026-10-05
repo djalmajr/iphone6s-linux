@@ -1,11 +1,14 @@
 """Failures must not bypass fresh activation gates or final restoration."""
 import importlib.util
 import contextlib
+import copy
+import hashlib
 import io
 import json
 import os
 from pathlib import Path
 import subprocess
+import struct
 import sys
 from types import SimpleNamespace
 import tempfile
@@ -396,6 +399,182 @@ class LinkSessionTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertFalse(proof['cleanup_verified'])
             self.assertNotIn('pcie-unload', calls)
+
+    def test_profile_pair_and_payload_select_exact_release(self):
+        # Mutation captured: accepting crossed ABI metadata or ignoring payload identity.
+        pairs = {'n71-dart-serdev-v1': '7.2.0-iphone6s-dart-serdev1',
+                 'n71-dart-serdev-power-v2': '7.2.0-iphone6s-dart-serdev-power2'}
+        for name, release in pairs.items():
+            metadata = dict(kernel_patchset=name, kernel_release=release, payload_sha256='a' * 64)
+            try:
+                self.assertEqual(MODULE.selected_release(metadata, 'a' * 64), release)
+            except ValueError as error:
+                self.fail(str(error))
+            for change in ({'kernel_release': pairs[next(n for n in pairs if n != name)]},
+                           {'kernel_patchset': 'unknown'}, {'kernel_patchset': 'n71-dart-serdev-power-v1'},
+                           {'payload_sha256': 'b' * 64}):
+                with self.assertRaises(ValueError):
+                    MODULE.selected_release(dict(metadata, **change), 'a' * 64)
+
+    def test_binding_selection_uses_verified_current_modules_for_each_mode(self):
+        # Mutation captured: falling back to the legacy module or skipping the recorded ABI.
+        release = '7.2.0-iphone6s-dart-serdev-power2'
+        with patch.object(MODULE, 'ROOT', ROOT):
+            expected = MODULE.selected_records(False, release=release)
+            self.assertEqual([(r['module'], r['bytes'], r['sha256']) for r in expected], [
+                ('n71-pcie-diagnostic.ko', 60536, 'e715ad64013eb0238c9074dba9b05157d2a7153835fd4a800bd53adb0e170785'),
+                ('n71-wlan-power-diagnostic.ko', 17688, 'fdf887e7572b70d09e76f770272bee5dc9ffcde799277e894ee8965007c5a8f1')])
+            for mode in ({}, {'config_inventory': True}, {'host_scan': True}, {'bar_sizing': True},
+                         {'chip_id': True}, {'dart_observe': True}, {'dart_cycle': True}):
+                try:
+                    self.assertEqual(MODULE.selected_records(**dict({'config_inventory': False, 'release': release}, **mode)), expected)
+                except ValueError as error:
+                    self.fail(str(error))
+            with self.assertRaises(ValueError):
+                MODULE.selected_records(False, host_scan=True, dart_cycle=True, release=release)
+            with self.assertRaises(ValueError):
+                MODULE.selected_records(False, release='unknown')
+
+    def test_binding_record_abi_and_build_flags_cannot_be_crossed(self):
+        # Mutation captured: omitting the recorded build identity or module vermagic guard.
+        evidence = json.loads((ROOT / 'docs/evidence/n71-binding-profile.json').read_text())
+        for kind in ('release', 'patchset', 'werror', 'modpost', 'module'):
+            altered = copy.deepcopy(evidence)
+            if kind == 'release':
+                altered['diagnostic_profile']['kernel_release'] = MODULE.RELEASE
+            elif kind == 'patchset':
+                altered['diagnostic_profile']['kernel_patchset'] = 'n71-dart-serdev-v1'
+            elif kind in ('werror', 'modpost'):
+                altered['module_build']['werror' if kind == 'werror' else 'modpost_passed'] = False
+            else:
+                altered['module_build']['modules']['n71-wlan-power-diagnostic.ko']['vermagic'] = MODULE.RELEASE
+            with tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                folder = root / 'docs/evidence'
+                folder.mkdir(parents=True)
+                (folder / 'n71-binding-profile.json').write_text(json.dumps(altered))
+                with patch.object(MODULE, 'ROOT', root), self.assertRaises(ValueError):
+                    MODULE.selected_records(False, release='7.2.0-iphone6s-dart-serdev-power2')
+
+    def module_fixture(self, release):
+        raw = bytearray(64)
+        raw[:7] = b'\x7fELF\x02\x01\x01'
+        struct.pack_into('<HH', raw, 16, 1, 183)
+        return bytes(raw) + ('vermagic=' + release + ' SMP preempt mod_unload aarch64\0').encode()
+
+    def test_module_vermagic_is_tied_to_the_selected_profile(self):
+        # Mutation captured: validating a power2 module with the default legacy ABI.
+        releases = ('7.2.0-iphone6s-dart-serdev1', '7.2.0-iphone6s-dart-serdev-power2')
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            for release in releases:
+                raw = self.module_fixture(release)
+                path = folder / 'module.ko'
+                path.write_bytes(raw)
+                path.chmod(0o600)
+                record = dict(module=path.name, bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest())
+                try:
+                    self.assertEqual(MODULE.module_bytes(folder, record, release=release), raw)
+                except ValueError as error:
+                    self.fail(str(error))
+                with self.assertRaises(ValueError):
+                    MODULE.module_bytes(folder, record, release=next(r for r in releases if r != release))
+
+    def test_binding_preflight_checks_live_release_and_records_selected_abi(self):
+        # Mutation captured: checking or reporting the legacy ABI in a power2 session.
+        release = '7.2.0-iphone6s-dart-serdev-power2'
+        boot = '12345678-1234-1234-1234-123456789abc'
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
+                session = MODULE.Session(Path(directory), [], release=release)
+            calls = []
+            def capture(stage, command, raw=None):
+                calls.append(stage)
+                return SimpleNamespace(returncode=0, stdout=release + '\nN71_BOOT_ID ' + boot + '\n')
+            session.capture = capture
+            try:
+                session.preflight()
+            except ValueError as error:
+                self.fail(str(error))
+            self.assertEqual(session.result['kernel_release'], release)
+            self.assertEqual(session.result['boot_id'], boot)
+            self.assertFalse(session.result['dma_enabled'])
+            session.capture = lambda *args: SimpleNamespace(returncode=0, stdout=MODULE.RELEASE + '\nN71_BOOT_ID ' + boot + '\n')
+            with self.assertRaises(ValueError):
+                session.preflight()
+            self.assertEqual(calls, ['preflight'])
+
+    def test_binding_cli_check_and_hot_history_never_use_ssh(self):
+        # Mutation captured: losing the selected ABI in module, history or CLI construction.
+        release = '7.2.0-iphone6s-dart-serdev-power2'
+        evidence = json.loads((ROOT / 'docs/evidence/n71-binding-profile.json').read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / 'runtime/profile'
+            folder.mkdir(parents=True, mode=0o700)
+            folder.parent.chmod(0o700)
+            doc = root / 'docs/evidence'
+            doc.mkdir(parents=True)
+            for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko'):
+                raw = self.module_fixture(release) + name.encode() + b'\0'
+                path = folder / name
+                path.write_bytes(raw)
+                path.chmod(0o600)
+                evidence['module_build']['modules'][name] = dict(bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest(),
+                                                                vermagic=release + ' SMP preempt mod_unload aarch64')
+            (doc / 'n71-binding-profile.json').write_text(json.dumps(evidence))
+            metadata = dict(kernel_patchset='n71-dart-serdev-power-v2', kernel_release=release,
+                            payload_sha256='a' * 64, module_sha256=evidence['module_build']['modules']['n71-pcie-diagnostic.ko']['sha256'])
+            provenance = folder / 'provenance.json'
+            provenance.write_text(json.dumps(metadata))
+            provenance.chmod(0o600)
+            history = root / 'runtime/previous'
+            history.mkdir(mode=0o700)
+            prior = dict(cleanup_verified=True, cleanup_errors=[], kernel_release=release, endpoint_id='43a314e4')
+            for name, value in {'result-private.json': json.dumps(prior),
+                                'pcie-cleanup-private.log': CLEANUP,
+                                'reg-unload-private.log': 'N71_REG_UNLOADED\n[ 10.123456] dev N71_PCIE_RESET_RESTORED asserted=1 readback=1\nN71_REG_ON_REMOVE error=0 restore_pending=0\n'}.items():
+                path = history / name
+                path.write_text(value)
+                path.chmod(0o600)
+            profile = dict(payload=folder / 'payload.bin', sha256='a' * 64)
+            argv = ['n71-link-session.py', '--profile', str(folder / 'deployment.json'), '--check']
+            with patch.object(MODULE, 'ROOT', root), patch.object(MODULE.device_profile, 'verify', return_value=profile), \
+                    patch.object(MODULE.subprocess, 'run', side_effect=AssertionError('Unexpected SSH')), \
+                    patch.dict(os.environ), contextlib.redirect_stdout(io.StringIO()) as output:
+                for arguments in (argv, argv + ['--config-inventory'], argv + ['--previous-clean', str(history)]):
+                    with patch.object(sys, 'argv', arguments):
+                        try:
+                            self.assertEqual(MODULE.main(), 0)
+                        except ValueError as error:
+                            self.fail(str(error))
+                self.assertIn('N71_SESSION_LOCAL_GATE_OK; no SSH or USB action', output.getvalue())
+                replies = {'preflight': release + '\nN71_BOOT_ID 12345678-1234-1234-1234-123456789abc\n',
+                           'observe': OBSERVE, 'activate': ACTIVE, 'pcie': LINK + INVENTORY,
+                           'pcie-cleanup': CLEANUP, 'pcie-unload': 'N71_PCIE_UNLOADED\n', 'restore': RESTORE,
+                           'reg-unload': 'N71_REG_ON_REMOVE error=0 restore_pending=0\nN71_REG_UNLOADED\n'}
+                def capture(session, stage, command, raw=None):
+                    return SimpleNamespace(returncode=0, stdout=replies.get(stage, ''))
+                destination = root / 'runtime/session'
+                with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]), \
+                        patch.object(MODULE.Session, 'capture', capture), \
+                        patch.object(sys, 'argv', argv[:-1] + ['--config-inventory', '--output-dir', str(destination)]):
+                    self.assertEqual(MODULE.main(), 0)
+                result = json.loads((destination / 'result-private.json').read_text())
+                self.assertEqual(result['kernel_release'], release)
+                self.assertTrue(result['cleanup_verified'])
+                self.assertEqual(result['inventory']['reads'], 19)
+                self.assertFalse(result['dma_enabled'])
+                metadata['module_sha256'] = 'b' * 64
+                provenance.write_text(json.dumps(metadata))
+                with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
+                    MODULE.main()
+                metadata['module_sha256'] = evidence['module_build']['modules']['n71-pcie-diagnostic.ko']['sha256']
+                provenance.write_text(json.dumps(metadata))
+                prior['kernel_release'] = MODULE.RELEASE
+                (history / 'result-private.json').write_text(json.dumps(prior))
+                with patch.object(sys, 'argv', argv + ['--previous-clean', str(history)]), self.assertRaises(ValueError):
+                    MODULE.main()
 
 
 if __name__ == '__main__':
