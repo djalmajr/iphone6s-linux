@@ -397,8 +397,8 @@ O CLI `36c7f53` seleciona o módulo caller de 76.112 bytes somente com
 `--host-scan --scan-link-target --scan-pme-disable --scan-hold`.
 Exige `pcie_scan_hold: true` na provenance, os opt-ins PME/ASPM anteriores
 e SHA/ELF/vermagic exatos. `--check` verifica somente arquivos locais.
-O composer/perfil físico correspondente ainda precisa ser preparado;
-não altere um perfil já testado para fingir essa seleção.
+Naquele checkpoint, o composer/perfil correspondente ainda estava pendente;
+a composição completa abaixo tem prova própria. Use uma candidata separada.
 
 Com a candidata privada qualificada e um boot Linux já estabelecido:
 
@@ -464,6 +464,67 @@ transferido ou carregado no iPhone nesta integração. Não comprova retenção
 física, recursos atribuídos, bind, entrega IRQ, DMA/IOMMU, rádio, telemetria
 ou carregamento Linux. O próximo passo prepara o perfil e controles
 compatíveis antes de uma sessão física agrupada.
+
+## Perfil retido completo — composição verificada sem boot
+
+Composer `c30a4ac` acrescenta `--pcie-scan-hold` e `--reg-on-module`.
+Hold exige explicitamente `--pcie-aspm-off`, patchset power2 e o arquivo REG_ON.
+REG_ON sem hold é recusado. A seleção usa a prova do caller qualificado,
+com tamanho/SHA/ELF/vermagic dos dois módulos antes de criar a saída.
+O padrão anterior conserva a ausência de hold e da cópia REG_ON.
+
+Use artefatos privados já qualificados e uma pasta de saída nova:
+
+```sh
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile "$base_profile/deployment.json" \
+  --kernel-dir "$kernel_artifacts" \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir "$diagnostic_dt" \
+  --module "$pcie_module" --module-sha256 "$pcie_sha256" \
+  --reg-on-module "$reg_on_module" --output-dir "$candidate" \
+  --pcie-aspm-off --pcie-scan-hold
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold --check
+```
+
+O composer copia REG_ON automaticamente e grava `pcie_scan_link_target: true`,
+`pcie_scan_pme_noop: false`, `pcie_scan_pme_disable: true` e
+`pcie_scan_hold: true`, além de ASPM/bootargs. Não há edição manual de
+provenance, autoload ou USB. Mantém o layout/preservação DT anterior e verifica
+as identidades da saída antes de declarar o perfil composto.
+
+O perfil real desta etapa passou esses checks com PCIe de 76.112 bytes/SHA b7e51d4d
+e REG_ON de 17.688 bytes/SHA fdf887e7. O payload inteiro é idêntico ao PME/ASPM
+anterior, portanto loader/DT/kernel/userspace permanecem iguais; initramfs,
+chave cliente e pin SSH também foram conferidos por igualdade.
+Fonte/default e perfis anteriores ficaram intactos.
+
+Ferramentas de boot e snapshot local com 44 entradas foram verificados.
+O argumento de `persist.py verify` é o ID canônico do manifesto privado,
+não o número 44 de entradas. Esses checks não consultam o telefone.
+
+Na cópia descartável do código público, em Mac e Ubuntu ARM64:
+
+```sh
+set -e
+python3 -B -m unittest discover -s tests -p 'test_n71_diagnostic_*.py' -v
+python3 -B tests/run_n71_diagnostic_payload_mutations.py
+```
+
+13 testes/29 mutações por AssertionError: 7/13 anteriores e 6 testes/16 mutações
+novos. Mutações antigas usam o contrato do payload; mutações held usam o
+contrato do perfil completo, com filesystem real e dependências de
+identidade/kernel sintéticas. Os 20 inputs e logs foram preservados e
+conferidos por SHA; AST e lint de erros fatais passaram. Import, compilação
+e timeout não contam como mutation kill.
+[Prova sanitizada e inputs](evidence/n71-pci-held-profile.json).
+
+O perfil não foi bootado e nenhum módulo foi transferido ou carregado no
+iPhone. Prova de composição não comprova bus retido, atribuição de recursos,
+IRQ/DMA/IOMMU, rádio, telemetria ou carregamento. Preparar os controles
+compatíveis antes da sessão física agrupada.
 
 ## Próximos gates
 
