@@ -881,7 +881,7 @@ flowchart TD
   H -->|"Cleanup íntegro"| I["Liberar pin; unload normal"]
 ```
 
-O trecho REG_ON do fluxo é uma obrigação do coletor do Mac. A versão anterior ainda não implementa essa retenção; **não carregar esta candidata usando o coletor antigo**. O módulo pode permanecer carregado e bound após falha justamente para conservar devres e permitir recuperação. `insmod` retornar0 não comprova que o scan ou o cleanup passaram. Nunca usar unload forçado, unbind manual ou desligar REG_ON enquanto o status indicar retenção.
+O trecho REG_ON do fluxo é uma obrigação do coletor do Mac. A versão anterior a `e1a4835` não implementa essa retenção; **não carregar esta candidata usando o coletor antigo**. O módulo pode permanecer carregado e bound após falha justamente para conservar devres e permitir recuperação. `insmod` retornar0 não comprova que o scan ou o cleanup passaram. Nunca usar unload forçado, unbind manual ou desligar REG_ON enquanto o status indicar retenção.
 
 Os parâmetros novos, lidos pelo Mac via SSH, são:
 
@@ -927,4 +927,63 @@ sha256sum "$module_dir/phone/kernel/n71-pcie-diagnostic.ko"
 
 O módulo PCIe qualificado tem69976 bytes/SHA `b3fc79aa86b2e291edea464851f028b4516ff7053f5cf20a48787170440096b1`; a ABI é `7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64`. Paths e detalhes de build podem mudar o hash de sua reprodução: conferir ELF/vermagic e registrar a nova provenance. W=1/KCFLAGS-Werror/modpost passaram; o aviso de Module.symvers global ausente foi conservado, com vmlinux.symvers exato fornecido. Nenhum erro modpost foi rebaixado. Os40 inputs e source/config/Image/exports permaneceram iguais; módulo anterior preservado.
 
-Ainda não houve load deste código no telefone, nova medição de capabilities pelo helper, scan concluído, driver Broadcom, IRQdelivery, DMA, firmware ou Wi-Fi. Não há prova de carga Linux. O próximo gate é o coletor qualificado com retenção REG_ON/staging e perfil separado, seguido de uma sessão agrupada no mesmo boot.
+Ainda não houve load deste código no telefone, nova medição de capabilities pelo helper, scan concluído, driver Broadcom, IRQdelivery, DMA, firmware ou Wi-Fi. Não há prova de carga Linux. O coletor e o perfil separados avançaram no checkpoint seguinte; a prova física continua pendente.
+
+## Coletor com retenção REG_ON — candidata pronta para sessão agrupada
+
+O commit `e1a4835` conserva REG_ON quando o cleanup PCIe não é comprovado, inclusive nos modos anteriores. Para o módulo integrado, exige seleção explícita `--host-scan --scan-link-target`, ABI power2, build qualificado e `pcie_scan_link_target: true` na provenance. Sem o flag correspondente, o perfil é recusado antes do SSH. [Prova sanitizada do coletor e perfil](evidence/n71-scan-target-session.json).
+
+O coletor lê um status vivo único e confere release, boot UUID e ausência de bind/unbind antes da limpeza. Se houver retenção, tenta **uma** ação cleanup por SSH, sem repetir o scan. Depois exige status limpo, provas finais de config/TLS/reset/energia, ausência de devices PCI e unload normal. Só então restaura/descarrega REG_ON. Falha ou timeout conserva logs, staging e REG_ON; erro primário continua no resultado mesmo quando a limpeza posterior passa. Reboot não é usado para mascarar o resultado.
+
+Os36 testes e45 mutações por AssertionError passaram Mac/Ubuntu ARM64, com25 inputs conferidos por SHA antes/depois. Os10 comandos gerados, incluindo retry, passaram bash-n nas duas plataformas; AST e fatal-flake8 passaram. A regressão de config restauração incompleta verifica também o efeito do cleanup sobre REG_ON, pois uma recusa do parser de sucesso por outro guard não bastava para provar esse fluxo. Transporte é simulado nesses testes. Gates C/build do checkpoint anterior foram reutilizados com inputs idênticos; nenhum módulo/Image foi recompilado nesta fatia.
+
+O perfil privado `runtime/n71-binding-scan-target-profile-20261005/` passou o check real de payload/initramfs/identidades/módulos e conserva o perfil anterior. Contém PCIe69976 bytes e REG_ON17688 bytes; sem autoload. Para reproduzir, primeiro prepare o perfil power2 de link e compile o módulo conforme a receita anterior. Na raiz de `iphone-linux-tools`, copie para uma pasta nova e registre a seleção, usando somente o artefato correspondente ao build qualificado:
+
+```sh
+set -eu
+umask 077
+source_dir="$PWD/runtime/n71-binding-link-profile-repro"
+profile_dir="$PWD/runtime/n71-binding-scan-target-profile-repro"
+module_candidate="$module_dir/phone/kernel/n71-pcie-diagnostic.ko"
+python3 - "$source_dir" "$profile_dir" "$module_candidate" <<'PY'
+import hashlib, json, shutil, sys
+from pathlib import Path
+source, target, module = map(Path, sys.argv[1:])
+record = json.loads(Path('docs/evidence/n71-pcie-scan-target-build.json').read_text())
+raw = module.read_bytes()
+selected = record['selected_modules']['n71-pcie-diagnostic.ko']
+assert len(raw) == selected['bytes'] and hashlib.sha256(raw).hexdigest() == selected['sha256']
+assert not target.exists() and not target.is_symlink()
+shutil.copytree(source, target)
+target.chmod(0o700)
+for path in target.iterdir():
+    assert path.is_file() and not path.is_symlink()
+    path.chmod(0o600)
+(target / 'n71-pcie-diagnostic.ko').write_bytes(raw)
+path = target / 'provenance.json'
+metadata = json.loads(path.read_text())
+metadata.update(module_sha256=selected['sha256'], pcie_scan_link_target=True,
+                physical_boot_tested=False, module_automatic_load=False,
+                default_profile_changed=False, wifi_verified=False)
+path.write_text(json.dumps(metadata, indent=2) + '\n')
+PY
+python3 scripts/host/n71-link-session.py \
+  --profile "$profile_dir/deployment.json" --host-scan --scan-link-target --check
+```
+
+O hash de uma recompilação pode mudar por paths/detalhes de build. Nesse caso, preserve o resultado e qualifique seu próprio registro; não troque o hash apenas para contornar a recusa. O check acima não acessa USB/SSH. Para repetir os gates do coletor:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_link_session.py -v
+python3 -B tests/run_n71_link_session_mutations.py
+```
+
+Depois de um único boot supervisionado do perfil e da coleta de energia, execute o scan com uma pasta nova e privada sob runtime. Exemplo da seleção preparada:
+
+```sh
+python3 scripts/host/n71-link-session.py \
+  --profile "$PWD/runtime/n71-binding-scan-target-profile-20261005/deployment.json" \
+  --host-scan --scan-link-target --output-dir "$PWD/runtime/n71-scan-target-first"
+```
+
+Esse comando faz uma tentativa delimitada; não habilita Broadcom, firmware, IRQ ou DMA. Se tudo passar, preserve o boot para os próximos passos qualificados via SSH. Se houver obrigação pendente, conserve os módulos/REG_ON e investigue os registros antes de outra ação. Continuar automaticamente um scan falho ou descarregar à força não faz parte da receita. Os novos guards de capability e a permanência do link após TLS2 ainda precisam de prova física; Wi-Fi e carga Linux continuam abertos.
