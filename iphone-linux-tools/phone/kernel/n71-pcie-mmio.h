@@ -11,6 +11,8 @@ struct n71_diagnostic {
 	u32 last_link_status;
 	unsigned int link_status_reads;
 	struct pci_host_bridge *scan_bridge;
+	bool module_retained, power_put_pending, reset_pending;
+	int primary_error, cleanup_error;
 };
 
 static int n71_read(void *context, enum n71_pcie_region region, u32 offset, u32 *value)
@@ -84,7 +86,11 @@ static void n71_delay(void *context, unsigned int microseconds)
 static int n71_reset(void *context, bool asserted)
 {
 	struct n71_diagnostic *state = context;
-	return gpiod_direction_output(state->perst, asserted);
+	int value, error = gpiod_direction_output(state->perst, asserted);
+	if (error)
+		return error;
+	value = gpiod_get_value_cansleep(state->perst);
+	return value < 0 ? value : value == asserted ? 0 : -EIO;
 }
 
 static int n71_endpoint(void *context, u32 offset, u32 *value)

@@ -4,6 +4,8 @@
 #include <linux/gpio/consumer.h>
 #include <linux/io.h>
 #include <linux/module.h>
+#include <linux/mutex.h>
+#include <linux/string.h>
 #include <linux/of_address.h>
 #include <linux/platform_device.h>
 #include <linux/pm_domain.h>
@@ -41,6 +43,9 @@ MODULE_PARM_DESC(dart_observe, "Read two stable DART snapshots; no provider, DAR
 static bool dart_cycle;
 module_param(dart_cycle, bool, 0400);
 MODULE_PARM_DESC(dart_cycle, "Test temporary DART provider and restore tables; no DMA attachment");
+static DEFINE_MUTEX(session_lock);
+static struct n71_diagnostic *session;
+static struct device *session_device;
 
 static int n71_inventory_read32(void *context, u32 offset, u32 *value)
 {
@@ -89,9 +94,11 @@ static int n71_table(struct device *dev, const char *name, u32 size,
 	u32 values[3];
 	int error;
 
-	if (cells <= 0 || cells % 3 || cells / 3 > N71_PCIE_MAX_TUNABLES)
+	if (cells <= 0 || cells % 3)
 		return -EINVAL;
 	*count = cells / 3;
+	if (*count > N71_PCIE_MAX_TUNABLES)
+		return -EINVAL;
 	result = devm_kcalloc(dev, *count, sizeof(*result), GFP_KERNEL);
 	if (!result)
 		return -ENOMEM;
@@ -142,16 +149,104 @@ static int n71_validate_resources(struct platform_device *pdev)
 
 static int n71_release_power(struct n71_diagnostic *state)
 {
-	int error, first = 0;
-	while (state->powered) {
-		error = pm_runtime_put_sync_suspend(state->domains[--state->powered]);
-		if (error < 0 && !first)
-			first = error;
+	struct device *domain;
+	int error;
+
+	while (state->powered || state->power_put_pending) {
+		if (state->power_put_pending) {
+			domain = state->domains[state->powered];
+			pm_runtime_barrier(domain);
+			error = pm_runtime_suspend(domain); /* Never drop the same usage reference twice. */
+		} else {
+			domain = state->domains[--state->powered];
+			state->power_put_pending = true;
+			error = pm_runtime_put_sync_suspend(domain);
+		}
+		if (error < 0 || !pm_runtime_status_suspended(domain))
+			return error < 0 ? error : -EBUSY;
+		state->power_put_pending = false;
 	}
 	while (state->attached)
 		dev_pm_domain_detach(state->domains[--state->attached], true);
-	return first;
+	return 0;
 }
+
+static int n71_session_cleanup(struct n71_diagnostic *state)
+{
+	int error = n71_pcie_scan_cleanup(state);
+
+	/* Pending rollback owns the link, GPIO, mappings and all power references. */
+	if (error || state->scan_bridge)
+		return error ? error : -EBUSY;
+	if (state->reset_pending) {
+		error = n71_reset(state, true);
+		if (error)
+			return error;
+		state->reset_pending = false;
+		dev_info(session_device, "N71_PCIE_RESET_RESTORED asserted=1 readback=1\n");
+	}
+	error = n71_release_power(state);
+	if (!error)
+		dev_info(session_device, "N71_PCIE_POWER_RELEASED powered=%u attached=%u\n",
+			 state->powered, state->attached);
+	return error;
+}
+
+static int n71_finish_cleanup(struct n71_diagnostic *state)
+{
+	state->cleanup_error = n71_session_cleanup(state);
+	if (!state->cleanup_error && !state->scan_bridge && !state->reset_pending &&
+	    !state->powered && !state->attached && !state->power_put_pending && state->module_retained) {
+		state->module_retained = false;
+		module_put(THIS_MODULE);
+	}
+	dev_info(session_device, "N71_PCIE_SESSION_CLEANUP error=%d retained=%u scan_pending=%u reset_pending=%u powered=%u attached=%u power_put_pending=%u primary_error=%d\n",
+		 state->cleanup_error, state->module_retained, !!state->scan_bridge,
+		 state->reset_pending, state->powered, state->attached,
+		 state->power_put_pending, state->primary_error);
+	return state->cleanup_error;
+}
+
+static int n71_cleanup_action(const char *text, const struct kernel_param *parameter)
+{
+	int error;
+
+	(void)parameter;
+	if (!sysfs_streq(text, "cleanup"))
+		return -EINVAL;
+	if (!try_module_get(THIS_MODULE))
+		return -ENODEV;
+	mutex_lock(&session_lock);
+	error = session ? n71_finish_cleanup(session) : -ENODEV;
+	mutex_unlock(&session_lock);
+	module_put(THIS_MODULE);
+	return error;
+}
+
+static int n71_session_status(char *buffer, const struct kernel_param *parameter)
+{
+	int length;
+
+	(void)parameter;
+	mutex_lock(&session_lock);
+	if (session)
+		length = scnprintf(buffer, PAGE_SIZE,
+			"ready=1 retained=%u scan_pending=%u reset_pending=%u powered=%u attached=%u power_put_pending=%u primary_error=%d cleanup_error=%d\n",
+			session->module_retained, !!session->scan_bridge, session->reset_pending,
+			session->powered, session->attached, session->power_put_pending,
+			session->primary_error, session->cleanup_error);
+	else
+		length = scnprintf(buffer, PAGE_SIZE, "ready=0 retained=0\n");
+	mutex_unlock(&session_lock);
+	return length;
+}
+
+static const struct kernel_param_ops cleanup_ops = {.set = n71_cleanup_action};
+static const struct kernel_param_ops status_ops = {.get = n71_session_status};
+module_param_cb(action, &cleanup_ops, NULL, 0200);
+MODULE_PARM_DESC(action, "cleanup retries restoration only; never repeats enumeration or scan");
+module_param_cb(status, &status_ops, NULL, 0400);
+MODULE_PARM_DESC(status, "Inspect retained ownership and cleanup errors before normal unload");
 
 static int n71_power(struct device *dev, struct n71_diagnostic *state)
 {
@@ -172,19 +267,25 @@ static int n71_power(struct device *dev, struct n71_diagnostic *state)
 	return 0;
 }
 
-static int n71_probe(struct platform_device *pdev)
+static int n71_probe_locked(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
-	struct n71_diagnostic state = {};
+	struct n71_diagnostic *state;
 	struct n71_pcie_global_config config = {.lane_config = 1};
 	struct n71_pcie_tunable *phy, *common, *port, *ecam;
 	unsigned int port_count, ecam_count;
 	u32 root_id, port_status;
-	struct n71_pcie_port_io io = {{&state, n71_read, n71_write, n71_delay}, n71_read_port, n71_write_port};
-	struct n71_pcie_link_io link = {&state, n71_read_link, n71_write_link, n71_reset, n71_delay, n71_endpoint};
+	struct n71_pcie_port_io io;
+	struct n71_pcie_link_io link;
 	u32 identity;
 	const char *stage = "validate";
 	int error, cleanup;
+
+	state = devm_kzalloc(dev, sizeof(*state), GFP_KERNEL);
+	if (!state)
+		return -ENOMEM;
+	io = (struct n71_pcie_port_io){{state, n71_read, n71_write, n71_delay}, n71_read_port, n71_write_port};
+	link = (struct n71_pcie_link_io){state, n71_read_link, n71_write_link, n71_reset, n71_delay, n71_endpoint};
 
 	error = n71_validate_resources(pdev);
 	if (!error)
@@ -202,17 +303,22 @@ static int n71_probe(struct platform_device *pdev)
 		return dev_err_probe(dev, error, "N71_PCIE_DIAGNOSTIC validate failed\n");
 	config.phy = phy;
 	config.common = common;
-	state.common = devm_platform_ioremap_resource(pdev, 9);
-	state.phy = devm_platform_ioremap_resource(pdev, 10);
-	state.port = devm_platform_ioremap_resource(pdev, 3);
-	state.ecam = devm_platform_ioremap_resource(pdev, 0);
-	if (IS_ERR(state.common) || IS_ERR(state.phy) || IS_ERR(state.port) || IS_ERR(state.ecam))
+	state->common = devm_platform_ioremap_resource(pdev, 9);
+	state->phy = devm_platform_ioremap_resource(pdev, 10);
+	state->port = devm_platform_ioremap_resource(pdev, 3);
+	state->ecam = devm_platform_ioremap_resource(pdev, 0);
+	if (IS_ERR(state->common) || IS_ERR(state->phy) || IS_ERR(state->port) || IS_ERR(state->ecam))
 		return -ENODEV;
-	state.perst = devm_gpiod_get(dev, "perst", GPIOD_OUT_HIGH);
-	if (IS_ERR(state.perst))
-		return dev_err_probe(dev, PTR_ERR(state.perst), "N71_PCIE_DIAGNOSTIC PERST unavailable\n");
+	state->perst = devm_gpiod_get(dev, "perst", GPIOD_OUT_HIGH);
+	if (IS_ERR(state->perst))
+		return dev_err_probe(dev, PTR_ERR(state->perst), "N71_PCIE_DIAGNOSTIC PERST unavailable\n");
+	platform_set_drvdata(pdev, state);
+	session = state;
+	session_device = dev;
+	__module_get(THIS_MODULE);
+	state->module_retained = true;
 	stage = "power";
-	error = n71_power(dev, &state);
+	error = n71_power(dev, state);
 	if (error)
 		goto done;
 	stage = "global";
@@ -223,8 +329,8 @@ static int n71_probe(struct platform_device *pdev)
 	error = n71_pcie_prepare_wlan(&io, false, false);
 	if (!error) {
 		stage = "root-read";
-		root_id = readl(state.ecam + 0x8000);
-		port_status = readl(state.port + 0x88);
+		root_id = readl(state->ecam + 0x8000);
+		port_status = readl(state->port + 0x88);
 		if (!root_id || root_id == 0xffffffff || port_status == 0xffffffff)
 			error = -ENODEV;
 		else
@@ -233,60 +339,78 @@ static int n71_probe(struct platform_device *pdev)
 	}
 	if (!error && enumerate) {
 		stage = "enumerate";
+		state->reset_pending = true;
 		error = n71_pcie_enumerate_wlan(&link, ecam, ecam_count, port, port_count, &identity);
 		dev_info(dev, "N71_PCIE_LINK_RESULT error=%d port88=%08x reads=%u; no DMA\n",
-			 error, state.last_link_status, state.link_status_reads);
+			 error, state->last_link_status, state->link_status_reads);
 		if (!error)
 			dev_info(dev, "N71_PCIE_ENDPOINT_ID=%08x; bus-master clear; no radio\n", identity);
 		if (!error && config_inventory) {
 			stage = "inventory";
-			error = n71_inventory_report(dev, &state);
+			error = n71_inventory_report(dev, state);
 		}
 		if (!error && host_scan) {
 			stage = "host-scan";
-			error = n71_pcie_scan(dev, &state);
+			error = n71_pcie_scan(dev, state);
 		}
 		if (!error && bar_sizing) {
 			stage = "bar-sizing";
-			error = n71_pcie_size_bars(dev, &state, NULL);
+			error = n71_pcie_size_bars(dev, state, NULL);
 		}
 		if (!error && chip_id) {
 			stage = "chip-id";
-			error = n71_pcie_chip_id(dev, &state);
+			error = n71_pcie_chip_id(dev, state);
 		}
 		if (!error && dart_observe) {
 			stage = "dart-observe";
-			error = n71_pcie_dart_observe(dev, &state);
+			error = n71_pcie_dart_observe(dev, state);
 		}
 		if (!error && dart_cycle) {
 			stage = "dart-cycle";
-			error = n71_pcie_dart_cycle(dev, &state);
-		}
-		cleanup = n71_reset(&state, true);
-		if (!cleanup)
-			dev_info(dev, "N71_PCIE_RESET_RESTORED asserted=1 readback=1\n");
-		if (cleanup) {
-			dev_err(dev, "N71_PCIE_DIAGNOSTIC reset cleanup failed: %d\n", cleanup);
-			if (!error)
-				error = cleanup;
+			error = n71_pcie_dart_cycle(dev, state);
 		}
 	}
 done:
-	/* Reassert reset after enumeration and balance every power reference. */
-	cleanup = n71_release_power(&state);
-	if (!cleanup)
-		dev_info(dev, "N71_PCIE_POWER_RELEASED powered=%u attached=%u\n",
-			 state.powered, state.attached);
-	if (cleanup < 0) {
-		dev_err(dev, "N71_PCIE_DIAGNOSTIC power cleanup failed: %d\n", cleanup);
-		if (!error) {
-			error = cleanup;
-			stage = "cleanup";
-		}
+	state->primary_error = error;
+	cleanup = n71_finish_cleanup(state);
+	if (cleanup && !error) {
+		error = cleanup;
+		stage = "cleanup";
 	}
-	if (error)
+	if (state->module_retained) {
+		/* Binding keeps devres alive; a module pin prevents normal unload. */
+		dev_err(dev, "N71_PCIE_DIAGNOSTIC %s error=%d; cleanup retained, use action=cleanup\n", stage, error);
+		return 0;
+	}
+	if (error) {
+		session = NULL;
+		session_device = NULL;
+		platform_set_drvdata(pdev, NULL);
 		return dev_err_probe(dev, error, "N71_PCIE_DIAGNOSTIC %s failed\n", stage);
+	}
 	return 0;
+}
+
+static int n71_probe(struct platform_device *pdev)
+{
+	int error;
+
+	mutex_lock(&session_lock);
+	error = session ? -EBUSY : n71_probe_locked(pdev);
+	mutex_unlock(&session_lock);
+	return error;
+}
+
+static void n71_remove(struct platform_device *pdev)
+{
+	mutex_lock(&session_lock);
+	/* Suppressed bind attributes and the retained pin protect this lifetime. */
+	WARN_ON(session && session->module_retained);
+	if (platform_get_drvdata(pdev) == session) {
+		session = NULL;
+		session_device = NULL;
+	}
+	mutex_unlock(&session_lock);
 }
 
 static const struct of_device_id n71_match[] = {
@@ -294,8 +418,8 @@ static const struct of_device_id n71_match[] = {
 };
 MODULE_DEVICE_TABLE(of, n71_match);
 static struct platform_driver n71_driver = {
-	.probe = n71_probe,
-	.driver = {.name = "n71-pcie-diagnostic", .of_match_table = n71_match},
+	.probe = n71_probe, .remove = n71_remove,
+	.driver = {.name = "n71-pcie-diagnostic", .of_match_table = n71_match, .suppress_bind_attrs = true},
 };
 
 static int __init n71_init(void)
