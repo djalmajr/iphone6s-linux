@@ -4,6 +4,7 @@ import hashlib
 import os
 from pathlib import Path
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -127,6 +128,69 @@ class WifiModuleTests(unittest.TestCase):
             with patch.object(MODULE.shutil, 'disk_usage', return_value=SimpleNamespace(free=1024**3)):
                 MODULE.destination(target, source, output)
             self.assertFalse(target.exists())
+
+    def test_selected_binding_identity_is_pinned_and_unknown_profiles_refused(self):
+        self.assertEqual(MODULE.build_identity('n71-dart-serdev-power-v2'), (
+            '7.2.0-iphone6s-dart-serdev-power2', {
+                '.config': 'c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8',
+                'arch/arm64/boot/Image': 'f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed',
+                'vmlinux.symvers': '03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61',
+            }))
+        self.assertEqual(MODULE.build_identity('n71-dart-serdev-v1'), (MODULE.RELEASE, MODULE.KERNEL_FILES))
+        for profile in ('unknown', 'n71-dart-serdev-power-v1'):
+            with self.assertRaises(ValueError):
+                MODULE.build_identity(profile)
+
+    def test_selected_elf_rejects_crossed_kernel_release(self):
+        releases = {'n71-dart-serdev-v1': '7.2.0-iphone6s-dart-serdev1',
+                    'n71-dart-serdev-power-v2': '7.2.0-iphone6s-dart-serdev-power2'}
+        for profile, release in releases.items():
+            raw = bytearray(64)
+            raw[:7] = b'\x7fELF\x02\x01\x01'
+            struct.pack_into('<HH', raw, 16, 1, 183)
+            valid = bytes(raw) + ('vermagic=' + release + ' SMP preempt mod_unload aarch64\0').encode()
+            try:
+                MODULE.verify_elf(valid, profile=profile)
+            except ValueError as error:
+                self.fail('Correct selected ABI refused: ' + str(error))
+            for other in releases:
+                if other != profile:
+                    with self.assertRaises(ValueError):
+                        MODULE.verify_elf(valid, profile=other)
+
+    def test_binding_output_requires_its_own_hashes_and_release(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory).resolve()
+            data = {'.config': self.config().encode(), 'arch/arm64/boot/Image': b'synthetic binding image',
+                    'vmlinux.symvers': b'synthetic binding exports'}
+            for name, raw in data.items():
+                path = output / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(raw)
+            path = output / 'include/config/kernel.release'
+            path.parent.mkdir(parents=True)
+            path.write_text('7.2.0-iphone6s-dart-serdev-power2\n')
+            hashes = {name: hashlib.sha256(raw).hexdigest() for name, raw in data.items()}
+            with patch.object(MODULE, 'BINDING_KERNEL_FILES', hashes):
+                try:
+                    self.assertEqual(MODULE.kernel_state(output, profile='n71-dart-serdev-power-v2'), MODULE.REQUIRED)
+                except ValueError as error:
+                    self.fail('Correct binding artifacts refused: ' + str(error))
+                for name, raw in data.items():
+                    (output / name).write_bytes(raw + b'changed')
+                    with self.assertRaises(ValueError):
+                        MODULE.kernel_state(output, profile='n71-dart-serdev-power-v2')
+                    (output / name).write_bytes(raw)
+                path.write_text('7.2.0-iphone6s-dart-serdev1\n')
+                with self.assertRaises(ValueError):
+                    MODULE.kernel_state(output, profile='n71-dart-serdev-power-v2')
+
+    def test_cli_offers_explicit_binding_selection_without_building(self):
+        environment = dict(os.environ, PYTHONPATH=str(ROOT / 'scripts/build'), PYTHONDONTWRITEBYTECODE='1')
+        call = subprocess.run([sys.executable, str(SPEC.origin), '--help'], capture_output=True,
+                              text=True, env=environment, timeout=10)
+        self.assertEqual(call.returncode, 0, call.stderr)
+        self.assertIn('--profile {n71-dart-serdev-v1,n71-dart-serdev-power-v2}', call.stdout)
 
 
 if __name__ == '__main__':

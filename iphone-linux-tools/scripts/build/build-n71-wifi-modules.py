@@ -21,6 +21,12 @@ KERNEL_FILES = {
     'arch/arm64/boot/Image': 'dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d',
     'vmlinux.symvers': '03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61',
 }
+BINDING_RELEASE = '7.2.0-iphone6s-dart-serdev-power2'
+BINDING_KERNEL_FILES = {
+    '.config': 'c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8',
+    'arch/arm64/boot/Image': 'f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed',
+    'vmlinux.symvers': '03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61',
+}
 REQUIRED = {'CONFIG_BRCMFMAC': 'm', 'CONFIG_BRCMFMAC_PCIE': 'n',
             'CONFIG_BRCMFMAC_PROTO_MSGBUF': 'n', 'CONFIG_BRCMFMAC_SDIO': 'y',
             'CONFIG_BRCMUTIL': 'm', 'CONFIG_CFG80211': 'm', 'CONFIG_FW_LOADER': 'y',
@@ -52,13 +58,21 @@ def macro_scope(paths):
     require(set(paths) == MACRO_FILES, 'PCIe/MSGBUF macros escaped the audited driver package')
 
 
-def kernel_state(output):
+def build_identity(profile):
+    require(profile in (kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE), 'Unsupported Wi-Fi kernel profile')
+    if profile == kernel_bundle.BINDING_BUNDLE:
+        return BINDING_RELEASE, BINDING_KERNEL_FILES
+    return RELEASE, KERNEL_FILES
+
+
+def kernel_state(output, *, profile=kernel_bundle.BUNDLE):
+    release, hashes = build_identity(profile)
     require(output == output.resolve(strict=True) and output.stat().st_uid == os.geteuid(),
             'Owned kernel output without aliases required')
-    for name, expected in KERNEL_FILES.items():
+    for name, expected in hashes.items():
         raw = kernel_bundle.kernel_patchset.plain_file(output / name)
         require(hashlib.sha256(raw).hexdigest() == expected, 'Preserved kernel hash differs: ' + name)
-    require((output / 'include/config/kernel.release').read_text().strip() == RELEASE,
+    require((output / 'include/config/kernel.release').read_text().strip() == release,
             'Preserved kernel release differs')
     return configuration((output / '.config').read_text())
 
@@ -97,8 +111,9 @@ def make_command(output, package, exports, *, pcie=False):
     return command
 
 
-def verify_elf(raw):
-    magic = ('vermagic=' + RELEASE + ' SMP preempt mod_unload aarch64\0').encode()
+def verify_elf(raw, *, profile=kernel_bundle.BUNDLE):
+    release, _ = build_identity(profile)
+    magic = ('vermagic=' + release + ' SMP preempt mod_unload aarch64\0').encode()
     require(len(raw) >= 64 and raw[:7] == b'\x7fELF\x02\x01\x01'
             and struct.unpack_from('<HH', raw, 16) == (1, 183) and raw.count(magic) == 1,
             'Exact bundle ABI and relocatable AArch64 module required')
@@ -108,9 +123,10 @@ def verify_alias(aliases):
     require(ALIAS in aliases, 'PCI 14e4:43a3 with driver network-other class match required')
 
 
-def build(source, output, target):
-    kernel_bundle.inspect(source)
-    config = kernel_state(output)
+def build(source, output, target, *, profile=kernel_bundle.BUNDLE):
+    release, hashes = build_identity(profile)
+    kernel_bundle.inspect(source, profile=profile)
+    config = kernel_state(output, profile=profile)
     paths = kernel_bundle.kernel_patchset.git(source, 'grep', '-l', '-E',
                                               'CONFIG_BRCMFMAC_(PCIE|PROTO_MSGBUF)').decode().splitlines()
     macro_scope(paths)
@@ -137,7 +153,7 @@ def build(source, output, target):
     modules = {}
     for module in sorted(target.glob('**/*.ko')):
         raw = module.read_bytes()
-        verify_elf(raw)
+        verify_elf(raw, profile=profile)
         depends = subprocess.check_output(['modinfo', '-F', 'depends', str(module)], text=True).strip()
         modules[str(module.relative_to(target))] = {'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest(),
                                                    'depends': sorted(filter(None, depends.split(',')))}
@@ -150,10 +166,10 @@ def build(source, output, target):
     symbols = subprocess.check_output(['nm', '--defined-only', str(driver)], text=True)
     for symbol in ('brcmf_pcie_register', 'brcmf_proto_msgbuf_attach'):
         require(re.search(r'\b[Tt]\s+' + symbol + r'$', symbols, re.M), 'PCIe/MSGBUF implementation not linked')
-    kernel_bundle.inspect(source)
-    require(kernel_state(output) == config, 'Preserved build changed')
-    report = {'format': 1, 'source_commit': kernel_bundle.BASE, 'kernel_release': RELEASE,
-              'preserved_kernel_sha256': KERNEL_FILES, 'config': config, 'macro_files': sorted(paths),
+    kernel_bundle.inspect(source, profile=profile)
+    require(kernel_state(output, profile=profile) == config, 'Preserved build changed')
+    report = {'format': 1, 'source_commit': kernel_bundle.BASE, 'kernel_profile': profile, 'kernel_release': release,
+              'preserved_kernel_sha256': hashes, 'config': config, 'macro_files': sorted(paths),
               'source_sha256': source_hashes, 'commands': commands, 'modules': modules,
               'pci_alias_verified': ALIAS, 'pcie_msgbuf_symbols_linked': True,
               'werror_modpost_passed': True, 'kernel_source_and_image_preserved': True,
@@ -169,10 +185,13 @@ def main():
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--kernel-output', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--profile', choices=(kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE),
+                        default=kernel_bundle.BUNDLE)
     options = parser.parse_args()
     require(sys.platform == 'linux' and platform.machine() == 'aarch64' and os.geteuid() != 0,
             'Run only as the dedicated Linux ARM64 VM user')
-    build(options.source.absolute(), options.kernel_output.absolute(), options.output_dir.absolute())
+    build(options.source.absolute(), options.kernel_output.absolute(), options.output_dir.absolute(),
+          profile=options.profile)
 
 
 if __name__ == '__main__':
