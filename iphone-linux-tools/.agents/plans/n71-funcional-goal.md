@@ -2273,3 +2273,21 @@ Não instalar pacotes no Mac, modificar política/rede global/sudoers/PF/firewal
   sem ERROR e nomeia a mudança corretamente como duplicate-apply. Gate final
   completo passou; não afirmar detecção de remoção pura de preflight.
 - AST/fatal-flake8/diff passaram; Image power2 ainda não compilado nem físico.
+
+
+### Incremento 133 — Image completo power2 separado
+
+- Até cinco arquivos públicos de prova/reprodução após sucesso: plano,
+  docs/evidence/kernel-n71-binding-build.json, docs/N71_KERNEL_BUNDLE.md,
+  docs/STATUS.md e docs/evidence/n71-i2c-genpd.json. Builds/logs/binários privados.
+- Usar worktree novo validado132 e output novo power2, sete patches, config
+  só com LOCALVERSION diferente. Metadata reproduzível, provider builtin,
+  Image/DTB completos Werror/modpost, config embutida/16KiB/serdev export/ELF,
+  DTB base igual e modules_prepare. Preservar power1 source/config/Image/exports.
+- Transferir artifacts públicos de kernel sem firmware/calibração/chaves,
+  conferir SHA e manter700/600. Não selecionar como default, carregar no
+  telefone ou afirmar ausência física de sysfs bind/unbind pelo link.
+- Somente depois: integrações do profile e módulos/caller de diagnóstico,
+  permitindo reunir gates num DFU. Nenhuma intervenção do operador agora.
+
+- Gate133: Image completo power2 terminal0 em1146s, Werror/modpost, ARM64/16KiB, config embutida, GPIO/PMGR builtin, export serdev e DTB preservado; modules_prepare não mudou config/Image/exports. Artefatos/logs transferidos com SHA recalculado no Mac,700/600. Power1 source/config/Image/exports intactos. CIa684 PR37255423107/push37255420563 terminal success, seis jobs. Patch007 está no Image separado; não foi bootado, não há prova física de ausência bind/unbind nem carga/telemetria/Wi-Fi.

@@ -463,3 +463,105 @@ Nenhum perfil default foi alterado nem houve USB/DFU nessa preparação.
 Boot/restore/SSH/HTTP/snapshot na ABI nova e comportamento físico continuam
 gates futuros. Esse Image ainda não habilita I2C1/HDQ/SN2400 nem comprova
 carga ou Wi-Fi; a próxima sessão física deve agrupar as observações de energia.
+
+## Image power2 e proteção de binding — 2026-10-05
+
+O profile explícito `n71-dart-serdev-power-v2` reúne001→007 e exige `-iphone6s-dart-serdev-power2`. A patch007 define `suppress_bind_attrs` no registro do provider PMGR; o backend genpd exige essa proteção antes de attach. A fonte power1 já aplicada é recusada para power2: use um worktree novo na base fixada. Default, power1 e rollback continuam separados.
+
+A [prova do Image](evidence/kernel-n71-binding-build.json) registra o link completo Werror, modpost, Image ARM64/16KiB, config embutida exata, GPIO/PMGR builtin, export serdev e DTB igual ao anterior. Os oito testes e seis mutações por asserção do seletor passaram no Mac/ARM64; CI do código `a684a93` terminou success nos seis jobs. Essas provas não substituem a ausência de bind/unbind no aparelho nem o ciclo físico genpd. Carga, telemetria e Wi-Fi permanecem pendentes.
+
+### Fonte e build reproduzíveis
+
+Execute como usuário Ubuntu sem privilégios, na cópia pública do projeto dentro da VM dedicada. Os caminhos registrados já existem: escolha nomes novos para repetir e preserve os outputs anteriores. Dependências: [build fonte](KERNEL-SOURCE-BUILD.md). Chaves, firmware e snapshots não vão para a VM.
+
+```sh
+set -eu
+umask 077
+work_dir=/home/ubuntu/kernel-n71-binding-source-20261005
+build_dir=/home/ubuntu/kernel-n71-binding-build-20261005
+base_dir=/home/ubuntu/kernel-n71-source-20261001
+legacy_src=/home/ubuntu/kernel-n71-power-source-20261004
+legacy_build=/home/ubuntu/kernel-n71-power-build-20261004
+test ! -e "$work_dir" && test ! -L "$work_dir"
+test ! -e "$build_dir" && test ! -L "$build_dir"
+python3 - "$build_dir" <<'PY'
+from pathlib import Path
+import shutil
+import sys
+assert shutil.disk_usage(Path(sys.argv[1]).parent).free >= 8 * 1024**3
+PY
+mkdir -m 700 "$build_dir"
+python3 scripts/build/kernel_bundle.py check "$legacy_src" \
+  --profile n71-dart-serdev-power-v1 > "$build_dir/power1-source-before.json"
+sha256sum "$legacy_build/.config" "$legacy_build/arch/arm64/boot/Image" \
+  "$legacy_build/vmlinux.symvers" > "$build_dir/power1-before.sha256"
+git -C "$base_dir" worktree add --detach "$work_dir" \
+  958481f87fee0949ff6a9a4af77f7eb6dac8a149
+python3 scripts/build/kernel_bundle.py apply "$work_dir" \
+  --profile n71-dart-serdev-power-v2
+python3 scripts/build/kernel_bundle.py check "$work_dir" \
+  --profile n71-dart-serdev-power-v2 > "$build_dir/source-before.json"
+python3 -B -m unittest discover -s tests -p test_kernel_binding_bundle.py -v
+cp "$legacy_build/.config" "$build_dir/.config"
+"$work_dir/scripts/config" --file "$build_dir/.config" \
+  --set-str LOCALVERSION -iphone6s-dart-serdev-power2
+epoch=$(git -C "$work_dir" show -s --format=%ct HEAD)
+export SOURCE_DATE_EPOCH="$epoch"
+export KBUILD_BUILD_TIMESTAMP="$(date -u -d "@$epoch" '+%a %b %e %T %Y')"
+export KBUILD_BUILD_USER=build KBUILD_BUILD_HOST=iphone6s-kernel-source KBUILD_BUILD_VERSION=1
+export LC_ALL=C LOCALVERSION=
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror olddefconfig
+python3 - "$legacy_build/.config" "$build_dir/.config" <<'PY'
+from pathlib import Path
+import sys
+before, after = [Path(name).read_text() for name in sys.argv[1:]]
+assert after == before.replace('CONFIG_LOCALVERSION="-iphone6s-dart-serdev-power1"',
+                               'CONFIG_LOCALVERSION="-iphone6s-dart-serdev-power2"')
+PY
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror prepare
+test "$(cat "$build_dir/include/config/kernel.release")" = 7.2.0-iphone6s-dart-serdev-power2
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror Image apple/s8000-n71.dtb > "$build_dir/full-build.log" 2>&1
+python3 - "$work_dir" "$build_dir" "$legacy_build" <<'PY'
+from pathlib import Path
+import struct
+import subprocess
+import sys
+work, out, old = [Path(name) for name in sys.argv[1:]]
+image = out / 'arch/arm64/boot/Image'
+header = image.read_bytes()[:64]
+assert header[56:60] == b'ARM\x64'
+assert (struct.unpack_from('<Q', header, 24)[0] >> 1) & 3 == 2
+embedded = subprocess.check_output([str(work / 'scripts/extract-ikconfig'), str(image)])
+assert embedded == (out / '.config').read_bytes()
+assert 'MODPOST vmlinux.symvers' in (out / 'full-build.log').read_text()
+symbols = subprocess.check_output(['nm', str(out / 'vmlinux')], text=True).splitlines()
+assert sum(line.split()[-2:] == ['T', 'serdev_device_set_stop_bits'] for line in symbols) == 1
+exports = [line.split() for line in (out / 'vmlinux.symvers').read_text().splitlines()
+           if line.split()[1] == 'serdev_device_set_stop_bits']
+assert len(exports) == 1 and exports[0][3] == 'EXPORT_SYMBOL_GPL'
+for name in ('drivers/pinctrl/pinctrl-apple-gpio.o', 'drivers/pmdomain/apple/pmgr-pwrstate.o'):
+    obj = out / name
+    raw = obj.read_bytes()[:20]
+    assert raw[:6] == b'\x7fELF\x02\x01' and struct.unpack('<HH', raw[16:20]) == (1, 183)
+    assert '-DMODULE' not in (obj.parent / ('.' + obj.name + '.cmd')).read_text()
+dtb = 'arch/arm64/boot/dts/apple/s8000-n71.dtb'
+assert (out / dtb).read_bytes() == (old / dtb).read_bytes()
+assert subprocess.check_output(['fdtget', '-t', 's', str(out / dtb), '/', 'compatible'],
+                               text=True).split() == ['apple,n71', 'apple,s8000', 'apple,arm-platform']
+(out / 'config-embedded-checked').write_bytes(embedded)
+PY
+env LOCALVERSION= make -C "$work_dir" O="$build_dir" ARCH=arm64 -j2 \
+  KCFLAGS=-Werror modules_prepare
+python3 scripts/build/kernel_bundle.py check "$work_dir" \
+  --profile n71-dart-serdev-power-v2 > "$build_dir/source-after.json"
+cmp "$build_dir/source-before.json" "$build_dir/source-after.json"
+python3 scripts/build/kernel_bundle.py check "$legacy_src" \
+  --profile n71-dart-serdev-power-v1 > "$build_dir/power1-source-after.json"
+cmp "$build_dir/power1-source-before.json" "$build_dir/power1-source-after.json"
+sha256sum -c "$build_dir/power1-before.sha256"
+```
+
+A execução registrada também conferiu config/Image/exports novos depois de `modules_prepare`; empacotou os cinco artefatos e logs com SHA e os recalculou no Mac, em `runtime/kernel-n71-binding-artifacts-20261005/`, com diretórios700/arquivos600. Não reutilize módulos power1 nesta ABI. Integração do perfil, módulo operacional, controles de lifetime e sessão física agrupada são os próximos gates; nenhum perfil default ou boot foi alterado nesta build.

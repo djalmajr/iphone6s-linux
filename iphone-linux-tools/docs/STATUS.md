@@ -49,12 +49,14 @@ Não foi carregado no aparelho nem implementa backend genpd ou carga.
 Backend genpd `1cdfa72`:87 cenários/20 mutações Mac/ARM64, callbacks reais
 linkados Werror/modpost e patch007 aplicada/compilada em cópia do provider.
 Proteção suppress_bind_attrs obrigatória: power1 atual recusa esse backend;
-Image power2, módulo operacional e teste físico ainda pendentes. Suspend
+Image power2 passou o link separado; módulo operacional e teste físico ainda pendentes. Suspend
 com domínio ligado mantém cleanup pendente, sem detach nem outro put.
 [Contrato/reprodução](N71_HDQ.md#backend-genpd-i2c1--compilado-proteção-de-binding-pendente-no-image),
 [prova selecionada](evidence/n71-i2c-genpd.json). CI da primeira versão
-`a476729` terminou verde nos seis jobs; guard de binding aguarda novo CI.
+`a476729` terminou verde nos seis jobs; guard e seletor power2 passaram nos seis jobs de `a684a93`.
 Nenhum DFU, acesso ao carregador ou configuração global do Mac nesta rodada.
+
+Image separado `7.2.0-iphone6s-dart-serdev-power2` compilou em19min06s com001→007. Patch007 integra a proteção de binding exigida pelo backend. Image/config/gzip/DTB/logs passaram SHA no Mac; config só difere de power1 na identidade e fonte/config/Image/exports anteriores ficaram intactos. Nenhum boot ou perfil default alterado. Integração, rebuild dos módulos e controles operacionais seguem antes de um único teste agrupado. [Reprodução](N71_KERNEL_BUNDLE.md#image-power2-e-proteção-de-binding--2026-10-05), [prova de link](evidence/kernel-n71-binding-build.json). Ausência física de bind/unbind, carga, telemetria e Wi-Fi continuam sem comprovação.
 
 No boot anterior, DART provider/INTx/probes de ponte tiveram cleanup verificado
 e SSH/HTTP/snapshot preservados. Scan PCI ainda negativo; primeira recusa

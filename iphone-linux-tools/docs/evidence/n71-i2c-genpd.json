@@ -52,7 +52,7 @@
     "patched_source_sha256": "0d84693ae4f5a24df9f8c9499ecd0f8f6725566223428dfe7af686cf7a21f5b2",
     "object_sha256": "579f6af9f2b7ce4892216e760d9777817cf79b48ad441153eff2ff21ca24ccf3",
     "log_sha256": "6339bd351bc1df4f2a4447ef26175966079bf14774ccaa3a9c3c8771785a5c70",
-    "integrated_into_image": false,
+    "integrated_into_image": true,
     "physical_bind_unbind_absence_verified": false,
     "direct_driver_unregister_by_other_kernel_code_supported": false
   },
@@ -89,12 +89,18 @@
     "prior_backend_push_run": 37253807827,
     "prior_backend_conclusion": "success",
     "prior_successful_jobs": 6,
-    "binding_guard_ci_pending": true
+    "binding_guard_ci_pending": false,
+    "binding_guard_ci_head": "a684a939e0ba8281393b78f249eaade9fe163f81",
+    "binding_guard_pr_run": 37255423107,
+    "binding_guard_push_run": 37255420563,
+    "binding_guard_conclusion": "success",
+    "binding_guard_successful_jobs": 6
   },
   "physical_domain_cycle_executed": false,
   "charger_io_performed": false,
   "linux_charging_validated": false,
   "wifi_validated": false,
   "new_dfu_or_reboot": false,
-  "limits": "Compiled header backend with mocked kernel APIs plus real kernel callback linkage and full provider object compilation. No operational module, active controller, clock/pinctrl/IRQ/adapter, charger I/O or physical domain cycle. Current power1 deliberately fails the new suppress_bind_attrs guard. A separate Image containing patch007, then caller lifetime/control and grouped physical evidence are required before hardware activation."
+  "limits": "Compiled header backend with mocked kernel APIs plus real kernel callback linkage. Patch007 is now integrated into a separate fully linked power2 Image, not booted. No operational module, active controller, clock/pinctrl/IRQ/adapter, charger I/O or physical domain cycle. Current physical power1 deliberately fails the suppress_bind_attrs guard. Caller lifetime/control and grouped physical evidence, including absent bind/unbind attributes, remain required before hardware activation.",
+  "binding_image_record": "docs/evidence/kernel-n71-binding-build.json"
 }
