@@ -12,7 +12,7 @@ MUTATIONS = (
     ('early-action', 'if (!diagnostic_ready) {', 'if (false) {'),
     ('pending-new-cycle', 'if (!n71_diagnostic_clean() || diagnostic_retained) {', 'if (false) {'),
     ('pending-unpin', 'diagnostic_retained && n71_diagnostic_clean()', 'diagnostic_retained'),
-    ('skip-cycle-release', 'if (!error)\n\t\t\terror = n71_i2c_power_release', 'if (false)\n\t\t\terror = n71_i2c_power_release'),
+    ('skip-cycle-release', 'cleanup_error = n71_i2c_power_release(&diagnostic_io, &diagnostic_state);', 'cleanup_error = 0;'),
     ('missing-retained-pin', '__module_get(THIS_MODULE);', 'if (false) __module_get(THIS_MODULE);'),
     ('missing-ephemeral-pin', 'if (!try_module_get(THIS_MODULE))', 'if (false && !try_module_get(THIS_MODULE))'),
     ('lose-primary-error', 'module_put(THIS_MODULE);\n\treturn error;', 'module_put(THIS_MODULE);\n\treturn 0;'),
@@ -22,6 +22,10 @@ MUTATIONS = (
     ('ignore-initial-quiescence', 'error = n71_genpd_words(access, false);', 'error = 0;'),
     ('missing-action-lock', 'mutex_lock(&diagnostic_lock);\n\tif (!diagnostic_ready)',
      'if (false) mutex_lock(&diagnostic_lock);\n\tif (!diagnostic_ready)'),
+    ('skip-inspect', 'if (inspect) {', 'if (false) {'),
+    ('overwrite-inspect-error', 'if (!error)\n\t\t\t\terror = cleanup_error;', 'if (true)\n\t\t\t\terror = cleanup_error;'),
+    ('skip-release-after-inspect-failure', 'cleanup_error = n71_i2c_power_release(&diagnostic_io, &diagnostic_state);',
+     'cleanup_error = error ? 0 : n71_i2c_power_release(&diagnostic_io, &diagnostic_state);'),
 )
 
 
@@ -47,9 +51,9 @@ class N71I2CControlTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='n71-i2c-caller-') as directory:
             folder = Path(directory)
             (folder / 'linux').mkdir()
-            for name in ('i2c', 'pm_domain', 'pm_runtime', 'module', 'mutex', 'string'):
+            for name in ('i2c', 'pm_domain', 'pm_runtime', 'module', 'mutex', 'string', 'io', 'ioport', 'of_address'):
                 (folder / 'linux' / (name + '.h')).write_text('/* Kernel APIs supplied by harness. */\n')
-            for name in ('n71-i2c-genpd.h', 'n71-i2c-power-lifecycle.h', 'n71-pmgr-access.h'):
+            for name in ('n71-i2c-genpd.h', 'n71-i2c-power-lifecycle.h', 'n71-pmgr-access.h', 'n71-i2c-controller-observe.h'):
                 (folder / name).write_bytes((ROOT / 'phone/kernel' / name).read_bytes())
             (folder / 'n71_i2c_genpd_fixture.c').write_text(fixture)
             module, binary = folder / 'n71-i2c-power-diagnostic.c', folder / 'caller'
@@ -64,7 +68,7 @@ class N71I2CControlTests(unittest.TestCase):
                 result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5, cwd=folder)
                 if before is None:
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertIn('N71_I2C_CALLER_OK cases=39', result.stdout)
+                    self.assertIn('N71_I2C_CALLER_OK cases=52', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)

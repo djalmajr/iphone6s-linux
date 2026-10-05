@@ -84,16 +84,20 @@ int main(void)
 	observe_reset(); assert(n71_i2c_controller_observe(&observe_consumer,&power,NULL)==-EINVAL && !observe_claims); cases++;
 	for (unsigned int i=0;i<4;i++) {
 		struct n71_i2c_power_state invalid=power;
-		if (i==0) invalid.active=false; if (i==1) invalid.attached=false;
-		if (i==2) invalid.usage_held=false; if (i==3) invalid.cleanup_pending=false;
+		if (i==0) invalid.active=false;
+		if (i==1) invalid.attached=false;
+		if (i==2) invalid.usage_held=false;
+		if (i==3) invalid.cleanup_pending=false;
 		observe_reset(); memset(&result,0xff,sizeof(result));
 		assert(n71_i2c_controller_observe(&observe_consumer,&invalid,&result)==-EINVAL);
 		assert(!observe_claims && !observe_reads && !result.complete && !result.idle_status); cases++;
 	}
 	for (unsigned int i=0;i<5;i++) {
 		observe_reset();
-		if (i==0) observe_consumer.of_node=NULL; if (i==1) observe_consumer.registered=false;
-		if (i==2) observe_consumer.bus=&power; if (i==3) observe_consumer.driver=&power;
+		if (i==0) observe_consumer.of_node=NULL;
+		if (i==1) observe_consumer.registered=false;
+		if (i==2) observe_consumer.bus=&power;
+		if (i==3) observe_consumer.driver=&power;
 		if (i==4) observe_consumer.pm_domain=&power;
 		assert(n71_i2c_controller_observe(&observe_consumer,&power,&result)==(i==0 ? -EINVAL : -ENODEV));
 		assert(!observe_claims && !observe_reads && !result.complete); cases++;
@@ -102,7 +106,8 @@ int main(void)
 		observe_reset();
 		if (i==0) observe_resource_error=-EIO;
 		if (i==1) { observe_resource.start--; observe_resource.end--; }
-		if (i==2) observe_resource.end++; if (i==3) observe_resource.flags=0;
+		if (i==2) observe_resource.end++;
+		if (i==3) observe_resource.flags=0;
 		assert(n71_i2c_controller_observe(&observe_consumer,&power,&result)==(i==0 ? -EIO : -ENODEV));
 		assert(!observe_claims && !observe_reads); cases++;
 	}

@@ -25,6 +25,7 @@ struct kernel_param_ops {
 static int module_refs, root_error, root_validation_error, missing_node, unregisters;
 static bool module_live;
 static char last_log[1024];
+static char controller_log[1024];
 static void mutex_lock(int *lock) { assert(!*lock); *lock=1; }
 static void mutex_unlock(int *lock) { assert(*lock); *lock=0; }
 static bool try_module_get(void *module) { assert(module==THIS_MODULE); if (!module_live) return false; module_refs++; return true; }
@@ -33,7 +34,10 @@ static void module_put(void *module) { assert(module==THIS_MODULE && module_refs
 static bool sysfs_streq(const char *text, const char *expected)
 { size_t length=strlen(expected); return !strcmp(text,expected) || (strlen(text)==length+1 && !strncmp(text,expected,length) && text[length]=='\n'); }
 static void pr_info(const char *format, ...)
-{ va_list args; va_start(args,format); vsnprintf(last_log,sizeof(last_log),format,args); va_end(args); }
+{
+	va_list args; va_start(args,format); vsnprintf(last_log,sizeof(last_log),format,args); va_end(args);
+	if (!strncmp(last_log,"N71_I2C_CONTROLLER ",19)) strcpy(controller_log,last_log);
+}
 static struct device *root_device_register(const char *name)
 {
 	assert(!strcmp(name,"n71-i2c1-power"));
@@ -55,6 +59,9 @@ static struct device_node *diagnostic_find_node(const char *path)
 	return index==missing_node ? NULL : node_get((unsigned int)index);
 }
 #define of_find_node_by_path diagnostic_find_node
+#define __iomem
+#define N71_CONTROLLER_INTEGRATION
+#include "n71_i2c_controller_observe.c"
 #include "n71-i2c-power-diagnostic.c"
 #undef of_find_node_by_path
 
@@ -65,6 +72,7 @@ static void caller_reset(void)
 	memset(&diagnostic_state,0,sizeof(diagnostic_state)); memset(&diagnostic_io,0,sizeof(diagnostic_io));
 	diagnostic_pmgr=diagnostic_node=NULL; diagnostic_ready=diagnostic_retained=false;
 	run=true; root_error=root_validation_error=unregisters=0; missing_node=-1; module_live=true; last_log[0]=0;
+	observe_reset(); controller_log[0]=0;
 }
 static void caller_clean(void)
 {
@@ -82,6 +90,7 @@ static void caller_init(void)
 {
 	assert(n71_i2c_power_diagnostic_init()==0);
 	assert(diagnostic_ready && !attaches && !put_calls && !detaches && !module_refs && reads==2);
+	assert(!observe_claims && !observe_reads);
 	assert(nodes[ROOT_NODE].refs==2 && nodes[CONSUMER_NODE].refs==2);
 	for (unsigned int i=0;i<3;i++) assert(nodes[LEAF_NODE+i].refs==2);
 }
@@ -89,6 +98,7 @@ static void caller_idle(void)
 {
 	assert(n71_diagnostic_clean() && !diagnostic_retained && !module_refs && !virtual_device.refs);
 	assert(!diagnostic_lock); for (unsigned int i=0;i<3;i++) assert(!held[i]);
+	assert(!observe_region && !observe_mapping);
 }
 int main(void)
 {
@@ -138,6 +148,33 @@ int main(void)
 	caller_reset(); caller_init(); detach_fail=true; assert(n71_diagnostic_action("cycle",NULL)==-EBUSY);
 	assert(module_refs==1 && diagnostic_retained && diagnostic_state.cleanup_pending && virtual_device.refs==2 && detaches==1); cases++;
 	detach_fail=false; assert(n71_diagnostic_action("cleanup",NULL)==0); caller_idle(); assert(detaches==2 && put_calls==1); caller_exit(); cases++;
+	caller_reset(); assert(n71_diagnostic_action("inspect",NULL)==-ENODEV && !observe_claims); caller_clean(); cases++;
+	caller_reset(); caller_init(); assert(n71_diagnostic_action("inspect\n",NULL)==0);
+	assert(observe_reads==6 && observe_unmaps==1 && observe_releases==1 && put_calls==1 && detaches==1);
+	assert(!strcmp(controller_log,"N71_I2C_CONTROLLER complete=1 stable=1 idle_status=1 error=0 rev=00000005,00000005 smsta=00010000,00010000 xfsta=00000000,00000000 controller_writes=0 charger_io=0\n"));
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); resume_error=-EIO; assert(n71_diagnostic_action("inspect",NULL)==-EIO && !observe_claims);
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); read_fail=3; assert(n71_diagnostic_action("inspect",NULL)==-EIO && !observe_claims);
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); observe_busy=true; assert(n71_diagnostic_action("inspect",NULL)==-EBUSY);
+	assert(strstr(controller_log,"complete=0 stable=0 idle_status=0 error=-16"));
+	assert(!observe_maps && !observe_reads && put_calls==1 && detaches==1); caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); observe_map_failure=true; assert(n71_diagnostic_action("inspect",NULL)==-ENOMEM);
+	assert(!observe_reads && observe_releases==1 && put_calls==1 && detaches==1); caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); observe_samples[1][0]=~0U; assert(n71_diagnostic_action("inspect",NULL)==-ENODEV);
+	assert(strstr(controller_log,"complete=1 stable=0 idle_status=0 error=-19"));
+	assert(observe_reads==6 && observe_releases==1 && put_calls==1 && detaches==1); caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); observe_samples[1][0]++; assert(n71_diagnostic_action("inspect",NULL)==0);
+	assert(observe_reads==6 && observe_releases==1 && put_calls==1 && detaches==1); caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); observe_busy=true; suspend_error=-ETIMEDOUT;
+	assert(n71_diagnostic_action("inspect",NULL)==-EBUSY && diagnostic_state.cleanup_error==-ETIMEDOUT);
+	assert(module_refs==1 && diagnostic_retained && !observe_region && !observe_mapping && put_calls==1 && !detaches); cases++;
+	assert(n71_diagnostic_action("inspect",NULL)==-EBUSY && observe_claims==1 && module_refs==1 && put_calls==1); cases++;
+	suspend_error=0; assert(n71_diagnostic_action("cleanup",NULL)==0); caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); suspend_error=-ETIMEDOUT; assert(n71_diagnostic_action("inspect",NULL)==-ETIMEDOUT);
+	assert(observe_reads==6 && observe_releases==1 && module_refs==1 && diagnostic_retained && !detaches); cases++;
+	suspend_error=0; assert(n71_diagnostic_action("cleanup",NULL)==0); caller_idle(); caller_exit(); cases++;
 	printf("N71_I2C_CALLER_OK cases=%u\n",cases);
 	return 0;
 }
