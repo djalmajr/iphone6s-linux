@@ -17,7 +17,16 @@ MUTATIONS = {
     'selected-result-release': ("{'kernel_release': self.release,", "{'kernel_release': RELEASE,"),
     'selected-history-release': ('History(options.previous_clean, ROOT, release)', 'History(options.previous_clean, ROOT, RELEASE)'),
     'binding-profile-module-hash': ("metadata['module_sha256'] == records[0]['sha256']", 'True'),
-    'selected-session-release': ('history=history, release=release).run()', 'history=history).run()'),
+    'selected-session-release': ('history=history, scan_link_target=options.scan_link_target, release=release).run()', 'history=history, scan_link_target=options.scan_link_target).run()'),
+    'target-profile-flag': ("metadata.get('pcie_scan_link_target', False) is options.scan_link_target", 'True'),
+    'target-mode-abi': ('host_scan and release == BINDING_RELEASE,', 'True,'),
+    'target-module-abi': ("all(r['vermagic'] == release + ' SMP preempt mod_unload aarch64' for r in records)", 'True'),
+    'target-module-pin': ("and evidence['contract']['module_pin_while_pending'] is True", ''),
+    'target-build-flags': ("and build['modpost_passed'] is True and build['werror'] is True", ''),
+    'target-unbind': ("and evidence['contract']['bind_attributes_suppressed'] is True", ''),
+    'reg-on-under-retention': ('if self.reg_attempted and pcie_released:', 'if self.reg_attempted:'),
+    'ignore-live-status': ("n71_scan_target_result.live_status(p.stdout)\n                    if not", "{'ready': 1, 'retained': 0}\n                    if not"),
+    'ignore-retry-state': ('and n71_scan_target_result.is_clean(n71_scan_target_result.live_status(p.stdout)),', 'and True,'),
     'host-selection': ("'n71-pcie-controls-scan-build.json'", "'n71-pcie-bridge-scan-build.json'"),
     'cycle-mode': ("parameters += ' dart_cycle=1'", "parameters += ''"),
     'cycle-cleanup': ('n71_dart_cycle_result.cleanup(p.stdout)', 'pass'),
@@ -38,18 +47,36 @@ MUTATIONS = {
     'inventory-selection': ("if record['module'] == 'n71-pcie-diagnostic.ko' else record for record in records]",
                             'if False else record for record in records]'),
 }
+TARGET_MUTATIONS = {
+    'status-unique': ('len(rows) == 1', 'len(rows) >= 1'),
+    'ignore-retained': ("('retained', 'scan_pending', 'reset_pending', 'powered', 'attached', 'power_put_pending', 'cleanup_error')",
+                        "('scan_pending', 'reset_pending', 'powered', 'attached', 'power_put_pending', 'cleanup_error')"),
+    'ignore-powered': ("('retained', 'scan_pending', 'reset_pending', 'powered', 'attached', 'power_put_pending', 'cleanup_error')",
+                       "('retained', 'scan_pending', 'reset_pending', 'attached', 'power_put_pending', 'cleanup_error')"),
+    'ignore-put-pending': ("'attached', 'power_put_pending', 'cleanup_error'", "'attached', 'cleanup_error'"),
+    'counts-annotation': ('text.count(suffix) == 1', 'True'),
+    'final-caller-cleanup': ('tuple(map(int, sessions[-1][:7])) == (0, 0, 0, 0, 0, 0, 0)', 'True'),
+    'final-config': ("config[-1] == '0'", 'True'),
+    'final-target': ("restored[-1] == ('0', '0')", 'True'),
+    'bus-removed': ("require(removed == ['1'],", 'require(True,'),
+    'caller-primary': ("live_status(text).get('primary_error') == 0", 'True'),
+}
 
 
 def main():
-    text = SOURCE.read_text()
     with tempfile.TemporaryDirectory(prefix='n71-link-session-mutations-') as directory:
         folder = Path(directory)
-        for name, (before, after) in MUTATIONS.items():
+        variants = [(SOURCE, 'N71_LINK_SESSION_SCRIPT', name, values) for name, values in MUTATIONS.items()]
+        variants += [(ROOT / 'scripts/host/n71_scan_target_result.py', 'N71_SCAN_TARGET_RESULT_SCRIPT', name, values)
+                     for name, values in TARGET_MUTATIONS.items()]
+        for source, variable, name, (before, after) in variants:
+            text = source.read_text()
             if text.count(before) != 1:
                 raise SystemExit('Mutation anchor differs: ' + name)
             mutated = folder / (name + '.py')
             mutated.write_text(text.replace(before, after))
-            environment = dict(os.environ, N71_LINK_SESSION_SCRIPT=str(mutated), PYTHONDONTWRITEBYTECODE='1')
+            environment = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')
+            environment[variable] = str(mutated)
             process = subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', str(ROOT / 'tests'),
                                       '-p', 'test_n71_link_session.py'], env=environment,
                                      capture_output=True, text=True, timeout=30)

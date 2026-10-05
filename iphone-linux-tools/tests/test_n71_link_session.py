@@ -24,6 +24,11 @@ sys.path.insert(0, str(ROOT / 'scripts/host'))
 SPEC = importlib.util.spec_from_file_location('link_session', os.environ.get('N71_LINK_SESSION_SCRIPT', ROOT / 'scripts/host/n71-link-session.py'))
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
+if os.environ.get('N71_SCAN_TARGET_RESULT_SCRIPT'):
+    TARGET_SPEC = importlib.util.spec_from_file_location('scan_target_result', os.environ['N71_SCAN_TARGET_RESULT_SCRIPT'])
+    TARGET_MODULE = importlib.util.module_from_spec(TARGET_SPEC)
+    TARGET_SPEC.loader.exec_module(TARGET_MODULE)
+    MODULE.n71_scan_target_result = TARGET_MODULE
 
 OBSERVE = ('N71_REG_ON_PARENT simple-mfd-i2c shared-regmap; no rebind\n'
            'N71_REG_ON_OBSERVED control=80 bit0=0 compatible-plan=1\n'
@@ -46,10 +51,17 @@ SCAN = ('N71_PCIE_SCAN_DEVICE bus=0 devfn=08 id=1004106b class=060400 command=01
         + 'N71_PCIE_SCAN_BUS_REMOVED bus-null=1\n'
         'N71_PCIE_SCAN_CONFIG_RESTORED error=0; decode/readback checked\n'
         'N71_PCIE_SCAN_RESULT error=0 devices=2 endpoints=1 reads=100 attempts=24 writes=20 refusals=0; no DMA or radio\n')
+STATUS = ('N71_PCIE_STATUS ready=1 retained=0 scan_pending=0 reset_pending=0 powered=0 attached=0 '
+          'power_put_pending=0 primary_error=0 cleanup_error=0\n')
+TARGET = ('N71_PCIE_SCAN_TARGET_PREPARED error=0 pending=1 prepared=1; no retrain\n'
+          + SCAN.replace('; no DMA or radio', '; counts before cleanup, no DMA or radio')
+          + 'N71_PCIE_SCAN_TARGET_RESTORED error=0 pending=0; no retrain\n'
+          'N71_PCIE_SESSION_CLEANUP error=0 retained=0 scan_pending=0 reset_pending=0 powered=0 attached=0 power_put_pending=0 primary_error=0\n'
+          + STATUS)
 
 
 class LinkSessionTests(unittest.TestCase):
-    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False):
+    def run_session(self, overrides=None, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, scan_link_target=False):
         replies = {'observe': OBSERVE, 'activate': ACTIVE,
                    'pcie': 'N71_PCIE_LINK_RESULT error=-110 port88=0000880c reads=10000\n',
                    'pcie-cleanup': CLEANUP, 'pcie-unload': 'N71_PCIE_UNLOADED\n',
@@ -65,13 +77,18 @@ class LinkSessionTests(unittest.TestCase):
             replies.update({'pcie-cleanup': CLEANUP + DART, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
         if dart_cycle:
             replies.update({'pcie-cleanup': CLEANUP + DART_CYCLE, 'pci-empty-after': 'N71_PCI_CLEANUP_EMPTY\n'})
+        if scan_link_target:
+            replies.update({'pcie': LINK + INVENTORY + TARGET, 'pcie-cleanup': CLEANUP + TARGET,
+                            'pcie-status': STATUS, 'pcie-retry': STATUS})
         replies.update(overrides or {})
         calls = []
         with tempfile.TemporaryDirectory() as folder:
             with patch.object(MODULE.device_profile, 'ssh_options', return_value=[]):
                 session = MODULE.Session(Path(folder), [], config_inventory=config_inventory,
                                          host_scan=host_scan, bar_sizing=bar_sizing, chip_id=chip_id,
-                                         dart_observe=dart_observe, dart_cycle=dart_cycle)
+                                         dart_observe=dart_observe, dart_cycle=dart_cycle,
+                                         scan_link_target=scan_link_target,
+                                         release=MODULE.BINDING_RELEASE if scan_link_target else MODULE.RELEASE)
 
             def capture(stage, command, raw=None):
                 calls.append((stage, command))
@@ -83,7 +100,7 @@ class LinkSessionTests(unittest.TestCase):
                 return SimpleNamespace(returncode=0, stdout=value)
 
             session.capture = capture
-            session.preflight = lambda: None
+            session.preflight = lambda: session.result.update(boot_id='12345678-1234-1234-1234-123456789abc')
             exit_code = session.run()
         return exit_code, session.result, dict(calls)
 
@@ -125,7 +142,8 @@ class LinkSessionTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertFalse(result['cleanup_verified'])
         self.assertNotIn('pcie-unload', calls)
-        self.assertIn('restore', calls)
+        self.assertNotIn('restore', calls)
+        self.assertTrue(result['reg_on_release_skipped'])
 
     def test_failed_reg_restore_must_not_unload(self):
         code, result, calls = self.run_session({'restore': RESTORE.replace('restore_pending=0', 'restore_pending=1')})
@@ -260,7 +278,7 @@ class LinkSessionTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertFalse(result['cleanup_verified'])
             self.assertNotIn('pcie-unload', calls)
-            self.assertIn('reg-unload', calls)
+            self.assertNotIn('reg-unload', calls)
 
     def test_host_scan_failure_with_restoration_still_allows_cleanup(self):
         failed = SCAN.replace('error=0 devices', 'error=-1 devices').replace('refusals=0', 'refusals=1')
@@ -373,7 +391,7 @@ class LinkSessionTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertFalse(proof['cleanup_verified'])
             self.assertNotIn('pcie-unload', calls)
-            self.assertIn('reg-unload', calls)
+            self.assertNotIn('reg-unload', calls)
 
     def test_provider_cycle_selection_and_exclusive_parameters(self):
         with patch.object(MODULE, 'ROOT', ROOT):
@@ -574,6 +592,141 @@ class LinkSessionTests(unittest.TestCase):
                 prior['kernel_release'] = MODULE.RELEASE
                 (history / 'result-private.json').write_text(json.dumps(prior))
                 with patch.object(sys, 'argv', argv + ['--previous-clean', str(history)]), self.assertRaises(ValueError):
+                    MODULE.main()
+
+
+    @patch.object(MODULE, 'ROOT', ROOT)
+    def test_target_scan_selection_is_explicit_power2_and_preserves_reg_on(self):
+        selected = MODULE.selected_records(False, host_scan=True, release=MODULE.BINDING_RELEASE, scan_link_target=True)
+        self.assertEqual(selected[0]['bytes'], 69976)
+        self.assertEqual(selected[0]['sha256'], 'b3fc79aa86b2e291edea464851f028b4516ff7053f5cf20a48787170440096b1')
+        self.assertEqual(selected[1], MODULE.selected_records(False, release=MODULE.BINDING_RELEASE)[1])
+        for mode in ({'host_scan': False, 'release': MODULE.BINDING_RELEASE},
+                     {'host_scan': True, 'release': MODULE.RELEASE}):
+            with self.assertRaises(ValueError):
+                MODULE.selected_records(False, **mode, scan_link_target=True)
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-scan-target-build.json').read_text())
+        for kind in ('release', 'patchset', 'werror', 'modpost', 'pin', 'binding', 'abi'):
+            changed = copy.deepcopy(evidence)
+            if kind in ('release', 'patchset'):
+                changed['kernel_' + kind] = 'unknown'
+            elif kind in ('werror', 'modpost'):
+                changed['module_build']['werror' if kind == 'werror' else 'modpost_passed'] = False
+            elif kind == 'abi':
+                changed['selected_modules']['n71-pcie-diagnostic.ko']['vermagic'] = MODULE.RELEASE
+            else:
+                changed['contract']['module_pin_while_pending' if kind == 'pin' else 'bind_attributes_suppressed'] = False
+            with tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / 'docs/evidence').mkdir(parents=True)
+                (root / 'docs/evidence/n71-pcie-scan-target-build.json').write_text(json.dumps(changed))
+                with patch.object(MODULE, 'ROOT', root), self.assertRaises(ValueError):
+                    MODULE.selected_records(False, host_scan=True, release=MODULE.BINDING_RELEASE, scan_link_target=True)
+
+    def test_target_scan_success_and_missing_rollback_proof(self):
+        code, result, calls = self.run_session(host_scan=True, scan_link_target=True)
+        self.assertEqual(code, 0)
+        self.assertTrue(result['cleanup_verified'])
+        self.assertIn('pcie-status', calls)
+        self.assertNotIn('pcie-retry', calls)
+        self.assertIn('test "$(cat /proc/sys/kernel/random/boot_id)"', calls['pcie-status'])
+        self.assertIn('/n71-pcie-diagnostic/bind', calls['pcie-status'])
+        self.assertIn('/n71-pcie-diagnostic/unbind', calls['pcie-status'])
+        self.assertFalse(result['reg_on_release_skipped'])
+        for text in (TARGET.replace('TARGET_RESTORED error=0 pending=0', 'TARGET_RESTORED error=-5 pending=1'),
+                     TARGET.replace('TARGET_PREPARED error=0', 'TARGET_PREPARED error=-5'),
+                     TARGET.replace('; counts before cleanup, no DMA or radio', '; no DMA or radio'),
+                     TARGET.replace('primary_error=0', 'primary_error=-1'),
+                     TARGET.replace('CONFIG_RESTORED error=0', 'CONFIG_RESTORED error=-5'),
+                     TARGET.replace('bus-null=1', 'bus-null=0'),
+                     TARGET.replace('N71_PCIE_SCAN_BUS_REMOVED bus-null=1\n', ''),
+                     TARGET.replace('SESSION_CLEANUP error=0', 'SESSION_CLEANUP error=-5'), TARGET + STATUS):
+            with self.subTest(text=text):
+                with self.assertRaises(ValueError):
+                    MODULE.n71_scan_target_result.parse(text)
+        # Mutation captured: accepting incomplete rollback releases REG_ON under retained PCI ownership.
+        for text in (TARGET.replace('TARGET_RESTORED error=0 pending=0', 'TARGET_RESTORED error=-5 pending=1'),
+                     TARGET.replace('CONFIG_RESTORED error=0', 'CONFIG_RESTORED error=-5'),
+                     TARGET.replace('N71_PCIE_SCAN_BUS_REMOVED bus-null=1\n', '')):
+            with self.subTest(cleanup=text):
+                code, result, calls = self.run_session({'pcie-cleanup': CLEANUP + text}, host_scan=True, scan_link_target=True)
+                self.assertEqual(code, 1)
+                self.assertFalse(result['cleanup_verified'])
+                self.assertNotIn('pcie-unload', calls)
+                self.assertNotIn('restore', calls)
+
+    def test_target_pending_retry_once_preserves_primary_error_and_reg_on(self):
+        pending = STATUS.replace('retained=0', 'retained=1').replace('scan_pending=0', 'scan_pending=1').replace('reset_pending=0', 'reset_pending=1').replace('powered=0 attached=0', 'powered=4 attached=4').replace('primary_error=0 cleanup_error=0', 'primary_error=-5 cleanup_error=-5')
+        failed = TARGET.replace(STATUS, pending).replace('error=0 devices', 'error=-5 devices').replace('TARGET_RESTORED error=0 pending=0', 'TARGET_RESTORED error=-5 pending=1').replace('SESSION_CLEANUP error=0 retained=0 scan_pending=0 reset_pending=0 powered=0 attached=0', 'SESSION_CLEANUP error=-5 retained=1 scan_pending=1 reset_pending=1 powered=4 attached=4').replace('primary_error=0\n', 'primary_error=-5\n')
+        code, result, calls = self.run_session({'pcie': LINK + INVENTORY + failed, 'pcie-status': pending, 'pcie-retry': pending}, host_scan=True, scan_link_target=True)
+        self.assertEqual(code, 1)
+        self.assertFalse(result['cleanup_verified'])
+        self.assertNotIn('pcie-unload', calls)
+        self.assertNotIn('restore', calls)
+        self.assertTrue(result['reg_on_release_skipped'])
+        self.assertEqual(list(calls).count('pcie-retry'), 1)
+        cleaned = TARGET.replace('primary_error=0', 'primary_error=-5')
+        retry_log = ''.join(line + '\n' for line in cleaned.splitlines()
+                            if any(marker in line for marker in ('CONFIG_RESTORED', 'TARGET_RESTORED', 'SESSION_CLEANUP', 'N71_PCIE_STATUS')))
+        history = failed.replace(pending, '') + retry_log
+        code, result, calls = self.run_session({'pcie': LINK + INVENTORY + failed, 'pcie-status': pending,
+                                              'pcie-retry': cleaned, 'pcie-cleanup': CLEANUP + history}, host_scan=True, scan_link_target=True)
+        self.assertEqual(code, 1)  # Cleanup does not erase the failed experiment.
+        self.assertTrue(result['cleanup_verified'])
+        self.assertIn('experiment_error', result)
+        self.assertIn('reg-unload', calls)
+
+    def test_target_unknown_live_state_or_changed_boot_retains_everything(self):
+        for status in ('', STATUS + STATUS, STATUS.replace('ready=1', 'ready=2'),
+                       STATUS.replace('powered=0', 'powered=5'),
+                       SimpleNamespace(returncode=1, stdout='boot differs'), ValueError('SSH timeout')):
+            code, result, calls = self.run_session({'pcie-status': status}, host_scan=True, scan_link_target=True)
+            self.assertEqual(code, 1)
+            self.assertFalse(result['cleanup_verified'])
+            self.assertNotIn('pcie-unload', calls)
+            self.assertNotIn('restore', calls)
+        for name in ('retained', 'scan_pending', 'reset_pending', 'powered', 'attached', 'power_put_pending', 'cleanup_error'):
+            changed = STATUS.replace(name + '=0', name + '=1')
+            code, result, calls = self.run_session({'pcie-status': changed, 'pcie-retry': changed}, host_scan=True, scan_link_target=True)
+            self.assertEqual(code, 1)
+            self.assertTrue(result['reg_on_release_skipped'])
+            self.assertNotIn('reg-unload', calls)
+
+    def test_target_cli_opt_in_and_profile_provenance_before_ssh(self):
+        release = MODULE.BINDING_RELEASE
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-scan-target-build.json').read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / 'runtime/profile'
+            folder.mkdir(parents=True, mode=0o700)
+            folder.parent.chmod(0o700)
+            (root / 'docs/evidence').mkdir(parents=True)
+            for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko'):
+                raw = self.module_fixture(release) + name.encode() + b'\0'
+                (folder / name).write_bytes(raw)
+                (folder / name).chmod(0o600)
+                evidence['selected_modules'][name] = dict(bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest(), vermagic=release + ' SMP preempt mod_unload aarch64')
+            (root / 'docs/evidence/n71-pcie-scan-target-build.json').write_text(json.dumps(evidence))
+            metadata = dict(kernel_patchset='n71-dart-serdev-power-v2', kernel_release=release,
+                            payload_sha256='a' * 64, module_sha256=evidence['selected_modules']['n71-pcie-diagnostic.ko']['sha256'], pcie_scan_link_target=True)
+            provenance = folder / 'provenance.json'
+            provenance.write_text(json.dumps(metadata)); provenance.chmod(0o600)
+            profile = dict(payload=folder / 'payload.bin', sha256='a' * 64)
+            argv = ['n71-link-session.py', '--profile', str(folder / 'deployment.json'), '--host-scan', '--scan-link-target', '--check']
+            with patch.object(MODULE, 'ROOT', root), patch.object(MODULE.device_profile, 'verify', return_value=profile), patch.dict(os.environ), \
+                    patch.object(MODULE.subprocess, 'run', side_effect=AssertionError('Unexpected SSH')), contextlib.redirect_stdout(io.StringIO()):
+                with patch.object(sys, 'argv', argv):
+                    try:
+                        self.assertEqual(MODULE.main(), 0)
+                    except ValueError as error:
+                        self.fail(str(error))
+                for altered in (False, 'true', 1):
+                    metadata['pcie_scan_link_target'] = altered
+                    provenance.write_text(json.dumps(metadata))
+                    with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
+                        MODULE.main()
+                metadata['pcie_scan_link_target'] = True; provenance.write_text(json.dumps(metadata))
+                with patch.object(sys, 'argv', [x for x in argv if x != '--scan-link-target']), self.assertRaises(ValueError):
                     MODULE.main()
 
 

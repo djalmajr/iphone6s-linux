@@ -16,6 +16,7 @@ import n71_chip_result
 import n71_dart_result
 import n71_dart_cycle_result
 import n71_scan_result
+import n71_scan_target_result
 import n71_session_history
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,6 +25,7 @@ BINDING_RELEASE = '7.2.0-iphone6s-dart-serdev-power2'
 PROFILE_RELEASES = {'n71-dart-serdev-v1': RELEASE, 'n71-dart-serdev-power-v2': BINDING_RELEASE}
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
 STATE_ACTIVE = 'bound=1 active=1 restore_pending=1 original=80'
+PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
 
 
 def require(condition, message):
@@ -52,9 +54,22 @@ def module_bytes(profile, record, *, release=RELEASE):
     return raw
 
 
-def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE):
+def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False):
     require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
     require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
+    if scan_link_target:
+        require(host_scan and release == BINDING_RELEASE, 'Target scan requires host-scan and power2')
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pcie-scan-target-build.json').read_text())
+        build = evidence['module_build']
+        require(evidence['kernel_release'] == release and evidence['kernel_patchset'] == 'n71-dart-serdev-power-v2'
+                and build['modpost_passed'] is True and build['werror'] is True
+                and evidence['contract']['module_pin_while_pending'] is True
+                and evidence['contract']['bind_attributes_suppressed'] is True, 'Target scan build differs')
+        records = [dict(evidence['selected_modules'][name], module=name)
+                   for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko')]
+        require(all(r['vermagic'] == release + ' SMP preempt mod_unload aarch64' for r in records),
+                'Target scan ABI differs')
+        return records
     if release == BINDING_RELEASE:
         evidence = json.loads((ROOT / 'docs/evidence/n71-binding-profile.json').read_text())
         build = evidence['module_build']
@@ -117,9 +132,11 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, release=RELEASE):
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE):
         require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
         require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
+        require(not scan_link_target or (host_scan and release == BINDING_RELEASE), 'Target session requires host-scan and power2')
+        self.scan_link_target = scan_link_target
         self.release = release
         self.output = output
         self.modules = modules
@@ -220,10 +237,11 @@ class Session:
             parameters += ' dart_observe=1'
         elif self.dart_cycle:
             parameters += ' dart_cycle=1'
+        status = 'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; ' if self.scan_link_target else ''
         p = self.capture('pcie', 'set -e; '
                          'test "$(cat ' + REG + 'state)" = "' + STATE_ACTIVE + '"; '
                          'test "$(cat ' + REG + 'control)" = "N71_REG_ON_CONTROL_READBACK value=81"; '
-                         'insmod ' + self.module_directory + '/n71-pcie-diagnostic.ko run=1 enumerate=1' + parameters + '; dmesg')
+                         'insmod ' + self.module_directory + '/n71-pcie-diagnostic.ko run=1 enumerate=1' + parameters + '; ' + status + 'dmesg')
         require(p.returncode == 0, 'PCIe command did not complete')
         matches = re.findall(r'N71_PCIE_LINK_RESULT error=(-?\d+) port88=([0-9a-f]+) reads=(\d+)', p.stdout)
         require(len(matches) == 1, 'Exactly one completed link result required')
@@ -241,7 +259,8 @@ class Session:
             require(int(error) == 0 and identities == ['43a314e4'], 'Measured inventory endpoint required')
             self.result['inventory'] = inventory_result(p.stdout)
         if self.host_scan:
-            self.result['host_scan'] = n71_scan_result.parse(p.stdout)
+            parser = n71_scan_target_result if self.scan_link_target else n71_scan_result
+            self.result['host_scan'] = parser.parse(p.stdout)
         if self.bar_sizing:
             self.result['bar_sizing'] = n71_bar_result.parse(p.stdout, self.result['inventory']['bars_raw'])
         if self.chip_id:
@@ -253,15 +272,34 @@ class Session:
 
     def cleanup(self):
         failures = []
+        pcie_released = not self.pcie_attempted
         if self.pcie_attempted:
             try:
-                p = self.capture('pcie-cleanup', 'dmesg')
+                command = 'dmesg'
+                if self.scan_link_target:
+                    require('boot_id' in self.result, 'Cleanup requires this live boot identity')
+                    live = ('set -e; test "$(uname -r)" = "' + self.release + '"; '
+                            'test "$(cat /proc/sys/kernel/random/boot_id)" = "' + self.result['boot_id'] + '"; '
+                            'test ! -e /sys/bus/platform/drivers/n71-pcie-diagnostic/bind; '
+                            'test ! -e /sys/bus/platform/drivers/n71-pcie-diagnostic/unbind; ')
+                    p = self.capture('pcie-status', live + 'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status')
+                    require(p.returncode == 0, 'Live caller status unavailable; retain REG_ON')
+                    state = n71_scan_target_result.live_status(p.stdout)
+                    if not n71_scan_target_result.is_clean(state):
+                        p = self.capture('pcie-retry', live + 'if printf "cleanup\n" > ' + PCIE
+                                         + 'action; then cleanup_exit=0; else cleanup_exit=$?; fi; '
+                                         'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; dmesg; exit "$cleanup_exit"')
+                        require(p.returncode == 0 and n71_scan_target_result.is_clean(n71_scan_target_result.live_status(p.stdout)),
+                                'Bounded caller cleanup failed; retain REG_ON')
+                    command = live + 'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; dmesg'
+                p = self.capture('pcie-cleanup', command)
                 require(p.returncode == 0
                         and 'N71_PCIE_RESET_RESTORED asserted=1 readback=1' in p.stdout
                         and 'N71_PCIE_POWER_RELEASED powered=0 attached=0' in p.stdout,
                         'PCIe reset/power cleanup not proved')
                 if self.host_scan or self.bar_sizing:
-                    (n71_bar_result if self.bar_sizing else n71_scan_result).cleanup(p.stdout)
+                    parser = n71_bar_result if self.bar_sizing else n71_scan_target_result if self.scan_link_target else n71_scan_result
+                    parser.cleanup(p.stdout)
                     if self.chip_id:
                         n71_chip_result.cleanup(p.stdout)
                 if self.dart_observe:
@@ -274,9 +312,10 @@ class Session:
                 p = self.capture('pcie-unload', 'set -e; rmmod n71_pcie_diagnostic; '
                                  'test ! -d /sys/module/n71_pcie_diagnostic; echo N71_PCIE_UNLOADED')
                 require(p.returncode == 0, 'PCIe unload not proved')
+                pcie_released = True
             except (ValueError, OSError) as error:
                 failures.append(str(error))
-        if self.reg_attempted:
+        if self.reg_attempted and pcie_released:
             try:
                 release = 'printf "0\n" > ' + REG + 'power; ' if self.activation_attempted else ''
                 p = self.capture('restore', 'set -e; '
@@ -299,6 +338,7 @@ class Session:
                 failures.append(str(error))
         self.result['cleanup_verified'] = not failures
         self.result['cleanup_errors'] = failures
+        self.result['reg_on_release_skipped'] = self.reg_attempted and not pcie_released
 
     def run(self):
         try:
@@ -322,6 +362,7 @@ def main():
     parser.add_argument('--config-inventory', action='store_true', help='Require the separately recorded read-only inventory module')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--host-scan', action='store_true', help='Select recorded PCI-core sizing module; implies inventory')
+    parser.add_argument('--scan-link-target', action='store_true', help='Explicit power2 host-scan candidate with retained TLS/caller cleanup')
     modes.add_argument('--bar-sizing', action='store_true', help='Select endpoint-only BAR sizing module; implies inventory')
     modes.add_argument('--chip-id', action='store_true', help='Read ChipCommon ID once via restored BAR0 route; implies sizing/inventory')
     modes.add_argument('--dart-observe', action='store_true', help='Read stable DART state without provider activation; implies inventory')
@@ -336,8 +377,9 @@ def main():
     require(provenance.stat().st_size <= 8192, 'Provenance size refused')
     metadata = json.loads(provenance.read_text())
     release = selected_release(metadata, profile['sha256'])
+    require(metadata.get('pcie_scan_link_target', False) is options.scan_link_target, 'Target profile selection differs')
     records = selected_records(options.config_inventory, options.host_scan, options.bar_sizing, options.chip_id,
-                               dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release)
+                               dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release, scan_link_target=options.scan_link_target)
     if release == BINDING_RELEASE or options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe or options.dart_cycle:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record, release=release)) for record in records]
@@ -357,7 +399,7 @@ def main():
     return Session(output, modules, config_inventory=options.config_inventory,
                    host_scan=options.host_scan, bar_sizing=options.bar_sizing,
                    chip_id=options.chip_id, dart_observe=options.dart_observe,
-                   dart_cycle=options.dart_cycle, history=history, release=release).run()
+                   dart_cycle=options.dart_cycle, history=history, scan_link_target=options.scan_link_target, release=release).run()
 
 
 if __name__ == '__main__':
