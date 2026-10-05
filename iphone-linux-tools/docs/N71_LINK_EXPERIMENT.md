@@ -987,3 +987,27 @@ python3 scripts/host/n71-link-session.py \
 ```
 
 Esse comando faz uma tentativa delimitada; não habilita Broadcom, firmware, IRQ ou DMA. Se tudo passar, preserve o boot para os próximos passos qualificados via SSH. Se houver obrigação pendente, conserve os módulos/REG_ON e investigue os registros antes de outra ação. Continuar automaticamente um scan falho ou descarregar à força não faz parte da receita. Os novos guards de capability e a permanência do link após TLS2 ainda precisam de prova física; Wi-Fi e carga Linux continuam abertos.
+
+## Sessão física do target — um boot, correção do coletor sem reiniciar
+
+Em2026-10-05, o perfil do checkpoint anterior iniciou num único DFU com restore de44 entradas, SSH/HTTP/Herdr e kernel power2 confirmados. Foi executado **um** scan; não houve reinício intermediário nem repetição do scan. [Prova sanitizada, hashes e limites](evidence/n71-scan-target-physical.json).
+
+| Etapa | Resultado físico |
+| --- | --- |
+| Link/inventário | Endpoint43a314e4, revision8, link erro0/12 reads |
+| Target TLS | Prepare1→2 e restore2→1 com readback/link qualificados; sem escrita de retrain |
+| PCI core | Negativo: erro-1,2 devices/1 endpoint,579 reads,14 attempts/10 writes/1 refusal; contagens antes do cleanup |
+| Primeira recusa | Root0:08, offset044, word, valor8008; original PMCSR8 |
+| Cleanup do driver | Bus/config/TLS/reset/power limpos, sem retenção; probe terminou com primary=-1 e status ready0 |
+| Recuperação pelo Mac | Coletor corrigido verificou as provas e descarregou PCIe/REG_ON normalmente, no mesmo boot |
+| Estado final | SSH/HTTP/Herdr ativos; módulos diagnósticos e devices PCI ausentes; snapshot44/sync e retorno por software ao iOS |
+
+O coletor original conservou REG_ON corretamente diante de uma prova que não reconhecia: recusava um scan em status ready0, inclusive quando o probe negativo já tinha concluído seu cleanup. O commit `d1cee21` diferencia esse caso de um sucesso sem owner. Ready0 só aceita scan estritamente negativo, erro primário final correspondente e todas as provas de restauração/remoção limpas.37 testes/47 mutações por AssertionError passaram Mac/Ubuntu ARM64, com25 inputs/logs conferidos. Sucesso ready0, primary incoerente ou prova incompleta continuam recusados. A recuperação física usou apenas cleanup do coletor; o resultado original foi preservado e o erro do scan não virou sucesso.
+
+A nova primeira recusa coincide com a limpeza de PME no core: `__pci_pme_active()` lê PMCSR, prepara o bit PME_STATUS8000 para limpar o status e conserva os demais campos ao desabilitar PME. A word8 observada contém NO_SOFT_RESET, conforme os [campos PMCSR](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/include/uapi/linux/pci_regs.h#L263) e a [função do core](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/pci.c#L2389), confrontados na fonte local exata por SHA. A origem da chamada é uma inferência da fonte e da word solicitada, não um trace de call stack capturado no aparelho.
+
+Esse status é W1C: escrever1 o limpa; não há restauração comum por simples escrita do valor anterior. A próxima fatia deve qualificar a operação e o lifecycle/callbacks envolvidos antes de permitir qualquer escrita. As demais recusas desta sessão foram latched depois da primeira; não são evidência de permissões independentes. Nenhuma escrita PME/W1C ou nova permissão PCI foi aplicada nesta sessão.
+
+O orçamento declarado do gadget permaneceu500mA; power_supply continuou sem dispositivos. iOS100→90% inclui boot, retorno e intervalos iOS; carregamento estava ativo após o retorno. Não mede corrente líquida, saúde da bateria ou carga Linux. Não houve Broadcom/firmware, IRQdelivery, DMA, HDQ, SN2400 ou novo Image. iOS foi mantido para recarga enquanto a implementação continua offline. Logs, UUID, perfis, chaves e snapshot ficam privados.
+
+CI do headd045d24 passou PR37330736713 e push37330728149; o push exigiu retry somente do job Ubuntu por timeout/backup ausente em dois testes antigos de return_ios. Os dois passaram isoladamente na VM;20 testes passaram no Mac sem alterações. A causa da intermitência continua pendente de investigação. Essa CI antecede a correção d1cee21; os gates locais/ARM64 e a recuperação física da correção estão registrados separadamente.
