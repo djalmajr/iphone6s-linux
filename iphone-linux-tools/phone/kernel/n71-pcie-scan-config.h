@@ -112,6 +112,33 @@ static inline int n71_scan_refuse(struct n71_scan_config *config, int error)
 	return error;
 }
 
+/* pci_pm_init disables PME. An already clear event needs no W1C write. */
+static inline int n71_scan_pme_noop(const struct n71_scan_io *io, u32 observed)
+{
+	u32 identity, command, status, pointer, header, pmcsr_now, version;
+	int error;
+
+	if (observed != 8)
+		return -EPERM;
+	error = n71_scan_read(io, true, 0, 4, &identity);
+	if (!error)
+		error = n71_scan_read(io, true, 4, 2, &command);
+	if (!error)
+		error = n71_scan_read(io, true, 6, 2, &status);
+	if (!error)
+		error = n71_scan_read(io, true, 0x34, 1, &pointer);
+	if (!error)
+		error = n71_scan_read(io, true, 0x40, 4, &header);
+	if (error)
+		return error;
+	version = (header >> 16) & 7;
+	if (identity != 0x1004106b || (command & 4) || !(status & 0x10) ||
+	    pointer != 0x40 || (header & 0xff) != 1 || !version || version > 3)
+		return -EPERM;
+	error = n71_scan_read(io, true, 0x44, 2, &pmcsr_now);
+	return error ? error : pmcsr_now == observed ? 0 : -EAGAIN;
+}
+
 /* A latched refusal stops later writes; final restore uses its own path. */
 static inline int n71_scan_write(const struct n71_scan_io *io,
 				  struct n71_scan_config *config,
@@ -169,6 +196,12 @@ static inline int n71_scan_write(const struct n71_scan_io *io,
 	error = n71_scan_read(io, request->root, request->where, request->size, &observed);
 	if (error)
 		return n71_scan_refuse(config, error);
+	/* Handle PME_STATUS before generic equality: writing an active W1C bit is not a no-op. */
+	if (request->root && request->where == 0x44 && request->size == 2 &&
+	    (request->value & 0x8000)) {
+		error = request->value == 0x8008 ? n71_scan_pme_noop(io, observed) : -EPERM;
+		return error ? n71_scan_refuse(config, error) : 0;
+	}
 	/* No-op emulation avoids writing W1C bits and unsupported capabilities. */
 	if (observed == request->value)
 		return 0;

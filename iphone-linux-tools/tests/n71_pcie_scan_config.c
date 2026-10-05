@@ -6,7 +6,7 @@
 
 struct mock {
 	u32 config[2][1024];
-	unsigned int reads, writes, fail_read, fail_write, bad_readback;
+	unsigned int reads, writes, fail_read, fail_write, bad_readback, change_pm_read;
 	u32 fail_read_where, failed_write_where;
 	bool failed_write_root;
 };
@@ -18,6 +18,8 @@ static int read_config(void *context, bool root, u32 where, unsigned int size, u
 	assert(where < 4096 && where % size == 0);
 	if (++mock->reads == mock->fail_read || (root && where && where == mock->fail_read_where))
 		return -EIO;
+	if (mock->reads == mock->change_pm_read && root && where == 0x44)
+		mock->config[0][where / 4] |= 0x8000; /* A new event must not be hidden by a stale observation. */
 	*value = (mock->config[root ? 0 : 1][where / 4] >> ((where & 3) * 8)) & mask;
 	if (mock->reads == mock->bad_readback)
 		*value ^= 1;
@@ -189,6 +191,88 @@ static void check_serr(void)
 	assert(request(&io, &config, true, 0x3e, 2, 0) == -EPERM); /* Never clear a pre-existing SERR bit. */
 }
 
+static void initialize_pme(struct mock *mock)
+{
+	initialize(mock);
+	mock->config[0][1] |= 0x100000;
+	mock->config[0][0x34 / 4] = 0x40;
+	mock->config[0][0x40 / 4] = 0x00035001;
+	mock->config[0][0x44 / 4] = 8;
+}
+
+static void check_pme_noop(void)
+{
+	struct mock mock, original;
+	struct n71_scan_io io = {&mock, read_config, write_config};
+	struct n71_scan_config config;
+	unsigned int bit, index, reads;
+	const struct n71_scan_request wrong_scope[] = {
+		{false, 0x44, 0x8008, 2}, {true, 0x4c, 0x8008, 2},
+		{true, 0x44, 0x8008, 4}, {true, 0x44, 0x80, 1},
+	};
+
+	/* Mutation captured: deny the measured no-op, issue W1C, or accept active PME through equality. */
+	initialize_pme(&mock); original = mock;
+	assert(n71_scan_capture(&io, &config) == 0);
+	reads = mock.reads;
+	assert(request(&io, &config, true, 0x44, 2, 0x8008) == 0);
+	reads = mock.reads - reads;
+	assert(reads == 7 && mock.writes == 0 && config.writes == 0 && config.attempts == 1);
+	assert(request(&io, &config, true, 0x44, 2, 0x8008) == 0);
+	assert(memcmp(mock.config, original.config, sizeof(mock.config)) == 0);
+	assert(n71_scan_restore(&io, &config) == 0);
+	assert(memcmp(mock.config, original.config, sizeof(mock.config)) == 0);
+	assert(request(&io, &config, true, 0x44, 2, 0x8008) == -EPERM);
+	for (index = 1; index <= reads; index++) {
+		initialize_pme(&mock); assert(n71_scan_capture(&io, &config) == 0);
+		mock.fail_read = mock.reads + index;
+		assert(request(&io, &config, true, 0x44, 2, 0x8008) == -EIO);
+		assert(config.error == -EIO && config.refusals == 1 && mock.writes == 0);
+		assert(request(&io, &config, false, 4, 2, 0x100) == -EIO && mock.writes == 0);
+	}
+	for (bit = 0; bit < 16; bit++) {
+		initialize_pme(&mock); assert(n71_scan_capture(&io, &config) == 0);
+		mock.config[0][0x44 / 4] = 8 ^ (1U << bit);
+		original = mock;
+		assert(request(&io, &config, true, 0x44, 2, 0x8008) == -EPERM);
+		assert(mock.writes == 0 && config.refusals == 1);
+		assert(memcmp(mock.config, original.config, sizeof(mock.config)) == 0);
+		initialize_pme(&mock); assert(n71_scan_capture(&io, &config) == 0);
+		assert(request(&io, &config, true, 0x44, 2, 0x8008 ^ (1U << bit)) ==
+		       (bit == 15 ? 0 : -EPERM)); /* Request8 is an ordinary equality no-op, without W1C. */
+		assert(mock.writes == 0);
+	}
+	for (index = 0; index < 8; index++) {
+		initialize_pme(&mock); assert(n71_scan_capture(&io, &config) == 0);
+		mock.config[0][0x40 / 4] = (index << 16) | 0x5001;
+		assert(request(&io, &config, true, 0x44, 2, 0x8008) ==
+		       (index >= 1 && index <= 3 ? 0 : -EPERM));
+		assert(mock.writes == 0);
+	}
+	for (index = 0; index < 5; index++) {
+		initialize_pme(&mock); assert(n71_scan_capture(&io, &config) == 0);
+		switch (index) {
+		case 0: mock.config[0][0] ^= 1; break;
+		case 1: mock.config[0][1] |= 4; break;
+		case 2: mock.config[0][1] &= ~0x100000U; break;
+		case 3: mock.config[0][0x34 / 4] = 0x48; break;
+		case 4: mock.config[0][0x40 / 4] ^= 1; break;
+		}
+		assert(request(&io, &config, true, 0x44, 2, 0x8008) == -EPERM && mock.writes == 0);
+	}
+	for (index = 0; index < sizeof(wrong_scope) / sizeof(*wrong_scope); index++) {
+		initialize_pme(&mock); assert(n71_scan_capture(&io, &config) == 0);
+		mock.config[1][0x44 / 4] = mock.config[0][0x4c / 4] = 8;
+		assert(n71_scan_write(&io, &config, &wrong_scope[index]) == -EPERM && mock.writes == 0);
+	}
+	initialize_pme(&mock); assert(n71_scan_capture(&io, &config) == 0);
+	mock.change_pm_read = mock.reads + reads;
+	assert(request(&io, &config, true, 0x44, 2, 0x8008) == -EAGAIN && mock.writes == 0);
+	assert(mock.config[0][0x44 / 4] == 0x8008 && config.error == -EAGAIN);
+	assert(n71_scan_restore(&io, &config) == 0);
+	assert(mock.config[0][0x44 / 4] == 0x8008); /* Cleanup must preserve the new event. */
+}
+
 int main(void)
 {
 	struct mock mock, original;
@@ -205,6 +289,7 @@ int main(void)
 	check_intx();
 	check_bridge_windows();
 	check_serr();
+	check_pme_noop();
 
 	initialize(&mock);
 	assert(n71_scan_capture(&io, &config) == 0 && config.active);
