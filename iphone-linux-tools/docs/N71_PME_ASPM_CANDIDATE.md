@@ -569,12 +569,92 @@ passaram. O backend de configuração é sintético, executando a política real
 Compilação, import e timeout não contam como mutation kill.
 [Prova sanitizada, inputs e referências](evidence/n71-pci-resource-write.json).
 
-O adaptador/caller/journal ainda precisam chamar a política e o alocador.
-Não há PCI core, build de módulo, boot ou USB nesta prova. Reserva e
+A prova isolada deste checkpoint não chama o adaptador/caller/journal.
+Não há PCI core, build de módulo, boot ou USB nessa prova. Reserva e
 atribuição na árvore de recursos, ausência de sobreposição final, readback
 de registradores opcionais no hardware, IRQ/DMA/IOMMU, rádio e energia
 continuam pendentes. A próxima integração deve permitir atribuição por SSH
 no mesmo boot; não pedir DFU somente para repetir o helper.
+
+## Atribuição no bus retido — adaptador, caller e build real
+
+O adaptador `3f09eec` reserva a janela MEM32 na árvore `iomem`, captura a
+configuração e chama `pci_bus_size_bridges`/`pci_bus_assign_resources`
+sob rescan lock. Exige topologia N71/BCM4350 exata e recursos inicialmente
+sem parent. A política anterior cobre as escritas do alocador; ao final,
+confere árvore/flags/tamanhos/alinhamento, tradução CPU→PCI, ausência de
+sobreposição, BAR0/BAR2 e janela MEM por readback. IO/PREF permanecem
+desativados, COMMAND/decode/master e BRIDGE_CONTROL são preservados.
+
+Caller `3ff8769` oferece `action=assign` somente em `scan_hold=1` com bus
+retido, módulo/reset e quatro domínios ativos, sem erro anterior ou power-put
+pendente. Um pin temporário e o mutex da sessão cobrem a operação. A ação
+não repete enumeração/scan nem encerra os owners; repetição retorna EALREADY
+sem contaminar `primary_error`. Falhas reais conservam o primeiro erro e
+impedem outra atribuição no mesmo bus.
+
+O getter somente leitura `resources` informa
+`ready/attempted/assigned/pending/claimed/active/error`. `assigned=1` exige
+bus vivo/retido, atribuição concluída, janela na árvore iomem e ausência de
+fase/erro. Um bus removido continua `assigned=0` mesmo com rollback ou
+reserva pendentes. Recusas anteriores à fase e erros após liberar o bridge
+continuam observáveis. Os formatos anteriores de `status` e `held` permanecem.
+
+Cleanup recusa fase ativa, remove o bus, restaura os três campos adicionais
+e a configuração genérica, depois libera a janela global somente com child
+vazio. Falhas mantêm bridge/owners para retry; reset/energia/REG_ON continuam
+dependendo dessa limpeza comprovada. A validação da árvore sintética não
+substitui readback e restauração no iPhone.
+
+Reprodução nativa numa cópia descartável do código público:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pcie_scan_host.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pcie_diagnostic_caller.py -v
+```
+
+Em cada plataforma Mac/Ubuntu ARM64: adaptador64 cenários/51 mutações,
+três provas unittest e12 inputs; caller121 cenários/59 mutações, uma prova
+unittest e cinco inputs. Todas as mutações compilaram com Werror e falharam
+por SIGABRT/assertion; compile/import/timeout não contam como kills.
+O código real foi executado com dependências de kernel/PCI sintéticas,
+e inputs/logs/exit foram conferidos por SHA. AST/Flake8 fatal passaram.
+
+O build real ocorreu numa cópia exclusiva dos48 inputs públicos,
+`/home/ubuntu/n71-resource-caller-modules-20261005/phone/kernel`, na VM
+dedicada, usando o source/output power2 já qualificado:
+
+```sh
+make -C /home/ubuntu/kernel-n71-binding-source-20261005 \
+  O=/home/ubuntu/kernel-n71-binding-build-20261005 ARCH=arm64 -j2 \
+  W=1 KCFLAGS=-Werror LOCALVERSION= \
+  M=/home/ubuntu/n71-resource-caller-modules-20261005/phone/kernel \
+  KBUILD_EXTRA_SYMBOLS=/home/ubuntu/kernel-n71-binding-build-20261005/vmlinux.symvers \
+  modules
+```
+
+Os seis módulos passaram Werror/modpost/ELF AArch64/vermagic
+`7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64`.
+PCIe84.696 bytes; REG_ON17.688 bytes/SHA anterior intacto. Fonte/config/Image
+e exports foram conferidos antes/depois. `modinfo -p` confirmou os getters
+e a ação, `nm -u` confirmou alocação/reserva/release vinculados. A prova
+sanitizada contém os48 inputs, módulos e logs por SHA; payload/DT,
+identidades, chaves e logs completos permanecem privados.
+[Evidência integrada](evidence/n71-pci-resource-assignment.json).
+
+Seleção/provenance/journal do host ainda precisam reconhecer esse build e
+registrar o checkpoint antes de `assign`. O CLI atual continua selecionando
+o módulo retido anterior; os perfis preservados não foram substituídos.
+Nenhum módulo novo carregado, novo Image, boot ou DFU nesta etapa.
+Atribuição/restauração no kernel em execução, IRQ/IOMMU, driver/firmware/radio,
+Wi-Fi e telemetria/carga Linux continuam pendentes.
+
+CI anterior `3f09eec`: [PR37394918817](https://github.com/djalmajr/iphone6s-linux/actions/runs/37394918817)
+e [push37394914087](https://github.com/djalmajr/iphone6s-linux/actions/runs/37394914087)
+concluíram cancelled; Mac/Windows success e Ubuntu cancelled nos dois eventos.
+O log do job Ubuntu da PR não foi disponibilizado (`log not found`);
+causa segue não confirmada na [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38).
+Esses resultados não cobrem o caller novo.
 
 ## Próximos gates
 
@@ -585,9 +665,10 @@ exige um único `pcie_aspm=off` no cmdline e o marcador de suporte ASPM
 desativado. O parser exige prepare/restore PME completos e conserva REG_ON
 se não houver prova de cleanup. Retry de restauração não executa novo scan.
 
-O scan atual enumera e remove o bus; os BARs ainda não têm endereços
-persistentes atribuídos. Para Wi-Fi, preparar offline o lifecycle do host PCI,
-atribuição de recursos, IRQ/IOMMU do endpoint e depois driver/firmware/radio.
+O scan da última prova física enumera e remove o bus; ainda não comprova
+endereços persistentes atribuídos. Lifecycle/atribuição estão preparados
+offline; integrar seleção/provenance/journal e comprovar atribuição/restauração
+no aparelho, IRQ/IOMMU do endpoint e depois driver/firmware/radio.
 Esses passos não estão habilitados pela prova diagnóstica. Alimentação e
 telemetria precisam de acesso HDQ/charger e medição própria.
 
