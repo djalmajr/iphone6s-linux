@@ -188,6 +188,8 @@ class Session:
                 'Held session requires its explicit power2 host/target/PME candidate')
         self.scan_hold = scan_hold
         self.resource_capable = resource_capable
+        self.resource_attempted = False
+        self.resource_assignment = None
         self.scan_link_target = scan_link_target
         self.scan_pme_disable = scan_pme_disable
         self.scan_parser = n71_scan_pme_result if scan_pme_disable else n71_scan_target_result if scan_link_target else n71_scan_result
@@ -444,7 +446,9 @@ def main():
     parser.add_argument('--scan-pme-disable', action='store_true', help='Explicit endpoint PME disable/restore candidate; requires ASPM off')
     parser.add_argument('--scan-hold', action='store_true', help='Retain the qualified PCI bus and power owners until explicit same-boot release')
     parser.add_argument('--resource-capable', action='store_true', help='Select the qualified held module with explicit resource assignment support')
-    parser.add_argument('--release-held', type=Path, help='Release owners from a private held session in this exact boot; requires --scan-hold')
+    held_actions = parser.add_mutually_exclusive_group()
+    held_actions.add_argument('--release-held', type=Path, help='Release owners from a private held session in this exact boot; requires --scan-hold')
+    held_actions.add_argument('--assign-held', type=Path, help='Assign PCI resources in this saved held boot; requires --resource-capable')
     modes.add_argument('--bar-sizing', action='store_true', help='Select endpoint-only BAR sizing module; implies inventory')
     modes.add_argument('--chip-id', action='store_true', help='Read ChipCommon ID once via restored BAR0 route; implies sizing/inventory')
     modes.add_argument('--dart-observe', action='store_true', help='Read stable DART state without provider activation; implies inventory')
@@ -453,6 +457,8 @@ def main():
     options = parser.parse_args()
     require(not options.release_held or (options.scan_hold and options.previous_clean is None),
             'Held release requires held mode without previous-clean')
+    require(not options.assign_held or (options.resource_capable and options.previous_clean is None and options.scan_hold),
+            'Held assignment requires resource-capable held mode without previous-clean')
     os.umask(0o077)
     os.environ['IPHONE_LINUX_PROFILE'] = str(options.profile.absolute())
     profile = device_profile.verify()
@@ -483,11 +489,11 @@ def main():
         require(history is not None, 'Provider cycle requires prior private same-boot cleanup')
         n71_dart_cycle_result.previous(options.previous_clean.absolute())
     if options.check:
-        if options.release_held:
+        if options.release_held or options.assign_held:
             session = Session(ROOT / 'runtime', modules, host_scan=True, scan_link_target=True,
                               scan_pme_disable=True, scan_hold=True, release=release,
                               resource_capable=options.resource_capable)
-            n71_held_session.load_source(session, ROOT, options.release_held, held_identity)
+            n71_held_session.load_source(session, ROOT, options.release_held or options.assign_held, held_identity)
         print('N71_SESSION_LOCAL_GATE_OK; no SSH or USB action')
         return 0
     require(options.output_dir is not None, 'New private output required')
@@ -500,7 +506,8 @@ def main():
         session = Session(output, modules, host_scan=options.host_scan, scan_link_target=options.scan_link_target,
                           scan_pme_disable=options.scan_pme_disable, scan_hold=True, release=release, history=history,
                           resource_capable=options.resource_capable)
-        return n71_held_session.run(session, held_identity, root=ROOT, source=options.release_held)
+        return n71_held_session.run(session, held_identity, root=ROOT, source=options.release_held or options.assign_held,
+                                    assign=options.assign_held is not None)
     return Session(output, modules, config_inventory=options.config_inventory,
                    host_scan=options.host_scan, bar_sizing=options.bar_sizing,
                    chip_id=options.chip_id, dart_observe=options.dart_observe,

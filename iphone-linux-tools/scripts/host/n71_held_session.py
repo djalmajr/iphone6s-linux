@@ -9,6 +9,7 @@ import device_profile
 import n71_scan_held_result
 import n71_scan_target_result
 import n71_session_history
+import n71_resource_stage
 
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
@@ -57,6 +58,7 @@ def snapshot_command(session):
                 'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; ')
     for name in TRUE_PARAMETERS + FALSE_PARAMETERS:
         command += 'printf "N71_HELD_PARAM ' + name + '="; cat ' + PCIE + name + '; '
+    command += n71_resource_stage.getter(session)
     command += ('else echo N71_HELD_PCIE_PRESENT=0; fi; '
                 'if [ -d /sys/module/n71_wlan_power_diagnostic ]; then echo N71_HELD_REG_PRESENT=1; '
                 'cat ' + REG + 'state; cat ' + REG + 'control; '
@@ -89,6 +91,7 @@ def snapshot(session, stage):
             require(value == ('Y' if name in TRUE_PARAMETERS else 'N'), 'Held immutable parameter changed')
         n71_scan_held_result.live_held(raw)
         n71_scan_target_result.live_status(raw)
+    n71_resource_stage.snapshot(session, raw, pcie)
     if reg:
         one(raw, 'bound=', r'^(bound=1 active=[01] restore_pending=[01] original=[0-9a-f]{2})$')
         one(raw, 'N71_REG_ON_CONTROL_READBACK ', r'^N71_REG_ON_CONTROL_READBACK value=([0-9a-f]{2})$')
@@ -123,7 +126,8 @@ class Journal:
                  'module_directory': session.module_directory, 'result': session.result,
                  'reg_attempted': session.reg_attempted, 'activation_attempted': session.activation_attempted,
                  'pcie_attempted': session.pcie_attempted, 'baseline': self.baseline,
-                 'proofs': self.proofs, 'checkpoint': self.checkpoint}
+                 'proofs': self.proofs, 'checkpoint': self.checkpoint,
+                 **n71_resource_stage.fields(session)}
         temporary = self.path.with_name('.held-state-' + secrets.token_hex(12))
         try:
             with temporary.open('x') as stream:
@@ -185,7 +189,7 @@ def load_source(session, root, directory, selected_identity):
     baseline = Baseline(data.get('baseline'))
     require(n71_session_history.kernel_lines(text)[:len(data['baseline'])] == data['baseline'], 'Held baseline differs')
     proofs = data.get('proofs')
-    require(isinstance(proofs, dict) and set(proofs).issubset(PROOFS), 'Held cleanup proof set differs')
+    require(isinstance(proofs, dict) and set(proofs).issubset(PROOFS + n71_resource_stage.extra_proofs(session)), 'Held cleanup proof set differs')
     verified = {}
     for stage, expected in proofs.items():
         path = directory / (stage + '-proof-private.log')
@@ -195,9 +199,13 @@ def load_source(session, root, directory, selected_identity):
                 [line for line in n71_session_history.kernel_lines(text) if line not in baseline.known]
                 [:len(n71_session_history.kernel_lines(proof))], 'Held cleanup history differs')
         verified[stage] = proof
+    n71_resource_stage.load_source(session, data, verified)
     if 'pcie-unload' in verified:
         require('pcie-cleanup' in verified, 'PCI unload lacks cleanup proof')
-        n71_scan_held_result.cleanup(verified['pcie-cleanup'])
+        if n71_resource_stage.capable(session):
+            n71_resource_stage.cleanup(session, verified['pcie-cleanup'])
+        else:
+            n71_scan_held_result.cleanup(verified['pcie-cleanup'])
         require(verified['pcie-unload'].splitlines().count('N71_PCIE_UNLOADED') == 1, 'Held PCI unload not proved')
     if 'reg-unload' in verified:
         require('pcie-unload' in verified and 'restore' in verified, 'REG_ON unload precedes PCI cleanup')
@@ -227,10 +235,14 @@ def release(session, journal, presence, live_text):
                                       'test "$(cat /proc/sys/kernel/random/boot_id)" = "' + session.result['boot_id'] + '"; '
                                       'if printf "cleanup\n" > ' + PCIE + 'action; then cleanup_exit=0; else cleanup_exit=$?; fi; '
                                       'printf "N71_PCIE_HELD "; cat ' + PCIE + 'held; '
-                                      'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; dmesg; exit "$cleanup_exit"')
+                                      'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; '
+                                      + n71_resource_stage.getter(session) + 'dmesg; exit "$cleanup_exit"')
             require(process.returncode == 0, 'Held cleanup pending; retain REG_ON and module')
             proof = process.stdout
-        cleanup = n71_scan_held_result.cleanup(proof)
+        if n71_resource_stage.capable(session):
+            cleanup = n71_resource_stage.cleanup(session, proof)
+        else:
+            cleanup = n71_scan_held_result.cleanup(proof)
         session.result['stop_error'] = cleanup['stop_error']
         if 'pcie-cleanup' not in journal.proofs:
             journal.proof('pcie-cleanup', proof)
@@ -265,9 +277,11 @@ def release(session, journal, presence, live_text):
     session.result.update(held_verified=False, cleanup_verified=True, cleanup_errors=[])
 
 
-def run(session, selected_identity, *, root, source=None):
+def run(session, selected_identity, *, root, source=None, assign=False):
     journal = None
     try:
+        require(type(assign) is bool and (not assign or (source is not None and n71_resource_stage.capable(session))),
+                'Assignment requires an explicit saved resource-capable held session')
         if source:
             data, prior, verified = load_source(session, root, source, selected_identity)
             live, presence = snapshot(session, 'held-resume-live')
@@ -276,6 +290,7 @@ def run(session, selected_identity, *, root, source=None):
             expected = (int(session.pcie_attempted and 'pcie-unload' not in verified),
                         int(session.reg_attempted and 'reg-unload' not in verified))
             require(presence[:2] == expected, 'Held module ownership changed; no cleanup attempted')
+            n71_resource_stage.resume(session, live, prior)
             if presence[1]:
                 require(one(live, 'bound=', r'^(bound=1 active=[01] restore_pending=[01] original=[0-9a-f]{2})$') ==
                         one(prior, 'bound=', r'^(bound=1 active=[01] restore_pending=[01] original=[0-9a-f]{2})$')
@@ -298,7 +313,11 @@ def run(session, selected_identity, *, root, source=None):
             journal.baseline = data['baseline']
             for stage, proof in verified.items():
                 journal.proof(stage, proof)
-            release(session, journal, presence, live)
+            if assign:
+                require(presence == (1, 1, 0), 'Assignment requires live held owners')
+                n71_resource_stage.assign(session, journal, live)
+            else:
+                release(session, journal, presence, live)
         else:
             journal = Journal(session, selected_identity)
             session.before_effect = journal.save
@@ -307,14 +326,14 @@ def run(session, selected_identity, *, root, source=None):
             journal.baseline = n71_session_history.kernel_lines(preflight)
             live, presence = snapshot(session, 'held-acquire-live')
             require(presence == (1, 1, 0), 'Held modules and PCI bus not live')
-            n71_scan_held_result.parse(Baseline(journal.baseline).fresh(live))
+            n71_resource_stage.retained(session, Baseline(journal.baseline).fresh(live))
             require('bound=1 active=1 restore_pending=1 original=80\n' in live
                     and 'N71_REG_ON_CONTROL_READBACK value=81\n' in live, 'Held REG_ON ownership changed')
             session.result['held_verified'] = True
         final, presence = journal.finish()
-        require((presence == (0, 0, 1) if source else presence == (1, 1, 0)), 'Held final ownership differs')
-        if not source:
-            n71_scan_held_result.parse(Baseline(journal.baseline).fresh(final))
+        require((presence == (0, 0, 1) if source and not assign else presence == (1, 1, 0)), 'Held final ownership differs')
+        if not source or assign:
+            n71_resource_stage.retained(session, Baseline(journal.baseline).fresh(final))
             require('bound=1 active=1 restore_pending=1 original=80\n' in final
                     and 'N71_REG_ON_CONTROL_READBACK value=81\n' in final, 'Final held REG_ON ownership changed')
     except (ValueError, OSError, KeyError, KeyboardInterrupt) as error:
@@ -341,4 +360,4 @@ def run(session, selected_identity, *, root, source=None):
         json.dump(session.result, stream, indent=2)
         stream.write('\n')
     print('N71_SESSION_RESULT', json.dumps(session.result), flush=True)
-    return 0 if 'held_error' not in session.result and session.result.get('stop_error', 0) == 0 else 1
+    return 0 if 'held_error' not in session.result and session.result.get('stop_error', 0) == 0 and n71_resource_stage.success(session) else 1
