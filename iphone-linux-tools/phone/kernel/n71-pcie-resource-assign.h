@@ -60,6 +60,14 @@ static int n71_resource_preflight(struct n71_scan_host *host,
 	for (index = PCI_BRIDGE_IO_WINDOW; index <= PCI_BRIDGE_PREF_MEM_WINDOW; index++)
 		if (root->resource[index].parent || root->resource[index].child)
 			return -EBUSY;
+	resource = &root->resource[PCI_BRIDGE_IO_WINDOW];
+	if (!root->io_window && (resource->flags || resource->start || resource->end))
+		return -EACCES;
+	resource = &root->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
+	if (!root->pref_window && (resource->flags || resource->start || resource->end))
+		return -EACCES;
+	layout->io_absent = !root->io_window;
+	layout->pref_absent = !root->pref_window;
 	resource = &host->windows[1];
 	if (resource->start != 0x7c0000000ULL || resource->end != 0x7ffffffffULL ||
 	    resource->flags != IORESOURCE_MEM || resource->parent || resource->child)
@@ -164,6 +172,13 @@ static inline void n71_resource_report_readback(struct n71_scan_host *host)
 		 failure->write_error, failure->read_error);
 }
 
+static inline void n71_resource_report_optional(struct n71_scan_host *host)
+{
+	dev_info(host->dev, "N71_PCIE_OPTIONAL_WINDOWS captured=%u io_absent=%u pref_absent=%u io_noops=%u pref_noops=%u; absent ranges are emulated without hardware writes\n",
+		 host->resources.pending, host->resources.io_absent, host->resources.pref_absent,
+		 host->resources.io_noops, host->resources.pref_noops);
+}
+
 /* Caller serializes this action with cleanup and retains MMIO/module/power. */
 static inline int n71_pcie_assign_resources(struct n71_diagnostic *state)
 {
@@ -214,6 +229,7 @@ static inline int n71_pcie_assign_resources(struct n71_diagnostic *state)
 	pci_dev_put(devices.endpoint);
 	pci_dev_put(devices.root);
 	pci_unlock_rescan_remove();
+	n71_resource_report_optional(host);
 	n71_resource_report_readback(host);
 	dev_info(host->dev, "N71_PCIE_RESOURCE_RESULT error=%d assigned=%u pending=%u claimed=%u attempts=%u writes=%u; no decode, bind or DMA\n",
 		 error, host->resources_assigned, host->resources.pending, host->window_claimed,

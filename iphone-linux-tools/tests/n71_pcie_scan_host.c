@@ -45,7 +45,7 @@ struct pci_dev {
 	void *driver;
 	struct resource resource[10];
 	struct pci_bus *subordinate;
-	bool enabled;
+	bool enabled, io_window, pref_window;
 };
 struct pci_ops {
 	int (*read)(struct pci_bus *, unsigned int, int, int, u32 *);
@@ -89,7 +89,8 @@ static struct {
 	unsigned int target_prepares, target_restores;
 	unsigned int pme_prepares, pme_restores, pme_reads;
 	bool locked, returned, pme;
-	bool resource_mode, allocating;
+	bool resource_mode, allocating, io_readonly, pref_readonly;
+	unsigned int optional_attempts;
 	enum resource_fault resource_fault;
 	unsigned int claims, releases, sizing, assigning, references;
 	char log[16384];
@@ -106,6 +107,14 @@ static u32 readl(const void *address)
 }
 static void writel(u32 value, void *address)
 {
+	if (mock.allocating && (address == &mock.ecam[0x8030 / 4] ||
+	    address == &mock.ecam[0x8024 / 4] || address == &mock.ecam[0x8028 / 4] ||
+	    address == &mock.ecam[0x802c / 4])) {
+		mock.optional_attempts++;
+		if ((address == &mock.ecam[0x8030 / 4] && mock.io_readonly) ||
+		    (address != &mock.ecam[0x8030 / 4] && mock.pref_readonly))
+			return;
+	}
 	if (mock.allocating && mock.resource_fault == READBACK_DROP &&
 	    address == &mock.ecam[0x8030 / 4] && value == 0xffff)
 		return;
@@ -120,6 +129,11 @@ static void writel(u32 value, void *address)
 }
 static void writew(u16 value, void *address)
 {
+	if (mock.allocating && address == &mock.ecam[0x801c / 4]) {
+		mock.optional_attempts++;
+		if (mock.io_readonly)
+			return;
+	}
 	if (mock.returned && !mock.allocating) {
 		assert(!mock.scans || mock.removes == 1);
 		if ((mock.fault == RESTORE_DROP || mock.fault == STOP_AND_RESTORE) &&
@@ -233,7 +247,7 @@ static int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
 	bridge->bus->sysdata = bridge->sysdata;
 	mock.endpoint_bus = (struct pci_bus){.sysdata = bridge->sysdata, .number = 1};
 	mock.root = (struct pci_dev){.bus = bridge->bus, .devfn = 8, .vendor = 0x106b,
-		.device = 0x1004, .class = 0x060400};
+		.device = 0x1004, .class = 0x060400, .io_window = true, .pref_window = true};
 	mock.endpoint = (struct pci_dev){.bus = &mock.endpoint_bus, .vendor = 0x14e4,
 		.device = 0x43a3, .class = 0x028000};
 	mock.root.subordinate = &mock.endpoint_bus; mock.endpoint_bus.self = &mock.root;

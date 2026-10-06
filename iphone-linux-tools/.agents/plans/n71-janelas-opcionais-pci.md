@@ -24,7 +24,7 @@ Fase C (fatias de até cinco arquivos): build externo na VM preservada; registro
 
 - [x] A: política de no-op restrita, baseline/leituras vivas, contadores e guardas.
 - [x] A: regressões de ranges ausentes/implementados, drift/erro, rollback e mutations por assertion no Mac/Ubuntu ARM64.
-- [ ] B: derivar flags do PCI core e relatar decisão; testar adaptador e restaurar corretamente.
+- [x] B: derivar flags do PCI core e relatar decisão; testar adaptador e restaurar corretamente.
 - [ ] C: build, seleção, journal/candidata e reprodução sem novo DFU.
 - [ ] Uma sessão física agrupada somente após os gates; conservar diagnóstico/cleanup e serviços. Não habilitar driver/DMA/radio nesta atribuição.
 - [ ] Atualizar docs/issues com provas sanitizadas e limites; Wi-Fi/energia seguem abertos até provas próprias.
@@ -36,3 +36,7 @@ Rodar a nova fixture real da política e seu mutation runner; baseline deve pass
 ### Gate A — política qualificada, flags ainda não ativados no adaptador
 
 Cinco arquivos: plano, header da política, fixture/runner próprios e `docs/evidence/n71-pci-optional-policy.json`. Mac e Ubuntu ARM64: 21 cenários/15 mutações novos; política anterior194/36 e adaptador65/57 requalificados, total280/108 por plataforma. Cinquenta e três inputs públicos iguais, AST/lint fatal/diff. A primeira rodada detectou que um mutante não compilava por parâmetro unused; fixture ajustada para conservar o uso do parâmetro sem o guard. Essa falha não contou como kill. Somente o gate final compilado/SIGABRT qualificou a prova. Nenhum build/módulo/boot novo; flags no layout padrão continuam false até a fase B provar suporte/ausência PCI core.
+
+### Gate B — flags PCI core, recursos vazios e relato qualificados
+
+Cinco arquivos: plano, adaptador, backend PCI compartilhado e fixture/runner próprios `tests/n71_pcie_optional_host.c` e `tests/test_n71_pcie_optional_host.py`. Mac/Ubuntu ARM64: 18 cenários/14 mutações novos e adaptador legado65/57 requalificado, total83/71 por plataforma;55 inputs/AST/lint fatal. Política21/15 e194/36 reutilizada com oito inputs relevantes intactos; conjunto C final298 cenários/122 mutações por plataforma. Backend conserva flags true nos casos legados e modela registros readonly nos novos. Ausência não pode ser inferida só do valor zero; flags de suporte e recursos flags/start/end vazios são verificados antes de capture. MMIO/BARs/decode e falhas/retry de restauração continuam estritos. Report único precede readback, conserva flags/counters e não repete após tentativa. Build/seleção/journal e prova física dessa correção ainda são gates separados.
