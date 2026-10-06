@@ -26,8 +26,10 @@ static int read_config(void *context, bool root, u32 where, unsigned int size, u
 	struct backend *backend = context;
 	u32 raw;
 	assert(where < 256 && (size == 2 || size == 4));
-	if (++backend->reads == backend->fail_read)
+	if (++backend->reads == backend->fail_read) {
+		*value = 0xdeadbeef; /* A failed callback does not validate this value. */
 		return backend->failure;
+	}
 	raw = backend->config[root ? 0 : 1][where / 4];
 	*value = size == 4 ? raw : (raw >> ((where & 3) * 8)) & 0xffff;
 	return 0;
@@ -94,6 +96,67 @@ static void restore_all(const struct n71_scan_io *io, struct n71_resource_write_
 	assert(n71_scan_restore(io, &state->reference) == 0);
 }
 
+static void first_write_failure(void)
+{
+	const struct n71_scan_request request = {true, 0x30, 0xffff, 4};
+	struct backend backend, before;
+	struct n71_scan_io io = {&backend, read_config, write_config};
+	unsigned int fault;
+
+	/* Mutation captured: losing the first 0x30 readback, inventing validity, or adding I/O. */
+	for (fault = 0; fault < 5; fault++) {
+		struct n71_resource_write_state state = {0};
+		struct n71_resource_write_failure failure;
+		unsigned int reads, writes;
+		int expected = fault == 1 || fault == 3 ? -ENOLINK : -EIO;
+
+		initialize(&backend); backend.config[0][12] = 0; before = backend;
+		assert(n71_resource_capture(&io, &layout, &state) == 0);
+		reads = backend.reads;
+		if (fault == 0)
+			backend.drop_write = 1;
+		else if (fault < 3)
+			backend.fail_write = 1;
+		else
+			backend.fail_read = reads + 6;
+		backend.failure = fault == 2 || fault == 4 ? 7 : -ENOLINK;
+		assert(n71_resource_write(&io, &state, &request) == expected);
+		failure = state.failure;
+		assert(state.error == expected && !state.writes && state.attempts == 1);
+		assert(state.active && state.pending && failure.valid);
+		assert(failure.request.root && failure.request.where == 0x30);
+		assert(failure.request.size == 4 && failure.request.value == 0xffff);
+		assert(failure.before == 0 && failure.after == 0);
+		assert(failure.after_valid == (fault == 0));
+		assert(failure.write_error == (fault == 1 || fault == 2 ? backend.failure : 0));
+		assert(failure.read_error == (fault >= 3 ? backend.failure : 0));
+		assert(backend.reads - reads == (fault == 1 || fault == 2 ? 5U : 6U));
+		assert(backend.writes == 1 && backend.config[0][12] == (fault >= 3 ? 0xffffU : 0U));
+		reads = backend.reads; writes = backend.writes;
+		assert(n71_resource_write(&io, &state, &allocation[1]) == expected);
+		assert(backend.reads == reads && backend.writes == writes);
+		assert(memcmp(&state.failure, &failure, sizeof(failure)) == 0);
+		backend.fail_read = backend.fail_write = backend.drop_write = 0;
+		restore_all(&io, &state);
+		assert(memcmp(backend.config, before.config, sizeof(backend.config)) == 0);
+		assert(memcmp(&state.failure, &failure, sizeof(failure)) == 0);
+		assert(state.error == expected && !state.writes);
+	}
+	/* Mutation captured: claiming a failure for success/no-op or losing the pre-write value. */
+	{
+		struct n71_resource_write_state state = {0};
+		initialize(&backend); before = backend;
+		assert(n71_resource_capture(&io, &layout, &state) == 0);
+		assert(n71_resource_write(&io, &state, &request) == 0 && !state.failure.valid && state.writes == 1);
+		backend.drop_write = 2;
+		assert(n71_resource_write(&io, &state, &allocation[7]) == -EIO);
+		assert(state.failure.valid && state.failure.before == 0xffff && state.failure.after == 0xffff);
+		assert(state.failure.request.value == 0 && state.failure.after_valid && state.writes == 1);
+		backend.drop_write = 0; restore_all(&io, &state);
+		assert(memcmp(backend.config, before.config, sizeof(backend.config)) == 0);
+	}
+}
+
 int main(void)
 {
 	struct backend backend, before;
@@ -120,6 +183,7 @@ int main(void)
 	assert(!backend.writes); capture_reads = backend.reads;
 	assert(n71_resource_capture(&io, &layout, &state) == -EBUSY);
 	assert(allocate(&io, &state) == 0);
+	assert(!state.failure.valid);
 	reads = backend.reads - capture_reads; writes = backend.writes;
 	assert(backend.config[1][4] == 0xc0800004 && backend.config[1][6] == 0xc0000004);
 	assert(backend.config[0][8] == 0xc080c000 && backend.config[0][7] == 0xa90000f0);
@@ -157,6 +221,7 @@ int main(void)
 		initialize(&backend); state = (struct n71_resource_write_state){0};
 		assert(n71_resource_capture(&io, &layout, &state) == 0);
 		assert(n71_resource_write(&io, &state, &refused[index]) == -EPERM && state.error == -EPERM);
+		assert(!state.failure.valid);
 		assert(!backend.writes); error = backend.reads;
 		assert(n71_resource_write(&io, &state, &allocation[1]) == -EPERM && backend.reads == (unsigned int)error);
 	}
@@ -220,6 +285,7 @@ int main(void)
 		backend.drop_write = 0; restore_all(&io, &state);
 		assert(memcmp(backend.config, before.config, sizeof(backend.config)) == 0);
 	}
+	first_write_failure();
 	printf("N71_PCIE_RESOURCE_WRITE_OK cases=%u; no PCI core or hardware\n", cases);
 	return 0;
 }

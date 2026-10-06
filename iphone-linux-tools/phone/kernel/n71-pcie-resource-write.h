@@ -12,8 +12,16 @@ struct n71_resource_bar_layout {
 	u32 bytes[6];
 };
 
+struct n71_resource_write_failure {
+	struct n71_scan_request request;
+	u32 before, after;
+	int write_error, read_error;
+	bool valid, after_valid;
+};
+
 struct n71_resource_write_state {
 	struct n71_scan_config reference;
+	struct n71_resource_write_failure failure;
 	u32 extra[3];
 	unsigned int attempts, writes;
 	int error;
@@ -134,6 +142,35 @@ static inline int n71_resource_refuse(struct n71_resource_write_state *state, in
 	return state->error;
 }
 
+/* Record the existing verification I/O; failed callbacks do not prove a value. */
+static inline int n71_resource_write_value(const struct n71_scan_io *io,
+					  struct n71_resource_write_state *state,
+					  const struct n71_scan_request *request, u32 before)
+{
+	struct n71_resource_write_failure failure = {.request = *request, .before = before};
+	u32 actual = 0;
+	int error;
+
+	failure.write_error = io->write(io->context, request->root, request->where,
+					request->size, request->value);
+	error = failure.write_error;
+	if (!error) {
+		failure.read_error = io->read(io->context, request->root, request->where,
+					    request->size, &actual);
+		error = failure.read_error;
+		if (!error) {
+			failure.after_valid = true;
+			failure.after = actual;
+			error = actual == request->value ? 0 : -EIO;
+		}
+	}
+	if (error) {
+		failure.valid = true;
+		state->failure = failure;
+	}
+	return error > 0 ? -EIO : error;
+}
+
 static inline int n71_resource_write(const struct n71_scan_io *io,
 				    struct n71_resource_write_state *state,
 				    const struct n71_scan_request *request)
@@ -158,7 +195,7 @@ static inline int n71_resource_write(const struct n71_scan_io *io,
 		return n71_resource_refuse(state, error);
 	if (observed == request->value)
 		return 0;
-	error = n71_scan_restore_value(io, request->root, request->where, request->size, request->value);
+	error = n71_resource_write_value(io, state, request, observed);
 	if (error)
 		return n71_resource_refuse(state, error);
 	state->writes++;
