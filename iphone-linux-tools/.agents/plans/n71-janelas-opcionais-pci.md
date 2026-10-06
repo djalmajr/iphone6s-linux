@@ -32,7 +32,8 @@ C3, três arquivos: plano, `tests/run_n71_diagnostic_payload_mutations.py` (depe
 - [x] A: regressões de ranges ausentes/implementados, drift/erro, rollback e mutations por assertion no Mac/Ubuntu ARM64.
 - [x] B: derivar flags do PCI core e relatar decisão; testar adaptador e restaurar corretamente.
 - [x] C: build, seleção e journal/candidata sem novo DFU.
-- [ ] Registrar reprodução e publicar o checkpoint qualificado antes da sessão física.
+- [x] Registrar reprodução e provas sanitizadas do checkpoint qualificado.
+- [ ] Publicar o checkpoint e atualizar issue39 antes da sessão física.
 - [ ] Uma sessão física agrupada somente após os gates; conservar diagnóstico/cleanup e serviços. Não habilitar driver/DMA/radio nesta atribuição.
 - [ ] Atualizar docs/issues com provas sanitizadas e limites; Wi-Fi/energia seguem abertos até provas próprias.
 
@@ -63,3 +64,7 @@ Quatro arquivos definidos acima. Mac/Ubuntu ARM64 passaram19 testes/45 mutaçõe
 Três arquivos definidos acima. Mac/Ubuntu ARM64:73 testes/120 mutações por AssertionError por plataforma,67 inputs/AST/lint fatal: composição19/37 (34 composer e três forwarding collector), estágio16/26, readback9/15, optional8/12 e held21/30. C2seletor/resultado e históricoC1 reutilizados com controles relevantes intactos. Fixture nova compõe e executa --check com os dois reports selecionados, mesmo payload/identidades/REG_ON. Dep nova foi incluída na cópia descartável dos mutantes; erros de import não contam como kills.
 
 Candidata real separada passou composer/--check: oito arquivos privados700/600, PCIe86.304 bytes/SHAfba31cb2, dois reports exigidos. Deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON byte a byte iguais ao perfil readback anterior; somente PCIe e `module_sha256` da provenance mudaram. Perfis anteriores preservados; nada carregado no iPhone nesta preparação. Próxima sessão agrupa aquisição/assign/coleta, cleanup/retry, serviços, snapshot/sync e retorno iOS. Driver/DMA/rádio e carga Linux continuam fora desta prova.
+
+### Gate D — reprodução e checkpoint offline
+
+Quatro arquivos: plano, `docs/STATUS.md`, `docs/N71_PME_ASPM_CANDIDATE.md` e nova `docs/evidence/n71-pci-optional-profile.json`. Registra gates, comandos, source/ABI/bytes preservados, booleans dos reports exigidos e limites. Sem quebra de CLI/defaults, dependências/banco/config global inalterados; guardas acrescentam somente leituras limitadas nos pedidos de ranges ausentes. Testes reais/AST/lint fatal, provas por hash e links/Bash/diff/guard público qualificados. Publicar somente a branch autorizada, mantendo merge/tag/release pendentes. Issue39/Wi-Fi/energia continuam em curso até provas físicas próprias.

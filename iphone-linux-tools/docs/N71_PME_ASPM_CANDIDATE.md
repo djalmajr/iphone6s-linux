@@ -994,7 +994,81 @@ flowchart LR
     F --> G["iOS confirmado; preparação offline"]
 ```
 
-## Próximos gates após o readback
+## Candidata de ranges opcionais — qualificação e reprodução
+
+O adaptador usa os flags `pci_dev.io_window/pref_window` produzidos pelos
+probes PCI core e exige recursos opcionais vazios. A política conserva essa
+decisão somente com baseline zerada; valida novamente os registradores vivos
+antes de emular um pedido exato de desativação. IO usa leituras word0x1c e
+dword0x30; prefetch usa dword0x24/28/2c. Erro ou drift recusa a operação sem
+escrita. Não altera readback ou whitelist de BARs/MMIO implementados,
+COMMAND/MASTER, orçamento de tentativas, primeiro erro ou rollback.
+
+`N71_PCIE_OPTIONAL_WINDOWS` conserva capture, flags e contadores dos pedidos
+emulados. O parser exige registro único/completo entre held e readback/result,
+capture compatível com pending, flags/counters e orçamento coerentes. Proof,
+checkpoint, reuso e cleanup comparam o evento integral. O build novo exige
+`assignment_readback=true` e `assignment_optional_windows=true`; os dois
+builds anteriores e defaults conservam seus contratos. Instrumentação do
+primeiro readback não acrescenta I/O; os novos guards de ausência fazem
+leituras adicionais limitadas, sem escrita em ranges ausentes.
+
+| Gate por plataforma Mac/Ubuntu ARM64 | Prova |
+|---|---|
+| Política + adaptador C final | 298 cenários; 122 mutações compiladas/SIGABRT |
+| Contrato/journal | 70 testes; 119 mutações/AssertionError; 64 inputs |
+| Seleção opcional e compatibilidade | 19 testes; 45 mutações/AssertionError; 66 inputs |
+| Integração final | 73 testes; 120 mutações/AssertionError; 67 inputs |
+| Build real | Seis módulos; 48 inputs; Werror/modpost/ELF/vermagic |
+
+Provas relevantes intactas foram reutilizadas entre as fases. Tentativas
+de compile/import ou mutante que invalidou a baseline não contaram como
+kills. [Política](evidence/n71-pci-optional-policy.json),
+[build/contratos](evidence/n71-pci-optional-build.json),
+[integração/candidata](evidence/n71-pci-optional-profile.json),
+[plano e decisões](../.agents/plans/n71-janelas-opcionais-pci.md).
+
+Build externo novo da VM, com os comandos `make` já documentados: diretório
+`/home/ubuntu/n71-optional-modules-20261006/phone/kernel`. PCIe: 86.304 bytes,
+SHA fba31cb2; os outros cinco módulos permaneceram iguais. Oito fontes PCI,
+seis fontes patched e config/Image/exports foram verificados antes/depois;
+HEAD foi fixado e conferido antes do build.
+Não foi reconstruído Image nem instalado pacote/configuração global no Mac.
+
+Comandos na raiz `iphone-linux-tools`, com uma pasta de saída nova. Artefatos
+e perfis são privados, produzidos pelas receitas anteriores:
+
+```sh
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile runtime/n71-binding-base-profile-20261005/deployment.json \
+  --kernel-dir runtime/kernel-n71-binding-artifacts-20261005 \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir runtime/n71-pcie-diagnostic-20261002 \
+  --module runtime/n71-first-readback-20261006/optional-build/modules/n71-pcie-diagnostic.ko \
+  --module-sha256 fba31cb277e39ac1626913fd6879d17cd41cc0b9f3a8c1d11f89c9cce9f5ae3d \
+  --pcie-aspm-off --pcie-scan-hold --pcie-resource-capable \
+  --reg-on-module runtime/n71-first-readback-20261006/optional-build/modules/n71-wlan-power-diagnostic.ko \
+  --output-dir runtime/n71-binding-optional-profile-20261006
+python3 -B scripts/host/n71-link-session.py \
+  --profile runtime/n71-binding-optional-profile-20261006/deployment.json \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --check
+python3 -B -m unittest discover -s tests -p test_n71_pcie_optional_ranges.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pcie_optional_host.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_optional.py -v
+python3 -B -m unittest discover -s tests -p test_n71_optional_build.py -v
+python3 -B tests/run_n71_diagnostic_payload_mutations.py
+```
+
+Candidata real separada passou composer/--check, oito arquivos privados com
+diretório700/arquivos600. Deployment/payload/DT/kernel/loader/initramfs,
+identidades e REG_ON byte a byte iguais ao perfil readback anterior; somente
+PCIe e `module_sha256` da provenance mudaram. Nenhum novo load/boot nesta
+preparação. Próximo teste agrupa aquisição/assign/coleta/cleanup/retry,
+serviços/snapshot/sync e retorno iOS; não requer operar a tela. Atribuição
+positiva, IRQ/DMA/IOMMU/driver/radio e carga/gauge Linux continuam pendentes.
+
+## Próximos gates da atribuição
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os
 opt-ins exatos, SHA/ABI do módulo e bootargs literais no payload. No telefone,
@@ -1005,8 +1079,8 @@ se não houver prova de cleanup. Retry de restauração não executa novo scan.
 
 A aquisição/atribuição negativa e sua restauração já têm prova física
 acima; ainda não há endereços persistentes atribuídos positivamente.
-Registrar readback da recusa0x30, qualificar sua semântica e comprovar
-atribuição positiva, IRQ/IOMMU do endpoint e depois driver/firmware/radio.
+Comprovar a correção das janelas opcionais e a atribuição positiva,
+IRQ/IOMMU do endpoint e depois driver/firmware/radio.
 Esses passos não estão habilitados pela prova diagnóstica. Alimentação e
 telemetria precisam de acesso HDQ/charger e medição própria.
 

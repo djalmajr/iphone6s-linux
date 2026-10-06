@@ -1,6 +1,16 @@
 # iPhone 6s Linux — atualizado em 2026-10-06
 
-## Checkpoint atual — primeira leitura física registrada em um único boot
+## Checkpoint atual — candidata de janelas opcionais qualificada, teste físico pendente
+
+A correção trata somente pedidos de desativação de IO/prefetch quando flags/probes PCI core comprovam ausência, os recursos estão vazios, a baseline é zero e os registradores vivos continuam zerados. Faz no-op sem escrita nesses ranges; BARs/MMIO implementados, decode/master, primeiro erro e rollback continuam estritos. Registro único conserva flags/counters; o journal o exige somente para o novo módulo selecionado por hash e preserva seu conteúdo até o cleanup. [Plano](../.agents/plans/n71-janelas-opcionais-pci.md), [build](evidence/n71-pci-optional-build.json), [integração/candidata](evidence/n71-pci-optional-profile.json).
+
+Mac/Ubuntu ARM64: conjunto C final 298 cenários/122 mutações compiladas por assertion por plataforma; contrato/journal 70 testes/119 mutações por AssertionError; seleção 19/45; integração final 73/120, 67 inputs/AST/lint fatal. Seis módulos Werror/modpost/ELF/vermagic; PCIe 86.304 bytes/SHA fba31cb2, outros cinco preservados. Fonte/config/Image/exports conferidos antes/depois, incluindo oito fontes PCI e seis patched.
+
+Candidata real separada passou composer/--check: oito arquivos privados700/600; deployment, payload/DT/kernel/loader/initramfs, identidades e REG_ON iguais ao perfil readback anterior. Somente PCIe e seu SHA na provenance mudaram. Nenhum novo boot físico nesta correção, pacote/configuração global instalado no Mac ou Image reconstruído. iPhone reconfirmado no iOS com100%; próximo teste agrupa aquisição/assign/coleta, cleanup/retry, serviços, snapshot/sync e retorno ao iOS. Wi-Fi/IRQ/IOMMU/driver e energia permanecem pendentes até provas próprias.
+
+CI do checkpoint publicado e04e0e6: macOS e Windows passaram; Ubuntu marcou erros nos testes PMGR e encerrou antes do resumo com exit143. Causa não confirmada, registrada na #38; gates locais/VM não substituem a matriz completa.
+
+### Primeiro readback físico — uma sessão agrupada
 
 Um DFU/um boot, sem reinícios intermediários: aquisição PCI retida positiva; atribuição negativa `error=-5`, nove tentativas/duas escritas verificadas. O novo registro conserva a primeira falha root 0:08/0x30/dword: pedido `0x0000ffff`, anterior `0`, retorno válido `0`, write/read callbacks sem erro. Leitura separada confirmou IO base/limit 0x1c e upper 0x30 zerados, no mesmo boot e sem escrita. Isso mede o comportamento; a semântica de janela opcional ainda precisa de correção qualificada. [Prova física](evidence/n71-pci-readback-physical.json).
 
