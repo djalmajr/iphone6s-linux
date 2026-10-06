@@ -1,0 +1,213 @@
+{
+  "format": 1,
+  "date": "2026-10-05",
+  "code_commit": "8c16d0a341773c3fb287c7665a573baf72577be9",
+  "contract": {
+    "allocation_phase_explicit": true,
+    "capture_has_no_writes": true,
+    "capture_atomic_and_existing_owner_preserved": true,
+    "layout_bytes": [
+      32768,
+      0,
+      4194304,
+      0,
+      0,
+      0
+    ],
+    "bar_bus_aperture": [
+      "c0000000",
+      "ffffffff"
+    ],
+    "bar_alignment_and_type_checked": true,
+    "bar_upper32_zero": true,
+    "memory_window_reserved_bits_and_order_checked": true,
+    "io_and_prefetch_disabled_only": true,
+    "command_and_bridge_control_preserved": true,
+    "both_function_identity_decode_master_guarded_before_effects": true,
+    "configuration_w1c_widths_refused": true,
+    "attempt_budget": 64,
+    "first_error_latched": true,
+    "write_readback_checked": true,
+    "extra_restore_offsets": [
+      "020",
+      "02c",
+      "030"
+    ],
+    "extra_restore_requires_closed_phase_and_removed_bus": true,
+    "restore_failure_retains_pending_for_retry": true,
+    "remaining_bar_windows_rollback_owned_by_scan_adapter": true
+  },
+  "qualification": {
+    "platforms": {
+      "macos-arm64": {
+        "qualified": true,
+        "tests": 1,
+        "native_scenarios": 188,
+        "assertion_mutations": 25,
+        "mutations": [
+          "overwrite-capture",
+          "capture-wrong-layout",
+          "capture-wrong-bar",
+          "capture-extra-lost",
+          "capture-before-final-read",
+          "bar-wrong-type",
+          "bar-range-boundary",
+          "bar-alignment-lost",
+          "mem-reserved-bits",
+          "mem-reversed-window",
+          "pref-window-enabled",
+          "bar-upper-enabled",
+          "status-width",
+          "command-width",
+          "inactive-write",
+          "lost-first-error",
+          "budget-boundary",
+          "decode-enabled",
+          "endpoint-not-guarded",
+          "write-readback-lost",
+          "restore-with-live-bus",
+          "restore-during-allocation",
+          "restore-last-window-skipped",
+          "restore-error-forgotten",
+          "restore-owner-lost"
+        ],
+        "inputs_preserved": true,
+        "log_sha256": "affbc30b9bae2b7118dc3c8ecf69ac2124b1f98168b114e9eeaa924bc47c2f36",
+        "test_exit": 0
+      },
+      "ubuntu-arm64": {
+        "qualified": true,
+        "tests": 1,
+        "native_scenarios": 188,
+        "assertion_mutations": 25,
+        "mutations": [
+          "overwrite-capture",
+          "capture-wrong-layout",
+          "capture-wrong-bar",
+          "capture-extra-lost",
+          "capture-before-final-read",
+          "bar-wrong-type",
+          "bar-range-boundary",
+          "bar-alignment-lost",
+          "mem-reserved-bits",
+          "mem-reversed-window",
+          "pref-window-enabled",
+          "bar-upper-enabled",
+          "status-width",
+          "command-width",
+          "inactive-write",
+          "lost-first-error",
+          "budget-boundary",
+          "decode-enabled",
+          "endpoint-not-guarded",
+          "write-readback-lost",
+          "restore-with-live-bus",
+          "restore-during-allocation",
+          "restore-last-window-skipped",
+          "restore-error-forgotten",
+          "restore-owner-lost"
+        ],
+        "inputs_preserved": true,
+        "log_sha256": "fd64d82404c377a55916a30a3530796bc05ea33bf8f72610594484ccbbfb53ed",
+        "test_exit": 0
+      }
+    },
+    "inputs": {
+      "phone/kernel/n71-pcie-resource-write.h": {
+        "bytes": 5556,
+        "sha256": "9a685d1e7b29f152d59c2cb913f22ce56ed6b7e09e03ba208d996d607bb1a85d"
+      },
+      "phone/kernel/n71-pcie-contract.h": {
+        "bytes": 2529,
+        "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8"
+      },
+      "phone/kernel/n71-pcie-ecam.h": {
+        "bytes": 1977,
+        "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3"
+      },
+      "phone/kernel/n71-pcie-scan-config.h": {
+        "bytes": 10201,
+        "sha256": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8"
+      },
+      "tests/n71_pcie_resource_write.c": {
+        "bytes": 10257,
+        "sha256": "c4f21781e17d4fa0539290f7e37b091e17e7c98d4b6b0769db2cd3e62242db97"
+      },
+      "tests/test_n71_pcie_resource_write.py": {
+        "bytes": 5538,
+        "sha256": "9d8a3612b3e8fe028d221330dbc8bc6aebb4f51ea7fe18335c1269a1c5821067"
+      }
+    },
+    "public_input_count": 6,
+    "fault_backend_synthetic": true,
+    "ast_passed": true,
+    "fatal_flake8_passed": true,
+    "compile_import_timeout_counted_as_mutation_kill": false
+  },
+  "selected_kernel_reference": {
+    "format": 1,
+    "source_files": {
+      "drivers/pci/setup-bus.c": {
+        "bytes": 64303,
+        "sha256": "a2b86f1f58883fa3dfb319892f4c2b8b910276e3967b0a0a9f7c32e30fce5779"
+      },
+      "drivers/pci/setup-res.c": {
+        "bytes": 14541,
+        "sha256": "33a5c06a64bd740946d834a09fd5afaea0ae9c1c41be9b15479fe4b29b535f2e"
+      },
+      "drivers/pci/probe.c": {
+        "bytes": 94415,
+        "sha256": "c14188e7d25a8a33d09bd415c50f70c62be91ebb3a240627fee6c6c5298765d6"
+      },
+      "include/linux/pci.h": {
+        "bytes": 107074,
+        "sha256": "cac298a06cf955ce7bc9f9c1a415345481387e20dfeda153bfca5850659b589d"
+      }
+    },
+    "vmlinux_symvers_sha256": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61",
+    "exported_api": {
+      "pci_bus_size_bridges": [
+        [
+          "pci_bus_size_bridges",
+          "vmlinux",
+          "EXPORT_SYMBOL"
+        ]
+      ],
+      "pci_bus_assign_resources": [
+        [
+          "pci_bus_assign_resources",
+          "vmlinux",
+          "EXPORT_SYMBOL"
+        ]
+      ],
+      "pci_get_slot": [
+        [
+          "pci_get_slot",
+          "vmlinux",
+          "EXPORT_SYMBOL"
+        ]
+      ],
+      "pci_dev_put": [
+        [
+          "pci_dev_put",
+          "vmlinux",
+          "EXPORT_SYMBOL"
+        ]
+      ]
+    },
+    "commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149"
+  },
+  "limits": {
+    "adapter_and_caller_integrated": false,
+    "host_journal_integrated": false,
+    "pci_core_invoked": false,
+    "kernel_or_module_rebuilt": false,
+    "physical_boot_attempted": false,
+    "optional_register_readback_verified_on_phone": false,
+    "resource_tree_claims_and_final_nonoverlap_verified": false,
+    "irq_dma_iommu_verified": false,
+    "wifi_verified": false,
+    "battery_or_charging_verified": false,
+    "private_payload_dt_identity_or_logs_published": false
+  }
+}

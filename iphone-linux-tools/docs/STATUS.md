@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-05
 
-## Checkpoint atual — perfil PCI retido completo preparado
+## Checkpoint atual — política de atribuição PCI qualificada
+
+Política `8c16d0a` delimita as escritas que o alocador PCI poderá fazer no barramento retido: BAR0/BAR2 alinhados na janela MEM32 selecionada, upper32 zero, janela MEM compatível, IO/PREF somente desativados, COMMAND/BRIDGE_CONTROL preservados. Antes dos efeitos, captura a configuração e três registradores adicionais; confere identidade/decode/master e readback, conserva o primeiro erro e mantém pending em falhas de restauração. Mac/Ubuntu ARM64: 188 cenários nativos e 25 mutações compiladas por SIGABRT/assertion em cada plataforma, seis inputs/logs por SHA, AST e Flake8 fatal. [Reprodução e limites](N71_PME_ASPM_CANDIDATE.md#política-de-escritas-de-atribuição-pci--preparação-offline), [prova sanitizada](evidence/n71-pci-resource-write.json).
+
+As APIs do alocador estão exportadas pelo kernel selecionado. A política ainda não está conectada ao adaptador/caller/journal e a prova não chama PCI core; reserva/atribuição, sobreposição final, registradores opcionais, IRQ/DMA/IOMMU, Wi-Fi e carga/telemetria Linux continuam pendentes. Nenhum novo kernel/módulo, USB ou DFU nesta etapa. A próxima integração deve permitir atribuir recursos por SSH no mesmo boot, antes da sessão física agrupada. A CI do perfil anterior `8f35fd2` concluiu success nos seis jobs: [PR37390299442](https://github.com/djalmajr/iphone6s-linux/actions/runs/37390299442) e [push37390295065](https://github.com/djalmajr/iphone6s-linux/actions/runs/37390295065). Não cobre esta política nova.
+
+### Perfil PCI retido anterior — composição completa preparada
 
 Composer `c30a4ac` oferece `--pcie-scan-hold --reg-on-module`, exigindo ASPM off e power2 explícitos. Antes da saída, verifica o par PCIe/REG_ON contra o build qualificado e SHA/tamanho/ELF/vermagic; copia os dois módulos e gera os booleanos target/PME/noop/hold automaticamente. Default conserva ausência de hold/REG_ON. Mac/Ubuntu ARM64: 13 testes/29 mutações por AssertionError, incluindo 7/13 anteriores e 6 testes/16 mutações novos, 20 inputs preservados e logs conferidos por SHA. [Reprodução](N71_PME_ASPM_CANDIDATE.md#perfil-retido-completo--composição-verificada-sem-boot), [prova](evidence/n71-pci-held-profile.json).
 

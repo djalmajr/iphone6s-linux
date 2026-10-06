@@ -25,4 +25,4 @@
 - **Alternativas:** escrever endereços fixos manualmente também exige atualizar e reservar a árvore de recursos; pci_host_probe habilita etapas de registro/bind antes dos controles IRQ/IOMMU. Repetir um scan temporário não prepara o driver.
 - **Reverter:** baixo para a fase opt-in; módulos/perfis anteriores permanecem disponíveis. A limpeza deve remover o bus antes da restauração e não liberar owners em erro.
 - **Onde:** incremento 183 e integração seguinte do plano; política de configuração, adaptador PCI, caller e journal; issue39.
-- **Status:** em curso. Preparar política e provas nativas primeiro, depois integrar alocador/CLI e build real, reunindo os controles compatíveis numa sessão física.
+- **Status:** política aplicada em `8c16d0a`: 188 cenários/25 mutações compiladas por SIGABRT/assertion no Mac/Ubuntu ARM64, seis inputs/logs por SHA, captura sem efeitos, limites/readback e pending conservado em erro. APIs exportadas do kernel conferidas. Adaptador/caller/journal, reserva e validação da árvore de recursos, registradores opcionais e build real permanecem pendentes; integrar esses controles antes da sessão física agrupada.

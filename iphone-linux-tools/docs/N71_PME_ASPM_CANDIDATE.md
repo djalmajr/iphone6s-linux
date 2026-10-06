@@ -526,6 +526,56 @@ iPhone. Prova de composição não comprova bus retido, atribuição de recursos
 IRQ/DMA/IOMMU, rádio, telemetria ou carregamento. Preparar os controles
 compatíveis antes da sessão física agrupada.
 
+## Política de escritas de atribuição PCI — preparação offline
+
+Código `8c16d0a` prepara a política de configuração para o alocador PCI.
+O código-fonte selecionado e `vmlinux.symvers` confirmaram exports de
+`pci_bus_size_bridges`, `pci_bus_assign_resources`, `pci_get_slot` e
+`pci_dev_put`. Referências públicas: [alocação de barramentos](https://github.com/torvalds/linux/blob/master/drivers/pci/setup-bus.c)
+e [atualização de BARs](https://github.com/torvalds/linux/blob/master/drivers/pci/setup-res.c).
+Os hashes do código-fonte realmente inspecionado estão na prova abaixo;
+essas URLs são referências upstream, não substituem a versão selecionada.
+
+A captura é somente leitura e exige BAR0 de 32 KiB/BAR2 de 4 MiB,
+identidades/classes/configuração N71 e decode/bus-master desligados.
+Registra os três campos adicionais que o alocador pode mudar:
+MEM_BASE/LIMIT em `0x20`, PREF_LIMIT_UPPER32 em `0x2c` e
+IO_BASE/LIMIT_UPPER16 em `0x30`. Captura incompleta não publica ownership;
+captura repetida recusa sobrescrever estado ativo ou pendente.
+
+Na fase explícita, aceita BARs 64-bit não prefetch alinhados na janela PCI
+`c0000000–ffffffff`, upper32 zero e janela MEM dentro dessa faixa.
+IO/PREF só podem ser desativados; COMMAND e BRIDGE_CONTROL são preservados.
+Identidade e decode/master das duas funções são conferidos antes das escritas,
+com readback, orçamento de 64 tentativas e primeiro erro conservado.
+Recusa capacidades/W1C e larguras que alcançariam STATUS adjacente.
+
+A restauração adicional exige fase encerrada e confirmação de remoção do bus
+pelo adaptador. Confere identidade/decode e readback; falha conserva pending
+para retry sem recaptura. BARs e as janelas anteriores ainda pertencem à
+limpeza genérica do scan, que deve ocorrer depois desses campos adicionais.
+O helper isolado não comprova que um bus real foi removido.
+
+Para reproduzir a prova nativa em uma cópia descartável do código público:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pcie_resource_write.py -v
+```
+
+Mac e Ubuntu ARM64 passaram 188 cenários e 25 mutações compiladas por
+SIGABRT/assertion, uma prova unittest em cada plataforma. Seis inputs e os
+dois logs foram preservados/conferidos por SHA; AST e lint de erros fatais
+passaram. O backend de configuração é sintético, executando a política real.
+Compilação, import e timeout não contam como mutation kill.
+[Prova sanitizada, inputs e referências](evidence/n71-pci-resource-write.json).
+
+O adaptador/caller/journal ainda precisam chamar a política e o alocador.
+Não há PCI core, build de módulo, boot ou USB nesta prova. Reserva e
+atribuição na árvore de recursos, ausência de sobreposição final, readback
+de registradores opcionais no hardware, IRQ/DMA/IOMMU, rádio e energia
+continuam pendentes. A próxima integração deve permitir atribuição por SSH
+no mesmo boot; não pedir DFU somente para repetir o helper.
+
 ## Próximos gates
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os
