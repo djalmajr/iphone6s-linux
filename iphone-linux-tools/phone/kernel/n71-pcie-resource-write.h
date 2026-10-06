@@ -3,6 +3,7 @@
 #ifndef N71_PCIE_RESOURCE_WRITE_H
 #define N71_PCIE_RESOURCE_WRITE_H
 #include "n71-pcie-scan-config.h"
+#include "n71-pcie-io16-upper.h"
 
 #define N71_RESOURCE_MAX_ATTEMPTS 64U
 
@@ -10,7 +11,7 @@ static const u32 n71_resource_extra_offsets[] = {0x20, 0x2c, 0x30};
 
 struct n71_resource_bar_layout {
 	u32 bytes[6];
-	bool io_absent, pref_absent;
+	bool io_absent, pref_absent, io16_upper_unused;
 };
 
 struct n71_resource_write_failure {
@@ -24,9 +25,9 @@ struct n71_resource_write_state {
 	struct n71_scan_config reference;
 	struct n71_resource_write_failure failure;
 	u32 extra[3];
-	unsigned int attempts, writes, io_noops, pref_noops;
+	unsigned int attempts, writes, io_noops, pref_noops, io16_noops;
 	int error;
-	bool active, pending, io_absent, pref_absent;
+	bool active, pending, io_absent, pref_absent, io16_upper_unused;
 };
 
 /* The adapter supplies PCI-core probe flags; zero config alone is insufficient. */
@@ -38,8 +39,12 @@ static inline int n71_resource_optional_capture(struct n71_resource_write_state 
 	if ((layout->io_absent && (windows[0] || state->extra[2])) ||
 	    (layout->pref_absent && (windows[1] || windows[2] || state->extra[1])))
 		return -EACCES;
+	if (layout->io16_upper_unused && (layout->io_absent ||
+	    n71_io16_upper_capture(windows[0], state->extra[2])))
+		return -EACCES;
 	state->io_absent = layout->io_absent;
 	state->pref_absent = layout->pref_absent;
+	state->io16_upper_unused = layout->io16_upper_unused;
 	return 0;
 }
 
@@ -251,6 +256,15 @@ static inline int n71_resource_write(const struct n71_scan_io *io,
 		error = n71_scan_read(io, request->root, request->where, request->size, &observed);
 	if (error)
 		return n71_resource_refuse(state, error);
+	if (state->io16_upper_unused) {
+		error = n71_io16_upper_noop(io, request, observed, &handled);
+		if (error)
+			return n71_resource_refuse(state, error);
+		if (handled) {
+			state->io16_noops++;
+			return 0;
+		}
+	}
 	if (observed == request->value)
 		return 0;
 	error = n71_resource_optional_noop(io, state, request, observed, &handled);

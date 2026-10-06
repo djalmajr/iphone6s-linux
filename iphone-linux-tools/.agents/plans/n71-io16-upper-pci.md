@@ -32,7 +32,7 @@ Física (até cinco): somente após A–C qualificados. Um boot agrupa acquire/a
 ## Tarefas
 
 - [x] A0: helpers separados e dependências dos gates anteriores.
-- [ ] A1: política opt-in e regressões/mutações Mac/Ubuntu ARM64.
+- [x] A1: política opt-in e regressões/mutações Mac/Ubuntu ARM64.
 - [ ] B: adapter/report/fixtures e qualificação C final.
 - [ ] C1: contrato/journal estritos e compatibilidade.
 - [ ] C2: build/ABI/fonte preservados e seleção explícita.
@@ -42,3 +42,7 @@ Física (até cinco): somente após A–C qualificados. Um boot agrupa acquire/a
 ## Verificação
 
 Reusar provas independentes intactas; gates afetados compilados Werror e assertions, AST/Flake8 fatal/diff/guard público e inputs por SHA. Nova flag false conserva comportamento legado. Fonte PCI primária fixada e provas físicas anteriores permanecem; logs/IDs/DT/firmware/chaves/snapshots não são publicados. Wi-Fi/IRQ/IOMMU/driver e energia/HDQ/carga continuam pendentes até prova física própria. Nenhum pacote/configuração global instalado no Mac.
+
+### Gate A1 — política IO16 qualificada; adapter ainda sem opt-in
+
+Mac/Ubuntu ARM64:49 cenários/20 mutações novos, ranges21/15, política194/36, adapter65/57 e optional host18/14 requalificados, total347 cenários/142 mutações compiladas SIGABRT/assertion em cada plataforma. Cinquenta e oito inputs iguais/preservados, AST e Flake8 fatal. A fixture reutiliza somente o backend de configuração, mantém lower gravável e modela upper sem efeito; sequence lower/status/rollback, drift/erros, scope e budgets foram exercitados. Defaults sem flag continuam estritos. Nenhum build/candidata/load/DFU desta integração; B deve derivar a flag e report próprio antes da seleção física.
