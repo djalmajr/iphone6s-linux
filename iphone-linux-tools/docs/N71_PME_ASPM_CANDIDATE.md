@@ -796,6 +796,75 @@ ainda não carrega o módulo nem comprova atribuição/restauração no iPhone.
 A próxima sessão física deve reunir esses controles sem reboots entre
 etapas. IRQ/IOMMU/driver/firmware, Wi-Fi e telemetria/carga seguem abertos.
 
+## Primeira atribuição física — erro preservado e cleanup retomado
+
+A sessão power2 real fez uma aquisição retida positiva e uma atribuição,
+sem reiniciar entre etapas. Restore de44 entradas e SSH/HTTP/Bash/Herdr
+passaram. C/module/payload/identidades permaneciam os qualificados;
+nenhum Image ou módulo foi recompilado durante a sessão.
+[Prova física selecionada](evidence/n71-pci-resource-first-physical.json).
+
+A continuação inicial encontrou uma leitura extra
+`N71_REG_ON_READ error=0 value_valid=1 value=81`. O getter do módulo emite
+esse registro a cada leitura; o comparador exigia histórico idêntico e
+recusou antes do setter. `eba8f30` preserva o prefixo integral e admite
+somente sufixo de leituras positivas completas, com value_valid1 e valor
+igual ao getter vivo único. Com REG_ON ausente, exige histórico exatamente
+igual. Estado/controle/módulos/ownership continuam comparados ao checkpoint.
+Nenhuma linha é eliminada, reescrita ou rebased manualmente.
+
+A fixture passou a emitir essas leituras. `71df973` corrige o caso
+adversarial que esquecia uma leitura de uma tentativa recusada: o checkpoint
+passa a conter o delta real antes da operação desconhecida, exercitando
+o guard de operação, com recusa antes do cleanup. Mac/Ubuntu ARM64:
+44 testes/63 mutações por AssertionError por plataforma,57 inputs/AST,
+Flake8 fatal e diff aprovados. História7/7, held21/30 e resource16/26.
+Os dois primeiros gates intactos foram reutilizados após corrigir somente
+a fixture resource; import/compile/timeout não são kills.
+[Regressão e inputs](evidence/n71-reg-on-held-history.json).
+
+Reprodução host numa cópia descartável, sem aparelho:
+
+```sh
+set -e
+python3 -B -m unittest discover -s tests -p test_n71_held_history.py -v
+python3 -B -m unittest discover -s tests -p test_n71_held_session.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_stage.py -v
+```
+
+Após qualificação, a continuação usou a aquisição original no mesmo boot.
+A ação retornou-5,9 tentativas/2 escritas e assigned0/pending1/claimed1.
+A primeira recusa foi root0:08/030/dword/0000ffff. O código preservado faz
+write/readback exato; o valor real pós-write não foi registrado. Não
+presumir campos hardwired ou ampliar a máscara com base somente no errno.
+As recusas posteriores são latched, sem prova independente para permissões.
+
+O primeiro release removeu o bus e comprovou restore extra/genérico e
+release da janela, mas reteve reset/energia pelo stop-error-5. Um retry
+somente de cleanup liberou esses owners e descarregou PCIe/REG_ON,
+restaurando controle80. Não repetiu scan ou assign. O resultado continuou
+negativo; cleanup_verified true não transforma a atribuição em sucesso.
+Não foi exercitado reuso de atribuição positiva, bind, enable ou DMA.
+
+```mermaid
+flowchart TD
+    A["Aquisição retida positiva"] --> B["Getter registrado: correção host no mesmo boot"]
+    B --> C["Atribuição negativa: primeiro erro -5"]
+    C --> D["Release: bus/configuração/janela restaurados"]
+    D --> E["Retry: reset/energia/REG_ON liberados"]
+    E --> F["Serviços, snapshot44, sync e retorno ao iOS"]
+```
+
+Os serviços, snapshot44/sync e retorno automático USB ao iOS passaram.
+Uptime final26 minutos; a duração aumentou pela correção host no boot,
+sem reinícios intermediários. iOS100→77% incluindo transições; recarga e
+fonte externas ativas no retorno. Não é medição de corrente líquida,
+saúde ou carga sustentada Linux; power_supply continuou sem entradas.
+O telefone voltou ao iOS para recarga durante desenvolvimento offline.
+Firmware/DT/payload/identidades/boot ID/snapshot ID/logs brutos continuam
+privados. O próximo gate registra o readback real da primeira recusa
+antes de alterar o contrato de escrita.
+
 ## Próximos gates
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os
@@ -805,10 +874,10 @@ exige um único `pcie_aspm=off` no cmdline e o marcador de suporte ASPM
 desativado. O parser exige prepare/restore PME completos e conserva REG_ON
 se não houver prova de cleanup. Retry de restauração não executa novo scan.
 
-O scan da última prova física enumera e remove o bus; ainda não comprova
-endereços persistentes atribuídos. Lifecycle/atribuição estão preparados
-offline, com seleção/provenance/journal acima; comprovar atribuição/restauração
-no aparelho, IRQ/IOMMU do endpoint e depois driver/firmware/radio.
+A aquisição/atribuição negativa e sua restauração já têm prova física
+acima; ainda não há endereços persistentes atribuídos positivamente.
+Registrar readback da recusa0x30, qualificar sua semântica e comprovar
+atribuição positiva, IRQ/IOMMU do endpoint e depois driver/firmware/radio.
 Esses passos não estão habilitados pela prova diagnóstica. Alimentação e
 telemetria precisam de acesso HDQ/charger e medição própria.
 

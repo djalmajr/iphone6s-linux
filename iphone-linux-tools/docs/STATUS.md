@@ -1,10 +1,18 @@
 # iPhone 6s Linux — atualizado em 2026-10-06
 
-## Checkpoint atual — atribuição PCI integrada ao journal
+## Checkpoint atual — aquisição física e atribuição negativa com cleanup comprovado
+
+Um boot power2 restaurou44 entradas e confirmou SSH/HTTP/Bash/Herdr. A aquisição retida passou com dois dispositivos/um endpoint Broadcom e decode/master desativados. A primeira continuação foi recusada antes do setter por uma leitura REG_ON registrada pelo getter; correção `eba8f30`/fixture `71df973` passou Mac/Ubuntu ARM6444 testes/63 mutações por AssertionError por plataforma,57 inputs/AST/Flake8 fatal. Conserva o prefixo integral e admite somente leituras positivas completas com valor igual ao getter vivo; todos os registros e hashes privados permanecem. [Reprodução](N71_PME_ASPM_CANDIDATE.md#primeira-atribuição-física--erro-preservado-e-cleanup-retomado), [regressão](evidence/n71-reg-on-held-history.json).
+
+Atribuição uma vez: error-5,9 tentativas/2 escritas, assigned0/pending1/claimed1. Primeira recusa root0:08/030/dword/0000ffff; readback real não foi registrado, e recusas seguintes são latched. Primeiro release restaurou bus/configuração/janela e reteve reset/energia; retry somente de cleanup liberou owners/módulos e REG_ON80. Resultado permaneceu negativo, cleanup_verified true/stop-error-5. Snapshot44/sync e retorno automático iOS passaram; uptime final26 minutos, zero reinícios intermediários. iOS100→77%, incluindo transições, com recarga/fonte externas ativas no retorno; não comprova corrente, saúde ou carga Linux. [Prova física selecionada](evidence/n71-pci-resource-first-physical.json).
+
+Próximo desenvolvimento: registrar o readback real da primeira recusa0x30 antes de mudar permissões. Kernel/payload/módulos preservados nesta correção; iPhone no iOS para recarga durante trabalho offline. Atribuição positiva, IRQ/IOMMU/driver/firmware, Wi-Fi e telemetria/carga continuam pendentes. CI de `9aebe85` terminou cancelled nos eventos PR/push, causa não confirmada; gates locais separados não substituem CI completa (#38).
+
+### Journal anterior — preparação host
 
 Código `2e07258` oferece `--assign-held`, exclusivo de release e dependente do perfil resource-capable held. Confere boot/perfil/módulos/params/REG_ON/histórico/getter e salva intenção antes do setter, depois prova privada/hash/checkpoint. Retomada reutiliza atribuição sem outro setter; cleanup comprova rollback extra/janela e owners antes de PCI unload/REG_ON restore. Erros de atribuição/stop continuam negativos mesmo após cleanup completo; prova perdida ou estado contraditório recusam efeitos. Mac/Ubuntu ARM64: 82 testes/137 mutações por AssertionError por plataforma,55 inputs/logs/exit SHA, estágio16/26, held21/30 e legado45/81;37/56 Mac intactos reutilizados, ARM64 executou o conjunto. Comandos de ação/snapshot rodaram em Bash contra arquivos privados sintéticos. [Reprodução](N71_PME_ASPM_CANDIDATE.md#atribuição-com-journal--ação-e-limpeza-no-mesmo-boot), [prova sanitizada](evidence/n71-pci-resource-session.json).
 
-Candidata real preparada abaixo passou o check atualizado;48 inputs do build real intactos, sem nova compilação/load/DFU. Próximo gate é atribuição e restauração no iPhone em uma sessão agrupada. IRQ/IOMMU/driver/firmware, Wi-Fi e telemetria/carga Linux continuam pendentes. Provas host/sintéticas e build não comprovam os recursos físicos.
+Candidata real preparada abaixo passou o check atualizado;48 inputs do build real intactos, sem nova compilação/load/DFU naquele checkpoint. A sessão agrupada seguinte está descrita acima. IRQ/IOMMU/driver/firmware, Wi-Fi e telemetria/carga Linux continuam pendentes. Provas host/sintéticas e build não comprovam os recursos físicos.
 
 ### Seleção anterior — candidata privada preparada
 
