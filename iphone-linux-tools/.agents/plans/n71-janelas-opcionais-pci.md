@@ -22,6 +22,8 @@ Fase C (fatias de até cinco arquivos): build externo na VM preservada; registro
 
 C1, cinco arquivos: plano; novo `scripts/host/n71_resource_optional.py`; `scripts/host/n71_resource_result.py` (evento preservado); `scripts/host/n71_resource_stage.py` (contrato obrigatório por metadata selecionada); novo `tests/test_n71_resource_optional.py`. Exigir relatório único/completo entre held e readback/result, capture compatível com pending, flags/counters coerentes, contadores limitados às tentativas sem escrita verificada. Preservar evento inteiro em proof/checkpoint/reuso/cleanup. Registros anteriores sem report continuam válidos somente nos builds anteriores.
 
+C2, quatro arquivos: plano, `scripts/host/n71_resource_build.py`, nova `docs/evidence/n71-pci-optional-build.json` e novo `tests/test_n71_optional_build.py`. Selecionar bytes86.304/SHAfba31cb2 somente pela evidência de build/política/adaptador/host qualificada e vinculada à evidência readback anterior por SHA. Require readback e optional windows por metadata, REG_ON/ABI/interface preservados. Hash anterior readback e default resource mantêm contratos anteriores; não substituir evidências históricas ou perfis privados.
+
 ## Tarefas
 
 - [x] A: política de no-op restrita, baseline/leituras vivas, contadores e guardas.
@@ -48,3 +50,7 @@ Cinco arquivos: plano, adaptador, backend PCI compartilhado e fixture/runner pr�
 Cinco arquivos definidos acima. Mac/Ubuntu ARM64:70 testes/119 mutações por AssertionError por plataforma,64 inputs iguais/AST/lint fatal. Nova fixture8/12; readback9/15, resultado9/29, estágio16/26, held21/30 e histórico7/7 requalificados. Registros ausentes/duplos/incompletos/fora da fase, flags/counters incompatíveis, proof alterado e metadata selecionada sem report são recusados. Journal conserva decisão/counters no assign, reuso sem setter e cleanup. Mutante de ordenação inicial produziu uma comparação impossível e erro de baseline; anchor corrigido para remover só o guard pretendido, sem contar essa tentativa. Somente a rodada final positiva qualificou a prova.
 
 Build externo paralelo compilou seis módulos Werror/modpost/ELF/vermagic;PCIe86.304 bytes/SHAfba31cb2. Cinco módulos e fonte/config/Image/exports preservados, incluindo oito fontes PCI e seis fontes patched verificadas antes/depois. Esses bytes ainda não foram selecionados ou carregados no telefone. C2 integra evidência/hash e C3 compõe/checka a candidata agrupada antes de qualquer novo DFU.
+
+### Gate C2 — novo build selecionado explicitamente
+
+Quatro arquivos definidos acima. Mac/Ubuntu ARM64 passaram19 testes/45 mutações por AssertionError por plataforma,66 inputs/AST/lint fatal: novo seletor5/7, seletor readback5/9 e contrato resultado9/29. Exige evidência readback anterior por SHA, booleans exatos de política/adaptador/host, relato opcional compilado, fonte patched preservada e bytes/hash/ABI/REG_ON/interface. Acrescenta `assignment_optional_windows=true` somente ao build novo; hash anterior readback continua com seu report único, default resource mantém o contrato legado. Nenhum novo load/boot; C3 ainda verifica composição/coletor/candidata antes da sessão física.
