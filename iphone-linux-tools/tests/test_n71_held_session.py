@@ -49,6 +49,7 @@ class Phone:
         self.calls = []
         self.overrides = {}
         self.cleanup_calls = 0
+        self.reg_reads = 0
 
     def snapshot(self, session):
         text = 'N71_BOOT_ID ' + self.boot + '\nN71_PCIE_CMDLINE rdinit=/init pcie_aspm=off\n'
@@ -60,6 +61,10 @@ class Phone:
             text += ''.join('N71_HELD_PARAM ' + name + '=' + ('Y' if name in HELD.TRUE_PARAMETERS else 'N') + '\n'
                             for name in HELD.TRUE_PARAMETERS + HELD.FALSE_PARAMETERS)
         if self.reg:
+            self.reg_reads += 1
+            value = '81' if self.active else '80'
+            self.history += timestamp('N71_REG_ON_READ error=0 value_valid=1 value=' + value + '\n',
+                                      160 + self.reg_reads)
             text += REG_ACTIVE if self.active else REG_CLEAN
         return text + self.history
 
@@ -614,7 +619,7 @@ class HeldSessionTests(unittest.TestCase):
             'held-boot': ("boot == session.result['boot_id']", 'True'),
             'held-checkpoint-hash': ("hashlib.sha256(checkpoint.read_bytes()).hexdigest() == record['sha256']", 'True'),
             'held-proof-hash': ("hashlib.sha256(path.read_bytes()).hexdigest() == expected", 'True'),
-            'held-history': ('n71_session_history.kernel_lines(live) == n71_session_history.kernel_lines(prior)', 'True'),
+            'held-history': ('n71_held_history.verify(live, prior, reg_present=presence[1])', 'pass'),
             'held-private-mode': ('device_profile.protected(directory, directory=True)', 'pass'),
             'held-sysfs-parameters': ("value == ('Y' if name in TRUE_PARAMETERS else 'N')", 'True'),
             'held-staged-hash': ("re.findall(r'^([0-9a-f]{64})  ' + re.escape(target) + r'$', raw, re.M) == [record['sha256']]", 'True'),

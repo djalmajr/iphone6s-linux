@@ -10,6 +10,7 @@ import n71_scan_held_result
 import n71_scan_target_result
 import n71_session_history
 import n71_resource_stage
+import n71_held_history
 
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
@@ -285,8 +286,7 @@ def run(session, selected_identity, *, root, source=None, assign=False):
         if source:
             data, prior, verified = load_source(session, root, source, selected_identity)
             live, presence = snapshot(session, 'held-resume-live')
-            require(n71_session_history.kernel_lines(live) == n71_session_history.kernel_lines(prior),
-                    'Held diagnostic history changed; no cleanup attempted')
+            n71_held_history.verify(live, prior, reg_present=presence[1])
             expected = (int(session.pcie_attempted and 'pcie-unload' not in verified),
                         int(session.reg_attempted and 'reg-unload' not in verified))
             require(presence[:2] == expected, 'Held module ownership changed; no cleanup attempted')
