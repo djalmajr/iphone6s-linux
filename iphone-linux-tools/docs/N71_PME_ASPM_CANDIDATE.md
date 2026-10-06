@@ -865,6 +865,96 @@ Firmware/DT/payload/identidades/boot ID/snapshot ID/logs brutos continuam
 privados. O próximo gate registra o readback real da primeira recusa
 antes de alterar o contrato de escrita.
 
+## Readback da primeira falha — candidata qualificada sem reiniciar
+
+A falha física em 0x30 mostrou que faltava o valor retornado pela leitura
+obrigatória após a escrita. A política agora conserva somente a primeira
+falha que alcançou essa operação: pedido, valor anterior, valor retornado
+válido e erros brutos dos callbacks. Não acrescenta I/O ou retries e não
+altera permissões, orçamento ou restauração. `writes` conta somente escritas
+verificadas; uma verificação negativa pode ocorrer depois de uma escrita
+executada que não incrementou o contador.
+
+`N71_PCIE_ASSIGN_READBACK` aparece uma vez antes de `RESOURCE_RESULT`.
+`failed=0` exige campos zerados e não inventa uma leitura; `failed=1` exige
+validade/valores/erro consistentes com a primeira recusa. Write ou read que
+retornou erro não prova um valor retornado válido. Os registros brutos ficam
+no checkpoint/proof e são comparados ao retomar e limpar. Build selecionado
+com `assignment_readback=true` exige a linha; o build legado conserva seu
+contrato. Resultado negativo continua negativo mesmo com cleanup completo.
+
+A seleção usa o SHA concreto do arquivo no composer e da provenance no
+coletor; não há outra flag CLI. O registro do build novo verifica a evidência
+base, contrato, ABI/interface e REG_ON preservado. SHA desconhecido ou
+metadata divergente recusam a candidata antes de transferir módulos.
+[Build/contratos](evidence/n71-pci-resource-readback.json),
+[integração/candidata](evidence/n71-pci-readback-profile.json),
+[plano e decisões](../.agents/plans/n71-primeiro-readback-pci.md).
+
+| Gate por plataforma Mac/Ubuntu ARM64 | Resultado |
+|---|---|
+| Política real em backend sintético | 194 cenários; 36 mutações compiladas/SIGABRT |
+| Adaptador real com PCI API sintética | 65 cenários; 57 mutações compiladas/SIGABRT |
+| Integração final composer/coletor/journal | 64 testes; 108 mutações/AssertionError; 62 inputs |
+| Seletor de build e contrato anterior | 14 testes; 38 mutações/AssertionError |
+| Módulos na VM dedicada | Seis módulos; Werror/modpost/ELF/vermagic; 48 inputs |
+
+Os gates foram incrementais. Código e fixtures alterados foram
+requalificados; provas de C/build intactas foram reutilizadas durante a
+integração host. Compilação/importação/timeout e fixtures recusadas por um
+controle diferente não contam como mutation kill. A leitura de um arquivo
+deliberadamente removido pelo mutante foi substituída por uma assertion do
+contrato de arquivos antes da leitura. O último anchor legado foi atualizado
+e somente held21/30 repetido. AST/lint fatal/diff e hashes/exit passaram.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pcie_resource_write.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pcie_scan_host.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_readback.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_build.py -v
+python3 -B tests/run_n71_diagnostic_payload_mutations.py
+python3 -B -m unittest discover -s tests -p test_n71_held_session.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_stage.py -v
+```
+
+O build real usa o source/output power2 qualificado e um diretório externo
+novo, seguindo o comando `make` da reprodução anterior. PCIe: 85.096 bytes,
+SHA a56fafb4; os outros cinco módulos, fontes PCI verificadas e
+config/Image/exports permaneceram iguais. A candidata real separada passou
+composer e --check, com oito arquivos privados, diretório 700/arquivos 600.
+Deployment, payload/DT/kernel/loader, initramfs, identidades
+e REG_ON são byte a byte iguais ao perfil resource anterior. Somente PCIe e
+seu SHA na provenance mudaram. O perfil anterior e o default permanecem.
+
+Comandos executados na raiz `iphone-linux-tools`; a pasta de saída deve ser
+nova. Os arquivos referenciados são locais privados produzidos pelas receitas
+anteriores, não downloads públicos. A seleção depende do hash completo do
+módulo qualificado:
+
+```sh
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile runtime/n71-binding-base-profile-20261005/deployment.json \
+  --kernel-dir runtime/kernel-n71-binding-artifacts-20261005 \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir runtime/n71-pcie-diagnostic-20261002 \
+  --module runtime/n71-first-readback-20261006/modules/n71-pcie-diagnostic.ko \
+  --module-sha256 a56fafb49ec8df0746241f45c5ff4efb1b5e01b680cfb0429f9933c09d1bd2cf \
+  --pcie-aspm-off --pcie-scan-hold --pcie-resource-capable \
+  --reg-on-module runtime/n71-first-readback-20261006/modules/n71-wlan-power-diagnostic.ko \
+  --output-dir runtime/n71-binding-readback-profile-20261006
+python3 -B scripts/host/n71-link-session.py \
+  --profile runtime/n71-binding-readback-profile-20261006/deployment.json \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --check
+```
+
+Esta rodada não executou o módulo novo no iPhone. Atribuição positiva,
+registradores opcionais, IRQ/DMA/IOMMU, rádio e alimentação precisam de prova
+física. O iPhone foi reconfirmado no iOS com 100%; isso não é saúde da bateria
+nem carga Linux. A próxima sessão agrupa aquisição, assign/coleta, limpeza
+com retry, serviços, snapshot/sync e retorno ao iOS. O readback real orientará
+a correção seguinte; não presumir bits hardwired apenas pelo errno-5.
+
 ## Próximos gates
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os

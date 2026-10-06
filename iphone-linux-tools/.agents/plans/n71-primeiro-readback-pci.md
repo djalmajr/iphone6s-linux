@@ -27,7 +27,8 @@ Fase C: build real na VM dedicada, prova ELF/ABI/exports e preservação de font
 - [x] B: integrar registro, parser e journal; validar histórico, rejeições e compatibilidade sem reiniciar o telefone.
 - [x] C: qualificar build, seleção e candidata agrupada; manter iOS para recarga durante desenvolvimento.
 - [ ] Teste físico único quando candidata e alimentação estiverem prontas: aquisição, atribuição, coleta, cleanup/retry, serviços, snapshot/sync e retorno ao iOS no mesmo boot.
-- [ ] Documentar resultados sanitizados e atualizar issue39; Wi-Fi e energia continuam abertos até suas próprias provas.
+- [x] Documentar preparação, reprodução e provas sanitizadas; Wi-Fi e energia continuam abertos até suas próprias provas.
+- [ ] Atualizar issue39 e registrar o resultado físico após a sessão agrupada.
 
 ## Verificação
 
@@ -68,3 +69,7 @@ Candidata real separada foi produzida pelo composer e passou --check. Oito arqui
 ### Gate C2b — anchor legado corrigido
 
 Dois arquivos: plano e `tests/test_n71_held_session.py`. O mutante `resource-cli-selection` continua removendo a seleção explícita no CLI, agora com anchor que conserva o argumento novo do SHA. Nenhum código do coletor ou da candidata mudou. Somente held21 testes/30 mutações foi repetido no Mac e Ubuntu ARM64;62 inputs atuais conferidos, AST/lint fatal/diff. Gates C2a43/78 reutilizados com fontes e cenários relevantes intactos; total final da integração64 testes/108 mutações por plataforma. Bateria iOS atual100%, alimentação externa conectada/capaz; `BatteryIsCharging=false` em bateria cheia não é prova de carga no Linux nem de saúde da bateria.
+
+### Gate D — encerramento da preparação offline
+
+Quatro arquivos: plano, `docs/STATUS.md`, `docs/N71_PME_ASPM_CANDIDATE.md` e `docs/evidence/n71-pci-readback-profile.json`. Registro da integração final, hashes dos logs qualificados, limites de prova e comandos exatos de composição/check. Dependências, banco de dados e configuração global do Mac não mudaram. A captura acrescenta apenas estado/relato; nenhuma operação adicional de hardware. Compatibilidade do perfil anterior e cleanup foram cobertos pelos gates. O teste físico e a demanda de Wi-Fi/energia continuam em curso; a publicação é somente na branch de trabalho autorizada, sem merge/tag/release.
