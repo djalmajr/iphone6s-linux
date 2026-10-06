@@ -1080,6 +1080,50 @@ A reprodução segue os comandos composer/check anteriores e a sessão held já 
 
 Próxima fatia: qualificar um opt-in restrito para o pedido upper de disable em IO16, com recurso/tipo/base/limite/upper capturados e vivos, decode/master off, primeiro erro e rollback intactos. Ranges inteiros ausentes continuam com contrato anterior, sem habilitar esse opt-in em layouts/defaults anteriores. Todo desenvolvimento/build ocorre com iPhone carregando no iOS; nenhuma nova sessão física até composição/check qualificados.
 
+## IO16 upper — candidata qualificada sem outro DFU
+
+O erro físico do perfil optional confirmou janelas presentes e tipos IO16. A correção não altera esses flags: habilita somente o pedido temporário upper0000ffff quando o PCI core declara IO presente padrão4K, os dois tipos são0 e o recurso está vazio ou representa a janela IO16 coerente0..fff. Capture exige baseline lower/upper0 e ausência do range inteiro é incompatível com IO16. Estado vivo lower0 ou00f0/upper0, identidade/decode/master e budget são verificados antes do no-op, sem escrever upper. Lower00f0 e demais BARs/MMIO conservam readback exato. [Plano/decisão](../.agents/plans/n71-io16-upper-pci.md), [política](evidence/n71-pci-io16-policy.json).
+
+Report único `N71_PCIE_IO16_UPPER captured/enabled/noops` fica entre optional/readback. Host exige o report apenas no build selecionado por SHA, confere capture/ausência/counters combinados e noop positivo quando assigned/enabled. Journal conserva o evento inteiro até cleanup; faltar proof retém owners. Builds/defaults anteriores mantêm seus requisitos antigos. [Build/contratos](evidence/n71-pci-io16-build.json), [candidata](evidence/n71-pci-io16-profile.json).
+
+Mac/Ubuntu ARM64:49 cenários/20 mutações novos da política e20/17 do adapter. Política legada194/36, ranges21/15, adapter65/57 e optional host18/14 requalificados; totalC367/159 por plataforma. Host/journal78 testes/131 mutações por AssertionError, seleção25/54 e integração final82/132,72 inputs/AST/lint fatal. Gates puros264/71 foram reutilizados na fase adapter com11 inputs relevantes iguais. Tentativa inicial de fixture com helper inexistente terminou AttributeError e ficou excluída; corrigido para o argv explícito do collector, somente a rodada final positiva conta.
+
+Build externo na VM `iphone6s-kernel-20261001`, fonte/config/Image/exports preservados, base958481f87fee0949ff6a9a4af77f7eb6dac8a149/release7.2.0-iphone6s-dart-serdev-power2. Quarenta e nove inputs públicos; seis módulos Werror/modpost/ELF/vermagic. PCIe87.008 bytes/SHA d6188a13d8871b00af637b68cf1c322e616fd9891c14c72fb926571965f90245; outros cinco módulos iguais ao build anterior, incluindo REG_ON. Relatórios readback/optional/IO16 compilados e API action/resources/held/status/exportações do allocator verificadas. O build usou a receita externa anterior com uma pasta nova:
+
+```sh
+make -C /home/ubuntu/kernel-n71-binding-source-20261005 \
+  O=/home/ubuntu/kernel-n71-binding-build-20261005 ARCH=arm64 -j2 \
+  W=1 KCFLAGS=-Werror LOCALVERSION= \
+  M=/home/ubuntu/n71-io16-modules-20261006/phone/kernel \
+  KBUILD_EXTRA_SYMBOLS=/home/ubuntu/kernel-n71-binding-build-20261005/vmlinux.symvers modules
+```
+
+Comandos na raiz `iphone-linux-tools`, usando diretório de saída novo:
+
+```sh
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile runtime/n71-binding-base-profile-20261005/deployment.json \
+  --kernel-dir runtime/kernel-n71-binding-artifacts-20261005 \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir runtime/n71-pcie-diagnostic-20261002 \
+  --module runtime/n71-io16-build-20261006/modules/n71-pcie-diagnostic.ko \
+  --module-sha256 d6188a13d8871b00af637b68cf1c322e616fd9891c14c72fb926571965f90245 \
+  --pcie-aspm-off --pcie-scan-hold --pcie-resource-capable \
+  --reg-on-module runtime/n71-io16-build-20261006/modules/n71-wlan-power-diagnostic.ko \
+  --output-dir runtime/n71-binding-io16-profile-20261006
+python3 -B scripts/host/n71-link-session.py \
+  --profile runtime/n71-binding-io16-profile-20261006/deployment.json \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --check
+python3 -B -m unittest discover -s tests -p test_n71_pcie_io16_upper.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pcie_io16_host.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_io16.py -v
+python3 -B -m unittest discover -s tests -p test_n71_io16_build.py -v
+python3 -B tests/run_n71_diagnostic_payload_mutations.py
+```
+
+Candidata real tem oito arquivos privados700/600. Deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON iguais ao perfil optional anterior; somente PCIe/provenance SHA diferem. Composer e collector --check passaram; não carrega automaticamente nem é prova física de atribuição/Wi-Fi/carga. Próximo teste agrupa acquire→assign→read-only→cleanup/retry→services/snapshot/sync→iOS; nenhum driver/DMA/radio habilitado nesta atribuição. Não operar a tela/PIN/console e não trocar cabo sem necessidade; desenvolver/buildar no iOS carregando.
+
 ## Próximos gates da atribuição
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os

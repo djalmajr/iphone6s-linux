@@ -64,3 +64,7 @@ Mac/Ubuntu ARM64:25 testes/54 mutações por AssertionError por plataforma,69 in
 Mac/Ubuntu ARM64:82 testes/132 mutações por AssertionError por plataforma,72 inputs/AST/lint fatal. Baseline de composição20 testes/34 mutações mais3 de forwarding do coletor; stage16/26, readback9/15, optional8/12, IO16 8/12 e held21/30 requalificados. Nova fixture compara perfil antigo/novo e exige os três reports no collector --check. Primeira tentativa da fixture usou helper inexistente e terminou AttributeError; corrigida para o argv explícito existente, erro preservado/excluído. Só os gates finais positivos contam.
 
 Candidata real separada passou composer/--check, oito arquivos privados700/600; deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON iguais ao perfil optional anterior. Somente PCIe e seu SHA na provenance mudaram. Módulo não carrega automaticamente. Nenhum load/boot novo; documentação/publicação do checkpoint precedem a sessão física agrupada.
+
+### Documentação e checkpoint
+
+`docs/STATUS.md` e `docs/N71_PME_ASPM_CANDIDATE.md` registram a fase, receita Multipass/make externa, composição/check/gates, comparação do perfil real e limitações. Evidências históricas offline permanecem como checkpoints; a candidata ainda precisa da sessão física própria. Publicar somente a branch autorizada e atualizar issue39, mantendo merge/tag/release pendentes.

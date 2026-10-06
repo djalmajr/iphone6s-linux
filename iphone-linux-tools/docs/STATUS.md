@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-06
 
-## Checkpoint atual — janelas presentes, atribuição recusada e limpeza comprovada
+## Checkpoint atual — candidata IO16 qualificada, teste físico pendente
+
+A nova política trata somente o pedido temporário root0:08/upper0x30/dword0000ffff em IO16 presente padrão4K, com os dois tipos e o recurso coerentes, lower/upper baseline0 e estado vivo confirmado. Faz no-op sem escrita upper; lower00f0 continua gravado/verificado, junto de MMIO/BARs. Primeiro erro, decode/master, budgets e rollback permanecem. Report próprio é exigido somente para o novo SHA e conservado no journal/reuso/cleanup. [Plano](../.agents/plans/n71-io16-upper-pci.md), [política](evidence/n71-pci-io16-policy.json), [build](evidence/n71-pci-io16-build.json), [integração](evidence/n71-pci-io16-profile.json).
+
+Mac/Ubuntu ARM64: C final367 cenários/159 mutações compiladas por assertion por plataforma; host/journal78 testes/131 mutações, seleção25/54 e integração82/132,72 inputs/AST/lint fatal. Gates independentes reutilizados somente com inputs relevantes intactos. Seis módulos Werror/modpost/ELF/vermagic,49 inputs;PCIe87.008 bytes/SHAd6188a13. Outros cinco módulos e fonte/config/Image/exports preservados.
+
+Candidata real separada passou composer/--check: oito arquivos700/600, mesmo deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON do perfil optional. Somente PCIe e seu SHA na provenance mudaram. Defaults/perfis anteriores conservados, nenhum pacote/configuração global instalado no Mac ou Image novo. Ainda não carregada fisicamente; próximo boot reúne acquire/assign/read-only/cleanup/retry/services/snapshot/sync/retorno iOS. Atribuição positiva, IRQ/IOMMU/driver/radio, Wi-Fi e telemetria/carga continuam pendentes até provas próprias.
+
+### Sessão anterior — janelas presentes, atribuição recusada e limpeza comprovada
 
 A candidata SHA fba31cb2 rodou em um único boot/DFU, sem reinícios intermediários. Aquisição PCI retida passou; o PCI core declarou IO/prefetch presentes (`io_absent=0`, `pref_absent=0`), portanto nenhum no-op de range ausente foi aplicado. A atribuição preservou o primeiro erro -5 em root0:08/0x30: pedido0000ffff, anterior/retorno0, callbacks sem erro. Essa sessão não comprova atribuição positiva nem ausência das janelas. [Prova física](evidence/n71-pci-optional-physical.json).
 
