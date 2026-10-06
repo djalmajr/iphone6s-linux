@@ -2,7 +2,7 @@
   "format": 1,
   "date": "2026-10-06",
   "physical_base_commit": "2488b12",
-  "decision": "narrow complete PREF64 disable expectation; no production caller yet",
+  "decision": "scoped complete PREF64 disable expectation; adapter opt-in not yet derived",
   "helper_contract": {
     "capture_lower_00010001": true,
     "capture_uppers_zero": true,
@@ -136,12 +136,1044 @@
     }
   },
   "limits": {
-    "policy_integrated": false,
+    "policy_integrated": true,
     "adapter_integrated": false,
     "new_module_built": false,
     "physical_loaded": false,
     "wifi_proven": false,
     "linux_charge_or_gauge_proven": false,
     "private_data_published": false
+  },
+  "policy_contract": {
+    "default_strict": true,
+    "captured_optin_only": true,
+    "absence_conflict_refused": true,
+    "live_proof_before_equality": true,
+    "core_write_value_unchanged": true,
+    "full_expected_readback": true,
+    "raw_first_failure_and_expected_preserved": true,
+    "verified_typed_write_counter": true,
+    "exact_baseline_rollback": true
+  },
+  "policy_qualification": {
+    "mac": {
+      "architecture": "arm64",
+      "qualified": true,
+      "inputs": {
+        "phone/kernel/Makefile": {
+          "bytes": 267,
+          "sha256": "b7bd176e3fa4bb925bed34d2a6af5a861fe2d611d966cc53eae275c3107a1edc"
+        },
+        "phone/kernel/n71-dart-cycle.h": {
+          "bytes": 3359,
+          "sha256": "08b39c05a41b87936962b341525d7188a28909c91613ea902c5b899e9d431a4a"
+        },
+        "phone/kernel/n71-dart-mmio.h": {
+          "bytes": 4252,
+          "sha256": "b76e50b078bd8b8c764093c6fb6b101ca19b9c11b27cd77e76a05a3a47187d97"
+        },
+        "phone/kernel/n71-dart-observe.h": {
+          "bytes": 1971,
+          "sha256": "fa65e2c487b80b52d16edbacd9a7450892f14acf2d6bbed1362f7cc94120b4af"
+        },
+        "phone/kernel/n71-dart-provider.h": {
+          "bytes": 7363,
+          "sha256": "4598dee76099f2a53fbd6f4d37054315f4df3e0c4b722a42728c1e2b9b99b168"
+        },
+        "phone/kernel/n71-hdq-codec.h": {
+          "bytes": 1909,
+          "sha256": "f71ceb810d5f9ee654b8b26598f5ebac213a7f56e2cec9c2d852d5e73e449176"
+        },
+        "phone/kernel/n71-hdq-gpio-observe.c": {
+          "bytes": 3139,
+          "sha256": "37c6a6d2e9b3ccf220ed041d1785a65cad91d6fa7ae77248309296ec949c371f"
+        },
+        "phone/kernel/n71-hdq-handshake.h": {
+          "bytes": 2011,
+          "sha256": "07740deeeee260326684898fc463dcfbdd3741c27c9ba608c3fb9fd6b2962032"
+        },
+        "phone/kernel/n71-hdq-pinmux.h": {
+          "bytes": 1023,
+          "sha256": "8c84a6fad766ce8347afc4d93144d212b4e91437900113bd478db06aef6049a4"
+        },
+        "phone/kernel/n71-hdq-release-plan.h": {
+          "bytes": 1685,
+          "sha256": "d77ef3d965e52311ca58f15c3b523e79791fa2e4bfeee0439948a1c2159416ee"
+        },
+        "phone/kernel/n71-i2c-controller-observe.h": {
+          "bytes": 2842,
+          "sha256": "8b86f579023ca4270c7eb04a387ce9990f18f825fd4ee395b240e1a1b1ade78a"
+        },
+        "phone/kernel/n71-i2c-genpd.h": {
+          "bytes": 8259,
+          "sha256": "6d772609640235a03b381ca0c7bcd49eb2d2cbbe5ef053ca1844bcf3b2488fea"
+        },
+        "phone/kernel/n71-i2c-power-diagnostic.c": {
+          "bytes": 6910,
+          "sha256": "5dc4d053efd9df7e9a977712a48bc395e23e5e25782567f465b839b6afbfab4b"
+        },
+        "phone/kernel/n71-i2c-power-lifecycle.h": {
+          "bytes": 3013,
+          "sha256": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2"
+        },
+        "phone/kernel/n71-i2c-topology-observe.c": {
+          "bytes": 7733,
+          "sha256": "5dc56e1dcbcc8e91b671ae4e6eeae53289550a6e7a7bdf42dfbdfc99ccf2223d"
+        },
+        "phone/kernel/n71-pcie-bar-sizing.h": {
+          "bytes": 2645,
+          "sha256": "9242d467d90feca8a286d8d7d7931a314e083f7eecbb6459f6867e5a119336cb"
+        },
+        "phone/kernel/n71-pcie-chip-id.h": {
+          "bytes": 3975,
+          "sha256": "a71b62b785def3344b2539db660167f3adf2dd86ca1aa48d7743b5338a567405"
+        },
+        "phone/kernel/n71-pcie-chip-mmio.h": {
+          "bytes": 2258,
+          "sha256": "e37a65f3e7b846937d84654180657c5a3981200ea470a5f571f867a719e7fe6c"
+        },
+        "phone/kernel/n71-pcie-contract.h": {
+          "bytes": 2529,
+          "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8"
+        },
+        "phone/kernel/n71-pcie-control-reference.h": {
+          "bytes": 4190,
+          "sha256": "6ac0fd634272206f70ec8ad12ba5bdf9aa4517a4e8ce0807f62e2661533ef764"
+        },
+        "phone/kernel/n71-pcie-diagnostic.c": {
+          "bytes": 19734,
+          "sha256": "c01bc0bb9ca36be3597eecd600252f7fa9c119180833c3a7e9b4d8bd8343821f"
+        },
+        "phone/kernel/n71-pcie-ecam.h": {
+          "bytes": 1977,
+          "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3"
+        },
+        "phone/kernel/n71-pcie-init.h": {
+          "bytes": 3707,
+          "sha256": "bcb0b842d7a46e47b061a69b481750b50c6f4e412f0dbdd605803ac3e6ed1158"
+        },
+        "phone/kernel/n71-pcie-inventory.h": {
+          "bytes": 3903,
+          "sha256": "507d9a7a7d5a848377453f66d8366f77f99cf3c8466a6cc433f940d4bc8a052e"
+        },
+        "phone/kernel/n71-pcie-io16-upper.h": {
+          "bytes": 1152,
+          "sha256": "69182167556a90a46a5a6ef9c250c1cafb260fef1070df5befcfd5c14007100c"
+        },
+        "phone/kernel/n71-pcie-link.h": {
+          "bytes": 5444,
+          "sha256": "a4ddb3ab756450388d4734f555295e2b801930eaaa746767fbc20adbdef0f237"
+        },
+        "phone/kernel/n71-pcie-mmio.h": {
+          "bytes": 3091,
+          "sha256": "85feac07eb85f92fb9fafea3a6951a6b6cf66ce3586e12e534a253103531e7f5"
+        },
+        "phone/kernel/n71-pcie-pme-control.h": {
+          "bytes": 4513,
+          "sha256": "4e555a50eda36e15d8170c40eaaf4202be4a36bcd0d7e1f0f556bdabdcfcd418"
+        },
+        "phone/kernel/n71-pcie-port.h": {
+          "bytes": 3328,
+          "sha256": "ac155857e994d6e8d60c05527a3fb9e9169925219585696349a8b7ed3ba828bb"
+        },
+        "phone/kernel/n71-pcie-pref64-disable.h": {
+          "bytes": 1241,
+          "sha256": "be4ebe34c7fa1ba8e110d52ffdabbe902103058e1f968221d0ac369afb55fa33"
+        },
+        "phone/kernel/n71-pcie-resource-assign.h": {
+          "bytes": 11551,
+          "sha256": "9aac02b116b6b2369e371cc3e540138db3ec64d3aca7002b73908a2d810a19d9"
+        },
+        "phone/kernel/n71-pcie-resource-write.h": {
+          "bytes": 9828,
+          "sha256": "015ea311c511ce43b1bfe9b307c3d2b8f8e3b1b6b06fee663d0b3b69d0db5250"
+        },
+        "phone/kernel/n71-pcie-scan-config.h": {
+          "bytes": 10201,
+          "sha256": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8"
+        },
+        "phone/kernel/n71-pcie-scan-link-target.h": {
+          "bytes": 5822,
+          "sha256": "1af47829908937d28de30b5a05c10ca406a08db22c7657c642e94f3e71534dea"
+        },
+        "phone/kernel/n71-pcie-scan.h": {
+          "bytes": 15670,
+          "sha256": "8dfd03a832d9f593dfccf3d1ff682d2980899b0b97f710b45cfa5669415c8543"
+        },
+        "phone/kernel/n71-peripherals.dtsi": {
+          "bytes": 1795,
+          "sha256": "8afde1b8111a781c29f20bfb00a303b0996daacd1db2a582e66fec9281655f9a"
+        },
+        "phone/kernel/n71-pmgr-access.h": {
+          "bytes": 5487,
+          "sha256": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae"
+        },
+        "phone/kernel/n71-pmgr-power-observe.c": {
+          "bytes": 1673,
+          "sha256": "fec9d8d28ae34deef0c0da1528f0b341a1dd043e4917b3677c789a182070fc99"
+        },
+        "phone/kernel/n71-sn2400-input-reference.h": {
+          "bytes": 1371,
+          "sha256": "f67d5fcb3ffa5e9fdfec80f6091f52b6ae965e0a6eac5aef5187f43d61c8a161"
+        },
+        "phone/kernel/n71-wlan-power-contract.h": {
+          "bytes": 2550,
+          "sha256": "2034977747e830da0464bc8b9df29a98c176e7dcf6e4e8dbe1137ed10f1a8013"
+        },
+        "phone/kernel/n71-wlan-power-diagnostic.c": {
+          "bytes": 8544,
+          "sha256": "1dc9ef28bafaa49cb15c3faa0d1e6caf9c728ec2fcb7ee8aaa074587aaf8c34e"
+        },
+        "phone/kernel/n71-wlan-power.h": {
+          "bytes": 2595,
+          "sha256": "bcdf5f0bf675d9a113cb2d7e7d4910fd4ea6b1c7444f9eac02cf9d807a982bd9"
+        },
+        "tests/n71_pcie_optional_ranges.c": {
+          "bytes": 6423,
+          "sha256": "e7cb20832f186a36afbfccf14e26f794380174f8fe2abe0e23c2e135ff348052"
+        },
+        "tests/n71_pcie_resource_write.c": {
+          "bytes": 13401,
+          "sha256": "00b2ab90f7bf243df960dc2eb5891fd15139bff03ec9334db4503967314f6634"
+        },
+        "tests/n71_pcie_scan_host.c": {
+          "bytes": 29702,
+          "sha256": "63cc271e46c7fbf4185b07452e95f6dc5c4cc5915419b7169af5e8df166749fb"
+        },
+        "tests/n71_pcie_optional_host.c": {
+          "bytes": 4150,
+          "sha256": "3fea8adb75b1d0497a63833e1cb7e1b117b58970e76193fea7993b4e2b4dba4c"
+        },
+        "tests/n71_pcie_io16_upper.c": {
+          "bytes": 7406,
+          "sha256": "10036607a22d8c46362e6572505edef4e29a9e8a52fecebde8cc0fd47b25072c"
+        },
+        "tests/n71_pcie_io16_host.c": {
+          "bytes": 4447,
+          "sha256": "bc21f39cd5310d71e744c2bd2507dd13494221e67df1df38eec55b51db21983c"
+        },
+        "tests/n71_pcie_pref64_disable.c": {
+          "bytes": 3747,
+          "sha256": "3b44893d9fc11824652c9958fafed3fa9d234f26cd106a82219b0e40fb1d1bf2"
+        },
+        "tests/n71_pcie_pref64_policy.c": {
+          "bytes": 5626,
+          "sha256": "fba6c85350364903b44d5348790f6f214c247f57ef5ef4443b3727ab1aaf4c34"
+        },
+        "tests/test_n71_pcie_optional_ranges.py": {
+          "bytes": 4019,
+          "sha256": "9e76de2361e5c5658a4d47c2f5a04e1357199d0fefaaa431d29be99cfbfdcca3"
+        },
+        "tests/test_n71_pcie_resource_write.py": {
+          "bytes": 6829,
+          "sha256": "f70bd327cc83b77de0f583e93e3976baff4fc065629d562c93f82cd2e77d73af"
+        },
+        "tests/test_n71_pcie_scan_host.py": {
+          "bytes": 12302,
+          "sha256": "9f6954d6e3872d2f25a0b737a02fb8bdc9ccc19a1f01b1d50bedb19b7d581210"
+        },
+        "tests/test_n71_pcie_optional_host.py": {
+          "bytes": 4508,
+          "sha256": "4e1d66809145bde93cae729b5a787375f915153afe58ab8eec65a5a2b83f24a9"
+        },
+        "tests/test_n71_pcie_io16_upper.py": {
+          "bytes": 4638,
+          "sha256": "e449f0c1e7530b835c3e6bbb004e393e75c3a1fd245112e63409bf0c6d1120f9"
+        },
+        "tests/test_n71_pcie_io16_host.py": {
+          "bytes": 4590,
+          "sha256": "1c8d24154ab29efd769b800255881f2bfff110bd1c4bc61d65176bf164b6ca9f"
+        },
+        "tests/test_n71_pcie_pref64_disable.py": {
+          "bytes": 3735,
+          "sha256": "7b6bbef57692eff412bc895f6c03bf3d2770f0343a1fa67abbd3572b3a3bc9e7"
+        },
+        "tests/test_n71_pcie_pref64_policy.py": {
+          "bytes": 3703,
+          "sha256": "b3dadf90881f6abdeaea8244ab6286933d2a0c852e0df6de9bb24a4432e85d80"
+        }
+      },
+      "inputs_preserved": true,
+      "ast_passed": true,
+      "suites": [
+        {
+          "suite": "helper",
+          "tests": 1,
+          "native_scenarios": 35,
+          "assertion_mutations": 15,
+          "mutations": [
+            "capture-types",
+            "capture-base-upper",
+            "capture-limit-upper",
+            "request-function",
+            "request-register",
+            "request-width",
+            "request-value",
+            "observed-types-or-address",
+            "disable-already-applied",
+            "live-lower",
+            "live-base-upper",
+            "live-limit-upper",
+            "callback-error",
+            "expected-types",
+            "expected-address"
+          ],
+          "exit_code": 0,
+          "log_sha256": "51dd79abebc66dfcd628b04d31beb06953a0b8930c189de4a43ad6d7c3ec82af"
+        },
+        {
+          "suite": "pref64",
+          "tests": 1,
+          "native_scenarios": 20,
+          "assertion_mutations": 11,
+          "mutations": [
+            "capture-check-lost",
+            "capture-optin-lost",
+            "optin-invented",
+            "live-error-ignored",
+            "equality-before-live-proof",
+            "expected-original-only",
+            "counter-lost",
+            "counter-unscoped",
+            "readback-compares-original",
+            "readback-accepts-original-or-typed",
+            "expected-failure-lost"
+          ],
+          "exit_code": 0,
+          "log_sha256": "d52052874db33229571f56967423fc752db75fb3ea57da59e265a0933cd9db30"
+        },
+        {
+          "suite": "io16",
+          "tests": 1,
+          "native_scenarios": 49,
+          "assertion_mutations": 20,
+          "mutations": [
+            "capture-lower-ignored",
+            "capture-upper-ignored",
+            "contradictory-absence",
+            "captured-optin-lost",
+            "optin-invented",
+            "counter-lost",
+            "equal-observed-bypasses-guard",
+            "observed-drift-ignored",
+            "live-lower-ignored",
+            "disabled-lower-rejected",
+            "live-upper-ignored",
+            "lower-error-ignored",
+            "upper-error-ignored",
+            "secondary-status-width",
+            "wrong-function",
+            "wrong-register",
+            "wrong-width",
+            "wrong-value",
+            "unhandled-flag-invented",
+            "handled-flag-lost"
+          ],
+          "exit_code": 0,
+          "log_sha256": "dd3479789c38ac5d9bbddd9ab68e7cb627db440dab5c2a484d63d0a6082f682a"
+        },
+        {
+          "suite": "optional",
+          "tests": 1,
+          "native_scenarios": 21,
+          "assertion_mutations": 15,
+          "mutations": [
+            "io-baseline-ignored",
+            "pref-baseline-ignored",
+            "io-flag-lost",
+            "pref-flag-lost",
+            "io-support-invented",
+            "pref-support-invented",
+            "observed-race-ignored",
+            "io-upper-live-skipped",
+            "pref-limit-live-skipped",
+            "secondary-status-read-width",
+            "live-drift-ignored",
+            "live-error-ignored",
+            "io-counter-lost",
+            "pref-counter-lost",
+            "emulation-not-handled"
+          ],
+          "exit_code": 0,
+          "log_sha256": "c8e21fa134e404a463c553f43ec8849087e6da4f1cdb66d1ebbec02a041ff771"
+        },
+        {
+          "suite": "policy",
+          "tests": 1,
+          "native_scenarios": 194,
+          "assertion_mutations": 36,
+          "mutations": [
+            "overwrite-capture",
+            "capture-wrong-layout",
+            "capture-wrong-bar",
+            "capture-extra-lost",
+            "capture-before-final-read",
+            "bar-wrong-type",
+            "bar-range-boundary",
+            "bar-alignment-lost",
+            "mem-reserved-bits",
+            "mem-reversed-window",
+            "pref-window-enabled",
+            "bar-upper-enabled",
+            "status-width",
+            "command-width",
+            "inactive-write",
+            "lost-first-error",
+            "budget-boundary",
+            "decode-enabled",
+            "endpoint-not-guarded",
+            "write-readback-lost",
+            "failure-before-lost",
+            "failure-request-root",
+            "failure-after-lost",
+            "failure-readback-invalid",
+            "failure-read-error-ignored",
+            "failure-write-error-ignored",
+            "failure-missing",
+            "failure-on-success",
+            "failure-raw-write-error-lost",
+            "failure-extra-read",
+            "failure-erased-on-restore",
+            "restore-with-live-bus",
+            "restore-during-allocation",
+            "restore-last-window-skipped",
+            "restore-error-forgotten",
+            "restore-owner-lost"
+          ],
+          "exit_code": 0,
+          "log_sha256": "2358c82cede5d17ad8e09a2ae499c624ea7c825320d0c4360dd333376eff7183"
+        },
+        {
+          "suite": "adapter",
+          "tests": 3,
+          "native_scenarios": 65,
+          "assertion_mutations": 57,
+          "mutations": [
+            "missing-remove",
+            "early-restore",
+            "ignored-refusal",
+            "restore-starved",
+            "enable-allowed",
+            "forgot-stop-error",
+            "skip-target-prepare",
+            "skip-target-restore",
+            "release-after-config-failure",
+            "release-after-target-failure",
+            "lose-retained-bridge",
+            "skip-partial-bus-removal",
+            "overwrite-pending-bridge",
+            "skip-pme-prepare",
+            "skip-pme-restore",
+            "release-after-pme-failure",
+            "generic-pme-callback",
+            "lose-pme-ownership",
+            "hold-without-pme",
+            "hold-negative-scan",
+            "hold-invalid-topology",
+            "lose-held-owner",
+            "held-cleanup-without-lock",
+            "held-cleanup-before-remove",
+            "ignore-held-stop-refusal",
+            "forget-held-stop-refusal-on-retry",
+            "readback-report-missing",
+            "readback-report-duplicate",
+            "readback-failure-lost",
+            "readback-root-lost",
+            "readback-value-invented",
+            "readback-error-invented",
+            "retry-assignment",
+            "allocation-without-lock",
+            "extra-topology-accepted",
+            "wrong-sized-bar",
+            "capture-skipped",
+            "claim-skipped",
+            "claim-owner-lost",
+            "sizing-skipped",
+            "assignment-skipped",
+            "verification-skipped",
+            "bar-parent-widened",
+            "translation-lost",
+            "bar-readback-lost",
+            "overlap-accepted",
+            "extra-bar-accepted",
+            "post-driver-accepted",
+            "phase-left-active",
+            "allocation-uses-probe-policy",
+            "remove-active-allocation",
+            "extra-restore-skipped",
+            "extra-restore-starved",
+            "window-release-before-bars",
+            "window-release-with-children",
+            "failed-window-release-owner-lost",
+            "window-release-error-ignored"
+          ],
+          "exit_code": 0,
+          "log_sha256": "1a8adc40376c2b34698077d604179351d7c99053b176ad4e64fe73b691b2a181"
+        },
+        {
+          "suite": "optional-host",
+          "tests": 1,
+          "native_scenarios": 18,
+          "assertion_mutations": 14,
+          "mutations": [
+            "io-absence-lost",
+            "pref-absence-lost",
+            "io-absence-invented",
+            "pref-absence-invented",
+            "io-resource-flags",
+            "io-resource-start",
+            "io-resource-end",
+            "pref-resource-flags",
+            "pref-resource-start",
+            "pref-resource-end",
+            "optional-report-missing",
+            "optional-report-duplicate",
+            "optional-report-flag",
+            "optional-report-counter"
+          ],
+          "exit_code": 0,
+          "log_sha256": "821e4c4654601cc04d4395ee2ff1bb342c2d2f2bc7fbd8f13d6fdeb0cda0247a"
+        },
+        {
+          "suite": "io16-host",
+          "tests": 1,
+          "native_scenarios": 20,
+          "assertion_mutations": 17,
+          "mutations": [
+            "unsupported-window",
+            "one-k-window",
+            "type-base-lost",
+            "type-limit-lost",
+            "type-read-error-ignored",
+            "flags-ignored",
+            "present-start-ignored",
+            "present-end-ignored",
+            "empty-start-ignored",
+            "empty-end-ignored",
+            "derived-optin-lost",
+            "preflight-error-ignored",
+            "report-missing",
+            "report-duplicate",
+            "report-before-optional",
+            "report-enabled-lost",
+            "report-counter-lost"
+          ],
+          "exit_code": 0,
+          "log_sha256": "91a5ccc4960d17776dff3baec93685084bf268604361404337530aa2784d18d6"
+        }
+      ],
+      "physical_action": false
+    },
+    "ubuntu_arm64": {
+      "architecture": "aarch64",
+      "qualified": true,
+      "inputs": {
+        "phone/kernel/Makefile": {
+          "bytes": 267,
+          "sha256": "b7bd176e3fa4bb925bed34d2a6af5a861fe2d611d966cc53eae275c3107a1edc"
+        },
+        "phone/kernel/n71-dart-cycle.h": {
+          "bytes": 3359,
+          "sha256": "08b39c05a41b87936962b341525d7188a28909c91613ea902c5b899e9d431a4a"
+        },
+        "phone/kernel/n71-dart-mmio.h": {
+          "bytes": 4252,
+          "sha256": "b76e50b078bd8b8c764093c6fb6b101ca19b9c11b27cd77e76a05a3a47187d97"
+        },
+        "phone/kernel/n71-dart-observe.h": {
+          "bytes": 1971,
+          "sha256": "fa65e2c487b80b52d16edbacd9a7450892f14acf2d6bbed1362f7cc94120b4af"
+        },
+        "phone/kernel/n71-dart-provider.h": {
+          "bytes": 7363,
+          "sha256": "4598dee76099f2a53fbd6f4d37054315f4df3e0c4b722a42728c1e2b9b99b168"
+        },
+        "phone/kernel/n71-hdq-codec.h": {
+          "bytes": 1909,
+          "sha256": "f71ceb810d5f9ee654b8b26598f5ebac213a7f56e2cec9c2d852d5e73e449176"
+        },
+        "phone/kernel/n71-hdq-gpio-observe.c": {
+          "bytes": 3139,
+          "sha256": "37c6a6d2e9b3ccf220ed041d1785a65cad91d6fa7ae77248309296ec949c371f"
+        },
+        "phone/kernel/n71-hdq-handshake.h": {
+          "bytes": 2011,
+          "sha256": "07740deeeee260326684898fc463dcfbdd3741c27c9ba608c3fb9fd6b2962032"
+        },
+        "phone/kernel/n71-hdq-pinmux.h": {
+          "bytes": 1023,
+          "sha256": "8c84a6fad766ce8347afc4d93144d212b4e91437900113bd478db06aef6049a4"
+        },
+        "phone/kernel/n71-hdq-release-plan.h": {
+          "bytes": 1685,
+          "sha256": "d77ef3d965e52311ca58f15c3b523e79791fa2e4bfeee0439948a1c2159416ee"
+        },
+        "phone/kernel/n71-i2c-controller-observe.h": {
+          "bytes": 2842,
+          "sha256": "8b86f579023ca4270c7eb04a387ce9990f18f825fd4ee395b240e1a1b1ade78a"
+        },
+        "phone/kernel/n71-i2c-genpd.h": {
+          "bytes": 8259,
+          "sha256": "6d772609640235a03b381ca0c7bcd49eb2d2cbbe5ef053ca1844bcf3b2488fea"
+        },
+        "phone/kernel/n71-i2c-power-diagnostic.c": {
+          "bytes": 6910,
+          "sha256": "5dc4d053efd9df7e9a977712a48bc395e23e5e25782567f465b839b6afbfab4b"
+        },
+        "phone/kernel/n71-i2c-power-lifecycle.h": {
+          "bytes": 3013,
+          "sha256": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2"
+        },
+        "phone/kernel/n71-i2c-topology-observe.c": {
+          "bytes": 7733,
+          "sha256": "5dc56e1dcbcc8e91b671ae4e6eeae53289550a6e7a7bdf42dfbdfc99ccf2223d"
+        },
+        "phone/kernel/n71-pcie-bar-sizing.h": {
+          "bytes": 2645,
+          "sha256": "9242d467d90feca8a286d8d7d7931a314e083f7eecbb6459f6867e5a119336cb"
+        },
+        "phone/kernel/n71-pcie-chip-id.h": {
+          "bytes": 3975,
+          "sha256": "a71b62b785def3344b2539db660167f3adf2dd86ca1aa48d7743b5338a567405"
+        },
+        "phone/kernel/n71-pcie-chip-mmio.h": {
+          "bytes": 2258,
+          "sha256": "e37a65f3e7b846937d84654180657c5a3981200ea470a5f571f867a719e7fe6c"
+        },
+        "phone/kernel/n71-pcie-contract.h": {
+          "bytes": 2529,
+          "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8"
+        },
+        "phone/kernel/n71-pcie-control-reference.h": {
+          "bytes": 4190,
+          "sha256": "6ac0fd634272206f70ec8ad12ba5bdf9aa4517a4e8ce0807f62e2661533ef764"
+        },
+        "phone/kernel/n71-pcie-diagnostic.c": {
+          "bytes": 19734,
+          "sha256": "c01bc0bb9ca36be3597eecd600252f7fa9c119180833c3a7e9b4d8bd8343821f"
+        },
+        "phone/kernel/n71-pcie-ecam.h": {
+          "bytes": 1977,
+          "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3"
+        },
+        "phone/kernel/n71-pcie-init.h": {
+          "bytes": 3707,
+          "sha256": "bcb0b842d7a46e47b061a69b481750b50c6f4e412f0dbdd605803ac3e6ed1158"
+        },
+        "phone/kernel/n71-pcie-inventory.h": {
+          "bytes": 3903,
+          "sha256": "507d9a7a7d5a848377453f66d8366f77f99cf3c8466a6cc433f940d4bc8a052e"
+        },
+        "phone/kernel/n71-pcie-io16-upper.h": {
+          "bytes": 1152,
+          "sha256": "69182167556a90a46a5a6ef9c250c1cafb260fef1070df5befcfd5c14007100c"
+        },
+        "phone/kernel/n71-pcie-link.h": {
+          "bytes": 5444,
+          "sha256": "a4ddb3ab756450388d4734f555295e2b801930eaaa746767fbc20adbdef0f237"
+        },
+        "phone/kernel/n71-pcie-mmio.h": {
+          "bytes": 3091,
+          "sha256": "85feac07eb85f92fb9fafea3a6951a6b6cf66ce3586e12e534a253103531e7f5"
+        },
+        "phone/kernel/n71-pcie-pme-control.h": {
+          "bytes": 4513,
+          "sha256": "4e555a50eda36e15d8170c40eaaf4202be4a36bcd0d7e1f0f556bdabdcfcd418"
+        },
+        "phone/kernel/n71-pcie-port.h": {
+          "bytes": 3328,
+          "sha256": "ac155857e994d6e8d60c05527a3fb9e9169925219585696349a8b7ed3ba828bb"
+        },
+        "phone/kernel/n71-pcie-pref64-disable.h": {
+          "bytes": 1241,
+          "sha256": "be4ebe34c7fa1ba8e110d52ffdabbe902103058e1f968221d0ac369afb55fa33"
+        },
+        "phone/kernel/n71-pcie-resource-assign.h": {
+          "bytes": 11551,
+          "sha256": "9aac02b116b6b2369e371cc3e540138db3ec64d3aca7002b73908a2d810a19d9"
+        },
+        "phone/kernel/n71-pcie-resource-write.h": {
+          "bytes": 9828,
+          "sha256": "015ea311c511ce43b1bfe9b307c3d2b8f8e3b1b6b06fee663d0b3b69d0db5250"
+        },
+        "phone/kernel/n71-pcie-scan-config.h": {
+          "bytes": 10201,
+          "sha256": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8"
+        },
+        "phone/kernel/n71-pcie-scan-link-target.h": {
+          "bytes": 5822,
+          "sha256": "1af47829908937d28de30b5a05c10ca406a08db22c7657c642e94f3e71534dea"
+        },
+        "phone/kernel/n71-pcie-scan.h": {
+          "bytes": 15670,
+          "sha256": "8dfd03a832d9f593dfccf3d1ff682d2980899b0b97f710b45cfa5669415c8543"
+        },
+        "phone/kernel/n71-peripherals.dtsi": {
+          "bytes": 1795,
+          "sha256": "8afde1b8111a781c29f20bfb00a303b0996daacd1db2a582e66fec9281655f9a"
+        },
+        "phone/kernel/n71-pmgr-access.h": {
+          "bytes": 5487,
+          "sha256": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae"
+        },
+        "phone/kernel/n71-pmgr-power-observe.c": {
+          "bytes": 1673,
+          "sha256": "fec9d8d28ae34deef0c0da1528f0b341a1dd043e4917b3677c789a182070fc99"
+        },
+        "phone/kernel/n71-sn2400-input-reference.h": {
+          "bytes": 1371,
+          "sha256": "f67d5fcb3ffa5e9fdfec80f6091f52b6ae965e0a6eac5aef5187f43d61c8a161"
+        },
+        "phone/kernel/n71-wlan-power-contract.h": {
+          "bytes": 2550,
+          "sha256": "2034977747e830da0464bc8b9df29a98c176e7dcf6e4e8dbe1137ed10f1a8013"
+        },
+        "phone/kernel/n71-wlan-power-diagnostic.c": {
+          "bytes": 8544,
+          "sha256": "1dc9ef28bafaa49cb15c3faa0d1e6caf9c728ec2fcb7ee8aaa074587aaf8c34e"
+        },
+        "phone/kernel/n71-wlan-power.h": {
+          "bytes": 2595,
+          "sha256": "bcdf5f0bf675d9a113cb2d7e7d4910fd4ea6b1c7444f9eac02cf9d807a982bd9"
+        },
+        "tests/n71_pcie_optional_ranges.c": {
+          "bytes": 6423,
+          "sha256": "e7cb20832f186a36afbfccf14e26f794380174f8fe2abe0e23c2e135ff348052"
+        },
+        "tests/n71_pcie_resource_write.c": {
+          "bytes": 13401,
+          "sha256": "00b2ab90f7bf243df960dc2eb5891fd15139bff03ec9334db4503967314f6634"
+        },
+        "tests/n71_pcie_scan_host.c": {
+          "bytes": 29702,
+          "sha256": "63cc271e46c7fbf4185b07452e95f6dc5c4cc5915419b7169af5e8df166749fb"
+        },
+        "tests/n71_pcie_optional_host.c": {
+          "bytes": 4150,
+          "sha256": "3fea8adb75b1d0497a63833e1cb7e1b117b58970e76193fea7993b4e2b4dba4c"
+        },
+        "tests/n71_pcie_io16_upper.c": {
+          "bytes": 7406,
+          "sha256": "10036607a22d8c46362e6572505edef4e29a9e8a52fecebde8cc0fd47b25072c"
+        },
+        "tests/n71_pcie_io16_host.c": {
+          "bytes": 4447,
+          "sha256": "bc21f39cd5310d71e744c2bd2507dd13494221e67df1df38eec55b51db21983c"
+        },
+        "tests/n71_pcie_pref64_disable.c": {
+          "bytes": 3747,
+          "sha256": "3b44893d9fc11824652c9958fafed3fa9d234f26cd106a82219b0e40fb1d1bf2"
+        },
+        "tests/n71_pcie_pref64_policy.c": {
+          "bytes": 5626,
+          "sha256": "fba6c85350364903b44d5348790f6f214c247f57ef5ef4443b3727ab1aaf4c34"
+        },
+        "tests/test_n71_pcie_optional_ranges.py": {
+          "bytes": 4019,
+          "sha256": "9e76de2361e5c5658a4d47c2f5a04e1357199d0fefaaa431d29be99cfbfdcca3"
+        },
+        "tests/test_n71_pcie_resource_write.py": {
+          "bytes": 6829,
+          "sha256": "f70bd327cc83b77de0f583e93e3976baff4fc065629d562c93f82cd2e77d73af"
+        },
+        "tests/test_n71_pcie_scan_host.py": {
+          "bytes": 12302,
+          "sha256": "9f6954d6e3872d2f25a0b737a02fb8bdc9ccc19a1f01b1d50bedb19b7d581210"
+        },
+        "tests/test_n71_pcie_optional_host.py": {
+          "bytes": 4508,
+          "sha256": "4e1d66809145bde93cae729b5a787375f915153afe58ab8eec65a5a2b83f24a9"
+        },
+        "tests/test_n71_pcie_io16_upper.py": {
+          "bytes": 4638,
+          "sha256": "e449f0c1e7530b835c3e6bbb004e393e75c3a1fd245112e63409bf0c6d1120f9"
+        },
+        "tests/test_n71_pcie_io16_host.py": {
+          "bytes": 4590,
+          "sha256": "1c8d24154ab29efd769b800255881f2bfff110bd1c4bc61d65176bf164b6ca9f"
+        },
+        "tests/test_n71_pcie_pref64_disable.py": {
+          "bytes": 3735,
+          "sha256": "7b6bbef57692eff412bc895f6c03bf3d2770f0343a1fa67abbd3572b3a3bc9e7"
+        },
+        "tests/test_n71_pcie_pref64_policy.py": {
+          "bytes": 3703,
+          "sha256": "b3dadf90881f6abdeaea8244ab6286933d2a0c852e0df6de9bb24a4432e85d80"
+        }
+      },
+      "inputs_preserved": true,
+      "ast_passed": true,
+      "suites": [
+        {
+          "suite": "helper",
+          "tests": 1,
+          "native_scenarios": 35,
+          "assertion_mutations": 15,
+          "mutations": [
+            "capture-types",
+            "capture-base-upper",
+            "capture-limit-upper",
+            "request-function",
+            "request-register",
+            "request-width",
+            "request-value",
+            "observed-types-or-address",
+            "disable-already-applied",
+            "live-lower",
+            "live-base-upper",
+            "live-limit-upper",
+            "callback-error",
+            "expected-types",
+            "expected-address"
+          ],
+          "exit_code": 0,
+          "log_sha256": "ba654f3685110f141e783ad14be2a7dfe0a1e7f7306f173ca88149691dbf759c"
+        },
+        {
+          "suite": "pref64",
+          "tests": 1,
+          "native_scenarios": 20,
+          "assertion_mutations": 11,
+          "mutations": [
+            "capture-check-lost",
+            "capture-optin-lost",
+            "optin-invented",
+            "live-error-ignored",
+            "equality-before-live-proof",
+            "expected-original-only",
+            "counter-lost",
+            "counter-unscoped",
+            "readback-compares-original",
+            "readback-accepts-original-or-typed",
+            "expected-failure-lost"
+          ],
+          "exit_code": 0,
+          "log_sha256": "ef56ed8ad73f7ffa8bd395f5bda28cc23cdae097854facf84854bf53546b42c0"
+        },
+        {
+          "suite": "io16",
+          "tests": 1,
+          "native_scenarios": 49,
+          "assertion_mutations": 20,
+          "mutations": [
+            "capture-lower-ignored",
+            "capture-upper-ignored",
+            "contradictory-absence",
+            "captured-optin-lost",
+            "optin-invented",
+            "counter-lost",
+            "equal-observed-bypasses-guard",
+            "observed-drift-ignored",
+            "live-lower-ignored",
+            "disabled-lower-rejected",
+            "live-upper-ignored",
+            "lower-error-ignored",
+            "upper-error-ignored",
+            "secondary-status-width",
+            "wrong-function",
+            "wrong-register",
+            "wrong-width",
+            "wrong-value",
+            "unhandled-flag-invented",
+            "handled-flag-lost"
+          ],
+          "exit_code": 0,
+          "log_sha256": "2d8eaa3e877ee2be4ded27be5dde4217b6afdc8a21e1e4f7f4be8ed4c033516a"
+        },
+        {
+          "suite": "optional",
+          "tests": 1,
+          "native_scenarios": 21,
+          "assertion_mutations": 15,
+          "mutations": [
+            "io-baseline-ignored",
+            "pref-baseline-ignored",
+            "io-flag-lost",
+            "pref-flag-lost",
+            "io-support-invented",
+            "pref-support-invented",
+            "observed-race-ignored",
+            "io-upper-live-skipped",
+            "pref-limit-live-skipped",
+            "secondary-status-read-width",
+            "live-drift-ignored",
+            "live-error-ignored",
+            "io-counter-lost",
+            "pref-counter-lost",
+            "emulation-not-handled"
+          ],
+          "exit_code": 0,
+          "log_sha256": "9f84ce5cd9d09d7a784ba4262d797022e5fffe75456df874eac175140ded72e7"
+        },
+        {
+          "suite": "policy",
+          "tests": 1,
+          "native_scenarios": 194,
+          "assertion_mutations": 36,
+          "mutations": [
+            "overwrite-capture",
+            "capture-wrong-layout",
+            "capture-wrong-bar",
+            "capture-extra-lost",
+            "capture-before-final-read",
+            "bar-wrong-type",
+            "bar-range-boundary",
+            "bar-alignment-lost",
+            "mem-reserved-bits",
+            "mem-reversed-window",
+            "pref-window-enabled",
+            "bar-upper-enabled",
+            "status-width",
+            "command-width",
+            "inactive-write",
+            "lost-first-error",
+            "budget-boundary",
+            "decode-enabled",
+            "endpoint-not-guarded",
+            "write-readback-lost",
+            "failure-before-lost",
+            "failure-request-root",
+            "failure-after-lost",
+            "failure-readback-invalid",
+            "failure-read-error-ignored",
+            "failure-write-error-ignored",
+            "failure-missing",
+            "failure-on-success",
+            "failure-raw-write-error-lost",
+            "failure-extra-read",
+            "failure-erased-on-restore",
+            "restore-with-live-bus",
+            "restore-during-allocation",
+            "restore-last-window-skipped",
+            "restore-error-forgotten",
+            "restore-owner-lost"
+          ],
+          "exit_code": 0,
+          "log_sha256": "9b9943d5673ec79d1d4dfa7c375face5e9e2f325186e75f7d2c5de5053e2e809"
+        },
+        {
+          "suite": "adapter",
+          "tests": 3,
+          "native_scenarios": 65,
+          "assertion_mutations": 57,
+          "mutations": [
+            "missing-remove",
+            "early-restore",
+            "ignored-refusal",
+            "restore-starved",
+            "enable-allowed",
+            "forgot-stop-error",
+            "skip-target-prepare",
+            "skip-target-restore",
+            "release-after-config-failure",
+            "release-after-target-failure",
+            "lose-retained-bridge",
+            "skip-partial-bus-removal",
+            "overwrite-pending-bridge",
+            "skip-pme-prepare",
+            "skip-pme-restore",
+            "release-after-pme-failure",
+            "generic-pme-callback",
+            "lose-pme-ownership",
+            "hold-without-pme",
+            "hold-negative-scan",
+            "hold-invalid-topology",
+            "lose-held-owner",
+            "held-cleanup-without-lock",
+            "held-cleanup-before-remove",
+            "ignore-held-stop-refusal",
+            "forget-held-stop-refusal-on-retry",
+            "readback-report-missing",
+            "readback-report-duplicate",
+            "readback-failure-lost",
+            "readback-root-lost",
+            "readback-value-invented",
+            "readback-error-invented",
+            "retry-assignment",
+            "allocation-without-lock",
+            "extra-topology-accepted",
+            "wrong-sized-bar",
+            "capture-skipped",
+            "claim-skipped",
+            "claim-owner-lost",
+            "sizing-skipped",
+            "assignment-skipped",
+            "verification-skipped",
+            "bar-parent-widened",
+            "translation-lost",
+            "bar-readback-lost",
+            "overlap-accepted",
+            "extra-bar-accepted",
+            "post-driver-accepted",
+            "phase-left-active",
+            "allocation-uses-probe-policy",
+            "remove-active-allocation",
+            "extra-restore-skipped",
+            "extra-restore-starved",
+            "window-release-before-bars",
+            "window-release-with-children",
+            "failed-window-release-owner-lost",
+            "window-release-error-ignored"
+          ],
+          "exit_code": 0,
+          "log_sha256": "877208e59769509165e5c89af0c33a755377683363265203f9c1839551f1adfd"
+        },
+        {
+          "suite": "optional-host",
+          "tests": 1,
+          "native_scenarios": 18,
+          "assertion_mutations": 14,
+          "mutations": [
+            "io-absence-lost",
+            "pref-absence-lost",
+            "io-absence-invented",
+            "pref-absence-invented",
+            "io-resource-flags",
+            "io-resource-start",
+            "io-resource-end",
+            "pref-resource-flags",
+            "pref-resource-start",
+            "pref-resource-end",
+            "optional-report-missing",
+            "optional-report-duplicate",
+            "optional-report-flag",
+            "optional-report-counter"
+          ],
+          "exit_code": 0,
+          "log_sha256": "9782db8875bbc3af48468ab92b156045d8b8eb1445746cbe9b3e206bb1c6b1d1"
+        },
+        {
+          "suite": "io16-host",
+          "tests": 1,
+          "native_scenarios": 20,
+          "assertion_mutations": 17,
+          "mutations": [
+            "unsupported-window",
+            "one-k-window",
+            "type-base-lost",
+            "type-limit-lost",
+            "type-read-error-ignored",
+            "flags-ignored",
+            "present-start-ignored",
+            "present-end-ignored",
+            "empty-start-ignored",
+            "empty-end-ignored",
+            "derived-optin-lost",
+            "preflight-error-ignored",
+            "report-missing",
+            "report-duplicate",
+            "report-before-optional",
+            "report-enabled-lost",
+            "report-counter-lost"
+          ],
+          "exit_code": 0,
+          "log_sha256": "d935d1ae1a7dc9eb2fee5424b2a4d71774e36bbcd8260080b924173f6df2f449"
+        }
+      ],
+      "physical_action": false
+    },
+    "initial_surviving_counter_mutant_excluded": true,
+    "nonpref_write_counter_regression_added": true,
+    "ast_and_fatal_lint": true
   }
 }

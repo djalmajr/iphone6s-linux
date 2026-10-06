@@ -32,7 +32,7 @@ Física (até cinco): somente após A–E. Um boot reúne acquire/assign/read-on
 ## Tarefas
 
 - [x] A0: helper sem efeitos e regressões/mutações.
-- [ ] A1/A2: integração na política, defaults/readback/rollback qualificados.
+- [x] A1/A2: integração na política, defaults/readback/rollback qualificados.
 - [ ] B: derivação/report/adapter qualificados.
 - [ ] C1/C2: contrato/journal e legados qualificados.
 - [ ] D: build/ABI preservados e seleção explícita.
@@ -46,3 +46,9 @@ Mac e Ubuntu ARM64, Werror/assertions, AST/Flake8 fatal, inputs/hashes/logs/exit
 ### Gate A0 — helper inativo qualificado
 
 Mac/Ubuntu ARM64:35 cenários/15 mutações compiladas SIGABRT/assertion por plataforma, seis inputs iguais/preservados, AST/Flake8 fatal. Captura exata, tipos/endereço/uppers vivos, releitura, escopo e erros positivos/negativos passaram sem escrita hardware. Gate em cópia descartável conserva logs/exit SHA; teste inicial direto também passou. Nenhum caller, módulo/Image novo ou DFU desta fatia. [Prova](../../docs/evidence/n71-pci-pref64-policy.json).
+
+### Gate A1/A2 — política integrada; opt-in ainda sem derivação no adapter
+
+Fixture/runner novos `tests/n71_pcie_pref64_policy.c`/`tests/test_n71_pcie_pref64_policy.py` exercitam a política real com tipos readonly/endereço gravável e rollback. Mac/Ubuntu ARM64:422 cenários/185 mutações compiladas SIGABRT/assertion por plataforma,58 inputs iguais/preservados, AST/lint fatal. Novos20/11 mais helper35/15; IO16, optional, política/adapter/host legados requalificados. Mutante inicial do counter sobreviveu porque faltava verificar o counter após uma escrita não-PREF; caso corrigido e probe negativo conservado/excluído. Somente a matriz final positiva conta.
+
+O pedido hardware permanece0000fff0, mas readback completo esperado é0001fff1 somente com opt-in capturado e guards vivos. Falha conserva pedido original/expected/antes/depois/callbacks; contador avança só depois de escrita tipada verificada. Defaults, primeiro erro e rollback exato passaram. Sem módulo/Image/build/load/DFU novo; B ainda precisa derivar o opt-in, emitir report e qualificar o adapter.
