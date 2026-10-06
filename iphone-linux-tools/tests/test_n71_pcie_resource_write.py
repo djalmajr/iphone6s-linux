@@ -76,7 +76,8 @@ class ResourceWriteTests(unittest.TestCase):
         source = (ROOT / 'phone/kernel/n71-pcie-resource-write.h').read_text()
         with tempfile.TemporaryDirectory(prefix='n71-resource-write-') as directory:
             folder = Path(directory)
-            for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h'):
+            for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h',
+                         'n71-pcie-io16-upper.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
             header, binary = folder / 'n71-pcie-resource-write.h', folder / 'policy'
             for name, before, after in (('baseline', None, None),) + MUTATIONS:

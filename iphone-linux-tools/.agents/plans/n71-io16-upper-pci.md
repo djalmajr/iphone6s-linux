@@ -1,0 +1,44 @@
+# Upper de disable em IO16 — issue39
+
+## Contexto
+
+O boot agrupado da candidata fba31cb2 declarou janelas IO/PREF presentes e recusou upper0x30=0000ffff com retorno0. A leitura no mesmo boot confirmou lower1c=0 e upper30=0, tipos base/limit0. Linux fixado958481f87fee0949ff6a9a4af77f7eb6dac8a149 define tipo0 como16 bits, lê upper somente para IO32 (`probe.c:397`) e escreve upper temporário sem condicionar ao tipo (`setup-bus.c:826`). Ausência do range inteiro não foi comprovada; a política anterior preservou corretamente a recusa.
+
+## D1. Tratar somente o pedido temporário upper em IO16
+
+- **Decisão:** opt-in separado `io16_upper_unused` no layout/adaptador. Capture exige IO presente de16 bits, lower e upper baseline0, sem conflito com io_absent. O único pedido emulado é root0:08/0x30/dword0000ffff, observado0, lower vivo0 ou00f0 (baseline ou disable) e upper vivo0. Sem escrita hardware; counter/report próprios. Lower00f0 continua escrito/verificado, junto de BARs/MMIO e restantes registradores.
+- **Por quê:** trata o primeiro erro medido e a sequência PCI core sem declarar IO ausente nem ignorar mismatch geral. Decode/master/identidade/budget/rollback continuam exigidos antes da emulação.
+- **Alternativas:** forçar flags de ausência contradiz o probe; aceitar upper de qualquer tipo ameaça IO32; mudar o Image amplia o rebuild/rollback. Nova instrumentação antes da mudança é possível, mas tipos/valores já foram coletados no mesmo boot e a fonte primária esclarece a sequência.
+- **Reverter:** baixo; novo módulo somente por hash/metadata qualificados, defaults e perfis anteriores conservados.
+- **Onde:** política/adapter/host, fases abaixo.
+- **Status:** em curso offline; iPhone no iOS carregando. Sem novo DFU até qualificação completa.
+
+## Arquivos e fases
+
+A0 (até cinco arquivos): plano; novo `phone/kernel/n71-pcie-io16-upper.h` com helpers puros sem efeitos; `tests/test_n71_pcie_resource_write.py` e `tests/test_n71_pcie_optional_ranges.py` copiam a nova dependência sem mudar os gates anteriores. Helpers não são chamados nesta fatia. Validar import/AST/lint e compilação da base.
+
+A1 (até cinco): plano, `phone/kernel/n71-pcie-resource-write.h` (layout/estado opt-in, capture e caminho noop), novo `tests/n71_pcie_io16_upper.c`, novo `tests/test_n71_pcie_io16_upper.py`, evidência de política. Fixture exercita sequência upperFFFF/lowerF0/upper0, rollback/sentinelas; default estrito, tipos32/mistos/reservados, baseline/live contraditórios, callbacks positivos/negativos, largura/status, COMMAND/MASTER, orçamento e erro latched. Mutantes compilados morrem por SIGABRT/assertion; compilação/import/timeout não contam.
+
+B (até cinco): plano, `phone/kernel/n71-pcie-resource-assign.h`, backend PCI compartilhado e fixture/runner próprios. Derivar opt-in somente de janela presente padrão4K, tipo IO16/recursos coerentes; report único de captured/enabled/noops entre optional/readback. Testar flags, recursos, negação/repeat/cleanup e evento, sem driver/DMA. Requalificar integrações C afetadas nas duas plataformas.
+
+C1 (até cinco): plano; parser IO16 novo; resultado/event; etapa/journal; teste próprio. Require report por metadata exata, ordenar após optional antes de readback, counters dentro das tentativas sem escrita, capturado coerente e noop positivo quando atribuído/enabled. Conservar evento inteiro até cleanup, faltar proof retém owners. Legados sem novo report continuam iguais.
+
+C2 (até cinco): plano; build externo na VM; evidência sanitizada; seletor/hash; teste próprio. Preservar fonte/config/Image/exports/REG_ON/outros cinco módulos. Novo record exige readback/optional/io16, antigos defaults e bytes intactos.
+
+C3 (até cinco): plano; dependências de cópia de gates se necessário; fixture composer/coletor real; prova da candidata; docs. Compor perfil novo privado, comparar payload/identidades/REG_ON, check antes de efeitos. Documentar/push branch/issues sanitizados; não integrar main/tag/release.
+
+Física (até cinco): somente após A–C qualificados. Um boot agrupa acquire/assign/read-only/cleanup/retry/services/snapshot/sync/retorno iOS, preserva primeiro erro. Sem driver/DMA/radio nesta atribuição. Publicar resultados/limites próprios.
+
+## Tarefas
+
+- [x] A0: helpers separados e dependências dos gates anteriores.
+- [ ] A1: política opt-in e regressões/mutações Mac/Ubuntu ARM64.
+- [ ] B: adapter/report/fixtures e qualificação C final.
+- [ ] C1: contrato/journal estritos e compatibilidade.
+- [ ] C2: build/ABI/fonte preservados e seleção explícita.
+- [ ] C3: candidata privada/check/reprodução e checkpoint publicado.
+- [ ] Uma sessão física agrupada; atualizar issue39 com resultado/limites.
+
+## Verificação
+
+Reusar provas independentes intactas; gates afetados compilados Werror e assertions, AST/Flake8 fatal/diff/guard público e inputs por SHA. Nova flag false conserva comportamento legado. Fonte PCI primária fixada e provas físicas anteriores permanecem; logs/IDs/DT/firmware/chaves/snapshots não são publicados. Wi-Fi/IRQ/IOMMU/driver e energia/HDQ/carga continuam pendentes até prova física própria. Nenhum pacote/configuração global instalado no Mac.
