@@ -24,12 +24,15 @@ C1, cinco arquivos: plano; novo `scripts/host/n71_resource_optional.py`; `script
 
 C2, quatro arquivos: plano, `scripts/host/n71_resource_build.py`, nova `docs/evidence/n71-pci-optional-build.json` e novo `tests/test_n71_optional_build.py`. Selecionar bytes86.304/SHAfba31cb2 somente pela evidência de build/política/adaptador/host qualificada e vinculada à evidência readback anterior por SHA. Require readback e optional windows por metadata, REG_ON/ABI/interface preservados. Hash anterior readback e default resource mantêm contratos anteriores; não substituir evidências históricas ou perfis privados.
 
+C3, três arquivos: plano, `tests/run_n71_diagnostic_payload_mutations.py` (dependência nova na cópia descartável) e novo `tests/test_n71_diagnostic_optional_profile.py`. Fixture de composição/coletor --check com build opcional, payload/identidades/REG_ON iguais e dois reports exigidos. Preservar os gates/mutations de forwarding anteriores; produzir candidata real em pasta privada nova somente após os gates locais. A integração não muda CLI, composer ou coletor porque o encaminhamento por SHA já está qualificado.
+
 ## Tarefas
 
 - [x] A: política de no-op restrita, baseline/leituras vivas, contadores e guardas.
 - [x] A: regressões de ranges ausentes/implementados, drift/erro, rollback e mutations por assertion no Mac/Ubuntu ARM64.
 - [x] B: derivar flags do PCI core e relatar decisão; testar adaptador e restaurar corretamente.
-- [ ] C: build, seleção, journal/candidata e reprodução sem novo DFU.
+- [x] C: build, seleção e journal/candidata sem novo DFU.
+- [ ] Registrar reprodução e publicar o checkpoint qualificado antes da sessão física.
 - [ ] Uma sessão física agrupada somente após os gates; conservar diagnóstico/cleanup e serviços. Não habilitar driver/DMA/radio nesta atribuição.
 - [ ] Atualizar docs/issues com provas sanitizadas e limites; Wi-Fi/energia seguem abertos até provas próprias.
 
@@ -54,3 +57,9 @@ Build externo paralelo compilou seis módulos Werror/modpost/ELF/vermagic;PCIe86
 ### Gate C2 — novo build selecionado explicitamente
 
 Quatro arquivos definidos acima. Mac/Ubuntu ARM64 passaram19 testes/45 mutações por AssertionError por plataforma,66 inputs/AST/lint fatal: novo seletor5/7, seletor readback5/9 e contrato resultado9/29. Exige evidência readback anterior por SHA, booleans exatos de política/adaptador/host, relato opcional compilado, fonte patched preservada e bytes/hash/ABI/REG_ON/interface. Acrescenta `assignment_optional_windows=true` somente ao build novo; hash anterior readback continua com seu report único, default resource mantém o contrato legado. Nenhum novo load/boot; C3 ainda verifica composição/coletor/candidata antes da sessão física.
+
+### Gate C3 — integração final e candidata real
+
+Três arquivos definidos acima. Mac/Ubuntu ARM64:73 testes/120 mutações por AssertionError por plataforma,67 inputs/AST/lint fatal: composição19/37 (34 composer e três forwarding collector), estágio16/26, readback9/15, optional8/12 e held21/30. C2seletor/resultado e históricoC1 reutilizados com controles relevantes intactos. Fixture nova compõe e executa --check com os dois reports selecionados, mesmo payload/identidades/REG_ON. Dep nova foi incluída na cópia descartável dos mutantes; erros de import não contam como kills.
+
+Candidata real separada passou composer/--check: oito arquivos privados700/600, PCIe86.304 bytes/SHAfba31cb2, dois reports exigidos. Deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON byte a byte iguais ao perfil readback anterior; somente PCIe e `module_sha256` da provenance mudaram. Perfis anteriores preservados; nada carregado no iPhone nesta preparação. Próxima sessão agrupa aquisição/assign/coleta, cleanup/retry, serviços, snapshot/sync e retorno iOS. Driver/DMA/rádio e carga Linux continuam fora desta prova.
