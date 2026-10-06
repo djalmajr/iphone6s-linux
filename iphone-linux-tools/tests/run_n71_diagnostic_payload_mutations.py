@@ -19,6 +19,7 @@ DEPENDENCIES = (
     'scripts/host/n71_resource_result.py',
     'scripts/host/n71_resource_readback.py', 'scripts/host/n71_resource_build.py',
     'scripts/host/n71_resource_optional.py',
+    'scripts/host/n71_resource_io16.py',
 )
 MUTATIONS = (
     ('known-abi', 'if kernel_release not in known:', 'if False:'),

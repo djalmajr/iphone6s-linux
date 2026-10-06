@@ -36,7 +36,7 @@ Física (até cinco): somente após A–C qualificados. Um boot agrupa acquire/a
 - [x] B: adapter/report/fixtures e qualificação C final.
 - [x] C1: contrato/journal estritos e compatibilidade.
 - [x] C2: build/ABI/fonte preservados e seleção explícita.
-- [ ] C3: candidata privada/check/reprodução e checkpoint publicado.
+- [x] C3: candidata privada/check qualificados; reprodução/publicação em andamento.
 - [ ] Uma sessão física agrupada; atualizar issue39 com resultado/limites.
 
 ## Verificação
@@ -58,3 +58,9 @@ Mac/Ubuntu ARM64:78 testes/131 mutações por AssertionError por plataforma,66 i
 ### Gate C2 — build real e seleção IO16 qualificados
 
 Mac/Ubuntu ARM64:25 testes/54 mutações por AssertionError por plataforma,69 inputs/AST/lint fatal; seletor novo6/9, optional5/7, readback5/9 e resultado9/29. Evidência nova é vinculada às bases optional/readback/assignment por SHA e exige booleans exatos do contrato IO16/report compilado; records requerem os três reports. Hashes anteriores conservam seus requisitos antigos, unknown ou evidence ausente/alias recusam seleção. Seis módulos da VM passaram Werror/modpost/ELF/vermagic,49 inputs, PCIe87.008 bytes/SHAd6188a13; outros cinco e fonte/config/Image/exports preservados. Sem novo Image, load/DFU, pacote/config global. C3 ainda compõe/checka o perfil e requalifica as integrações antes da sessão física.
+
+### Gate C3 — candidata completa qualificada sem outro DFU
+
+Mac/Ubuntu ARM64:82 testes/132 mutações por AssertionError por plataforma,72 inputs/AST/lint fatal. Baseline de composição20 testes/34 mutações mais3 de forwarding do coletor; stage16/26, readback9/15, optional8/12, IO16 8/12 e held21/30 requalificados. Nova fixture compara perfil antigo/novo e exige os três reports no collector --check. Primeira tentativa da fixture usou helper inexistente e terminou AttributeError; corrigida para o argv explícito existente, erro preservado/excluído. Só os gates finais positivos contam.
+
+Candidata real separada passou composer/--check, oito arquivos privados700/600; deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON iguais ao perfil optional anterior. Somente PCIe e seu SHA na provenance mudaram. Módulo não carrega automaticamente. Nenhum load/boot novo; documentação/publicação do checkpoint precedem a sessão física agrupada.
