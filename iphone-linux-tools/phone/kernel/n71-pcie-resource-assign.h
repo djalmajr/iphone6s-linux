@@ -43,6 +43,21 @@ static int n71_resource_visit(struct pci_dev *dev, void *context)
 	return devices->error;
 }
 
+static int n71_resource_pref64_layout(struct pci_dev *root,
+				    struct n71_resource_bar_layout *layout)
+{
+	const struct resource *resource = &root->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
+
+	if (!root->pref_window || !root->pref_64_window)
+		return 0;
+	if (resource->flags != (IORESOURCE_MEM | IORESOURCE_PREFETCH |
+	    IORESOURCE_MEM_64 | PCI_PREF_RANGE_TYPE_64) ||
+	    resource->start || resource->end != 0xfffffU)
+		return -EACCES;
+	layout->pref64_disable = true;
+	return 0;
+}
+
 static int n71_resource_preflight(struct n71_scan_host *host,
 				  struct n71_resource_devices *devices,
 				  struct n71_resource_bar_layout *layout)
@@ -93,6 +108,9 @@ static int n71_resource_preflight(struct n71_scan_host *host,
 	layout->io_absent = !root->io_window;
 	layout->pref_absent = !root->pref_window;
 	error = n71_resource_io16_layout(root, layout);
+	if (error)
+		return error;
+	error = n71_resource_pref64_layout(root, layout);
 	if (error)
 		return error;
 	resource = &host->windows[1];
@@ -177,6 +195,10 @@ static int n71_resource_verify(struct n71_scan_host *host, struct n71_resource_d
 	error = n71_scan_read(&io, true, 0x20, 4, &actual);
 	if (!error && actual != expected)
 		error = -EIO;
+	if (!error && host->resources.pref64_disable) {
+		const struct n71_scan_request disable = {true, 0x24, 0x0000fff0, 4};
+		error = n71_pref64_disable_expected(&io, &disable, 0x0001fff1, &expected);
+	}
 	for (function = 0; !error && function < 2; function++) {
 		error = n71_scan_read(&io, function == 0, 4, 2, &actual);
 		if (!error && (actual != host->resources.reference.saved[function].command || (actual & 7)))
@@ -192,11 +214,14 @@ static int n71_resource_verify(struct n71_scan_host *host, struct n71_resource_d
 static inline void n71_resource_report_readback(struct n71_scan_host *host)
 {
 	const struct n71_resource_write_failure *failure = &host->resources.failure;
+	char expected[32] = "";
 
-	dev_info(host->dev, "N71_PCIE_ASSIGN_READBACK failed=%u root=%u where=%03x size=%u value=%08x before=%08x after_valid=%u after=%08x write_error=%d read_error=%d; no additional IO\n",
+	if (failure->valid && failure->expected != failure->request.value)
+		scnprintf(expected, sizeof(expected), " expected=%08x", failure->expected);
+	dev_info(host->dev, "N71_PCIE_ASSIGN_READBACK failed=%u root=%u where=%03x size=%u value=%08x before=%08x after_valid=%u after=%08x write_error=%d read_error=%d%s; no additional IO\n",
 		 failure->valid, failure->request.root, failure->request.where, failure->request.size,
 		 failure->request.value, failure->before, failure->after_valid, failure->after,
-		 failure->write_error, failure->read_error);
+		 failure->write_error, failure->read_error, expected);
 }
 
 static inline void n71_resource_report_optional(struct n71_scan_host *host)
@@ -210,6 +235,12 @@ static inline void n71_resource_report_io16(struct n71_scan_host *host)
 {
 	dev_info(host->dev, "N71_PCIE_IO16_UPPER captured=%u enabled=%u noops=%u; temporary upper disable without hardware write\n",
 		 host->resources.pending, host->resources.io16_upper_unused, host->resources.io16_noops);
+}
+
+static inline void n71_resource_report_pref64(struct n71_scan_host *host)
+{
+	dev_info(host->dev, "N71_PCIE_PREF64_DISABLE captured=%u enabled=%u writes=%u; full disabled readback with preserved types\n",
+		 host->resources.pending, host->resources.pref64_disable, host->resources.pref64_writes);
 }
 
 /* Caller serializes this action with cleanup and retains MMIO/module/power. */
@@ -264,6 +295,7 @@ static inline int n71_pcie_assign_resources(struct n71_diagnostic *state)
 	pci_unlock_rescan_remove();
 	n71_resource_report_optional(host);
 	n71_resource_report_io16(host);
+	n71_resource_report_pref64(host);
 	n71_resource_report_readback(host);
 	dev_info(host->dev, "N71_PCIE_RESOURCE_RESULT error=%d assigned=%u pending=%u claimed=%u attempts=%u writes=%u; no decode, bind or DMA\n",
 		 error, host->resources_assigned, host->resources.pending, host->window_claimed,

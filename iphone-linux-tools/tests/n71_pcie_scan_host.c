@@ -9,8 +9,10 @@
 #include "n71-pcie-contract.h"
 typedef uint16_t u16;
 #define __iomem
+#define scnprintf snprintf
 #define PCI_COMMAND 4
 #define PCI_IO_BASE 0x1c
+#define PCI_PREF_RANGE_TYPE_64 1
 #define PCI_COMMAND_MASTER 4
 #define PCI_STD_NUM_BARS 6
 #define PCIBIOS_DEVICE_NOT_FOUND 0x86
@@ -47,7 +49,7 @@ struct pci_dev {
 	void *driver;
 	struct resource resource[10];
 	struct pci_bus *subordinate;
-	bool enabled, io_window, pref_window, io_window_1k;
+	bool enabled, io_window, pref_window, io_window_1k, pref_64_window;
 };
 struct pci_ops {
 	int (*read)(struct pci_bus *, unsigned int, int, int, u32 *);
@@ -92,6 +94,8 @@ static struct {
 	unsigned int pme_prepares, pme_restores, pme_reads;
 	bool locked, returned, pme;
 	bool resource_mode, allocating, io_readonly, pref_readonly;
+	bool pref_types_readonly, pref_drop_address, pref_clear_types;
+	unsigned int pref_final_drift;
 	unsigned int optional_attempts;
 	enum resource_fault resource_fault;
 	unsigned int claims, releases, sizing, assigning, references;
@@ -109,6 +113,13 @@ static u32 readl(const void *address)
 }
 static void writel(u32 value, void *address)
 {
+	if (mock.pref_types_readonly && address == &mock.ecam[0x8024 / 4]) {
+		if (mock.allocating && mock.pref_drop_address)
+			return;
+		value = (value & 0xfff0fff0U) | 0x00010001U;
+		if (mock.allocating && mock.pref_clear_types)
+			value &= 0xfff0fff0U;
+	}
 	if (mock.allocating && (address == &mock.ecam[0x8030 / 4] ||
 	    address == &mock.ecam[0x8024 / 4] || address == &mock.ecam[0x8028 / 4] ||
 	    address == &mock.ecam[0x802c / 4])) {
@@ -414,6 +425,8 @@ static void pci_bus_assign_resources(const struct pci_bus *bus)
 	if (mock.resource_fault == ROOT_WINDOW_BAD) window->end++;
 	if (mock.resource_fault == EXTRA_BAR) mock.endpoint.resource[4].flags = IORESOURCE_MEM;
 	if (mock.resource_fault == AFTER_ASSIGN_DRIVER) mock.endpoint.driver = &mock;
+	if (mock.pref_final_drift)
+		mock.ecam[0x8024 / 4 + mock.pref_final_drift - 1] ^= 1;
 }
 #include "n71-pcie-resource-assign.h"
 
