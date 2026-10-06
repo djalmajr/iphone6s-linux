@@ -78,7 +78,7 @@ enum fault { NONE, CAP_WRITE, STOP_WRITE, SCAN_FAIL, MISSING_ENDPOINT, MASTER,
 enum resource_fault { RESOURCE_OK, CLAIM_CONFLICT, BAD_LAYOUT, BAD_PARENT,
 	OVERLAP, BAD_TRANSLATION, BAD_BAR, MISSING_ASSIGNMENT, CORE_REFUSAL,
 	RESTORE_EXTRA_DROP, RELEASE_FAIL, CHILD_LEFT, ACTIVE_PHASE, WRONG_TOPOLOGY,
-	BRIDGE_CONTROL_MISMATCH, ROOT_WINDOW_BAD, EXTRA_BAR, AFTER_ASSIGN_DRIVER, ROLLBACK_BUDGET };
+	BRIDGE_CONTROL_MISMATCH, ROOT_WINDOW_BAD, EXTRA_BAR, AFTER_ASSIGN_DRIVER, ROLLBACK_BUDGET, READBACK_DROP };
 static struct {
 	enum fault fault;
 	u32 *ecam, port[4096];
@@ -106,6 +106,9 @@ static u32 readl(const void *address)
 }
 static void writel(u32 value, void *address)
 {
+	if (mock.allocating && mock.resource_fault == READBACK_DROP &&
+	    address == &mock.ecam[0x8030 / 4] && value == 0xffff)
+		return;
 	if (mock.returned && !mock.allocating) {
 		assert(!mock.scans || mock.removes == 1);
 		mock.bars_after_scan++;
@@ -509,7 +512,7 @@ static unsigned int exercise_held_bus(void)
 static unsigned int exercise_resource_assignment(void)
 {
 	const int expected[] = {0, -EBUSY, -EINVAL, -EACCES, -EACCES, -ERANGE,
-		-EIO, -EACCES, -EPERM, 0, 0, 0, 0, -ENODEV, -EACCES, -EACCES, -EACCES, -EACCES, 0};
+		-EIO, -EACCES, -EPERM, 0, 0, 0, 0, -ENODEV, -EACCES, -EACCES, -EACCES, -EACCES, 0, -EIO};
 	struct device device = {0};
 	unsigned int fault;
 	for (fault = 0; fault < sizeof(expected) / sizeof(expected[0]); fault++) {
@@ -523,6 +526,7 @@ static unsigned int exercise_resource_assignment(void)
 		mock.ecam[0x8020 / 4] = 0x12301230;
 		mock.ecam[0x802c / 4] = 0x55667788;
 		mock.ecam[0x8030 / 4] = 0xaabbccdd;
+		if (fault == READBACK_DROP) mock.ecam[0x8030 / 4] = 0;
 		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
 		assert(n71_pcie_scan_hold(&device, &state) == 0);
 		host = pci_host_bridge_priv(state.scan_bridge);
@@ -533,9 +537,20 @@ static unsigned int exercise_resource_assignment(void)
 		if (fault == BAD_LAYOUT) mock.endpoint.resource[0].end--;
 		if (fault == BRIDGE_CONTROL_MISMATCH) mock.endpoint_bus.bridge_ctl = 2;
 		assert(n71_pcie_assign_resources(&state) == expected[fault]);
+		/* Mutation captured: missing, duplicated, reordered or altered first-readback report. */
+		{
+			const char *readback = strstr(mock.log, "N71_PCIE_ASSIGN_READBACK ");
+			const char *result = strstr(mock.log, "N71_PCIE_RESOURCE_RESULT ");
+			assert(readback && result && readback < result);
+			assert(!strstr(readback + 1, "N71_PCIE_ASSIGN_READBACK "));
+			assert(strstr(readback, fault == READBACK_DROP ?
+				"failed=1 root=1 where=030 size=4 value=0000ffff before=00000000 after_valid=1 after=00000000 write_error=0 read_error=0; no additional IO\n" :
+				"failed=0 root=0 where=000 size=0 value=00000000 before=00000000 after_valid=0 after=00000000 write_error=0 read_error=0; no additional IO\n"));
+		}
 		assert(!host->resources.active && host->resources_assigned == !expected[fault]);
 		assert(!mock.locked && !mock.references && mock.scans == 1);
 		assert(n71_pcie_assign_resources(&state) == (expected[fault] ? expected[fault] : -EALREADY));
+		assert(!strstr(strstr(mock.log, "N71_PCIE_ASSIGN_READBACK ") + 1, "N71_PCIE_ASSIGN_READBACK "));
 		assert(mock.sizing <= 1 && mock.assigning == mock.sizing);
 		if (fault == ACTIVE_PHASE) {
 			host->resources.active = true;
@@ -554,7 +569,7 @@ static unsigned int exercise_resource_assignment(void)
 		} else assert(cleanup == expected[fault]);
 		assert(!state.scan_bridge && !iomem_resource.child && !mock.allocations && !mock.references);
 		assert(mock.ecam[0x8020 / 4] == 0x12301230 && mock.ecam[0x802c / 4] == 0x55667788);
-		assert(mock.ecam[0x8030 / 4] == 0xaabbccdd && mock.ecam[0x100010 / 4] == 4);
+		assert(mock.ecam[0x8030 / 4] == (fault == READBACK_DROP ? 0U : 0xaabbccddU) && mock.ecam[0x100010 / 4] == 4);
 		assert(mock.ecam[0x100018 / 4] == 4 && mock.scans == 1 && mock.removes == 1);
 		assert(n71_pcie_scan_cleanup(&state) == 0);
 		free(mock.ecam);
@@ -634,7 +649,7 @@ int main(void)
 	puts("N71_PCIE_SCAN_HOST_OK cases=29");
 	assert(exercise_held_bus() == 16);
 	puts("N71_PCIE_HELD_BUS_OK cases=16");
-	assert(exercise_resource_assignment() == 19);
-	puts("N71_PCIE_RESOURCE_ASSIGN_OK cases=19; PCI allocator synthetic");
+	assert(exercise_resource_assignment() == 20);
+	puts("N71_PCIE_RESOURCE_ASSIGN_OK cases=20; PCI allocator synthetic");
 	return 0;
 }

@@ -154,6 +154,16 @@ static int n71_resource_verify(struct n71_scan_host *host, struct n71_resource_d
 	return error;
 }
 
+static inline void n71_resource_report_readback(struct n71_scan_host *host)
+{
+	const struct n71_resource_write_failure *failure = &host->resources.failure;
+
+	dev_info(host->dev, "N71_PCIE_ASSIGN_READBACK failed=%u root=%u where=%03x size=%u value=%08x before=%08x after_valid=%u after=%08x write_error=%d read_error=%d; no additional IO\n",
+		 failure->valid, failure->request.root, failure->request.where, failure->request.size,
+		 failure->request.value, failure->before, failure->after_valid, failure->after,
+		 failure->write_error, failure->read_error);
+}
+
 /* Caller serializes this action with cleanup and retains MMIO/module/power. */
 static inline int n71_pcie_assign_resources(struct n71_diagnostic *state)
 {
@@ -204,6 +214,7 @@ static inline int n71_pcie_assign_resources(struct n71_diagnostic *state)
 	pci_dev_put(devices.endpoint);
 	pci_dev_put(devices.root);
 	pci_unlock_rescan_remove();
+	n71_resource_report_readback(host);
 	dev_info(host->dev, "N71_PCIE_RESOURCE_RESULT error=%d assigned=%u pending=%u claimed=%u attempts=%u writes=%u; no decode, bind or DMA\n",
 		 error, host->resources_assigned, host->resources.pending, host->window_claimed,
 		 host->resources.attempts, host->resources.writes);

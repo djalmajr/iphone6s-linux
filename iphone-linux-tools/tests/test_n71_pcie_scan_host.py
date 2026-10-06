@@ -47,7 +47,7 @@ class N71PcieScanHost(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('N71_PCIE_SCAN_HOST_OK cases=29', result.stdout)
         self.assertIn('N71_PCIE_HELD_BUS_OK cases=16', result.stdout)
-        self.assertIn('N71_PCIE_RESOURCE_ASSIGN_OK cases=19', result.stdout)
+        self.assertIn('N71_PCIE_RESOURCE_ASSIGN_OK cases=20', result.stdout)
         print(result.stdout.strip(), flush=True)
 
     def test_lifecycle_mutations_die_by_assertion(self):
@@ -111,6 +111,13 @@ class N71PcieScanHost(unittest.TestCase):
 
     def test_resource_allocator_mutations_die_by_assertion(self):
         mutations = (
+            ('readback-report-missing', 'assign', 'n71_resource_report_readback(host);', '(void)n71_resource_report_readback;'),
+            ('readback-report-duplicate', 'assign', 'n71_resource_report_readback(host);',
+             'n71_resource_report_readback(host); n71_resource_report_readback(host);'),
+            ('readback-failure-lost', 'assign', 'failure->valid, failure->request.root', 'false, failure->request.root'),
+            ('readback-root-lost', 'assign', 'failure->valid, failure->request.root', 'failure->valid, false'),
+            ('readback-value-invented', 'assign', 'failure->after_valid, failure->after,', 'failure->after_valid, failure->request.value,'),
+            ('readback-error-invented', 'assign', 'failure->write_error, failure->read_error);', '1, failure->read_error);'),
             ('retry-assignment', 'assign', 'if (host->resource_attempted)', 'if (false)'),
             ('allocation-without-lock', 'assign', 'pci_lock_rescan_remove();', '(void)pci_lock_rescan_remove;'),
             ('extra-topology-accepted', 'assign', 'if (devices->error || devices->count != 2)', 'if (false)'),

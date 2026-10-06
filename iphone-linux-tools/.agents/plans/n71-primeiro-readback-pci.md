@@ -36,3 +36,9 @@ Fase C: build real na VM dedicada, prova ELF/ABI/exports e preservação de font
 ### Gate A
 
 Mac e Ubuntu ARM64 passaram quatro testes: política194 cenários/36 mutações e adaptador64 cenários/51 mutações, todas compiladas e mortas por SIGABRT/assertion. Cinquenta e um inputs públicos iguais, AST, lint fatal e diff íntegros; logs/resultados privados conservados por SHA. Seis cenários novos distinguem readback0x30 divergente, erro bruto negativo/positivo de escrita/leitura, buffer alterado por callback que falhou, primeiro erro retido sem outra I/O, contagem somente de escritas verificadas e preservação após rollback. Nenhum módulo, Image, boot ou efeito físico novo.
+
+### Gate B1 — registro do adaptador
+
+Quatro arquivos: plano, `phone/kernel/n71-pcie-resource-assign.h`, `tests/n71_pcie_scan_host.c` e `tests/test_n71_pcie_scan_host.py`. O adaptador emite uma única linha `N71_PCIE_ASSIGN_READBACK` antes do resultado da atribuição, usando o estado capturado e sem nova I/O. `failed=0` e campos zerados distinguem falha que não alcançou escrita/leitura da falha registrada; `failed=1` conserva pedido/valores/validade/erros brutos. Repetição recusada e cleanup não emitem outra medição.
+
+Mac/Ubuntu ARM64 passaram três testes,65 cenários/57 mutações compiladas por SIGABRT/assertion e51 inputs iguais, AST/lint fatal/diff. Política194/36 reutilizada com seus seis inputs intactos. A regressão adicional executa o adaptador real com readback0x30 divergente, restaura a configuração e conserva o erro negativo. Contrato host e seleção/build ainda serão integrados antes do teste físico.
