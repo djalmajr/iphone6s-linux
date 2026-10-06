@@ -10,6 +10,7 @@ static const u32 n71_resource_extra_offsets[] = {0x20, 0x2c, 0x30};
 
 struct n71_resource_bar_layout {
 	u32 bytes[6];
+	bool io_absent, pref_absent;
 };
 
 struct n71_resource_write_failure {
@@ -23,10 +24,24 @@ struct n71_resource_write_state {
 	struct n71_scan_config reference;
 	struct n71_resource_write_failure failure;
 	u32 extra[3];
-	unsigned int attempts, writes;
+	unsigned int attempts, writes, io_noops, pref_noops;
 	int error;
-	bool active, pending;
+	bool active, pending, io_absent, pref_absent;
 };
+
+/* The adapter supplies PCI-core probe flags; zero config alone is insufficient. */
+static inline int n71_resource_optional_capture(struct n71_resource_write_state *state,
+					       const struct n71_resource_bar_layout *layout)
+{
+	const u32 *windows = state->reference.saved[0].bridge_windows;
+
+	if ((layout->io_absent && (windows[0] || state->extra[2])) ||
+	    (layout->pref_absent && (windows[1] || windows[2] || state->extra[1])))
+		return -EACCES;
+	state->io_absent = layout->io_absent;
+	state->pref_absent = layout->pref_absent;
+	return 0;
+}
 
 static inline int n71_resource_guard(const struct n71_scan_io *io)
 {
@@ -73,6 +88,8 @@ static inline int n71_resource_capture(const struct n71_scan_io *io,
 			return -EACCES;
 	for (index = 0; index < 3; index++) {
 		error = n71_scan_read(io, true, n71_resource_extra_offsets[index], 4, &result.extra[index]);
+		if (!error && index == 2)
+			error = n71_resource_optional_capture(&result, layout);
 		if (error)
 			return error;
 	}
@@ -142,6 +159,46 @@ static inline int n71_resource_refuse(struct n71_resource_write_state *state, in
 	return state->error;
 }
 
+/* Emulate only disable requests for ranges proved absent by the PCI core. */
+static inline int n71_resource_optional_noop(const struct n71_scan_io *io,
+					    struct n71_resource_write_state *state,
+					    const struct n71_scan_request *request,
+					    u32 observed, bool *handled)
+{
+	static const u32 offsets[] = {0x1c, 0x30, 0x24, 0x28, 0x2c};
+	unsigned int start, end, index;
+	u32 actual;
+	bool io_range;
+	int error;
+
+	*handled = false;
+	if (!request->root)
+		return 0;
+	io_range = state->io_absent &&
+		((request->where == 0x1c && request->size == 2 && request->value == 0x00f0) ||
+		 (request->where == 0x30 && request->size == 4 && request->value == 0x0000ffff));
+	if (!io_range && !(state->pref_absent && request->where == 0x24 &&
+			  request->size == 4 && request->value == 0x0000fff0))
+		return 0;
+	if (observed)
+		return -EAGAIN;
+	start = io_range ? 0 : 2;
+	end = io_range ? 2 : 5;
+	for (index = start; index < end; index++) {
+		error = n71_scan_read(io, true, offsets[index], index == 0 ? 2 : 4, &actual);
+		if (error)
+			return error;
+		if (actual)
+			return -EAGAIN;
+	}
+	if (io_range)
+		state->io_noops++;
+	else
+		state->pref_noops++;
+	*handled = true;
+	return 0;
+}
+
 /* Record the existing verification I/O; failed callbacks do not prove a value. */
 static inline int n71_resource_write_value(const struct n71_scan_io *io,
 					  struct n71_resource_write_state *state,
@@ -176,6 +233,7 @@ static inline int n71_resource_write(const struct n71_scan_io *io,
 				    const struct n71_scan_request *request)
 {
 	u32 observed;
+	bool handled;
 	int error;
 
 	if (!io || !io->read || !io->write || !state || !request)
@@ -194,6 +252,11 @@ static inline int n71_resource_write(const struct n71_scan_io *io,
 	if (error)
 		return n71_resource_refuse(state, error);
 	if (observed == request->value)
+		return 0;
+	error = n71_resource_optional_noop(io, state, request, observed, &handled);
+	if (error)
+		return n71_resource_refuse(state, error);
+	if (handled)
 		return 0;
 	error = n71_resource_write_value(io, state, request, observed);
 	if (error)
