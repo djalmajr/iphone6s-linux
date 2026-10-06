@@ -1200,3 +1200,9 @@ quando uma candidata agrupada exigir boot novo. Snapshot/sync e retorno
 automático devem ser verificados novamente ao final. Um retorno positivo não
 fecha a confiabilidade de [#21](https://github.com/djalmajr/iphone6s-linux/issues/21);
 o fallback físico continua disponível quando USB não confirmar o iOS.
+
+## PREF64 físico — recurso vazio antes do sizing
+
+A candidata968e6a06 rodou um DFU/um boot com restauração44 e zero reinícios intermediários. Assign recusou-13 antes de capture/claim/tentativas/escritas; inventário confirmou todos os recursos da ponte0, PREF lower00010001 e uppers0. IRQ root255/endpoint0 e links driver/IOMMU/of_node ausentes não comprovam entrega IRQ ou attachment. Power_supply0 mantém carga/gauge Linux pendentes. [Prova sanitizada](evidence/n71-pci-pref64-physical.json).
+
+Cleanup/retry liberou owners conservando erro/reports, serviços passaram, snapshot44/sync e retorno automático ao iOS USB passaram. Bateria100→100%, carregando após o retorno; não é saúde de bateria nem carga Linux. A pré-validação nova exigia recurso tipado antes do sizing. Fonte fixada958481f: probe.c:518–568 usa recurso temporário ao sondar a ponte; setup-bus.c:971–991 preenche flags durante sizing em1431. [D3/plano](../.agents/plans/n71-pref64-disable-pci.md): aceitar somente estado vazio exato adicional, conservar probes/capture/guards/rollback e comprovar lifecycle na fixture. Nenhum novo DFU até candidata completamente qualificada.

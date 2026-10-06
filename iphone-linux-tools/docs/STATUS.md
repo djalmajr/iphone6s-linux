@@ -1,12 +1,16 @@
 # iPhone 6s Linux — atualizado em 2026-10-06
 
-## Checkpoint atual — candidata PREF64 qualificada, sessão física pendente
+## Checkpoint atual — PREF64 físico: recusa antes de capture; corrigir lifecycle offline
 
-O novo opt-in trata somente root0:08/0x24/dword0000fff0 com probes/recurso PREF64 coerentes, baseline00010001/uppers0 e estado vivo confirmado. Mantém o pedido hardware e exige readback completo0001fff1; tipo/endereço incorretos continuam erros. Confere a janela novamente antes de sucesso. Primeiro erro conserva pedido/expected/callbacks, o report é exigido somente para o novo SHA e o journal o mantém durante reuso/cleanup. [Plano/decisões](../.agents/plans/n71-pref64-disable-pci.md), [política](evidence/n71-pci-pref64-policy.json), [build](evidence/n71-pci-pref64-build.json), [candidata](evidence/n71-pci-pref64-profile.json).
+A candidata968e6a06 iniciou em um DFU/um boot, com restauração44 e sem reinícios intermediários. Acquire, inventário PCI/IRQ/IOMMU sem escrita, cleanup/retry, SSH/Bash/Herdr/HTTP, snapshot/sync e retorno automático ao iOS passaram. Bateria iOS100→100%, carregando após o retorno. [Prova física sanitizada](evidence/n71-pci-pref64-physical.json).
 
-Mac/Ubuntu ARM64: C final442 cenários/199 mutações compiladas por plataforma; host/journal89 testes/149 mutações, seleção32/62 e integração94/150,78 inputs/AST/lint fatal. Gates independentes reaproveitados só com inputs relevantes intactos. Seis módulos Werror/modpost/ELF/vermagic,50 inputs;PCIe88.120 bytes/SHA968e6a06. Kernel/fonte/config/Image/exports/REG_ON/outros cinco módulos preservados. Probes/fixtures/mutantes negativos ficaram registrados e fora das contagens qualificadas.
+Assign recusou error-13 antes de capture/claim/tentativas/escritas; os três reports ficaram captured0 e owners foram liberados por retry somente de limpeza. A leitura confirmou recursos da ponte todos0 e PREF lower00010001/uppers0. A hipótese foi introduzida no adapter: exigir recurso PREF já preenchido antes de `pci_bus_size_bridges`. Na fonte fixada, scan sonda capabilities com recurso temporário e sizing preenche flags da ponte posteriormente. Corrigir a elegibilidade para aceitar o estado vazio exato também, mantendo probes64/capture/estado vivo/readback/rollback estritos. [Decisão D3 e sequência](../.agents/plans/n71-pref64-disable-pci.md).
 
-Candidata real separada passou composer/check, oito arquivos700/600; deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON iguais ao perfil IO16 físico. Só PCIe e seu SHA na provenance mudaram, sem carga automática. Ainda não testada no aparelho. Próximo boot agrupa acquire/assign, inventário de PCI/IRQ/IOMMU sem escrita, cleanup/retry, serviços e snapshot/sync/retorno iOS. Wi-Fi e telemetria/carga continuam pendentes até provas próprias. Nenhum pacote/configuração global instalado no Mac ou Image novo.
+IRQ root255/endpoint0, driver/IOMMU/of_node ausentes e power_supply0 são inventário do modo sem bind/DMA, sem prova de funcionamento ou de defeito nesses componentes. Wi-Fi, telemetria e carga Linux continuam pendentes. Desenvolvimento/build prosseguem offline enquanto o iPhone carrega no iOS; nenhuma nova sessão até qualificação/composição completas.
+
+### Qualificação PREF64 anterior ao teste físico
+
+C final442 cenários/199 mutações compiladas por plataforma; host/journal89/149, seleção32/62 e integração94/150 passaram no Mac/Ubuntu ARM64. Seis módulos Werror/modpost/ELF/vermagic,50 inputs;PCIe88.120 bytes/SHA968e6a06. Kernel/fonte/config/Image/exports/REG_ON/outros cinco preservados. Candidata passou composer/check com oito arquivos700/600. Essa qualificação sintética não cobriu a janela vazia medida no hardware. [Política](evidence/n71-pci-pref64-policy.json), [build](evidence/n71-pci-pref64-build.json), [candidata](evidence/n71-pci-pref64-profile.json).
 
 ### IO16 físico anterior — correção comprovada; primeira recusa em PREF
 

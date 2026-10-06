@@ -1,0 +1,146 @@
+{
+  "format": 1,
+  "date": "2026-10-06",
+  "code_commit": "a98bbc5d3d755817bb9819efa60de6cd8c17982e",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "pcie_module_sha256": "968e6a06e9b671a5d1dffff7f1a6322c6144d8d99243d0f2b3115fabcb851c28",
+  "session": {
+    "dfu_sequences": 1,
+    "linux_boots": 1,
+    "monitor_attempts": 1,
+    "intermediate_reboots": 0,
+    "snapshot_restored_entries": 44,
+    "boot_exit": 0,
+    "boot_elapsed_seconds": 60.92,
+    "held_acquisition_verified": true
+  },
+  "assignment": {
+    "error": -13,
+    "action_exit": 1,
+    "event": {
+      "error": -13,
+      "assigned": 0,
+      "pending": 0,
+      "claimed": 0,
+      "attempts": 0,
+      "writes": 0,
+      "write_readback": {
+        "failed": 0,
+        "root": 0,
+        "where": 0,
+        "size": 0,
+        "value": 0,
+        "before": 0,
+        "after_valid": 0,
+        "after": 0,
+        "write_error": 0,
+        "read_error": 0
+      },
+      "optional_windows": {
+        "captured": 0,
+        "io_absent": 0,
+        "pref_absent": 0,
+        "io_noops": 0,
+        "pref_noops": 0
+      },
+      "io16_upper": {
+        "captured": 0,
+        "enabled": 0,
+        "noops": 0
+      },
+      "pref64_disable": {
+        "captured": 0,
+        "enabled": 0,
+        "writes": 0
+      }
+    },
+    "assignment_verified": false,
+    "early_refusal": false
+  },
+  "read_only_inventory": {
+    "exit": 0,
+    "same_boot_verified": true,
+    "hardware_writes": false,
+    "root_resources_all_zero": true,
+    "root_irq": 255,
+    "endpoint_irq": 0,
+    "driver_links_present": false,
+    "iommu_group_links_present": false,
+    "of_node_links_present": false,
+    "power_supply_count": 0,
+    "root_config": {
+      "io_base_limit_word_1c": 0,
+      "io_upper_dword_30": 0,
+      "mem_base_limit_dword_20": 0,
+      "pref_base_limit_dword_24": 65537,
+      "pref_base_upper_dword_28": 0,
+      "pref_limit_upper_dword_2c": 0
+    }
+  },
+  "cleanup": {
+    "verified": true,
+    "stop_error": -13,
+    "owners_unloaded": true,
+    "same_assignment_and_reports_preserved": true,
+    "retry_no_scan_or_assignment": true
+  },
+  "services": {
+    "cleanup_verified": true,
+    "bash_ssh_sync_exit": 0,
+    "herdr_status_exit": 0,
+    "http_exit": 0,
+    "uptime_at_services_seconds": 61.31
+  },
+  "return": {
+    "exit": 0,
+    "elapsed_seconds": 31.69,
+    "backup_verified": true,
+    "snapshot_entries": 44,
+    "sync_verified": true,
+    "ios_usb_verified": true
+  },
+  "ios_before": {
+    "BatteryCurrentCapacity": 100,
+    "BatteryIsCharging": false,
+    "ExternalConnected": true,
+    "ExternalChargeCapable": true
+  },
+  "ios_after": {
+    "BatteryCurrentCapacity": 100,
+    "BatteryIsCharging": true,
+    "ExternalConnected": true,
+    "ExternalChargeCapable": true
+  },
+  "analysis": {
+    "confirmed": "Assignment refused before capture/claim/resource writes; root bridge resources were empty.",
+    "inference": "The new PREF64 layout gate required a populated resource before pci_bus_size_bridges; this is incompatible with the measured unsized lifecycle.",
+    "primary_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "primary_source_ranges": [
+      "drivers/pci/probe.c:518-568",
+      "drivers/pci/setup-bus.c:971-991",
+      "drivers/pci/setup-bus.c:1388-1462"
+    ]
+  },
+  "private_log_sha256": {
+    "acquire-private.log": "1491e69913f8e678cecc6b65160a2eec20d8e691776616f838fd3e54ce2d7b5a",
+    "assign-private.log": "409b80cb747d2f62b65fdd1ac48ef080b4d8e7fb041fb403947db7dc5d03d410",
+    "bash_ssh_sync-private.log": "fb5b3e5765a214ed4c0284d73dc9511e1cbf9de95cad69d13a6920ceeaa79cc0",
+    "boot-private.log": "109bca757c3a2724202294076d0e241af95789a82f2f0d2073736b3b7f5167f4",
+    "herdr_status-private.log": "e59393e6fd80081641dca861945aa486ab7f5fc54935a90fd564e92ed6f8eb8a",
+    "http-private.log": "77c3c5ddccf2cc45e0adb052d09470fee283e2101a16d8e993b1ba6b0d53f88a",
+    "pci-irq-iommu-read-only-private.log": "6a02aab6a19fa80701744fc414f7104c20eaf36b24d55a54aaa985d2039b583d",
+    "release-private.log": "58ccc993af6781a2cad839b90e4157f9a7d32e431fbba42eaa8f9d2f17221608",
+    "release2-private.log": "f334f494061d8ad43ac39e6adc41f780f1d47fdaf2169ee1e1b2d698057dba91",
+    "return-ios-private.log": "1d456537e93c06eb2ffa20d3b25a5c0892b85447312b5c5c2161cf0c9fa90e29"
+  },
+  "limits": {
+    "pref64_correction_loaded": true,
+    "pref64_typed_disable_exercised": false,
+    "assignment_positive": false,
+    "irq_delivery_or_iommu_attachment_proven": false,
+    "wifi_functional": false,
+    "linux_gauge_or_charge_proven": false,
+    "battery_health_measured": false,
+    "raw_logs_or_private_files_published": false
+  }
+}

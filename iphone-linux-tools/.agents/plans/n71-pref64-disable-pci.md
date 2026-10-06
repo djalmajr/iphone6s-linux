@@ -48,7 +48,7 @@ Física (até cinco): somente após A–E. Um boot reúne acquire/assign/read-on
 - [x] D: build/ABI preservados e seleção explícita.
 - [x] E: candidata privada/check e integrações qualificados.
 - [x] E: reprodução/documentação do checkpoint; publicar a branch/issues antes da sessão física.
-- [ ] Sessão física agrupada e resultado/limites na issue39.
+- [x] Sessão física agrupada; resultado negativo/limites registrados para a issue39.
 
 ## Verificação
 
@@ -95,3 +95,23 @@ Build real final:50 inputs, seis módulos Werror/modpost/ELF/vermagic,PCIe88.120
 Mac/Ubuntu ARM64:94 testes/150 mutações por AssertionError por plataforma,78 inputs/AST/lint fatal. CLI de composição21 testes/34 mutações e3 de forwarding; stage16/26, readback9/15, optional8/12, IO16 8/12, PREF646/14, journal5/4 e held21/30 requalificados. Fixture nova reutiliza o CLI anterior, compõe o build tipado e exige os quatro reports no collector --check.
 
 Candidata real separada passou composer/check, oito arquivos700/600. Deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON iguais ao perfil IO16 físico; somente PCIe e seu SHA na provenance mudaram. Módulo não carrega automaticamente. [Candidata/integração](../../docs/evidence/n71-pci-pref64-profile.json). Nenhum boot novo nesta preparação; reprodução/push/issues precedem a sessão física agrupada.
+
+## Sessão física PREF64 — recusa anterior ao sizing
+
+Um DFU/um boot reuniu os estágios; acquire e inventário passaram, assign-13 antes de capture/claim/tentativas/escritas, cleanup/retry liberou owners conservando o primeiro erro. Serviços, snapshot44/sync e retorno iOS USB passaram; bateria100→100%, carregando. [Prova](../../docs/evidence/n71-pci-pref64-physical.json). Não exerceu o disable tipado.
+
+## D3. Aceitar somente recurso PREF vazio exato antes do sizing
+
+- **Decisão:** com `pref_window` e `pref_64_window` verdadeiros, permitir também flags/start/end todos0 e sem ownership, além do recurso tipado exato anteriormente qualificado. Não preencher resource antecipadamente. Capture continua exigindo lower00010001/uppers0; estado vivo, compare completo0001fff1, BARs/decode/master/budgets e rollback não mudam.
+- **Por quê:** a sessão mediu todos os recursos da ponte vazios. Fonte fixada958481f em probe.c:518–568 usa recurso temporário durante o probe; setup-bus.c:971–991 preenche flags somente no sizing chamado em1431. A fixture antiga preencheu a janela cedo demais; a guarda nova recusou esse lifecycle antes de qualquer escrita de recursos.
+- **Alternativas:** chamar `pci_read_bridge_bases` antes altera lifecycle/configuração além da correção; remover a guarda aceita metadata contraditória; inferir ausência de flags0 ignora probes64. Todos rejeitados.
+- **Reverter:** baixo; build/perfil novo separado por SHA, candidata968e6a06 preservada.
+- **Onde:** adapter e fixture/runner PREF64 host; novo build/qualificação/seletor e perfil; prova/documentação.
+- **Status:** em curso offline, sem novo DFU.
+
+### Fases D3
+
+- [ ] F1 (até cinco arquivos): adapter aceita vazio exato; fixture/runner cobrem janela vazia, flags0 com start/end não0, ownership, core probes ausentes, baseline/tipos/uppers/drift, erro/cleanup/repetição. Executar gates C afetados no Mac/Ubuntu, reaproveitar helpers/política intactos.
+- [ ] F2 (até cinco): build externo na VM com fonte/config/Image/exports/outros módulos preservados; evidência nova e seletor por SHA com prova estrita de D3. Rerodar apenas seleção afetada.
+- [ ] F3 (até cinco): composição/check da nova candidata e integração do contrato; documentação/push/issue antes da sessão física. Nenhum novo Image/configuração global.
+- [ ] F4: uma sessão reúne acquire/assign/inventário/cleanup/services/snapshot/sync/iOS. Não pedir PIN, temperatura ou operação de console; manter USB-A traseiro.
