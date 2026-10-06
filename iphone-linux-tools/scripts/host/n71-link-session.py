@@ -71,7 +71,7 @@ def aspm_payload(profile, metadata):
             'Exact ASPM payload bootargs and loader required')
 
 
-def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False, scan_hold=False, resource_capable=False):
+def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False, scan_hold=False, resource_capable=False, resource_module_sha256=None):
     require(type(resource_capable) is bool and (not resource_capable or scan_hold),
             'Resource capability requires an explicit boolean and held mode')
     require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
@@ -83,6 +83,8 @@ def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_i
             'Held scan requires its explicit power2 host/target/PME candidate')
     if scan_hold:
         if resource_capable:
+            if resource_module_sha256 is not None:
+                return n71_resource_result.selected_records(ROOT, release=release, pcie_sha256=resource_module_sha256)
             return n71_resource_result.selected_records(ROOT, release=release)
         return n71_scan_held_result.selected_records(ROOT, release=release)
     if scan_link_target:
@@ -479,7 +481,8 @@ def main():
                                dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release,
                                scan_link_target=options.scan_link_target, scan_pme_noop=options.scan_pme_noop,
                                scan_pme_disable=options.scan_pme_disable, scan_hold=options.scan_hold,
-                               resource_capable=options.resource_capable)
+                               resource_capable=options.resource_capable,
+                               resource_module_sha256=metadata['module_sha256'] if options.resource_capable else None)
     if release == BINDING_RELEASE or options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe or options.dart_cycle:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record, release=release)) for record in records]

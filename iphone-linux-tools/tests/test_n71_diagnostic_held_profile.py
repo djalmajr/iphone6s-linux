@@ -20,6 +20,11 @@ SPEC = importlib.util.spec_from_file_location('n71_held_profile_composer',
                                             os.environ.get('N71_DIAGNOSTIC_COMPOSER_SCRIPT', ROOT / 'scripts/build/compose-n71-diagnostic.py'))
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
+LINK_PATH = ROOT / 'scripts/host/n71-link-session.py'
+sys.path.insert(0, str(ROOT / 'scripts/host'))
+LINK_SPEC = importlib.util.spec_from_file_location('held_readback_collector', os.environ.get('N71_HELD_READBACK_SESSION_SCRIPT', LINK_PATH))
+LINK = importlib.util.module_from_spec(LINK_SPEC)
+LINK_SPEC.loader.exec_module(LINK)
 RELEASE = '7.2.0-iphone6s-dart-serdev-power2'
 PATCHSET = 'n71-dart-serdev-power-v2'
 PROFILE_FILES = {'payload.bin', 'initramfs.gz', 'client_ed25519', 'known_hosts',
@@ -295,6 +300,68 @@ class HeldProfileTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.invoke('resource-invalid-' + str(index), self.held + ['--pcie-resource-capable'])
             self.assertFalse((self.runtime / ('resource-invalid-' + str(index))).exists())
+
+    def test_readback_version_composes_and_checks_the_same_module_in_collector(self):
+        # Mutations killed: drop the actual module hash in composer, collector selector or --check wiring.
+        base, _ = self.resource_build()
+        old = self.compose_ok('old-resource', self.held + ['--pcie-resource-capable'])
+        self.driver = elf('RESOURCE_READBACK_PCIE')
+        digest = hashlib.sha256(self.driver).hexdigest()
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pci-resource-readback.json').read_text())
+        evidence['base_assignment_evidence_sha256'] = hashlib.sha256(base.read_bytes()).hexdigest()
+        evidence['real_module_build']['modules']['n71-pcie-diagnostic.ko'] = {
+            'bytes': len(self.driver), 'sha256': digest, 'vermagic': RELEASE + ' SMP preempt mod_unload aarch64'}
+        evidence['real_module_build']['modules']['n71-wlan-power-diagnostic.ko'] = dict(
+            self.build['kernel_build']['modules']['n71-wlan-power-diagnostic.ko'])
+        self.write(self.root / 'docs/evidence/n71-pci-resource-readback.json', json.dumps(evidence).encode())
+        self.write(self.runtime / 'modules/n71-pcie-diagnostic.ko', self.driver)
+        self.args[-1] = digest
+        new = self.compose_ok('readback-resource', self.held + ['--pcie-resource-capable'])
+        self.assertEqual({path.name for path in new.iterdir()}, PROFILE_FILES)
+        for name in ('payload.bin', 'initramfs.gz', 'client_ed25519', 'known_hosts', 'deployment.json'):
+            self.assertEqual((new / name).read_bytes(), (old / name).read_bytes(), name)
+        profile = dict(self.source, payload=new / 'payload.bin', initramfs=new / 'initramfs.gz',
+                       client_key=new / 'client_ed25519', known_hosts=new / 'known_hosts',
+                       sha256=hashlib.sha256((new / 'payload.bin').read_bytes()).hexdigest(),
+                       initramfs_sha256=hashlib.sha256((new / 'initramfs.gz').read_bytes()).hexdigest())
+        with patch.object(LINK, 'ROOT', self.root), patch.object(LINK.device_profile, 'verify', return_value=profile):
+            records = LINK.selected_records(True, True, release=RELEASE, scan_link_target=True,
+                                           scan_pme_disable=True, scan_hold=True, resource_capable=True,
+                                           resource_module_sha256=digest)
+            self.assertIs(records[0].get('assignment_readback'), True)
+            self.assertEqual(records[0]['sha256'], digest)
+            argv = ['n71-link-session.py', '--profile', str(new / 'deployment.json'), '--host-scan',
+                    '--scan-link-target', '--scan-pme-disable', '--scan-hold', '--resource-capable', '--check']
+            with patch.object(sys, 'argv', argv), patch.dict(os.environ), contextlib.redirect_stdout(io.StringIO()):
+                try:
+                    self.assertEqual(LINK.main(), 0)
+                except ValueError as error:
+                    self.fail('Valid readback collector profile refused: ' + str(error))
+        self.assertEqual((new / 'n71-pcie-diagnostic.ko').read_bytes(), self.driver)
+
+
+class ReadbackLinkMutationsTests(unittest.TestCase):
+    def test_hash_forwarding_mutations_fail_by_assertion(self):
+        variants = (
+            ('selector-hash-lost', 'pcie_sha256=resource_module_sha256', 'pcie_sha256=None'),
+            ('new-route-lost', 'if resource_module_sha256 is not None:', 'if False:'),
+            ('cli-hash-lost', "resource_module_sha256=metadata['module_sha256'] if options.resource_capable else None", 'resource_module_sha256=None'),
+        )
+        source = LINK_PATH.read_text()
+        with tempfile.TemporaryDirectory(prefix='n71-readback-link-') as directory:
+            for name, before, after in variants:
+                self.assertEqual(source.count(before), 1, name)
+                path = Path(directory) / (name + '.py'); path.write_text(source.replace(before, after, 1))
+                compile(path.read_text(), str(path), 'exec')
+                env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', N71_HELD_READBACK_SESSION_SCRIPT=str(path))
+                run = subprocess.run([sys.executable, '-B', '-m', 'unittest', 'discover', '-s', 'tests',
+                                      '-p', 'test_n71_diagnostic_held_profile.py', '-k', 'test_readback_version'],
+                                     cwd=ROOT, env=env, capture_output=True, text=True, timeout=30)
+                output = run.stdout + run.stderr
+                self.assertNotEqual(run.returncode, 0, name)
+                self.assertIn('AssertionError', output, name + output)
+                self.assertNotIn('ERROR:', output, name + output)
+                print('N71_READBACK_LINK_ASSERTION_KILL', name, flush=True)
 
 
 if __name__ == '__main__':

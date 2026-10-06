@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import shutil
+import re
 import subprocess
 import sys
 import tempfile
@@ -16,6 +17,7 @@ DEPENDENCIES = (
     'scripts/host/n71_scan_held_result.py', 'scripts/host/n71_scan_pme_result.py',
     'scripts/host/n71_scan_target_result.py', 'scripts/host/n71_scan_result.py',
     'scripts/host/n71_resource_result.py',
+    'scripts/host/n71_resource_readback.py', 'scripts/host/n71_resource_build.py',
 )
 MUTATIONS = (
     ('known-abi', 'if kernel_release not in known:', 'if False:'),
@@ -49,7 +51,7 @@ MUTATIONS = (
     ('held-profile-target', 'pcie_scan_link_target=True', 'pcie_scan_link_target=False'),
     ('held-profile-noop', 'pcie_scan_pme_noop=False', 'pcie_scan_pme_noop=True'),
     ('held-profile-pme', 'pcie_scan_pme_disable=True', 'pcie_scan_pme_disable=False'),
-    ('held-build-contract', 'records = selector.selected_records(ROOT, release=kernel_release)',
+    ('held-build-contract', 'records = selector.selected_records(ROOT, release=kernel_release, **kwargs)',
      "records = [dict(json.loads((ROOT / 'docs/evidence/n71-pci-held-caller.json').read_text())['kernel_build']['modules'][name], module=name) for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko')]"),
     ('held-resource-scope', 'if options.pcie_resource_capable and not options.pcie_scan_hold:', 'if False:'),
     ('held-resource-build', 'n71_resource_result if options.pcie_resource_capable else n71_scan_held_result',
@@ -57,6 +59,7 @@ MUTATIONS = (
     ('held-resource-provenance', "'pcie_resource_capable': options.pcie_resource_capable", "'pcie_resource_capable': False"),
     ('held-resource-default', "'--pcie-resource-capable', action='store_true',",
      "'--pcie-resource-capable', action='store_true', default=True,"),
+    ('held-readback-hash-forwarding', "kwargs = {'pcie_sha256': hashlib.sha256(driver).hexdigest()} if selector is n71_resource_result else {}", 'kwargs = {}'),
 )
 
 
@@ -75,6 +78,13 @@ def main():
     if baseline.returncode:
         print(baseline.stderr, file=sys.stderr)
         return 1
+    count = re.search(r'\bRan (\d+) tests?\b', baseline.stderr)
+    if count is None:
+        raise ValueError('Complete diagnostic baseline test count required')
+    print('N71_DIAGNOSTIC_PAYLOAD_BASELINE_OK tests=' + count.group(1))
+    for line in baseline.stdout.splitlines():
+        if line.startswith('N71_READBACK_LINK_ASSERTION_KILL '):
+            print(line)
     text = (ROOT / SUBJECT).read_text()
     with tempfile.TemporaryDirectory(prefix='n71-diagnostic-public-mutations-') as folder:
         copied = Path(folder) / 'source'

@@ -87,7 +87,8 @@ def private_write(path, raw):
 
 def held_reg_module(options, driver, *, kernel_release):
     selector = n71_resource_result if options.pcie_resource_capable else n71_scan_held_result
-    records = selector.selected_records(ROOT, release=kernel_release)
+    kwargs = {'pcie_sha256': hashlib.sha256(driver).hexdigest()} if selector is n71_resource_result else {}
+    records = selector.selected_records(ROOT, release=kernel_release, **kwargs)
     pcie, reg = records
     if len(driver) != pcie['bytes'] or hashlib.sha256(driver).hexdigest() != pcie['sha256']:
         raise ValueError('Held PCI module differs from the qualified build')
