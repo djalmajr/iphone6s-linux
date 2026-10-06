@@ -34,7 +34,7 @@ Física (até cinco): somente após A–C qualificados. Um boot agrupa acquire/a
 - [x] A0: helpers separados e dependências dos gates anteriores.
 - [x] A1: política opt-in e regressões/mutações Mac/Ubuntu ARM64.
 - [x] B: adapter/report/fixtures e qualificação C final.
-- [ ] C1: contrato/journal estritos e compatibilidade.
+- [x] C1: contrato/journal estritos e compatibilidade.
 - [ ] C2: build/ABI/fonte preservados e seleção explícita.
 - [ ] C3: candidata privada/check/reprodução e checkpoint publicado.
 - [ ] Uma sessão física agrupada; atualizar issue39 com resultado/limites.
@@ -50,3 +50,7 @@ Mac/Ubuntu ARM64:49 cenários/20 mutações novos, ranges21/15, política194/36,
 ### Gate B — derivação e report IO16 qualificados
 
 Mac/Ubuntu ARM64:20 cenários/17 mutações novos, adapter65/57 e optional host18/14 requalificados,103/88 por plataforma,60 inputs/AST/lint fatal. Gate puro A1 de264 cenários/71 mutações reutilizado com11 inputs relevantes idênticos; conjunto C final367/159 por plataforma. Derivação lê ambos os tipos IO e exige janela presente padrão4K, recurso vazio ou IO16 de4K coerente; IO32/mistos/reservados/1K não habilitam o opt-in. Primeiro erro/leitura/cleanup e report único entre optional/readback foram verificados. Backend dos casos legados deixa IO16 fora do escopo; cenários próprios modelam upper readonly com lower gravável. Sem build/load/DFU novo; contrato host ainda é gate C1.
+
+### Gate C1 — evento IO16 obrigatório e conservado no journal
+
+Mac/Ubuntu ARM64:78 testes/131 mutações por AssertionError por plataforma,66 inputs iguais/preservados, AST/lint fatal. Novo contrato8/12; optional8/12, readback9/15, result9/29, stage16/26, held21/30 e history7/7 requalificados. Report único entre optional/readback, captured coerente, ausência/IO16 mutuamente exclusivos, counters combinados limitados às tentativas sem escrita e noop obrigatório quando atribuição positiva/enabled. Journal conserva os campos na ação/checkpoint/reuso/cleanup; faltar o report exigido não salva proof e retém owners. Defaults/resultados antigos sem report ficam iguais. Build externo paralelo passou seis módulos Werror/modpost/ELF/vermagic e preservação de fonte/config/Image/exports/outros cinco;PCIe87.008 bytes/SHAd6188a13. Esses bytes não são selecionados ou carregados até C2/C3.

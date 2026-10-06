@@ -27,7 +27,9 @@ def verify_readback(session, text):
     require(type(required) is bool, 'Selected readback contract must be an exact boolean')
     optional = records[0].get('assignment_optional_windows', False)
     require(type(optional) is bool, 'Selected optional windows contract must be an exact boolean')
-    n71_resource_result.event(text, readback_required=required, optional_required=optional)
+    io16 = records[0].get('assignment_io16_upper', False)
+    require(type(io16) is bool, 'Selected IO16 contract must be an exact boolean')
+    n71_resource_result.event(text, readback_required=required, optional_required=optional, io16_required=io16)
 
 
 def getter(session):
