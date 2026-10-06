@@ -1,0 +1,370 @@
+{
+  "format": 1,
+  "code_commit": "2e07258751dd662f4d8abd49a63b9ffa2231a057",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "scope": "Host assignment journal, simulated transport/sysfs and real Bash on private files",
+  "contract": {
+    "assignment_flag": "--assign-held",
+    "release_flag": "--release-held",
+    "resource_capable_held_source_required": true,
+    "assignment_release_mutually_exclusive": true,
+    "previous_clean_not_allowed": true,
+    "mode_intent_boolean_types_exact": true,
+    "live_boot_profile_modules_parameters_reg_on_history_resource_getter_checked": true,
+    "intent_saved_before_assignment": true,
+    "action_exit_getter_event_validated_before_private_proof": true,
+    "completed_assignment_reused_without_setter": true,
+    "missing_or_changed_proof_checkpoint_or_live_getter_refused_before_effects": true,
+    "unknown_or_inconsistent_resource_operation_refused_before_cleanup": true,
+    "resource_rollback_verified_before_pci_unload_and_reg_on_restore": true,
+    "cleanup_retries_skip_completed_owners_without_scan": true,
+    "assignment_and_stop_errors_remain_negative_after_cleanup": true,
+    "old_journal_missing_mode_and_intent_means_false_only": true,
+    "check_performs_no_ssh_or_usb_action": true
+  },
+  "qualification": {
+    "public_input_count": 55,
+    "inputs": {
+      "docs/evidence/kernel-n71-bundle-build.json": {
+        "bytes": 4558,
+        "sha256": "01c2db2d9b6319555161e2438de22cecf4bb20adb0a3d34524d90023e099879c"
+      },
+      "docs/evidence/m1n1-rebuild.json": {
+        "bytes": 5173,
+        "sha256": "47c05448a71661082a756e8d0bc05dd700fe3aff64e7382c55c920dee013c569"
+      },
+      "docs/evidence/n71-binding-profile.json": {
+        "bytes": 13857,
+        "sha256": "7099326bbe809d3b658be58a2ac723475fffe20ccb8cb6419ee9ff44809484cc"
+      },
+      "docs/evidence/n71-dart-cycle-build.json": {
+        "bytes": 3528,
+        "sha256": "b9fafc4237833f8a61bad5b30066ef0fc3ebd04b51a8fc31d23346edc21ec46a"
+      },
+      "docs/evidence/n71-dart-state-build.json": {
+        "bytes": 2563,
+        "sha256": "dc5f3c8c40fc8a120f5f4e8375339a11a20e96cd284a1ad3db61c0ee15859705"
+      },
+      "docs/evidence/n71-pci-held-caller.json": {
+        "bytes": 15698,
+        "sha256": "5ff425784fa9d4ae919de3a26cf3c29f9faac63ac5d2980ff54ce6c1b28460c8"
+      },
+      "docs/evidence/n71-pci-resource-assignment.json": {
+        "bytes": 27768,
+        "sha256": "5d764660436d5ec7ad494a07913eba3e899c9c978d87357bffd49cc1b558bc49"
+      },
+      "docs/evidence/n71-pcie-bar-sizing.json": {
+        "bytes": 2027,
+        "sha256": "29ffe4338960489f7a7ac6bd4d55492fadef3b51fda4b56d25b475d99c4eff9b"
+      },
+      "docs/evidence/n71-pcie-bridge-scan-build.json": {
+        "bytes": 3113,
+        "sha256": "7e222f43bebf0f4e7167e248b4594b114755d4c5b7f9cf03896c09f7ea5d0a26"
+      },
+      "docs/evidence/n71-pcie-chip-id-build.json": {
+        "bytes": 2003,
+        "sha256": "bf0e7614097314ab640a28f5623266eb5a547b9ddcf51ad814b3874a709ac9ef"
+      },
+      "docs/evidence/n71-pcie-config-inventory.json": {
+        "bytes": 3277,
+        "sha256": "11a4f6b373ce35dc003f9bd9cabe9383fde45584a6efa9e3a8f9a9099c62235d"
+      },
+      "docs/evidence/n71-pcie-controls-scan-build.json": {
+        "bytes": 3994,
+        "sha256": "4b31fb6005b85f113e4afc375a5f0376c3bef2a34409e716cfb596bb804126d1"
+      },
+      "docs/evidence/n71-pcie-pme-aspm-build.json": {
+        "bytes": 23753,
+        "sha256": "3d347360c9937a396030f5d62ee5cba723ca0d9d6494e6bc705694143d8c7bc1"
+      },
+      "docs/evidence/n71-pcie-pme-noop-build.json": {
+        "bytes": 15776,
+        "sha256": "e697928495e358d908fedc0d2cd1efdbd2763e3d4db034f094686ed437e85efb"
+      },
+      "docs/evidence/n71-pcie-scan-target-build.json": {
+        "bytes": 10691,
+        "sha256": "b98cda2136fb37883a2f2dc83e86350fe02fb43af4e5809dd8bdd81cc223cbad"
+      },
+      "scripts/build/compose-n71-diagnostic.py": {
+        "bytes": 11704,
+        "sha256": "0e502befad50616892cbda7649c1ca9eadb00fceb163e3d98b48b18aba242375"
+      },
+      "scripts/build/integrate-source-kernel.py": {
+        "bytes": 12044,
+        "sha256": "c775173d3f0782387ac4374c675efc08a6833556662e1912fbd926e56ecd9f8b"
+      },
+      "scripts/build/kernel_bundle.py": {
+        "bytes": 7424,
+        "sha256": "807bfc3a59801a2703b1135fc3887a2873b25cc2e05b10de9c9cd0bd89d8ed64"
+      },
+      "scripts/build/kernel_patchset.py": {
+        "bytes": 5466,
+        "sha256": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817"
+      },
+      "scripts/build/prepare-n71-pcie-diagnostic.py": {
+        "bytes": 6840,
+        "sha256": "0d95c6d234a6b864efc1bddec509c246a17dd0ce53146014d52cb52c9c13c7e7"
+      },
+      "scripts/build/prepare-n71-topology.py": {
+        "bytes": 12359,
+        "sha256": "9aa9ecae3a25a340e76a2aab270288e13741012671b0bd9b435c6f7d7adf01b7"
+      },
+      "scripts/host/device_profile.py": {
+        "bytes": 6526,
+        "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+      },
+      "scripts/host/n71-link-session.py": {
+        "bytes": 34236,
+        "sha256": "783cbe0b118065b5fbd22cc7b74602d0456a44429a3fc9dc84f2e7815e001d30"
+      },
+      "scripts/host/n71_bar_result.py": {
+        "bytes": 3096,
+        "sha256": "77f0046bf9589c4f530813724a1b65678ee1afef7bb44680ac0de56cd76b0e80"
+      },
+      "scripts/host/n71_chip_result.py": {
+        "bytes": 2166,
+        "sha256": "5635ff77403a8b9211be1909fac6228bf25c75b548a6962ec4b7fc42ecf0a511"
+      },
+      "scripts/host/n71_dart_cycle_result.py": {
+        "bytes": 4562,
+        "sha256": "571fa7e2318a916da1c24eb0830cac86445e9e05e9d101534e1a4056acab0c9f"
+      },
+      "scripts/host/n71_dart_result.py": {
+        "bytes": 3171,
+        "sha256": "98d707949851b9e7a2bee6d01300d2c46a442edc6d815a91272bb85b45a87ade"
+      },
+      "scripts/host/n71_held_session.py": {
+        "bytes": 21462,
+        "sha256": "972c9738f267842e223811918d1fd2373ab5fadd41b31c2f109fb21cc5f779e6"
+      },
+      "scripts/host/n71_resource_result.py": {
+        "bytes": 10097,
+        "sha256": "41b8502787eb58d935e4a678fa78351bf9cebcf4bd8ddd1728d8720821094e5d"
+      },
+      "scripts/host/n71_resource_stage.py": {
+        "bytes": 8666,
+        "sha256": "2b60ced662de049d823b5c4f6e32ffdf6d47770716864b73de07c468f2112e91"
+      },
+      "scripts/host/n71_scan_held_result.py": {
+        "bytes": 10863,
+        "sha256": "70612133fb02d26a4cceaddde01c4777f22c070c20fc69b61e439e13573f2e3d"
+      },
+      "scripts/host/n71_scan_pme_result.py": {
+        "bytes": 2959,
+        "sha256": "ea08620386e7c65de46b4b2a753ce0365bfce81e4c204c797ba7fb8c84e72590"
+      },
+      "scripts/host/n71_scan_result.py": {
+        "bytes": 3702,
+        "sha256": "051615003afa1eb7091d5f2a73d931958e3463a407a1efc7cc5390c61a53a58f"
+      },
+      "scripts/host/n71_scan_target_result.py": {
+        "bytes": 4066,
+        "sha256": "37f2e7ce6fab4c26231097c7591d5bc7e9909c848e377b6a87c3c427d38afe7e"
+      },
+      "scripts/host/n71_session_history.py": {
+        "bytes": 2725,
+        "sha256": "4f6760e9b125cbcb7434631a91d2d88e59be53e29b6d889aad865855a70797bc"
+      },
+      "scripts/host/profile_image.py": {
+        "bytes": 4463,
+        "sha256": "19d4610eeb44ba50d9c29267e1b3bba250a03bb30e8f9a0e0d99abc4533fd427"
+      },
+      "scripts/research/n71_runtime_tunables.py": {
+        "bytes": 6395,
+        "sha256": "6be603cbcdacc6974f4d472a4bef751a9b707de9038366cb66127136778ec3e7"
+      },
+      "tests/run_n71_diagnostic_payload_mutations.py": {
+        "bytes": 6144,
+        "sha256": "6a2f2a2bd36f64dd0f6a861b8787bee843d54cdc41b74985941c3462dbf9ee3d"
+      },
+      "tests/run_n71_link_session_mutations.py": {
+        "bytes": 10933,
+        "sha256": "64d6f842cd863bca796ff2b4e0bb21f16fd29b20f58511ee40a6c7c5ec86b566"
+      },
+      "tests/run_n71_scan_result_mutations.py": {
+        "bytes": 2119,
+        "sha256": "d081a049a72375951646c7e8a3a029fa0e646d4e35a130d7e865b755c43f895b"
+      },
+      "tests/test_n71_bar_result.py": {
+        "bytes": 3647,
+        "sha256": "f509d2e1d90befab0557d6c1b9bc307a35b3e7a330d10b9a7f35e7ac864fb60c"
+      },
+      "tests/test_n71_chip_result.py": {
+        "bytes": 3104,
+        "sha256": "5a3983443cafca968d85f9bd920ebc2ba8a06a7697dc6094595c44d1e37a5c62"
+      },
+      "tests/test_n71_dart_cycle_result.py": {
+        "bytes": 5529,
+        "sha256": "0d6828f3bad0896da06f5fdacd2e15c224804a56aa279013867bc04ee15099be"
+      },
+      "tests/test_n71_dart_result.py": {
+        "bytes": 4910,
+        "sha256": "f52ca466fa8bcf8b2dc7aac6f3b109ea40a4bf6b50c2e8bbe289a0f346bb3038"
+      },
+      "tests/test_n71_diagnostic_held_profile.py": {
+        "bytes": 17824,
+        "sha256": "ab47f962efeceb878b14e7a4503b7b3c86d7e673d2bd1f59af9db4e134805ae6"
+      },
+      "tests/test_n71_diagnostic_payload.py": {
+        "bytes": 7043,
+        "sha256": "3c9d5a4474172581e6996c1abc7bf7b609474bac9b53330c04f61e7d70d81673"
+      },
+      "tests/test_n71_held_session.py": {
+        "bytes": 43934,
+        "sha256": "8953152dd485da98201243f044ff12016f9d551427d51183a449e1c9e1ba69e0"
+      },
+      "tests/test_n71_link_session.py": {
+        "bytes": 72368,
+        "sha256": "93732109d4e8c33ecbabbbb9d7c65b0c45c07a362ab0a78271c0b09229537d90"
+      },
+      "tests/test_n71_pcie_diagnostic.py": {
+        "bytes": 4390,
+        "sha256": "45fc388ad895ef1658dcb50db388f33f10e0814ae9452c37d4cabc896da37779"
+      },
+      "tests/test_n71_resource_result.py": {
+        "bytes": 21000,
+        "sha256": "74add5e05440ffe19e7562eab4535d405d7a90f03c40f473f6786742af22a8f1"
+      },
+      "tests/test_n71_resource_stage.py": {
+        "bytes": 35416,
+        "sha256": "84104b166fcc4d6147300fd52b379882cc02d4abaa983dbd81dfb27b6e0b49e3"
+      },
+      "tests/test_n71_runtime_tunables.py": {
+        "bytes": 4415,
+        "sha256": "6dbcb406aaf27b68d7a6c116d1377da49932a8a30d6b34bb60d897fc2a2c0744"
+      },
+      "tests/test_n71_scan_held_result.py": {
+        "bytes": 19857,
+        "sha256": "9a2df80fe4374074efe2c8e5b9332cc6a102f85b1a44189e9118884225b9ab57"
+      },
+      "tests/test_n71_scan_result.py": {
+        "bytes": 3810,
+        "sha256": "fd3cfdea2e5231d2efe934a6714bc1c4747f61785be34abd7fc1741cd2719c06"
+      },
+      "tests/test_n71_topology.py": {
+        "bytes": 13753,
+        "sha256": "e034af6f8152af0f0ecc281624d344130d3d5ae97a7c08237ed5cad2db6f7060"
+      }
+    },
+    "platforms": {
+      "macos": {
+        "architecture": "arm64",
+        "tests": 82,
+        "assertion_mutations": 137,
+        "test_exits": [
+          {
+            "suite": "stage",
+            "exit_code": 0,
+            "reused_unchanged_inputs": true
+          },
+          {
+            "suite": "held",
+            "exit_code": 0,
+            "reused_unchanged_inputs": true
+          },
+          {
+            "suite": "legacy",
+            "exit_code": 0
+          },
+          {
+            "suite": "legacy-mutations",
+            "exit_code": 0
+          }
+        ],
+        "logs": {
+          "stage": {
+            "sha256": "63fb6f2d1731ae7b2a7fcfd67f60946a80c298cfcaaf5bdcd727b8d24b514a52",
+            "bytes": 5119
+          },
+          "held": {
+            "sha256": "e1ecf77d0bd798e3eaca0a822d96fd6a13940358b06221ee9bd3da013fbc6e16",
+            "bytes": 5372
+          },
+          "legacy": {
+            "sha256": "9b8c7a35cd3c79f233a7f8a7a61c627c0a2b594c9f95f18825eb4ba43c9acfe3",
+            "bytes": 102529
+          },
+          "legacy-mutations": {
+            "sha256": "63bdb9f1227cd7c04a133da2af1313db807baa759f5eb7e4424b90f708a3196c",
+            "bytes": 4129
+          }
+        },
+        "ast_passed": true,
+        "inputs_preserved": true,
+        "reused_mac_stage_and_held_tests": 37,
+        "reused_mac_stage_and_held_mutations": 56
+      },
+      "ubuntu_arm64": {
+        "architecture": "aarch64",
+        "tests": 82,
+        "assertion_mutations": 137,
+        "test_exits": [
+          {
+            "suite": "stage",
+            "exit_code": 0
+          },
+          {
+            "suite": "held",
+            "exit_code": 0
+          },
+          {
+            "suite": "legacy",
+            "exit_code": 0
+          },
+          {
+            "suite": "legacy-mutations",
+            "exit_code": 0
+          }
+        ],
+        "logs": {
+          "stage": {
+            "sha256": "c748380b79a5a391d4b7c922fcc96dc665bdf97a4d92be6e7b921937afb837ce",
+            "bytes": 5092
+          },
+          "held": {
+            "sha256": "01dec13ea5e03ed4841b9efc2c86f974293bd8f6add595a57672c4ace3bde2de",
+            "bytes": 5372
+          },
+          "legacy": {
+            "sha256": "48f8d6ead83e9c38e70bf22f02f251898ea8aa662efeec98a6919687bf927851",
+            "bytes": 102529
+          },
+          "legacy-mutations": {
+            "sha256": "63bdb9f1227cd7c04a133da2af1313db807baa759f5eb7e4424b90f708a3196c",
+            "bytes": 4129
+          }
+        },
+        "ast_passed": true,
+        "inputs_preserved": true,
+        "reused_mac_stage_and_held_tests": 0,
+        "reused_mac_stage_and_held_mutations": 0
+      }
+    },
+    "stage_tests": 16,
+    "stage_assertion_mutations": 26,
+    "compatible_held_tests": 21,
+    "compatible_held_assertion_mutations": 30,
+    "compatible_legacy_tests": 45,
+    "compatible_legacy_assertion_mutations": 81,
+    "compiler_import_or_timeout_used_as_mutation_kill": false,
+    "generated_command_guards_executed_in_bash_on_private_files": true,
+    "fatal_flake8_passed": true
+  },
+  "preserved_candidate_and_build": {
+    "candidate_prepared_in": "n71-pci-resource-profile.json",
+    "current_collector_local_check_passed": true,
+    "all_48_real_module_build_inputs_unchanged": true,
+    "recompiled": false
+  },
+  "limits": {
+    "assignment_journal_integrated": true,
+    "phone_sysfs_logs_and_transport_synthetic": true,
+    "new_module_loaded_on_phone": false,
+    "physical_boot_attempted": false,
+    "assignment_or_restore_on_phone_verified": false,
+    "irq_dma_iommu_verified": false,
+    "wifi_verified": false,
+    "battery_or_charging_verified": false,
+    "private_payload_dt_identity_keys_snapshot_ids_or_logs_published": false
+  }
+}

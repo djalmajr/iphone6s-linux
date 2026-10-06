@@ -644,7 +644,7 @@ identidades, chaves e logs completos permanecem privados.
 
 Neste checkpoint, seleção/provenance/journal do host ainda precisavam
 reconhecer esse build e registrar o checkpoint antes de `assign`. A seleção
-posterior está descrita abaixo; o checkpoint da ação continua pendente.
+e o checkpoint da ação posteriores estão descritos abaixo.
 Nenhum módulo novo carregado, novo Image, boot ou DFU nesta etapa.
 Atribuição/restauração no kernel em execução, IRQ/IOMMU, driver/firmware/radio,
 Wi-Fi e telemetria/carga Linux continuam pendentes.
@@ -714,10 +714,87 @@ pacote final. AST e Flake8 fatal passaram. Gates interrompidos não foram
 contados como qualificação completa; import/compile/timeout não são kills.
 [Prova sanitizada da seleção](evidence/n71-pci-resource-profile.json).
 
-O journal ainda precisa incluir a ação, getter e prova de atribuição e sua
-restauração. Essa integração precede os efeitos por SSH e permite reunir
-as etapas no mesmo boot. A candidata desta seleção não foi carregada no
+Nesse checkpoint, o journal ainda precisava incluir a ação, getter e prova
+de atribuição e sua restauração; a integração está descrita abaixo.
+A candidata desta seleção não foi carregada no
 iPhone; Wi-Fi, IRQ/IOMMU/driver e telemetria/carga Linux continuam pendentes.
+
+## Atribuição com journal — ação e limpeza no mesmo boot
+
+Código `2e07258` oferece `--assign-held DIR`, exclusivo de `--release-held`.
+Exige fonte privada held com `--resource-capable`, os demais opt-ins do
+perfil e ausência de previous-clean. Confere perfil, boot, módulos/params,
+REG_ON, histórico e getter resources antes dos efeitos; a ação não refaz
+insmod, scan, reset ou ativação de REG_ON.
+
+O journal salva `resource_attempted` antes do setter. A saída da ação,
+getter e evento kernel precisam ser completos e concordar, incluindo erro,
+owners e orçamento. A prova privada possui hash e acompanha o checkpoint.
+Uma retomada com prova íntegra reutiliza a atribuição sem outro setter.
+Flags de modo/intenção são booleanas exatas; journals antigos sem esses
+campos são aceitos somente como false. Prova perdida, getter diferente,
+histórico desconhecido ou restauração incoerente recusam efeitos.
+
+No boot Linux qualificado, use diretórios novos diretamente sob runtime:
+
+```sh
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --output-dir "$held_acquisition"
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --assign-held "$held_acquisition" \
+  --output-dir "$held_assignment"
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --assign-held "$held_assignment" \
+  --output-dir "$held_reuse"
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --release-held "$held_reuse" \
+  --output-dir "$held_released"
+```
+
+O exemplo de reuso pressupõe atribuição positiva. Um resultado negativo
+com prova completa conserva o erro e os owners; use release sobre a saída
+comprovada, sem repetir assign. Cleanup confere remoção/restore extra,
+configuração genérica, release da janela e PME/TLS/reset/energia antes de
+PCI unload e REG_ON restore. Falha de cleanup preserva o estado para nova
+invocação release no mesmo boot; etapas completas não são repetidas.
+O código de saída continua negativo após liberar todos os owners quando
+houve erro de atribuição ou stop; confira `cleanup_verified` separadamente.
+
+Se transporte/saída não permitirem prova completa ou não concordarem,
+a intenção fica pendente e a retomada é recusada. Não criar prova ou
+checkpoint manualmente para contornar esse controle.
+
+Reprodução host sem aparelho numa cópia descartável:
+
+```sh
+set -e
+python3 -B -m unittest discover -s tests -p test_n71_resource_stage.py -v
+python3 -B -m unittest discover -s tests -p test_n71_held_session.py -v
+python3 -B -m unittest discover -s tests -p test_n71_link_session.py -v
+python3 -B tests/run_n71_link_session_mutations.py
+```
+
+Mac/Ubuntu ARM64: 82 testes/137 mutações por AssertionError por plataforma,
+55 inputs/quatro logs/exit SHA conferidos. Estágio16/26, held21/30 e
+legado45/81;37 testes/56 mutações Mac já aprovados foram reutilizados com
+55 inputs intactos, ARM64 executou o conjunto. Ação e snapshot rodaram em
+Bash contra sysfs/arquivos privados sintéticos; testes também exercitaram
+CLI real. AST/Flake8 fatal passaram; import/compile/timeout não são kills.
+[Prova sanitizada do journal](evidence/n71-pci-resource-session.json).
+
+A candidata real anterior passou o check local atualizado;48 inputs do
+build real permaneceram iguais, sem recompilar módulos/kernel. Essa prova
+ainda não carrega o módulo nem comprova atribuição/restauração no iPhone.
+A próxima sessão física deve reunir esses controles sem reboots entre
+etapas. IRQ/IOMMU/driver/firmware, Wi-Fi e telemetria/carga seguem abertos.
 
 ## Próximos gates
 
@@ -730,7 +807,7 @@ se não houver prova de cleanup. Retry de restauração não executa novo scan.
 
 O scan da última prova física enumera e remove o bus; ainda não comprova
 endereços persistentes atribuídos. Lifecycle/atribuição estão preparados
-offline; integrar seleção/provenance/journal e comprovar atribuição/restauração
+offline, com seleção/provenance/journal acima; comprovar atribuição/restauração
 no aparelho, IRQ/IOMMU do endpoint e depois driver/firmware/radio.
 Esses passos não estão habilitados pela prova diagnóstica. Alimentação e
 telemetria precisam de acesso HDQ/charger e medição própria.
