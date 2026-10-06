@@ -4,6 +4,7 @@
 #define N71_PCIE_RESOURCE_WRITE_H
 #include "n71-pcie-scan-config.h"
 #include "n71-pcie-io16-upper.h"
+#include "n71-pcie-pref64-disable.h"
 
 #define N71_RESOURCE_MAX_ATTEMPTS 64U
 
@@ -11,12 +12,12 @@ static const u32 n71_resource_extra_offsets[] = {0x20, 0x2c, 0x30};
 
 struct n71_resource_bar_layout {
 	u32 bytes[6];
-	bool io_absent, pref_absent, io16_upper_unused;
+	bool io_absent, pref_absent, io16_upper_unused, pref64_disable;
 };
 
 struct n71_resource_write_failure {
 	struct n71_scan_request request;
-	u32 before, after;
+	u32 before, after, expected;
 	int write_error, read_error;
 	bool valid, after_valid;
 };
@@ -25,9 +26,9 @@ struct n71_resource_write_state {
 	struct n71_scan_config reference;
 	struct n71_resource_write_failure failure;
 	u32 extra[3];
-	unsigned int attempts, writes, io_noops, pref_noops, io16_noops;
+	unsigned int attempts, writes, io_noops, pref_noops, io16_noops, pref64_writes;
 	int error;
-	bool active, pending, io_absent, pref_absent, io16_upper_unused;
+	bool active, pending, io_absent, pref_absent, io16_upper_unused, pref64_disable;
 };
 
 /* The adapter supplies PCI-core probe flags; zero config alone is insufficient. */
@@ -42,9 +43,13 @@ static inline int n71_resource_optional_capture(struct n71_resource_write_state 
 	if (layout->io16_upper_unused && (layout->io_absent ||
 	    n71_io16_upper_capture(windows[0], state->extra[2])))
 		return -EACCES;
+	if (layout->pref64_disable && (layout->pref_absent ||
+	    n71_pref64_disable_capture(windows[1], windows[2], state->extra[1])))
+		return -EACCES;
 	state->io_absent = layout->io_absent;
 	state->pref_absent = layout->pref_absent;
 	state->io16_upper_unused = layout->io16_upper_unused;
+	state->pref64_disable = layout->pref64_disable;
 	return 0;
 }
 
@@ -207,12 +212,14 @@ static inline int n71_resource_optional_noop(const struct n71_scan_io *io,
 /* Record the existing verification I/O; failed callbacks do not prove a value. */
 static inline int n71_resource_write_value(const struct n71_scan_io *io,
 					  struct n71_resource_write_state *state,
-					  const struct n71_scan_request *request, u32 before)
+					  const struct n71_scan_request *request,
+					  u32 before, u32 expected)
 {
 	struct n71_resource_write_failure failure = {.request = *request, .before = before};
 	u32 actual = 0;
 	int error;
 
+	failure.expected = expected;
 	failure.write_error = io->write(io->context, request->root, request->where,
 					request->size, request->value);
 	error = failure.write_error;
@@ -223,7 +230,7 @@ static inline int n71_resource_write_value(const struct n71_scan_io *io,
 		if (!error) {
 			failure.after_valid = true;
 			failure.after = actual;
-			error = actual == request->value ? 0 : -EIO;
+			error = actual == expected ? 0 : -EIO;
 		}
 	}
 	if (error) {
@@ -237,7 +244,7 @@ static inline int n71_resource_write(const struct n71_scan_io *io,
 				    struct n71_resource_write_state *state,
 				    const struct n71_scan_request *request)
 {
-	u32 observed;
+	u32 observed, expected;
 	bool handled;
 	int error;
 
@@ -265,17 +272,25 @@ static inline int n71_resource_write(const struct n71_scan_io *io,
 			return 0;
 		}
 	}
-	if (observed == request->value)
+	expected = request->value;
+	if (state->pref64_disable) {
+		error = n71_pref64_disable_expected(io, request, observed, &expected);
+		if (error)
+			return n71_resource_refuse(state, error);
+	}
+	if (observed == expected)
 		return 0;
 	error = n71_resource_optional_noop(io, state, request, observed, &handled);
 	if (error)
 		return n71_resource_refuse(state, error);
 	if (handled)
 		return 0;
-	error = n71_resource_write_value(io, state, request, observed);
+	error = n71_resource_write_value(io, state, request, observed, expected);
 	if (error)
 		return n71_resource_refuse(state, error);
 	state->writes++;
+	if (state->pref64_disable && n71_pref64_disable_request(request))
+		state->pref64_writes++;
 	return 0;
 }
 

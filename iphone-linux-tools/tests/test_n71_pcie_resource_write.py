@@ -35,7 +35,7 @@ MUTATIONS = (
     ('endpoint-not-guarded', 'for (function = 0; function < 2; function++)',
      'for (function = 0; function < 1; function++)'),
     ('write-readback-lost',
-     'error = n71_resource_write_value(io, state, request, observed);',
+     'error = n71_resource_write_value(io, state, request, observed, expected);',
      'error = io->write(io->context, request->root, request->where, request->size, request->value);'),
     ('failure-before-lost', '.before = before', '.before = before ^ 1U'),
     ('failure-request-root', 'state->failure = failure;',
