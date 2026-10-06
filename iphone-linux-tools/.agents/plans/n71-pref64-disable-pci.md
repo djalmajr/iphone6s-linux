@@ -46,7 +46,8 @@ Física (até cinco): somente após A–E. Um boot reúne acquire/assign/read-on
 - [x] C1: parsers de contrato/readback e legados qualificados.
 - [x] C2: dispatch, stage/journal e legados qualificados.
 - [x] D: build/ABI preservados e seleção explícita.
-- [ ] E: candidata/check/reprodução/publicação.
+- [x] E: candidata privada/check e integrações qualificados.
+- [ ] E: reprodução/publicação do checkpoint antes da sessão física.
 - [ ] Sessão física agrupada e resultado/limites na issue39.
 
 ## Verificação
@@ -88,3 +89,9 @@ Kernel/módulos não mudaram nesta etapa; build final88120/SHA968e6a06 permanece
 Mac/Ubuntu ARM64:32 testes/62 mutações por AssertionError por plataforma,73 inputs/AST/lint fatal. Seletor novo7/8, IO16 6/9, optional5/7, readback5/9 e result9/29. Novo SHA exige os quatro reports e contratos exatos; booleans1/false, base IO16/política alterada/ausente/link, ABI/bytes/REG_ON/scope e hash desconhecido recusam seleção. Hashes anteriores mantêm somente seus contratos originais. Um mutante redundante da segunda checagem de symlink IO16 não foi contado: a travessia já rejeita o mesmo alias; a recusa completa continua testada.
 
 Build real final:50 inputs, seis módulos Werror/modpost/ELF/vermagic,PCIe88.120 bytes/SHA968e6a06e9b671a5d1dffff7f1a6322c6144d8d99243d0f2b3115fabcb851c28. Fonte/config/Image/exports/REG_ON/outros cinco preservados; quatro reports compilados, formatter esperado conferido. Evidência é ligada por hash a assignment/readback/optional/IO16/política, mantendo limits físicos falsos. [Build/contratos](../../docs/evidence/n71-pci-pref64-build.json). E ainda compõe/checka a candidata; sem load/DFU nesta preparação.
+
+### Gate E — candidata completa qualificada sem outro DFU
+
+Mac/Ubuntu ARM64:94 testes/150 mutações por AssertionError por plataforma,78 inputs/AST/lint fatal. CLI de composição21 testes/34 mutações e3 de forwarding; stage16/26, readback9/15, optional8/12, IO16 8/12, PREF646/14, journal5/4 e held21/30 requalificados. Fixture nova reutiliza o CLI anterior, compõe o build tipado e exige os quatro reports no collector --check.
+
+Candidata real separada passou composer/check, oito arquivos700/600. Deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON iguais ao perfil IO16 físico; somente PCIe e seu SHA na provenance mudaram. Módulo não carrega automaticamente. [Candidata/integração](../../docs/evidence/n71-pci-pref64-profile.json). Nenhum boot novo nesta preparação; reprodução/push/issues precedem a sessão física agrupada.
