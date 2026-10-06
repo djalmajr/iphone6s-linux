@@ -4,11 +4,13 @@
 #define N71_PCIE_SCAN_H
 #include <linux/pci.h>
 #include <linux/spinlock.h>
+#include <linux/ioport.h>
 #include "n71-pcie-scan-config.h"
 #include "n71-pcie-bar-sizing.h"
 #include "n71-pcie-control-reference.h"
 #include "n71-pcie-scan-link-target.h"
 #include "n71-pcie-pme-control.h"
+#include "n71-pcie-resource-write.h"
 
 struct n71_scan_host {
 	struct device *dev;
@@ -17,8 +19,10 @@ struct n71_scan_host {
 	struct n71_scan_config config;
 	struct n71_link_target target;
 	struct n71_pme_state pme;
+	struct n71_resource_write_state resources;
 	bool config_pending;
 	bool bus_held;
+	bool resource_attempted, resources_assigned, window_claimed;
 	struct resource windows[3];
 	unsigned int reads, devices, endpoints;
 	int io_error, held_stop_error;
@@ -133,7 +137,13 @@ static int n71_scan_config_write(struct pci_bus *bus, unsigned int devfn,
 		n71_scan_refuse(&host->config, error);
 	} else {
 		request = (struct n71_scan_request){location.root, where, value, size};
-		error = n71_pme_scan_write(&io, &host->config, &host->pme, &request);
+		if (host->resources.active) {
+			error = host->config.error ? host->config.error : n71_resource_write(&io, &host->resources, &request);
+			if (error)
+				n71_scan_refuse(&host->config, error);
+		} else {
+			error = n71_pme_scan_write(&io, &host->config, &host->pme, &request);
+		}
 	}
 	spin_unlock_irqrestore(&host->lock, flags);
 	if (error)
@@ -228,6 +238,8 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 	if (!bridge)
 		return 0;
 	host = pci_host_bridge_priv(bridge);
+	if (host->resources.active)
+		return -EBUSY;
 	stop_error = host->held_stop_error;
 	if (bridge->bus) {
 		if (!host->bus_held)
@@ -244,6 +256,13 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 	}
 	io = (struct n71_scan_io){host, n71_scan_raw_read, n71_scan_raw_write};
 	target_io = (struct n71_link_target_io){host, n71_scan_target_read, n71_scan_target_write};
+	if (host->resources.pending) {
+		host->config.active = false; /* Removed bus: rollback is outside the scan budget. */
+		error = n71_resource_restore(&io, &host->resources, !bridge->bus);
+		dev_info(host->dev, "N71_PCIE_RESOURCE_RESTORED error=%d pending=%u\n", error, host->resources.pending);
+		if (error)
+			return error;
+	}
 	if (host->config_pending) {
 		/* Retry restoration only; no PCI callbacks or scan writes remain. */
 		host->config.active = true;
@@ -252,6 +271,16 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 		if (error)
 			return error;
 		host->config_pending = false;
+	}
+	if (host->window_claimed) {
+		if (host->windows[1].parent != &iomem_resource || host->windows[1].child)
+			return -EBUSY;
+		error = release_resource(&host->windows[1]);
+		if (error)
+			return error;
+		host->window_claimed = false;
+		host->resources_assigned = false;
+		dev_info(host->dev, "N71_PCIE_RESOURCE_WINDOW_RELEASED claimed=0\n");
 	}
 	if (host->pme.pending) {
 		error = n71_pme_restore(&io, &host->pme);

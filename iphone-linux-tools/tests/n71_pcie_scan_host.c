@@ -20,21 +20,32 @@ typedef uint16_t u16;
 #define IORESOURCE_MEM 0x200
 #define IORESOURCE_MEM_64 0x100000
 #define IORESOURCE_PREFETCH 0x2000
+#define IORESOURCE_TYPE_BITS 0x1f00
+#define IORESOURCE_PCI_FIXED 0x10
+#define IORESOURCE_UNSET 0x20000000
+#define PCI_ROM_RESOURCE 6
+#define PCI_BRIDGE_IO_WINDOW 7
+#define PCI_BRIDGE_MEM_WINDOW 8
+#define PCI_BRIDGE_PREF_MEM_WINDOW 9
 typedef int spinlock_t;
 #define spin_lock_init(lock) (*(lock) = 0)
 #define spin_lock_irqsave(lock, flags) do { assert(!*(lock)); *(lock) = 1; (flags) = 0; } while (0)
 #define spin_unlock_irqrestore(lock, flags) do { assert(*(lock)); *(lock) = 0; (void)(flags); } while (0)
 
 struct device { struct device *parent; };
-struct resource { const char *name; uint64_t start, end; unsigned long flags; };
+struct resource { const char *name; uint64_t start, end; unsigned long flags; struct resource *parent, *child; };
+static struct resource iomem_resource, foreign_resource;
+static uint64_t resource_size(const struct resource *res) { return res->end - res->start + 1; }
 struct resource_entry { struct resource_entry *next; struct resource *res; uint64_t offset; };
 struct resource_list { struct resource_entry *first; };
-struct pci_bus { void *sysdata; unsigned int number; };
+struct pci_bus { void *sysdata; unsigned int number; struct pci_dev *self; unsigned int bridge_ctl; };
 struct pci_dev {
 	struct pci_bus *bus;
 	unsigned int devfn, vendor, device, class;
 	void *driver;
-	struct resource resource[6];
+	struct resource resource[10];
+	struct pci_bus *subordinate;
+	bool enabled;
 };
 struct pci_ops {
 	int (*read)(struct pci_bus *, unsigned int, int, int, u32 *);
@@ -64,6 +75,10 @@ enum fault { NONE, CAP_WRITE, STOP_WRITE, SCAN_FAIL, MISSING_ENDPOINT, MASTER,
 	PME_NONE, PME_PREPARE_DROP, PME_RESTORE_DROP, PME_CORE_EVENT,
 	PME_DISABLE_EVENT, PME_CAP_BAD, PME_CORE_LATCHED, PME_LINK_LOST,
 	STOP_AND_RESTORE };
+enum resource_fault { RESOURCE_OK, CLAIM_CONFLICT, BAD_LAYOUT, BAD_PARENT,
+	OVERLAP, BAD_TRANSLATION, BAD_BAR, MISSING_ASSIGNMENT, CORE_REFUSAL,
+	RESTORE_EXTRA_DROP, RELEASE_FAIL, CHILD_LEFT, ACTIVE_PHASE, WRONG_TOPOLOGY,
+	BRIDGE_CONTROL_MISMATCH, ROOT_WINDOW_BAD, EXTRA_BAR, AFTER_ASSIGN_DRIVER, ROLLBACK_BUDGET };
 static struct {
 	enum fault fault;
 	u32 *ecam, port[4096];
@@ -74,6 +89,9 @@ static struct {
 	unsigned int target_prepares, target_restores;
 	unsigned int pme_prepares, pme_restores, pme_reads;
 	bool locked, returned, pme;
+	bool resource_mode, allocating;
+	enum resource_fault resource_fault;
+	unsigned int claims, releases, sizing, assigning, references;
 	char log[16384];
 	size_t used;
 } mock;
@@ -88,16 +106,18 @@ static u32 readl(const void *address)
 }
 static void writel(u32 value, void *address)
 {
-	if (mock.returned) {
+	if (mock.returned && !mock.allocating) {
 		assert(!mock.scans || mock.removes == 1);
 		mock.bars_after_scan++;
+		if (mock.resource_fault == RESTORE_EXTRA_DROP && address == &mock.ecam[0x8020 / 4])
+			return;
 	}
 	memcpy(address, &value, sizeof(value));
 	mock.writes++;
 }
 static void writew(u16 value, void *address)
 {
-	if (mock.returned) {
+	if (mock.returned && !mock.allocating) {
 		assert(!mock.scans || mock.removes == 1);
 		if ((mock.fault == RESTORE_DROP || mock.fault == STOP_AND_RESTORE) &&
 		    address == (void *)&mock.ecam[0x100004 / 4] && value == 0x100)
@@ -171,6 +191,7 @@ static void pci_free_host_bridge(struct pci_host_bridge *bridge)
 	struct resource_entry *entry = bridge->windows.first;
 	while (entry) { struct resource_entry *next = entry->next; free(entry); entry = next; }
 	assert(mock.allocations == 1 && (!mock.scans || mock.removes == 1));
+	assert(!mock.resource_mode || (!iomem_resource.child && !mock.references));
 	assert((mock.ecam[0x80a0 / 4] & 0xffff) == 1);
 	if (mock.pme)
 		assert(mock.ecam[0x10004c / 4] & 0x100);
@@ -207,11 +228,12 @@ static int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
 	mock.bridge = bridge; mock.scans++;
 	bridge->bus = calloc(1, sizeof(*bridge->bus)); assert(bridge->bus);
 	bridge->bus->sysdata = bridge->sysdata;
-	mock.endpoint_bus = (struct pci_bus){bridge->sysdata, 1};
+	mock.endpoint_bus = (struct pci_bus){.sysdata = bridge->sysdata, .number = 1};
 	mock.root = (struct pci_dev){.bus = bridge->bus, .devfn = 8, .vendor = 0x106b,
 		.device = 0x1004, .class = 0x060400};
 	mock.endpoint = (struct pci_dev){.bus = &mock.endpoint_bus, .vendor = 0x14e4,
 		.device = 0x43a3, .class = 0x028000};
+	mock.root.subordinate = &mock.endpoint_bus; mock.endpoint_bus.self = &mock.root;
 	mock.endpoint.resource[0] = (struct resource){.start = 0x7c0000000ULL,
 		.end = 0x7c0003fffULL, .flags = IORESOURCE_MEM | IORESOURCE_MEM_64};
 	if (mock.fault == SCAN_PARTIAL_FAIL) {
@@ -230,7 +252,7 @@ static int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
 			assert(bridge->ops->write(bus, devfn, 0x10 + index * 4, 4, 0xffffffff) == 0);
 			assert(bridge->ops->write(bus, devfn, 0x10 + index * 4, 4, original) == 0);
 		}
-		assert(bridge->ops->write(bus, devfn, 4, 2, function ? 0x103 : 0) == 0);
+		assert(bridge->ops->write(bus, devfn, 4, 2, function ? (mock.resource_mode ? 0x100 : 0x103) : 0) == 0);
 	}
 	if (mock.pme) {
 		unsigned int reads;
@@ -273,6 +295,9 @@ static void pci_walk_bus(struct pci_bus *bus, int (*callback)(struct pci_dev *, 
 	if (callback(&mock.root, context) || mock.fault == MISSING_ENDPOINT)
 		return;
 	callback(&mock.endpoint, context);
+	if (mock.resource_mode && mock.resource_fault == WRONG_TOPOLOGY) {
+		struct pci_dev extra = {0}; callback(&extra, context);
+	}
 }
 static void pci_stop_root_bus(struct pci_bus *bus)
 {
@@ -283,11 +308,94 @@ static void pci_stop_root_bus(struct pci_bus *bus)
 static void pci_remove_root_bus(struct pci_bus *bus)
 {
 	assert(mock.stops == 1 && mock.locked); mock.removes++;
+	if (mock.resource_mode) {
+		unsigned int index;
+		struct resource *window = mock.root.resource[PCI_BRIDGE_MEM_WINDOW].parent;
+		for (index = 0; index < 10; index++) {
+			mock.root.resource[index].parent = mock.endpoint.resource[index].parent = NULL;
+			mock.root.resource[index].child = NULL;
+		}
+		if (window) window->child = mock.resource_fault == CHILD_LEFT ? &foreign_resource : NULL;
+	}
 	free(bus); mock.bridge->bus = NULL;
 	if (mock.fault == PME_LINK_LOST)
 		mock.port[0x88 / 4] = 0;
 }
+static int request_resource(struct resource *parent, struct resource *res)
+{
+	assert(mock.locked && parent == &iomem_resource && !parent->child && !res->parent);
+	mock.claims++;
+	if (mock.resource_fault == CLAIM_CONFLICT) return -EBUSY;
+	parent->child = res; res->parent = parent; return 0;
+}
+static int release_resource(struct resource *res)
+{
+	assert(mock.removes == 1 && res->parent == &iomem_resource && !res->child);
+	assert(mock.ecam[0x8020 / 4] == 0x12301230 && mock.ecam[0x100010 / 4] == 4);
+	mock.releases++;
+	if (mock.resource_fault == RELEASE_FAIL) return -EIO;
+	iomem_resource.child = res->parent = NULL; return 0;
+}
 #include "n71-pcie-scan.h"
+
+static struct pci_dev *pci_get_slot(struct pci_bus *bus, unsigned int devfn)
+{
+	struct pci_dev *dev = bus->number == 0 && devfn == 8 ? &mock.root : bus->number == 1 && !devfn ? &mock.endpoint : NULL;
+	assert(mock.locked); if (dev) mock.references++; return dev;
+}
+static void pci_dev_put(struct pci_dev *dev) { if (dev) { assert(mock.references); mock.references--; } }
+static bool pci_is_enabled(struct pci_dev *dev) { return dev->enabled; }
+struct pci_bus_region { uint64_t start, end; };
+static void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region, struct resource *res)
+{
+	(void)bus; region->start = res->start - 0x700000000ULL; region->end = res->end - 0x700000000ULL;
+	if (mock.resource_fault == BAD_TRANSLATION) region->start++;
+}
+static void pci_bus_size_bridges(struct pci_bus *bus)
+{
+	assert(bus == mock.bridge->bus && mock.locked && mock.claims == 1);
+	assert(iomem_resource.child && !mock.sizing); mock.sizing++;
+}
+static void pci_bus_assign_resources(const struct pci_bus *bus)
+{
+	struct n71_scan_host *host = pci_host_bridge_priv(mock.bridge);
+	struct resource *window = &mock.root.resource[PCI_BRIDGE_MEM_WINDOW];
+	const struct n71_scan_request steps[] = {
+		{false, 0x10, 0xc0800004, 4}, {false, 0x14, 0, 4},
+		{false, 0x18, 0xc0000004, 4}, {false, 0x1c, 0, 4},
+		{true, 0x30, 0xffff, 4}, {true, 0x1c, 0xf0, 2}, {true, 0x30, 0, 4},
+		{true, 0x20, 0xc080c000, 4}, {true, 0x2c, 0, 4},
+		{true, 0x24, 0xfff0, 4}, {true, 0x28, 0, 4}, {true, 0x3e, 0, 2}
+	};
+	unsigned int index;
+	assert(bus == mock.bridge->bus && mock.locked && mock.sizing == 1 && !mock.assigning);
+	mock.assigning++; mock.allocating = true;
+	if (mock.resource_fault == CORE_REFUSAL)
+		mock.bridge->ops->write(&mock.endpoint_bus, 0, 0x80, 4, 1);
+	for (index = 0; index < sizeof(steps) / sizeof(steps[0]); index++)
+		mock.bridge->ops->write(steps[index].root ? mock.bridge->bus : &mock.endpoint_bus,
+			steps[index].root ? 8 : 0, steps[index].where, steps[index].size, steps[index].value);
+	mock.allocating = false;
+	*window = (struct resource){.start = 0x7c0000000ULL, .end = 0x7c08fffffULL,
+		.flags = IORESOURCE_MEM, .parent = &host->windows[1]};
+	host->windows[1].child = window;
+	mock.endpoint.resource[0] = (struct resource){.start = 0x7c0800000ULL, .end = 0x7c0807fffULL,
+		.flags = IORESOURCE_MEM | IORESOURCE_MEM_64, .parent = window};
+	mock.endpoint.resource[2] = (struct resource){.start = 0x7c0000000ULL, .end = 0x7c03fffffULL,
+		.flags = IORESOURCE_MEM | IORESOURCE_MEM_64, .parent = window};
+	if (mock.resource_fault == BAD_PARENT) mock.endpoint.resource[0].parent = &foreign_resource;
+	if (mock.resource_fault == OVERLAP) {
+		mock.endpoint.resource[0].start = 0x7c0000000ULL;
+		mock.endpoint.resource[0].end = 0x7c0007fffULL;
+		mock.ecam[0x100010 / 4] = 0xc0000004;
+	}
+	if (mock.resource_fault == BAD_BAR) mock.ecam[0x100010 / 4] ^= 0x8000;
+	if (mock.resource_fault == MISSING_ASSIGNMENT) mock.endpoint.resource[2].parent = NULL;
+	if (mock.resource_fault == ROOT_WINDOW_BAD) window->end++;
+	if (mock.resource_fault == EXTRA_BAR) mock.endpoint.resource[4].flags = IORESOURCE_MEM;
+	if (mock.resource_fault == AFTER_ASSIGN_DRIVER) mock.endpoint.driver = &mock;
+}
+#include "n71-pcie-resource-assign.h"
 
 static void initialize_case(enum fault index, bool pme)
 {
@@ -398,6 +506,63 @@ static unsigned int exercise_held_bus(void)
 	return cases + 1;
 }
 
+static unsigned int exercise_resource_assignment(void)
+{
+	const int expected[] = {0, -EBUSY, -EINVAL, -EACCES, -EACCES, -ERANGE,
+		-EIO, -EACCES, -EPERM, 0, 0, 0, 0, -ENODEV, -EACCES, -EACCES, -EACCES, -EACCES, 0};
+	struct device device = {0};
+	unsigned int fault;
+	for (fault = 0; fault < sizeof(expected) / sizeof(expected[0]); fault++) {
+		struct n71_diagnostic state;
+		struct n71_scan_host *host;
+		int cleanup;
+		initialize_case(PME_NONE, true); mock.resource_mode = true;
+		iomem_resource = (struct resource){0};
+		mock.ecam[0x100004 / 4] &= ~3U;
+		mock.ecam[0x100010 / 4] = mock.ecam[0x100018 / 4] = 4;
+		mock.ecam[0x8020 / 4] = 0x12301230;
+		mock.ecam[0x802c / 4] = 0x55667788;
+		mock.ecam[0x8030 / 4] = 0xaabbccdd;
+		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
+		assert(n71_pcie_scan_hold(&device, &state) == 0);
+		host = pci_host_bridge_priv(state.scan_bridge);
+		mock.endpoint.resource[0] = (struct resource){.end = 0x7fff, .flags = IORESOURCE_MEM | IORESOURCE_MEM_64};
+		mock.endpoint.resource[2] = (struct resource){.end = 0x3fffff, .flags = IORESOURCE_MEM | IORESOURCE_MEM_64};
+		mock.root.resource[PCI_BRIDGE_MEM_WINDOW].flags = IORESOURCE_MEM;
+		mock.resource_fault = fault;
+		if (fault == BAD_LAYOUT) mock.endpoint.resource[0].end--;
+		if (fault == BRIDGE_CONTROL_MISMATCH) mock.endpoint_bus.bridge_ctl = 2;
+		assert(n71_pcie_assign_resources(&state) == expected[fault]);
+		assert(!host->resources.active && host->resources_assigned == !expected[fault]);
+		assert(!mock.locked && !mock.references && mock.scans == 1);
+		assert(n71_pcie_assign_resources(&state) == (expected[fault] ? expected[fault] : -EALREADY));
+		assert(mock.sizing <= 1 && mock.assigning == mock.sizing);
+		if (fault == ACTIVE_PHASE) {
+			host->resources.active = true;
+			assert(n71_pcie_scan_cleanup(&state) == -EBUSY && !mock.removes);
+			host->resources.active = false;
+		}
+		if (fault == ROLLBACK_BUDGET) host->reads = 4096;
+		cleanup = n71_pcie_scan_cleanup(&state);
+		if (fault == RESTORE_EXTRA_DROP || fault == RELEASE_FAIL || fault == CHILD_LEFT) {
+			assert(cleanup == (fault == CHILD_LEFT ? -EBUSY : -EIO) && state.scan_bridge);
+			assert(host->window_claimed && mock.removes == 1 && host->pme.pending && host->target.pending);
+			assert(n71_pcie_scan_cleanup(&state) == cleanup && mock.scans == 1);
+			assert(n71_pcie_assign_resources(&state) == -ENODEV);
+			mock.resource_fault = RESOURCE_OK; host->windows[1].child = NULL;
+			assert(n71_pcie_scan_cleanup(&state) == 0);
+		} else assert(cleanup == expected[fault]);
+		assert(!state.scan_bridge && !iomem_resource.child && !mock.allocations && !mock.references);
+		assert(mock.ecam[0x8020 / 4] == 0x12301230 && mock.ecam[0x802c / 4] == 0x55667788);
+		assert(mock.ecam[0x8030 / 4] == 0xaabbccdd && mock.ecam[0x100010 / 4] == 4);
+		assert(mock.ecam[0x100018 / 4] == 4 && mock.scans == 1 && mock.removes == 1);
+		assert(n71_pcie_scan_cleanup(&state) == 0);
+		free(mock.ecam);
+	}
+	assert(n71_pcie_assign_resources(NULL) == -ENODEV);
+	return fault;
+}
+
 int main(void)
 {
 	const int expected[] = {0, -EPERM, -EPERM, -ENOMEM, -ENODEV, -EACCES,
@@ -469,5 +634,7 @@ int main(void)
 	puts("N71_PCIE_SCAN_HOST_OK cases=29");
 	assert(exercise_held_bus() == 16);
 	puts("N71_PCIE_HELD_BUS_OK cases=16");
+	assert(exercise_resource_assignment() == 19);
+	puts("N71_PCIE_RESOURCE_ASSIGN_OK cases=19; PCI allocator synthetic");
 	return 0;
 }

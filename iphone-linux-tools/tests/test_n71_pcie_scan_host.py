@@ -10,14 +10,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class N71PcieScanHost(unittest.TestCase):
-    def compile_and_run(self, *, mutation=None):
+    def compile_and_run(self, *, mutation=None, assignment_mutation=None):
         compiler = shutil.which('cc')
         if compiler is None:
             self.skipTest('Native compiler unavailable; native gate not passed.')
         with tempfile.TemporaryDirectory(prefix='n71-scan-host-') as directory:
             folder = Path(directory)
             (folder / 'linux').mkdir()
-            for name in ('pci.h', 'spinlock.h'):
+            for name in ('pci.h', 'spinlock.h', 'ioport.h'):
                 (folder / 'linux' / name).write_text('/* PCI API supplied by the harness. */\n')
             for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
@@ -27,6 +27,12 @@ class N71PcieScanHost(unittest.TestCase):
                 self.assertEqual(source.count(before), 1, 'Mutation requires a unique anchor')
                 source = source.replace(before, after, 1)
             (folder / 'n71-pcie-scan.h').write_text(source)
+            source = (ROOT / 'phone/kernel/n71-pcie-resource-assign.h').read_text()
+            if assignment_mutation:
+                before, after = assignment_mutation
+                self.assertEqual(source.count(before), 1, 'Assignment mutation requires a unique anchor')
+                source = source.replace(before, after, 1)
+            (folder / 'n71-pcie-resource-assign.h').write_text(source)
             binary = folder / 'host'
             compiled = subprocess.run(
                 [compiler, '-std=gnu11', '-Wall', '-Wextra', '-Werror',
@@ -41,6 +47,8 @@ class N71PcieScanHost(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('N71_PCIE_SCAN_HOST_OK cases=29', result.stdout)
         self.assertIn('N71_PCIE_HELD_BUS_OK cases=16', result.stdout)
+        self.assertIn('N71_PCIE_RESOURCE_ASSIGN_OK cases=19', result.stdout)
+        print(result.stdout.strip(), flush=True)
 
     def test_lifecycle_mutations_die_by_assertion(self):
         mutations = (
@@ -98,6 +106,62 @@ class N71PcieScanHost(unittest.TestCase):
                     self.assertEqual(result.returncode, -6, result.stderr)
                     self.assertIn('assert', result.stderr.lower())
                     print(f'N71_SCAN_HOST_ASSERTION_KILL {name}', flush=True)
+        finally:
+            resource.setrlimit(resource.RLIMIT_CORE, limits)
+
+    def test_resource_allocator_mutations_die_by_assertion(self):
+        mutations = (
+            ('retry-assignment', 'assign', 'if (host->resource_attempted)', 'if (false)'),
+            ('allocation-without-lock', 'assign', 'pci_lock_rescan_remove();', '(void)pci_lock_rescan_remove;'),
+            ('extra-topology-accepted', 'assign', 'if (devices->error || devices->count != 2)', 'if (false)'),
+            ('wrong-sized-bar', 'assign', '|| resource_size(resource) != bytes)', '|| false)'),
+            ('capture-skipped', 'assign', 'error = n71_resource_capture(&io, &layout, &host->resources);', 'error = ((void)io, 0);'),
+            ('claim-skipped', 'assign', 'error = request_resource(&iomem_resource, &host->windows[1]);', '(void)request_resource; error = 0;'),
+            ('claim-owner-lost', 'assign', 'host->window_claimed = true;', 'host->window_claimed = false;'),
+            ('sizing-skipped', 'assign', 'pci_bus_size_bridges(bridge->bus);', '(void)pci_bus_size_bridges;'),
+            ('assignment-skipped', 'assign', 'pci_bus_assign_resources(bridge->bus);', '(void)pci_bus_assign_resources;'),
+            ('verification-skipped', 'assign', 'error = n71_resource_verify(host, &devices);',
+             '(void)n71_resource_verify; error = 0;'),
+            ('bar-parent-widened', 'assign', 'resource->parent != window', 'resource->parent == NULL'),
+            ('translation-lost', 'assign', 'region.start != resource->start - 0x700000000ULL', 'false'),
+            ('bar-readback-lost', 'assign', 'low == ((u32)region.start | 4U)', 'low != 0'),
+            ('overlap-accepted', 'assign', 'if (!(endpoint->resource[0].end', 'if (false && !(endpoint->resource[0].end'),
+            ('extra-bar-accepted', 'assign',
+             'resource = &endpoint->resource[index];\n\t\tif (resource->flags || resource->start || resource->end || resource->parent)',
+             'resource = &endpoint->resource[index];\n\t\tif (false)'),
+            ('post-driver-accepted', 'assign',
+             'root->resource[PCI_BRIDGE_PREF_MEM_WINDOW].parent || root->driver || endpoint->driver ||',
+             'root->resource[PCI_BRIDGE_PREF_MEM_WINDOW].parent ||'),
+            ('phase-left-active', 'assign', 'host->resources.active = false;', 'host->resources.active = true;'),
+            ('allocation-uses-probe-policy', 'scan',
+             'n71_resource_write(&io, &host->resources, &request)',
+             'n71_pme_scan_write(&io, &host->config, &host->pme, &request)'),
+            ('remove-active-allocation', 'scan', 'if (host->resources.active)\n\t\treturn -EBUSY;',
+             'if (false)\n\t\treturn -EBUSY;'),
+            ('extra-restore-skipped', 'scan', 'if (host->resources.pending) {', 'if (false) {'),
+            ('extra-restore-starved', 'scan', 'host->config.active = false; /* Removed bus:',
+             'host->config.active = true; /* Removed bus:'),
+            ('window-release-before-bars', 'scan', 'if (host->config_pending) {',
+             'if (host->window_claimed) { release_resource(&host->windows[1]); host->window_claimed = false; }\n\tif (host->config_pending) {'),
+            ('window-release-with-children', 'scan',
+             'host->windows[1].parent != &iomem_resource || host->windows[1].child',
+             'host->windows[1].parent != &iomem_resource'),
+            ('failed-window-release-owner-lost', 'scan', 'error = release_resource(&host->windows[1]);',
+             'error = release_resource(&host->windows[1]);\n\t\thost->window_claimed = false;'),
+            ('window-release-error-ignored', 'scan',
+             'if (error)\n\t\t\treturn error;\n\t\thost->window_claimed',
+             'if (false)\n\t\t\treturn error;\n\t\thost->window_claimed'),
+        )
+        limits = resource.getrlimit(resource.RLIMIT_CORE)
+        resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
+        try:
+            for name, target, before, after in mutations:
+                with self.subTest(mutation=name):
+                    options = {'assignment_mutation' if target == 'assign' else 'mutation': (before, after)}
+                    result = self.compile_and_run(**options)
+                    self.assertEqual(result.returncode, -6, 'Compilation/timeout is not a kill: ' + name + result.stderr)
+                    self.assertIn('assert', result.stderr.lower(), name)
+                    print('N71_RESOURCE_ASSIGN_ASSERTION_KILL ' + name, flush=True)
         finally:
             resource.setrlimit(resource.RLIMIT_CORE, limits)
 
