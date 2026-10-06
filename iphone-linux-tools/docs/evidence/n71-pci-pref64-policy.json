@@ -1,0 +1,147 @@
+{
+  "format": 1,
+  "date": "2026-10-06",
+  "physical_base_commit": "2488b12",
+  "decision": "narrow complete PREF64 disable expectation; no production caller yet",
+  "helper_contract": {
+    "capture_lower_00010001": true,
+    "capture_uppers_zero": true,
+    "root24_dword_0000fff0_only": true,
+    "live_baseline_or_disabled_only": true,
+    "live_lower_repeated_and_uppers_zero": true,
+    "raw_errors_normalized": true,
+    "expected_full_0001fff1": true,
+    "no_hardware_writes": true
+  },
+  "qualification": {
+    "mac": {
+      "architecture": "arm64",
+      "qualified": true,
+      "inputs": {
+        "phone/kernel/n71-pcie-contract.h": {
+          "bytes": 2529,
+          "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8"
+        },
+        "phone/kernel/n71-pcie-ecam.h": {
+          "bytes": 1977,
+          "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3"
+        },
+        "phone/kernel/n71-pcie-scan-config.h": {
+          "bytes": 10201,
+          "sha256": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8"
+        },
+        "phone/kernel/n71-pcie-pref64-disable.h": {
+          "bytes": 1241,
+          "sha256": "be4ebe34c7fa1ba8e110d52ffdabbe902103058e1f968221d0ac369afb55fa33"
+        },
+        "tests/n71_pcie_pref64_disable.c": {
+          "bytes": 3747,
+          "sha256": "3b44893d9fc11824652c9958fafed3fa9d234f26cd106a82219b0e40fb1d1bf2"
+        },
+        "tests/test_n71_pcie_pref64_disable.py": {
+          "bytes": 3735,
+          "sha256": "7b6bbef57692eff412bc895f6c03bf3d2770f0343a1fa67abbd3572b3a3bc9e7"
+        }
+      },
+      "inputs_preserved": true,
+      "ast_passed": true,
+      "suites": [
+        {
+          "suite": "helper",
+          "tests": 1,
+          "native_scenarios": 35,
+          "assertion_mutations": 15,
+          "mutations": [
+            "capture-types",
+            "capture-base-upper",
+            "capture-limit-upper",
+            "request-function",
+            "request-register",
+            "request-width",
+            "request-value",
+            "observed-types-or-address",
+            "disable-already-applied",
+            "live-lower",
+            "live-base-upper",
+            "live-limit-upper",
+            "callback-error",
+            "expected-types",
+            "expected-address"
+          ],
+          "exit_code": 0,
+          "log_sha256": "8a151a93f4dd1f46b9565fb7aa84c0a905c20a06336850e689f56e56d718bd06"
+        }
+      ],
+      "physical_action": false
+    },
+    "ubuntu_arm64": {
+      "architecture": "aarch64",
+      "qualified": true,
+      "inputs": {
+        "phone/kernel/n71-pcie-contract.h": {
+          "bytes": 2529,
+          "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8"
+        },
+        "phone/kernel/n71-pcie-ecam.h": {
+          "bytes": 1977,
+          "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3"
+        },
+        "phone/kernel/n71-pcie-scan-config.h": {
+          "bytes": 10201,
+          "sha256": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8"
+        },
+        "phone/kernel/n71-pcie-pref64-disable.h": {
+          "bytes": 1241,
+          "sha256": "be4ebe34c7fa1ba8e110d52ffdabbe902103058e1f968221d0ac369afb55fa33"
+        },
+        "tests/n71_pcie_pref64_disable.c": {
+          "bytes": 3747,
+          "sha256": "3b44893d9fc11824652c9958fafed3fa9d234f26cd106a82219b0e40fb1d1bf2"
+        },
+        "tests/test_n71_pcie_pref64_disable.py": {
+          "bytes": 3735,
+          "sha256": "7b6bbef57692eff412bc895f6c03bf3d2770f0343a1fa67abbd3572b3a3bc9e7"
+        }
+      },
+      "inputs_preserved": true,
+      "ast_passed": true,
+      "suites": [
+        {
+          "suite": "helper",
+          "tests": 1,
+          "native_scenarios": 35,
+          "assertion_mutations": 15,
+          "mutations": [
+            "capture-types",
+            "capture-base-upper",
+            "capture-limit-upper",
+            "request-function",
+            "request-register",
+            "request-width",
+            "request-value",
+            "observed-types-or-address",
+            "disable-already-applied",
+            "live-lower",
+            "live-base-upper",
+            "live-limit-upper",
+            "callback-error",
+            "expected-types",
+            "expected-address"
+          ],
+          "exit_code": 0,
+          "log_sha256": "65e6c0029b18e81ca49864919afa26c01e6b43eeca9b90d913c80efc04a3742d"
+        }
+      ],
+      "physical_action": false
+    }
+  },
+  "limits": {
+    "policy_integrated": false,
+    "adapter_integrated": false,
+    "new_module_built": false,
+    "physical_loaded": false,
+    "wifi_proven": false,
+    "linux_charge_or_gauge_proven": false,
+    "private_data_published": false
+  }
+}
