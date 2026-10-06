@@ -15,6 +15,7 @@
 #include "n71-pcie-inventory.h"
 #include "n71-pcie-mmio.h"
 #include "n71-pcie-scan.h"
+#include "n71-pcie-resource-assign.h"
 #include "n71-pcie-chip-mmio.h"
 #include "n71-dart-mmio.h"
 #include "n71-dart-provider.h"
@@ -213,11 +214,15 @@ static int n71_finish_cleanup(struct n71_diagnostic *state)
 	return state->cleanup_error;
 }
 
+static int n71_assign_action(void);
+
 static int n71_cleanup_action(const char *text, const struct kernel_param *parameter)
 {
 	int error;
 
 	(void)parameter;
+	if (sysfs_streq(text, "assign"))
+		return n71_assign_action();
 	if (!sysfs_streq(text, "cleanup"))
 		return -EINVAL;
 	if (!try_module_get(THIS_MODULE))
@@ -257,6 +262,62 @@ static bool n71_session_has_held_bus(const struct n71_diagnostic *state)
 	return host->bus_held;
 }
 
+static int n71_assign_action(void)
+{
+	bool pinned;
+	int error;
+
+	if (!scan_hold)
+		return -EINVAL;
+	pinned = try_module_get(THIS_MODULE);
+	if (!pinned)
+		return -ENODEV;
+	mutex_lock(&session_lock);
+	if (!session || !n71_session_has_held_bus(session)) {
+		error = -ENODEV;
+	} else if (!session->module_retained || !session->reset_pending ||
+		   session->powered != 4 || session->attached != 4 || session->power_put_pending ||
+		   session->primary_error || session->cleanup_error) {
+		error = -EBUSY;
+	} else {
+		error = n71_pcie_assign_resources(session);
+		if (error && error != -EALREADY && !session->primary_error)
+			session->primary_error = error;
+	}
+	mutex_unlock(&session_lock);
+	module_put(THIS_MODULE);
+	return error;
+}
+
+static int n71_resource_status(char *buffer, const struct kernel_param *parameter)
+{
+	struct n71_scan_host *host;
+	bool assigned;
+	int length, error;
+
+	(void)parameter;
+	mutex_lock(&session_lock);
+	if (session && session->scan_bridge) {
+		host = pci_host_bridge_priv(session->scan_bridge);
+		error = session->primary_error ? session->primary_error :
+			host->config.error ? host->config.error :
+			host->io_error ? host->io_error : host->resources.error;
+		assigned = session->scan_bridge->bus && host->bus_held && host->resources_assigned &&
+			host->window_claimed && host->windows[1].parent == &iomem_resource &&
+			!host->resources.active && !error;
+		length = scnprintf(buffer, PAGE_SIZE,
+			"ready=1 attempted=%u assigned=%u pending=%u claimed=%u active=%u error=%d\n",
+			host->resource_attempted, assigned, host->resources.pending,
+			host->window_claimed, host->resources.active, error);
+	} else {
+		length = scnprintf(buffer, PAGE_SIZE,
+			"ready=0 attempted=0 assigned=0 pending=0 claimed=0 active=0 error=%d\n",
+			session ? session->primary_error : 0);
+	}
+	mutex_unlock(&session_lock);
+	return length;
+}
+
 static int n71_held_status(char *buffer, const struct kernel_param *parameter)
 {
 	int length;
@@ -271,12 +332,15 @@ static int n71_held_status(char *buffer, const struct kernel_param *parameter)
 static const struct kernel_param_ops cleanup_ops = {.set = n71_cleanup_action};
 static const struct kernel_param_ops status_ops = {.get = n71_session_status};
 static const struct kernel_param_ops held_ops = {.get = n71_held_status};
+static const struct kernel_param_ops resource_ops = {.get = n71_resource_status};
 module_param_cb(action, &cleanup_ops, NULL, 0200);
-MODULE_PARM_DESC(action, "cleanup retries restoration only; never repeats enumeration or scan");
+MODULE_PARM_DESC(action, "assign allocates the held bus; cleanup retries restoration; neither repeats scan");
 module_param_cb(status, &status_ops, NULL, 0400);
 MODULE_PARM_DESC(status, "Inspect retained ownership and cleanup errors before normal unload");
 module_param_cb(held, &held_ops, NULL, 0400);
 MODULE_PARM_DESC(held, "Read live bus ownership; distinct from pending restoration");
+module_param_cb(resources, &resource_ops, NULL, 0400);
+MODULE_PARM_DESC(resources, "Read assignment and pending ownership; a removed bus is never assigned");
 
 static int n71_power(struct device *dev, struct n71_diagnostic *state)
 {

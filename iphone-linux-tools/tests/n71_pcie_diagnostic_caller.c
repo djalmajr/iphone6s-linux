@@ -31,8 +31,9 @@
 #define module_param_cb(name, ops, arg, mode) \
 	static const void *param_##name __attribute__((unused)) = (ops)
 #define DEFINE_MUTEX(name) int name
-static void mutex_lock(int *lock) { assert(!*lock); *lock = 1; }
-static void mutex_unlock(int *lock) { assert(*lock); *lock = 0; }
+static int *active_lock;
+static void mutex_lock(int *lock) { assert(!*lock && !active_lock); *lock = 1; active_lock = lock; }
+static void mutex_unlock(int *lock) { assert(*lock && active_lock == lock); *lock = 0; active_lock = NULL; }
 struct kernel_param { int unused; };
 struct kernel_param_ops {
 	int (*set)(const char *, const struct kernel_param *);
@@ -41,7 +42,8 @@ struct kernel_param_ops {
 struct device_node { int refs; };
 struct device { struct device_node *of_node; int index, usage; bool suspended, attached; };
 typedef uint64_t resource_size_t;
-struct resource { resource_size_t start, end; };
+struct resource { resource_size_t start, end; struct resource *parent; };
+static struct resource iomem_resource, foreign_resource;
 struct platform_device { struct device dev; void *data; struct resource resources[11]; };
 struct of_phandle_args { struct device_node *np; u32 args[2]; };
 struct of_device_id { const char *compatible; };
@@ -51,7 +53,13 @@ struct platform_driver {
 	struct { const char *name; const struct of_device_id *of_match_table; bool suppress_bind_attrs; } driver;
 };
 struct gpio_desc { int logical; };
-struct n71_scan_host { bool bus_held; int held_stop_error; };
+struct n71_scan_host {
+	bool bus_held, resource_attempted, resources_assigned, window_claimed;
+	int held_stop_error, io_error;
+	struct { bool pending, active; int error; } resources;
+	struct { int error; } config;
+	struct resource windows[3];
+};
 struct pci_host_bridge { bool alive; void *bus; struct n71_scan_host private; };
 static void *pci_host_bridge_priv(struct pci_host_bridge *bridge) { return &bridge->private; }
 enum n71_pcie_region { N71_PCIE_COMMON, N71_PCIE_PHY };
@@ -89,6 +97,8 @@ static struct {
 	bool machine, live, reset_phase;
 	unsigned int refs, gets, puts, suspends, detaches, scans, enumerations, resets, registered;
 	unsigned int pme_scans, held_scans;
+	unsigned int assignments;
+	int assign_error, assign_early_error;
 	struct device domains[4];
 	struct gpio_desc gpio;
 	struct device_node node;
@@ -128,7 +138,7 @@ static int of_parse_phandle_with_fixed_args(struct device_node *node, const char
 }
 static int of_address_to_resource(struct device_node *node, int index, struct resource *out)
 {
-	assert(node==&mock.node && !index); *out=(struct resource){0x20f100000ULL,0x20f1fffffULL}; return 0;
+	assert(node==&mock.node && !index); *out=(struct resource){.start=0x20f100000ULL,.end=0x20f1fffffULL}; return 0;
 }
 static void of_node_put(struct device_node *node) { assert(node->refs); node->refs--; }
 static int of_property_count_u32_elems(struct device_node *node, const char *name) { (void)node; (void)name; return mock.fault==TABLE ? 2 : 3; }
@@ -265,10 +275,31 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 		mock.bridge.private.bus_held=false;
 		if (mock.fault==HOLD_STOP_REFUSED || mock.fault==HOLD_STOP_AND_RESTORE)
 			mock.bridge.private.held_stop_error=-EPERM;
+		if (mock.bridge.private.config.error && !mock.bridge.private.held_stop_error)
+			mock.bridge.private.held_stop_error=mock.bridge.private.config.error;
 	}
 	if (mock.fault==HOLD_PENDING || mock.fault==HOLD_STOP_AND_RESTORE) return -EIO;
 	stop_error=mock.bridge.private.held_stop_error;
+	mock.bridge.private.resources.pending=false;
+	mock.bridge.private.window_claimed=mock.bridge.private.resources_assigned=false;
+	mock.bridge.private.windows[1].parent=NULL;
 	mock.bridge.alive=false; state->scan_bridge=NULL; return stop_error;
+}
+static int n71_pcie_assign_resources(struct n71_diagnostic *state)
+{
+	struct n71_scan_host *host=&mock.bridge.private;
+	assert(active_lock && *active_lock && mock.refs==2);
+	assert(state->module_retained && state->reset_pending && state->powered==4 && state->attached==4);
+	assert(!state->power_put_pending && !state->primary_error && !state->cleanup_error);
+	assert(state->scan_bridge==&mock.bridge && mock.bridge.alive && mock.bridge.bus && host->bus_held);
+	if (mock.assign_early_error) return mock.assign_early_error;
+	if (host->resource_attempted) return host->config.error ? host->config.error : -EALREADY;
+	host->resource_attempted=true; mock.assignments++;
+	host->resources.pending=host->window_claimed=true;
+	host->windows[1].parent=&iomem_resource;
+	host->config.error=mock.assign_error;
+	host->resources_assigned=!mock.assign_error;
+	return mock.assign_error;
 }
 static int n71_pcie_size_bars(struct device *dev, struct n71_diagnostic *state, void *out) { (void)dev; (void)state; (void)out; return 0; }
 static int n71_pcie_chip_id(struct device *dev, struct n71_diagnostic *state) { (void)dev; (void)state; return 0; }
@@ -287,7 +318,7 @@ static struct platform_device setup(void)
 	mock.ecam=calloc(0x1000000/4,4); assert(mock.ecam);
 	mock.ecam[0x8000/4]=0x1004106b; mock.ecam[0x100000/4]=0x43a314e4; mock.port[0x88/4]=5;
 	for (index=0;index<4;index++) { mock.domains[index].index=index; mock.domains[index].suspended=true; }
-	for (index=0;index<11;index++) p.resources[index]=(struct resource){addresses[index],addresses[index]+(index==0 ? 0x1000000 : index==9 ? 0x8000 : 0x4000)-1};
+	for (index=0;index<11;index++) p.resources[index]=(struct resource){.start=addresses[index],.end=addresses[index]+(index==0 ? 0x1000000 : index==9 ? 0x8000 : 0x4000)-1};
 	p.dev.of_node=&mock.node;
 	run=enumerate=config_inventory=host_scan=true; bar_sizing=chip_id=dart_observe=dart_cycle=false;
 	scan_pme_disable=scan_hold=false;
@@ -411,6 +442,118 @@ static unsigned int exercise_held_caller(void)
 	finish(&p); cases++;
 	return cases;
 }
+static void expect_resources(const char *expected)
+{
+	char buffer[PAGE_SIZE];
+	assert(resource_ops.get(buffer,NULL)>0 && !strcmp(buffer,expected));
+	assert(!session_lock && !active_lock);
+}
+
+static unsigned int exercise_resource_caller(void)
+{
+	struct platform_device p;
+	struct n71_diagnostic *state, saved_state;
+	struct n71_scan_host saved_host;
+	void *saved_bus;
+	unsigned int index,cases=0;
+	char expected[PAGE_SIZE];
+	int error;
+
+	/* Mutations killed: assign without opt-in/session, or take an unreleased temporary pin. */
+	p=setup();
+	expect_resources("ready=0 attempted=0 assigned=0 pending=0 claimed=0 active=0 error=0\n");
+	assert(n71_cleanup_action("assign",NULL)==-EINVAL && !mock.refs && !mock.assignments);
+	scan_hold=true;
+	assert(n71_cleanup_action("assign",NULL)==-ENODEV && !mock.refs && !mock.assignments);
+	mock.live=false;
+	assert(n71_cleanup_action("assign",NULL)==-ENODEV && !mock.refs && !mock.assignments);
+	finish(&p); cases++;
+	/* Mutations killed: remove any lifetime/power/error gate before the allocator's effects. */
+	for (index=0;index<12;index++) {
+		p=setup_held(); assert(n71_probe(&p)==0);
+		state=session; saved_state=*state; saved_host=mock.bridge.private; saved_bus=mock.bridge.bus;
+		error=-EBUSY;
+		switch(index) {
+		case 0: state->module_retained=false; break;
+		case 1: state->reset_pending=false; break;
+		case 2: state->powered=3; break;
+		case 3: state->attached=3; break;
+		case 4: state->power_put_pending=true; break;
+		case 5: state->primary_error=-ETIMEDOUT; break;
+		case 6: state->cleanup_error=-EIO; break;
+		case 7: mock.bridge.private.bus_held=false; error=-ENODEV; break;
+		case 8: mock.bridge.bus=NULL; error=-ENODEV; break;
+		case 9: session=NULL; error=-ENODEV; break;
+		case 10: scan_hold=false; error=-EINVAL; break;
+		default: mock.live=false; error=-ENODEV; break;
+		}
+		assert(n71_cleanup_action("assign",NULL)==error && mock.refs==1 && !mock.assignments);
+		assert(!mock.puts && !mock.resets && !mock.detaches && mock.scans==1 && !active_lock);
+		*state=saved_state; session=state; mock.bridge.private=saved_host; mock.bridge.bus=saved_bus;
+		scan_hold=mock.live=true;
+		assert(n71_cleanup_action("cleanup",NULL)==0); finish(&p); cases++;
+	}
+	/* Mutations killed: dispatch to cleanup, lose EALREADY idempotency, omit mutex/pin or unpin twice. */
+	p=setup_held(); assert(n71_probe(&p)==0);
+	expect_resources("ready=1 attempted=0 assigned=0 pending=0 claimed=0 active=0 error=0\n");
+	assert(n71_cleanup_action("assignjunk",NULL)==-EINVAL && mock.refs==1 && !mock.assignments);
+	assert(cleanup_ops.set("assign\n",NULL)==0 && mock.refs==1 && mock.assignments==1);
+	assert(mock.bridge.bus && !mock.puts && !mock.resets && !mock.detaches && mock.scans==1);
+	expect_resources("ready=1 attempted=1 assigned=1 pending=1 claimed=1 active=0 error=0\n");
+	assert(n71_cleanup_action("assign",NULL)==-EALREADY && !session->primary_error && mock.assignments==1);
+	assert(mock.refs==1 && mock.bridge.bus && !mock.puts && !mock.resets && mock.enumerations==1);
+	cases++;
+	/* Mutations killed: assigned from historical flags instead of live bus/window/phase/error ownership. */
+	for (index=0;index<10;index++) {
+		saved_state=*session; saved_host=mock.bridge.private; saved_bus=mock.bridge.bus; error=0;
+		switch(index) {
+		case 0: mock.bridge.bus=NULL; break;
+		case 1: mock.bridge.private.bus_held=false; break;
+		case 2: mock.bridge.private.resources_assigned=false; break;
+		case 3: mock.bridge.private.window_claimed=false; break;
+		case 4: mock.bridge.private.windows[1].parent=&foreign_resource; break;
+		case 5: mock.bridge.private.resources.active=true; break;
+		case 6: mock.bridge.private.config.error=error=-EACCES; break;
+		case 7: mock.bridge.private.io_error=error=-ERANGE; break;
+		case 8: mock.bridge.private.resources.error=error=-EIO; break;
+		default: session->primary_error=error=-ENODEV; break;
+		}
+		snprintf(expected,sizeof(expected),"ready=1 attempted=1 assigned=0 pending=1 claimed=%u active=%u error=%d\n",
+			 index==3 ? 0 : 1,index==5 ? 1 : 0,error);
+		expect_resources(expected);
+		*session=saved_state; mock.bridge.private=saved_host; mock.bridge.bus=saved_bus; cases++;
+	}
+	/* Mutation killed: a removed bus with pending rollback still reported assigned. */
+	mock.fault=HOLD_PENDING;
+	assert(n71_cleanup_action("cleanup",NULL)==-EIO && session->scan_bridge && mock.refs==1);
+	mock.bridge.private.bus_held=true;
+	expect_resources("ready=1 attempted=1 assigned=0 pending=1 claimed=1 active=0 error=0\n");
+	assert(n71_cleanup_action("assign",NULL)==-ENODEV && mock.assignments==1 && mock.refs==1);
+	mock.fault=NONE;
+	assert(n71_cleanup_action("cleanup",NULL)==0 && !mock.refs && mock.puts==4 && mock.resets==1);
+	expect_resources("ready=0 attempted=0 assigned=0 pending=0 claimed=0 active=0 error=0\n");
+	assert(n71_cleanup_action("assign",NULL)==-ENODEV && !mock.refs && mock.assignments==1);
+	finish(&p); cases++;
+	/* Mutations killed: lose assignment error, retry after failure or hide it when its bridge is freed. */
+	p=setup_held(); assert(n71_probe(&p)==0); mock.assign_error=-EACCES;
+	assert(n71_cleanup_action("assign",NULL)==-EACCES && session->primary_error==-EACCES && mock.refs==1);
+	expect_resources("ready=1 attempted=1 assigned=0 pending=1 claimed=1 active=0 error=-13\n");
+	assert(n71_cleanup_action("assign",NULL)==-EBUSY && mock.assignments==1);
+	assert(n71_cleanup_action("cleanup",NULL)==-EACCES && !session->scan_bridge && mock.refs==1);
+	expect_resources("ready=0 attempted=0 assigned=0 pending=0 claimed=0 active=0 error=-13\n");
+	assert(n71_cleanup_action("cleanup",NULL)==0 && !mock.refs && mock.scans==1 && mock.puts==4);
+	assert(session->primary_error==-EACCES); finish(&p); cases++;
+	/* Mutation killed: hide an early adapter refusal not copied into host config.error. */
+	p=setup_held(); assert(n71_probe(&p)==0); mock.assign_early_error=-ENODEV;
+	assert(n71_cleanup_action("assign",NULL)==-ENODEV && session->primary_error==-ENODEV && !mock.assignments);
+	expect_resources("ready=1 attempted=0 assigned=0 pending=0 claimed=0 active=0 error=-19\n");
+	assert(n71_cleanup_action("assign",NULL)==-EBUSY && !mock.assignments && mock.refs==1);
+	assert(n71_cleanup_action("cleanup",NULL)==0 && !mock.refs && session->primary_error==-ENODEV);
+	expect_resources("ready=0 attempted=0 assigned=0 pending=0 claimed=0 active=0 error=-19\n");
+	finish(&p); cases++;
+	return cases;
+}
+
 int main(void)
 {
 	struct platform_device p; char status[PAGE_SIZE]; unsigned int index, cases=0;
@@ -489,5 +632,7 @@ int main(void)
 	printf("N71_PCIE_CALLER_OK cases=%u\n",cases);
 	assert(exercise_held_caller()==21);
 	puts("N71_PCIE_HELD_CALLER_OK cases=21");
+	assert(exercise_resource_caller()==27);
+	puts("N71_PCIE_RESOURCE_CALLER_OK cases=27");
 	return 0;
 }

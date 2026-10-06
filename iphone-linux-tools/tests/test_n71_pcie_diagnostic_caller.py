@@ -56,6 +56,59 @@ MMIO_MUTATIONS = (
     ('skip-gpio-read', 'value = gpiod_get_value_cansleep(state->perst);',
      'value = false ? gpiod_get_value_cansleep(state->perst) : asserted;'),
 )
+RESOURCE_MUTATIONS = (
+    ('ignore-assign-dispatch', 'if (sysfs_streq(text, "assign"))',
+     'if (false && sysfs_streq(text, "assign"))'),
+    ('assign-without-opt-in', 'if (!scan_hold)\n\t\treturn -EINVAL;',
+     'if (false && !scan_hold)\n\t\treturn -EINVAL;'),
+    ('missing-assign-pin', 'pinned = try_module_get(THIS_MODULE);', 'pinned = true;'),
+    ('ignore-assign-pin-failure', 'if (!pinned)', 'if (false && !pinned)'),
+    ('assign-without-lock', 'mutex_lock(&session_lock);\n\tif (!session ||',
+     'if (false) mutex_lock(&session_lock);\n\tif (!session ||'),
+    ('assign-without-held-bus', '!session || !n71_session_has_held_bus(session)', '!session'),
+    ('assign-without-retained-owner', '!session->module_retained || !session->reset_pending ||',
+     '(false && !session->module_retained) || !session->reset_pending ||'),
+    ('assign-without-reset-owner', '!session->module_retained || !session->reset_pending ||',
+     '!session->module_retained || (false && !session->reset_pending) ||'),
+    ('assign-with-partial-power', 'session->powered != 4', '(false && session->powered != 4)'),
+    ('assign-with-partial-domains', 'session->attached != 4', '(false && session->attached != 4)'),
+    ('assign-with-pending-power-put', 'session->power_put_pending ||\n\t\t   session->primary_error',
+     '(false && session->power_put_pending) ||\n\t\t   session->primary_error'),
+    ('assign-after-primary-error', 'session->primary_error || session->cleanup_error)',
+     '(false && session->primary_error) || session->cleanup_error)'),
+    ('assign-after-cleanup-error', 'session->primary_error || session->cleanup_error)',
+     'session->primary_error || (false && session->cleanup_error))'),
+    ('skip-assign-effects', 'error = n71_pcie_assign_resources(session);',
+     'error = false ? n71_pcie_assign_resources(session) : 0;'),
+    ('lose-assign-error', 'session->primary_error = error;', 'session->primary_error = 0;'),
+    ('ealready-poisons-session', 'error != -EALREADY && !session->primary_error',
+     'true && !session->primary_error'),
+    ('leak-assign-pin', 'module_put(THIS_MODULE);\n\treturn error;\n}\n\nstatic int n71_resource_status',
+     'if (false) module_put(THIS_MODULE);\n\treturn error;\n}\n\nstatic int n71_resource_status'),
+    ('duplicate-assign-unpin', 'module_put(THIS_MODULE);\n\treturn error;\n}\n\nstatic int n71_resource_status',
+     'module_put(THIS_MODULE); module_put(THIS_MODULE);\n\treturn error;\n}\n\nstatic int n71_resource_status'),
+    ('resources-getter-without-lock', 'mutex_lock(&session_lock);\n\tif (session && session->scan_bridge)',
+     'if (false) mutex_lock(&session_lock);\n\tif (session && session->scan_bridge)'),
+    ('assigned-after-bus-removal', 'assigned = session->scan_bridge->bus &&', 'assigned = true &&'),
+    ('assigned-without-bus-owner', 'host->bus_held && host->resources_assigned &&',
+     'true && host->resources_assigned &&'),
+    ('assigned-without-assignment', 'host->bus_held && host->resources_assigned &&',
+     'host->bus_held && true &&'),
+    ('assigned-without-window-claim', 'host->window_claimed && host->windows[1].parent',
+     'true && host->windows[1].parent'),
+    ('assigned-with-foreign-window', 'host->windows[1].parent == &iomem_resource &&',
+     '(true || host->windows[1].parent == &iomem_resource) &&'),
+    ('assigned-during-active-phase', '!host->resources.active && !error;',
+     '(true || !host->resources.active) && !error;'),
+    ('assigned-after-error', '!host->resources.active && !error;',
+     '!host->resources.active && (true || !error);'),
+    ('resources-hides-primary-error', 'error = session->primary_error ? session->primary_error :',
+     'error = false && session->primary_error ? session->primary_error :'),
+    ('resources-hides-policy-error', 'host->io_error ? host->io_error : host->resources.error;',
+     'host->io_error ? host->io_error : 0;'),
+    ('resources-hides-error-after-release', 'session ? session->primary_error : 0);',
+     'session ? 0 : 0);'),
+)
 
 
 class N71PcieCaller(unittest.TestCase):
@@ -75,12 +128,13 @@ class N71PcieCaller(unittest.TestCase):
                 (folder / 'linux' / (name + '.h')).write_text('/* Kernel fixture APIs. */\n')
             for name in ('n71-pcie-contract.h', 'n71-pcie-mmio.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
-            for name in ('port', 'link', 'inventory', 'scan', 'chip-mmio'):
+            for name in ('port', 'link', 'inventory', 'scan', 'resource-assign', 'chip-mmio'):
                 (folder / f'n71-pcie-{name}.h').write_text('/* Dependency supplied by fixture. */\n')
             for name in ('mmio', 'provider'):
                 (folder / f'n71-dart-{name}.h').write_text('/* Dependency supplied by fixture. */\n')
             caller, binary = folder / 'n71-pcie-diagnostic.c', folder / 'caller'
-            variants = tuple((name, before, after, False) for name, before, after in (('baseline', None, None),) + MUTATIONS)
+            variants = tuple((name, before, after, False) for name, before, after in
+                             (('baseline', None, None),) + MUTATIONS + RESOURCE_MUTATIONS)
             variants += tuple((name, before, after, True) for name, before, after in MMIO_MUTATIONS)
             for name, before, after, mmio in variants:
                 subject = mmio_source if mmio else source
@@ -97,6 +151,7 @@ class N71PcieCaller(unittest.TestCase):
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertIn('N71_PCIE_CALLER_OK cases=73', result.stdout)
                     self.assertIn('N71_PCIE_HELD_CALLER_OK cases=21', result.stdout)
+                    self.assertIn('N71_PCIE_RESOURCE_CALLER_OK cases=27', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
