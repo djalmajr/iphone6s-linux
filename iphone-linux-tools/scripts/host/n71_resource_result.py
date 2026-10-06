@@ -2,6 +2,7 @@
 import json
 import re
 import n71_resource_readback
+import n71_resource_optional
 import n71_resource_build
 import n71_scan_held_result
 
@@ -35,11 +36,12 @@ def live_status(text):
     return state
 
 
-def event(text, *, readback_required=False):
+def event(text, *, readback_required=False, optional_required=False):
     found = rows(text, 'N71_PCIE_RESOURCE_RESULT ', RESULT)
     require(len(found) <= 1, 'Assignment must not repeat')
     if not found:
         n71_resource_readback.parse(text, None, required=readback_required)
+        n71_resource_optional.parse(text, None, required=optional_required)
         return None
     values = tuple(map(int, found[0].groups()))
     error, assigned, pending, claimed, attempts, writes = values
@@ -53,6 +55,9 @@ def event(text, *, readback_required=False):
     readback = n71_resource_readback.parse(text, result, required=readback_required)
     if readback is not None:
         result['write_readback'] = readback
+    optional = n71_resource_optional.parse(text, result, required=optional_required)
+    if optional is not None:
+        result['optional_windows'] = optional
     return result
 
 

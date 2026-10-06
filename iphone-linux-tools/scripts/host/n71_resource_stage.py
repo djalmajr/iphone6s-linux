@@ -25,7 +25,9 @@ def verify_readback(session, text):
     require(len(records) == 1, 'Exactly one selected PCI module required')
     required = records[0].get('assignment_readback', False)
     require(type(required) is bool, 'Selected readback contract must be an exact boolean')
-    n71_resource_result.event(text, readback_required=required)
+    optional = records[0].get('assignment_optional_windows', False)
+    require(type(optional) is bool, 'Selected optional windows contract must be an exact boolean')
+    n71_resource_result.event(text, readback_required=required, optional_required=optional)
 
 
 def getter(session):

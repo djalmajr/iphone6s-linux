@@ -20,6 +20,8 @@ Fase B (até cinco arquivos): adaptador `phone/kernel/n71-pcie-resource-assign.h
 
 Fase C (fatias de até cinco arquivos): build externo na VM preservada; registros de qualificação, seletor por hash compatível com os builds anteriores; journal/coletor/composer; candidata privada separada. Executar gates afetados no Mac/Ubuntu ARM64, preservar fonte/config/Image/exports e cinco módulos não alterados. Não publicar binários, firmware, DT, perfis/chaves/snapshots/logs físicos. Confirmar módulos/ABI/contrato antes de carregar.
 
+C1, cinco arquivos: plano; novo `scripts/host/n71_resource_optional.py`; `scripts/host/n71_resource_result.py` (evento preservado); `scripts/host/n71_resource_stage.py` (contrato obrigatório por metadata selecionada); novo `tests/test_n71_resource_optional.py`. Exigir relatório único/completo entre held e readback/result, capture compatível com pending, flags/counters coerentes, contadores limitados às tentativas sem escrita verificada. Preservar evento inteiro em proof/checkpoint/reuso/cleanup. Registros anteriores sem report continuam válidos somente nos builds anteriores.
+
 ## Tarefas
 
 - [x] A: política de no-op restrita, baseline/leituras vivas, contadores e guardas.
@@ -40,3 +42,9 @@ Cinco arquivos: plano, header da política, fixture/runner próprios e `docs/evi
 ### Gate B — flags PCI core, recursos vazios e relato qualificados
 
 Cinco arquivos: plano, adaptador, backend PCI compartilhado e fixture/runner próprios `tests/n71_pcie_optional_host.c` e `tests/test_n71_pcie_optional_host.py`. Mac/Ubuntu ARM64: 18 cenários/14 mutações novos e adaptador legado65/57 requalificado, total83/71 por plataforma;55 inputs/AST/lint fatal. Política21/15 e194/36 reutilizada com oito inputs relevantes intactos; conjunto C final298 cenários/122 mutações por plataforma. Backend conserva flags true nos casos legados e modela registros readonly nos novos. Ausência não pode ser inferida só do valor zero; flags de suporte e recursos flags/start/end vazios são verificados antes de capture. MMIO/BARs/decode e falhas/retry de restauração continuam estritos. Report único precede readback, conserva flags/counters e não repete após tentativa. Build/seleção/journal e prova física dessa correção ainda são gates separados.
+
+### Gate C1 — contrato/journal opcional qualificado
+
+Cinco arquivos definidos acima. Mac/Ubuntu ARM64:70 testes/119 mutações por AssertionError por plataforma,64 inputs iguais/AST/lint fatal. Nova fixture8/12; readback9/15, resultado9/29, estágio16/26, held21/30 e histórico7/7 requalificados. Registros ausentes/duplos/incompletos/fora da fase, flags/counters incompatíveis, proof alterado e metadata selecionada sem report são recusados. Journal conserva decisão/counters no assign, reuso sem setter e cleanup. Mutante de ordenação inicial produziu uma comparação impossível e erro de baseline; anchor corrigido para remover só o guard pretendido, sem contar essa tentativa. Somente a rodada final positiva qualificou a prova.
+
+Build externo paralelo compilou seis módulos Werror/modpost/ELF/vermagic;PCIe86.304 bytes/SHAfba31cb2. Cinco módulos e fonte/config/Image/exports preservados, incluindo oito fontes PCI e seis fontes patched verificadas antes/depois. Esses bytes ainda não foram selecionados ou carregados no telefone. C2 integra evidência/hash e C3 compõe/checka a candidata agrupada antes de qualquer novo DFU.
