@@ -375,7 +375,11 @@ class ResourceStageTests(unittest.TestCase):
         checkpoint = pending / data['checkpoint']['name']
         foreign = held_fixture.timestamp('N71_PCIE_RESOURCE_UNKNOWN pending=0\n', 200)
         self.phone.history += foreign
-        checkpoint.write_text(checkpoint.read_text().replace('\nSTDERR\n', foreign + '\nSTDERR\n'))
+        before = HELD.n71_session_history.kernel_lines(checkpoint.read_text())
+        after = HELD.n71_session_history.kernel_lines(self.phone.history)
+        self.assertEqual(after[:len(before)], before)
+        delta = '\n'.join(after[len(before):]) + '\n'
+        checkpoint.write_text(checkpoint.read_text().replace('\nSTDERR\n', delta + '\nSTDERR\n'))
         data['checkpoint']['sha256'] = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
         state_path.write_text(json.dumps(data))
         self.assertEqual(self.execute('unknown-checkpoint', pending)[0], 1)
