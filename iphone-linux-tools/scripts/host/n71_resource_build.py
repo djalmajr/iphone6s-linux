@@ -20,6 +20,9 @@ PREF64_FLAGS = ('core_pref_window_and_pref64_probe', 'exact_resource_flags_and_r
                 'verified_typed_write_counter', 'unique_report_between_io16_and_readback',
                 'typed_annotation_scoped_and_original_refusal_preserved',
                 'journal_preserves_event_and_expected', 'legacy_defaults_preserved')
+UNSIZED_FLAGS = ('empty_resource_flags_start_end_zero_only', 'populated_typed_resource_unchanged',
+                 'ownership_parent_child_refused', 'core_probes_and_capture_required',
+                 'live_readback_and_rollback_unchanged')
 
 
 def require(condition, message):
@@ -56,6 +59,17 @@ def extended_evidence(root, original, request):
                 'PREF64 policy proof missing or invalid')
         require(candidate.get('pref64_policy_evidence_sha256') == hashlib.sha256(policy.read_bytes()).hexdigest(),
                 'PREF64 policy proof changed')
+    if request.get('unsized', False):
+        for filename, field in (('n71-pci-pref64-build.json', 'base_pref64_evidence_sha256'),
+                                ('n71-pci-pref64-unsized-adapter.json', 'unsized_adapter_evidence_sha256')):
+            bound = root / 'docs/evidence' / filename
+            require(bound.is_file() and not bound.is_symlink() and bound.stat().st_size <= 256 * 1024,
+                    'Unsized PREF64 base missing or invalid')
+            require(candidate.get(field) == hashlib.sha256(bound.read_bytes()).hexdigest(),
+                    'Unsized PREF64 base changed')
+        require(candidate.get('pref64_unsized_adapter_qualified') is True
+                and all(candidate.get('pref64_unsized_contract', {}).get(name) is True for name in UNSIZED_FLAGS),
+                'Qualified unsized PREF64 lifecycle required')
     return candidate
 
 
@@ -79,6 +93,10 @@ def select(root, previous, *, release, pcie_sha256):
         if candidate is None:
             candidate = extended_evidence(root, path, {'filename': 'n71-pci-pref64-build.json',
                                                       'sha256': pcie_sha256, 'io16': True, 'pref64': True})
+            if candidate is None:
+                candidate = extended_evidence(root, path, {'filename': 'n71-pci-pref64-unsized-build.json',
+                                                          'sha256': pcie_sha256, 'io16': True,
+                                                          'pref64': True, 'unsized': True})
             pref64 = candidate is not None
             io16 = pref64
         if candidate is not None:

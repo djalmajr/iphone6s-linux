@@ -111,7 +111,13 @@ Um DFU/um boot reuniu os estágios; acquire e inventário passaram, assign-13 an
 
 ### Fases D3
 
-- [ ] F1 (até cinco arquivos): adapter aceita vazio exato; fixture/runner cobrem janela vazia, flags0 com start/end não0, ownership, core probes ausentes, baseline/tipos/uppers/drift, erro/cleanup/repetição. Executar gates C afetados no Mac/Ubuntu, reaproveitar helpers/política intactos.
-- [ ] F2 (até cinco): build externo na VM com fonte/config/Image/exports/outros módulos preservados; evidência nova e seletor por SHA com prova estrita de D3. Rerodar apenas seleção afetada.
+- [x] F1 (até cinco arquivos): adapter aceita vazio exato; fixture/runner cobrem janela vazia, flags0 com start/end não0, ownership, core probes ausentes, baseline/tipos/uppers/drift, erro/cleanup/repetição. Executar gates C afetados no Mac/Ubuntu, reaproveitar helpers/política intactos.
+- [x] F2 (até cinco): build externo na VM com fonte/config/Image/exports/outros módulos preservados; evidência nova e seletor por SHA com prova estrita de D3. Rerodar apenas seleção afetada.
 - [ ] F3 (até cinco): composição/check da nova candidata e integração do contrato; documentação/push/issue antes da sessão física. Nenhum novo Image/configuração global.
 - [ ] F4: uma sessão reúne acquire/assign/inventário/cleanup/services/snapshot/sync/iOS. Não pedir PIN, temperatura ou operação de console; manter USB-A traseiro.
+
+### D3 F1/F2 — correção e seleção qualificadas offline
+
+Fixture compilada reproduziu modo20:actual-13/expected0 na guarda anterior. Com o estado vazio exato permitido, Mac/Ubuntu ARM64 passaram138 cenários/105 mutações C compiladas; pure319/97 reutilizado com42 inputs intactos, total457/202 por plataforma. Três suítes passaram de primeira; a regressão IO16 teve duas âncoras ambíguas depois da guarda nova, foi delimitada e só essa suíte repetida. Tentativas negativas excluídas. [Prova do adapter](../../docs/evidence/n71-pci-pref64-unsized-adapter.json).
+
+Build externo passou seis módulos Werror/modpost/ELF/vermagic,50 inputs;PCIe88.184 bytes/SHA15617e32ec0d897a53a462d26525705bccea5d8ffa7f54d18ca9d070130f023a. Fonte/config/Image/exports/REG_ON/outros cinco módulos preservados. Novo seletor mantém hashes antigos e exige vínculos por hash da prova/base PREF64 e contrato de lifecycle exato; seleção Mac/Ubuntu41 testes/68 mutações,76 inputs/AST/lint fatal. [Build/contratos](../../docs/evidence/n71-pci-pref64-unsized-build.json). Ainda sem composição/load/DFU desta correção.
