@@ -1124,6 +1124,14 @@ python3 -B tests/run_n71_diagnostic_payload_mutations.py
 
 Candidata real tem oito arquivos privados700/600. Deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON iguais ao perfil optional anterior; somente PCIe/provenance SHA diferem. Composer e collector --check passaram; não carrega automaticamente nem é prova física de atribuição/Wi-Fi/carga. Próximo teste agrupa acquire→assign→read-only→cleanup/retry→services/snapshot/sync→iOS; nenhum driver/DMA/radio habilitado nesta atribuição. Não operar a tela/PIN/console e não trocar cabo sem necessidade; desenvolver/buildar no iOS carregando.
 
+## IO16 físico — um no-op; primeira falha agora em PREF
+
+A candidata d6188a13 rodou um boot Linux com um DFU e nenhum reinício entre estágios. O primeiro monitor expirou antes de carregar o payload; a segunda tentativa usou o DFU já detectado, sem pedir outra sequência manual. Acquire passou; IO16 captured1/enabled1/noops1 confirmou a emulação restrita. Assign avançou para14 tentativas/quatro escritas verificadas, conservando o primeiro erro-5. [Prova sanitizada](evidence/n71-pci-io16-physical.json).
+
+O novo primeiro mismatch foi root0:08/0x24/dword: Linux pediu0000fff0 sobre00010001 e leu0001fff1; write/read callbacks0. Leitura separada, sem escrita, confirmou lower PREF0001fff1/uppers0, IO lower00f0/upper0 e MEM/BARs atribuídos nesta tentativa. Ainda não houve atribuição positiva: os tipos64 permaneceram1 e a verificação atual recusou a diferença. Na fonte fixada, `probe.c:552–565` deriva `pref_64_window` do tipo64 e de um probe upper gravável; `setup-bus.c:867–889` escreve disable0000fff0 sem incluir os tipos. O próximo opt-in deve verificar probe, recurso, baseline e estado vivo antes de comparar o valor completo esperado; não mascarar diferenças arbitrárias nem alterar o pedido do core para habilitar uma janela.
+
+Cleanup/retry somente de limpeza liberou bus/configuração/janelas/owners e conservou evento/erro; nada de novo scan/assign. SSH/Bash/Herdr/HTTP/sync passaram em344,22 segundos de uptime. Snapshot44/sync concluíram; retorno automático não confirmado pelo USB em60 segundos. O operador relatou a tela de bloqueio após fallback físico, ainda sem USB/bateria posterior. Percentual iOS inicial100 não comprova carga Linux. Fontes privadas/logs/IDs/snapshots não são publicados, apenas resultados selecionados/hashes.
+
 ## Próximos gates da atribuição
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os

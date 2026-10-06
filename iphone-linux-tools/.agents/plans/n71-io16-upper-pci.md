@@ -36,8 +36,9 @@ Física (até cinco): somente após A–C qualificados. Um boot agrupa acquire/a
 - [x] B: adapter/report/fixtures e qualificação C final.
 - [x] C1: contrato/journal estritos e compatibilidade.
 - [x] C2: build/ABI/fonte preservados e seleção explícita.
-- [x] C3: candidata privada/check qualificados; reprodução/publicação em andamento.
-- [ ] Uma sessão física agrupada; atualizar issue39 com resultado/limites.
+- [x] C3: candidata privada/check, reprodução e publicação qualificados.
+- [x] Uma sessão física agrupada; resultado/limites em `docs/evidence/n71-pci-io16-physical.json`.
+- [ ] Atualizar issue39 com resultado físico/limites.
 
 ## Verificação
 
@@ -68,3 +69,9 @@ Candidata real separada passou composer/--check, oito arquivos privados700/600; 
 ### Documentação e checkpoint
 
 `docs/STATUS.md` e `docs/N71_PME_ASPM_CANDIDATE.md` registram a fase, receita Multipass/make externa, composição/check/gates, comparação do perfil real e limitações. Evidências históricas offline permanecem como checkpoints; a candidata ainda precisa da sessão física própria. Publicar somente a branch autorizada e atualizar issue39, mantendo merge/tag/release pendentes.
+
+### Sessão física — IO16 passou; PREF recusado
+
+Um DFU/um boot/zero reinícios intermediários. O primeiro monitor expirou antes de payload; retry carregou no DFU já detectado, sem outra sequência manual. Acquire passou; assign preservou error-5,14 tentativas/quatro escritas verificadas, IO16 enabled1/noops1. Primeira falha em PREF0x24: pedido0000fff0, anterior00010001, retorno0001fff1, callbacks0. Leitura separada confirmou os tipos64 e uppers0 após a tentativa; não prova ainda a política PREF nem atribuição positiva.
+
+Cleanup/retry sem novo scan/assign liberou owners, preservando evento/erro. SSH/Bash/Herdr/HTTP/sync passaram e snapshot44 foi verificado. Retorno automático não confirmado em60 segundos; fallback físico relatado na tela de bloqueio, sem USB/bateria posterior. Nenhum PIN solicitado. Próxima fatia trabalha offline no disable PREF64, conservando readback estrito de endereços e registradores restantes; Wi-Fi/energia seguem pendentes.

@@ -1,12 +1,20 @@
 # iPhone 6s Linux — atualizado em 2026-10-06
 
-## Checkpoint atual — candidata IO16 qualificada, teste físico pendente
+## Checkpoint atual — IO16 comprovado; primeira recusa agora em PREF
+
+Um DFU/um boot Linux reuniu acquire, assign, leitura sem escrita, cleanup/retry e serviços, sem reinícios intermediários. O primeiro monitor expirou antes de enviar payload; o segundo carregou a candidata no DFU já detectado, sem outra sequência de botões. IO16 foi habilitado e o pedido upper0000ffff recebeu exatamente um no-op; lower00f0 e BARs/MMIO avançaram com readback estrito. [Prova física](evidence/n71-pci-io16-physical.json).
+
+A atribuição continua negativa: error-5,14 tentativas/quatro escritas verificadas. Primeira falha root0:08/0x24/dword: pedido0000fff0, anterior00010001, retorno válido0001fff1, callbacks sem erro. A leitura separada confirmou PREF lower0001fff1/uppers0 e IO lower00f0/upper0. Os bits de endereço foram alterados, mas os dois tipos64 ficaram1; a próxima correção será restrita a esse disable, com probe/recurso/baseline/estado vivo e readback completo comprovados. Não aceitar mismatch geral.
+
+Cleanup/retry somente de limpeza liberou PCI/REG_ON e preservou o primeiro erro e os reports. SSH/Bash/Herdr/HTTP/sync passaram; snapshot44 e sync foram verificados antes do pedido de retorno. O retorno automático não apareceu no USB no prazo; fallback físico chegou à tela de bloqueio segundo o operador, ainda sem confirmação USB/bateria posterior. Não requer PIN. Wi-Fi/IRQ/IOMMU/driver/radio e telemetria/carga continuam pendentes.
+
+### Preparação IO16 anterior ao teste físico
 
 A nova política trata somente o pedido temporário root0:08/upper0x30/dword0000ffff em IO16 presente padrão4K, com os dois tipos e o recurso coerentes, lower/upper baseline0 e estado vivo confirmado. Faz no-op sem escrita upper; lower00f0 continua gravado/verificado, junto de MMIO/BARs. Primeiro erro, decode/master, budgets e rollback permanecem. Report próprio é exigido somente para o novo SHA e conservado no journal/reuso/cleanup. [Plano](../.agents/plans/n71-io16-upper-pci.md), [política](evidence/n71-pci-io16-policy.json), [build](evidence/n71-pci-io16-build.json), [integração](evidence/n71-pci-io16-profile.json).
 
 Mac/Ubuntu ARM64: C final367 cenários/159 mutações compiladas por assertion por plataforma; host/journal78 testes/131 mutações, seleção25/54 e integração82/132,72 inputs/AST/lint fatal. Gates independentes reutilizados somente com inputs relevantes intactos. Seis módulos Werror/modpost/ELF/vermagic,49 inputs;PCIe87.008 bytes/SHAd6188a13. Outros cinco módulos e fonte/config/Image/exports preservados.
 
-Candidata real separada passou composer/--check: oito arquivos700/600, mesmo deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON do perfil optional. Somente PCIe e seu SHA na provenance mudaram. Defaults/perfis anteriores conservados, nenhum pacote/configuração global instalado no Mac ou Image novo. Ainda não carregada fisicamente; próximo boot reúne acquire/assign/read-only/cleanup/retry/services/snapshot/sync/retorno iOS. Atribuição positiva, IRQ/IOMMU/driver/radio, Wi-Fi e telemetria/carga continuam pendentes até provas próprias.
+Candidata real separada passou composer/--check: oito arquivos700/600, mesmo deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON do perfil optional. Somente PCIe e seu SHA na provenance mudaram. Defaults/perfis anteriores conservados, nenhum pacote/configuração global instalado no Mac ou Image novo. Esse checkpoint de preparação não era prova física; o teste posterior está registrado acima em arquivo próprio. Atribuição positiva, IRQ/IOMMU/driver/radio, Wi-Fi e telemetria/carga continuam pendentes até provas próprias.
 
 ### Sessão anterior — janelas presentes, atribuição recusada e limpeza comprovada
 
