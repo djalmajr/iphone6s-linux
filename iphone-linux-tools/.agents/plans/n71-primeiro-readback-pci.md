@@ -24,8 +24,8 @@ Fase C: build real na VM dedicada, prova ELF/ABI/exports e preservação de font
 
 - [x] A: conservar primeira falha com readback válido/ausente e erros brutos sem I/O adicional.
 - [x] A: executar regressão física sintética0x30, limites/rollback e mutações por assertion no Mac e Ubuntu ARM64; registrar inputs/logs/exit por SHA.
-- [ ] B: integrar registro, parser e journal; validar histórico, rejeições e compatibilidade sem reiniciar o telefone.
-- [ ] C: qualificar build, seleção e candidata agrupada; manter iOS para recarga durante desenvolvimento.
+- [x] B: integrar registro, parser e journal; validar histórico, rejeições e compatibilidade sem reiniciar o telefone.
+- [x] C: qualificar build, seleção e candidata agrupada; manter iOS para recarga durante desenvolvimento.
 - [ ] Teste físico único quando candidata e alimentação estiverem prontas: aquisição, atribuição, coleta, cleanup/retry, serviços, snapshot/sync e retorno ao iOS no mesmo boot.
 - [ ] Documentar resultados sanitizados e atualizar issue39; Wi-Fi e energia continuam abertos até suas próprias provas.
 
@@ -64,3 +64,7 @@ Cinco arquivos: plano, `scripts/build/compose-n71-diagnostic.py`, `scripts/host/
 Mac/Ubuntu ARM64 passaram43 testes/78 mutações por AssertionError por plataforma,62 inputs iguais, AST/lint fatal/diff: composição18 testes/34 mutações mais3 de forwarding do coletor, estágio16/26 e readback9/15. Gate legado held21/30 revelou anchor de chamada desatualizado; será corrigido separadamente e somente esse gate será repetido. Tentativas de import incompleto ou leitura de módulo removido pelo mutante não contaram como kills; a fixture foi corrigida para importar dependências públicas e verificar o contrato de arquivos antes de tentar lê-los. Somente a rodada final positiva foi qualificada.
 
 Candidata real separada foi produzida pelo composer e passou --check. Oito arquivos privados, diretório700/arquivos600, módulo PCIe85.096 bytes/SHAa56fafb4. Deployment, payload/DT/kernel/loader, initramfs, identidades e REG_ON são byte a byte iguais ao perfil resource anterior; somente o módulo PCIe e seu SHA na provenance mudaram. Perfil antigo preservado. Nenhum SSH/USB/DFU novo ou carga Linux comprovada.
+
+### Gate C2b — anchor legado corrigido
+
+Dois arquivos: plano e `tests/test_n71_held_session.py`. O mutante `resource-cli-selection` continua removendo a seleção explícita no CLI, agora com anchor que conserva o argumento novo do SHA. Nenhum código do coletor ou da candidata mudou. Somente held21 testes/30 mutações foi repetido no Mac e Ubuntu ARM64;62 inputs atuais conferidos, AST/lint fatal/diff. Gates C2a43/78 reutilizados com fontes e cenários relevantes intactos; total final da integração64 testes/108 mutações por plataforma. Bateria iOS atual100%, alimentação externa conectada/capaz; `BatteryIsCharging=false` em bateria cheia não é prova de carga no Linux nem de saúde da bateria.
