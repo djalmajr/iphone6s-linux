@@ -63,25 +63,30 @@ def acquisition(text):
     return {'devices': 2, 'endpoints': 1, **devices}
 
 
-def parse(text):
+def parse(text, *, primary_error=0):
+    require(type(primary_error) is int and -4095 <= primary_error <= 0, 'Invalid held primary error')
     result = acquisition(text)
     forbidden = ('N71_PCIE_SCAN_RESULT ', 'N71_PCIE_SCAN_WRITE_REFUSED ',
                  'N71_PCIE_SCAN_BUS_REMOVED ', 'N71_PCIE_SCAN_CONFIG_RESTORED ',
                  'N71_PCIE_SCAN_PME_RESTORED ', 'N71_PCIE_SCAN_TARGET_RESTORED ',
                  'N71_PCIE_SCAN_CLEANUP ', 'N71_PCIE_SESSION_CLEANUP ',
                  'N71_PCIE_RESET_RESTORED ', 'N71_PCIE_POWER_RELEASED ')
+    if primary_error:
+        forbidden = tuple(marker for marker in forbidden if marker != 'N71_PCIE_SCAN_WRITE_REFUSED ')
     require(not any(marker in text for marker in forbidden), 'Held acquisition already failed or cleaned up')
     require(live_held(text) == 1, 'Live held bus required')
     state = n71_scan_target_result.live_status(text)
-    require(state == ACTIVE, 'Live held caller ownership differs')
+    require(state == dict(ACTIVE, primary_error=primary_error), 'Live held caller ownership differs')
     result.update(held_verified=True, caller_state=state,
                   target_prepare_verified=True, pme_prepare_verified=True)
     return result
 
 
-def cleanup(text):
+def cleanup(text, *, primary_error=0):
+    require(type(primary_error) is int and -4095 <= primary_error <= 0, 'Invalid cleanup primary error')
     require(live_held(text) == 0, 'Bus still held during cleanup')
     if 'N71_PCIE_SCAN_HELD ' not in text:
+        require(primary_error == 0, 'Assignment requires a previously acquired held bus')
         n71_scan_pme_result.cleanup(text)
         failed = re.findall(r'N71_PCIE_(?:LINK|INVENTORY|SCAN)_RESULT error=(-?\d+)', text)
         sessions = re.findall(CLEANUP_PATTERN + r'$', text, re.M)
@@ -94,7 +99,7 @@ def cleanup(text):
         return {'stop_error': 0, 'held_acquired': False}
     acquisition(text)
     state = n71_scan_target_result.live_status(text)
-    require(state.get('ready') == 1 and state.get('primary_error') == 0
+    require(state.get('ready') == 1 and state.get('primary_error') == primary_error
             and n71_scan_target_result.is_clean(state), 'Held caller cleanup incomplete')
     require('N71_PCIE_SCAN_RESULT ' not in text and 'N71_PCIE_SCAN_CLEANUP ' not in text,
             'Held and temporary scan protocols must not be mixed')
@@ -121,15 +126,15 @@ def cleanup(text):
                    r'N71_PCIE_POWER_RELEASED powered=0 attached=0')
     sessions = list(re.finditer(CLEANUP_PATTERN + r'$', text, re.M))
     require(len(sessions) == text.count('N71_PCIE_SESSION_CLEANUP ') and sessions
-            and tuple(map(int, sessions[-1].groups())) == (0, 0, 0, 0, 0, 0, 0, 0)
-            and all(int(row.group(1)) < 0 and row.group(2) == '1' and row.group(8) == '0'
+            and tuple(map(int, sessions[-1].groups())) == (0, 0, 0, 0, 0, 0, 0, primary_error)
+            and all(int(row.group(1)) < 0 and row.group(2) == '1' and int(row.group(8)) == primary_error
                     for row in sessions[:-1]), 'Final held caller cleanup required')
     require(targets[-1].start() < reset.start() < power.start() < sessions[-1].start(),
             'Held TLS, reset, power and caller cleanup order differs')
     refusals = list(re.finditer(r'N71_PCIE_SCAN_WRITE_REFUSED bus=\d+ devfn=[0-9a-f]{2} '
                                 r'where=[0-9a-f]{3} size=[124] value=[0-9a-f]{8} error=(-\d+)(?=\n|$)', text))
     require(len(refusals) == text.count('N71_PCIE_SCAN_WRITE_REFUSED '), 'Complete stop refusals required')
-    require((not refusals and stop_error == 0)
+    require((not refusals and stop_error in (0, primary_error))
             or (refusals and stop_error < 0 and int(refusals[0].group(1)) == stop_error
                 and all(text.index('N71_PCIE_SESSION_HELD ') < row.start() < removed.start()
                         for row in refusals)), 'Held stop refusal and error differ')
