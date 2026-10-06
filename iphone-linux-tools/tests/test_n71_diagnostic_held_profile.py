@@ -22,6 +22,8 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 RELEASE = '7.2.0-iphone6s-dart-serdev-power2'
 PATCHSET = 'n71-dart-serdev-power-v2'
+PROFILE_FILES = {'payload.bin', 'initramfs.gz', 'client_ed25519', 'known_hosts',
+                 'n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko', 'deployment.json', 'provenance.json'}
 
 
 def elf(name):
@@ -83,6 +85,7 @@ class HeldProfileTests(unittest.TestCase):
         self.addCleanup(os.umask, original_umask)
         self.diagnostic = diagnostic
         self.loader = loader
+        self.resource_build(update_module=False)
 
     def write(self, path, data):
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -91,6 +94,22 @@ class HeldProfileTests(unittest.TestCase):
 
     def save_build(self):
         self.write(self.build_path, (json.dumps(self.build) + '\n').encode())
+
+    def resource_build(self, *, update_module=True):
+        evidence = json.loads((ROOT / 'docs/evidence/n71-pci-resource-assignment.json').read_text())
+        driver = elf('RESOURCE_PCIE')
+        evidence['real_module_build']['modules']['n71-pcie-diagnostic.ko'] = {
+            'bytes': len(driver), 'sha256': hashlib.sha256(driver).hexdigest(),
+            'vermagic': RELEASE + ' SMP preempt mod_unload aarch64'}
+        evidence['real_module_build']['modules']['n71-wlan-power-diagnostic.ko'] = dict(
+            self.build['kernel_build']['modules']['n71-wlan-power-diagnostic.ko'])
+        path = self.root / 'docs/evidence/n71-pci-resource-assignment.json'
+        self.write(path, json.dumps(evidence).encode())
+        if update_module:
+            self.driver = driver
+            self.write(self.runtime / 'modules/n71-pcie-diagnostic.ko', self.driver)
+            self.args[-1] = hashlib.sha256(self.driver).hexdigest()
+        return path, evidence
 
     def invoke(self, name, arguments=None):
         output = self.runtime / name
@@ -115,9 +134,7 @@ class HeldProfileTests(unittest.TestCase):
     def test_complete_pair_provenance_payload_and_private_modes(self):
         # Mutations killed: omit REG_ON, change held booleans or select an incomplete/default candidate.
         output = self.compose_ok('held')
-        self.assertEqual({path.name for path in output.iterdir()},
-                         {'payload.bin', 'initramfs.gz', 'client_ed25519', 'known_hosts',
-                          'n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko', 'deployment.json', 'provenance.json'})
+        self.assertEqual({path.name for path in output.iterdir()}, PROFILE_FILES)
         self.assertEqual((output / 'n71-pcie-diagnostic.ko').read_bytes(), self.driver)
         self.assertEqual((output / 'n71-wlan-power-diagnostic.ko').read_bytes(), self.reg)
         for name in ('client_ed25519', 'known_hosts', 'initramfs.gz'):
@@ -128,7 +145,7 @@ class HeldProfileTests(unittest.TestCase):
         metadata = json.loads((output / 'provenance.json').read_text())
         expected = {'pcie_scan_link_target': True, 'pcie_scan_pme_noop': False,
                     'pcie_scan_pme_disable': True, 'pcie_scan_hold': True, 'pcie_aspm_off': True,
-                    'module_automatic_load': False, 'physical_boot_tested': False}
+                    'pcie_resource_capable': False, 'module_automatic_load': False, 'physical_boot_tested': False}
         for key, value in expected.items():
             self.assertIs(metadata[key], value, key)
         self.assertEqual(metadata['reg_on_module_sha256'], hashlib.sha256(self.reg).hexdigest())
@@ -141,6 +158,7 @@ class HeldProfileTests(unittest.TestCase):
         self.assertNotIn('n71-wlan-power-diagnostic.ko', {path.name for path in output.iterdir()})
         metadata = json.loads((output / 'provenance.json').read_text())
         self.assertIs(metadata['pcie_scan_hold'], False)
+        self.assertIs(metadata['pcie_resource_capable'], False)
         self.assertIs(metadata['pcie_aspm_off'], False)
         self.assertNotIn('reg_on_module_sha256', metadata)
         self.assertEqual((output / 'payload.bin').read_bytes(),
@@ -220,6 +238,63 @@ class HeldProfileTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.invoke('once')
         self.assertEqual({path.name: path.read_bytes() for path in output.iterdir()}, before)
+
+    def test_resource_selection_preserves_payload_and_identities_with_a_distinct_pair(self):
+        # Mutations killed: use the old module, omit the explicit capability or enable automatic loading.
+        baseline = self.compose_ok('old-held')
+        old_driver = self.driver
+        self.resource_build()
+        output = self.compose_ok('resource-held', self.held + ['--pcie-resource-capable'])
+        self.assertEqual({path.name for path in output.iterdir()}, PROFILE_FILES)
+        self.assertNotEqual(self.driver, old_driver)
+        self.assertEqual((output / 'n71-pcie-diagnostic.ko').read_bytes(), self.driver)
+        self.assertEqual((output / 'n71-wlan-power-diagnostic.ko').read_bytes(), self.reg)
+        for name in ('payload.bin', 'initramfs.gz', 'client_ed25519', 'known_hosts', 'deployment.json'):
+            self.assertEqual((output / name).read_bytes(), (baseline / name).read_bytes(), name)
+        metadata = json.loads((output / 'provenance.json').read_text())
+        for name, value in (('pcie_resource_capable', True), ('pcie_scan_hold', True),
+                            ('module_automatic_load', False), ('requires_explicit_run', True),
+                            ('physical_boot_tested', False), ('wifi_verified', False)):
+            self.assertIs(metadata[name], value, name)
+        self.assertEqual(metadata['module_sha256'], hashlib.sha256(self.driver).hexdigest())
+        self.assertEqual(metadata['reg_on_module_sha256'], hashlib.sha256(self.reg).hexdigest())
+        self.assertEqual(output.stat().st_mode & 0o777, 0o700)
+        self.assertTrue(all(path.stat().st_mode & 0o777 == 0o600 for path in output.iterdir()))
+
+    def test_resource_candidate_requires_hold_and_refuses_cross_selected_modules(self):
+        # Mutations killed: bypass held scope or select the new module for an unflagged profile.
+        for index, arguments in enumerate((['--pcie-resource-capable'],
+                                            ['--pcie-resource-capable'] + self.held[:1] + self.held[2:])):
+            with self.assertRaisesRegex(ValueError, 'Resource-capable profile requires explicit held selection'):
+                self.invoke('resource-no-hold-' + str(index), arguments)
+            self.assertFalse((self.runtime / ('resource-no-hold-' + str(index))).exists())
+        old_driver = self.driver
+        self.resource_build()
+        with self.assertRaises(ValueError):
+            self.invoke('resource-without-flag')
+        self.assertFalse((self.runtime / 'resource-without-flag').exists())
+        self.write(self.runtime / 'modules/n71-pcie-diagnostic.ko', old_driver)
+        self.args[-1] = hashlib.sha256(old_driver).hexdigest()
+        with self.assertRaises(ValueError):
+            self.invoke('old-with-resource-flag', self.held + ['--pcie-resource-capable'])
+        self.assertFalse((self.runtime / 'old-with-resource-flag').exists())
+
+    def test_resource_build_metadata_and_reg_on_pair_must_be_qualified(self):
+        # Mutation killed: bypass build qualification when the caller supplies a matching module SHA.
+        path, evidence = self.resource_build()
+        original = copy.deepcopy(evidence)
+        for index, change in enumerate(('modpost', 'pcie-size', 'reg-pair')):
+            evidence = copy.deepcopy(original)
+            if change == 'modpost':
+                evidence['real_module_build']['modpost_passed'] = False
+            elif change == 'pcie-size':
+                evidence['real_module_build']['modules']['n71-pcie-diagnostic.ko']['bytes'] += 1
+            else:
+                evidence['real_module_build']['modules']['n71-wlan-power-diagnostic.ko']['sha256'] = '0' * 64
+            self.write(path, json.dumps(evidence).encode())
+            with self.assertRaises(ValueError):
+                self.invoke('resource-invalid-' + str(index), self.held + ['--pcie-resource-capable'])
+            self.assertFalse((self.runtime / ('resource-invalid-' + str(index))).exists())
 
 
 if __name__ == '__main__':

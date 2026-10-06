@@ -15,6 +15,7 @@ DEPENDENCIES = (
     'scripts/host/device_profile.py', 'scripts/host/profile_image.py',
     'scripts/host/n71_scan_held_result.py', 'scripts/host/n71_scan_pme_result.py',
     'scripts/host/n71_scan_target_result.py', 'scripts/host/n71_scan_result.py',
+    'scripts/host/n71_resource_result.py',
 )
 MUTATIONS = (
     ('known-abi', 'if kernel_release not in known:', 'if False:'),
@@ -48,8 +49,14 @@ MUTATIONS = (
     ('held-profile-target', 'pcie_scan_link_target=True', 'pcie_scan_link_target=False'),
     ('held-profile-noop', 'pcie_scan_pme_noop=False', 'pcie_scan_pme_noop=True'),
     ('held-profile-pme', 'pcie_scan_pme_disable=True', 'pcie_scan_pme_disable=False'),
-    ('held-build-contract', 'records = n71_scan_held_result.selected_records(ROOT, release=kernel_release)',
+    ('held-build-contract', 'records = selector.selected_records(ROOT, release=kernel_release)',
      "records = [dict(json.loads((ROOT / 'docs/evidence/n71-pci-held-caller.json').read_text())['kernel_build']['modules'][name], module=name) for name in ('n71-pcie-diagnostic.ko', 'n71-wlan-power-diagnostic.ko')]"),
+    ('held-resource-scope', 'if options.pcie_resource_capable and not options.pcie_scan_hold:', 'if False:'),
+    ('held-resource-build', 'n71_resource_result if options.pcie_resource_capable else n71_scan_held_result',
+     'n71_scan_held_result'),
+    ('held-resource-provenance', "'pcie_resource_capable': options.pcie_resource_capable", "'pcie_resource_capable': False"),
+    ('held-resource-default', "'--pcie-resource-capable', action='store_true',",
+     "'--pcie-resource-capable', action='store_true', default=True,"),
 )
 
 

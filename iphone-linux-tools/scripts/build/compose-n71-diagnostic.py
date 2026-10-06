@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / 'scripts/host'))
 import device_profile
 import profile_image
 import n71_scan_held_result
+import n71_resource_result
 
 
 def module(name, path):
@@ -85,7 +86,8 @@ def private_write(path, raw):
 
 
 def held_reg_module(options, driver, *, kernel_release):
-    records = n71_scan_held_result.selected_records(ROOT, release=kernel_release)
+    selector = n71_resource_result if options.pcie_resource_capable else n71_scan_held_result
+    records = selector.selected_records(ROOT, release=kernel_release)
     pcie, reg = records
     if len(driver) != pcie['bytes'] or hashlib.sha256(driver).hexdigest() != pcie['sha256']:
         raise ValueError('Held PCI module differs from the qualified build')
@@ -111,8 +113,11 @@ def main():
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--pcie-aspm-off', action='store_true', help='Disable ASPM only in this diagnostic RAM boot candidate')
     parser.add_argument('--pcie-scan-hold', action='store_true', help='Compose the qualified power2 held PCI/REG_ON candidate')
+    parser.add_argument('--pcie-resource-capable', action='store_true', help='Select the qualified assignment-capable module; requires --pcie-scan-hold')
     parser.add_argument('--reg-on-module', type=Path, help='Qualified private REG_ON module; required only with --pcie-scan-hold')
     options = parser.parse_args()
+    if options.pcie_resource_capable and not options.pcie_scan_hold:
+        raise ValueError('Resource-capable profile requires explicit held selection')
     if options.pcie_scan_hold:
         if (not options.pcie_aspm_off or options.kernel_patchset != KERNEL.kernel_bundle.BINDING_BUNDLE
                 or options.reg_on_module is None):
@@ -192,6 +197,7 @@ def main():
         'module_sha256': options.module_sha256, 'kernel_initramfs_identities_preserved': True,
         'pcie_aspm_off': options.pcie_aspm_off, 'bootargs_sha256': KERNEL.digest(bootargs(options.pcie_aspm_off)),
         'pcie_scan_hold': options.pcie_scan_hold,
+        'pcie_resource_capable': options.pcie_resource_capable,
         'module_automatic_load': False, 'requires_explicit_run': True,
         'requires_explicit_enumerate': True, 'physical_boot_tested': False,
         'default_profile_changed': False, 'wifi_verified': False}

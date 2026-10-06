@@ -20,6 +20,7 @@ import n71_scan_target_result
 import n71_scan_pme_result
 import n71_session_history
 import n71_scan_held_result
+import n71_resource_result
 import n71_held_session
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -70,7 +71,9 @@ def aspm_payload(profile, metadata):
             'Exact ASPM payload bootargs and loader required')
 
 
-def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False, scan_hold=False):
+def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False, scan_hold=False, resource_capable=False):
+    require(type(resource_capable) is bool and (not resource_capable or scan_hold),
+            'Resource capability requires an explicit boolean and held mode')
     require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
     require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
     require(not scan_pme_noop or scan_link_target, 'PME no-op scan requires target scan')
@@ -79,6 +82,8 @@ def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_i
                               and not scan_pme_noop and release == BINDING_RELEASE),
             'Held scan requires its explicit power2 host/target/PME candidate')
     if scan_hold:
+        if resource_capable:
+            return n71_resource_result.selected_records(ROOT, release=release)
         return n71_scan_held_result.selected_records(ROOT, release=release)
     if scan_link_target:
         require(host_scan and release == BINDING_RELEASE, 'Target scan requires host-scan and power2')
@@ -172,7 +177,9 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE, scan_pme_disable=False, scan_hold=False):
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE, scan_pme_disable=False, scan_hold=False, resource_capable=False):
+        require(type(resource_capable) is bool and (not resource_capable or scan_hold),
+                'Resource session requires an explicit boolean and held mode')
         require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
         require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
         require(not scan_link_target or (host_scan and release == BINDING_RELEASE), 'Target session requires host-scan and power2')
@@ -180,6 +187,7 @@ class Session:
         require(not scan_hold or (host_scan and scan_link_target and scan_pme_disable and release == BINDING_RELEASE),
                 'Held session requires its explicit power2 host/target/PME candidate')
         self.scan_hold = scan_hold
+        self.resource_capable = resource_capable
         self.scan_link_target = scan_link_target
         self.scan_pme_disable = scan_pme_disable
         self.scan_parser = n71_scan_pme_result if scan_pme_disable else n71_scan_target_result if scan_link_target else n71_scan_result
@@ -435,6 +443,7 @@ def main():
     parser.add_argument('--scan-pme-noop', action='store_true', help='Explicit target candidate with inactive root PME acknowledgement without a write')
     parser.add_argument('--scan-pme-disable', action='store_true', help='Explicit endpoint PME disable/restore candidate; requires ASPM off')
     parser.add_argument('--scan-hold', action='store_true', help='Retain the qualified PCI bus and power owners until explicit same-boot release')
+    parser.add_argument('--resource-capable', action='store_true', help='Select the qualified held module with explicit resource assignment support')
     parser.add_argument('--release-held', type=Path, help='Release owners from a private held session in this exact boot; requires --scan-hold')
     modes.add_argument('--bar-sizing', action='store_true', help='Select endpoint-only BAR sizing module; implies inventory')
     modes.add_argument('--chip-id', action='store_true', help='Read ChipCommon ID once via restored BAR0 route; implies sizing/inventory')
@@ -457,12 +466,14 @@ def main():
     require(metadata.get('pcie_scan_pme_disable', False) is options.scan_pme_disable, 'Endpoint PME profile selection differs')
     require(metadata.get('pcie_aspm_off', False) is options.scan_pme_disable, 'ASPM profile selection differs')
     require(metadata.get('pcie_scan_hold', False) is options.scan_hold, 'Held profile selection differs')
+    require(metadata.get('pcie_resource_capable', False) is options.resource_capable, 'Resource profile selection differs')
     if options.scan_pme_disable:
         aspm_payload(profile, metadata)
     records = selected_records(options.config_inventory, options.host_scan, options.bar_sizing, options.chip_id,
                                dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release,
                                scan_link_target=options.scan_link_target, scan_pme_noop=options.scan_pme_noop,
-                               scan_pme_disable=options.scan_pme_disable, scan_hold=options.scan_hold)
+                               scan_pme_disable=options.scan_pme_disable, scan_hold=options.scan_hold,
+                               resource_capable=options.resource_capable)
     if release == BINDING_RELEASE or options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe or options.dart_cycle:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record, release=release)) for record in records]
@@ -474,7 +485,8 @@ def main():
     if options.check:
         if options.release_held:
             session = Session(ROOT / 'runtime', modules, host_scan=True, scan_link_target=True,
-                              scan_pme_disable=True, scan_hold=True, release=release)
+                              scan_pme_disable=True, scan_hold=True, release=release,
+                              resource_capable=options.resource_capable)
             n71_held_session.load_source(session, ROOT, options.release_held, held_identity)
         print('N71_SESSION_LOCAL_GATE_OK; no SSH or USB action')
         return 0
@@ -486,7 +498,8 @@ def main():
     output.mkdir(mode=0o700)
     if options.scan_hold:
         session = Session(output, modules, host_scan=options.host_scan, scan_link_target=options.scan_link_target,
-                          scan_pme_disable=options.scan_pme_disable, scan_hold=True, release=release, history=history)
+                          scan_pme_disable=options.scan_pme_disable, scan_hold=True, release=release, history=history,
+                          resource_capable=options.resource_capable)
         return n71_held_session.run(session, held_identity, root=ROOT, source=options.release_held)
     return Session(output, modules, config_inventory=options.config_inventory,
                    host_scan=options.host_scan, bar_sizing=options.bar_sizing,

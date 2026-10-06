@@ -329,6 +329,130 @@ class HeldSessionTests(unittest.TestCase):
                 with self.subTest(changed=changed), self.assertRaises(ValueError):
                     LINK_SESSION.Session(self.root / 'runtime', self.modules, **dict(mode, **changed))
 
+    def test_resource_build_dispatch_and_exact_capability_scope(self):
+        # Mutations killed: use the old build or admit an implicit/nonboolean resource capability.
+        mode = dict(host_scan=True, scan_link_target=True, scan_pme_disable=True,
+                    scan_hold=True, release=LINK_SESSION.BINDING_RELEASE, resource_capable=True)
+        records = LINK_SESSION.selected_records(False, **mode)
+        self.assertEqual(records[0]['bytes'], 84696)
+        self.assertEqual(records[0]['sha256'], '2dcdebc2251b272246c4b6ae7ee58449ef2973ffe01d66fa5398392730a2f31d')
+        self.assertEqual(records[1], LINK_SESSION.selected_records(False, **dict(mode, resource_capable=False))[1])
+        invalid = ({'scan_hold': False}, {'host_scan': False}, {'scan_link_target': False},
+                   {'scan_pme_disable': False}, {'release': LINK_SESSION.RELEASE},
+                   {'resource_capable': 1}, {'resource_capable': None}, {'resource_capable': 'yes'})
+        with patch.object(LINK_SESSION.device_profile, 'ssh_options', return_value=[]):
+            selected = LINK_SESSION.Session(self.root / 'runtime', self.modules, **mode)
+            self.assertIs(selected.resource_capable, True)
+            self.assertIs(LINK_SESSION.Session(self.root / 'runtime', self.modules,
+                          **dict(mode, resource_capable=False)).resource_capable, False)
+            for changed in invalid:
+                with self.subTest(changed=changed), self.assertRaises(ValueError):
+                    LINK_SESSION.selected_records(False, **dict(mode, **changed))
+                with self.subTest(session=changed), self.assertRaises(ValueError):
+                    LINK_SESSION.Session(self.root / 'runtime', self.modules, **dict(mode, **changed))
+
+    def resource_cli(self):
+        records = []
+        for index, name in enumerate(HELD.MODULES):
+            raw = bytearray(128)
+            raw[:7] = b'\x7fELF\x02\x01\x01'
+            struct.pack_into('<HH', raw, 16, 1, 183)
+            raw.extend(('vermagic=' + LINK_SESSION.BINDING_RELEASE + ' SMP preempt mod_unload aarch64\0').encode())
+            raw.extend(('RESOURCE_FIXTURE_' + str(index)).encode())
+            path = self.root / name
+            path.write_bytes(raw)
+            path.chmod(0o600)
+            records.append({'module': name, 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest(),
+                            'vermagic': LINK_SESSION.BINDING_RELEASE + ' SMP preempt mod_unload aarch64'})
+        folder = self.root / 'docs/evidence'
+        folder.mkdir(parents=True)
+        held = json.loads((ROOT / 'docs/evidence/n71-pci-held-caller.json').read_text())
+        resource = json.loads((ROOT / 'docs/evidence/n71-pci-resource-assignment.json').read_text())
+        held['kernel_build']['modules'].update({row['module']: {k: v for k, v in row.items() if k != 'module'}
+                                               for row in records})
+        held['kernel_build']['modules']['n71-pcie-diagnostic.ko']['sha256'] = '0' * 64
+        resource['real_module_build']['modules'].update(
+            {row['module']: {k: v for k, v in row.items() if k != 'module'} for row in records})
+        for name, evidence in (('n71-pci-held-caller.json', held), ('n71-pci-resource-assignment.json', resource)):
+            (folder / name).write_text(json.dumps(evidence))
+        loader = b'FIXTURE_LOADER'.ljust(64, b'_')
+        (folder / 'm1n1-rebuild.json').write_text(json.dumps({'shallow_clone': {
+            'matches_original': True, 'bytes': len(loader), 'sha256': hashlib.sha256(loader).hexdigest()}}))
+        payload = self.root / 'payload.bin'
+        payload.write_bytes(loader + LINK_SESSION.ASPM_BOOTARGS + b'FIXTURE_PAYLOAD')
+        payload.chmod(0o600)
+        profile = {'payload': payload, 'sha256': hashlib.sha256(payload.read_bytes()).hexdigest(),
+                   'initramfs_sha256': 'b' * 64}
+        deployment = self.root / 'deployment.json'
+        deployment.write_text('{}\n')
+        deployment.chmod(0o600)
+        metadata = {'kernel_patchset': 'n71-dart-serdev-power-v2', 'kernel_release': LINK_SESSION.BINDING_RELEASE,
+                    'payload_sha256': profile['sha256'], 'module_sha256': records[0]['sha256'],
+                    'pcie_scan_link_target': True, 'pcie_scan_pme_disable': True, 'pcie_scan_hold': True,
+                    'pcie_aspm_off': True, 'pcie_resource_capable': True,
+                    'bootargs_sha256': hashlib.sha256(LINK_SESSION.ASPM_BOOTARGS).hexdigest()}
+        provenance = self.root / 'provenance.json'
+        provenance.write_text(json.dumps(metadata))
+        provenance.chmod(0o600)
+        argv = ['n71-link-session.py', '--profile', str(deployment), '--host-scan', '--scan-link-target',
+                '--scan-pme-disable', '--scan-hold', '--resource-capable', '--check']
+        return profile, metadata, argv
+
+    def test_resource_cli_check_rejects_provenance_and_modules_without_ssh(self):
+        # Mutations killed: lose CLI capability dispatch or accept nonboolean/mismatched provenance.
+        profile, metadata, argv = self.resource_cli()
+        provenance = self.root / 'provenance.json'
+        with patch.object(LINK_SESSION, 'ROOT', self.root), patch.dict(os.environ), contextlib.redirect_stdout(io.StringIO()), \
+                patch.object(LINK_SESSION.device_profile, 'verify', return_value=profile), \
+                patch.object(LINK_SESSION.subprocess, 'run', side_effect=AssertionError('Unexpected SSH')):
+            with patch.object(sys, 'argv', argv):
+                try:
+                    self.assertEqual(LINK_SESSION.main(), 0)
+                except (ValueError, OSError, SystemExit) as error:
+                    self.fail('Valid resource CLI check refused: ' + str(error))
+            for value in (False, 1, None, 'true'):
+                provenance.write_text(json.dumps(dict(metadata, pcie_resource_capable=value)))
+                with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
+                    LINK_SESSION.main()
+            missing = dict(metadata)
+            del missing['pcie_resource_capable']
+            provenance.write_text(json.dumps(missing))
+            with patch.object(sys, 'argv', argv), self.assertRaises(ValueError):
+                LINK_SESSION.main()
+            provenance.write_text(json.dumps(metadata))
+            without_flag = [arg for arg in argv if arg != '--resource-capable']
+            with patch.object(sys, 'argv', without_flag), self.assertRaises(ValueError):
+                LINK_SESSION.main()
+            module = self.root / HELD.MODULES[0]
+            module.write_bytes(module.read_bytes() + b'CHANGED')
+            with patch.object(sys, 'argv', argv), self.assertRaisesRegex(ValueError, 'Module size differs'):
+                LINK_SESSION.main()
+
+    def test_resource_cli_forwards_capability_to_acquisition_and_resume_check(self):
+        # Mutations killed: omit capability from either Session constructor used by the held CLI.
+        profile, _, argv = self.resource_cli()
+        def coordinator(session, *args, **kwargs):
+            self.assertIs(session.resource_capable, True)
+            self.assertEqual(session.modules[0][0]['sha256'],
+                             hashlib.sha256((self.root / HELD.MODULES[0]).read_bytes()).hexdigest())
+            return 0
+        def invoke(arguments):
+            with patch.object(sys, 'argv', arguments):
+                try:
+                    return LINK_SESSION.main()
+                except (ValueError, OSError, SystemExit) as error:
+                    self.fail('Valid resource CLI dispatch refused: ' + str(error))
+        with patch.object(LINK_SESSION, 'ROOT', self.root), patch.dict(os.environ), contextlib.redirect_stdout(io.StringIO()), \
+                patch.object(LINK_SESSION.device_profile, 'verify', return_value=profile), \
+                patch.object(LINK_SESSION.device_profile, 'ssh_options', return_value=[]), \
+                patch.object(LINK_SESSION.n71_held_session, 'run', side_effect=coordinator), \
+                patch.object(LINK_SESSION.n71_held_session, 'load_source', side_effect=coordinator), \
+                patch.object(LINK_SESSION.subprocess, 'run', side_effect=AssertionError('Unexpected SSH')):
+            acquire = [arg for arg in argv if arg != '--check'] + ['--output-dir', str(self.root / 'runtime/acquire')]
+            self.assertEqual(invoke(acquire), 0)
+            resume = argv + ['--release-held', str(self.root / 'runtime/source')]
+            self.assertEqual(invoke(resume), 0)
+
     def test_cleanup_keeps_negative_stop_error_even_after_all_owners_are_released(self):
         # Mutation killed: convert a denied PCI stop write into a successful operation.
         _, _, output = self.execute('acquire')
@@ -511,6 +635,17 @@ class HeldSessionTests(unittest.TestCase):
             'held-provenance': ("metadata.get('pcie_scan_hold', False) is options.scan_hold", 'True'),
             'held-release-scope': ('options.scan_hold and options.previous_clean is None', 'True'),
             'held-journal-before-effect': ('session.before_effect = journal.save', 'session.before_effect = lambda: None'),
+            'resource-build-selection': ('return n71_resource_result.selected_records(ROOT, release=release)',
+                                         'return n71_scan_held_result.selected_records(ROOT, release=release)'),
+            'resource-selection-scope': ("type(resource_capable) is bool and (not resource_capable or scan_hold),\n            'Resource capability", "True,\n            'Resource capability"),
+            'resource-session-scope': ("type(resource_capable) is bool and (not resource_capable or scan_hold),\n                'Resource session", "True,\n                'Resource session"),
+            'resource-session-selection': ('self.resource_capable = resource_capable', 'self.resource_capable = False'),
+            'resource-provenance': ("metadata.get('pcie_resource_capable', False) is options.resource_capable", 'True'),
+            'resource-cli-selection': ('resource_capable=options.resource_capable)\n    if release', 'resource_capable=False)\n    if release'),
+            'resource-cli-check-session': ('resource_capable=options.resource_capable)\n            n71_held_session.load_source',
+                                           'resource_capable=False)\n            n71_held_session.load_source'),
+            'resource-cli-live-session': ('resource_capable=options.resource_capable)\n        return n71_held_session.run',
+                                          'resource_capable=False)\n        return n71_held_session.run'),
         }
         # The journal hook lives in the coordinator, not the link collector.
         variants['held-journal-before-effect'] = link_variants.pop('held-journal-before-effect')
