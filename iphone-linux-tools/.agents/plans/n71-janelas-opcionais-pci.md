@@ -33,8 +33,8 @@ C3, três arquivos: plano, `tests/run_n71_diagnostic_payload_mutations.py` (depe
 - [x] B: derivar flags do PCI core e relatar decisão; testar adaptador e restaurar corretamente.
 - [x] C: build, seleção e journal/candidata sem novo DFU.
 - [x] Registrar reprodução e provas sanitizadas do checkpoint qualificado.
-- [ ] Publicar o checkpoint e atualizar issue39 antes da sessão física.
-- [ ] Uma sessão física agrupada somente após os gates; conservar diagnóstico/cleanup e serviços. Não habilitar driver/DMA/radio nesta atribuição.
+- [x] Publicar o checkpoint e atualizar issue39 antes da sessão física.
+- [x] Uma sessão física agrupada somente após os gates; conservar diagnóstico/cleanup e serviços. Não habilitar driver/DMA/radio nesta atribuição.
 - [ ] Atualizar docs/issues com provas sanitizadas e limites; Wi-Fi/energia seguem abertos até provas próprias.
 
 ## Verificação
@@ -68,3 +68,7 @@ Candidata real separada passou composer/--check: oito arquivos privados700/600, 
 ### Gate D — reprodução e checkpoint offline
 
 Quatro arquivos: plano, `docs/STATUS.md`, `docs/N71_PME_ASPM_CANDIDATE.md` e nova `docs/evidence/n71-pci-optional-profile.json`. Registra gates, comandos, source/ABI/bytes preservados, booleans dos reports exigidos e limites. Sem quebra de CLI/defaults, dependências/banco/config global inalterados; guardas acrescentam somente leituras limitadas nos pedidos de ranges ausentes. Testes reais/AST/lint fatal, provas por hash e links/Bash/diff/guard público qualificados. Publicar somente a branch autorizada, mantendo merge/tag/release pendentes. Issue39/Wi-Fi/energia continuam em curso até provas físicas próprias.
+
+### Resultado físico — hipótese de ausência não confirmada
+
+Um boot/DFU da candidata SHA fba31cb2: reports de presença IO/PREF impediram o novo no-op, atribuição falhou no mesmo upper0x30. Config read-only confirmou tipos IO16, lower/upper0. Cleanup/retry, serviços, snapshot44 e retorno iOS passaram;100%/recarga ativa após sessão curta, sem prova de carga Linux. Documentação/evidência física preservam o erro e não mudam os registros históricos de qualificação offline. Próxima demanda distingue upper em IO16 de range inteiro ausente; nenhuma redução genérica do readback.

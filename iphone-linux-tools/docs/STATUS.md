@@ -1,12 +1,20 @@
 # iPhone 6s Linux — atualizado em 2026-10-06
 
-## Checkpoint atual — candidata de janelas opcionais qualificada, teste físico pendente
+## Checkpoint atual — janelas presentes, atribuição recusada e limpeza comprovada
+
+A candidata SHA fba31cb2 rodou em um único boot/DFU, sem reinícios intermediários. Aquisição PCI retida passou; o PCI core declarou IO/prefetch presentes (`io_absent=0`, `pref_absent=0`), portanto nenhum no-op de range ausente foi aplicado. A atribuição preservou o primeiro erro -5 em root0:08/0x30: pedido0000ffff, anterior/retorno0, callbacks sem erro. Essa sessão não comprova atribuição positiva nem ausência das janelas. [Prova física](evidence/n71-pci-optional-physical.json).
+
+Leitura sem escrita confirmou IO base/limit e upper zerados. Os tipos base/limit são0 (IO16 na fonte PCI fixada); em `pci_setup_bridge_io`, Linux escreve upper0000ffff antes de desativar lower00f0 mesmo quando a janela é de16 bits. O próximo desenvolvimento qualificará somente esse pedido upper sem efeito, com opt-in, tipo/baseline/estado vivo verificados; lower/MMIO/BARs permanecem estritos. Não aceitar qualquer readback zero nem inferir ausência de IO.
+
+Cleanup/retry somente de limpeza liberou PCI/REG_ON, preservando o erro original e ambos os reports. SSH/Bash/Herdr/HTTP/sync passaram em86,61 segundos de uptime. Snapshot44 e retorno automático iOS confirmados; bateria100% e recarga ativa no retorno. Percentual arredondado e fonte externa não comprovam corrente ou carregamento Linux. Telefone fica no iOS durante desenvolvimento/build, sem nova intervenção física nesta etapa.
+
+### Preparação anterior — candidata de janelas opcionais qualificada
 
 A correção trata somente pedidos de desativação de IO/prefetch quando flags/probes PCI core comprovam ausência, os recursos estão vazios, a baseline é zero e os registradores vivos continuam zerados. Faz no-op sem escrita nesses ranges; BARs/MMIO implementados, decode/master, primeiro erro e rollback continuam estritos. Registro único conserva flags/counters; o journal o exige somente para o novo módulo selecionado por hash e preserva seu conteúdo até o cleanup. [Plano](../.agents/plans/n71-janelas-opcionais-pci.md), [build](evidence/n71-pci-optional-build.json), [integração/candidata](evidence/n71-pci-optional-profile.json).
 
 Mac/Ubuntu ARM64: conjunto C final 298 cenários/122 mutações compiladas por assertion por plataforma; contrato/journal 70 testes/119 mutações por AssertionError; seleção 19/45; integração final 73/120, 67 inputs/AST/lint fatal. Seis módulos Werror/modpost/ELF/vermagic; PCIe 86.304 bytes/SHA fba31cb2, outros cinco preservados. Fonte/config/Image/exports conferidos antes/depois, incluindo oito fontes PCI e seis patched.
 
-Candidata real separada passou composer/--check: oito arquivos privados700/600; deployment, payload/DT/kernel/loader/initramfs, identidades e REG_ON iguais ao perfil readback anterior. Somente PCIe e seu SHA na provenance mudaram. Nenhum novo boot físico nesta correção, pacote/configuração global instalado no Mac ou Image reconstruído. iPhone reconfirmado no iOS com100%; próximo teste agrupa aquisição/assign/coleta, cleanup/retry, serviços, snapshot/sync e retorno ao iOS. Wi-Fi/IRQ/IOMMU/driver e energia permanecem pendentes até provas próprias.
+Candidata real separada passou composer/--check: oito arquivos privados700/600; deployment, payload/DT/kernel/loader/initramfs, identidades e REG_ON iguais ao perfil readback anterior. Somente PCIe e seu SHA na provenance mudaram. A preparação não instalou pacote/configuração global no Mac nem reconstruiu Image. A sessão agrupada acima executou aquisição/assign/coleta, cleanup/retry, serviços, snapshot/sync e retorno ao iOS. Wi-Fi/IRQ/IOMMU/driver e energia permanecem pendentes até provas próprias.
 
 CI do checkpoint publicado e04e0e6: macOS e Windows passaram; Ubuntu marcou erros nos testes PMGR e encerrou antes do resumo com exit143. Causa não confirmada, registrada na #38; gates locais/VM não substituem a matriz completa.
 

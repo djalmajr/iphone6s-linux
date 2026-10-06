@@ -1068,6 +1068,18 @@ preparação. Próximo teste agrupa aquisição/assign/coleta/cleanup/retry,
 serviços/snapshot/sync e retorno iOS; não requer operar a tela. Atribuição
 positiva, IRQ/DMA/IOMMU/driver/radio e carga/gauge Linux continuam pendentes.
 
+## Janelas opcionais — sessão física com flags de presença
+
+Candidata publicada e8ee1d4/SHA fba31cb2, Linux7.2 power2: um DFU/boot, snapshot44 restaurado e zero reinícios intermediários. Aquisição retida positiva. Atribuição negativa -5,9 tentativas/2 escritas verificadas; report opcional captured1/io_absent0/pref_absent0/noops0. Primeira falha continua root0:08/0x30/dword0000ffff, anterior/retorno válido0, callbacks sem erro. A proteção funcionou: a ausência não foi declarada e o mismatch não foi ignorado. [Prova sanitizada](evidence/n71-pci-optional-physical.json).
+
+Coleta somente de leitura, ainda no mesmo boot, confirmou IO1c/30 zero e tipos base/limit0, PREF24 zero, dois dispositivos e power_supply vazio. A fonte fixada958481f87fee0949ff6a9a4af77f7eb6dac8a149 define tipo0 como IO16 em `include/uapi/linux/pci_regs.h:142`. `drivers/pci/probe.c:397` usa upper somente para tipo32; `drivers/pci/setup-bus.c:826` escreve temporariamente upper0000ffff sem condicionar ao tipo e depois lower00f0/upper0. Assim, janela presente de16 bits exige tratamento próprio; os flags falsificam a hipótese anterior de range inteiro ausente. Não há prova de DMA/driver/radio ou de que toda escrita em upper possa ser dispensada.
+
+Primeiro cleanup removeu/restaurou o bus/config/janelas e reteve owners por stop-error; retry somente de limpeza liberou módulos/REG_ON. Prova/assignment/report foram preservados, stop-error-5 continua negativo. Serviços SSH/Bash/Herdr/HTTP e sync passaram com uptime86,61s. Backup verificado44/sync e retorno automático iOS passaram;100% antes/depois, recarga ativa no retorno. A medição não informa corrente ou carga Linux.
+
+A reprodução segue os comandos composer/check anteriores e a sessão held já documentada: acquire; `--assign-held` com a pasta de acquire; coleta read-only; `--release-held` da pasta assign; se cleanup pendente, release da pasta de cleanup anterior. Não repetir assignment ou scan durante cleanup. Conferir services/snapshot/sync e retorno pelo USB antes de concluir. Perfis, snapshots, chaves, IDs e logs completos ficam privados; a prova pública conserva somente resultados e hashes.
+
+Próxima fatia: qualificar um opt-in restrito para o pedido upper de disable em IO16, com recurso/tipo/base/limite/upper capturados e vivos, decode/master off, primeiro erro e rollback intactos. Ranges inteiros ausentes continuam com contrato anterior, sem habilitar esse opt-in em layouts/defaults anteriores. Todo desenvolvimento/build ocorre com iPhone carregando no iOS; nenhuma nova sessão física até composição/check qualificados.
+
 ## Próximos gates da atribuição
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os
