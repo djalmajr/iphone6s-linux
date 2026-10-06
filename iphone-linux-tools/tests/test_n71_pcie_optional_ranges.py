@@ -40,7 +40,7 @@ class OptionalRangeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='n71-optional-ranges-') as directory:
             folder = Path(directory)
             for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h',
-                         'n71-pcie-io16-upper.h'):
+                         'n71-pcie-io16-upper.h', 'n71-pcie-pref64-disable.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
             header, binary = folder / 'n71-pcie-resource-write.h', folder / 'policy'
             for name, before, after in (('baseline', None, None),) + MUTATIONS:

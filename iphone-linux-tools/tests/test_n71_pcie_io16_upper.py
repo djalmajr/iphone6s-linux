@@ -49,7 +49,8 @@ class IO16UpperTests(unittest.TestCase):
         sources = {name: (ROOT / 'phone/kernel' / name).read_text() for name in (POLICY, HELPER)}
         with tempfile.TemporaryDirectory(prefix='n71-io16-upper-') as directory:
             folder = Path(directory)
-            for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h'):
+            for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h',
+                         'n71-pcie-pref64-disable.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
             binary = folder / 'policy'
             for target, name, before, after in ((None, 'baseline', None, None),) + MUTATIONS:
