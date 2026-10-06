@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-06
 
-## Checkpoint atual — IO16 comprovado; primeira recusa agora em PREF
+## Checkpoint atual — candidata PREF64 qualificada, sessão física pendente
+
+O novo opt-in trata somente root0:08/0x24/dword0000fff0 com probes/recurso PREF64 coerentes, baseline00010001/uppers0 e estado vivo confirmado. Mantém o pedido hardware e exige readback completo0001fff1; tipo/endereço incorretos continuam erros. Confere a janela novamente antes de sucesso. Primeiro erro conserva pedido/expected/callbacks, o report é exigido somente para o novo SHA e o journal o mantém durante reuso/cleanup. [Plano/decisões](../.agents/plans/n71-pref64-disable-pci.md), [política](evidence/n71-pci-pref64-policy.json), [build](evidence/n71-pci-pref64-build.json), [candidata](evidence/n71-pci-pref64-profile.json).
+
+Mac/Ubuntu ARM64: C final442 cenários/199 mutações compiladas por plataforma; host/journal89 testes/149 mutações, seleção32/62 e integração94/150,78 inputs/AST/lint fatal. Gates independentes reaproveitados só com inputs relevantes intactos. Seis módulos Werror/modpost/ELF/vermagic,50 inputs;PCIe88.120 bytes/SHA968e6a06. Kernel/fonte/config/Image/exports/REG_ON/outros cinco módulos preservados. Probes/fixtures/mutantes negativos ficaram registrados e fora das contagens qualificadas.
+
+Candidata real separada passou composer/check, oito arquivos700/600; deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON iguais ao perfil IO16 físico. Só PCIe e seu SHA na provenance mudaram, sem carga automática. Ainda não testada no aparelho. Próximo boot agrupa acquire/assign, inventário de PCI/IRQ/IOMMU sem escrita, cleanup/retry, serviços e snapshot/sync/retorno iOS. Wi-Fi e telemetria/carga continuam pendentes até provas próprias. Nenhum pacote/configuração global instalado no Mac ou Image novo.
+
+### IO16 físico anterior — correção comprovada; primeira recusa em PREF
 
 Um DFU/um boot Linux reuniu acquire, assign, leitura sem escrita, cleanup/retry e serviços, sem reinícios intermediários. O primeiro monitor expirou antes de enviar payload; o segundo carregou a candidata no DFU já detectado, sem outra sequência de botões. IO16 foi habilitado e o pedido upper0000ffff recebeu exatamente um no-op; lower00f0 e BARs/MMIO avançaram com readback estrito. [Prova física](evidence/n71-pci-io16-physical.json).
 

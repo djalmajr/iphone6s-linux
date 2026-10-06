@@ -47,7 +47,7 @@ Física (até cinco): somente após A–E. Um boot reúne acquire/assign/read-on
 - [x] C2: dispatch, stage/journal e legados qualificados.
 - [x] D: build/ABI preservados e seleção explícita.
 - [x] E: candidata privada/check e integrações qualificados.
-- [ ] E: reprodução/publicação do checkpoint antes da sessão física.
+- [x] E: reprodução/documentação do checkpoint; publicar a branch/issues antes da sessão física.
 - [ ] Sessão física agrupada e resultado/limites na issue39.
 
 ## Verificação

@@ -1132,6 +1132,52 @@ O novo primeiro mismatch foi root0:08/0x24/dword: Linux pediu0000fff0 sobre00010
 
 Cleanup/retry somente de limpeza liberou bus/configuração/janelas/owners e conservou evento/erro; nada de novo scan/assign. SSH/Bash/Herdr/HTTP/sync passaram em344,22 segundos de uptime. Snapshot44/sync concluíram; retorno automático não confirmado pelo USB em60 segundos. O operador relatou a tela de bloqueio após fallback físico, ainda sem USB/bateria posterior. Percentual iOS inicial100 não comprova carga Linux. Fontes privadas/logs/IDs/snapshots não são publicados, apenas resultados selecionados/hashes.
 
+## Disable PREF64 — candidata qualificada, sem novo DFU nesta preparação
+
+A sessão IO16 mediu pedido0000fff0/anterior00010001/retorno0001fff1. O novo opt-in confere `pref_window`/`pref_64_window` e recurso MEM/PREF/MEM64/tipo1 exato0..fffff antes do claim. Capture exige os dois tipos1, endereços0 e uppers0; um check preliminar duplicado de lower foi removido, conservando a captura obrigatória. Para o único disable root0:08/0x24/dword0000fff0, confere lower vivo00010001 ou0001fff1, releitura igual e uppers0. Mantém o pedido hardware0000fff0 e compara o valor completo com0001fff1. Estado final da janela também é conferido antes de sucesso; restantes BARs/MMIO/permissões continuam estritos. [Plano/decisões](../.agents/plans/n71-pref64-disable-pci.md), [política](evidence/n71-pci-pref64-policy.json).
+
+Report `N71_PCIE_PREF64_DISABLE captured/enabled/writes` é único após IO16/antes readback. Falha tipada adiciona `expected=0001fff1` ao report de readback, conservando o pedido original no report e no primeiro refusal. Host exige scope/capture/baseline/expected completos; after igual ao pedido, com tipos perdidos, continua uma falha. Journal exige o report somente pelo record do novo SHA e conserva todos os campos até cleanup; faltar proof retém owners. Seleção vincula assignment/readback/optional/IO16/política por hash; builds/defaults antigos preservados. [Build e contratos](evidence/n71-pci-pref64-build.json), [integração](evidence/n71-pci-pref64-profile.json).
+
+Mac/Ubuntu ARM64: C final442 cenários/199 mutações compiladas SIGABRT/assertion por plataforma, com pure319/97 reutilizado só após conferir42 inputs relevantes. Host/journal89 testes/149 mutações por AssertionError, seleção32/62 e integração94/150,78 inputs/AST/lint fatal. CLI de composição21 testes/34 mutações mais3 de forwarding. Fixtures corrigidas e mutantes redundantes/sobreviventes iniciais ficaram excluídos; somente rodadas finais positivas contam.
+
+Build externo final na VM dedicada,50 inputs públicos, seis módulos Werror/modpost/ELF/vermagic;PCIe88.120 bytes/SHA968e6a06e9b671a5d1dffff7f1a6322c6144d8d99243d0f2b3115fabcb851c28. Fonte/config/Image/exports/REG_ON/outros cinco preservados. Primeiro build88.392 foi guardado, mas não selecionado porque antecede o formatter único validado. Receita de build final:
+
+```sh
+make -C /home/ubuntu/kernel-n71-binding-source-20261005 \
+  O=/home/ubuntu/kernel-n71-binding-build-20261005 ARCH=arm64 -j2 \
+  W=1 KCFLAGS=-Werror LOCALVERSION= \
+  M=/home/ubuntu/n71-pref64-modules2-20261006/phone/kernel \
+  KBUILD_EXTRA_SYMBOLS=/home/ubuntu/kernel-n71-binding-build-20261005/vmlinux.symvers modules
+```
+
+Na raiz `iphone-linux-tools`, usando diretório novo:
+
+```sh
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile runtime/n71-binding-base-profile-20261005/deployment.json \
+  --kernel-dir runtime/kernel-n71-binding-artifacts-20261005 \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir runtime/n71-pcie-diagnostic-20261002 \
+  --module runtime/n71-pref64-build2-20261006/modules/n71-pcie-diagnostic.ko \
+  --module-sha256 968e6a06e9b671a5d1dffff7f1a6322c6144d8d99243d0f2b3115fabcb851c28 \
+  --pcie-aspm-off --pcie-scan-hold --pcie-resource-capable \
+  --reg-on-module runtime/n71-pref64-build2-20261006/modules/n71-wlan-power-diagnostic.ko \
+  --output-dir runtime/n71-binding-pref64-profile-20261006
+python3 -B scripts/host/n71-link-session.py \
+  --profile runtime/n71-binding-pref64-profile-20261006/deployment.json \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --check
+python3 -B -m unittest discover -s tests -p test_n71_pcie_pref64_disable.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pcie_pref64_policy.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pcie_pref64_host.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_pref64.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pref64_journal.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pref64_build.py -v
+python3 -B tests/run_n71_diagnostic_payload_mutations.py
+```
+
+Perfil real passou composer/check: oito arquivos700/600; deployment/payload/DT/kernel/loader/initramfs/identidades/REG_ON iguais ao IO16 físico, só PCIe e seu SHA na provenance novos. Nenhuma carga automática ou prova física desta preparação. Próxima sessão reúne acquire→assign→inventário PCI/IRQ/IOMMU sem escrita→cleanup/retry→services/snapshot/sync→iOS, sem habilitar driver/DMA/radio. Novo DFU só depois de USB/carga frescos, sem pedir PIN ou operar o console. Wi-Fi, carga e telemetria seguem pendentes.
+
 ## Próximos gates da atribuição
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os
