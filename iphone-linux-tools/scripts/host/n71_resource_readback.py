@@ -4,7 +4,7 @@ import re
 FIELDS = ('failed', 'root', 'where', 'size', 'value', 'before', 'after_valid', 'after', 'write_error', 'read_error')
 PATTERN = (r'N71_PCIE_ASSIGN_READBACK failed=([01]) root=([01]) where=([0-9a-f]{3}) size=([024]) '
            r'value=([0-9a-f]{8}) before=([0-9a-f]{8}) after_valid=([01]) after=([0-9a-f]{8}) '
-           r'write_error=(-?\d+) read_error=(-?\d+); no additional IO$')
+           r'write_error=(-?\d+) read_error=(-?\d+)(?: expected=([0-9a-f]{8}))?; no additional IO$')
 
 
 def require(condition, message):
@@ -26,15 +26,27 @@ def parse(text, result, *, required=False):
             < text.index('N71_PCIE_RESOURCE_RESULT '), 'Readback is outside the assignment phase')
     data = dict(zip(FIELDS, (int(value, 16 if name in ('where', 'value', 'before', 'after') else 10)
                             for name, value in zip(FIELDS, row.groups()))))
+    annotation = row.group(11)
     if not data['failed']:
-        require(not any(data.values()), 'Absent write failure must have no fabricated fields')
+        require(annotation is None and not any(data.values()), 'Absent write failure must have no fabricated fields')
         return data
+    typed = (result.get('pref64_disable', {}).get('enabled') == 1
+             and (data['root'], data['where'], data['size'], data['value']) == (1, 0x24, 4, 0xfff0))
+    require((annotation is not None) == typed, 'Typed readback expectation lacks its exact scope or proof')
+    expected = data['value']
+    if annotation is not None:
+        data['expected'] = int(annotation, 16)
+        require(result.get('pref64_disable', {}).get('captured') == 1
+                and data['before'] == 0x10001 and data['expected'] == 0x1fff1,
+                'Typed readback must preserve the captured types and complete disabled address')
+        expected = data['expected']
     size = data['size']
     require(size in (2, 4) and data['where'] <= 0xfc and data['where'] % size == 0,
             'Write failure register/width differs')
     mask = (1 << (size * 8)) - 1
+    legacy_changed = data['before'] != data['value']
     require(all(data[name] <= mask for name in ('value', 'before', 'after'))
-            and data['before'] != data['value'], 'Write failure values or no-op differ')
+            and (data['before'] != expected if typed else legacy_changed), 'Write failure values or no-op differ')
     write, read = data['write_error'], data['read_error']
     require(all(-4095 <= value <= 0x7fffffff for value in (write, read)), 'Raw callback error differs')
     if write or read:
@@ -43,7 +55,8 @@ def parse(text, result, *, required=False):
         raw = write or read
         error = raw if raw < 0 else -5
     else:
-        require(data['after_valid'] == 1 and data['after'] != data['value'],
+        legacy_mismatch = data['after'] != data['value']
+        require(data['after_valid'] == 1 and (data['after'] != expected if typed else legacy_mismatch),
                 'Readback mismatch must have a valid differing value')
         error = -5
     require(result['error'] == error and result['assigned'] == 0

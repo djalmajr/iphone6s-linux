@@ -17,6 +17,15 @@ Na fonte fixada958481f87fee0949ff6a9a4af77f7eb6dac8a149, `drivers/pci/probe.c:55
 
 ## Arquivos e fases
 
+### D2. Capturar os tipos uma vez, antes de publicar ownership
+
+- **Decisão:** adapter confere probes e recurso; os dois tipos e uppers são conferidos pela captura exata já qualificada. Remover a releitura preliminar duplicada de lower no adapter. Verificar novamente lower/uppers depois da atribuição antes de sucesso, sem escrita adicional.
+- **Por quê:** a captura rejeita qualquer tipo/baseline contraditório antes do claim e não publica estado parcial. O mutante da validação duplicada não mudava nenhum resultado porque a captura já recusava o mesmo caso; uma única prova evita leitura e estado redundantes.
+- **Alternativas:** manter duas validações do mesmo lower aumenta IO sem nova garantia; enfraquecer capture elimina a prova da baseline de rollback. Ambos rejeitados.
+- **Reverter:** baixo; recolocar a leitura preliminar, mantendo capture como prova obrigatória.
+- **Onde:** `n71-pcie-resource-assign.h`, helper/capture e fixture de adapter. Fixtures incluem falha antes de capture e drift depois de assign.
+- **Status:** aplicada e qualificada offline.
+
 A0 (até cinco arquivos): plano, novo `phone/kernel/n71-pcie-pref64-disable.h`, fixture/runner `tests/n71_pcie_pref64_disable.c`/`tests/test_n71_pcie_pref64_disable.py` e evidência de política. Helper inicialmente sem caller; provar baseline/live/scope/erros/releituras com mutantes compilados mortos por assertion.
 
 A1 (até cinco): plano e dependências dos três runners C que copiam resource-write. Depois A2 (até cinco): plano, `phone/kernel/n71-pcie-resource-write.h`, fixture/runner próprios e evidência. Flag/capture/comparação completa, counter de escritas tipadas verificadas e primeiro erro com valor esperado explícito; defaults continuam exatos. Requalificar gates C afetados uma vez nas duas plataformas.
@@ -33,8 +42,9 @@ Física (até cinco): somente após A–E. Um boot reúne acquire/assign/read-on
 
 - [x] A0: helper sem efeitos e regressões/mutações.
 - [x] A1/A2: integração na política, defaults/readback/rollback qualificados.
-- [ ] B: derivação/report/adapter qualificados.
-- [ ] C1/C2: contrato/journal e legados qualificados.
+- [x] B: derivação/report/adapter qualificados.
+- [x] C1: parsers de contrato/readback e legados qualificados.
+- [ ] C2: dispatch, stage/journal e legados qualificados.
 - [ ] D: build/ABI preservados e seleção explícita.
 - [ ] E: candidata/check/reprodução/publicação.
 - [ ] Sessão física agrupada e resultado/limites na issue39.
@@ -52,3 +62,17 @@ Mac/Ubuntu ARM64:35 cenários/15 mutações compiladas SIGABRT/assertion por pla
 Fixture/runner novos `tests/n71_pcie_pref64_policy.c`/`tests/test_n71_pcie_pref64_policy.py` exercitam a política real com tipos readonly/endereço gravável e rollback. Mac/Ubuntu ARM64:422 cenários/185 mutações compiladas SIGABRT/assertion por plataforma,58 inputs iguais/preservados, AST/lint fatal. Novos20/11 mais helper35/15; IO16, optional, política/adapter/host legados requalificados. Mutante inicial do counter sobreviveu porque faltava verificar o counter após uma escrita não-PREF; caso corrigido e probe negativo conservado/excluído. Somente a matriz final positiva conta.
 
 O pedido hardware permanece0000fff0, mas readback completo esperado é0001fff1 somente com opt-in capturado e guards vivos. Falha conserva pedido original/expected/antes/depois/callbacks; contador avança só depois de escrita tipada verificada. Defaults, primeiro erro e rollback exato passaram. Sem módulo/Image/build/load/DFU novo; B ainda precisa derivar o opt-in, emitir report e qualificar o adapter.
+
+### Gate B — adapter e formatter único qualificados
+
+Mac/Ubuntu ARM64:123 cenários/102 mutações compiladas por plataforma,60 inputs/AST/lint fatal. Pure A2 de319 cenários/97 mutações reutilizado com42 inputs iguais; C final442/199 por plataforma. Novos20/14 mais adapter65/57, optional host18/14 e IO16 host20/17 requalificados. Probes/recurso, captura exata antes do claim, final lower/uppers, erro original, cleanup/repeat e report único passaram.
+
+Fixtures iniciais omitiram a sentinela MEM e esperavam restauração de upper limit nunca capturado; corrigidas para o ownership real. Check preliminar duplicado de tipos foi removido conforme D2. Três anchors legados ficaram duplicados por duas branches de impressão; consolidado formatter único com sufixo expected e atualizado um anchor. Tentativas negativas preservadas/excluídas; somente os gates finais positivos contam.
+
+Build externo final na VM passou seis módulos Werror/modpost/ELF/vermagic,50 inputs;PCIe88.120 bytes/SHA968e6a06. Fonte/config/Image/exports/REG_ON/outros cinco módulos preservados. O build anterior de88.392 bytes não será selecionado porque precede o formatter final. Ainda sem seleção/candidata/load/DFU; contrato/journal host e seletor por SHA são gates seguintes.
+
+### Gate C1 — parsers PREF64/readback qualificados
+
+Mac/Ubuntu ARM64:84 testes/145 mutações por AssertionError por plataforma,68 inputs iguais/preservados, AST/lint fatal. Novo contrato6/14, mais IO16/optional/readback/result/stage/held/history legados requalificados. Report completo/único/ordenado, capture/ausência/counters, expected0001fff1 somente no disable PREF64 capturado, baseline/pedido/refusal originais e callbacks brutos passaram. Perda de tipos retorna uma falha válida com after igual ao pedido original, mas diferente do expected completo; isso não passa como sucesso. Shapes legados ficam iguais.
+
+Mutante unknown inicialmente sobreviveu porque o caso apenas substituía o report exigido; adicionada linha desconhecida completa ao lado de uma prova válida. Casos de scope e baseline também foram ampliados. Probe negativo preservado/excluído. C2 ainda precisa despachar o novo parser e exigir/conservar os campos no journal; nenhum perfil/load/DFU novo.
