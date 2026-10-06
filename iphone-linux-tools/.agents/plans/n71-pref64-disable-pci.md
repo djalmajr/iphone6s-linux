@@ -45,7 +45,7 @@ Física (até cinco): somente após A–E. Um boot reúne acquire/assign/read-on
 - [x] B: derivação/report/adapter qualificados.
 - [x] C1: parsers de contrato/readback e legados qualificados.
 - [x] C2: dispatch, stage/journal e legados qualificados.
-- [ ] D: build/ABI preservados e seleção explícita.
+- [x] D: build/ABI preservados e seleção explícita.
 - [ ] E: candidata/check/reprodução/publicação.
 - [ ] Sessão física agrupada e resultado/limites na issue39.
 
@@ -82,3 +82,9 @@ Mutante unknown inicialmente sobreviveu porque o caso apenas substituía o repor
 Mac/Ubuntu ARM64:89 testes/149 mutações por AssertionError por plataforma,69 inputs iguais/preservados, AST/lint fatal. Journal novo5/4 mais contrato6/14 e legados requalificados. Contexto PREF64 é validado antes de interpretar expected; shape/ordem legados do resultado conservados. Metadata exata exige o report; a cópia do compositor inclui o novo parser. Proof ausente retém owners e não salva atribuição; sucesso/reuso/cleanup conserva counter/evento e um setter, falha tipada/cleanup retry conserva pedido0000fff0/expected0001fff1/erro-5, sem repetir assignment.
 
 Kernel/módulos não mudaram nesta etapa; build final88120/SHA968e6a06 permanece. D ainda vincula as provas ao hash selecionado; nenhuma candidata/load/DFU nova.
+
+### Gate D — build real e seleção por SHA qualificados
+
+Mac/Ubuntu ARM64:32 testes/62 mutações por AssertionError por plataforma,73 inputs/AST/lint fatal. Seletor novo7/8, IO16 6/9, optional5/7, readback5/9 e result9/29. Novo SHA exige os quatro reports e contratos exatos; booleans1/false, base IO16/política alterada/ausente/link, ABI/bytes/REG_ON/scope e hash desconhecido recusam seleção. Hashes anteriores mantêm somente seus contratos originais. Um mutante redundante da segunda checagem de symlink IO16 não foi contado: a travessia já rejeita o mesmo alias; a recusa completa continua testada.
+
+Build real final:50 inputs, seis módulos Werror/modpost/ELF/vermagic,PCIe88.120 bytes/SHA968e6a06e9b671a5d1dffff7f1a6322c6144d8d99243d0f2b3115fabcb851c28. Fonte/config/Image/exports/REG_ON/outros cinco preservados; quatro reports compilados, formatter esperado conferido. Evidência é ligada por hash a assignment/readback/optional/IO16/política, mantendo limits físicos falsos. [Build/contratos](../../docs/evidence/n71-pci-pref64-build.json). E ainda compõe/checka a candidata; sem load/DFU nesta preparação.

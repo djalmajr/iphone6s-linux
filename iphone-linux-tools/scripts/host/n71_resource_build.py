@@ -14,6 +14,12 @@ IO16_FLAGS = ('core_present_standard_window', 'both_type_fields_io16', 'coherent
               'temporary_upper_request_only', 'no_hardware_write', 'lower_readback_strict',
               'report_between_optional_and_readback', 'positive_noop_required',
               'combined_noop_budget', 'journal_preserves_event', 'legacy_defaults_preserved')
+PREF64_FLAGS = ('core_pref_window_and_pref64_probe', 'exact_resource_flags_and_range',
+                'both_types_and_zero_uppers_in_capture', 'live_lower_repeated_and_zero_uppers',
+                'core_disable_request_unchanged', 'full_expected_0001fff1', 'final_lower_and_uppers_verified',
+                'verified_typed_write_counter', 'unique_report_between_io16_and_readback',
+                'typed_annotation_scoped_and_original_refusal_preserved',
+                'journal_preserves_event_and_expected', 'legacy_defaults_preserved')
 
 
 def require(condition, message):
@@ -39,6 +45,17 @@ def extended_evidence(root, original, request):
                 'IO16 optional base missing or invalid')
         require(candidate.get('base_optional_evidence_sha256') == hashlib.sha256(base.read_bytes()).hexdigest(),
                 'IO16 optional base changed')
+    if request.get('pref64', False):
+        base = root / 'docs/evidence/n71-pci-io16-build.json'
+        require(base.is_file() and not base.is_symlink() and base.stat().st_size <= 256 * 1024,
+                'PREF64 IO16 base missing or invalid')
+        require(candidate.get('base_io16_evidence_sha256') == hashlib.sha256(base.read_bytes()).hexdigest(),
+                'PREF64 IO16 base changed')
+        policy = root / 'docs/evidence/n71-pci-pref64-policy.json'
+        require(policy.is_file() and not policy.is_symlink() and policy.stat().st_size <= 256 * 1024,
+                'PREF64 policy proof missing or invalid')
+        require(candidate.get('pref64_policy_evidence_sha256') == hashlib.sha256(policy.read_bytes()).hexdigest(),
+                'PREF64 policy proof changed')
     return candidate
 
 
@@ -51,6 +68,7 @@ def select(root, previous, *, release, pcie_sha256):
     evidence = json.loads(path.read_text())
     optional = False
     io16 = False
+    pref64 = False
     if pcie_sha256 != evidence['real_module_build']['modules']['n71-pcie-diagnostic.ko']['sha256']:
         candidate = extended_evidence(root, path, {'filename': 'n71-pci-optional-build.json',
                                                   'sha256': pcie_sha256, 'io16': False})
@@ -58,6 +76,11 @@ def select(root, previous, *, release, pcie_sha256):
             candidate = extended_evidence(root, path, {'filename': 'n71-pci-io16-build.json',
                                                       'sha256': pcie_sha256, 'io16': True})
             io16 = candidate is not None
+        if candidate is None:
+            candidate = extended_evidence(root, path, {'filename': 'n71-pci-pref64-build.json',
+                                                      'sha256': pcie_sha256, 'io16': True, 'pref64': True})
+            pref64 = candidate is not None
+            io16 = pref64
         if candidate is not None:
             evidence, optional = candidate, True
     require(type(evidence.get('format')) is int and evidence['format'] == 1, 'Readback build format differs')
@@ -80,6 +103,11 @@ def select(root, previous, *, release, pcie_sha256):
         require(all(io16_contract.get(name) is True for name in IO16_FLAGS),
                 'Qualified IO16 policy, adapter and journal contract required')
         require(build.get('io16_upper_report_compiled') is True, 'Compiled IO16 report required')
+    if pref64:
+        pref64_contract = evidence.get('pref64_contract', {})
+        require(all(pref64_contract.get(name) is True for name in PREF64_FLAGS),
+                'Qualified PREF64 policy, adapter and journal contract required')
+        require(build.get('pref64_disable_report_compiled') is True, 'Compiled PREF64 report required')
     require(type(build.get('exit_code')) is int and build['exit_code'] == 0 and build.get('release') == release
             and all(build.get(name) is True for name in ('werror', 'modpost_passed', 'elf_vermagic_verified',
                     'source_config_image_exports_preserved', 'first_write_readback_report_compiled')),
@@ -107,4 +135,6 @@ def select(root, previous, *, release, pcie_sha256):
         records[0]['assignment_optional_windows'] = True
     if io16:
         records[0]['assignment_io16_upper'] = True
+    if pref64:
+        records[0]['assignment_pref64_disable'] = True
     return records
