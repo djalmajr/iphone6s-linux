@@ -26,7 +26,7 @@ Fase C: build real na VM dedicada, prova ELF/ABI/exports e preservação de font
 - [x] A: executar regressão física sintética0x30, limites/rollback e mutações por assertion no Mac e Ubuntu ARM64; registrar inputs/logs/exit por SHA.
 - [x] B: integrar registro, parser e journal; validar histórico, rejeições e compatibilidade sem reiniciar o telefone.
 - [x] C: qualificar build, seleção e candidata agrupada; manter iOS para recarga durante desenvolvimento.
-- [ ] Teste físico único quando candidata e alimentação estiverem prontas: aquisição, atribuição, coleta, cleanup/retry, serviços, snapshot/sync e retorno ao iOS no mesmo boot.
+- [x] Teste físico único: aquisição, atribuição, coleta, cleanup/retry, serviços, snapshot/sync e retorno ao iOS no mesmo boot.
 - [x] Documentar preparação, reprodução e provas sanitizadas; Wi-Fi e energia continuam abertos até suas próprias provas.
 - [ ] Atualizar issue39 e registrar o resultado físico após a sessão agrupada.
 
@@ -73,3 +73,7 @@ Dois arquivos: plano e `tests/test_n71_held_session.py`. O mutante `resource-cli
 ### Gate D — encerramento da preparação offline
 
 Quatro arquivos: plano, `docs/STATUS.md`, `docs/N71_PME_ASPM_CANDIDATE.md` e `docs/evidence/n71-pci-readback-profile.json`. Registro da integração final, hashes dos logs qualificados, limites de prova e comandos exatos de composição/check. Dependências, banco de dados e configuração global do Mac não mudaram. A captura acrescenta apenas estado/relato; nenhuma operação adicional de hardware. Compatibilidade do perfil anterior e cleanup foram cobertos pelos gates. O teste físico e a demanda de Wi-Fi/energia continuam em curso; a publicação é somente na branch de trabalho autorizada, sem merge/tag/release.
+
+### Gate E — readback físico conservado e retorno ao iOS
+
+Quatro arquivos: plano, `docs/STATUS.md`, `docs/N71_PME_ASPM_CANDIDATE.md` e `docs/evidence/n71-pci-readback-physical.json`. Um DFU/um boot, zero reinícios intermediários. Primeira recusa root0:08/0x30: pedido0000ffff, anterior0, leitura válida0, erros brutos write/read0. Leitura separada IO1c/30 zerados, sem escrita. Cleanup/retry liberou owners/módulos, preservando atribuição/stop-error-5; SSH/Bash/Herdr/HTTP/sync, snapshot44 e retorno automático iOS confirmados. iOS94% carregando ao final, sem prova de carga Linux. Próxima correção depende de distinguir janelas opcionais ausentes pelos flags/probes PCI core e leituras/baseline; não presumir hardware nem ampliar writes. Fontes fixadas consultadas na VM; provas completas/IDs continuam privados.

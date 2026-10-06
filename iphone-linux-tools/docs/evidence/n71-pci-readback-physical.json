@@ -1,0 +1,110 @@
+{
+  "format": 1,
+  "date": "2026-10-06",
+  "code_commit": "e04e0e677612322175cb88c58f7cc1e73f32d91a",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "pcie_module_sha256": "a56fafb49ec8df0746241f45c5ff4efb1b5e01b680cfb0429f9933c09d1bd2cf",
+  "session": {
+    "dfu_sequences": 1,
+    "linux_boots": 1,
+    "intermediate_reboots": 0,
+    "snapshot_restored_entries": 44,
+    "boot_exit": 0,
+    "held_acquisition_exit": 0,
+    "held_acquisition_verified": true
+  },
+  "assignment": {
+    "error": -5,
+    "action_exit": 1,
+    "event": {
+      "error": -5,
+      "assigned": 0,
+      "pending": 1,
+      "claimed": 1,
+      "attempts": 9,
+      "writes": 2,
+      "write_readback": {
+        "failed": 1,
+        "root": 1,
+        "where": 48,
+        "size": 4,
+        "value": 65535,
+        "before": 0,
+        "after_valid": 1,
+        "after": 0,
+        "write_error": 0,
+        "read_error": 0
+      }
+    },
+    "assignment_verified": false,
+    "early_refusal": false
+  },
+  "read_only_root_config": {
+    "root": "0000:00:01.0",
+    "vendor": "106b",
+    "device": "1004",
+    "io_base_limit_bytes_1c": [
+      0,
+      0
+    ],
+    "io_upper_bytes_30": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "same_boot_verified": true,
+    "no_writes": true
+  },
+  "cleanup": {
+    "first_release_exit": 1,
+    "retry_release_exit": 1,
+    "verified": true,
+    "stop_error": -5,
+    "owners_unloaded": true,
+    "pci_devices_empty": true,
+    "same_assignment_and_readback_preserved": true,
+    "retry_no_scan_or_assignment": true
+  },
+  "services": {
+    "ssh_bash_sync_exit": 0,
+    "herdr_status_exit": 0,
+    "http_exit": 0,
+    "uptime_at_services_seconds": 235.34
+  },
+  "return": {
+    "exit": 0,
+    "backup_verified": true,
+    "snapshot_entries": 44,
+    "sync_verified": true,
+    "ios_usb_verified": true
+  },
+  "ios_after": {
+    "BatteryCurrentCapacity": 94,
+    "BatteryIsCharging": true,
+    "ExternalChargeCapable": true,
+    "ExternalConnected": true
+  },
+  "private_log_sha256": {
+    "boot-private.log": "2bc766f8e7210e66e9fbbe2a0aebbdf80066e205008fb7c034d34d7d28083460",
+    "acquire-private.log": "71be86ff5c93ca774ecafd53df57d283d3d4466320cc4823e7ec322bfcc9f446",
+    "assign-private.log": "6b18575942afc21ea80d669234b0b4fcb3a76413ce730d4a18fbf6bf0e3e1553",
+    "root-io-read-private.log": "3218a48b7a002b124548824f2ef22be2fea0055759f985a93af5998603f6b4c6",
+    "release-private.log": "9e074f817834f62af3bff0cdaac8940e7f12c11d19bacf14d508cd91a52005c0",
+    "release2-private.log": "2b1e78ae9d0ee97f9797e76df21e87d798ffc7370b701493bc7c1e1de4410bc7",
+    "services-after-cleanup-private.log": "3b37f9da17c935dd5bc590d9d70abc8493b997e6ccc7e63247e2419cca927420",
+    "herdr-after-cleanup-private.log": "d3008652f8ba7eadc9e3b4a51c8315255ad98448e4adb97962a2f34477a65f4e",
+    "http-after-cleanup-private.log": "d6c7881c937ea94c8d4243c132279e8bffeff68eb97b8500955e2666d73d2ddd",
+    "return-ios-private.log": "1d456537e93c06eb2ffa20d3b25a5c0892b85447312b5c5c2161cf0c9fa90e29"
+  },
+  "limits": {
+    "assignment_positive": false,
+    "io_register_unimplemented_proven": false,
+    "pci_optional_window_semantics_corrected": false,
+    "irq_dma_iommu_enabled": false,
+    "wifi_functional": false,
+    "linux_gauge_or_charge_proven": false,
+    "battery_health_measured": false,
+    "raw_logs_or_private_files_published": false
+  }
+}

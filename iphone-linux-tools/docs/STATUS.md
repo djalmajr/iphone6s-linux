@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-06
 
-## Checkpoint atual — candidata de readback qualificada, aguardando teste físico
+## Checkpoint atual — primeira leitura física registrada em um único boot
+
+Um DFU/um boot, sem reinícios intermediários: aquisição PCI retida positiva; atribuição negativa `error=-5`, nove tentativas/duas escritas verificadas. O novo registro conserva a primeira falha root 0:08/0x30/dword: pedido `0x0000ffff`, anterior `0`, retorno válido `0`, write/read callbacks sem erro. Leitura separada confirmou IO base/limit 0x1c e upper 0x30 zerados, no mesmo boot e sem escrita. Isso mede o comportamento; a semântica de janela opcional ainda precisa de correção qualificada. [Prova física](evidence/n71-pci-readback-physical.json).
+
+Primeiro cleanup restaurou bus/configuração/janelas e reteve owners; retry somente de limpeza liberou PCI/REG_ON, preservando o erro -5 e a mesma leitura. SSH/Bash/Herdr/HTTP e sync passaram, com uptime de serviços de 235 segundos. Snapshot com 44 entradas foi verificado e o retorno automático ao iOS foi confirmado pelo USB. Bateria iOS após a sessão: 94%, carregando e com fonte externa conectada/capaz. Não é prova de corrente/carga no Linux ou de saúde da bateria.
+
+Próxima implementação: tratar janelas opcionais ausentes com base nos flags/probes do PCI core e nos registradores zerados, conservando readback estrito das janelas implementadas e MMIO/BARs. Preparar IO e prefetch compatíveis antes de outro DFU; desenvolver com o telefone no iOS para recarga. Wi-Fi nativo e energia continuam em curso; CI completa permanece gate separado (#38).
+
+### Preparação da candidata de readback
 
 A correção conserva a primeira escrita/leitura que falhar na atribuição PCI, com pedido, valor anterior, valor retornado válido e erros brutos. Usa as operações que já eram exigidas; as permissões de escrita e o rollback continuam iguais. O adaptador emite um registro único antes do resultado; o journal conserva esse registro no checkpoint, reuso e cleanup. A seleção por hash exige o registro somente para o build novo e mantém o build anterior disponível. [Plano](../.agents/plans/n71-primeiro-readback-pci.md), [reprodução](N71_PME_ASPM_CANDIDATE.md#readback-da-primeira-falha--candidata-qualificada-sem-reiniciar).
 

@@ -955,7 +955,46 @@ nem carga Linux. A próxima sessão agrupa aquisição, assign/coleta, limpeza
 com retry, serviços, snapshot/sync e retorno ao iOS. O readback real orientará
 a correção seguinte; não presumir bits hardwired apenas pelo errno-5.
 
-## Próximos gates
+## Primeiro readback físico — uma sessão agrupada
+
+A candidata de readback foi executada com um DFU/um boot e zero reinícios
+intermediários. Aquisição retida positiva. Atribuição negativa: `error=-5`,
+nove tentativas, duas escritas verificadas. Primeira falha: root 0:08,
+registrador 0x30, largura quatro; pedido `0000ffff`, valor anterior `0`,
+retorno válido `0`, callbacks write/read com erro bruto zero. A primeira
+leitura agora é preservada pelo kernel, proof, checkpoint e cleanup.
+
+Uma leitura separada por sysfs PCI confirmou root `106b:1004`, classe bridge,
+IO base/limit 0x1c e upper 0x30 zerados no mesmo boot; não escreveu config.
+Não prova por si só que o registrador seja não implementado. O PCI core
+fixado em `958481f87fee0949ff6a9a4af77f7eb6dac8a149` detecta IO/prefetch
+opcionais por probes em `drivers/pci/probe.c`; em
+`drivers/pci/setup-bus.c`, `pci_bridge_check_ranges()` usa os flags de
+suporte e documenta que janelas ausentes têm registradores somente leitura
+zerados. `pci_setup_bridge_io()` escreve 0x0000ffff em upper antes de
+programar/desativar IO. A correção seguinte deve distinguir esse caso com
+suporte/probes, baseline e leituras vivas; não relaxar MMIO/BARs ou aceitar
+qualquer readback zero. Fontes foram consultadas na VM preservada.
+
+Primeiro release restaurou bus/configuração/janelas, mas conservou owners
+com stop-error -5. Retry somente de cleanup liberou PCI/REG_ON e comprovou
+bus vazio, sem scan ou setter novo. A atribuição e o erro permanecem
+negativos. SSH/Bash/Herdr/HTTP/sync passaram com uptime de 235 segundos;
+snapshot de 44 entradas verificado e retorno automático ao iOS confirmado.
+iOS após a sessão: 94%, carregando, fonte externa conectada/capaz; não
+comprova saúde ou carga Linux. [Evidência sanitizada](evidence/n71-pci-readback-physical.json).
+
+```mermaid
+flowchart LR
+    A["DFU e restore"] --> B["Aquisição retida"]
+    B --> C["Assign negativo e primeira leitura"]
+    C --> D["IO read-only no mesmo boot"]
+    D --> E["Cleanup e retry sem scan"]
+    E --> F["Serviços, snapshot e sync"]
+    F --> G["iOS confirmado; preparação offline"]
+```
+
+## Próximos gates após o readback
 
 O coletor PME/ASPM usado na sessão física seleciona o build169 e exige os
 opt-ins exatos, SHA/ABI do módulo e bootargs literais no payload. No telefone,
