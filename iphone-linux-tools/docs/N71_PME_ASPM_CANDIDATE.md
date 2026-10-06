@@ -642,9 +642,9 @@ sanitizada contém os48 inputs, módulos e logs por SHA; payload/DT,
 identidades, chaves e logs completos permanecem privados.
 [Evidência integrada](evidence/n71-pci-resource-assignment.json).
 
-Seleção/provenance/journal do host ainda precisam reconhecer esse build e
-registrar o checkpoint antes de `assign`. O CLI atual continua selecionando
-o módulo retido anterior; os perfis preservados não foram substituídos.
+Neste checkpoint, seleção/provenance/journal do host ainda precisavam
+reconhecer esse build e registrar o checkpoint antes de `assign`. A seleção
+posterior está descrita abaixo; o checkpoint da ação continua pendente.
 Nenhum módulo novo carregado, novo Image, boot ou DFU nesta etapa.
 Atribuição/restauração no kernel em execução, IRQ/IOMMU, driver/firmware/radio,
 Wi-Fi e telemetria/carga Linux continuam pendentes.
@@ -655,6 +655,69 @@ concluíram cancelled; Mac/Windows success e Ubuntu cancelled nos dois eventos.
 O log do job Ubuntu da PR não foi disponibilizado (`log not found`);
 causa segue não confirmada na [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38).
 Esses resultados não cobrem o caller novo.
+
+## Seleção do módulo com atribuição — candidata privada preparada
+
+Código `d94a14e` acrescenta `--pcie-resource-capable` ao composer e
+`--resource-capable` ao coletor. As flags selecionam exclusivamente o build
+de atribuição acima, através do contrato `n71_resource_result`; exigem held
+explícito e seus pré-requisitos power2/ASPM/REG_ON. A aquisição conserva o
+bus e não executa `assign` automaticamente. Sem essas flags, o seletor held
+anterior continua sendo usado.
+
+O composer grava `pcie_resource_capable` como booleano exato. O coletor
+exige correspondência exata com sua flag; ausência da chave nos perfis
+antigos equivale somente a false. Tamanho/SHA/ELF/vermagic dos módulos e
+ASPM no payload são conferidos antes dos efeitos. A seleção também é
+propagada à Session no caminho de aquisição e no check local de retomada.
+
+Com os módulos privados do build186 e os artefatos já qualificados:
+
+```sh
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile "$base_profile/deployment.json" \
+  --kernel-dir "$kernel_artifacts" \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir "$diagnostic_dt" \
+  --module "$pcie_module" --module-sha256 "$pcie_sha256" \
+  --reg-on-module "$reg_on_module" --output-dir "$candidate" \
+  --pcie-aspm-off --pcie-scan-hold --pcie-resource-capable
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$candidate/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --check
+```
+
+A candidata real completa passou esses checks sem SSH/USB. O payload
+inteiro, deployment, initramfs, identidades e REG_ON são iguais ao perfil
+held anterior; PCIe84.696 bytes/SHA2dcdebc2 e provenance são novos. Os48
+inputs do build real permaneceram iguais, sem recompilar kernel ou módulos.
+O perfil novo e os anteriores permanecem privados.
+
+Reprodução dos contratos host numa cópia descartável do código público:
+
+```sh
+set -e
+python3 -B -m unittest discover -s tests -p 'test_n71_diagnostic_*.py' -v
+python3 -B -m unittest discover -s tests -p test_n71_held_session.py -v
+python3 -B -m unittest discover -s tests -p test_n71_link_session.py -v
+python3 -B tests/run_n71_diagnostic_payload_mutations.py
+python3 -B tests/run_n71_link_session_mutations.py
+```
+
+Mac/Ubuntu ARM64: 82 testes/144 mutações por AssertionError em cada
+plataforma, com53 inputs e cinco logs por SHA. Composer16/33, held21/30 e
+coletor legado45/81; seis testes/12 mutações novos. Após corrigir somente a
+fixture composer, foram reutilizados held21/30 e45 testes legados, com52
+inputs intactos; composer16/33 e81 mutações legadas foram executados no
+pacote final. AST e Flake8 fatal passaram. Gates interrompidos não foram
+contados como qualificação completa; import/compile/timeout não são kills.
+[Prova sanitizada da seleção](evidence/n71-pci-resource-profile.json).
+
+O journal ainda precisa incluir a ação, getter e prova de atribuição e sua
+restauração. Essa integração precede os efeitos por SSH e permite reunir
+as etapas no mesmo boot. A candidata desta seleção não foi carregada no
+iPhone; Wi-Fi, IRQ/IOMMU/driver e telemetria/carga Linux continuam pendentes.
 
 ## Próximos gates
 
