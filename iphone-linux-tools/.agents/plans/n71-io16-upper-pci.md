@@ -35,7 +35,7 @@ Física (até cinco): somente após A–C qualificados. Um boot agrupa acquire/a
 - [x] A1: política opt-in e regressões/mutações Mac/Ubuntu ARM64.
 - [x] B: adapter/report/fixtures e qualificação C final.
 - [x] C1: contrato/journal estritos e compatibilidade.
-- [ ] C2: build/ABI/fonte preservados e seleção explícita.
+- [x] C2: build/ABI/fonte preservados e seleção explícita.
 - [ ] C3: candidata privada/check/reprodução e checkpoint publicado.
 - [ ] Uma sessão física agrupada; atualizar issue39 com resultado/limites.
 
@@ -54,3 +54,7 @@ Mac/Ubuntu ARM64:20 cenários/17 mutações novos, adapter65/57 e optional host1
 ### Gate C1 — evento IO16 obrigatório e conservado no journal
 
 Mac/Ubuntu ARM64:78 testes/131 mutações por AssertionError por plataforma,66 inputs iguais/preservados, AST/lint fatal. Novo contrato8/12; optional8/12, readback9/15, result9/29, stage16/26, held21/30 e history7/7 requalificados. Report único entre optional/readback, captured coerente, ausência/IO16 mutuamente exclusivos, counters combinados limitados às tentativas sem escrita e noop obrigatório quando atribuição positiva/enabled. Journal conserva os campos na ação/checkpoint/reuso/cleanup; faltar o report exigido não salva proof e retém owners. Defaults/resultados antigos sem report ficam iguais. Build externo paralelo passou seis módulos Werror/modpost/ELF/vermagic e preservação de fonte/config/Image/exports/outros cinco;PCIe87.008 bytes/SHAd6188a13. Esses bytes não são selecionados ou carregados até C2/C3.
+
+### Gate C2 — build real e seleção IO16 qualificados
+
+Mac/Ubuntu ARM64:25 testes/54 mutações por AssertionError por plataforma,69 inputs/AST/lint fatal; seletor novo6/9, optional5/7, readback5/9 e resultado9/29. Evidência nova é vinculada às bases optional/readback/assignment por SHA e exige booleans exatos do contrato IO16/report compilado; records requerem os três reports. Hashes anteriores conservam seus requisitos antigos, unknown ou evidence ausente/alias recusam seleção. Seis módulos da VM passaram Werror/modpost/ELF/vermagic,49 inputs, PCIe87.008 bytes/SHAd6188a13; outros cinco e fonte/config/Image/exports preservados. Sem novo Image, load/DFU, pacote/config global. C3 ainda compõe/checka o perfil e requalifica as integrações antes da sessão física.
