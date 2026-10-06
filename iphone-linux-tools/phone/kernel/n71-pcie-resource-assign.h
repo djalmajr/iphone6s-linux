@@ -50,9 +50,12 @@ static int n71_resource_pref64_layout(struct pci_dev *root,
 
 	if (!root->pref_window || !root->pref_64_window)
 		return 0;
-	if (resource->flags != (IORESOURCE_MEM | IORESOURCE_PREFETCH |
+	/* Scan leaves bridge resources empty until pci_bus_size_bridges(). */
+	if (resource->flags && (resource->flags != (IORESOURCE_MEM | IORESOURCE_PREFETCH |
 	    IORESOURCE_MEM_64 | PCI_PREF_RANGE_TYPE_64) ||
-	    resource->start || resource->end != 0xfffffU)
+	    resource->start || resource->end != 0xfffffU))
+		return -EACCES;
+	if (!resource->flags && (resource->start || resource->end))
 		return -EACCES;
 	layout->pref64_disable = true;
 	return 0;

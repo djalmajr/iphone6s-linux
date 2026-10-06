@@ -14,6 +14,12 @@ MUTATIONS = (
      '\t    IORESOURCE_MEM_64 | PCI_PREF_RANGE_TYPE_64)', 'false'),
     ('resource-start-ignored', 'resource->start || resource->end != 0xfffffU', 'false || resource->end != 0xfffffU'),
     ('resource-end-ignored', 'resource->start || resource->end != 0xfffffU', 'resource->start || false'),
+    ('empty-resource-rejected', 'if (resource->flags && (resource->flags !=',
+     'if ((resource->flags || true) && (resource->flags !='),
+    ('empty-start-ignored', 'if (!resource->flags && (resource->start || resource->end))',
+     'if (!resource->flags && (false || resource->end))'),
+    ('empty-end-ignored', 'if (!resource->flags && (resource->start || resource->end))',
+     'if (!resource->flags && (resource->start || false))'),
     ('derived-optin-lost', 'layout->pref64_disable = true;', 'layout->pref64_disable = false;'),
     ('preflight-error-ignored', 'n71_resource_pref64_layout(root, layout);\n\tif (error)',
      'n71_resource_pref64_layout(root, layout);\n\tif (false)'),
@@ -57,7 +63,7 @@ class Pref64HostTests(unittest.TestCase):
                 p = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5, cwd=folder)
                 if before is None:
                     self.assertEqual(p.returncode, 0, p.stderr)
-                    self.assertIn('N71_PCIE_PREF64_HOST_OK cases=20', p.stdout)
+                    self.assertIn('N71_PCIE_PREF64_HOST_OK cases=35', p.stdout)
                     print(p.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(p.returncode, -6, 'Missing SIGABRT: ' + name + p.stderr)

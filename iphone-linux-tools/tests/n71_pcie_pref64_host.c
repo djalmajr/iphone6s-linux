@@ -7,18 +7,22 @@
 int main(void)
 {
 	unsigned int mode;
-	for (mode = 0; mode < 20; mode++) {
+	for (mode = 0; mode < 35; mode++) {
 		struct device device = {0};
 		struct n71_diagnostic state;
 		struct n71_scan_host *host;
 		struct resource *resource;
 		const char *io16, *report, *readback;
 		char expected_report[160];
-		int expected = mode == 0 ? 0 : mode == 2 || mode == 14 || mode == 15 ? -EIO : mode == 13 ? -E2BIG :
-			mode >= 17 ? -EAGAIN : -EACCES;
-		bool captured = mode == 0 || mode == 2 || mode == 14 || mode == 15 || mode >= 17;
-		bool enabled = captured && mode != 2;
-		unsigned int writes = mode == 0 || mode >= 17 ? 1 : 0;
+		int expected = mode == 0 || mode == 20 ? 0 :
+			mode == 2 || mode == 14 || mode == 15 || mode == 27 || mode == 32 || mode == 33 ? -EIO :
+			mode == 13 ? -E2BIG : mode == 24 || mode == 25 ? -EBUSY :
+			(mode >= 17 && mode <= 19) || mode == 31 ? -EAGAIN : -EACCES;
+		bool captured = mode == 0 || mode == 2 || mode == 14 || mode == 15 ||
+			(mode >= 17 && mode <= 20) || mode == 27 || (mode >= 31 && mode <= 33);
+		bool enabled = captured && mode != 2 && mode != 27;
+		unsigned int writes = mode == 0 || (mode >= 17 && mode <= 20) || mode == 31 ? 1 : 0;
+		int actual;
 		initialize_case(PME_NONE, true); mock.resource_mode = true;
 		iomem_resource = (struct resource){0};
 		mock.ecam[0x100004 / 4] &= ~3U;
@@ -36,6 +40,9 @@ int main(void)
 		resource = &mock.root.resource[PCI_BRIDGE_PREF_MEM_WINDOW];
 		*resource = (struct resource){.end = 0xfffff,
 			.flags = IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_MEM_64 | PCI_PREF_RANGE_TYPE_64};
+		/* Regression: the physical bus has empty bridge resources before sizing. */
+		if (mode >= 20)
+			memset(mock.root.resource, 0, sizeof(mock.root.resource));
 		switch (mode) {
 		case 1: mock.root.pref_window = false; break;
 		case 2: mock.root.pref_64_window = false; break;
@@ -54,17 +61,34 @@ int main(void)
 		case 15: mock.pref_clear_types = true; break;
 		case 16: mock.ecam[0x802c / 4] = 1; break;
 		case 17: case 18: case 19: mock.pref_final_drift = mode - 16; break;
+		case 21: resource->start = 1; break;
+		case 22: resource->end = 1; break;
+		case 23: resource->end = 0xfffff; break;
+		case 24: resource->parent = &foreign_resource; break;
+		case 25: resource->child = &foreign_resource; break;
+		case 26: mock.root.pref_window = false; break;
+		case 27: mock.root.pref_64_window = false; break;
+		case 28: mock.ecam[0x8024 / 4] = 1; break;
+		case 29: mock.ecam[0x8028 / 4] = 1; break;
+		case 30: mock.ecam[0x802c / 4] = 1; break;
+		case 31: mock.pref_final_drift = 1; break;
+		case 32: mock.pref_drop_address = true; break;
+		case 33: mock.pref_clear_types = true; break;
+		case 34: mock.ecam[0x8024 / 4] = 0x1fff1; break;
 		}
-		if (mode == 1 || mode == 2) {
+		if (mode == 1 || mode == 2 || mode == 26 || mode == 27) {
 			struct n71_resource_bar_layout unsupported = {0};
 			assert(n71_resource_pref64_layout(&mock.root, &unsupported) == 0 && !unsupported.pref64_disable);
 		}
-		assert(n71_pcie_assign_resources(&state) == expected);
+		actual = n71_pcie_assign_resources(&state);
+		if (actual != expected)
+			fprintf(stderr, "PREF64 mode=%u actual=%d expected=%d\n", mode, actual, expected);
+		assert(actual == expected);
 		assert(host->resources.pending == captured && host->resources.pref64_disable == enabled);
 		assert(host->resources.pref64_writes == writes && host->resources_assigned == (expected == 0));
 		assert(!host->resources.active);
 		if (!captured) assert(!mock.claims && !mock.assigning);
-		if (mode == 14 || mode == 15) {
+		if (mode == 14 || mode == 15 || mode == 32 || mode == 33) {
 			assert(host->resources.failure.valid && host->resources.failure.expected == 0x1fff1);
 			assert(host->resources.failure.request.value == 0xfff0);
 			assert(strstr(mock.log, "read_error=0 expected=0001fff1; no additional IO"));
@@ -83,7 +107,7 @@ int main(void)
 		assert(!state.scan_bridge && !iomem_resource.child && !mock.allocations && !mock.references);
 		assert(mock.ecam[0x8024 / 4] == 0x10001 && mock.ecam[0x8028 / 4] == 0);
 		/* A refused capture never owns the externally injected upper limit. */
-		assert(mock.ecam[0x802c / 4] == (mode == 16 ? 1U : 0U));
+		assert(mock.ecam[0x802c / 4] == (mode == 16 || mode == 30 ? 1U : 0U));
 		assert(mock.ecam[0x100010 / 4] == 4 && mock.ecam[0x100018 / 4] == 4);
 		assert(mock.scans == 1 && mock.removes == 1);
 		free(mock.ecam);
