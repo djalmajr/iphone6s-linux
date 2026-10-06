@@ -10,6 +10,29 @@ struct n71_resource_devices {
 	int error;
 };
 
+static int n71_resource_io16_layout(struct pci_dev *root,
+				   struct n71_resource_bar_layout *layout)
+{
+	const struct resource *resource = &root->resource[PCI_BRIDGE_IO_WINDOW];
+	u16 lower;
+	int error;
+
+	if (!root->io_window || root->io_window_1k)
+		return 0;
+	error = pci_read_config_word(root, PCI_IO_BASE, &lower);
+	if (error)
+		return error > 0 ? -EIO : error;
+	if (lower & 0x0f0fU)
+		return 0;
+	if (resource->flags && resource->flags != IORESOURCE_IO)
+		return -EACCES;
+	if ((resource->flags && (resource->start || resource->end != 0xfffU)) ||
+	    (!resource->flags && (resource->start || resource->end)))
+		return -EACCES;
+	layout->io16_upper_unused = true;
+	return 0;
+}
+
 static int n71_resource_visit(struct pci_dev *dev, void *context)
 {
 	struct n71_resource_devices *devices = context;
@@ -27,6 +50,7 @@ static int n71_resource_preflight(struct n71_scan_host *host,
 	struct pci_dev *root = devices->root, *endpoint = devices->endpoint;
 	struct resource *resource;
 	unsigned int index;
+	int error;
 	unsigned long type_mask = IORESOURCE_TYPE_BITS | IORESOURCE_MEM_64 | IORESOURCE_PREFETCH;
 
 	if (!root || !endpoint || root->bus->number || root->devfn != 8 ||
@@ -68,6 +92,9 @@ static int n71_resource_preflight(struct n71_scan_host *host,
 		return -EACCES;
 	layout->io_absent = !root->io_window;
 	layout->pref_absent = !root->pref_window;
+	error = n71_resource_io16_layout(root, layout);
+	if (error)
+		return error;
 	resource = &host->windows[1];
 	if (resource->start != 0x7c0000000ULL || resource->end != 0x7ffffffffULL ||
 	    resource->flags != IORESOURCE_MEM || resource->parent || resource->child)
@@ -179,6 +206,12 @@ static inline void n71_resource_report_optional(struct n71_scan_host *host)
 		 host->resources.io_noops, host->resources.pref_noops);
 }
 
+static inline void n71_resource_report_io16(struct n71_scan_host *host)
+{
+	dev_info(host->dev, "N71_PCIE_IO16_UPPER captured=%u enabled=%u noops=%u; temporary upper disable without hardware write\n",
+		 host->resources.pending, host->resources.io16_upper_unused, host->resources.io16_noops);
+}
+
 /* Caller serializes this action with cleanup and retains MMIO/module/power. */
 static inline int n71_pcie_assign_resources(struct n71_diagnostic *state)
 {
@@ -230,6 +263,7 @@ static inline int n71_pcie_assign_resources(struct n71_diagnostic *state)
 	pci_dev_put(devices.root);
 	pci_unlock_rescan_remove();
 	n71_resource_report_optional(host);
+	n71_resource_report_io16(host);
 	n71_resource_report_readback(host);
 	dev_info(host->dev, "N71_PCIE_RESOURCE_RESULT error=%d assigned=%u pending=%u claimed=%u attempts=%u writes=%u; no decode, bind or DMA\n",
 		 error, host->resources_assigned, host->resources.pending, host->window_claimed,

@@ -10,6 +10,7 @@
 typedef uint16_t u16;
 #define __iomem
 #define PCI_COMMAND 4
+#define PCI_IO_BASE 0x1c
 #define PCI_COMMAND_MASTER 4
 #define PCI_STD_NUM_BARS 6
 #define PCIBIOS_DEVICE_NOT_FOUND 0x86
@@ -17,6 +18,7 @@ typedef uint16_t u16;
 #define PCIBIOS_SET_FAILED 0x88
 #define PCIBIOS_SUCCESSFUL 0
 #define IORESOURCE_BUS 0x1000
+#define IORESOURCE_IO 0x100
 #define IORESOURCE_MEM 0x200
 #define IORESOURCE_MEM_64 0x100000
 #define IORESOURCE_PREFETCH 0x2000
@@ -45,7 +47,7 @@ struct pci_dev {
 	void *driver;
 	struct resource resource[10];
 	struct pci_bus *subordinate;
-	bool enabled, io_window, pref_window;
+	bool enabled, io_window, pref_window, io_window_1k;
 };
 struct pci_ops {
 	int (*read)(struct pci_bus *, unsigned int, int, int, u32 *);
@@ -247,7 +249,8 @@ static int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
 	bridge->bus->sysdata = bridge->sysdata;
 	mock.endpoint_bus = (struct pci_bus){.sysdata = bridge->sysdata, .number = 1};
 	mock.root = (struct pci_dev){.bus = bridge->bus, .devfn = 8, .vendor = 0x106b,
-		.device = 0x1004, .class = 0x060400, .io_window = true, .pref_window = true};
+		.device = 0x1004, .class = 0x060400, .io_window = true, .pref_window = true,
+		.io_window_1k = true}; /* Legacy cases leave the separate IO16 opt-in out of scope. */
 	mock.endpoint = (struct pci_dev){.bus = &mock.endpoint_bus, .vendor = 0x14e4,
 		.device = 0x43a3, .class = 0x028000};
 	mock.root.subordinate = &mock.endpoint_bus; mock.endpoint_bus.self = &mock.root;
