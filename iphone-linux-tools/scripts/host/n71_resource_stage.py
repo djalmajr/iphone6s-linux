@@ -20,6 +20,14 @@ def capable(session):
     return selected
 
 
+def verify_readback(session, text):
+    records = [record for record, _ in session.modules if record['module'] == 'n71-pcie-diagnostic.ko']
+    require(len(records) == 1, 'Exactly one selected PCI module required')
+    required = records[0].get('assignment_readback', False)
+    require(type(required) is bool, 'Selected readback contract must be an exact boolean')
+    n71_resource_result.event(text, readback_required=required)
+
+
 def getter(session):
     return 'printf "N71_PCIE_RESOURCES "; cat ' + PCIE + 'resources; ' if capable(session) else ''
 
@@ -45,6 +53,8 @@ def load_source(session, data, proofs):
     require(type(attempted) is bool and (not attempted or capable(session)), 'Saved resource intent differs')
     require(attempted == (PROOF in proofs), 'Resource intent lacks its complete proof')
     assignment = n71_resource_result.outcome(proofs[PROOF]) if attempted else None
+    if attempted:
+        verify_readback(session, proofs[PROOF])
     require(data['result'].get('resource_assignment') == assignment, 'Saved assignment summary differs from proof')
     session.resource_attempted = attempted
     session.resource_assignment = assignment
@@ -57,6 +67,7 @@ def resume(session, live, prior):
         require(n71_resource_result.live_status(live) == n71_resource_result.live_status(prior),
                 'Live resource ownership changed')
     fresh = session.history.fresh(live)
+    verify_readback(session, fresh)
     assignment = getattr(session, 'resource_assignment', None)
     require(n71_resource_result.event(fresh) == (assignment['event'] if assignment else None),
             'Live assignment history differs from proof')
@@ -103,6 +114,7 @@ def retained(session, text):
         return
     assignment = getattr(session, 'resource_assignment', None)
     error = assignment['error'] if assignment else 0
+    verify_readback(session, text)
     n71_scan_held_result.parse(text, primary_error=error)
     state = n71_resource_result.live_status(text)
     event = assignment['event'] if assignment else None
@@ -144,6 +156,7 @@ def assign(session, journal, live):
     journal.save()
     process = session.capture('held-assign', command(session))
     assignment = n71_resource_result.outcome(process.stdout)
+    verify_readback(session, process.stdout)
     require(process.returncode == assignment['action_exit'], 'SSH exit differs from assignment action')
     session.resource_assignment = assignment
     session.result['resource_assignment'] = assignment
@@ -154,6 +167,7 @@ def assign(session, journal, live):
 def cleanup(session, proof):
     require(not session.resource_attempted or session.resource_assignment is not None,
             'Cannot clean up an unproved assignment intent')
+    verify_readback(session, proof)
     return n71_resource_result.cleanup(proof, session.resource_assignment)
 
 

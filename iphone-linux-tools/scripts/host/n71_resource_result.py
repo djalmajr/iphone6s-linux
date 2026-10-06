@@ -1,6 +1,7 @@
 """Prove one held PCI assignment and its restoration without changing raw logs."""
 import json
 import re
+import n71_resource_readback
 import n71_scan_held_result
 
 FIELDS = ('ready', 'attempted', 'assigned', 'pending', 'claimed', 'active', 'error')
@@ -33,10 +34,11 @@ def live_status(text):
     return state
 
 
-def event(text):
+def event(text, *, readback_required=False):
     found = rows(text, 'N71_PCIE_RESOURCE_RESULT ', RESULT)
     require(len(found) <= 1, 'Assignment must not repeat')
     if not found:
+        n71_resource_readback.parse(text, None, required=readback_required)
         return None
     values = tuple(map(int, found[0].groups()))
     error, assigned, pending, claimed, attempts, writes = values
@@ -46,7 +48,11 @@ def event(text):
     require((error == 0 and (assigned, pending, claimed) == (1, 1, 1) and writes > 0)
             or (error < 0 and assigned == 0), 'Assignment result state differs')
     require(text.index('N71_PCIE_SESSION_HELD ') < found[0].start(), 'Assignment precedes held acquisition')
-    return dict(zip(('error', 'assigned', 'pending', 'claimed', 'attempts', 'writes'), values))
+    result = dict(zip(('error', 'assigned', 'pending', 'claimed', 'attempts', 'writes'), values))
+    readback = n71_resource_readback.parse(text, result, required=readback_required)
+    if readback is not None:
+        result['write_readback'] = readback
+    return result
 
 
 def outcome(text):
