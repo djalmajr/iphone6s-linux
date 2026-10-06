@@ -17,3 +17,12 @@
 - **Reverter:** baixo para o opt-in; os caminhos anteriores continuam selecionando seus próprios builds. A retomada deverá conservar o contrato de cleanup mesmo se o comando CLI mudar.
 - **Onde:** incremento177 e integração posterior de [n71-funcional-goal.md](n71-funcional-goal.md), parser/coletor host; [issue39](https://github.com/djalmajr/iphone6s-linux/issues/39).
 - **Status:** parser/seleção aplicados em `49d2158`, CLI de aquisição/retomada em `36c7f53` e composer do perfil completo em `c30a4ac`. CLI 18/22 e compatibilidade 45/81; composer 13/29, com 20 inputs, passaram Mac/Ubuntu ARM64 e logs por SHA. Perfil privado real separado passou checks locais; payload, kernel/DT/loader/initramfs/identidades preservados, ambos os módulos e booleanos verificados. Prova física continua pendente; coletores futuros que alterem histórico/estado precisam participar do checkpoint da sessão. Manter iOS para recarga durante desenvolvimento offline.
+
+## D3. Atribuição PCI pelo alocador do kernel
+
+- **Decisão:** integrar o alocador PCI padrão ao bus retido, com uma fase explícita de configuração e restauração própria dos três registradores adicionais. BAR0/BAR2 devem caber na janela MEM32 N71 já documentada; decode e bus-master continuam desligados durante a atribuição.
+- **Por quê:** Wi-Fi exige recursos atribuídos que o núcleo PCI e o driver reconheçam. O scan anterior só sonda tamanhos; a política dele recusa as escritas de atribuição e não captura todos os registradores usados pelo alocador.
+- **Alternativas:** escrever endereços fixos manualmente também exige atualizar e reservar a árvore de recursos; pci_host_probe habilita etapas de registro/bind antes dos controles IRQ/IOMMU. Repetir um scan temporário não prepara o driver.
+- **Reverter:** baixo para a fase opt-in; módulos/perfis anteriores permanecem disponíveis. A limpeza deve remover o bus antes da restauração e não liberar owners em erro.
+- **Onde:** incremento 183 e integração seguinte do plano; política de configuração, adaptador PCI, caller e journal; issue39.
+- **Status:** em curso. Preparar política e provas nativas primeiro, depois integrar alocador/CLI e build real, reunindo os controles compatíveis numa sessão física.
