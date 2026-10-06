@@ -4,6 +4,7 @@ import re
 import n71_resource_readback
 import n71_resource_optional
 import n71_resource_io16
+import n71_resource_pref64
 import n71_resource_build
 import n71_scan_held_result
 
@@ -37,13 +38,14 @@ def live_status(text):
     return state
 
 
-def event(text, *, readback_required=False, optional_required=False, io16_required=False):
+def event(text, *, readback_required=False, optional_required=False, io16_required=False, pref64_required=False):
     found = rows(text, 'N71_PCIE_RESOURCE_RESULT ', RESULT)
     require(len(found) <= 1, 'Assignment must not repeat')
     if not found:
         n71_resource_readback.parse(text, None, required=readback_required)
         n71_resource_optional.parse(text, None, required=optional_required)
         n71_resource_io16.parse(text, None, required=io16_required)
+        n71_resource_pref64.parse(text, None, required=pref64_required)
         return None
     values = tuple(map(int, found[0].groups()))
     error, assigned, pending, claimed, attempts, writes = values
@@ -54,15 +56,25 @@ def event(text, *, readback_required=False, optional_required=False, io16_requir
             or (error < 0 and assigned == 0), 'Assignment result state differs')
     require(text.index('N71_PCIE_SESSION_HELD ') < found[0].start(), 'Assignment precedes held acquisition')
     result = dict(zip(('error', 'assigned', 'pending', 'claimed', 'attempts', 'writes'), values))
-    readback = n71_resource_readback.parse(text, result, required=readback_required)
-    if readback is not None:
-        result['write_readback'] = readback
+    proof = dict(result)
     optional = n71_resource_optional.parse(text, result, required=optional_required)
     if optional is not None:
+        proof['optional_windows'] = optional
+    io16 = n71_resource_io16.parse(text, proof, required=io16_required)
+    if io16 is not None:
+        proof['io16_upper'] = io16
+    pref64 = n71_resource_pref64.parse(text, proof, required=pref64_required)
+    if pref64 is not None:
+        proof['pref64_disable'] = pref64
+    readback = n71_resource_readback.parse(text, proof, required=readback_required)
+    if readback is not None:
+        result['write_readback'] = readback
+    if optional is not None:
         result['optional_windows'] = optional
-    io16 = n71_resource_io16.parse(text, result, required=io16_required)
     if io16 is not None:
         result['io16_upper'] = io16
+    if pref64 is not None:
+        result['pref64_disable'] = pref64
     return result
 
 

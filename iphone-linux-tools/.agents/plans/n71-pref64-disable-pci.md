@@ -44,7 +44,7 @@ Física (até cinco): somente após A–E. Um boot reúne acquire/assign/read-on
 - [x] A1/A2: integração na política, defaults/readback/rollback qualificados.
 - [x] B: derivação/report/adapter qualificados.
 - [x] C1: parsers de contrato/readback e legados qualificados.
-- [ ] C2: dispatch, stage/journal e legados qualificados.
+- [x] C2: dispatch, stage/journal e legados qualificados.
 - [ ] D: build/ABI preservados e seleção explícita.
 - [ ] E: candidata/check/reprodução/publicação.
 - [ ] Sessão física agrupada e resultado/limites na issue39.
@@ -76,3 +76,9 @@ Build externo final na VM passou seis módulos Werror/modpost/ELF/vermagic,50 in
 Mac/Ubuntu ARM64:84 testes/145 mutações por AssertionError por plataforma,68 inputs iguais/preservados, AST/lint fatal. Novo contrato6/14, mais IO16/optional/readback/result/stage/held/history legados requalificados. Report completo/único/ordenado, capture/ausência/counters, expected0001fff1 somente no disable PREF64 capturado, baseline/pedido/refusal originais e callbacks brutos passaram. Perda de tipos retorna uma falha válida com after igual ao pedido original, mas diferente do expected completo; isso não passa como sucesso. Shapes legados ficam iguais.
 
 Mutante unknown inicialmente sobreviveu porque o caso apenas substituía o report exigido; adicionada linha desconhecida completa ao lado de uma prova válida. Casos de scope e baseline também foram ampliados. Probe negativo preservado/excluído. C2 ainda precisa despachar o novo parser e exigir/conservar os campos no journal; nenhum perfil/load/DFU novo.
+
+### Gate C2 — dispatch e journal qualificados
+
+Mac/Ubuntu ARM64:89 testes/149 mutações por AssertionError por plataforma,69 inputs iguais/preservados, AST/lint fatal. Journal novo5/4 mais contrato6/14 e legados requalificados. Contexto PREF64 é validado antes de interpretar expected; shape/ordem legados do resultado conservados. Metadata exata exige o report; a cópia do compositor inclui o novo parser. Proof ausente retém owners e não salva atribuição; sucesso/reuso/cleanup conserva counter/evento e um setter, falha tipada/cleanup retry conserva pedido0000fff0/expected0001fff1/erro-5, sem repetir assignment.
+
+Kernel/módulos não mudaram nesta etapa; build final88120/SHA968e6a06 permanece. D ainda vincula as provas ao hash selecionado; nenhuma candidata/load/DFU nova.

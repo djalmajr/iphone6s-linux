@@ -29,7 +29,10 @@ def verify_readback(session, text):
     require(type(optional) is bool, 'Selected optional windows contract must be an exact boolean')
     io16 = records[0].get('assignment_io16_upper', False)
     require(type(io16) is bool, 'Selected IO16 contract must be an exact boolean')
-    n71_resource_result.event(text, readback_required=required, optional_required=optional, io16_required=io16)
+    pref64 = records[0].get('assignment_pref64_disable', False)
+    require(type(pref64) is bool, 'Selected PREF64 contract must be an exact boolean')
+    n71_resource_result.event(text, readback_required=required, optional_required=optional,
+                              io16_required=io16, pref64_required=pref64)
 
 
 def getter(session):
