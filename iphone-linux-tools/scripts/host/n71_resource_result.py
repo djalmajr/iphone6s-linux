@@ -2,6 +2,7 @@
 import json
 import re
 import n71_resource_readback
+import n71_resource_build
 import n71_scan_held_result
 
 FIELDS = ('ready', 'attempted', 'assigned', 'pending', 'claimed', 'active', 'error')
@@ -133,7 +134,7 @@ def cleanup(text, assignment=None):
     return dict(base, resource_cleanup_verified=True, assignment_error=error)
 
 
-def selected_records(root, *, release):
+def selected_records(root, *, release, pcie_sha256=None):
     previous = n71_scan_held_result.selected_records(root, release=release)
     evidence = json.loads((root / 'docs/evidence/n71-pci-resource-assignment.json').read_text())
     require(type(evidence.get('format')) is int and evidence['format'] == 1, 'Assignment evidence format differs')
@@ -168,4 +169,6 @@ def selected_records(root, *, release):
                 and row.get('vermagic') == release + ' SMP preempt mod_unload aarch64' for row in records),
             'Assignment module bytes/hash/ABI differ')
     require(records[1] == previous[1], 'Assignment REG_ON differs from qualified held profile')
-    return records
+    if pcie_sha256 is None or pcie_sha256 == records[0]['sha256']:
+        return records
+    return n71_resource_build.select(root, records, release=release, pcie_sha256=pcie_sha256)
