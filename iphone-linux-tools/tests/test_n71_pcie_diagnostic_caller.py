@@ -1,6 +1,7 @@
 """Compile the real caller and MMIO backend with fault-injected kernel dependencies."""
 from pathlib import Path
 import resource
+import re
 import shutil
 import signal
 import subprocess
@@ -12,7 +13,7 @@ MUTATIONS = (
     ('missing-retained-pin', '__module_get(THIS_MODULE);', 'if (false) __module_get(THIS_MODULE);'),
     ('missing-action-pin', 'if (!try_module_get(THIS_MODULE))', 'if (false && !try_module_get(THIS_MODULE))'),
     ('ignore-pending-scan', 'if (error || state->scan_bridge)', 'if (false && (error || state->scan_bridge))'),
-    ('skip-scan-cleanup', 'int error = n71_pcie_scan_cleanup(state);', 'int error = false ? n71_pcie_scan_cleanup(state) : 0;'),
+    ('skip-scan-cleanup', 'error = n71_pcie_scan_cleanup(state);', 'error = false ? n71_pcie_scan_cleanup(state) : 0;'),
     ('skip-reset-cleanup', 'if (state->reset_pending) {', 'if (false) {'),
     ('ignore-reset-error', 'if (error)\n\t\t\treturn error;\n\t\tstate->reset_pending', 'if (false)\n\t\t\treturn error;\n\t\tstate->reset_pending'),
     ('skip-power-release', 'error = n71_release_power(state);', 'error = false ? n71_release_power(state) : 0;'),
@@ -20,7 +21,7 @@ MUTATIONS = (
     ('duplicate-power-put', 'error = pm_runtime_suspend(domain);',
      'error = false ? pm_runtime_suspend(domain) : pm_runtime_put_sync_suspend(domain);'),
     ('ignore-power-error', 'if (error < 0 ||', 'if ((false && error < 0) ||'),
-    ('early-unpin', 'if (!state->cleanup_error && !state->scan_bridge && !state->reset_pending &&\n\t    !state->powered && !state->attached && !state->power_put_pending && state->module_retained)',
+    ('early-unpin', 'if (!state->cleanup_error && !state->dart && !state->scan_bridge && !state->reset_pending &&\n\t    !state->powered && !state->attached && !state->power_put_pending && state->module_retained)',
      'if (state->module_retained)'),
     ('drop-binding-on-pending', 'if (state->module_retained) {', 'if (false) {'),
     ('allow-second-device', 'error = session ? -EBUSY : n71_probe_locked(pdev);', 'error = n71_probe_locked(pdev);'),
@@ -83,10 +84,10 @@ RESOURCE_MUTATIONS = (
     ('lose-assign-error', 'session->primary_error = error;', 'session->primary_error = 0;'),
     ('ealready-poisons-session', 'error != -EALREADY && !session->primary_error',
      'true && !session->primary_error'),
-    ('leak-assign-pin', 'module_put(THIS_MODULE);\n\treturn error;\n}\n\nstatic int n71_resource_status',
-     'if (false) module_put(THIS_MODULE);\n\treturn error;\n}\n\nstatic int n71_resource_status'),
-    ('duplicate-assign-unpin', 'module_put(THIS_MODULE);\n\treturn error;\n}\n\nstatic int n71_resource_status',
-     'module_put(THIS_MODULE); module_put(THIS_MODULE);\n\treturn error;\n}\n\nstatic int n71_resource_status'),
+    ('leak-assign-pin', 'module_put(THIS_MODULE);\n\treturn error;',
+     'if (false) module_put(THIS_MODULE);\n\treturn error;'),
+    ('duplicate-assign-unpin', 'module_put(THIS_MODULE);\n\treturn error;',
+     'module_put(THIS_MODULE); module_put(THIS_MODULE);\n\treturn error;'),
     ('resources-getter-without-lock', 'mutex_lock(&session_lock);\n\tif (session && session->scan_bridge)',
      'if (false) mutex_lock(&session_lock);\n\tif (session && session->scan_bridge)'),
     ('assigned-after-bus-removal', 'assigned = session->scan_bridge->bus &&', 'assigned = true &&'),
@@ -109,6 +110,63 @@ RESOURCE_MUTATIONS = (
     ('resources-hides-error-after-release', 'session ? session->primary_error : 0);',
      'session ? 0 : 0);'),
 )
+DART_MUTATIONS = (
+    ('dart-ignore-hold-dispatch', 'n71_cleanup_action', 'if (sysfs_streq(text, "dart-hold"))',
+     'if (false && sysfs_streq(text, "dart-hold"))'),
+    ('dart-ignore-release-dispatch', 'n71_cleanup_action', 'if (sysfs_streq(text, "dart-release"))',
+     'if (false && sysfs_streq(text, "dart-release"))'),
+    ('dart-without-opt-in', 'n71_dart_action', 'if (!scan_hold)', 'if (false && !scan_hold)'),
+    ('dart-missing-pin', 'n71_dart_action', 'if (!try_module_get(THIS_MODULE))',
+     'if (false && !try_module_get(THIS_MODULE))'),
+    ('dart-without-lock', 'n71_dart_action', 'mutex_lock(&session_lock);',
+     'if (false) mutex_lock(&session_lock);'),
+    ('dart-skip-acquire', 'n71_dart_action', 'error = n71_pcie_dart_acquire(session_device, session);',
+     'error = false ? n71_pcie_dart_acquire(session_device, session) : 0;'),
+    ('dart-skip-release', 'n71_dart_action', 'error = n71_pcie_dart_cleanup(session_device, session);',
+     'error = false ? n71_pcie_dart_cleanup(session_device, session) : 0;'),
+    ('dart-lose-primary-error', 'n71_dart_action', 'session->primary_error = error;',
+     'session->primary_error = 0;'),
+    ('dart-ealready-poisons-session', 'n71_dart_action', 'error != -EALREADY', 'true'),
+    ('dart-leak-action-pin', 'n71_dart_action', 'module_put(THIS_MODULE);',
+     'if (false) module_put(THIS_MODULE);'),
+    ('dart-getter-without-lock', 'n71_dart_status', 'mutex_lock(&session_lock);',
+     'if (false) mutex_lock(&session_lock);'),
+    ('dart-getter-always-ready', 'n71_dart_status', '!!session, !!provider', '1, !!provider'),
+    ('dart-getter-hides-pending', 'n71_dart_status', 'provider ? n71_dart_lease_pending(&provider->lease) : 0',
+     'false && provider ? n71_dart_lease_pending(&provider->lease) : 0'),
+    ('dart-cleanup-skips-owner', 'n71_session_cleanup',
+     'int error = n71_pcie_dart_cleanup(session_device, state);',
+     'int error = false ? n71_pcie_dart_cleanup(session_device, state) : 0;'),
+    ('dart-cleanup-ignores-pending', 'n71_session_cleanup', 'if (error || state->dart)',
+     'if (false && (error || state->dart))'),
+)
+DART_GUARDS = (
+    '!session->module_retained', '!session->reset_pending', 'session->powered != 4',
+    'session->attached != 4', 'session->power_put_pending', '!n71_session_has_held_bus(session)',
+    'session->primary_error', 'session->cleanup_error', '!host->resources_assigned',
+    '!host->window_claimed', 'host->resources.active', 'host->windows[1].parent != &iomem_resource',
+    'host->resources.error', 'host->config.error', 'host->io_error',
+)
+DART_GUARD_ANCHORS = {
+    'session->primary_error': ('|| session->primary_error || session->cleanup_error)',
+                               '|| (false && session->primary_error) || session->cleanup_error)'),
+}
+DART_MUTATIONS += tuple((f'dart-missing-guard-{index}', 'n71_dart_action',
+                         *DART_GUARD_ANCHORS.get(guard, (guard, f'(false && {guard})')))
+                        for index, guard in enumerate(DART_GUARDS))
+
+
+def function_span(source, name):
+    match = re.search(r'static int ' + re.escape(name) + r'\([^)]*\)\n\{', source)
+    if match is None:
+        raise ValueError('Caller function not found: ' + name)
+    position, depth = match.end(), 1
+    while depth:
+        if position >= len(source):
+            raise ValueError('Caller function unterminated: ' + name)
+        depth += (source[position] == '{') - (source[position] == '}')
+        position += 1
+    return match.start(), position
 
 
 class N71PcieCaller(unittest.TestCase):
@@ -126,7 +184,7 @@ class N71PcieCaller(unittest.TestCase):
             for name in ('delay', 'gpio/consumer', 'io', 'module', 'mutex', 'string', 'of_address',
                          'platform_device', 'pm_domain', 'pm_runtime'):
                 (folder / 'linux' / (name + '.h')).write_text('/* Kernel fixture APIs. */\n')
-            for name in ('n71-pcie-contract.h', 'n71-pcie-mmio.h'):
+            for name in ('n71-pcie-contract.h', 'n71-pcie-mmio.h', 'n71-dart-lease.h', 'n71-dart-cycle.h', 'n71-dart-observe.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
             for name in ('port', 'link', 'inventory', 'scan', 'resource-assign', 'chip-mmio'):
                 (folder / f'n71-pcie-{name}.h').write_text('/* Dependency supplied by fixture. */\n')
@@ -136,11 +194,25 @@ class N71PcieCaller(unittest.TestCase):
             variants = tuple((name, before, after, False) for name, before, after in
                              (('baseline', None, None),) + MUTATIONS + RESOURCE_MUTATIONS)
             variants += tuple((name, before, after, True) for name, before, after in MMIO_MUTATIONS)
+            variants += tuple((name, before, after, False) for name, _, before, after in DART_MUTATIONS)
+            dart_functions = {name: function for name, function, _, _ in DART_MUTATIONS}
             for name, before, after, mmio in variants:
                 subject = mmio_source if mmio else source
+                start, end = 0, len(subject)
+                if name == 'missing-action-pin':
+                    start, end = function_span(subject, 'n71_cleanup_action')
+                if name in {entry[0] for entry in RESOURCE_MUTATIONS}:
+                    function = ('n71_cleanup_action' if name == 'ignore-assign-dispatch' else
+                                'n71_resource_status' if name.startswith(('resources-', 'assigned-')) else
+                                'n71_assign_action')
+                    start, end = function_span(subject, function)
+                if name in dart_functions:
+                    start, end = function_span(subject, dart_functions[name])
+                scoped = subject[start:end]
                 if before:
-                    self.assertEqual(subject.count(before), 1, name)
-                caller.write_text(source if before is None or mmio else source.replace(before, after, 1))
+                    self.assertEqual(scoped.count(before), 1, name)
+                changed = subject if before is None else subject[:start] + scoped.replace(before, after, 1) + subject[end:]
+                caller.write_text(source if before is None or mmio else changed)
                 (folder / 'n71-pcie-mmio.h').write_text(mmio_source.replace(before, after, 1) if mmio else mmio_source)
                 compiled = subprocess.run([compiler, '-std=gnu11', '-Wall', '-Wextra', '-Werror',
                                            '-I', str(folder), str(ROOT / 'tests/n71_pcie_diagnostic_caller.c'),
@@ -152,6 +224,7 @@ class N71PcieCaller(unittest.TestCase):
                     self.assertIn('N71_PCIE_CALLER_OK cases=73', result.stdout)
                     self.assertIn('N71_PCIE_HELD_CALLER_OK cases=21', result.stdout)
                     self.assertIn('N71_PCIE_RESOURCE_CALLER_OK cases=27', result.stdout)
+                    self.assertIn('N71_DART_CALLER_OK cases=22', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
