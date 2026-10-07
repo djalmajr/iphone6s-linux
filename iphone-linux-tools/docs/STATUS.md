@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-06
 
-## Checkpoint atual — PREF64 físico: recusa antes de capture; corrigir lifecycle offline
+## Checkpoint atual — lifecycle PREF64 corrigido; candidata qualificada
+
+A elegibilidade aceita recurso PREF vazio exato antes do sizing, além do recurso tipado exato anterior. Probes64, ownership, baseline00010001/uppers0, estado vivo, readback completo0001fff1, primeiro erro e rollback continuam estritos. Fixture reproduziu a recusa física anterior e passou com a correção. [D3/plano](../.agents/plans/n71-pref64-disable-pci.md), [adapter](evidence/n71-pci-pref64-unsized-adapter.json).
+
+Mac/Ubuntu ARM64:138 cenários/105 mutações C nos gates afetados; pure319/97 reutilizado com42 inputs intactos, total457/202 por plataforma. Só a suíte IO16 com âncoras de mutação ambíguas foi repetida após delimitação. Build externo passou seis módulos Werror/modpost/ELF/vermagic,50 inputs;PCIe88.184 bytes/SHA15617e32. Fonte/config/Image/exports/REG_ON/outros cinco módulos preservados. Seleção41/68 por plataforma liga qualificação e base por hash, conservando rollback pelos hashes anteriores. [Build](evidence/n71-pci-pref64-unsized-build.json).
+
+Integração95 testes/150 mutações por plataforma,80 inputs/AST/lint fatal. Candidata real passou composer/check: oito arquivos700/600; só PCIe/provenance hash mudam, sem carga automática. Snapshot44 recente verificado. Próximo boot agrupa acquire/assign/inventário PCI-IRQ-IOMMU sem escrita/cleanup/services/snapshot/sync/iOS. Novo módulo ainda sem prova física; Wi-Fi, carga e gauge continuam pendentes. [Candidata](evidence/n71-pci-pref64-unsized-profile.json), [reprodução](N71_PME_ASPM_CANDIDATE.md#lifecycle-pref64-corrigido--reprodução).
+
+### PREF64 físico anterior — recusa antes de capture; contexto de D3
 
 A candidata968e6a06 iniciou em um DFU/um boot, com restauração44 e sem reinícios intermediários. Acquire, inventário PCI/IRQ/IOMMU sem escrita, cleanup/retry, SSH/Bash/Herdr/HTTP, snapshot/sync e retorno automático ao iOS passaram. Bateria iOS100→100%, carregando após o retorno. [Prova física sanitizada](evidence/n71-pci-pref64-physical.json).
 

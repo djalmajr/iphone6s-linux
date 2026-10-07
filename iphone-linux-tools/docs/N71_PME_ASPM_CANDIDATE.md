@@ -1206,3 +1206,40 @@ o fallback físico continua disponível quando USB não confirmar o iOS.
 A candidata968e6a06 rodou um DFU/um boot com restauração44 e zero reinícios intermediários. Assign recusou-13 antes de capture/claim/tentativas/escritas; inventário confirmou todos os recursos da ponte0, PREF lower00010001 e uppers0. IRQ root255/endpoint0 e links driver/IOMMU/of_node ausentes não comprovam entrega IRQ ou attachment. Power_supply0 mantém carga/gauge Linux pendentes. [Prova sanitizada](evidence/n71-pci-pref64-physical.json).
 
 Cleanup/retry liberou owners conservando erro/reports, serviços passaram, snapshot44/sync e retorno automático ao iOS USB passaram. Bateria100→100%, carregando após o retorno; não é saúde de bateria nem carga Linux. A pré-validação nova exigia recurso tipado antes do sizing. Fonte fixada958481f: probe.c:518–568 usa recurso temporário ao sondar a ponte; setup-bus.c:971–991 preenche flags durante sizing em1431. [D3/plano](../.agents/plans/n71-pref64-disable-pci.md): aceitar somente estado vazio exato adicional, conservar probes/capture/guards/rollback e comprovar lifecycle na fixture. Nenhum novo DFU até candidata completamente qualificada.
+
+## Lifecycle PREF64 corrigido — reprodução
+
+D3 permite adicionalmente somente flags/start/end0 antes do sizing; guardas de probes/capture/ownership/readback/rollback continuam. Fixture reproduziu mode20 actual-13 na versão anterior; corrigida passou com janela vazia realista e14 negativos de metadata/probes/baseline/drift. C457/202 por plataforma inclui pure319/97 reaproveitado por hash; gates afetados138/105, seleção41/68 e integração95/150 no Mac/Ubuntu ARM64. Probes de âncora ambígua ficaram excluídos; só IO16 foi repetido. [Adapter](evidence/n71-pci-pref64-unsized-adapter.json), [build](evidence/n71-pci-pref64-unsized-build.json), [candidata](evidence/n71-pci-pref64-unsized-profile.json).
+
+Build na VM usa a fonte958481f/config/Image/exports anteriores; seis módulos Werror/modpost/ELF/vermagic,50 inputs. PCIe88.184 bytes/SHA15617e32ec0d897a53a462d26525705bccea5d8ffa7f54d18ca9d070130f023a; REG_ON e outros cinco preservados. Copie os inputs públicos qualificados para diretório externo novo antes de executar:
+
+```bash
+make -C /home/ubuntu/kernel-n71-binding-source-20261005 \
+  O=/home/ubuntu/kernel-n71-binding-build-20261005 ARCH=arm64 -j2 W=1 \
+  KCFLAGS=-Werror LOCALVERSION= \
+  M=/home/ubuntu/n71-pref64-unsized-modules-20261006/phone/kernel \
+  KBUILD_EXTRA_SYMBOLS=/home/ubuntu/kernel-n71-binding-build-20261005/vmlinux.symvers modules
+```
+
+Depois de recuperar os módulos e conferir hashes/ABI, compor somente em diretório privado ainda inexistente:
+
+```bash
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile runtime/n71-binding-base-profile-20261005/deployment.json \
+  --kernel-dir runtime/kernel-n71-binding-artifacts-20261005 \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir runtime/n71-pcie-diagnostic-20261002 \
+  --module runtime/n71-pref64-unsized-build-20261006/modules/n71-pcie-diagnostic.ko \
+  --module-sha256 15617e32ec0d897a53a462d26525705bccea5d8ffa7f54d18ca9d070130f023a \
+  --pcie-aspm-off --pcie-scan-hold --pcie-resource-capable \
+  --reg-on-module runtime/n71-pref64-unsized-build-20261006/modules/n71-wlan-power-diagnostic.ko \
+  --output-dir runtime/n71-binding-pref64-unsized-profile-20261006
+python3 -B scripts/host/n71-link-session.py \
+  --profile runtime/n71-binding-pref64-unsized-profile-20261006/deployment.json \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold --resource-capable --check
+python3 -B -m unittest discover -s tests -p test_n71_pcie_pref64_host.py -v
+python3 -B -m unittest discover -s tests -p test_n71_pref64_unsized_build.py -v
+python3 -B -m unittest discover -s tests -p test_n71_diagnostic_pref64_profile.py -v
+```
+
+Candidata real/check preservou payload/deployment/DT/kernel/loader/initramfs/identidades/REG_ON, oito arquivos700/600. Só PCIe e hash na provenance novos; não carrega automaticamente. Sem novo Image ou configuração global do Mac. Próxima prova física reúne os estágios sem reinícios intermediários; IRQ/IOMMU/driver/radio, Wi-Fi e telemetria/carga continuam abertos.
