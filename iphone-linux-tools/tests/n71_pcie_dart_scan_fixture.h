@@ -7,6 +7,23 @@
 struct platform_device { struct device dev; };
 struct property { unsigned int tag; };
 struct iommu_domain { unsigned int type; };
+struct iommu_group { int id; unsigned int refs; };
+enum dma_fault {
+	DMA_OK, DMA_LEGACY_ROOT, DMA_LEGACY_ENDPOINT, DMA_EMPTY_ALIAS, DMA_GROUP_ZERO,
+	DMA_ROOT_BUS_NUMBER, DMA_ROOT_PARENT, DMA_ROOT_SELF, DMA_ROOT_SYSDATA,
+	DMA_EP_PARENT, DMA_EP_SELF, DMA_EP_SYSDATA, DMA_ROOT_SUBORDINATE,
+	DMA_ROOT_BUS_OWNER, DMA_EP_BUS_NUMBER, DMA_EP_SUBORDINATE,
+	DMA_ROOT_HEADER, DMA_EP_HEADER, DMA_ROOT_TYPE, DMA_EP_TYPE, DMA_EP_NO_PCIE,
+	DMA_ROOT_MULTIFUNCTION, DMA_EP_MULTIFUNCTION, DMA_ROOT_PF, DMA_EP_PF, DMA_ROOT_VF, DMA_EP_VF,
+	DMA_ROOT_ALIAS, DMA_EP_ALIAS,
+	DMA_ROOT_ALIAS_FLAG, DMA_EP_ALIAS_FLAG, DMA_ROOT_XLATE_FLAG, DMA_EP_XLATE_FLAG,
+	DMA_ROOT_NO_ALIAS_FLAG, DMA_EP_NO_ALIAS_FLAG,
+	DMA_ROOT_MASK_NULL, DMA_EP_MASK_NULL, DMA_ROOT_MASK_FOREIGN, DMA_EP_MASK_FOREIGN,
+	DMA_ROOT_STREAM_ZERO, DMA_EP_STREAM_ZERO, DMA_ROOT_STREAM64, DMA_EP_STREAM64,
+	DMA_ROOT_COHERENT64, DMA_EP_COHERENT64, DMA_ROOT_COHERENT_ZERO, DMA_EP_COHERENT_ZERO,
+	DMA_ROOT_GROUP_NONE, DMA_EP_GROUP_NONE, DMA_ROOT_GROUP_NEGATIVE, DMA_EP_GROUP_NEGATIVE,
+	DMA_EP_GROUP_FOREIGN, DMA_FAULT_COUNT
+};
 struct iommu_fwspec { struct fwnode_handle *iommu_fwnode; u32 flags; unsigned int num_ids; u32 ids[2]; };
 struct n71_dart_host {
 	struct pci_host_bridge *bridge;
@@ -23,6 +40,11 @@ static struct {
 	struct device_node node, foreign_node;
 	struct n71_dart_host *owner;
 	struct iommu_domain domain, foreign_domain;
+	struct iommu_group group, foreign_group;
+	unsigned int group_gets, group_ids, group_puts;
+	enum dma_fault dma_fault;
+	unsigned long aliases[256 / (8 * sizeof(unsigned long))];
+	u64 foreign_mask;
 	struct iommu_fwspec spec[2];
 	struct property map_property, status_property, foreign_property;
 	struct property *map_current, *status_current;
@@ -36,6 +58,7 @@ static struct {
 static void dart_fixture_initialize(void)
 {
 	assert(!dart_mock.owner && !dart_mock.held_refs && !dart_mock.active_consumers);
+	assert(!dart_mock.group.refs && !dart_mock.foreign_group.refs);
 	memset(&dart_mock,0,sizeof(dart_mock));
 	dart_mock.node.fwnode.node=&dart_mock.node;
 	dart_mock.foreign_node.fwnode.node=&dart_mock.foreign_node;
@@ -43,6 +66,73 @@ static void dart_fixture_initialize(void)
 	dart_mock.registered=true; dart_mock.identity=true;
 	dart_mock.map_count=8;
 	dart_mock.domain.type=dart_mock.foreign_domain.type=IOMMU_DOMAIN_DMA;
+	dart_mock.group.id = 7; dart_mock.foreign_group.id = 8;
+	dart_mock.foreign_mask = DMA_BIT_MASK(32);
+}
+static bool pci_is_pcie(const struct pci_dev *dev) { return dev->pcie; }
+static int pci_pcie_type(const struct pci_dev *dev) { return dev->pcie_type; }
+static bool bitmap_empty(const unsigned long *mask, unsigned int bits)
+{
+	assert(bits == 256);
+	for (unsigned int i = 0; i < bits; i++)
+		if (mask[i / (8 * sizeof(*mask))] & (1UL << (i % (8 * sizeof(*mask))))) return false;
+	return true;
+}
+static void dart_fixture_dma_fault(void)
+{
+	switch (dart_mock.dma_fault) {
+	case DMA_OK: break;
+	case DMA_LEGACY_ROOT: mock.root.pcie = false; break;
+	case DMA_LEGACY_ENDPOINT: mock.endpoint.pcie_type = PCI_EXP_TYPE_LEG_END; break;
+	case DMA_EMPTY_ALIAS: mock.root.dma_alias_mask = mock.endpoint.dma_alias_mask = dart_mock.aliases; break;
+	case DMA_GROUP_ZERO: dart_mock.group.id = 0; break;
+	case DMA_ROOT_BUS_NUMBER: mock.bridge->bus->number = 2; break;
+	case DMA_ROOT_PARENT: mock.bridge->bus->parent = &mock.endpoint_bus; break;
+	case DMA_ROOT_SELF: mock.bridge->bus->self = &mock.endpoint; break;
+	case DMA_ROOT_SYSDATA: mock.bridge->bus->sysdata = &mock; break;
+	case DMA_EP_PARENT: mock.endpoint_bus.parent = NULL; break;
+	case DMA_EP_SELF: mock.endpoint_bus.self = NULL; break;
+	case DMA_EP_SYSDATA: mock.endpoint_bus.sysdata = &mock; break;
+	case DMA_ROOT_SUBORDINATE: mock.root.subordinate = NULL; break;
+	case DMA_ROOT_BUS_OWNER: mock.root.bus = &mock.endpoint_bus; break;
+	case DMA_EP_BUS_NUMBER: mock.endpoint_bus.number = 2; break;
+	case DMA_EP_SUBORDINATE: mock.endpoint.subordinate = mock.bridge->bus; break;
+	case DMA_ROOT_HEADER: mock.root.hdr_type = PCI_HEADER_TYPE_NORMAL; break;
+	case DMA_EP_HEADER: mock.endpoint.hdr_type = PCI_HEADER_TYPE_BRIDGE; break;
+	case DMA_ROOT_TYPE: mock.root.pcie_type = 5; break;
+	case DMA_EP_TYPE: mock.endpoint.pcie_type = PCI_EXP_TYPE_ROOT_PORT; break;
+	case DMA_EP_NO_PCIE: mock.endpoint.pcie = false; break;
+	case DMA_ROOT_MULTIFUNCTION: mock.root.multifunction = true; break;
+	case DMA_EP_MULTIFUNCTION: mock.endpoint.multifunction = true; break;
+	case DMA_ROOT_PF: mock.root.is_physfn = true; break;
+	case DMA_EP_PF: mock.endpoint.is_physfn = true; break;
+	case DMA_ROOT_VF: mock.root.is_virtfn = true; break;
+	case DMA_EP_VF: mock.endpoint.is_virtfn = true; break;
+	case DMA_ROOT_ALIAS: mock.root.dma_alias_mask = dart_mock.aliases; dart_mock.aliases[0] = 1; break;
+	case DMA_EP_ALIAS: mock.endpoint.dma_alias_mask = dart_mock.aliases; dart_mock.aliases[3] = 1; break;
+	case DMA_ROOT_ALIAS_FLAG: mock.root.dev_flags = PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS; break;
+	case DMA_EP_ALIAS_FLAG: mock.endpoint.dev_flags = PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS; break;
+	case DMA_ROOT_XLATE_FLAG: mock.root.dev_flags = PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT; break;
+	case DMA_EP_XLATE_FLAG: mock.endpoint.dev_flags = PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT; break;
+	case DMA_ROOT_NO_ALIAS_FLAG: mock.root.dev_flags = PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS; break;
+	case DMA_EP_NO_ALIAS_FLAG: mock.endpoint.dev_flags = PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS; break;
+	case DMA_ROOT_MASK_NULL: mock.root.dev.dma_mask = NULL; break;
+	case DMA_EP_MASK_NULL: mock.endpoint.dev.dma_mask = NULL; break;
+	case DMA_ROOT_MASK_FOREIGN: mock.root.dev.dma_mask = &dart_mock.foreign_mask; break;
+	case DMA_EP_MASK_FOREIGN: mock.endpoint.dev.dma_mask = &dart_mock.foreign_mask; break;
+	case DMA_ROOT_STREAM_ZERO: mock.root.dma_mask = 0; break;
+	case DMA_EP_STREAM_ZERO: mock.endpoint.dma_mask = 0; break;
+	case DMA_ROOT_STREAM64: mock.root.dma_mask = ~(u64)0; break;
+	case DMA_EP_STREAM64: mock.endpoint.dma_mask = ~(u64)0; break;
+	case DMA_ROOT_COHERENT64: mock.root.dev.coherent_dma_mask = ~(u64)0; break;
+	case DMA_EP_COHERENT64: mock.endpoint.dev.coherent_dma_mask = ~(u64)0; break;
+	case DMA_ROOT_COHERENT_ZERO: mock.root.dev.coherent_dma_mask = 0; break;
+	case DMA_EP_COHERENT_ZERO: mock.endpoint.dev.coherent_dma_mask = 0; break;
+	case DMA_ROOT_GROUP_NEGATIVE: dart_mock.group.id = -1; break;
+	case DMA_EP_GROUP_NEGATIVE: dart_mock.foreign_group.id = -1; break;
+	case DMA_ROOT_GROUP_NONE: case DMA_EP_GROUP_NONE: case DMA_EP_GROUP_FOREIGN: break;
+	case DMA_FAULT_COUNT: assert(false);
+	}
 }
 static bool n71_dart_host_refs_valid(const struct n71_dart_host *owner)
 {
@@ -148,6 +238,9 @@ static unsigned int dart_fixture_index(struct device *dev)
 static struct iommu_fwspec *dev_iommu_fwspec_get(struct device *dev)
 {
 	unsigned int i=dart_fixture_index(dev);
+	/* Drift is observed after the current device's COMMAND read, without corrupting fake MMIO. */
+	if (i || (dart_mock.dma_fault != DMA_EP_SYSDATA && dart_mock.dma_fault != DMA_EP_BUS_NUMBER))
+		dart_fixture_dma_fault();
 	return dart_mock.core_fault==i+1 ? NULL : &dart_mock.spec[i];
 }
 static struct iommu_domain *iommu_get_domain_for_dev(struct device *dev)
@@ -156,7 +249,32 @@ static struct iommu_domain *iommu_get_domain_for_dev(struct device *dev)
 	if (dart_mock.core_fault==i+11) return NULL;
 	return i && (dart_mock.core_fault==14 || dart_mock.core_fault==15) ? &dart_mock.foreign_domain : &dart_mock.domain;
 }
-static void dart_fixture_remove(void) { dart_mock.active_consumers=0; }
+static struct iommu_group *iommu_group_get(struct device *dev)
+{
+	unsigned int i = dart_fixture_index(dev);
+	dart_mock.group_gets++;
+	if ((!i && dart_mock.dma_fault == DMA_ROOT_GROUP_NONE) ||
+	    (i && dart_mock.dma_fault == DMA_EP_GROUP_NONE)) return NULL;
+	struct iommu_group *group = i && (dart_mock.dma_fault == DMA_EP_GROUP_NEGATIVE ||
+		dart_mock.dma_fault == DMA_EP_GROUP_FOREIGN) ? &dart_mock.foreign_group : &dart_mock.group;
+	group->refs++;
+	return group;
+}
+static int iommu_group_id(struct iommu_group *group)
+{
+	assert(group && group->refs == 1); dart_mock.group_ids++;
+	return group->id;
+}
+static void iommu_group_put(struct iommu_group *group)
+{
+	assert(group->refs == 1); group->refs--; dart_mock.group_puts++;
+}
+static void dart_fixture_remove(void)
+{
+	assert(!dart_mock.group.refs && !dart_mock.foreign_group.refs);
+	assert(dart_mock.group_ids == dart_mock.group_puts);
+	dart_mock.active_consumers=0;
+}
 static void dart_fixture_stop(void)
 {
 	assert(!dart_mock.active_consumers && !dart_mock.mapped && (!mock.bridge || !mock.bridge->bus));

@@ -51,6 +51,7 @@ class N71PcieScanHost(unittest.TestCase):
         self.assertIn('N71_PCIE_MSI_SCAN_OK cases=14', result.stdout)
         self.assertIn('N71_PCIE_CONSUMER_REMOVAL_OK cases=7', result.stdout)
         self.assertIn('N71_PCIE_DART_SCAN_OK cases=39', result.stdout)
+        self.assertIn('N71_PCIE_DMA_TOPOLOGY_OK cases=55', result.stdout)
         print(result.stdout.strip(), flush=True)
 
     def test_lifecycle_mutations_die_by_assertion(self):
@@ -209,6 +210,74 @@ class N71PcieScanHost(unittest.TestCase):
                     self.assertEqual(result.returncode, -6, 'Compilation/timeout is not a kill: ' + name + result.stderr)
                     self.assertIn('assert', result.stderr.lower(), name)
                     print('N71_DART_SCAN_ASSERTION_KILL ' + name, flush=True)
+        finally:
+            resource.setrlimit(resource.RLIMIT_CORE, limits)
+
+    def test_dma_topology_mutations_die_by_assertion(self):
+        mutations = (
+            ('skip-dma-observation', 'if (n71_scan_report_dma(host, dev))',
+             'if (false && n71_scan_report_dma(host, dev))'),
+            ('multifunction-alias-accepted', 'dev->multifunction ||', 'false ||'),
+            ('physical-function-accepted', 'dev->is_physfn ||', 'false ||'),
+            ('virtual-function-accepted', 'dev->is_virtfn ||', 'false ||'),
+            ('bridge-alias-flag-accepted', '(PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS |', '(0 |'),
+            ('translation-root-flag-accepted', 'PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT |', '0 |'),
+            ('bridge-no-alias-flag-accepted', '| PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS))', '| 0))'),
+            ('local-alias-bitmap-accepted', '!bitmap_empty(dev->dma_alias_mask, PCI_DEVFN(31, 7) + 1)',
+             '(false && !bitmap_empty(dev->dma_alias_mask, PCI_DEVFN(31, 7) + 1))'),
+            ('foreign-dma-pointer-accepted', 'dev->dev.dma_mask != &dev->dma_mask ||', 'false ||'),
+            ('streaming-mask-accepted', 'dev->dma_mask != DMA_BIT_MASK(32) ||', 'false ||'),
+            ('coherent-mask-accepted', 'dev->dev.coherent_dma_mask != DMA_BIT_MASK(32))', 'false)'),
+            ('root-header-accepted', 'dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&', 'true &&'),
+            ('endpoint-header-accepted', 'dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&', 'true &&'),
+            ('root-pcie-type-accepted', 'pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)',
+             '(pci_pcie_type(dev), true))'),
+            ('endpoint-pcie-type-accepted', 'pci_pcie_type(dev) == PCI_EXP_TYPE_LEG_END)',
+             '(pci_pcie_type(dev), true))'),
+            ('endpoint-without-pcie', 'PCI_HEADER_TYPE_NORMAL && pci_is_pcie(dev) &&',
+             'PCI_HEADER_TYPE_NORMAL && true &&'),
+            ('legacy-root-refused', '!pci_is_pcie(dev) || pci_pcie_type(dev)',
+             'pci_is_pcie(dev) && pci_pcie_type(dev)'),
+            ('legacy-endpoint-refused', '|| pci_pcie_type(dev) == PCI_EXP_TYPE_LEG_END)', '|| false)'),
+            ('root-bus-number-accepted', '!bus || bus->number ||', '!bus || false ||'),
+            ('root-parent-accepted', 'bus->number || bus->parent ||', 'bus->number || false ||'),
+            ('root-self-accepted', 'bus->parent || bus->self ||', 'bus->parent || false ||'),
+            ('root-sysdata-accepted', 'bus->self || bus->sysdata != host ||', 'bus->self || false ||'),
+            ('root-bus-owner-accepted', '!root || root->bus != bus ||', '!root || false ||'),
+            ('endpoint-parent-accepted', 'dev->bus->parent != bus ||', 'false ||'),
+            ('endpoint-sysdata-accepted', 'dev->bus->sysdata != host ||', 'false ||'),
+            ('endpoint-bus-number-accepted', '(dev != root && (dev->bus->number != 1 ||',
+             '(dev != root && (false ||'),
+            ('root-subordinate-accepted', 'root->subordinate != dev->bus ||', 'false ||'),
+            ('endpoint-subordinate-accepted', 'dev->class != 0x028000 || dev->subordinate ||',
+             'dev->class != 0x028000 || false ||'),
+            ('missing-group-accepted', 'if (!group)\n\t\treturn n71_scan_report_error(host, -EACCES);',
+             'if (false)\n\t\treturn n71_scan_report_error(host, -EACCES);'),
+            ('group-id-read-skipped', 'id = iommu_group_id(group);',
+             'id = false ? iommu_group_id(group) : 7;'),
+            ('group-ref-leaked', 'iommu_group_put(group);', '(void)iommu_group_put;'),
+            ('group-ref-put-twice', 'iommu_group_put(group);', 'iommu_group_put(group); iommu_group_put(group);'),
+            ('group-ref-put-before-read', 'id = iommu_group_id(group);\n\tiommu_group_put(group);',
+             'iommu_group_put(group);\n\tid = iommu_group_id(group);'),
+            ('negative-group-accepted', 'if (id < 0 ||', 'if (false ||'),
+            ('zero-group-refused', 'if (id < 0 ||', 'if (id <= 0 ||'),
+            ('foreign-group-accepted', '(host->iommu_devices && host->iommu_group_id != id)', 'false'),
+            ('shared-id-lost', 'host->iommu_group_id = id;', 'host->iommu_group_id = -1;'),
+            ('stale-group-after-removal', 'host->iommu_group_id = -1;', '(void)host;'),
+            ('legacy-alias-inference-lost', 'if (dev != root && !pci_is_pcie(root))',
+             'if (false && dev != root && !pci_is_pcie(root))'),
+            ('requester-id-invented', '(dev->bus->number << 8) | dev->devfn, aliases, id,',
+             '0, aliases, id,'),
+        )
+        limits = resource.getrlimit(resource.RLIMIT_CORE)
+        resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
+        try:
+            for name, before, after in mutations:
+                with self.subTest(mutation=name):
+                    result = self.compile_and_run(mutation=(before, after))
+                    self.assertEqual(result.returncode, -6, 'Compilation/timeout is not a kill: ' + name + result.stderr)
+                    self.assertIn('assert', result.stderr.lower(), name)
+                    print('N71_DMA_TOPOLOGY_ASSERTION_KILL ' + name, flush=True)
         finally:
             resource.setrlimit(resource.RLIMIT_CORE, limits)
 

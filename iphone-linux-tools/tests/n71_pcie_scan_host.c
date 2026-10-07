@@ -11,6 +11,7 @@
 #endif
 #include "n71-pcie-contract.h"
 typedef uint16_t u16;
+typedef uint64_t u64;
 #define __iomem
 #define scnprintf snprintf
 #define PCI_COMMAND 4
@@ -34,22 +35,49 @@ typedef uint16_t u16;
 #define PCI_BRIDGE_IO_WINDOW 7
 #define PCI_BRIDGE_MEM_WINDOW 8
 #define PCI_BRIDGE_PREF_MEM_WINDOW 9
+#define PCI_DEVFN(slot, func) (((slot) << 3) | (func))
+#define PCI_HEADER_TYPE_NORMAL 0
+#define PCI_HEADER_TYPE_BRIDGE 1
+#define PCI_EXP_TYPE_ENDPOINT 0
+#define PCI_EXP_TYPE_LEG_END 1
+#define PCI_EXP_TYPE_ROOT_PORT 4
+#define PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS (1U << 5)
+#define PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT (1U << 9)
+#define PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS (1U << 14)
+#define DMA_BIT_MASK(n) ((1ULL << (n)) - 1)
 typedef int spinlock_t;
 #define spin_lock_init(lock) (*(lock) = 0)
 #define spin_lock_irqsave(lock, flags) do { assert(!*(lock)); *(lock) = 1; (flags) = 0; } while (0)
 #define spin_unlock_irqrestore(lock, flags) do { assert(*(lock)); *(lock) = 0; (void)(flags); } while (0)
 
-struct device { struct device *parent; struct device_node *of_node; struct irq_domain *msi_domain; };
+struct device {
+	struct device *parent;
+	struct device_node *of_node;
+	struct irq_domain *msi_domain;
+	u64 *dma_mask;
+	u64 coherent_dma_mask;
+};
 struct resource { const char *name; uint64_t start, end; unsigned long flags; struct resource *parent, *child; };
 static struct resource iomem_resource, foreign_resource;
 static uint64_t resource_size(const struct resource *res) { return res->end - res->start + 1; }
 struct resource_entry { struct resource_entry *next; struct resource *res; uint64_t offset; };
 struct resource_list { struct resource_entry *first; };
-struct pci_bus { struct device dev; void *sysdata; unsigned int number; struct pci_dev *self; unsigned int bridge_ctl; };
+struct pci_bus {
+	struct device dev;
+	void *sysdata;
+	unsigned int number;
+	struct pci_dev *self;
+	struct pci_bus *parent;
+	unsigned int bridge_ctl;
+};
 struct pci_dev {
 	struct device dev;
 	struct pci_bus *bus;
 	unsigned int devfn, vendor, device, class;
+	unsigned int hdr_type, pcie_type, dev_flags;
+	u64 dma_mask;
+	unsigned long *dma_alias_mask;
+	bool pcie, multifunction, is_physfn, is_virtfn;
 	void *driver;
 	struct resource resource[10];
 	struct pci_bus *subordinate;
@@ -269,12 +297,18 @@ static int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
 	mock.bridge = bridge; mock.scans++;
 	bridge->bus = calloc(1, sizeof(*bridge->bus)); assert(bridge->bus);
 	bridge->bus->sysdata = bridge->sysdata;
-	mock.endpoint_bus = (struct pci_bus){.sysdata = bridge->sysdata, .number = 1};
+	mock.endpoint_bus = (struct pci_bus){.sysdata = bridge->sysdata, .number = 1, .parent = bridge->bus};
 	mock.root = (struct pci_dev){.bus = bridge->bus, .devfn = 8, .vendor = 0x106b,
 		.device = 0x1004, .class = 0x060400, .io_window = true, .pref_window = true,
-		.io_window_1k = true}; /* Legacy cases leave the separate IO16 opt-in out of scope. */
+		.io_window_1k = true, .hdr_type = PCI_HEADER_TYPE_BRIDGE,
+		.pcie = true, .pcie_type = PCI_EXP_TYPE_ROOT_PORT, .dma_mask = DMA_BIT_MASK(32)};
+	/* Legacy cases leave the separate IO16 opt-in out of scope. */
 	mock.endpoint = (struct pci_dev){.bus = &mock.endpoint_bus, .vendor = 0x14e4,
-		.device = 0x43a3, .class = 0x028000};
+		.device = 0x43a3, .class = 0x028000, .pcie = true,
+		.pcie_type = PCI_EXP_TYPE_ENDPOINT, .dma_mask = DMA_BIT_MASK(32)};
+	mock.root.dev.dma_mask = &mock.root.dma_mask;
+	mock.endpoint.dev.dma_mask = &mock.endpoint.dma_mask;
+	mock.root.dev.coherent_dma_mask = mock.endpoint.dev.coherent_dma_mask = DMA_BIT_MASK(32);
 	mock.root.subordinate = &mock.endpoint_bus; mock.endpoint_bus.self = &mock.root;
 	msi_fixture_inherit(bridge);
 	dart_fixture_publish();
@@ -870,6 +904,73 @@ static unsigned int exercise_dart_scan(void)
 	return cases;
 }
 
+static unsigned int exercise_dma_topology(void)
+{
+	unsigned int cases = 0;
+	/* Mutations: accept an alias/mask/topology drift, leak group refs, or lose the shared ID. */
+	for (unsigned int fault = 0; fault < DMA_FAULT_COUNT; fault++) {
+		initialize_case(PME_NONE, true); msi_mock.requested = dart_mock.requested = true;
+		struct device dev = {.of_node = &msi_mock.node}; dart_mock.provider.dev.parent = &dev;
+		struct n71_diagnostic state = {.ecam = mock.ecam, .port = mock.port};
+		dart_mock.dma_fault = fault;
+		bool valid = fault <= DMA_GROUP_ZERO;
+		int error = n71_pcie_scan_hold_iommu(&dev, &state, &dart_mock.provider);
+		if (error != (valid ? 0 : -EACCES))
+			fprintf(stderr, "DMA fault=%u error=%d\n%s", fault, error, mock.log);
+		assert(error == (valid ? 0 : -EACCES));
+		assert(state.scan_bridge && dart_mock.owner && dart_mock.available);
+		struct n71_scan_host *host = pci_host_bridge_priv(state.scan_bridge);
+		assert(!dart_mock.group.refs && !dart_mock.foreign_group.refs);
+		if (valid) {
+			int group = fault == DMA_GROUP_ZERO ? 0 : 7;
+			assert(host->iommu_devices == 2 && host->iommu_group_id == group);
+			assert(dart_mock.group_gets == 2 && dart_mock.group_ids == 2 && dart_mock.group_puts == 2);
+			char expected[240];
+			snprintf(expected, sizeof(expected), "N71_PCIE_SCAN_DMA bus=0 devfn=08 rid=0008 aliases-inferred=1 group=%d streaming=00000000ffffffff coherent=00000000ffffffff; public topology/source, read-only, no DMA", group);
+			const char *root = strstr(mock.log, expected);
+			snprintf(expected, sizeof(expected), "N71_PCIE_SCAN_DMA bus=1 devfn=00 rid=0100 aliases-inferred=%u group=%d streaming=00000000ffffffff coherent=00000000ffffffff; public topology/source, read-only, no DMA", fault == DMA_LEGACY_ROOT ? 2 : 1, group);
+			const char *endpoint = strstr(mock.log, expected);
+			assert(root && endpoint && root < endpoint && !strstr(endpoint + 1, "N71_PCIE_SCAN_DMA "));
+			assert(root < strstr(mock.log, "N71_PCIE_SCAN_IOMMU bus=0"));
+			assert(endpoint < strstr(mock.log, "N71_PCIE_SCAN_IOMMU bus=1"));
+			assert(!mock.root.driver && !mock.endpoint.driver && !mock.root.enabled && !mock.endpoint.enabled);
+			assert((mock.ecam[0x8004 / 4] & PCI_COMMAND_MASTER) == 0);
+			assert((mock.ecam[0x100004 / 4] & PCI_COMMAND_MASTER) == 0);
+		} else {
+			assert(!state.scan_bridge->bus && mock.removes == 1);
+			assert(!strstr(mock.log, "N71_PCIE_SCAN_HELD"));
+		}
+		assert(n71_pcie_scan_remove_consumers(&state) == 0);
+		assert(!host->iommu_domain && !host->iommu_devices && host->iommu_group_id == -1);
+		assert(!dart_mock.mapped && dart_mock.available);
+		dart_fixture_stop(); assert(n71_pcie_scan_cleanup(&state) == 0);
+		assert(!state.scan_bridge && !mock.allocations && mock.removes == 1);
+		free(mock.ecam); cases++;
+	}
+	/* Mutations: clear observations before removal, or keep a stale group when MSI release fails. */
+	for (unsigned int kind = 0; kind < 3; kind++) {
+		initialize_case(PME_NONE, true); msi_mock.requested = dart_mock.requested = true;
+		struct device dev = {.of_node = &msi_mock.node}; dart_mock.provider.dev.parent = &dev;
+		struct n71_diagnostic state = {.ecam = mock.ecam, .port = mock.port};
+		assert(n71_pcie_scan_hold_iommu(&dev, &state, &dart_mock.provider) == 0);
+		struct n71_scan_host *host = pci_host_bridge_priv(state.scan_bridge);
+		if (kind == 0) host->resources.active = true;
+		if (kind == 1) host->bus_held = false;
+		if (kind == 2) msi_mock.release_error = -EIO;
+		assert(n71_pcie_scan_remove_consumers(&state) == (kind == 2 ? -EIO : -EBUSY));
+		assert(host->iommu_group_id == (kind == 2 ? -1 : 7));
+		assert(host->iommu_devices == (kind == 2 ? 0U : 2U));
+		assert(mock.removes == (kind == 2 ? 1U : 0U));
+		host->resources.active = false; host->bus_held = !!state.scan_bridge->bus;
+		msi_mock.release_error = 0;
+		assert(n71_pcie_scan_remove_consumers(&state) == 0 && host->iommu_group_id == -1);
+		assert(dart_mock.group_gets == 2 && dart_mock.group_puts == 2 && mock.removes == 1);
+		dart_fixture_stop(); assert(n71_pcie_scan_cleanup(&state) == 0);
+		free(mock.ecam); cases++;
+	}
+	return cases;
+}
+
 int main(void)
 {
 	const int expected[] = {0, -EPERM, -EPERM, -ENOMEM, -ENODEV, -EACCES,
@@ -949,5 +1050,7 @@ int main(void)
 	puts("N71_PCIE_CONSUMER_REMOVAL_OK cases=7; host retained between phases");
 	assert(exercise_dart_scan()==39);
 	puts("N71_PCIE_DART_SCAN_OK cases=39; OF map and core domain modeled, no private SID readback");
+	assert(exercise_dma_topology() == DMA_FAULT_COUNT + 3);
+	printf("N71_PCIE_DMA_TOPOLOGY_OK cases=%u; public dependency model, no DMA\n", DMA_FAULT_COUNT + 3);
 	return 0;
 }

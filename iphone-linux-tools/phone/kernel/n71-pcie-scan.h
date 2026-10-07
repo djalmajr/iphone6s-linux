@@ -6,6 +6,8 @@
 #include <linux/spinlock.h>
 #include <linux/ioport.h>
 #include <linux/iommu.h>
+#include <linux/bitmap.h>
+#include <linux/dma-mapping.h>
 #include "n71-pcie-scan-config.h"
 #include "n71-pcie-bar-sizing.h"
 #include "n71-pcie-control-reference.h"
@@ -28,6 +30,7 @@ struct n71_scan_host {
 	/* Borrowed while PCI consumers are alive; cleared after bus removal. */
 	struct iommu_domain *iommu_domain;
 	unsigned int iommu_devices;
+	int iommu_group_id;
 	bool config_pending;
 	bool bus_held;
 	bool resource_attempted, resources_assigned, window_claimed;
@@ -178,6 +181,57 @@ static int n71_scan_report_error(struct n71_scan_host *host, int error)
 	return error;
 }
 
+static bool n71_scan_dma_device_valid(struct pci_dev *dev, bool root)
+{
+	if (dev->multifunction || dev->is_physfn || dev->is_virtfn ||
+	    (dev->dev_flags & (PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS |
+			      PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT | PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS)) ||
+	    (dev->dma_alias_mask && !bitmap_empty(dev->dma_alias_mask, PCI_DEVFN(31, 7) + 1)) ||
+	    dev->dev.dma_mask != &dev->dma_mask || dev->dma_mask != DMA_BIT_MASK(32) ||
+	    dev->dev.coherent_dma_mask != DMA_BIT_MASK(32))
+		return false;
+	if (root)
+		return dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
+			(!pci_is_pcie(dev) || pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT);
+	return dev->hdr_type == PCI_HEADER_TYPE_NORMAL && pci_is_pcie(dev) &&
+		(pci_pcie_type(dev) == PCI_EXP_TYPE_ENDPOINT || pci_pcie_type(dev) == PCI_EXP_TYPE_LEG_END);
+}
+
+static int n71_scan_report_dma(struct n71_scan_host *host, struct pci_dev *dev)
+{
+	struct pci_bus *bus = host->dart.bridge->bus;
+	struct pci_dev *root = dev->bus == bus ? dev : dev->bus->self;
+	struct iommu_group *group;
+	unsigned int aliases = 1;
+	int id;
+
+	if (!bus || bus->number || bus->parent || bus->self || bus->sysdata != host ||
+	    !root || root->bus != bus || root->devfn != 8 || root->vendor != 0x106b ||
+	    root->device != 0x1004 || root->class != 0x060400 ||
+	    !n71_scan_dma_device_valid(root, true) ||
+	    (dev != root && (dev->bus->number != 1 || dev->bus->parent != bus ||
+			     dev->bus->sysdata != host || root->subordinate != dev->bus ||
+			     dev->devfn || dev->vendor != 0x14e4 || dev->device != 0x43a3 ||
+			     dev->class != 0x028000 || dev->subordinate ||
+			     !n71_scan_dma_device_valid(dev, false))))
+		return n71_scan_report_error(host, -EACCES);
+	group = iommu_group_get(&dev->dev);
+	if (!group)
+		return n71_scan_report_error(host, -EACCES);
+	id = iommu_group_id(group);
+	iommu_group_put(group);
+	if (id < 0 || (host->iommu_devices && host->iommu_group_id != id))
+		return n71_scan_report_error(host, -EACCES);
+	host->iommu_group_id = id;
+	/* Fixed weak pci_real_dma_dev and this graph imply own RID plus a legacy bridge RID. */
+	if (dev != root && !pci_is_pcie(root))
+		aliases++;
+	dev_info(host->dev, "N71_PCIE_SCAN_DMA bus=%u devfn=%02x rid=%04x aliases-inferred=%u group=%d streaming=%016llx coherent=%016llx; public topology/source, read-only, no DMA\n",
+		 dev->bus->number, dev->devfn, (dev->bus->number << 8) | dev->devfn, aliases, id,
+		 (unsigned long long)dev->dma_mask, (unsigned long long)dev->dev.coherent_dma_mask);
+	return 0;
+}
+
 static int n71_scan_report_iommu(struct n71_scan_host *host, struct pci_dev *dev)
 {
 	struct iommu_fwspec *spec = dev_iommu_fwspec_get(&dev->dev);
@@ -199,6 +253,8 @@ static int n71_scan_report_iommu(struct n71_scan_host *host, struct pci_dev *dev
 	for (index = 0; index < 8; index++)
 		if (of_property_read_u32_index(host->dart.master_node, "iommu-map", index, &value) || value != map[index])
 			return n71_scan_report_error(host, -EACCES);
+	if (n71_scan_report_dma(host, dev))
+		return host->io_error;
 	host->iommu_domain = domain;
 	host->iommu_devices++;
 	dev_info(host->dev, "N71_PCIE_SCAN_IOMMU bus=%u devfn=%02x map_sid=0 translated=1; OF map and core domain, no private SID readback\n",
@@ -309,6 +365,7 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 	}
 	host->iommu_domain = NULL;
 	host->iommu_devices = 0;
+	host->iommu_group_id = -1;
 	error = n71_wlan_msi_host_release(&host->msi);
 	if (error)
 		return error;
