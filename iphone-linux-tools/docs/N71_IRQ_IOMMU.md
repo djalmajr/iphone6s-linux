@@ -95,3 +95,39 @@ make -C "$source_dir" O="$build_dir" M="$probe_dir" W=1 KCFLAGS=-Werror \
 ```
 
 Compare config/Image/exports antes/depois com os hashes do JSON; confira ELF/vermagic e preserve logs privadamente. Sem dependências/pacotes novos ou alteração de configuração do Mac. Testes anteriores de PCI/transportes conservam sua validade porque o helper não foi integrado. O próximo resultado esperado é fechar message data e ownership/restore MSI/provider DART retido; #40/#9/#2 e o goal permanecem abertos.
+
+## F1b/F1c — provider DART retido e recuperação na mesma sessão
+
+[Qualificação sanitizada](evidence/n71-dart-retained-qualification.json), commits c0fb252/003998d. O ciclo anterior mantinha o provider numa variável local e descartava MMIO/node/claim mesmo após falha de stop ou restauração. Agora o estado pertence à sessão desde antes do start. Probe parcial, impossibilidade de reclamar MMIO, falha de leitura/guard/write ou readback divergente conservam baseline e ownership para nova tentativa, sem reboot. O ciclo temporário continua disponível; seu contrato de sucesso mantém quatro snapshots/16 escritas/17 guards explícitos.
+
+### Alterações e contrato do caller
+
+- [Lease](../phone/kernel/n71-dart-lease.h): guarda baseline uma vez, impede aquisição repetida, marca tentativa antes do probe e retoma no primeiro TTBR não confirmado. Confere o prefixo antes da retomada e todos os16 words depois; uma divergência comprovada recua o cursor. Write que retorna erro, inclusive depois de armazenar, não avança o cursor. Cleanup invalida readiness antes de stop parcial e conserva o primeiro erro de operação.
+- [Backend](../phone/kernel/n71-dart-provider.h): conserva struct/MMIO/node/IRQ/device/claim enquanto houver recuperação pendente. Orçamentos de snapshot/quiet reiniciam por tentativa; não descarta owner em falha. Liberação de ownership não apaga um erro de operação já medido. A aquisição das IRQs ainda usa o backend anterior, cujo lookup/criação precisa de qualificação atômica.
+- [Estado da sessão](../phone/kernel/n71-pcie-mmio.h) e [caller](../phone/kernel/n71-pcie-diagnostic.c): cleanup DART precede PCI/reset/power/module_put. `dart-hold` exige scan_hold, barramento vivo, recursos atribuídos/claimed e sessão sem erro. `dart-release` libera somente DART, conservando host/energia para os testes seguintes; cleanup completo tenta recuperar antes de soltar os outros owners. O getter `dart` mostra estado e cursor; status/held/resources mantêm o formato anterior.
+- [Testes](../tests/test_n71_dart_lease.py), [fixtures nativas](../tests/test_n71_dart_provider.py): falhas de cada write/guard/snapshot, start parcial, stop/claim/owner externos, idempotência, recursos/refcounts, baseline/cursor/readback e ordem de cleanup/pin.
+
+As ações estão no código do módulo e não foram adicionadas ao perfil/autoload ou ao coletor físico. O parser temporário existente aceita o sucesso anterior; múltiplos resultados de retry/hold precisam de collector próprio. Não use esse parser como prova de lifecycle retido.
+
+### Verificação e reprodução
+
+Mac e Ubuntu ARM64:73 cenários do lease,15 do backend e quatro do cleanup real, total92 por plataforma.15+14+3 mutações compilaram e foram detectadas por SIGABRT/asserção, total32. O fixture executa o header de produção; duas funções do caller são extraídas literalmente, compiladas e exercidas com owners vivos/falhas. APIs de platform/OF/IRQ/MMIO são simuladas e têm recursos/refcounts verificados. Não são provas de IRQ, hardware, DMA ou concorrência. O build completo cobre o contexto kernel real.
+
+No Mac, regressão de ciclo/parser passou seis testes; no Ubuntu, ciclo temporário passou um teste com seis mutações C. AST/lint fatal passaram. Não há typechecker Python neste projeto; C usa Werror, C11/pedantic no lease/cleanup e GNU11 no fixture do backend. Este fixture suprime somente warnings de funções stub não usadas; o módulo real usa W=1/Werror sem essa supressão.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_dart_lease.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_dart_provider.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_dart_cycle*.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_dart_lease.py tests/test_n71_dart_provider.py
+```
+
+Para reproduzir o build externo, copie todos os headers de `phone/kernel/` e `n71-pcie-diagnostic.c` para uma pasta M nova na VM dedicada. Confira os hashes do JSON; crie `Makefile` com `obj-m += n71-pcie-diagnostic.o`. Não modifique a fonte/build preservados, não execute insmod e não sobrescreva o módulo físico anterior. Use o comando make acima com os mesmos source_dir/build_dir e KBUILD_EXTRA_SYMBOLS.
+
+O módulo final tem91.736 bytes/SHAae3e71f24b748e81af25ed4ae7c73dd5f9dac90524f39f5b0c5238fbf6b21bfd, ELF64 AArch64/vermagic7.2 power2. Fonte/config/Image/vmlinux.symvers preservados.44 inputs conferidos por digest tanto na VM quanto localmente. O aviso esperado da raiz sem Module.symvers permanece; exports são fornecidos explicitamente, sem KBUILD_MODPOST_WARN ou permissão para símbolos não resolvidos. Após corrigir preservação do primeiro erro/readiness na revisão, apenas os gates afetados e o build completo foram repetidos. Logs/módulo privados não foram publicados.
+
+### Plano, limites e próximo desenvolvimento
+
+F1b/F1c offline concluídos; nenhuma mudança de banco, dependência ou pacote/configuração global no Mac. Default/autoload/perfil físico anterior permanecem; não houve novo boot/DFU/PIN nem prova nova de SSH/HTTP/carga nesta rodada. O custo é retenção de uma struct/MMIO/node e owners até cleanup; cada tentativa de restauração permanece limitada a16 words e snapshots estáveis.
+
+F0/F1 globais, F2 seleção/perfil e F3 hardware continuam abertos. Antes de carregar a candidata, fechar ownership IRQ e máscara/restore: consultar mapping antes de criar não constitui aquisição atômica. Na [fonte fixada do IRQ core](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/kernel/irq/chip.c#L981), handler NULL pode executar mask_ack_irq; portanto alloc/free não pode ser declarado sem efeitos físicos. Preparar collector/provenance e reunir os gates numa sessão física, preservando serviços/snapshot/sync/retorno iOS. [Decisões D3/D4](../.agents/plans/n71-irq-iommu-bindings.md#d3-reter-o-provider-dart-e-seu-rollback-na-sessão-nativa), issue40; Wi-Fi#9 e energia#2 continuam pendentes.

@@ -8,6 +8,12 @@ Root MEM7c0000000..7c04fffff; BAR0 7c0400000..7c0407fff/BAR2 7c0000000..7c03ffff
 
 Auditoria2026-10-07 UTC recuperou pin1/MSI64 do log físico anterior, sem novo boot. ADT/driver N71: MSI32/offset256/porta1/base8/count8, registro parent AIC264..271; Linux usa células3/hwirq próprio. Helper F1a qualificado:61 cenários/14 mutações por asserção no Mac/Ubuntu ARM64, AST/lint fatal e probe kernel Werror/modpost/ELF/vermagic, fonte/config/Image/exports preservados. Calcula somente `<0, 264 + índice, 1>`, sem IRQ/domain/MMIO/message data/caller ou carga no telefone. Codificação MSI, restore/ownership e provider DART retido permanecem abertos. [Referência e limites](evidence/n71-irq-iommu-reference.json), [prova e reprodução F1a](N71_IRQ_IOMMU.md#f1a--células-aic-qualificadas-sem-alocação-de-irq). Telefone no iOS durante a preparação; carga/gauge Linux não comprovados.
 
+### DART retido — implementação e qualificação offline
+
+Commits c0fb252/003998d integram o provider ao owner da sessão, com `dart-hold`, `dart-release` e getter separado. Erros de stop/claim/read/guard/write conservam baseline/MMIO/node/estado para tentar novamente no mesmo boot; cleanup PCI/reset/energia/module pin espera o DART terminar. Readiness é invalidada quando começa o cleanup, inclusive stop parcial. Erro original permanece após liberar ownership. [Código e reprodução](N71_IRQ_IOMMU.md#f1bf1c--provider-dart-retido-e-recuperação-na-mesma-sessão), [prova sanitizada](evidence/n71-dart-retained-qualification.json).
+
+Mac e Ubuntu ARM64 passaram92 cenários/32 mutações compiladas por asserção; callbacks reais do provider e funções reais do cleanup foram executados com APIs kernel simuladas. Regressão temporária passou; build do módulo completo W=1/Werror/modpost/ELF/vermagic passou,91.736 bytes/SHAae3e71f2, fonte/config/Image/exports preservados. Isso não prova hardware. Nenhum perfil/autoload/load/DFU novo; o Mac não detectou o iPhone no USB na última leitura desta rodada. Próximo gate: ownership IRQ atômico e baseline/restore de máscaras, seguido de collector/seleção e sessão física agrupada. IRQ/DMA/Wi-Fi e carga/gauge continuam abertos, assim como o goal.
+
 ### Qualificação offline da candidata física
 
 

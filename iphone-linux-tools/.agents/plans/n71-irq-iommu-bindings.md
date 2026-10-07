@@ -67,12 +67,21 @@ Nenhuma modificação de firmware/NAND, credenciais de rede, pacote/configuraç�
 - **Alternativas:** repetir o ciclo e reiniciar o telefone perde estado e exige DFU; liberar o provider imediatamente impede attachment; iniciar brcmfmac mistura gates ainda não comprovados. Rejeitadas.
 - **Reverter:** baixo antes da prova física; sem autoload ou mudança de perfil. O caminho temporário continua disponível com o mesmo contrato de sucesso.
 - **Onde:** F1b toca somente este plano, `phone/kernel/n71-dart-lease.h`, `n71-dart-provider.h`, `n71-pcie-mmio.h` e `n71-pcie-diagnostic.c`. F1c qualifica cenários de aquisição/rollback/retomada com falhas e callbacks reais do backend, build Werror/modpost e reprodução sanitizada.
-- **Status:** em curso offline. Preparar a candidata não libera seu uso físico: ownership IRQ, efeitos de mask/free e baseline/restore ainda devem ser qualificados antes de carregar.
+- **Status:** implementação e qualificação offline concluídas nos commits c0fb252/003998d. Mac e Ubuntu ARM64 passaram92 cenários/32 mutações compiladas por asserção; módulo completo passou W=1/Werror/modpost/ELF/vermagic, com fonte/config/Image/exports preservados. Preparar o módulo não libera seu uso físico: ownership IRQ, efeitos de mask/free e baseline/restore ainda devem ser qualificados antes de carregar.
 
 ### Contratos F1b/F1c
 
-- [ ] Estado retido desde antes do start, inclusive probe parcial e stop/claim/restauração com erro.
-- [ ] Salvar baseline uma vez, impedir aquisição duplicada, retomar TTBR no primeiro índice não confirmado e verificar todas as palavras ao final. Tentativa de cleanup tem orçamento próprio; não reiniciar nem repetir writes já confirmados sem divergência medida.
-- [ ] `dart-hold` exige host retido, recursos atribuídos e sessão sem erro; `dart-release` preserva host/energia para outros testes. `cleanup` bloqueia remoção PCI/reset/power enquanto houver DART pendente. Getter separado não muda o formato dos getters já usados.
-- [ ] Qualificar falhas antes/depois de start, stop, reads, guards e cada write; idempotência/ownership/retomada e mutações compiladas por asserção, Mac/Ubuntu e módulo nativo completo. Não contar build/import/timeout como kill.
+- [x] Estado retido desde antes do start, inclusive probe parcial e stop/claim/restauração com erro.
+- [x] Salvar baseline uma vez, impedir aquisição duplicada, retomar TTBR no primeiro índice não confirmado e verificar todas as palavras ao final. Tentativa de cleanup tem orçamento próprio; não reiniciar nem repetir writes já confirmados sem divergência medida.
+- [x] `dart-hold` exige host retido, recursos atribuídos e sessão sem erro; `dart-release` preserva host/energia para outros testes. `cleanup` bloqueia remoção PCI/reset/power enquanto houver DART pendente. Getter separado não muda o formato dos getters já usados.
+- [x] Qualificar falhas antes/depois de start, stop, reads, guards e cada write; idempotência/ownership/retomada e mutações compiladas por asserção, Mac/Ubuntu e módulo nativo completo. Não contar build/import/timeout como kill.
 - [ ] Fechar ownership IRQ antes de qualquer boot da nova candidata; `irq_set_handler(NULL)` pode mascarar o AIC no free, portanto não é operação exclusivamente de software.
+
+## D4. Qualificar IRQ antes de compor o perfil físico retido
+
+- **Decisão:** próxima fatia fecha aquisição atômica e teardown/máscara da IRQ248 e dos parents MSI. Não compor/carregar o perfil retido até esse gate; o seletor atual continua nos hashes físicos anteriores.
+- **Por quê:** o backend herdado consulta mapping antes da criação, fora de uma aquisição atômica. A fonte fixada também mostra que liberar o handler pode mascarar o parent. Fixtures e ABI não provam concorrência ou preservação de máscaras reais.
+- **Alternativas:** considerar lookup anterior ownership suficiente deixa uma corrida; declarar alloc/free sem efeito físico contradiz `kernel/irq/chip.c`; pedir outro DFU agora não resolve o contrato. Rejeitadas.
+- **Reverter:** baixo, código opt-in sem mudança de perfil/DT/Image. O módulo anterior continua disponível.
+- **Onde:** issue40, `phone/kernel/n71-dart-provider.h`, APIs AIC/irqdomain fixadas e próximo collector. [Qualificação e limites](../../docs/evidence/n71-dart-retained-qualification.json).
+- **Status:** na fila de implementação; F0/F1 globais, F2 seleção/perfil e F3 físico continuam abertos. Nenhum novo DFU, PIN ou reboot nesta rodada.
