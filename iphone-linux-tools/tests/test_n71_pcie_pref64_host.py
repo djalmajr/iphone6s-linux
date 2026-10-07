@@ -47,7 +47,7 @@ class Pref64HostTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='n71-pref64-host-') as directory:
             folder = Path(directory)
             (folder / 'linux').mkdir()
-            for name in ('pci.h', 'spinlock.h', 'ioport.h', 'iommu.h'):
+            for name in ('pci.h', 'spinlock.h', 'ioport.h', 'iommu.h', 'bitmap.h', 'dma-mapping.h'):
                 (folder / 'linux' / name).write_text('/* PCI API supplied by the harness. */\n')
             binary = folder / 'host'
             for name, before, after in (('baseline', None, None),) + MUTATIONS:
