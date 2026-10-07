@@ -422,3 +422,14 @@ Execução preparada: iOS100%/carregando verificado sem PIN; snapshot44 íntegro
 - **Status:** em curso; USB continua em recuperação e CI do33fca56 ainda executa os testes sintéticos. A CI35f569a foi cancelada pela publicação do head seguinte, sem prova de gate completo.
 
 D20d qualificada: erro ModuleNotFoundError reproduzido antes da edição (exit1, não kill). Após acrescentar a dependência pública, baseline22 testes e34/34 mutants compilados por AssertionError passaram no Mac24.80s/Ubuntu ARM6414.91s; hashes antes/depois e AST/lint fatal aprovados. Sete inputs executáveis D20 e84 inputs da ABI D18 continuam iguais; candidata real passou novamente --check local. Nenhum Image/módulo recompilado, USB/DFU ou mudança no telefone. O runner faz parte de um passo externo da CI; as matrizes D20a/b/c são reutilizadas em seus escopos, sem promoção a prova da CI completa ou de hardware.
+
+## D20e. Atualizar dois selectors do teste de Session legado
+- **Decisão:** conservar as mutações que removem resource_capable dos constructors check/live e atualizar somente seus textos antes/depois para incluir o novo argumento iommu_parent, que permanece intacto no mutant.
+- **Por quê:** a CI33fca56 concluiu com uma falha nos testes sintéticos de ambos os source jobs: resource-cli-check-session encontrou0 matches. A string antiga terminava o constructor antes do argumento acrescentado em D20b; o selector live tem o mesmo drift. As matrizes D20b/c não incluíram esse runner embutido em test_n71_held_session.py.
+- **Alternativas:** afrouxar o match ou remover o mutant perde o gate de encaminhamento dos recursos; mudar produção para caber no selector não corrige a infraestrutura. Rejeitadas.
+- **Reverter:** baixo; dois pares de strings no teste, sem mudar produção/candidata.
+- **Onde:** este plano e test_n71_held_session.py; documentação/prova separadas.
+- **Verificação:** gate held completo21 testes/30 mutants compilados por AssertionError/sem ERROR no Mac/Ubuntu ARM64, incluindo ambos os selectors corrigidos. AST/lint fatal e hashes dos inputs; gates de produção/candidata/ABI reutilizados porque não mudaram. Publicar D20d/e juntos antes de uma CI completa nova.
+- **Status:** em curso; falha CI delimitada, sem atribuí-la ao bug separado de dependências D20d. A ação física DFU continua pendente.
+
+D20e qualificada:21 testes/30 mutants compilados por AssertionError por plataforma; ambos os selectors resource-cli-check-session/resource-cli-live-session foram mortos pelo mesmo comportamento anterior. Mac42.88s/Ubuntu ARM6419.67s, AST/lint fatal e592 inputs conferidos antes/depois. Produção/perfil/kernel/módulo não mudam. CI33fca56 executou638 testes por source job e falhou somente nesse parent de mutações;20 skips em cada job, Windows aprovado. Essa execução não alcançou os gates externos e não é green. Publicar a correção dos selectors junto da dependência D20d e aguardar a nova CI; o teste físico permanece pendente.

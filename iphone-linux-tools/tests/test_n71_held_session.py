@@ -648,10 +648,10 @@ class HeldSessionTests(unittest.TestCase):
             'resource-provenance': ("metadata.get('pcie_resource_capable', False) is options.resource_capable", 'True'),
             'resource-cli-selection': ('resource_capable=options.resource_capable,\n                               resource_module_sha256=',
                                        'resource_capable=False,\n                               resource_module_sha256='),
-            'resource-cli-check-session': ('resource_capable=options.resource_capable)\n            n71_held_session.load_source',
-                                           'resource_capable=False)\n            n71_held_session.load_source'),
-            'resource-cli-live-session': ('resource_capable=options.resource_capable)\n        return n71_held_session.run',
-                                          'resource_capable=False)\n        return n71_held_session.run'),
+            'resource-cli-check-session': ('resource_capable=options.resource_capable, iommu_parent=options.iommu_parent)\n            n71_held_session.load_source',
+                                           'resource_capable=False, iommu_parent=options.iommu_parent)\n            n71_held_session.load_source'),
+            'resource-cli-live-session': ('resource_capable=options.resource_capable, iommu_parent=options.iommu_parent)\n        return n71_held_session.run',
+                                          'resource_capable=False, iommu_parent=options.iommu_parent)\n        return n71_held_session.run'),
         }
         # The journal hook lives in the coordinator, not the link collector.
         variants['held-journal-before-effect'] = link_variants.pop('held-journal-before-effect')
