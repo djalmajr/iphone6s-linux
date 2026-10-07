@@ -590,3 +590,17 @@ flowchart LR
 ```
 
 A execução física aguarda DFU manual. A primeira janela do monitor expirou sem Pongo e sem envio de payload Linux; a leitura USB posterior confirmou recuperação (0x1281). A candidata e a sessão agrupada permanecem preparadas; uma leitura USB nova deve confirmar o modo antes de retomar. A sessão preparada reúne associação, resume/check sem segundo scan, atribuição, inventário PCI e energia, cleanup, SSH/Bash/Herdr/HTTP e snapshot/sync/retorno iOS. Erro de cleanup conserva owners e bloqueia reboot automático; os logs privados indicam a etapa a recuperar. Não habilitar driver/MASTER/rádio nesta candidata. Percentual/estado de carga lidos no iOS delimitam a sessão, sem comprovar saúde ou carregamento no Linux. Nenhuma prova física nova está incluída nesta documentação de preparação; issue40, Wi-Fi#9, energia#2 e o goal permanecem abertos.
+
+## D20d — dependência do helper na cópia pública de mutações
+
+[Código9faff88](https://github.com/djalmajr/iphone6s-linux/commit/9faff88), [decisão](../.agents/plans/n71-irq-iommu-bindings.md#d20d-incluir-o-helper-novo-na-cópia-pública-do-gate-legado), [prova](evidence/n71-iommu-mutation-dependencies.json). O passo externo da CI `run_n71_diagnostic_payload_mutations.py` cria uma árvore pública temporária para cada composer mutado. D20 acrescentou o import de `n71_iommu_build.py`, mas a lista explícita de cópia conservava somente as dependências antigas. O baseline passava na árvore completa; o primeiro mutant falhava por ModuleNotFoundError. Essa falha de infraestrutura foi reproduzida e nunca contada como kill.
+
+A lista agora inclui o helper público. Não houve alteração no composer, nas condições de seleção, nos asserts nem no critério de kills, e o runner continua isolado. Para reproduzir a partir de iphone-linux-tools:
+
+```sh
+python3 -B tests/run_n71_diagnostic_payload_mutations.py
+```
+
+Baseline22 testes e34/34 mutants compilados por AssertionError/sem ERROR passaram no Mac24.80s/Ubuntu ARM6414.91s. AST/lint fatal passaram; não há typechecker Python. A VM usou nova cópia isolada de591 inputs públicos; hashes foram conferidos antes/depois. Os sete inputs executáveis D20 e84 inputs relevantes da ABI D18 permanecem idênticos, e a candidata real passou novamente `--check`. Gates D20 anteriores reutilizados em seus escopos; não somar os counts sobrepostos nem declarar CI completa verde com essa prova estreita.
+
+Esta correção não muda artefatos de kernel, módulo, perfil, runtime ou protocolo do servidor; sem dependência/pacote/configuração global do Mac, banco ou custo físico novo. Nenhum USB/DFU/boot ou comando no telefone foi executado nesta fatia. A CI33fca56 terminou com falha nos testes sintéticos Mac/Ubuntu por um selector legado de Session com zero matches; Windows passou. Ela não chegou ao runner externo de dependências. Essa falha distinta está em correção separada, e o novo head terá sua própria execução. O teste físico da candidata aguarda DFU, e Wi-Fi/IRQ/DMA/gauge/carga permanecem abertos.
