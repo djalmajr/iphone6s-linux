@@ -131,3 +131,48 @@ O módulo final tem91.736 bytes/SHAae3e71f24b748e81af25ed4ae7c73dd5f9dac90524f39
 F1b/F1c offline concluídos; nenhuma mudança de banco, dependência ou pacote/configuração global no Mac. Default/autoload/perfil físico anterior permanecem; não houve novo boot/DFU/PIN nem prova nova de SSH/HTTP/carga nesta rodada. O custo é retenção de uma struct/MMIO/node e owners até cleanup; cada tentativa de restauração permanece limitada a16 words e snapshots estáveis.
 
 F0/F1 globais, F2 seleção/perfil e F3 hardware continuam abertos. Antes de carregar a candidata, fechar ownership IRQ e máscara/restore: consultar mapping antes de criar não constitui aquisição atômica. Na [fonte fixada do IRQ core](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/kernel/irq/chip.c#L981), handler NULL pode executar mask_ack_irq; portanto alloc/free não pode ser declarado sem efeitos físicos. Preparar collector/provenance e reunir os gates numa sessão física, preservando serviços/snapshot/sync/retorno iOS. [Decisões D3/D4](../.agents/plans/n71-irq-iommu-bindings.md#d3-reter-o-provider-dart-e-seu-rollback-na-sessão-nativa), issue40; Wi-Fi#9 e energia#2 continuam pendentes.
+
+## F1d/F1e/F1f — IRQ exclusiva e caller completo qualificados
+
+[Prova sanitizada](evidence/n71-dart-irq-qualification.json), código53c70ea/6b4d8a3/71663be. Este checkpoint atualiza os limites de ownership da fatia anterior. [IRQ nativa](../phone/kernel/n71-dart-irq.h): um domínio privado abaixo do AIC, fwnode próprio e referência OF retida. No callback alloc, lookup do parent e sua alocação ocorrem sob o mesmo root mutex do IRQ core; mapping já existente é recusado e não é reutilizado/disposto. Validamos cells0/248/4, hwirq100f8, root hierárquico e chipAIC. Falhas parciais conservam owner para cleanup.
+
+O [provider](../phone/kernel/n71-dart-provider.h) remove o dispositivo antes de liberar a IRQ. Release recusa action, started, enabled ou unmasked, identidade divergente e domínio não vazio; mantém os recursos quando a recuperação ainda depende deles. `dart-hold`, `dart-release`, nova aquisição e retry podem ocorrer no mesmo scan/session. Getter inclui `irq_domain` e `irq_fwnode`; getters anteriores mantêm seu formato.
+
+### Baseline de máscara e limite da prova
+
+[AIC init](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/irqchip/irq-apple-aic.c#L1076) mascara inicialmente todas as IRQs. O [IRQ descriptor](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/kernel/irq/irqdesc.c#L131) nasce disabled/masked. O [core de alocação](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/kernel/irq/irqdomain.c#L1710) serializa callbacks e publicação dos mappings pelo root mutex. Esses fatos sustentam a baseline derivada da fonte e o protocolo do owner exclusivo. Os flags do descriptor e o modelo de máscara não são readback físico do AIC; nenhum acesso a SET/CLR foi acrescentado para presumir leitura válida. Free pode mascarar hardware. A coordenação depende do teardown do dispositivo e do owner privado, sem alegação de segurança contra usuários arbitrários do virq.
+
+### Verificação realizada
+
+| Gate | Mac e Ubuntu ARM64, por plataforma |
+|---|---|
+| Callbacks IRQ de produção |37 cenários/21 mutações compiladas por asserção |
+| Backend provider de produção |27/14; sucesso temporário conserva frames e contadores |
+| Cleanup extraído do caller |4/3; header gerado termina em newline |
+| Caller completo de produção |143/89; inclui22 cenários DART, mantém73 probe/21 held/27 resource |
+| Total |211 cenários/127 mutações; SIGABRT e texto de asserção obrigatórios |
+| C/kernel |Werror; módulo completoW=1/modpost/ELF64 AArch64/vermagic power2 |
+| Python |AST e lint fatal passaram; sem typechecker Python no projeto |
+
+As fixtures exercitam os callbacks e owners reais com dependências kernel rastreadas. O backend DART no caller completo é um stub de recursos; o gate separado executa o provider real. Não são provas de entrega de IRQ, MMIO, DMA ou rádio. No ARM64,64 cenários/35 mutações IRQ/backend foram reutilizados com todos os inputs pertinentes intactos; caller e cleanup147/92 foram repetidos. A mudança do Python do provider foi exclusivamente a newline do header extraído, conferida literalmente.50 inputs finais têm o mesmo manifest no Mac/VM;38 inputs de produção correspondem ao módulo já compilado.
+
+O módulo privado final tem95.512 bytes/SHA13ff0388800bccfa505e2236e70a93ece4cbedd4a6760ead09ffc3d98a5fd8ac. Fonte/config/Image/vmlinux.symvers permanecem nos hashes fixados; sem KBUILD_MODPOST_WARN, load ou composição de perfil. O aviso esperado de Module.symvers ausente na raiz permanece com exports explícitos. O primeiro build falhou por constness de fwspec: corrigimos usando cópia local mutável. O preflight confundiu metadados gerados pelo make com fontes; corrigimos sua classificação e conferimos38 fontes, Makefile e módulo separadamente, sem rebuild desnecessário.
+
+### Regressão de CI e timeout preservados
+
+A [CI de4739cb5](https://github.com/djalmajr/iphone6s-linux/actions/runs/37558331536) falhou por newline ausente no header extraído e APIs/tipos DART ausentes na fixture do caller completo. Ambas foram corrigidas mantendo Werror. Não confundir essa regressão determinística com a intermitência anterior da [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38), que permanece aberta. A CI do novo head precisa terminar para haver prova remota.
+
+O primeiro caller ARM64 teve timeout numa mutação, que passou isoladamente em1,631s. A VM usa Apport por core_pattern piped; a [fonte Linux](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/fs/coredump.c#L984) confirma que RLIMIT_CORE não impede pipes. A fixture desabilita dumpability somente no processo C Linux para evitar handlers externos. O gate completo corrigido passou sem aumento de timeout, sysctl ou configuração de máquina. O vínculo do timeout com Apport permanece uma hipótese; logs e manifest da falha foram preservados, e ela não foi contada como mutation kill.
+
+### Reprodução e próximos passos
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_dart_irq.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_dart_provider.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_diagnostic_caller.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_dart_irq.py tests/test_n71_dart_provider.py tests/test_n71_pcie_diagnostic_caller.py
+```
+
+O build externo usa uma pasta M nova, os38 inputs de produção registrados no JSON, Makefile com `obj-m += n71-pcie-diagnostic.o` e o comando make já documentado acima. Compare todos os hashes antes/depois. Nenhuma dependência, banco ou pacote/configuração global do Mac mudou; logs, módulo e firmware permanecem privados. Custo adicional: domínio/fwnode/virq e referência OF por owner DART até release comprovado; desempenho físico não medido.
+
+F1d/F1e/F1f locais concluídos; F0/F1 globais, F2 perfil/collector e F3 físico permanecem abertos. Próximo desenvolvimento: mensagem/domínio MSI e lifecycle das máscaras, attachment PCI/IOMMU e política de enable, depois collector/perfil por SHA e um boot agrupado. Wi-Fi e carga/gauge ainda não funcionam nesta candidata. Nenhum novo reboot/DFU/PIN nesta rodada; iPhone detectado no iOS para carregar enquanto o trabalho offline avança. O goal e as issues40/9/2 permanecem ativos.

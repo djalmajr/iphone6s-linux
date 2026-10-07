@@ -93,14 +93,14 @@ Nenhuma modificação de firmware/NAND, credenciais de rede, pacote/configuraç�
 - **Alternativas:** reutilizar mapping preexistente mistura owners; bloquear manualmente o root e chamar create_mapping recursivamente pode deadlock; escrever AIC por MMIO presume efeitos de registradores ainda não qualificados. Rejeitadas.
 - **Reverter:** baixo antes do hardware, nenhuma alteração de FDT/Image/perfil/autoload. O ciclo passa a recusar IRQ previamente mapeada.
 - **Onde:** F1d: este plano, `phone/kernel/n71-dart-irq.h`, `n71-dart-provider.h`, `n71-pcie-diagnostic.c` (até quatro arquivos). F1e: fixtures de callbacks reais/IRQ lock/conflict/retry e build completo na VM; publicações sanitizadas em fatia separada.
-- **Status:** em curso. Células0/248/4 e hwirq100f8 da fonte fixada; parent deve ser root hierárquico AIC1. MSI permanece separado até integrar a sua mensagem/domínio.
+- **Status:** aplicada e qualificada offline. Células0/248/4 e hwirq100f8 da fonte fixada; parent deve ser root hierárquico AIC1. MSI permanece separado até integrar a sua mensagem/domínio. [Prova selecionada](../../docs/evidence/n71-dart-irq-qualification.json).
 
 ### Contratos F1d/F1e
 
-- [ ] Checagem de conflito dentro do callback sob root mutex; nenhuma mutação/reuso/dispose de mapping alheio.
-- [ ] Um domínio/fwnode/virq exclusivo com referência OF retida; cada falha parcial permite cleanup idempotente e retry.
-- [ ] Teardown recusa IRQ com action/started/unmasked/enabled e domain com mappings restantes. Não libera recursos enquanto a recuperação depender deles.
-- [ ] Preservar ciclo de sucesso e lease/primeiro erro; atualizar getters e fixtures, qualificar Mac/Ubuntu/ABI/modpost e mutações por asserção.
+- [x] Checagem de conflito dentro do callback sob root mutex; nenhuma mutação/reuso/dispose de mapping alheio. Prova pela fonte/protocolo e fixtures; sem claim de concorrência física global.
+- [x] Um domínio/fwnode/virq exclusivo com referência OF retida; cada falha parcial permite cleanup idempotente e retry.
+- [x] Teardown recusa IRQ com action/started/unmasked/enabled e domain com mappings restantes. Não libera recursos enquanto a recuperação depender deles.
+- [x] Preservar ciclo de sucesso e lease/primeiro erro; atualizar getters e fixtures, qualificar Mac/Ubuntu/ABI/modpost e mutações por asserção.
 - [ ] Collector/perfil e sessão física agrupada, distinguindo baseline de máscara derivada da fonte de readback/entrega IRQ reais. Wi-Fi/carga/telemetria continuam pendentes.
 
 ### F1f — regressão de CI do caller completo
@@ -108,3 +108,8 @@ Nenhuma modificação de firmware/NAND, credenciais de rede, pacote/configuraç�
 A CI de4739cb5 falhou no Mac: o header extraído não terminava em newline e a fixture do caller inteiro não tinha as APIs/tipos DART novos. Corrigir somente essas fixtures/geração, mantendo Werror. Arquivos: `tests/test_n71_dart_provider.py`, `tests/n71_pcie_diagnostic_caller.c`, `tests/test_n71_pcie_diagnostic_caller.py` e este plano. Integrar testes das ações/getter/cleanup e owners DART no caller real; conservar os73/21/27 casos e mutações anteriores. Qualificar o gate afetado Mac/Ubuntu e acompanhar CI do novo head; não declarar CI aprovada por prova local.
 
 No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo caso isolado passou em1,631s. A VM usa core_pattern piped pelo Apport e a fonte Linux confirma que RLIMIT_CORE não suprime pipes. Desabilitar dumpability somente no processo C da fixture Linux para evitar chamar um crash handler externo em cada SIGABRT; nenhum sysctl/configuração da VM/Mac ou prazo será alterado. O vínculo do timeout ao Apport é uma hipótese; repetir o gate afetado e manter o timeout anterior como falha, nunca como kill.
+
+- [x] Caller completo143 cenários/89 mutações no Mac e ARM64; cleanup corrigido4/3 em ambos. IRQ37/21 e backend27/14 reutilizados com inputs pertinentes intactos;50 inputs finais conferidos nas duas plataformas.
+- [x] Módulo completoW=1/Werror/modpost e ABI passou;38 inputs de produção, fonte/config/Image/exports preservados. Nenhum módulo novo carregado.
+- [ ] Acompanhar a CI do head publicado; corrigir eventual falha concreta sem repetir gates alheios. A intermitência anterior da issue38 não foi encerrada por essa correção.
+- [ ] Fechar lifecycle MSI e attachment PCI/DART; só então preparar seleção/collector e prova física agrupada.
