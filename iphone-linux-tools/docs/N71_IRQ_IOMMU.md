@@ -160,7 +160,7 @@ O módulo privado final tem95.512 bytes/SHA13ff0388800bccfa505e2236e70a93ece4cbe
 
 ### Regressão de CI e timeout preservados
 
-A [CI de4739cb5](https://github.com/djalmajr/iphone6s-linux/actions/runs/37558331536) falhou por newline ausente no header extraído e APIs/tipos DART ausentes na fixture do caller completo. Ambas foram corrigidas mantendo Werror. Não confundir essa regressão determinística com a intermitência anterior da [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38), que permanece aberta. A CI do novo head precisa terminar para haver prova remota.
+A [CI de4739cb5](https://github.com/djalmajr/iphone6s-linux/actions/runs/37558331536) falhou por newline ausente no header extraído e APIs/tipos DART ausentes na fixture do caller completo. Ambas foram corrigidas mantendo Werror. Não confundir essa regressão determinística com a intermitência anterior da [issue38](https://github.com/djalmajr/iphone6s-linux/issues/38), que permanece aberta. A [CI de19ffb03](https://github.com/djalmajr/iphone6s-linux/actions/runs/37566057928) passou nos três jobs após a correção da issue41; essa prova antecede a implementação MSI nativa abaixo.
 
 O primeiro caller ARM64 teve timeout numa mutação, que passou isoladamente em1,631s. A VM usa Apport por core_pattern piped; a [fonte Linux](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/fs/coredump.c#L984) confirma que RLIMIT_CORE não impede pipes. A fixture desabilita dumpability somente no processo C Linux para evitar handlers externos. O gate completo corrigido passou sem aumento de timeout, sysctl ou configuração de máquina. O vínculo do timeout com Apport permanece uma hipótese; logs e manifest da falha foram preservados, e ela não foi contada como mutation kill.
 
@@ -201,3 +201,40 @@ python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_wlan_msi_message.py
 Para ABI, crie pasta M nova na VM e copie os dois headers registrados no JSON; crie módulo GPL de prova que chame n71_wlan_msi_message no init com os valores N71 e Makefile `obj-m += n71-wlan-msi-abi-probe.o`. Compile pelo comando make já documentado, confira hashes/ELF/vermagic e conserve o probe privadamente, sem executá-lo. Para conferir a referência binária, use o procedimento Python dos recortes acima com o novo JSON e seus nove source_windows. Firmware, bytes e disassembly não foram publicados.
 
 Nenhum pacote/configuração global, banco, dependência ou estado físico foi alterado. Custo: cálculo e structs locais, sem recurso persistente; desempenho físico não medido. F1g offline concluída e pronta para o domínio nativo; CI do código IRQ/caller e publicação final seguem registradas no plano. Próximo desenvolvimento: bitmap/alocação exclusiva dos oito parents MSI com rollback, máscaras/teardown, attachment PCI/IOMMU e enable controlado. Wi-Fi/carga/gauge e goal continuam pendentes; não houve novo boot/DFU/PIN.
+
+
+## F1h — domínio MSI nativo isolado
+
+[Implementação](../phone/kernel/n71-wlan-msi-native.h), commit295c7c2, [plano D7](../.agents/plans/n71-irq-iommu-bindings.md#d7-próxima-fatia-domínio-msi-nativo-e-rollback-de-vetores) e [prova sanitizada](evidence/n71-wlan-msi-native-qualification.json). Um domínio MSI-parent privado abaixo do AIC retém fwnode e referência OF; usa as APIs modernas exportadas do kernel fixado. Somente MSI/multi-MSI, com oito slots e grants alinhados de1/2/4/8. MSI-X é recusado. Não usa os helpers de bitmap não exportados nem offsets da bridgeM1.
+
+Lookup e parent alloc compartilham o root mutex. Mappings externos são recusados, sem reuso ou dispose. Cada falha parcial de parent/set-leaf libera o que foi adquirido, preservando outros grants e permitindo retry. A tradução de todas as oito células exige `<0,264+índice,1>` e hwirq10108+índice. [AIC alloc](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/irqchip/irq-apple-aic.c#L751) traduz o tipo mas não o salva; MSI é implicitamente edge nesse chip. O callback mantém os flags compartilhados do IRQ core em edge, sem declarar configuração/readback físico do trigger.
+
+### Lifetime do filho e liberação por vetor
+
+O [core fixado](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/kernel/irq/irqdomain.c#L1604) chama free separadamente por vetor, inclusive após alloc multi-MSI. O owner libera apenas aquele bit, faz reset e free do parent; não arredonda a liberação para a região original. A fixture comprova liberar um vetor no meio de oito, reutilizar esse slot e preservar os restantes.
+
+[PCI mantém o domínio por dispositivo](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/msi/irqdomain.c#L235) após desativar MSI. Portanto bitmap/mapcount zero não basta. Prepare/teardown mantêm a identidade do único filho WLAN e do dispositivo; descriptor de outro dispositivo e filho duplicado são recusados. Release recusa o filho vivo, mesmo sem IRQs. [Teardown do core](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/kernel/irq/msi.c#L1113) roda antes de remover o domínio filho. O futuro consumidor precisa excluir criação/teardown concorrentes com release, remover/quiescer PCI e soltar referências antes de liberar o owner. Esse requisito ainda não foi integrado ao caller; não há claim de exclusão contra usuários arbitrários do domínio.
+
+Compose utiliza a referência qualificada: address0xbffff000/high0 e dados8..15, separados dos parents AIC264..271. Domínio/grant/índice inválidos resultam em mensagem zero. VectorBase0 continua inferência estática descrita na F1g; entrega MSI real e máscara/restore permanecem gates físicos.
+
+### Verificação, reprodução e limites
+
+| Gate | Resultado por plataforma |
+|---|---|
+| macOS e Ubuntu ARM64 |1132 cenários e45 mutações compiladas por assertion |
+| Propriedade do allocator |256 máscaras × quatro tamanhos =1024 combinações; alinhamento/overlap/preservação |
+| Falhas |Conflito em cada parent, prefixo parcial de alloc, chip/domain/hwirq divergentes, set-leaf, retry |
+| Lifetime |Filho sem vetores impede release; cleanup constructor, free de identidade/grant inválidos, release idempotente |
+| C/Python |gnu11/Wall/Wextra/Werror, AST nos dois ambientes, lint fatal no Mac; sem typechecker Python |
+| Kernel |W=1/Werror/modpost, ELF64 AArch64/vermagic power2; fonte/config/Image/exports intactos |
+
+Cada mutant precisa compilar e falhar por SIGABRT com texto de asserção. Import/compiler/timeout não são kills. Seis inputs idênticos por SHA; helpers anteriores intactos, sem repetir seus gates. Core/OF/MSI library são modelos de dependências; callbacks de produção executam diretamente. Não são provas de entrega física, DMA, concorrência global ou carregamento do domínio no kernel do iPhone.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_wlan_msi_native.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_wlan_msi_native.py
+```
+
+Para ABI, crie pasta M nova na VM e copie os três headers phone/kernel registrados no JSON. Faça um módulo GPL com funções globais, previamente declaradas, que chamem acquire/release com os mesmos argumentos; essas funções conservam os callbacks e dependências exportadas no objeto. Seu init retorna `-EOPNOTSUPP` e exit é vazio, impedindo uso como módulo funcional. Makefile: `obj-m += n71-wlan-msi-native-abi-probe.o`. Compile com o comando make e exports já documentados; confira SHA dos inputs/baselines, ELF e vermagic. O probe privado tem13136 bytes/SHAd6ce0910ccafe7375ef8bbaab842134f7a64319311b9b717a315bb1921a0ce44; não foi carregado ou publicado.
+
+F1h offline concluída. Nenhuma dependência, banco, pacote/configuração global do Mac ou estado do telefone mudou; nenhum novo DFU/boot/PIN. Custo adicional: oito bits de grant, identidade de filho/dispositivo e um domínio/fwnode/OF ref até teardown. Desempenho físico não medido. CI19ffb03 passou antes deste código e encerrou a issue41; a nova CI da F1h precisa terminar após a publicação. Próximo: associação MSI ao PCI e attachment DART, owners/pins/cleanup e guards antes de enable/MASTER, depois collector/perfil para uma sessão física agrupada. Wi-Fi#9, energia#2, issue40 e goal continuam abertos.

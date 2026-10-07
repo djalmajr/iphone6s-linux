@@ -137,7 +137,7 @@ No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo ca
 - **Alternativas:** copiar offsets/doorbellM1 não qualifica N71; usar bitmaps não exportados quebra modpost; iniciar brcmfmac agora mistura IRQ/DMA/firmware. Rejeitadas.
 - **Reverter:** baixo antes da integração física; header novo e fixtures isolados. Perfil/caller existente não muda nesta fatia.
 - **Onde:** F1h de até cinco arquivos: este plano, `phone/kernel/n71-wlan-msi-native.h`, `tests/n71_wlan_msi_native_fixture.h`, `tests/n71_wlan_msi_native.c`, `tests/test_n71_wlan_msi_native.py`. Probe ABI privado na VM; publicação sanitizada separada.
-- **Status:** em implementação offline; CI corrigida e três jobs aprovados no head19ffb03. Conferidos include/linux/msi.h SHA93b85e1e508914ef1c41e880bf399356b719ed383bf81eff58b1451c682829aa e exports da fonte958481f. Sem domínio/IRQ/MSI/config/MMIO novo no telefone.
+- **Status:** F1h aplicada e qualificada offline no commit295c7c2. CI anterior corrigida e três jobs aprovados no head19ffb03; nova CI da F1h pendente. Conferidos include/linux/msi.h SHA93b85e1e508914ef1c41e880bf399356b719ed383bf81eff58b1451c682829aa e exports da fonte958481f. Sem domínio/IRQ/MSI/config/MMIO novo no telefone.
 
 ### Contratos F1h planejados
 
