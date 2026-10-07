@@ -1,0 +1,61 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T10:06:12.754704+00:00",
+  "code_commit": "25b9f828ce84e3da35c132ec4d6849042317b71c",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "scope": "Repair two stale resource forwarding mutation anchors after adding the IOMMU Session keyword; production and private candidate unchanged.",
+  "subject_sha256": "4b4881055dc4d9d294f5460b7a7b976a258d084c414c10e2f727b890400c84a5",
+  "prior_ci": {
+    "head": "33fca56e35b411a139dbd45d5e21871e573a8fc4",
+    "run": 37602851952,
+    "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37602851952",
+    "source_jobs": "failure",
+    "synthetic_tests_per_source_job": 638,
+    "synthetic_failures_per_source_job": 1,
+    "skips_per_source_job": 20,
+    "windows_dns": "success",
+    "failure": "resource-cli-check-session mutation anchor matched zero locations",
+    "external_mutation_steps_reached": false
+  },
+  "qualification": {
+    "macos": {
+      "exit": 0,
+      "tests": 21,
+      "assertion_mutants": 30,
+      "elapsed_s": 42.88,
+      "inputs_unchanged": true,
+      "both_corrected_selectors_killed": true
+    },
+    "ubuntu_arm64": {
+      "exit": 0,
+      "tests": 21,
+      "assertion_mutants": 30,
+      "elapsed_s": 19.67,
+      "inputs_unchanged": true,
+      "both_corrected_selectors_killed": true
+    },
+    "ast_exit": 0,
+    "fatal_flake8_exit": 0,
+    "python_typechecker": "not configured",
+    "disposable_public_inputs": 592
+  },
+  "contracts": {
+    "resource_capability_mutations_preserved": true,
+    "iommu_parent_argument_unchanged_by_mutants": true,
+    "exact_single_anchor_matches_required": true,
+    "no_import_runtime_errors_counted_as_kills": true
+  },
+  "verification_reuse": {
+    "native_d18_inputs_unchanged": 84,
+    "d20_production_inputs_changed": false,
+    "production_or_candidate_rebuilt": false
+  },
+  "limits": {
+    "full_new_ci_verified": false,
+    "phone_action": false,
+    "irq_dma_wifi_gauge_or_charge_verified": false,
+    "private_artifacts_published": false,
+    "mac_global_configuration_or_packages": false,
+    "main_merged_or_release": false
+  }
+}

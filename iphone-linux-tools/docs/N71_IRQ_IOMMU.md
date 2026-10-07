@@ -604,3 +604,17 @@ python3 -B tests/run_n71_diagnostic_payload_mutations.py
 Baseline22 testes e34/34 mutants compilados por AssertionError/sem ERROR passaram no Mac24.80s/Ubuntu ARM6414.91s. AST/lint fatal passaram; não há typechecker Python. A VM usou nova cópia isolada de591 inputs públicos; hashes foram conferidos antes/depois. Os sete inputs executáveis D20 e84 inputs relevantes da ABI D18 permanecem idênticos, e a candidata real passou novamente `--check`. Gates D20 anteriores reutilizados em seus escopos; não somar os counts sobrepostos nem declarar CI completa verde com essa prova estreita.
 
 Esta correção não muda artefatos de kernel, módulo, perfil, runtime ou protocolo do servidor; sem dependência/pacote/configuração global do Mac, banco ou custo físico novo. Nenhum USB/DFU/boot ou comando no telefone foi executado nesta fatia. A CI33fca56 terminou com falha nos testes sintéticos Mac/Ubuntu por um selector legado de Session com zero matches; Windows passou. Ela não chegou ao runner externo de dependências. Essa falha distinta está em correção separada, e o novo head terá sua própria execução. O teste físico da candidata aguarda DFU, e Wi-Fi/IRQ/DMA/gauge/carga permanecem abertos.
+
+## D20e — selectors das mutações de Session
+
+[Código25b9f82](https://github.com/djalmajr/iphone6s-linux/commit/25b9f82), [decisão](../.agents/plans/n71-irq-iommu-bindings.md#d20e-atualizar-dois-selectors-do-teste-de-session-legado), [prova](evidence/n71-held-iommu-selectors.json). A [CI33fca56](https://github.com/djalmajr/iphone6s-linux/actions/runs/37602851952) terminou com falha nos dois source jobs:638 testes executados, uma falha no parent de mutações held e20 skips por job; Windows passou. O selector resource-cli-check-session esperava o fechamento do constructor imediatamente depois de resource_capable. D20b acrescentou iommu_parent, portanto houve zero matches. O selector live tinha a mesma string antiga. Essa falha precedeu o runner externo D20d; os dois defeitos de infraestrutura são distintos.
+
+Somente os dois pares antes/depois foram atualizados: o mutant continua retirando resource_capable e deixa iommu_parent intacto. Nenhuma mudança em produção ou afrouxamento do critério de matches/kills. Reprodução a partir de iphone-linux-tools:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_held_session.py
+```
+
+Gate held completo21 testes/30 mutants compilados por AssertionError/sem ERROR passou no Mac42.88s/Ubuntu ARM6419.67s. Ambos os selectors corrigidos foram exercitados e mortos pelo comportamento anterior. AST/lint fatal passaram; não há typechecker Python. Nova cópia ARM64 de592 inputs públicos e hashes antes/depois. Produção e candidata intactas,84 inputs da ABI D18 conferidos; gates D20 de produção/candidata são reutilizados em seus escopos. Plano/teste em dois públicos e documentação/prova separadas.
+
+Publicar D20d/e juntos e aguardar a CI completa do novo head. A prova estreita não transforma a CI anterior em green, não mede desempenho físico e não comprova load/IRQ/DMA/Wi-Fi/carga. Sem banco, dependência/pacote/configuração global do Mac, rebuild de kernel/módulo ou ação no telefone. A candidata agrupada e o snapshot permanecem preparados; DFU manual continua necessário para a sessão física.
