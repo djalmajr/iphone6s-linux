@@ -1,10 +1,16 @@
-# iPhone 6s Linux — atualizado em 2026-10-06
+# iPhone 6s Linux — atualizado em 2026-10-07
 
 ## Checkpoint atual — atribuição PCIe física positiva; IRQ/IOMMU e energia pendentes
 
 A candidata15617e32 passou no hardware: atribuição error0/assigned1,17 tentativas/cinco escritas verificadas, IO16 noops1 e PREF64 writes1. Um DFU/um boot reuniu inventário, reuso sem segundo setter, cleanup na primeira tentativa, SSH/Bash/Herdr/HTTP e snapshot44/sync/retorno automático ao iOS.100→100%, carregando após o retorno. [Prova física](evidence/n71-pci-pref64-unsized-physical.json).
 
 Root MEM7c0000000..7c04fffff; BAR0 7c0400000..7c0407fff/BAR2 7c0000000..7c03fffff. Decode/master/driver/radio permaneceram desligados. IRQ255/0, links IOMMU/of_node/driver ausentes e power_supply0 não comprovam IRQ/DMA/Wi-Fi/carga. Issue39 conclui host retido/atribuição/rollback; próxima fatia trata associação IRQ/IOMMU na [issue40](https://github.com/djalmajr/iphone6s-linux/issues/40), para Wi-Fi (#9). [Plano inicial](../.agents/plans/n71-irq-iommu-bindings.md), [auditoria de fontes](N71_IRQ_IOMMU.md). Alimentação/gauge continuam na #2.
+
+### D18 — fundamentos DMA qualificados offline
+
+O diagnóstico opt-in IOMMU agora recusa drift no grafo PCI N71, aliases locais/flags especiais, multifunction/PF/VF e máscaras streaming/coherent diferentes de32 bits ou ponteiro DMA estrangeiro. Confere o mesmo ID de grupo por get/id/put exportados, sem reter a referência. Aliases são inferidos da topologia pública e do binding weak fixado; o log distingue essa inferência de tradução física. Cleanup limpa o ID depois da remoção PCI e antes de liberar MSI, inclusive em falha posterior. [Código/fontes/reprodução](N71_IRQ_IOMMU.md#d18--topologia-dma-máscaras-e-grupo-iommu), [prova](evidence/n71-dma-topology-qualification.json).
+
+Mac/Ubuntu ARM64 passaram253 cenários/190 mutações compiladas por asserção por plataforma,55/40 novos; AST/lint fatal e módulo exato W=1/Werror/modpost/ELF/vermagic passaram. PCIe114008 bytes/SHA46dfdfda; fonte com seis patches, config/Image/exports preservados. CI parent6aeb88c passou os três jobs. Nenhum load/perfil físico novo nesta etapa. Collector ainda precisa exigir o registro DMA e selecionar a nova ABI antes da composição e do teste físico agrupado. Wi-Fi, IRQ/DMA reais, gauge e carregamento Linux continuam pendentes; nenhum novo DFU solicitado nesta rodada. Sem banco/dependência/pacote ou configuração global do Mac; desempenho físico não medido.
 
 Auditoria2026-10-07 UTC recuperou pin1/MSI64 do log físico anterior, sem novo boot. ADT/driver N71: MSI32/offset256/porta1/base8/count8, registro parent AIC264..271; Linux usa células3/hwirq próprio. Helper F1a qualificado:61 cenários/14 mutações por asserção no Mac/Ubuntu ARM64, AST/lint fatal e probe kernel Werror/modpost/ELF/vermagic, fonte/config/Image/exports preservados. Calcula somente `<0, 264 + índice, 1>`, sem IRQ/domain/MMIO/message data/caller ou carga no telefone. Codificação MSI, restore/ownership e provider DART retido permanecem abertos. [Referência e limites](evidence/n71-irq-iommu-reference.json), [prova e reprodução F1a](N71_IRQ_IOMMU.md#f1a--células-aic-qualificadas-sem-alocação-de-irq). Telefone no iOS durante a preparação; carga/gauge Linux não comprovados.
 
