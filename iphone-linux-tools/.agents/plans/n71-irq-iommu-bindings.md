@@ -182,7 +182,7 @@ A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLO
 - **Alternativas:** aplicar setter em dispositivos já escaneados exige snapshot de várias associações; criar domínio fora do owner da bridge quebra lifetime; ligar o driver antes de attachment DART mistura gates ainda abertos. Rejeitadas.
 - **Reverter:** baixo antes do hardware; API nova opt-in, wrappers atuais intactos. Campo adicional de lease é interno ao módulo, ainda sem seletor/collector.
 - **Onde:** até cinco públicos: este plano, phone/kernel/n71-pcie-scan.h, tests/n71_pcie_scan_host.c, tests/n71_pcie_msi_scan_fixture.h, tests/test_n71_pcie_scan_host.py. O modelo MSI novo fica no header de fixture, mantendo dependências separadas dos casos PCI existentes. O runner de mutações scan-config permanece intacto. As fixtures optional/IO16/PREF64 reutilizam o C base e precisam do gate afetado por essa dependência.
-- **Status:** em implementação offline. As funções existentes do scan estão referenciadas; não há função morta a remover. Estender o lifecycle sem refatorar/remover os caminhos de scan/rollback já comprovados. Firmware, Image/config/exports e Mac permanecem intactos; nenhuma nova sessão física até integração/collector/gates necessários.
+- **Status:** aplicada e qualificada offline no commit36998e8; documentação0ae5922 publicada e CI em execução. As funções existentes do scan estão referenciadas; não há função morta a remover. Firmware, Image/config/exports e Mac permanecem intactos; nenhuma nova sessão física até integração/collector/gates necessários.
 
 ### Contratos F1j
 
@@ -190,3 +190,20 @@ A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLO
 - [x] Herança nas cinco associações e divergências verificadas na fixture; enable permanece negado e guard de driver/MASTER preservado. Sem IRQ/bind/DMA novo nessa fatia.
 - [x] Bus removido antes da lease; falha nativa conserva bridge/config/power e permite retry sem rescan/restauração antecipada. Falhas parciais de acquire/scan exercitadas.
 - [x] Gates afetados Mac/ARM64 passaram152 cenários/117 mutações por assertion cada; ABI completoW=1/Werror/modpost/ELF/vermagic com wrapper MSI privado,55 inputs/baselines conferidos.57 mutações e três métodos antigos reutilizados por hashes/AST intactos. Duas falhas iniciais de compile não contam como kills; selectors corrigidos e somente o método MSI repetido. F1k selecionará a rota no caller/getter.
+
+## D10. Selecionar MSI no caller e expor ownership sem mudar o perfil físico
+
+- **Decisão:** F1k acrescenta msi_parent opt-in (default false,0400), válido apenas com scan_hold e suas precondições existentes. Probe escolhe hold_msi somente quando solicitado. Getter msi, sob session_lock, informa requested/ready/held/associated/owner/domain/mappings/child/session_error sem endereços ou identificadores. Não declara entrega IRQ ou attachment DMA a partir desses campos.
+- **Por quê:** a rota nativa já está qualificada no scan, mas o caller ainda não pode selecioná-la. Tornar selection/ownership observáveis permite agrupar futuras coletas e retries na mesma sessão. A bridge e o pin do módulo devem continuar retidos enquanto o cleanup MSI recusar, inclusive depois da remoção do bus.
+- **Alternativas:** habilitar MSI por default muda o diagnóstico físico anterior; publicar perfil antes da integração DART/collector deixa gates essenciais ausentes; usar getter como prova de entrega confunde identidade com hardware. Rejeitadas.
+- **Reverter:** baixo antes do hardware; flag default false e getter adicional, formatos anteriores preservados. Nenhuma mudança na Image/config/exports ou autoload.
+- **Onde:** quatro arquivos públicos nesta fatia: este plano, phone/kernel/n71-pcie-diagnostic.c:41,399,544,634, tests/n71_pcie_diagnostic_caller.c e tests/test_n71_pcie_diagnostic_caller.py. Código das dependências scan/MSI permanece intacto. Build de produção em M separado, agora sem wrapper privado para manter a rota.
+- **Status:** aplicada e qualificada offline. Mac/ARM64 passaram156 cenários/103 mutações compiladas por assertion cada; AST/lint fatal Mac, AST ARM64 e produçãoW=1/Werror/modpost/ELF/vermagic.48 inputs idênticos e30 includes efetivos; módulo104288 bytes/SHA0c0783806158eb88a4bc390644a3186d474d1fe20d2026a046719751f875f8a5, sem wrapper privado ou load. Fonte/config/Image/exports preservados. Os dois corpos de cleanup extraídos pelo gate DART permanecem idênticos por hash, assim como provider e gates de scan/MSI independentes: provas anteriores reutilizadas. Na leitura USB desta rodada o aparelho estava no iOS, sem novo boot/escrita.
+
+### Contratos F1k
+
+- [x] Default preservado, MSI sem hold recusado antes de registro/efeitos, rota selecionada só por opt-in; antigos guards e formatos intactos.
+- [x] Getter sob lock, valores exatos antes/depois do scan/release e com owner pendente sem bus; mapcount privado e child distintos de entrega física.
+- [x] Falhas de acquire/teardown conservam bridge/pin/reset/power; retry sem scan ou put duplicado. Getter mantém session_error até cleanup bem-sucedido.
+- [x] Caller completo Mac/ARM64 com cenários antigos e novos/mutações compiladas por assertion; AST/lint fatal; produção W=1/Werror/modpost/ELF/vermagic com hashes/baselines preservados. Não repetir gates independentes com inputs intactos.
+- [ ] Documentar prova/limites e CI na issue40; depois preparar attachment DART, collector/perfil e energia antes da sessão física agrupada.

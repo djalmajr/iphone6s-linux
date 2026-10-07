@@ -38,6 +38,9 @@ MODULE_PARM_DESC(scan_pme_disable, "Opt-in endpoint PME_ENABLE disable/restore f
 static bool scan_hold;
 module_param(scan_hold, bool, 0400);
 MODULE_PARM_DESC(scan_hold, "Keep the PME host scan and its owners until action=cleanup; no bind or DMA");
+static bool msi_parent;
+module_param(msi_parent, bool, 0400);
+MODULE_PARM_DESC(msi_parent, "Associate the private MSI parent before the held scan; no IRQ allocation or DMA");
 static bool bar_sizing;
 module_param(bar_sizing, bool, 0400);
 MODULE_PARM_DESC(bar_sizing, "Size/restore endpoint BARs directly; no PCI devices, MMIO or DMA");
@@ -394,11 +397,35 @@ static int n71_held_status(char *buffer, const struct kernel_param *parameter)
 	return length;
 }
 
+static int n71_msi_status(char *buffer, const struct kernel_param *parameter)
+{
+	struct n71_wlan_msi_host *owner = NULL;
+	struct n71_scan_host *host;
+	int length;
+
+	(void)parameter;
+	mutex_lock(&session_lock);
+	if (session && session->scan_bridge) {
+		host = pci_host_bridge_priv(session->scan_bridge);
+		owner = &host->msi;
+	}
+	length = scnprintf(buffer, PAGE_SIZE,
+		"requested=%u ready=%u held=%u associated=%u owner=%u domain=%u mappings=%u child=%u session_error=%d\n",
+		msi_parent, !!session, n71_session_has_held_bus(session),
+		owner ? owner->associated : 0, owner ? !!owner->bridge : 0,
+		owner ? !!owner->native.domain : 0,
+		owner && owner->native.domain ? owner->native.domain->mapcount : 0,
+		owner ? !!owner->native.child : 0, session ? session->cleanup_error : 0);
+	mutex_unlock(&session_lock);
+	return length;
+}
+
 static const struct kernel_param_ops cleanup_ops = {.set = n71_cleanup_action};
 static const struct kernel_param_ops status_ops = {.get = n71_session_status};
 static const struct kernel_param_ops held_ops = {.get = n71_held_status};
 static const struct kernel_param_ops resource_ops = {.get = n71_resource_status};
 static const struct kernel_param_ops dart_ops = {.get = n71_dart_status};
+static const struct kernel_param_ops msi_ops = {.get = n71_msi_status};
 module_param_cb(action, &cleanup_ops, NULL, 0200);
 MODULE_PARM_DESC(action, "assign, dart-hold, dart-release, cleanup operate on the retained session; no rescan");
 module_param_cb(status, &status_ops, NULL, 0400);
@@ -409,6 +436,8 @@ module_param_cb(resources, &resource_ops, NULL, 0400);
 MODULE_PARM_DESC(resources, "Read assignment and pending ownership; a removed bus is never assigned");
 module_param_cb(dart, &dart_ops, NULL, 0400);
 MODULE_PARM_DESC(dart, "Read DART ownership and recovery progress independently of PCI resources");
+module_param_cb(msi, &msi_ops, NULL, 0400);
+MODULE_PARM_DESC(msi, "Read MSI association ownership and pending session cleanup; not IRQ delivery proof");
 
 static int n71_power(struct device *dev, struct n71_diagnostic *state)
 {
@@ -514,7 +543,8 @@ static int n71_probe_locked(struct platform_device *pdev)
 		if (!error && host_scan) {
 			stage = scan_hold ? "host-scan-hold" : "host-scan";
 			if (scan_hold)
-				error = n71_pcie_scan_hold(dev, state);
+				error = msi_parent ? n71_pcie_scan_hold_msi(dev, state) :
+					n71_pcie_scan_hold(dev, state);
 			else
 				error = scan_pme_disable ? n71_pcie_scan_with_pme(dev, state, true) :
 					n71_pcie_scan(dev, state);
@@ -604,7 +634,7 @@ static int __init n71_init(void)
 {
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
-	if ((scan_hold && (!host_scan || !scan_pme_disable)) ||
+	if ((msi_parent && !scan_hold) || (scan_hold && (!host_scan || !scan_pme_disable)) ||
 	    (scan_pme_disable && !host_scan) || (config_inventory && !enumerate) ||
 	    ((host_scan || bar_sizing || chip_id || dart_observe || dart_cycle) && !config_inventory) ||
 	    (host_scan + bar_sizing + chip_id + dart_observe + dart_cycle > 1))

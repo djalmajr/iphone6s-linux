@@ -57,7 +57,16 @@ struct platform_driver {
 	struct { const char *name; const struct of_device_id *of_match_table; bool suppress_bind_attrs; } driver;
 };
 struct gpio_desc { int logical; };
+/* MSI dependencies are modeled here; native callbacks have separate gates. */
+struct irq_domain { unsigned int mapcount; };
+struct pci_host_bridge;
+struct n71_wlan_msi_host {
+	struct pci_host_bridge *bridge;
+	struct { struct irq_domain *domain, *child; } native;
+	bool associated;
+};
 struct n71_scan_host {
+	struct n71_wlan_msi_host msi;
 	bool bus_held, resource_attempted, resources_assigned, window_claimed;
 	int held_stop_error, io_error;
 	struct { bool pending, active; int error; } resources;
@@ -108,6 +117,9 @@ static struct {
 	bool machine, live, reset_phase;
 	unsigned int refs, gets, puts, suspends, detaches, scans, enumerations, resets, registered;
 	unsigned int pme_scans, held_scans;
+	unsigned int msi_scans, msi_releases, bus_removals;
+	int msi_acquire_error, msi_cleanup_error;
+	struct irq_domain msi_domain, msi_child;
 	unsigned int assignments;
 	unsigned int dart_acquires, dart_releases;
 	bool dart_live;
@@ -279,20 +291,46 @@ static int n71_pcie_scan_hold(struct device *dev, struct n71_diagnostic *state)
 	mock.bridge.private.bus_held=true;
 	return 0;
 }
+static int n71_pcie_scan_hold_msi(struct device *dev, struct n71_diagnostic *state)
+{
+	struct n71_wlan_msi_host *owner=&mock.bridge.private.msi;
+	int error;
+
+	assert(active_lock && *active_lock && mock.refs==1 && state->module_retained);
+	mock.msi_scans++;
+	if (mock.msi_acquire_error) {
+		mock.bridge.alive=true; state->scan_bridge=&mock.bridge;
+		owner->bridge=&mock.bridge; owner->native.domain=&mock.msi_domain;
+		return mock.msi_acquire_error;
+	}
+	error=n71_pcie_scan_hold(dev,state);
+	if (error || !state->scan_bridge) return error;
+	owner->bridge=&mock.bridge; owner->native.domain=&mock.msi_domain;
+	owner->associated=true;
+	return 0;
+}
 static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 {
+	struct n71_wlan_msi_host *owner=&mock.bridge.private.msi;
 	int stop_error;
 	assert(!state->dart && !mock.dart_live);
 	if (!state->scan_bridge) return 0;
 	assert(mock.bridge.alive && mock.refs && state->powered==4 && state->attached==4);
 	if (mock.fault==SCAN_PENDING) return -EIO;
 	if (mock.bridge.bus) {
+		mock.bus_removals++;
 		mock.bridge.bus=NULL;
 		mock.bridge.private.bus_held=false;
 		if (mock.fault==HOLD_STOP_REFUSED || mock.fault==HOLD_STOP_AND_RESTORE)
 			mock.bridge.private.held_stop_error=-EPERM;
 		if (mock.bridge.private.config.error && !mock.bridge.private.held_stop_error)
 			mock.bridge.private.held_stop_error=mock.bridge.private.config.error;
+	}
+	if (owner->bridge) {
+		owner->associated=false;
+		if (mock.msi_cleanup_error) return mock.msi_cleanup_error;
+		if (owner->native.child || owner->native.domain->mapcount) return -EBUSY;
+		*owner=(struct n71_wlan_msi_host){0}; mock.msi_releases++;
 	}
 	if (mock.fault==HOLD_PENDING || mock.fault==HOLD_STOP_AND_RESTORE) return -EIO;
 	stop_error=mock.bridge.private.held_stop_error;
@@ -368,13 +406,15 @@ static struct platform_device setup(void)
 	for (index=0;index<11;index++) p.resources[index]=(struct resource){.start=addresses[index],.end=addresses[index]+(index==0 ? 0x1000000 : index==9 ? 0x8000 : 0x4000)-1};
 	p.dev.of_node=&mock.node;
 	run=enumerate=config_inventory=host_scan=true; bar_sizing=chip_id=dart_observe=dart_cycle=false;
-	scan_pme_disable=scan_hold=false;
+	scan_pme_disable=scan_hold=msi_parent=false;
 	return p;
 }
 static void finish(struct platform_device *p)
 {
 	unsigned int index;
 	assert(!mock.refs && !mock.node.refs && !mock.bridge.alive && mock.puts==mock.gets);
+	assert(!mock.bridge.private.msi.bridge && !mock.bridge.private.msi.native.domain);
+	assert(mock.msi_scans==(msi_parent ? 1U : 0U) || !mock.enumerations);
 	assert(mock.pme_scans==(scan_pme_disable ? mock.scans : 0));
 	for (index=0;index<4;index++) assert(!mock.domains[index].attached && !mock.domains[index].usage);
 	if (session) n71_remove(p);
@@ -691,6 +731,101 @@ static unsigned int exercise_dart_caller(void)
 	return cases;
 }
 
+static void expect_msi(const char *expected)
+{
+	char buffer[PAGE_SIZE];
+	assert(msi_ops.get(buffer,NULL)>0 && !strcmp(buffer,expected));
+	assert(!session_lock && !active_lock);
+}
+
+static unsigned int exercise_msi_caller(void)
+{
+	struct platform_device p;
+	struct n71_wlan_msi_host saved;
+	unsigned int index, cases=0;
+	char expected[PAGE_SIZE];
+
+	/* Mutations killed: enable MSI by default or report a session/owner that does not exist. */
+	p=setup_held();
+	expect_msi("requested=0 ready=0 held=0 associated=0 owner=0 domain=0 mappings=0 child=0 session_error=0\n");
+	assert(n71_probe(&p)==0 && !mock.msi_scans);
+	expect_msi("requested=0 ready=1 held=1 associated=0 owner=0 domain=0 mappings=0 child=0 session_error=0\n");
+	assert(cleanup_ops.set("cleanup",NULL)==0); finish(&p); cases++;
+	/* Mutation killed: accept the MSI flag without the held-bus lifetime contract. */
+	p=setup(); msi_parent=true;
+	assert(n71_init()==-EINVAL && !mock.registered && !mock.refs && !mock.gets && !mock.scans);
+	finish(&p); cases++;
+	/* Mutations killed: ignore MSI selection, confuse requested with ownership, or skip the getter lock. */
+	p=setup_held(); msi_parent=true;
+	expect_msi("requested=1 ready=0 held=0 associated=0 owner=0 domain=0 mappings=0 child=0 session_error=0\n");
+	assert(n71_init()==0 && mock.registered==1 && !mock.msi_scans);
+	assert(n71_probe(&p)==0 && mock.msi_scans==1 && mock.scans==1 && mock.refs==1);
+	expect_msi("requested=1 ready=1 held=1 associated=1 owner=1 domain=1 mappings=0 child=0 session_error=0\n");
+	assert(n71_probe(&p)==-EBUSY && mock.msi_scans==1);
+	cases++;
+	/* Mutations killed: hard-code association, owner/domain, mapping count or child presence. */
+	for (index=0;index<5;index++) {
+		saved=mock.bridge.private.msi;
+		switch(index) {
+		case 0: mock.bridge.private.msi.associated=false; break;
+		case 1: mock.bridge.private.msi.bridge=NULL; break;
+		case 2: mock.bridge.private.msi.native.domain=NULL; break;
+		case 3: mock.msi_domain.mapcount=4; break;
+		default: mock.bridge.private.msi.native.child=&mock.msi_child; break;
+		}
+		snprintf(expected,sizeof(expected),
+			"requested=1 ready=1 held=1 associated=%u owner=%u domain=%u mappings=%u child=%u session_error=0\n",
+			index==0 ? 0U : 1U,index==1 ? 0U : 1U,index==2 ? 0U : 1U,
+			index==3 ? 4U : 0U,index==4 ? 1U : 0U);
+		expect_msi(expected);
+		mock.bridge.private.msi=saved; mock.msi_domain.mapcount=0; cases++;
+	}
+	assert(cleanup_ops.set("cleanup",NULL)==0 && mock.msi_releases==1 && !mock.refs);
+	expect_msi("requested=1 ready=1 held=0 associated=0 owner=0 domain=0 mappings=0 child=0 session_error=0\n");
+	assert(cleanup_ops.set("cleanup",NULL)==0 && mock.msi_releases==1 && mock.scans==1);
+	n71_exit(); finish(&p);
+	expect_msi("requested=1 ready=0 held=0 associated=0 owner=0 domain=0 mappings=0 child=0 session_error=0\n");
+	/* Mutations killed: release pin/reset/power before MSI quiesces, abandon partial acquire, or rescan on retry. */
+	for (index=0;index<4;index++) {
+		unsigned int scans, removals;
+		int error=index<2 ? -EBUSY : -EIO;
+		p=setup_held(); msi_parent=true;
+		if (index==3) { mock.msi_acquire_error=-ENOLINK; mock.msi_cleanup_error=-EIO; }
+		assert(n71_probe(&p)==0 && session->module_retained && mock.refs==1);
+		if (index==0) mock.bridge.private.msi.native.child=&mock.msi_child;
+		if (index==1) mock.msi_domain.mapcount=1;
+		if (index==2) mock.msi_cleanup_error=-EIO;
+		scans=mock.scans;
+		assert(cleanup_ops.set("cleanup",NULL)==error && session->scan_bridge && mock.refs==1);
+		assert(!mock.bridge.bus && mock.bridge.alive && session->reset_pending);
+		assert(session->powered==4 && session->attached==4 && !mock.puts && !mock.resets && !mock.detaches);
+		assert(session->primary_error==(index==3 ? -ENOLINK : 0));
+		snprintf(expected,sizeof(expected),
+			"requested=1 ready=1 held=0 associated=0 owner=1 domain=1 mappings=%u child=%u session_error=%d\n",
+			index==1 ? 1U : 0U,index==0 ? 1U : 0U,error);
+		expect_msi(expected);
+		removals=mock.bus_removals;
+		assert(cleanup_ops.set("cleanup",NULL)==error && mock.bus_removals==removals);
+		assert(cleanup_ops.set("assign",NULL)==-ENODEV && !mock.assignments && mock.refs==1);
+		assert(mock.scans==scans && mock.msi_scans==1 && !mock.msi_releases && !mock.puts && !mock.resets);
+		mock.bridge.private.msi.native.child=NULL; mock.msi_domain.mapcount=0; mock.msi_cleanup_error=0;
+		assert(cleanup_ops.set("cleanup",NULL)==0 && !mock.refs && mock.msi_releases==1);
+		assert(mock.scans==scans && mock.msi_scans==1 && mock.bus_removals==removals);
+		assert(mock.puts==4 && mock.resets==1 && !session->scan_bridge);
+		expect_msi("requested=1 ready=1 held=0 associated=0 owner=0 domain=0 mappings=0 child=0 session_error=0\n");
+		finish(&p); cases++;
+	}
+	/* Mutation killed: hide the session cleanup error after MSI ownership has already been released. */
+	p=setup_held(); msi_parent=true;
+	assert(n71_probe(&p)==0); mock.fault=RESET_READ;
+	assert(cleanup_ops.set("cleanup",NULL)==-EIO && !session->scan_bridge && mock.refs==1);
+	expect_msi("requested=1 ready=1 held=0 associated=0 owner=0 domain=0 mappings=0 child=0 session_error=-5\n");
+	mock.fault=NONE;
+	assert(cleanup_ops.set("cleanup",NULL)==0 && mock.msi_releases==1 && mock.scans==1);
+	finish(&p); cases++;
+	return cases;
+}
+
 int main(void)
 {
 	struct platform_device p; char status[PAGE_SIZE]; unsigned int index, cases=0;
@@ -777,5 +912,7 @@ int main(void)
 	puts("N71_PCIE_RESOURCE_CALLER_OK cases=27");
 	assert(exercise_dart_caller()==22);
 	puts("N71_DART_CALLER_OK cases=22");
+	assert(exercise_msi_caller()==13);
+	puts("N71_MSI_CALLER_OK cases=13");
 	return 0;
 }

@@ -35,10 +35,10 @@ MUTATIONS = (
      '(true || scan_pme_disable) ? n71_pcie_scan_with_pme(dev, state, true)'),
     ('allow-pme-without-scan', '(scan_pme_disable && !host_scan)',
      '(false && scan_pme_disable && !host_scan)'),
-    ('hold-by-default', 'if (scan_hold)\n\t\t\t\terror = n71_pcie_scan_hold',
-     'if (true || scan_hold)\n\t\t\t\terror = n71_pcie_scan_hold'),
-    ('ignore-hold-opt-in', 'if (scan_hold)\n\t\t\t\terror = n71_pcie_scan_hold',
-     'if (false && scan_hold)\n\t\t\t\terror = n71_pcie_scan_hold'),
+    ('hold-by-default', 'if (scan_hold)\n\t\t\t\terror =',
+     'if (true || scan_hold)\n\t\t\t\terror ='),
+    ('ignore-hold-opt-in', 'if (scan_hold)\n\t\t\t\terror =',
+     'if (false && scan_hold)\n\t\t\t\terror ='),
     ('allow-hold-without-pme', '(scan_hold && (!host_scan || !scan_pme_disable))',
      '(false && scan_hold && (!host_scan || !scan_pme_disable))'),
     ('held-success-without-proof', 'if (n71_session_has_held_bus(state)) {',
@@ -155,9 +155,38 @@ DART_MUTATIONS += tuple((f'dart-missing-guard-{index}', 'n71_dart_action',
                          *DART_GUARD_ANCHORS.get(guard, (guard, f'(false && {guard})')))
                         for index, guard in enumerate(DART_GUARDS))
 
+MSI_MUTATIONS = (
+    ('msi-without-held-bus', 'n71_init', '(msi_parent && !scan_hold)',
+     '(false && msi_parent && !scan_hold)'),
+    ('msi-ignore-opt-in', 'n71_probe_locked', 'msi_parent ? n71_pcie_scan_hold_msi',
+     '(false && msi_parent) ? n71_pcie_scan_hold_msi'),
+    ('msi-by-default', 'n71_probe_locked', 'msi_parent ? n71_pcie_scan_hold_msi',
+     '(true || msi_parent) ? n71_pcie_scan_hold_msi'),
+    ('msi-getter-without-lock', 'n71_msi_status', 'mutex_lock(&session_lock);',
+     'if (false) mutex_lock(&session_lock);'),
+    ('msi-getter-loses-owner', 'n71_msi_status', 'if (session && session->scan_bridge)',
+     'if (false && session && session->scan_bridge)'),
+    ('msi-getter-hides-request', 'n71_msi_status', 'msi_parent, !!session', 'false && msi_parent, !!session'),
+    ('msi-getter-always-ready', 'n71_msi_status', 'msi_parent, !!session', 'msi_parent, 1'),
+    ('msi-getter-hides-held-bus', 'n71_msi_status', 'n71_session_has_held_bus(session),',
+     'false && n71_session_has_held_bus(session),'),
+    ('msi-getter-hides-association', 'n71_msi_status', 'owner ? owner->associated : 0',
+     'false && owner ? owner->associated : 0'),
+    ('msi-getter-hides-lease', 'n71_msi_status', 'owner ? !!owner->bridge : 0',
+     'false && owner ? !!owner->bridge : 0'),
+    ('msi-getter-hides-domain', 'n71_msi_status', 'owner ? !!owner->native.domain : 0',
+     'false && owner ? !!owner->native.domain : 0'),
+    ('msi-getter-hides-mappings', 'n71_msi_status', 'owner->native.domain->mapcount : 0',
+     '0U * owner->native.domain->mapcount : 0'),
+    ('msi-getter-hides-child', 'n71_msi_status', 'owner ? !!owner->native.child : 0',
+     'false && owner ? !!owner->native.child : 0'),
+    ('msi-getter-hides-session-error', 'n71_msi_status', 'session ? session->cleanup_error : 0',
+     'false && session ? session->cleanup_error : 0'),
+)
+
 
 def function_span(source, name):
-    match = re.search(r'static int ' + re.escape(name) + r'\([^)]*\)\n\{', source)
+    match = re.search(r'static int (?:__init )?' + re.escape(name) + r'\([^)]*\)\n\{', source)
     if match is None:
         raise ValueError('Caller function not found: ' + name)
     position, depth = match.end(), 1
@@ -195,7 +224,8 @@ class N71PcieCaller(unittest.TestCase):
                              (('baseline', None, None),) + MUTATIONS + RESOURCE_MUTATIONS)
             variants += tuple((name, before, after, True) for name, before, after in MMIO_MUTATIONS)
             variants += tuple((name, before, after, False) for name, _, before, after in DART_MUTATIONS)
-            dart_functions = {name: function for name, function, _, _ in DART_MUTATIONS}
+            variants += tuple((name, before, after, False) for name, _, before, after in MSI_MUTATIONS)
+            scoped_functions = {name: function for name, function, _, _ in DART_MUTATIONS + MSI_MUTATIONS}
             for name, before, after, mmio in variants:
                 subject = mmio_source if mmio else source
                 start, end = 0, len(subject)
@@ -206,8 +236,8 @@ class N71PcieCaller(unittest.TestCase):
                                 'n71_resource_status' if name.startswith(('resources-', 'assigned-')) else
                                 'n71_assign_action')
                     start, end = function_span(subject, function)
-                if name in dart_functions:
-                    start, end = function_span(subject, dart_functions[name])
+                if name in scoped_functions:
+                    start, end = function_span(subject, scoped_functions[name])
                 scoped = subject[start:end]
                 if before:
                     self.assertEqual(scoped.count(before), 1, name)
@@ -225,6 +255,7 @@ class N71PcieCaller(unittest.TestCase):
                     self.assertIn('N71_PCIE_HELD_CALLER_OK cases=21', result.stdout)
                     self.assertIn('N71_PCIE_RESOURCE_CALLER_OK cases=27', result.stdout)
                     self.assertIn('N71_DART_CALLER_OK cases=22', result.stdout)
+                    self.assertIn('N71_MSI_CALLER_OK cases=13', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
