@@ -224,3 +224,29 @@ A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLO
 - [ ] Erro de apply/notify ou revert deve ser interpretado com identidade/readback das propriedades. Conservar owner/refs quando ainda houver efeito vivo ou drift; retry sem aplicar/reverter a mesma etapa já comprovada duas vezes.
 - [ ] Unmap recusa bus vivo; ref da bridge sobrevive ao put do scan. Release da disponibilidade recusa provider registrado; restaurar status disabled e só depois a flag própria. Nenhum provider alheio removido pelo notifier.
 - [ ] Callbacks reais com dependências OF/PCI modeladas e falhas antes/depois da aplicação; mutações compiladas por assertion Mac/ARM64; ABI fixadaWerror/modpost sem load. Integração do caller/getter/collector e prova física posteriores, agrupadas com energia.
+
+### Interface e ordem da próxima implementação
+
+Usar n71_dart_host_prepare(owner,request), n71_dart_host_unmap(owner) e n71_dart_host_release(owner). Request reúne bridge e provider; derivar master de bridge->dev.parent e conferir seu nó /soc/pcie@610000000, provider /soc/iommu@602008000 e driver apple-dart. Mapa restrito com entradas RID0x0008 e RID0x0100 para SID0, length1 cada, phandle verificado por lookup. São RIDs já medidos; o walker fixado search.c:28–115 também percorre aliases explícitos e tipos de bridge. Não alegar ausência de quirks runtime: alias diferente deve recusar associação.
+
+Owner retém get_device/put_device da bridge/master/provider e referências OF originais, além das duas changesets e identidades de suas propriedades. A ref da bridge impede uso após o put do scan. OF_POPULATED deve ser adquirido exclusivamente antes de disponibilizar o nó, preservado enquanto o provider manual existe e restaurado apenas com status disabled comprovado; uma flag previamente alheia recusa acquire.
+
+Em cada operação, distinguir propriedade original, propriedade própria aplicada e drift alheio. Apply/revert com erro de notify pode deixar o efeito concluído: guardar o erro e estado por readback, permitindo retry sem aplicar/reverter novamente uma etapa já restaurada. Dados/names de propriedades devem ser alocados pelos helpers OF exportados, nunca apontar para stack, owner liberado ou rodata de módulo descarregado. Destroy não recupera as propriedades retidas pelo tree. Sem liberação manual dessas props.
+
+Unmap exige bridge sem bus e mantém disponibilidade enquanto o provider está vivo. Release de disponibilidade exige ausência de platform device registrado para o nó, evitando remoção indireta pelo notifier. A futura integração precisa concluir PCI removal/unmap antes de provider stop, depois restaurar disponibilidade, antes de reset/power/module release. Esta é uma precondição a qualificar; ainda não é o comportamento do caller atual.
+
+## D12. Gerar primeiro um phandle DART estável na DTB desativada
+
+- **Decisão:** antes do helper D11, acrescentar --dart-phandle opt-in ao preparador de topologia. Reservar max(phandles baseline)+1 após validação dos pins; inserir somente o phandle do DART na candidata e exigir valor exclusivo/exato na delta. Status disabled e todas as propriedades anteriores permanecem. Default produz a topologia anterior. Não acrescentar iommu-map nem editar phandle live no kernel.
+- **Por quê:** a candidata atual não referencia o label n71_dart1, e verify_delta exige no DART exatamente os campos sem phandle. O helper proposto precisa de um identificador não nulo para o OF map; não pode presumir que o nó já o tenha. A alocação explícita antes de dtc deixa os providers novos escolherem outros números, preservando referências da baseline.
+- **Alternativas:** adicionar só a propriedade phandle em runtime presume atualização do campo/cache OF; escolher número arbitrário pode colidir; permitir qualquer propriedade extra no DART enfraquece a boundary. Rejeitadas.
+- **Reverter:** baixo; flag default off, sem Image/config/exports, perfil físico, status ativo, probe ou novo boot.
+- **Onde:** próxima fatia de quatro públicos: este plano, scripts/build/prepare-n71-topology.py, tests/test_n71_topology.py e tests/run_n71_topology_mutations.py. Depois, docs/prova sanitizada separadas. Fonte e fragmento anteriores preservados.
+- **Status:** implementação offline autorizada pelo goal em curso; nova precondição derivada da leitura completa do preparador/fragmento, sem modificar telefone.
+
+### Contratos D12
+
+- [ ] Flag off conserva o default; flag on gera handle válido, único, determinístico e pins anteriores intactos. Recusar overflow, baseline inválida e colisão/drift.
+- [ ] Delta opt-in aceita somente o phandle esperado no DART; recusa mapa, status ativo e qualquer outra alteração. Registrar o identificador na provenance somente no modo opt-in.
+- [ ] Testes/mutações dos guards e compilação real dtc na VM; comparar baseline/default/candidata com hashes, sem alterar source/config/Image/exports. AST/lint fatal e scope de saída preservados.
+- [ ] Documentar reprodução e issue40; D11 deverá recusar DTBs sem phandle. Nenhum autoload/DFU/hardware novo nesta preparação.

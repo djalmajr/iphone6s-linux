@@ -8,7 +8,8 @@
     "drivers/pci/pci-driver.c": "68fb85a00f63171e9d4a27f9358e4f1ce5b68c72ef1ac73d7b6f6744531b3dd1",
     "drivers/iommu/iommu.c": "27ec62e95f5d5d4e3f7103587e8f955c3722f2a61ae7436daf95615fd1a42875",
     "drivers/of/platform.c": "76511351e585839cd944ac59f7e92f45c3cda2b6eb855da86a865c13e8cef57d",
-    "drivers/of/dynamic.c": "72a54e86d96d0ff79d751514db7d541ac9af2262e3049d2d93085f68a29e411a"
+    "drivers/of/dynamic.c": "72a54e86d96d0ff79d751514db7d541ac9af2262e3049d2d93085f68a29e411a",
+    "drivers/pci/search.c": "86cd467b75760ec05d570f57a3f83dd22669fe251aaac3417fbd6b927b5f9a24"
   },
   "symbols_sha256": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61",
   "facts": [
@@ -71,6 +72,16 @@
         698
       ],
       "fact": "Destroy drops changeset entries and node refs, not the dynamic property itself. Property memory must not be embedded in a freed module owner."
+    },
+    {
+      "source": "drivers/pci/search.c",
+      "lines": [
+        39,
+        57,
+        60,
+        109
+      ],
+      "fact": "Walker starts at real DMA device RID, iterates explicit aliases and then upstream bridge rules. Restrict mapping to measured N71 RIDs and reject unknown aliases; the source walk does not prove absence of runtime quirks."
     }
   ],
   "configuration": {
@@ -90,6 +101,7 @@
   "private_evidence_sha256": {
     "iommu-source-private.json": "9a89ef76f7a72a83ee1f256a5031653691444851af1acf2874d7548f8ca63695",
     "of-lifetime-source-private.json": "76b70ac42d9656be84448c088eefa6c33173fc1c92bc9450795fdb0b4166a3bc",
-    "of-changeset-source-private.json": "6d15ce5427641ade79e1d515c1da1c5469cfb29cb1bf2337fd8b5a39a5ea477c"
+    "of-changeset-source-private.json": "6d15ce5427641ade79e1d515c1da1c5469cfb29cb1bf2337fd8b5a39a5ea477c",
+    "pci-alias-source-private.json": "bc9c90ca3239fb2862a6312954b4c1a81021996e9e7b8aa71aa1ac32c54bd071"
   }
 }
