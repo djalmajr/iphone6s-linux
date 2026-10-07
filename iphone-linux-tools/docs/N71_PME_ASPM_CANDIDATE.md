@@ -1243,3 +1243,11 @@ python3 -B -m unittest discover -s tests -p test_n71_diagnostic_pref64_profile.p
 ```
 
 Candidata real/check preservou payload/deployment/DT/kernel/loader/initramfs/identidades/REG_ON, oito arquivos700/600. Só PCIe e hash na provenance novos; não carrega automaticamente. Sem novo Image ou configuração global do Mac. Próxima prova física reúne os estágios sem reinícios intermediários; IRQ/IOMMU/driver/radio, Wi-Fi e telemetria/carga continuam abertos.
+
+## D3 físico — atribuição, reuso e cleanup positivos
+
+A candidata15617e32 rodou um DFU/um boot e agrupou todos os estágios, sem reinícios intermediários. Assign error0/assigned1/pending1/claimed1,17 tentativas/cinco escritas verificadas, IO16 noops1/PREF64 writes1 e report readback failed0. Root MEM7c0000000..7c04fffff; BAR0 7c0400000..7c0407fff e BAR2 7c0000000..7c03fffff. Readonly confirmou PREF lower0001fff1/uppers0, MEMc040c000 e IO00f0/upper0. [Prova sanitizada](evidence/n71-pci-pref64-unsized-physical.json).
+
+`--assign-held` sobre o resultado já positivo retornou reuso/evento igual/mesmo boot, sem outro setter. Cleanup passou na primeira tentativa, liberou owners e conservou reports; serviços SSH/Bash/Herdr/HTTP passaram. Snapshot44/sync e retorno automático iOS USB em30,82s passaram; bateria100→100%, carregando. Não precisou de PIN ou fallback físico.
+
+IRQ root255/endpoint0, enable0 e links driver/IOMMU/of_node ausentes são inventário sem bind/DMA. Sem power_supply; carregamento/gauge Linux e Wi-Fi ainda não funcionam. A próxima candidata precisa mapear IRQ e associar IOMMU antes de permitir driver/DMA; firmware/calibração permanecem privados. Alimentação contínua continua dependente da #2. Desenvolvimento offline no iOS, agrupar testes antes de outro DFU.

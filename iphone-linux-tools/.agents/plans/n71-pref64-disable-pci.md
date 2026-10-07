@@ -114,7 +114,7 @@ Um DFU/um boot reuniu os estágios; acquire e inventário passaram, assign-13 an
 - [x] F1 (até cinco arquivos): adapter aceita vazio exato; fixture/runner cobrem janela vazia, flags0 com start/end não0, ownership, core probes ausentes, baseline/tipos/uppers/drift, erro/cleanup/repetição. Executar gates C afetados no Mac/Ubuntu, reaproveitar helpers/política intactos.
 - [x] F2 (até cinco): build externo na VM com fonte/config/Image/exports/outros módulos preservados; evidência nova e seletor por SHA com prova estrita de D3. Rerodar apenas seleção afetada.
 - [x] F3 (até cinco): composição/check da nova candidata e integração do contrato; documentação/push/issue antes da sessão física. Nenhum novo Image/configuração global.
-- [ ] F4: uma sessão reúne acquire/assign/inventário/cleanup/services/snapshot/sync/iOS. Não pedir PIN, temperatura ou operação de console; manter USB-A traseiro.
+- [x] F4: uma sessão reúne acquire/assign/inventário/cleanup/services/snapshot/sync/iOS. Não pedir PIN, temperatura ou operação de console; manter USB-A traseiro.
 
 ### D3 F1/F2 — correção e seleção qualificadas offline
 
@@ -127,3 +127,9 @@ Build externo passou seis módulos Werror/modpost/ELF/vermagic,50 inputs;PCIe88.
 Seleção41 testes/68 mutações por plataforma; integração95/150 no Mac/Ubuntu ARM64,80 inputs/AST/lint fatal. CLI novo percorre composer e collector --check exigindo quatro reports; payload/deployment/DT/kernel/loader/initramfs/identidades/REG_ON preservados. Retenção/cleanup/reuso de assignment, readback/optional/IO16/PREF/journal requalificados porque a seleção participa dos paths de stage/held. [Prova da candidata](../../docs/evidence/n71-pci-pref64-unsized-profile.json).
 
 Perfil real separado tem oito arquivos700/600; composer/check passaram. Somente PCIe e hash na provenance mudaram; module_automatic_loadfalse. Snapshot44 mais recente verificado para o boot. Publicação desta prova/documentação precede F4. Nenhum módulo corrigido foi carregado no telefone nesta preparação.
+
+### D3 F4 — atribuição física positiva no mesmo boot
+
+Um DFU/um boot, snapshot44, acquire→assign→inventário→reuso→cleanup→serviços→snapshot/sync→iOS, zero reinícios intermediários. Assign error0/assigned1/pending1/claimed1,17 tentativas/cinco escritas verificadas; IO16 noops1 e PREF64 writes1, sem primeira falha. Root MEM7c0000000..7c04fffff; BAR0 7c0400000..7c0407fff/BAR2 7c0000000..7c03fffff, readback estrito. Reuso conservou evento/boot sem segundo setter. Cleanup passou na primeira tentativa, owners liberados, erro0. Serviços passaram; snapshot44/sync e retorno automático iOS USB em30,82s;100→100%, carregando. [Prova](../../docs/evidence/n71-pci-pref64-unsized-physical.json).
+
+IRQ root255/endpoint0, enable0 e driver/IOMMU/of_node ausentes são estado diagnóstico sem bind/DMA. Power_supply0; Wi-Fi e carga/gauge Linux ainda precisam de implementação/prova própria. Critérios da issue39 satisfeitos; dependências de IRQ/IOMMU e driver/firmware permanecem na evolução de Wi-Fi (#9), alimentação na #2.
