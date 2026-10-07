@@ -5,6 +5,7 @@
 #include <linux/pci.h>
 #include <linux/spinlock.h>
 #include <linux/ioport.h>
+#include <linux/iommu.h>
 #include "n71-pcie-scan-config.h"
 #include "n71-pcie-bar-sizing.h"
 #include "n71-pcie-control-reference.h"
@@ -12,6 +13,7 @@
 #include "n71-pcie-pme-control.h"
 #include "n71-pcie-resource-write.h"
 #include "n71-wlan-msi-host.h"
+#include "n71-dart-host.h"
 
 struct n71_scan_host {
 	struct device *dev;
@@ -22,6 +24,10 @@ struct n71_scan_host {
 	struct n71_pme_state pme;
 	struct n71_resource_write_state resources;
 	struct n71_wlan_msi_host msi;
+	struct n71_dart_host dart;
+	/* Borrowed while PCI consumers are alive; cleared after bus removal. */
+	struct iommu_domain *iommu_domain;
+	unsigned int iommu_devices;
 	bool config_pending;
 	bool bus_held;
 	bool resource_attempted, resources_assigned, window_claimed;
@@ -172,6 +178,24 @@ static int n71_scan_report_error(struct n71_scan_host *host, int error)
 	return error;
 }
 
+static int n71_scan_report_iommu(struct n71_scan_host *host, struct pci_dev *dev)
+{
+	struct iommu_fwspec *spec = dev_iommu_fwspec_get(&dev->dev);
+	struct iommu_domain *domain = iommu_get_domain_for_dev(&dev->dev);
+
+	if (!host->dart.available || !host->dart.mapped || !n71_dart_host_refs_valid(&host->dart) ||
+	    !spec || spec->iommu_fwnode != of_fwnode_handle(host->dart.provider_node) ||
+	    spec->flags || spec->num_ids != 1 || spec->ids[0] != 0 ||
+	    !domain || domain->type != IOMMU_DOMAIN_DMA ||
+	    (host->iommu_domain && host->iommu_domain != domain))
+		return n71_scan_report_error(host, -EACCES);
+	host->iommu_domain = domain;
+	host->iommu_devices++;
+	dev_info(host->dev, "N71_PCIE_SCAN_IOMMU bus=%u devfn=%02x sid=0 translated=1; core readback only\n",
+		 dev->bus->number, dev->devfn);
+	return 0;
+}
+
 static int n71_scan_report_device(struct pci_dev *dev, void *context)
 {
 	struct n71_scan_host *host = context;
@@ -201,6 +225,11 @@ static int n71_scan_report_device(struct pci_dev *dev, void *context)
 		dev_info(host->dev, "N71_PCIE_SCAN_MSI bus=%u devfn=%02x inherited=1; no IRQ allocation\n",
 			 dev->bus->number, dev->devfn);
 	}
+	if (host->dart.bridge) {
+		error = n71_scan_report_iommu(host, dev);
+		if (error)
+			return error;
+	}
 	dev_info(host->dev, "N71_PCIE_SCAN_DEVICE bus=%u devfn=%02x id=%04x%04x class=%06x command=%04x driver=none\n",
 		 dev->bus->number, dev->devfn, dev->device, dev->vendor, dev->class, command);
 	if (root)
@@ -219,6 +248,8 @@ static int n71_scan_validate_result(const struct n71_scan_host *host)
 {
 	if (host->config.error || host->io_error)
 		return host->config.error ? host->config.error : host->io_error;
+	if (host->dart.bridge && host->iommu_devices != 2)
+		return -ENODEV;
 	return host->devices == 2 && host->endpoints == 1 ? 0 : -ENODEV;
 }
 
@@ -247,6 +278,7 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 {
 	struct pci_host_bridge *bridge = state->scan_bridge;
 	struct n71_scan_host *host;
+	int error;
 
 	if (!bridge)
 		return 0;
@@ -265,7 +297,12 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 		host->held_stop_error = host->config.error ? host->config.error : host->io_error;
 		dev_info(host->dev, "N71_PCIE_SCAN_BUS_REMOVED bus-null=1 stop-error=%d\n", host->held_stop_error);
 	}
-	return n71_wlan_msi_host_release(&host->msi);
+	host->iommu_domain = NULL;
+	host->iommu_devices = 0;
+	error = n71_wlan_msi_host_release(&host->msi);
+	if (error)
+		return error;
+	return n71_dart_host_unmap(&host->dart);
 }
 
 static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
@@ -283,6 +320,9 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 		return error;
 	host = pci_host_bridge_priv(bridge);
 	stop_error = host->held_stop_error;
+	error = n71_dart_host_release(&host->dart);
+	if (error)
+		return error;
 	io = (struct n71_scan_io){host, n71_scan_raw_read, n71_scan_raw_write};
 	target_io = (struct n71_link_target_io){host, n71_scan_target_read, n71_scan_target_write};
 	if (host->resources.pending) {
@@ -332,6 +372,7 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 
 struct n71_scan_options {
 	bool disable_pme, hold_bus, msi_parent;
+	struct platform_device *provider;
 };
 
 static int n71_scan_msi_acquire(struct pci_host_bridge *bridge, struct device *dev)
@@ -373,6 +414,8 @@ static int n71_pcie_scan_with_options(struct device *dev, struct n71_diagnostic 
 	if (hold_bus && !disable_pme)
 		return -EINVAL;
 	if (options->msi_parent && !hold_bus)
+		return -EINVAL;
+	if (options->provider && (!hold_bus || !options->msi_parent))
 		return -EINVAL;
 	bridge = pci_alloc_host_bridge(sizeof(*host));
 	if (!bridge)
@@ -452,6 +495,17 @@ static int n71_pcie_scan_with_options(struct device *dev, struct n71_diagnostic 
 			goto restore;
 		}
 	}
+	if (options->provider) {
+		const struct n71_dart_host_request request = {.bridge = bridge, .provider = options->provider};
+
+		error = n71_dart_host_prepare(&host->dart, &request);
+		dev_info(dev, "N71_PCIE_SCAN_DART_PREPARED error=%d available=%u mapped=%u; before PCI publication\n",
+			 error, host->dart.available, host->dart.mapped);
+		if (error) {
+			pci_unlock_rescan_remove();
+			goto restore;
+		}
+	}
 	error = pci_scan_root_bus_bridge(bridge);
 	if (!error && !bridge->bus)
 		error = -ENODEV;
@@ -496,6 +550,18 @@ static int n71_pcie_scan_with_mode(struct device *dev, struct n71_diagnostic *st
 static inline int n71_pcie_scan_hold_msi(struct device *dev, struct n71_diagnostic *state)
 {
 	const struct n71_scan_options options = {.disable_pme = true, .hold_bus = true, .msi_parent = true};
+	return n71_pcie_scan_with_options(dev, state, &options);
+}
+
+static inline int n71_pcie_scan_hold_iommu(struct device *dev, struct n71_diagnostic *state,
+					struct platform_device *provider)
+{
+	const struct n71_scan_options options = {
+		.disable_pme = true, .hold_bus = true, .msi_parent = true, .provider = provider,
+	};
+
+	if (!provider)
+		return -EINVAL;
 	return n71_pcie_scan_with_options(dev, state, &options);
 }
 

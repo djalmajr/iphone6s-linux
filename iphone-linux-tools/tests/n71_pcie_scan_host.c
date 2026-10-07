@@ -108,6 +108,7 @@ static struct {
 	size_t used;
 } mock;
 #include "n71_pcie_msi_scan_fixture.h"
+#include "n71_pcie_dart_scan_fixture.h"
 
 static u32 readl(const void *address)
 {
@@ -229,6 +230,7 @@ static void pci_free_host_bridge(struct pci_host_bridge *bridge)
 	while (entry) { struct resource_entry *next = entry->next; free(entry); entry = next; }
 	assert(mock.allocations == 1 && (!mock.scans || mock.removes == 1));
 	assert(!msi_mock.domains && !msi_mock.names && !msi_mock.node.refs && !bridge->dev.msi_domain);
+	assert(!dart_mock.owner && !dart_mock.held_refs && !dart_mock.available && !dart_mock.mapped);
 	assert(!mock.resource_mode || (!iomem_resource.child && !mock.references));
 	assert((mock.ecam[0x80a0 / 4] & 0xffff) == 1);
 	if (mock.pme)
@@ -275,6 +277,7 @@ static int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
 		.device = 0x43a3, .class = 0x028000};
 	mock.root.subordinate = &mock.endpoint_bus; mock.endpoint_bus.self = &mock.root;
 	msi_fixture_inherit(bridge);
+	dart_fixture_publish();
 	mock.endpoint.resource[0] = (struct resource){.start = 0x7c0000000ULL,
 		.end = 0x7c0003fffULL, .flags = IORESOURCE_MEM | IORESOURCE_MEM_64};
 	if (mock.fault == SCAN_PARTIAL_FAIL) {
@@ -359,6 +362,7 @@ static void pci_remove_root_bus(struct pci_bus *bus)
 		if (window) window->child = mock.resource_fault == CHILD_LEFT ? &foreign_resource : NULL;
 	}
 	free(bus); mock.bridge->bus = NULL;
+	dart_fixture_remove();
 	if (mock.fault == PME_LINK_LOST)
 		mock.port[0x88 / 4] = 0;
 }
@@ -447,6 +451,7 @@ static void initialize_case(enum fault index, bool pme)
 #endif
 	memset(&mock, 0, sizeof(mock)); mock.fault = index;
 	msi_fixture_initialize();
+	dart_fixture_initialize();
 	mock.pme = pme;
 	mock.ecam = calloc(0x1000000 / 4, sizeof(u32)); assert(mock.ecam);
 	mock.ecam[0x8000 / 4] = 0x1004106b; mock.ecam[0x100000 / 4] = 0x43a314e4;
@@ -748,6 +753,121 @@ static unsigned int exercise_consumer_removal(void)
 	return 7;
 }
 
+static unsigned int exercise_dart_scan(void)
+{
+	unsigned int cases=0;
+	struct n71_diagnostic state;
+	struct device dev;
+	/* Mutations: prepare after publication, trust missing/wrong core readback, or release a live provider. */
+	for (unsigned int fault=0;fault<17;fault++) {
+		initialize_case(PME_NONE,true); msi_mock.requested=dart_mock.requested=true;
+		dev=(struct device){.of_node=&msi_mock.node}; dart_mock.provider.dev.parent=&dev;
+		state=(struct n71_diagnostic){.ecam=mock.ecam,.port=mock.port}; dart_mock.core_fault=fault;
+		assert(n71_pcie_scan_hold_iommu(&dev,&state,&dart_mock.provider)==(fault ? -EACCES : 0));
+		assert(state.scan_bridge && dart_mock.owner && dart_mock.held_refs==3 && dart_mock.available);
+		struct n71_scan_host *host=pci_host_bridge_priv(state.scan_bridge);
+		assert(host->config_pending && host->pme.pending && host->target.pending);
+		assert(mock.removes==(fault ? 1U : 0U) && mock.scans==1 && !mock.locked);
+		if (!fault) {
+			assert(host->iommu_domain==&dart_mock.domain && host->iommu_devices==2);
+			assert(strstr(mock.log,"N71_PCIE_SCAN_IOMMU bus=0 devfn=08 sid=0 translated=1"));
+			assert(strstr(mock.log,"N71_PCIE_SCAN_IOMMU bus=1 devfn=00 sid=0 translated=1"));
+			host->iommu_devices=1; assert(n71_scan_validate_result(host)==-ENODEV); host->iommu_devices=2;
+			assert(n71_scan_validate_result(host)==0 && dart_mock.mapped);
+			assert(state.scan_bridge->enable_device(state.scan_bridge,&mock.endpoint)==-EPERM);
+			pci_lock_rescan_remove();
+			host->dart.available=false;assert(n71_scan_report_iommu(host,&mock.root)==-EACCES);
+			host->dart.available=true;host->io_error=0;
+			host->dart.mapped=false;assert(n71_scan_report_iommu(host,&mock.root)==-EACCES);
+			host->dart.mapped=true;host->io_error=0;
+			pci_unlock_rescan_remove();
+		}
+		dart_mock.identity=true;
+		unsigned int writes=mock.writes;
+		assert(n71_pcie_scan_cleanup(&state)==-EBUSY && state.scan_bridge);
+		assert(!state.scan_bridge->bus && !host->iommu_domain && !host->iommu_devices);
+		assert(!dart_mock.mapped && dart_mock.available && dart_mock.held_refs==3);
+		assert(mock.writes==writes && !mock.pme_restores && !mock.target_restores);
+		unsigned int unmaps=dart_mock.unmaps;
+		assert(n71_pcie_scan_cleanup(&state)==-EBUSY && dart_mock.unmaps==unmaps && mock.removes==1);
+		dart_fixture_stop(); assert(n71_pcie_scan_cleanup(&state)==0);
+		assert(!state.scan_bridge && !dart_mock.owner && !dart_mock.available && !dart_mock.held_refs);
+		assert(mock.pme_restores==1 && mock.target_restores==1 && !mock.allocations);
+		free(mock.ecam);cases++;
+	}
+	/* Mutations: ignore prepare failure or lose partial ownership and restore before provider teardown. */
+	for (unsigned int fault=1;fault<=4;fault++) {
+		initialize_case(PME_NONE,true); msi_mock.requested=dart_mock.requested=true;
+		dev=(struct device){.of_node=&msi_mock.node}; dart_mock.provider.dev.parent=&dev;
+		state=(struct n71_diagnostic){.ecam=mock.ecam,.port=mock.port};dart_mock.prepare_failure=fault;
+		assert(n71_pcie_scan_hold_iommu(&dev,&state,&dart_mock.provider)==(fault==1 ? -EINVAL : -EIO));
+		assert(!mock.scans && !mock.locked && dart_mock.prepares==1);
+		if (fault>1) {
+			assert(state.scan_bridge && dart_mock.owner && dart_mock.held_refs==3);
+			unsigned int writes=mock.writes;
+			assert(n71_pcie_scan_cleanup(&state)==-EBUSY && mock.writes==writes);
+			dart_fixture_stop();assert(n71_pcie_scan_cleanup(&state)==0);
+		}
+		assert(!state.scan_bridge && !mock.allocations && !dart_mock.owner && !dart_mock.mapped && !dart_mock.available);
+		free(mock.ecam);cases++;
+	}
+	/* Mutations: ignore unmap/release/MSI errors, clear borrowed domain late or repeat completed unmap. */
+	for (unsigned int fault=1;fault<=4;fault++) {
+		initialize_case(PME_NONE,true);msi_mock.requested=dart_mock.requested=true;
+		dev=(struct device){.of_node=&msi_mock.node};dart_mock.provider.dev.parent=&dev;
+		state=(struct n71_diagnostic){.ecam=mock.ecam,.port=mock.port};
+		assert(n71_pcie_scan_hold_iommu(&dev,&state,&dart_mock.provider)==0);
+		struct n71_scan_host *host=pci_host_bridge_priv(state.scan_bridge);
+		if (fault<=2) dart_mock.unmap_failure=fault;
+		if (fault==4) msi_mock.release_error=-EIO;
+		unsigned int writes=mock.writes;
+		if (fault==3) {
+			assert(n71_pcie_scan_remove_consumers(&state)==0);dart_fixture_stop();dart_mock.release_failure=1;
+		}
+		assert(n71_pcie_scan_cleanup(&state)==-EIO && state.scan_bridge);
+		assert(!state.scan_bridge->bus && !host->iommu_domain && host->config_pending);
+		assert(dart_mock.owner && dart_mock.available && dart_mock.held_refs==3);
+		assert(mock.writes==writes && !mock.pme_restores && !mock.target_restores);
+		unsigned int unmaps=dart_mock.unmaps;
+		assert(n71_pcie_scan_cleanup(&state)==(fault==2 ? -EBUSY : -EIO));
+		if (fault==2 || fault==3) assert(dart_mock.unmaps==unmaps);
+		dart_mock.unmap_failure=dart_mock.release_failure=0;msi_mock.release_error=0;
+		assert(n71_pcie_scan_remove_consumers(&state)==0);
+		if (fault==2 || fault==3) assert(dart_mock.unmaps==unmaps);
+		dart_fixture_stop();assert(n71_pcie_scan_cleanup(&state)==0);
+		assert(!state.scan_bridge && !dart_mock.owner && !mock.allocations && mock.removes==1);
+		free(mock.ecam);cases++;
+	}
+	/* Mutation: allow DART without held MSI/PME, or fall back when provider argument is absent. */
+	for (unsigned int fault=0;fault<3;fault++) {
+		initialize_case(PME_NONE,true);dev=(struct device){.of_node=&msi_mock.node};
+		state=(struct n71_diagnostic){.ecam=mock.ecam,.port=mock.port};
+		const struct n71_scan_options options={.disable_pme=fault!=2,.hold_bus=fault!=0,
+			.msi_parent=fault!=1,.provider=&dart_mock.provider};
+		assert(n71_pcie_scan_with_options(&dev,&state,&options)==-EINVAL);
+		assert(!mock.allocations && !mock.scans && !mock.writes && !dart_mock.prepares);
+		free(mock.ecam);cases++;
+	}
+	initialize_case(PME_NONE,true);dev=(struct device){.of_node=&msi_mock.node};
+	state=(struct n71_diagnostic){.ecam=mock.ecam,.port=mock.port};
+	assert(n71_pcie_scan_hold_iommu(&dev,&state,NULL)==-EINVAL && !mock.allocations && !mock.writes);
+	free(mock.ecam);cases++;
+	/* Mutation: drop DART ownership after a partial PCI failure, or start it despite failed MSI acquire. */
+	for (unsigned int fault=0;fault<2;fault++) {
+		initialize_case(fault ? PME_NONE : SCAN_PARTIAL_FAIL,true);msi_mock.requested=dart_mock.requested=true;
+		dev=(struct device){.of_node=&msi_mock.node};dart_mock.provider.dev.parent=&dev;
+		state=(struct n71_diagnostic){.ecam=mock.ecam,.port=mock.port};msi_mock.missing_parent=fault;
+		assert(n71_pcie_scan_hold_iommu(&dev,&state,&dart_mock.provider)==(fault ? -ENODEV : -ENOMEM));
+		if (!fault) {
+			assert(state.scan_bridge && mock.removes==1 && dart_mock.available && !dart_mock.mapped);
+			dart_fixture_stop();assert(n71_pcie_scan_cleanup(&state)==0);
+		} else assert(!dart_mock.prepares && !mock.scans);
+		assert(!state.scan_bridge && !mock.allocations && !dart_mock.owner);
+		free(mock.ecam);cases++;
+	}
+	return cases;
+}
+
 int main(void)
 {
 	const int expected[] = {0, -EPERM, -EPERM, -ENOMEM, -ENODEV, -EACCES,
@@ -825,5 +945,7 @@ int main(void)
 	puts("N71_PCIE_MSI_SCAN_OK cases=14; inherited domains synthetic");
 	assert(exercise_consumer_removal() == 7);
 	puts("N71_PCIE_CONSUMER_REMOVAL_OK cases=7; host retained between phases");
+	assert(exercise_dart_scan()==31);
+	puts("N71_PCIE_DART_SCAN_OK cases=31; core association modeled, no physical DMA");
 	return 0;
 }

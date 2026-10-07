@@ -50,6 +50,7 @@ class N71PcieScanHost(unittest.TestCase):
         self.assertIn('N71_PCIE_RESOURCE_ASSIGN_OK cases=20', result.stdout)
         self.assertIn('N71_PCIE_MSI_SCAN_OK cases=14', result.stdout)
         self.assertIn('N71_PCIE_CONSUMER_REMOVAL_OK cases=7', result.stdout)
+        self.assertIn('N71_PCIE_DART_SCAN_OK cases=31', result.stdout)
         print(result.stdout.strip(), flush=True)
 
     def test_lifecycle_mutations_die_by_assertion(self):
@@ -102,9 +103,9 @@ class N71PcieScanHost(unittest.TestCase):
              'error = false ? n71_pcie_scan_remove_consumers(state) : 0;'),
             ('forget-consumer-stop-error', 'host->held_stop_error = host->config.error ? host->config.error : host->io_error;',
              'host->held_stop_error = 0;'),
-            ('restore-in-consumer-phase', 'return n71_wlan_msi_host_release(&host->msi);',
+            ('restore-in-consumer-phase', 'return n71_dart_host_unmap(&host->dart);',
              'struct n71_scan_io early = {host, n71_scan_raw_read, n71_scan_raw_write};\n'
-             '\tn71_scan_restore(&early, &host->config);\n\treturn n71_wlan_msi_host_release(&host->msi);'),
+             '\tn71_scan_restore(&early, &host->config);\n\treturn n71_dart_host_unmap(&host->dart);'),
         )
         limits = resource.getrlimit(resource.RLIMIT_CORE)
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
@@ -126,8 +127,8 @@ class N71PcieScanHost(unittest.TestCase):
              'error, host->msi.associated);\n\t\tif (false)'),
             ('msi-without-held-bus', 'if (options->msi_parent && !hold_bus)', 'if (false)'),
             ('skip-parent-put', 'of_node_put(parent);', '(void)parent;'),
-            ('missing-pre-scan-opt-in', '.hold_bus = true, .msi_parent = true',
-             '.hold_bus = true, .msi_parent = false'),
+            ('missing-pre-scan-opt-in', '.hold_bus = true, .msi_parent = true};',
+             '.hold_bus = true, .msi_parent = false};'),
             ('msi-by-default', '.disable_pme = disable_pme, .hold_bus = hold_bus}',
              '.disable_pme = disable_pme, .hold_bus = hold_bus, .msi_parent = true}'),
             ('omit-bridge-inheritance', 'dev_get_msi_domain(&bridge->dev) != domain ||', 'false ||'),
@@ -137,8 +138,8 @@ class N71PcieScanHost(unittest.TestCase):
              'false || false ||'),
             ('omit-device-bus-inheritance', 'dev_get_msi_domain(&dev->bus->dev) != domain ||', 'false ||'),
             ('omit-device-inheritance', 'dev_get_msi_domain(&dev->dev) != domain)', 'false)'),
-            ('skip-msi-cleanup', 'return n71_wlan_msi_host_release(&host->msi);',
-             'return false ? n71_wlan_msi_host_release(&host->msi) : 0;'),
+            ('skip-msi-cleanup', 'error = n71_wlan_msi_host_release(&host->msi);',
+             'error = false ? n71_wlan_msi_host_release(&host->msi) : 0;'),
             ('ignore-msi-cleanup-error', 'error = n71_pcie_scan_remove_consumers(state);\n\tif (error)',
              'error = n71_pcie_scan_remove_consumers(state);\n\tif (false)'),
         )
@@ -151,6 +152,57 @@ class N71PcieScanHost(unittest.TestCase):
                     self.assertEqual(result.returncode, -6, 'Compilation/timeout is not a kill: ' + name + result.stderr)
                     self.assertIn('assert', result.stderr.lower(), name)
                     print('N71_MSI_SCAN_ASSERTION_KILL ' + name, flush=True)
+        finally:
+            resource.setrlimit(resource.RLIMIT_CORE, limits)
+
+    def test_dart_scan_mutations_die_by_assertion(self):
+        mutations = (
+            ('dart-without-held-msi', 'if (options->provider && (!hold_bus || !options->msi_parent))', 'if (false)'),
+            ('skip-dart-prepare', 'error = n71_dart_host_prepare(&host->dart, &request);',
+             'error = false ? n71_dart_host_prepare(&host->dart, &request) : 0;'),
+            ('ignore-dart-prepare-error', 'error, host->dart.available, host->dart.mapped);\n\t\tif (error)',
+             'error, host->dart.available, host->dart.mapped);\n\t\tif (false)'),
+            ('omit-provider-selection', '.msi_parent = true, .provider = provider,',
+             '.msi_parent = true, .provider = NULL,'),
+            ('accept-null-provider', 'if (!provider)\n\t\treturn -EINVAL;', 'if (false)\n\t\treturn -EINVAL;'),
+            ('skip-iommu-readback', 'error = n71_scan_report_iommu(host, dev);',
+             'error = false ? n71_scan_report_iommu(host, dev) : 0;'),
+            ('ignore-provider-availability', '!host->dart.available ||', 'false ||'),
+            ('ignore-map-state', '!host->dart.mapped ||', 'false ||'),
+            ('ignore-owner-identity', '!n71_dart_host_refs_valid(&host->dart) ||', 'false ||'),
+            ('ignore-fwspec-guards', '!spec || spec->iommu_fwnode != of_fwnode_handle(host->dart.provider_node) ||\n'
+             '\t    spec->flags || spec->num_ids != 1 || spec->ids[0] != 0 ||', '(false && spec) ||'),
+            ('foreign-provider-fwnode', 'spec->iommu_fwnode != of_fwnode_handle(host->dart.provider_node) ||', 'false ||'),
+            ('foreign-fwspec-flags', 'spec->flags ||', 'false ||'),
+            ('wrong-stream-count', 'spec->num_ids != 1 ||', 'false ||'),
+            ('wrong-stream-id', 'spec->ids[0] != 0 ||', 'false ||'),
+            ('ignore-domain-guards', '!domain || domain->type != IOMMU_DOMAIN_DMA ||\n'
+             '\t    (host->iommu_domain && host->iommu_domain != domain)', 'false'),
+            ('identity-domain-accepted', 'domain->type != IOMMU_DOMAIN_DMA ||', 'false ||'),
+            ('different-domains-accepted', '(host->iommu_domain && host->iommu_domain != domain)', 'false'),
+            ('lose-observed-domain', 'host->iommu_domain = domain;', 'host->iommu_domain = NULL;'),
+            ('lose-observed-count', 'host->iommu_devices++;', '(void)host;'),
+            ('accept-incomplete-readback', 'if (host->dart.bridge && host->iommu_devices != 2)', 'if (false)'),
+            ('retain-stale-domain', 'host->iommu_domain = NULL;', '(void)host;'),
+            ('retain-stale-count', 'host->iommu_devices = 0;', '(void)host;'),
+            ('skip-dart-unmap', 'return n71_dart_host_unmap(&host->dart);',
+             'return false ? n71_dart_host_unmap(&host->dart) : 0;'),
+            ('ignore-dart-unmap-error', 'return n71_dart_host_unmap(&host->dart);',
+             '(void)n71_dart_host_unmap(&host->dart);\n\treturn 0;'),
+            ('skip-dart-release', 'error = n71_dart_host_release(&host->dart);',
+             'error = false ? n71_dart_host_release(&host->dart) : 0;'),
+            ('ignore-dart-release-error', 'error = n71_dart_host_release(&host->dart);\n\tif (error)',
+             'error = n71_dart_host_release(&host->dart);\n\tif (false)'),
+        )
+        limits = resource.getrlimit(resource.RLIMIT_CORE)
+        resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
+        try:
+            for name, before, after in mutations:
+                with self.subTest(mutation=name):
+                    result = self.compile_and_run(mutation=(before, after))
+                    self.assertEqual(result.returncode, -6, 'Compilation/timeout is not a kill: ' + name + result.stderr)
+                    self.assertIn('assert', result.stderr.lower(), name)
+                    print('N71_DART_SCAN_ASSERTION_KILL ' + name, flush=True)
         finally:
             resource.setrlimit(resource.RLIMIT_CORE, limits)
 
