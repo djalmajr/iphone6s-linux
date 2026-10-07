@@ -6,6 +6,8 @@ A candidata15617e32 passou no hardware: atribuição error0/assigned1,17 tentati
 
 Root MEM7c0000000..7c04fffff; BAR0 7c0400000..7c0407fff/BAR2 7c0000000..7c03fffff. Decode/master/driver/radio permaneceram desligados. IRQ255/0, links IOMMU/of_node/driver ausentes e power_supply0 não comprovam IRQ/DMA/Wi-Fi/carga. Issue39 conclui host retido/atribuição/rollback; próxima fatia trata associação IRQ/IOMMU na [issue40](https://github.com/djalmajr/iphone6s-linux/issues/40), para Wi-Fi (#9). [Plano inicial](../.agents/plans/n71-irq-iommu-bindings.md), [auditoria de fontes](N71_IRQ_IOMMU.md). Alimentação/gauge continuam na #2.
 
+Auditoria2026-10-07 UTC recuperou pin1/MSI64 do log físico anterior, sem novo boot. ADT/driver N71: MSI32/offset256/porta1/base8/count8, registro parent AIC264..271; Linux usa células3/hwirq próprio. Próxima fatia qualifica somente o cálculo de requisição `<0, 264 + índice, 1>`, sem IRQ/domain/MMIO/message data. Codificação MSI, restore/ownership e provider DART retido permanecem abertos. [Referência e limites](evidence/n71-irq-iommu-reference.json), [reprodução](N71_IRQ_IOMMU.md#msi-n71-e-capacidade-física-recuperada--2026-10-07-utc). Telefone no iOS durante a preparação; carga/gauge Linux não comprovados.
+
 ### Qualificação offline da candidata física
 
 

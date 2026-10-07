@@ -1,0 +1,132 @@
+{
+  "format": 1,
+  "board": "N71/S8000",
+  "date_utc": "2026-10-07",
+  "proof_scope": "Static Apple N71 MSI/AIC topology plus reused same-boot endpoint capability observation; no IRQ allocation, delivery or DMA proof",
+  "apple_adt_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+  "apple_kernel_sha256": "0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a",
+  "linux_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "apple_api_source_commit": "4822b27a36e2de70e231ecf2bf3021384fab6ec2",
+  "apple_msi": {
+    "parent_phandle": 22,
+    "aic_apple_cells": 1,
+    "first_aic_vector": 256,
+    "total_vectors": 32,
+    "message_address": "0xbffff000",
+    "port": 1,
+    "port_vector_base": 8,
+    "port_vectors": 8,
+    "registration_aic_numbers": [
+      264,
+      265,
+      266,
+      267,
+      268,
+      269,
+      270,
+      271
+    ],
+    "message_data_encoding_qualified": false
+  },
+  "linux_aic": {
+    "fwspec_cells": 3,
+    "external_irq_type_cell": 0,
+    "msi_trigger_cell": 1,
+    "trigger": "edge rising",
+    "virtual_irq_equals_aic_number": false,
+    "internal_hwirq_encoding_equals_aic_number": false,
+    "source_sha256": "d52ff497371f81b94af730792c9ea9fb2bf24d99cf7df6e8985351dd331c2287"
+  },
+  "dart": {
+    "provider": "/soc/iommu@602008000",
+    "irq_aic_number": 248,
+    "reference_sid": 0,
+    "pci_requester_id": "0x0100",
+    "max_streams_in_linux_s5l_variant": 4,
+    "bypass_supported": false,
+    "retained_provider_implemented": false,
+    "pci_dma_attachment_verified": false
+  },
+  "physical_endpoint_observation": {
+    "code_commit": "5d854060b5f1420cc58508b62d01ee7e4af78997",
+    "source_log_sha256": "972aa5cb32673e2789e94075aa92aa626de9afdc11e78cc5c0b272548044af87",
+    "inventory_error": 0,
+    "interrupt_register": "00000100",
+    "interrupt_line": 0,
+    "interrupt_pin": 1,
+    "msi_capability_offset": "0x58",
+    "msi_header": "00886805",
+    "msi_enabled": false,
+    "msi_64_bit_address": true,
+    "msi_max_vectors": 16,
+    "msix_present": false,
+    "new_boot_required": false
+  },
+  "source_windows": [
+    {
+      "name": "msi_controller_registration_offset",
+      "address": "0xfffffff005f7f6c0",
+      "bytes": 28,
+      "file_offset": 21280448,
+      "sha256": "893bfd1c12d26689ab54ff00ea6d26f084a1079886459e14fab9ca5a31a43096"
+    },
+    {
+      "name": "root_msi_offset_property",
+      "address": "0xfffffff005f80d48",
+      "bytes": 28,
+      "file_offset": 21286216,
+      "sha256": "cb77488b5a0ff9ac7009e572e2c4bcc168648110c8c387d3e4bc1a14a90995e7"
+    },
+    {
+      "name": "port_msi_base_property",
+      "address": "0xfffffff005f83fa4",
+      "bytes": 24,
+      "file_offset": 21299108,
+      "sha256": "e70aed47944c9cf52ae58cc9e89d1593b7bbff3a5da3bef119f156c67c73d74c"
+    },
+    {
+      "name": "port_msi_register_setting",
+      "address": "0xfffffff005f8bc4c",
+      "bytes": 60,
+      "file_offset": 21331020,
+      "sha256": "3ae476ad3b0f7e091033d97d7efd4e9b339e74c3cdb90a4d8666bf04592c7503"
+    },
+    {
+      "name": "port_interrupt_status_read",
+      "address": "0xfffffff005f8c004",
+      "bytes": 16,
+      "file_offset": 21331972,
+      "sha256": "d72758b73cad5e486703c86a614c17e3c084aa45797b2cdf41e63287789a8e70"
+    },
+    {
+      "name": "port_interrupt_status_write",
+      "address": "0xfffffff005f8bbb8",
+      "bytes": 20,
+      "file_offset": 21330872,
+      "sha256": "28b09550edb6b9a63773346c2794239665326e738f0e238de2a2f5d88ff64090"
+    },
+    {
+      "name": "port_interrupt_mask",
+      "address": "0xfffffff005f8bf20",
+      "bytes": 24,
+      "file_offset": 21331744,
+      "sha256": "cd24da177209db816cc78e2835999cc045a07a103c17a15b26d175bac2eae9fb"
+    }
+  ],
+  "port_register_reference": {
+    "interrupt_status_offset": "0x100",
+    "interrupt_mask_offset": "0x104",
+    "msi_config_offset": "0x124",
+    "msi_base_offset": "0x128",
+    "safe_read_side_effects_qualified": false,
+    "complete_restore_contract_qualified": false
+  },
+  "limits": {
+    "native_irq_delivery": false,
+    "native_wifi": false,
+    "linux_charge_or_gauge": false,
+    "hardware_modified_in_audit": false,
+    "firmware_executed": false,
+    "raw_firmware_dt_or_logs_published": false
+  }
+}

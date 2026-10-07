@@ -20,6 +20,7 @@
 - `scripts/build/prepare-n71-topology.py:124`: topologia atual declara PCIeIRQ244/247/250/253 e DART248; isso não identifica por si só semântica INTx/MSI/port status.
 - Fonte fixada958481f na VM: `drivers/pci/probe.c:685–727` (alloc vs devm/OF), `drivers/pci/of.c:638–649` (swizzle/map_irq), `drivers/pci/irq.c:142–175` (assign), `drivers/pci/pci-driver.c:1668–1700` (DMA), driver Apple e brcmfmac PCIe, bindings e DTS.
 - Reutilizar [módulos Wi-Fi](../../docs/evidence/n71-wifi-binding-modules.json), [seleção de firmware](../../docs/evidence/n71-firmware-selection.json) e perfis anteriores; não repetir builds com inputs relevantes intactos. Firmware/calibração e DT bruto ficam privados.
+- F1a: `phone/kernel/n71-wlan-irq-reference.h`, `tests/n71_wlan_irq_reference.c`, `tests/test_n71_wlan_irq_reference.py`. Validar topologia N71 e produzir somente índice lógico/número AIC/células Linux; sem alocar IRQ/domain nem produzir message data.
 
 ## Detalhes e fases
 
@@ -35,7 +36,9 @@ F3 hardware: um boot com todas as coletas/estágios preparados; SSH/Bash/Herdr/H
 
 - [x] Criar issue40 com critérios e dependências.
 - [x] Confirmar na fonte fixada os hooks de alloc/OF/IRQ/DMA e ler o lifecycle do provider existente.
+- [x] Recuperar pin1/MSI64/capability física do log já salvo, sem novo boot; fixar ADT32/offset256/porta1/base8/count8, registro AIC264..271 e células Linux.
 - [ ] F0: fechar a identificação de INTx/MSI/cells/streams e as provas ainda necessárias; guardar hashes/recortes privados e relatório sanitizado.
+- [ ] F1a: qualificar o cálculo de requisição AIC isolado no Mac/Ubuntu e contexto kernel, sem integração física.
 - [ ] F1: definir e implementar a candidata em fatias qualificadas.
 - [ ] F2: build/seleção/composição/check e reprodução.
 - [ ] F3: comprovar no hardware associações/IRQ e teardown, antes de rádio funcional.
@@ -47,3 +50,12 @@ Nenhuma modificação de firmware/NAND, credenciais de rede, pacote/configuraç�
 ## Auditoria inicial salva
 
 [Fatos e fontes fixadas](../../docs/N71_IRQ_IOMMU.md). Confirmados alloc simples vs devm/OF, map_irq, DMA configure pelo parent, enable/MASTER/IRQ no brcmfmac e provider DART temporário. Sem carregar driver ou alterar hardware. Fechar semântica INTx/MSI e mapping N71 continua pendente antes de código.
+
+## D2. Preparar MSI e qualificar primeiro somente as células do parent AIC
+
+- **Decisão:** caminho MSI para o WLAN; primeira fatia F1a valida32/offset256/porta1/base8/count8 e calcula `<0, 264 + índice, 1>`, índice0..7. Não declara message data ou virq como equivalentes ao número AIC. F0 e a integração ativa continuam abertas até fechar esses contratos.
+- **Por quê:** capacidade MSI já medida; registro Apple do parent soma offset256 ao vetor lógico. Linux usa células e hwirq distintos do ADT Apple. Esse cálculo pode ser verificado offline sem outro DFU, independente das escritas do controlador.
+- **Alternativas:** INTx exige rota ainda não comprovada; copiar domínio/offsets M1 para S8000 presume equivalência; registrar driver agora mistura MASTER/DMA/firmware. Rejeitadas nesta etapa.
+- **Reverter:** baixo; helper isolado, sem caller/autoload ou alteração do perfil.
+- **Onde:** arquivos F1a acima; [referência sanitizada](../../docs/evidence/n71-irq-iommu-reference.json), sete recortes por digest. Doc/status/referência/plano compõem a fase de auditoria, quatro arquivos públicos.
+- **Status:** referência preparada, qualificação F1a seguinte. Message data, ownership/restore MSI e provider DART retido permanecem pendentes; nenhuma integração de hardware por esta decisão.
