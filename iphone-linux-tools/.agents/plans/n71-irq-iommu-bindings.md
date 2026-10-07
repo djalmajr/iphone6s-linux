@@ -141,10 +141,10 @@ No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo ca
 
 ### Contratos F1h planejados
 
-- [ ] Allocation count1/2/4/8 alinhada; recusar conflito/owner/tipo/cells/chip, nunca reutilizar/dispose mapping alheio. Bitmap/parent rollback observado em falhas; preserve grants vivos em outras regiões.
-- [ ] O core fixado libera cada vetor com count1 mesmo após alloc multi-MSI; não usar free de região arredondada. Free observa/reset/free-parent por vetor. Release recusa bitmap/mapcount e domínio filho ainda registrado; MSI disabled não remove o filho. Não declarar free sem MMIO ou máscara física lida.
-- [ ] Compose usa o helper de referência, recusando valores fora da porta; fixture executa callbacks nativos, kernel module ABI/modpost passa com exports explícitos.
-- [ ] Integrar ao PCI/caller apenas em fatia posterior com owners/pins/cleanup e guards DMA. Perfil/collector e sessão física continuam depois dos gates de máscara/attachment; sem novo boot para esta fase offline.
+- [x] Allocation count1/2/4/8 alinhada; recusa conflito/owner/cells/chip. Todas as256 combinações de bitmap por quatro tamanhos foram verificadas, com preservação de outros grants. Falhas parciais de parent/set-leaf e retry passaram.
+- [x] Free por vetor conforme o core fixado, reset/free-parent e proteção de identidade/grant comprovados nas fixtures. Release recusa bitmap/mapcount e filho registrado mesmo sem IRQs. Não declara readback físico ou free sem MMIO.
+- [x] Compose usa o helper e recusa domínio/grant/índice inválidos. Mac e ARM64 passaram1132 cenários e45 mutações compiladas por assertion cada; AST/lint fatal Mac e AST ARM64. ProbeABI W=1/Werror/modpost/ELF/vermagic passou, seis inputs idênticos e kernel/exports preservados; não carregado.
+- [x] F1h permanece isolada: sem associação PCI, caller, perfil ou autoload. A integração F1i, collector e hardware continuam pendentes depois dos gates de máscara/attachment; nenhum novo boot nesta qualificação.
 
 ### D7: precondições de lifetime antes do código
 
