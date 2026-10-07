@@ -1,0 +1,149 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T09:38:48.104892+00:00",
+  "code_commit": "482aadf741fec57dfa5bf035c8da92bb184bf20e",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "scope": "Private real profile composition, unique disabled DART reference and local --check. No phone execution covered.",
+  "python_typechecker": "not configured",
+  "fatal_flake8_exit": 0,
+  "hardware_claims": {
+    "physical_boot_verified": false,
+    "irq_delivery_verified": false,
+    "dma_translation_verified": false,
+    "wifi_verified": false,
+    "linux_gauge_or_charging_verified": false
+  },
+  "private_data_published": false,
+  "main_merged": false,
+  "qualification": {
+    "macos": {
+      "reports": [
+        {
+          "pattern": "test_n71_iommu_profile.py",
+          "exit": 0,
+          "tests": 8,
+          "mutation_kills": 21,
+          "elapsed_s": 15.841
+        },
+        {
+          "pattern": "test_n71_diagnostic_payload.py",
+          "exit": 0,
+          "tests": 7,
+          "mutation_kills": 0,
+          "elapsed_s": 0.252
+        },
+        {
+          "pattern": "test_n71_diagnostic_held_profile.py",
+          "exit": 0,
+          "tests": 11,
+          "mutation_kills": 3,
+          "elapsed_s": 0.832
+        },
+        {
+          "pattern": "test_n71_diagnostic_optional_profile.py",
+          "exit": 0,
+          "tests": 1,
+          "mutation_kills": 0,
+          "elapsed_s": 0.217
+        },
+        {
+          "pattern": "test_n71_diagnostic_io16_profile.py",
+          "exit": 0,
+          "tests": 1,
+          "mutation_kills": 0,
+          "elapsed_s": 0.164
+        },
+        {
+          "pattern": "test_n71_diagnostic_pref64_profile.py",
+          "exit": 0,
+          "tests": 2,
+          "mutation_kills": 0,
+          "elapsed_s": 0.229
+        }
+      ],
+      "tests": 30,
+      "compiled_assertion_mutations": 24,
+      "exit": 0,
+      "ast_exit": 0,
+      "public_inputs_unchanged_during_gates": true
+    },
+    "ubuntu_arm64": {
+      "reports": [
+        {
+          "pattern": "test_n71_iommu_profile.py",
+          "exit": 0,
+          "tests": 8,
+          "mutation_kills": 21,
+          "elapsed_s": 10.757
+        },
+        {
+          "pattern": "test_n71_diagnostic_payload.py",
+          "exit": 0,
+          "tests": 7,
+          "mutation_kills": 0,
+          "elapsed_s": 0.122
+        },
+        {
+          "pattern": "test_n71_diagnostic_held_profile.py",
+          "exit": 0,
+          "tests": 11,
+          "mutation_kills": 3,
+          "elapsed_s": 0.487
+        },
+        {
+          "pattern": "test_n71_diagnostic_optional_profile.py",
+          "exit": 0,
+          "tests": 1,
+          "mutation_kills": 0,
+          "elapsed_s": 0.17
+        },
+        {
+          "pattern": "test_n71_diagnostic_io16_profile.py",
+          "exit": 0,
+          "tests": 1,
+          "mutation_kills": 0,
+          "elapsed_s": 0.105
+        },
+        {
+          "pattern": "test_n71_diagnostic_pref64_profile.py",
+          "exit": 0,
+          "tests": 2,
+          "mutation_kills": 0,
+          "elapsed_s": 0.166
+        }
+      ],
+      "tests": 30,
+      "compiled_assertion_mutations": 24,
+      "exit": 0,
+      "ast_exit": 0,
+      "public_inputs_unchanged_during_gates": true
+    }
+  },
+  "inputs_sha256": {
+    "scripts/build/compose-n71-diagnostic.py": "c797d15a64348456803095050586c59c94e54ec70c13fa57531843b0c2599576",
+    "tests/test_n71_iommu_profile.py": "c52f62e6438e17073f0c4d3575f99182d43c79e79d137f488da475d8cc243e3d"
+  },
+  "private_profile": {
+    "composed": true,
+    "local_check_exit": 0,
+    "file_count": 8,
+    "directory_mode": "0700",
+    "file_modes": "0600",
+    "dart_phandle": 45,
+    "dart_disabled": true,
+    "only_dtb_property_added": "phandle on DART",
+    "old_staged_provider_references_preserved": true,
+    "permanent_iommu_map_added": false,
+    "same_loader_bootargs_image_initramfs": true,
+    "same_client_key_host_pin_and_reg_on": true,
+    "deployment_diff_only_payload_hash": true,
+    "previous_profile_preserved": true,
+    "snapshot_verified_entries": 44,
+    "module_sha256": "46dfdfda600ad1bfa21606a7a758f7764b899c38959ba877fca819571e49106f",
+    "module_bytes": 114008,
+    "native_inputs_unchanged": 84,
+    "default_profile_changed": false
+  },
+  "regression": "The first real composition was correctly refused for duplicate phandle41: staging already uses41-44. Reservation now considers all preserved diagnostic providers and chooses45; synthetic collision case and four new compiled assertion mutants cover it.",
+  "next_gate": "One grouped physical boot: acquire, resume check, resource assignment, read-only PCI/power inventory, verified cleanup, services, snapshot/sync and iOS return."
+}

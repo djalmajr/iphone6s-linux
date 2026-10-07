@@ -534,3 +534,59 @@ python3 -B -m unittest discover -s tests -p test_n71_link_session.py
 ```
 
 ABI D18 foi reutilizada com84 inputs relevantes por SHA intactos, incluindo os C/headers e gates PCI anteriores; nenhum rebuild de módulo/kernel/Image, load, boot ou DFU. Arquivos desta fase: plano, collector e teste; documentação/prova separadas. Sem banco, pacote, instalação/configuração global do Mac; custo adicional de parsing de dois registros e armazenamento do pequeno resumo, sem desempenho físico medido. Próximo: selector/flags/composer ligam ABI e premissas à Image power2 exata num perfil privado separado, conservando modos anteriores, rollback, SSH/Bash/Herdr/HTTP, snapshot e orçamento de energia. Wi-Fi#9, energia#2, issue40 e goal continuam abertos.
+
+## D20 — seleção, Image e candidata privada
+
+A implementação foi dividida em três fatias: [53a9789](https://github.com/djalmajr/iphone6s-linux/commit/53a9789) centraliza a qualificação e confere Image; [eeb6a50](https://github.com/djalmajr/iphone6s-linux/commit/eeb6a50) integra os selectors/flags/coordinator; [482aadf](https://github.com/djalmajr/iphone6s-linux/commit/482aadf) completa a referência exclusiva do DART. [Decisões D20](../.agents/plans/n71-irq-iommu-bindings.md#d20-integrar-seleção-e-composição-do-perfil-iommu).
+
+`n71_iommu_build.py` conserva a autoridade D18 de fonte/patch/exports/ABI e liga config/Image/vmlinux.symvers ao registro de build power2. Exige SHA/bytes de Image.gz, um único stream gzip completo com limite128MiB e SHA/bytes da Image descomprimida. No collector, o prefixo loader/ASPM é conferido primeiro; o FDT enquadrado e o initramfs protegido delimitam a faixa comprimida, que passa pelo mesmo helper. Mudança de kernel, streams concatenados, tamanho/tipo errado ou sufixo alterado são recusados antes de SSH. [Prova Image](evidence/n71-iommu-image-qualification.json).
+
+`--pcie-iommu-parent` exige held/resources/ASPM-off/power2/REG_ON. `--iommu-parent` exige metadata booleano exatamente correspondente, o módulo D18 explícito e a Image exata. Os nove headers de atribuição precisam conservar seus hashes entre o build PREF64-unsized, D18 e a árvore atual; readback/optional/IO16/PREF64 são herdados do seletor anterior. Somente o registro PCIe muda; REG_ON e modos antigos são preservados. A seleção é passada aos caminhos run/check/resume/release do Session. O teste integrado usa o coordinator/journal reais e um backend físico modelado; acquire/check/release executam uma enumeração. Isso não comprova associação no hardware. [Prova de integração](evidence/n71-iommu-profile-qualification.json).
+
+A composição real revelou ausência do phandle DART no DTB diagnóstico antigo. Reservar o próximo valor apenas do baseline colidiria com41, já usado por um provider acrescentado no staging. O composer valida o DTB completo existente, reserva45 depois das referências41–44 e adiciona somente `phandle` ao DART desativado. Revalida todos os nós/propriedades, sem mapa IOMMU permanente nem mudança dos providers antigos. D12, que compila a topologia com o pin reservado antecipadamente, conserva sua semântica. Um caso sintético reproduz essa colisão; o primeiro smoke recusado não conta como sucesso. [Prova de composição](evidence/n71-iommu-private-profile.json).
+
+### Reprodução da preparação
+
+Os artefatos privados vêm da build D18 e dos perfis já verificados. Defina `TASK_SOURCE_PROFILE`, `TASK_KERNEL_DIR`, `TASK_DIAGNOSTIC_DIR`, `TASK_PCIE_MODULE`, `TASK_REG_ON_MODULE` e `TASK_IOMMU_PROFILE_DIR` para esses caminhos. O output deve ser um diretório novo diretamente sob runtime; nunca sobrescreva a candidata anterior. Execute a partir da pasta iphone-linux-tools:
+
+```sh
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile "$TASK_SOURCE_PROFILE" \
+  --kernel-dir "$TASK_KERNEL_DIR" \
+  --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir "$TASK_DIAGNOSTIC_DIR" \
+  --module "$TASK_PCIE_MODULE" \
+  --module-sha256 46dfdfda600ad1bfa21606a7a758f7764b899c38959ba877fca819571e49106f \
+  --reg-on-module "$TASK_REG_ON_MODULE" \
+  --output-dir "$TASK_IOMMU_PROFILE_DIR" \
+  --pcie-aspm-off --pcie-scan-hold --pcie-resource-capable --pcie-iommu-parent
+python3 -B scripts/host/n71-link-session.py \
+  --profile "$TASK_IOMMU_PROFILE_DIR/deployment.json" \
+  --host-scan --scan-link-target --scan-pme-disable --scan-hold \
+  --resource-capable --iommu-parent --check
+```
+
+Ambos os comandos são locais: não iniciam USB/SSH, carregam módulo ou dão boot. A composição real conferiu oito arquivos700/600, igualdade de initramfs/chaves/REG_ON e de todo o payload fora da única propriedade DART; deployment difere somente no hash do payload. O snapshot preservado tem44 entradas. Os84 inputs relevantes da ABI D18 permaneceram idênticos, sem reconstrução de Image/módulo. Payload/DTB, chaves, identificadores, snapshots e logs ficam privados.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_iommu_build.py
+python3 -B -m unittest discover -s tests -p test_n71_iommu_profile.py
+python3 -B -m unittest discover -s tests -p test_n71_diagnostic_payload.py
+python3 -B -m unittest discover -s tests -p test_n71_diagnostic_held_profile.py
+```
+
+Mac e Ubuntu ARM64: D20a107 testes/122 mutações; D20b125/130, seis gates intactos reutilizados após a correção de um selector legado; D20c30/24, novo perfil8/21. Escopos sobrepostos não são somados. Mutants contados compilaram e falharam por AssertionError, sem import/ERROR/timeout. AST e lint fatal passaram; não há typechecker Python. A fase de integração teve cinco públicos, composição três, documentação separada. Sem dependência/pacote/banco/configuração global do Mac; desempenho físico não medido.
+
+### Sessão física agrupada preparada
+
+```mermaid
+flowchart LR
+    A["DFU manual uma vez"] --> B["Linux e restore"]
+    B --> C["MSI/DART e PCI retidos"]
+    C --> D["Recursos e inventário"]
+    D --> E["Cleanup verificado"]
+    E --> F["Serviços, snapshot e sync"]
+    F --> G["Retorno ao iOS"]
+```
+
+O monitor aguarda a ação manual. A sessão preparada reúne associação, resume/check sem segundo scan, atribuição, inventário PCI e energia, cleanup, SSH/Bash/Herdr/HTTP e snapshot/sync/retorno iOS. Erro de cleanup conserva owners e bloqueia reboot automático; os logs privados indicam a etapa a recuperar. Não habilitar driver/MASTER/rádio nesta candidata. Percentual/estado de carga lidos no iOS delimitam a sessão, sem comprovar saúde ou carregamento no Linux. Nenhuma prova física nova está incluída nesta documentação de preparação; issue40, Wi-Fi#9, energia#2 e o goal permanecem abertos.

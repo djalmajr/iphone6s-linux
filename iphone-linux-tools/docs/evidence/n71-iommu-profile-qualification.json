@@ -1,0 +1,264 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T09:38:48.104892+00:00",
+  "code_commit": "eeb6a5039a2dc4372a0ef8967527ca75c505b835",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "scope": "Explicit IOMMU selector/composer/CLI integration and modeled same-boot acquire/check/release through the real journal.",
+  "python_typechecker": "not configured",
+  "fatal_flake8_exit": 0,
+  "hardware_claims": {
+    "physical_boot_verified": false,
+    "irq_delivery_verified": false,
+    "dma_translation_verified": false,
+    "wifi_verified": false,
+    "linux_gauge_or_charging_verified": false
+  },
+  "private_data_published": false,
+  "main_merged": false,
+  "qualification": {
+    "macos": {
+      "reports": [
+        {
+          "pattern": "test_n71_resource_build.py",
+          "exit": 0,
+          "tests": 5,
+          "mutation_kills": 9,
+          "elapsed_s": 1.399,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_resource_result.py",
+          "exit": 0,
+          "tests": 9,
+          "mutation_kills": 29,
+          "elapsed_s": 7.533,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_optional_build.py",
+          "exit": 0,
+          "tests": 5,
+          "mutation_kills": 7,
+          "elapsed_s": 1.309,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_io16_build.py",
+          "exit": 0,
+          "tests": 6,
+          "mutation_kills": 9,
+          "elapsed_s": 1.814,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_pref64_build.py",
+          "exit": 0,
+          "tests": 7,
+          "mutation_kills": 8,
+          "elapsed_s": 2.301,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_pref64_unsized_build.py",
+          "exit": 0,
+          "tests": 9,
+          "mutation_kills": 6,
+          "elapsed_s": 2.182,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_diagnostic_held_profile.py",
+          "exit": 0,
+          "tests": 11,
+          "mutation_kills": 3,
+          "elapsed_s": 0.797,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_iommu_profile.py",
+          "exit": 0,
+          "tests": 7,
+          "mutation_kills": 17,
+          "elapsed_s": 11.158,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_diagnostic_optional_profile.py",
+          "exit": 0,
+          "tests": 1,
+          "mutation_kills": 0,
+          "elapsed_s": 0.147,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_diagnostic_io16_profile.py",
+          "exit": 0,
+          "tests": 1,
+          "mutation_kills": 0,
+          "elapsed_s": 0.17,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_diagnostic_pref64_profile.py",
+          "exit": 0,
+          "tests": 2,
+          "mutation_kills": 0,
+          "elapsed_s": 0.219,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_link_session.py",
+          "exit": 0,
+          "tests": 45,
+          "mutation_kills": 0,
+          "elapsed_s": 0.283,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_iommu_result.py",
+          "exit": 0,
+          "tests": 17,
+          "mutation_kills": 42,
+          "elapsed_s": 14.396,
+          "reused": false
+        }
+      ],
+      "tests": 125,
+      "compiled_assertion_mutations": 130,
+      "exit": 0,
+      "ast_exit": 0,
+      "public_inputs_unchanged_during_gates": true
+    },
+    "ubuntu_arm64": {
+      "reports": [
+        {
+          "pattern": "test_n71_resource_build.py",
+          "exit": 0,
+          "tests": 5,
+          "mutation_kills": 9,
+          "elapsed_s": 1.054,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_resource_result.py",
+          "exit": 0,
+          "tests": 9,
+          "mutation_kills": 29,
+          "elapsed_s": 7.12,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_optional_build.py",
+          "exit": 0,
+          "tests": 5,
+          "mutation_kills": 7,
+          "elapsed_s": 0.836,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_io16_build.py",
+          "exit": 0,
+          "tests": 6,
+          "mutation_kills": 9,
+          "elapsed_s": 1.286,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_pref64_build.py",
+          "exit": 0,
+          "tests": 7,
+          "mutation_kills": 8,
+          "elapsed_s": 1.522,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_pref64_unsized_build.py",
+          "exit": 0,
+          "tests": 9,
+          "mutation_kills": 6,
+          "elapsed_s": 1.548,
+          "reused": true
+        },
+        {
+          "pattern": "test_n71_diagnostic_held_profile.py",
+          "exit": 0,
+          "tests": 11,
+          "mutation_kills": 3,
+          "elapsed_s": 0.483,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_iommu_profile.py",
+          "exit": 0,
+          "tests": 7,
+          "mutation_kills": 17,
+          "elapsed_s": 10.717,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_diagnostic_optional_profile.py",
+          "exit": 0,
+          "tests": 1,
+          "mutation_kills": 0,
+          "elapsed_s": 0.1,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_diagnostic_io16_profile.py",
+          "exit": 0,
+          "tests": 1,
+          "mutation_kills": 0,
+          "elapsed_s": 0.105,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_diagnostic_pref64_profile.py",
+          "exit": 0,
+          "tests": 2,
+          "mutation_kills": 0,
+          "elapsed_s": 0.171,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_link_session.py",
+          "exit": 0,
+          "tests": 45,
+          "mutation_kills": 0,
+          "elapsed_s": 0.207,
+          "reused": false
+        },
+        {
+          "pattern": "test_n71_iommu_result.py",
+          "exit": 0,
+          "tests": 17,
+          "mutation_kills": 42,
+          "elapsed_s": 15.636,
+          "reused": false
+        }
+      ],
+      "tests": 125,
+      "compiled_assertion_mutations": 130,
+      "exit": 0,
+      "ast_exit": 0,
+      "public_inputs_unchanged_during_gates": true
+    }
+  },
+  "inputs_sha256": {
+    "scripts/host/n71_resource_build.py": "6066fad1b2679c39a480d527f713635ab7834b241febccdf5b5ed4202bade3f5",
+    "scripts/host/n71_resource_result.py": "a398821e555b5186620a5862c57030737ba7be8019e2dee5c0859e55f0dbf921",
+    "scripts/host/n71-link-session.py": "6ef7b5da6a5953660a44fb53a31e5333f269c3469102501388b5f2a5d2288dc9",
+    "scripts/build/compose-n71-diagnostic.py": "c4a9cc01421628626a7cead991d412f5393c3a6d9f1a878e23db92ae0125d94c",
+    "tests/test_n71_iommu_profile.py": "f1e6cd5255a72338725c849d4c87ea97d44410156133e6c2e8383470d279f8c9"
+  },
+  "contracts": {
+    "exact_bool_cli_profile_match": true,
+    "exact_image_and_module_before_ssh": true,
+    "unchanged_nine_assignment_policies": true,
+    "legacy_resource_reports_inherited": true,
+    "reg_on_preserved": true,
+    "modeled_one_scan_acquire_check_release": true,
+    "legacy_defaults_preserved": true
+  },
+  "verification_reuse": "Six unchanged build/result gates reused; corrected legacy selector test and seven affected/remaining gates ran. Only link-session differed between the initial and final manifest.",
+  "limitations": "This phase did not qualify a usable physical DTB. D20c supplies the missing exclusive DART reference."
+}
