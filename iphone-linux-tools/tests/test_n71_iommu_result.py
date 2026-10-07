@@ -314,6 +314,8 @@ class IommuMutationTests(unittest.TestCase):
             'pre-scan-resources': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "== dict.fromkeys(n71_resource_stage.n71_resource_result.FIELDS, 0) | {'error': primary}", "!= {}"),
             'pre-scan-error': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'int(acquired.group(1)) == primary', 'True'),
             'pre-scan-order': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "text.index('N71_DART_CYCLE_RELEASED ') < reset.start() < power.start() < finished[-1].start()", 'True'),
+            'unattempted-restore-index': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "'16' if pending else '0'", "'16'"),
+            'proof-tier': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "'wifi_verified': False", "'wifi_verified': True"),
         }
         with tempfile.TemporaryDirectory(prefix='n71-iommu-mutations-') as directory:
             for name, (filename, variable, before, after) in variants.items():

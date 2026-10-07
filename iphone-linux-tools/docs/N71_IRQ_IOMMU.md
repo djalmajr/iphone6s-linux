@@ -456,3 +456,33 @@ Build exato, sem wrapper privado: W=1/Werror/modpost/ELF64 AArch64/vermagic powe
 [CI do parent e8307e9](https://github.com/djalmajr/iphone6s-linux/actions/runs/37582690113) passou os três jobs em2026-10-07T06:50:49Z. Essa CI comprova a publicação D14/D15; D16 exige sua própria CI após publicação.
 
 Arquivos desta fase: plano, caller, C/runner do caller e fixture isolada de cleanup; doc/prova separadas. Mudança de API opt-in sem quebrar modos antigos. Sem pacote/dependência/banco, instalação/configuração global no Mac, novo boot/DFU ou load. Custo: provider retido durante o scan e leitura de estado sob mutex; desempenho físico não medido. Próximo: collector/perfil e contrato de aliases/máscaras, depois sessão física agrupada com orçamento de energia. Wi-Fi#9, energia#2, issue40 e goal permanecem abertos.
+
+## D17 — coleta MSI/IOMMU e journal na mesma sessão
+
+Código9c3c177, [coletor](../scripts/host/n71_iommu_result.py), [prova sanitizada](evidence/n71-iommu-collector-qualification.json). A API interna Session aceita iommu_parent bool default false, somente com held/resource-capable/power2 e bytes/hash/vermagic exatos da ABI D16 qualificada sem wrapper. Adiciona msi_parent=1/iommu_parent=1 ao único insmod e coleta getters/parâmetros imutáveis. Nenhuma opção CLI, perfil ou autoload físico seleciona a rota nesta fase.
+
+Coleta exige requested/ready/held/erro coerentes entre MSI/IOMMU/caller, flags imutáveis Y e ownership/counts completos. Provider bound/acquired deve preceder os dois registros MSI/OF/core, cada um antes do respectivo root/endpoint PCI e antes da sessão retida. Root0:08 e endpoint1:00 são exatos; SID0 é somente o mapa OF e o domínio traduzido observado no core. O resumo mantém IRQ delivery, DMA translation, Wi-Fi e energia como false.
+
+Journal salva modo e resumo de associação. Retomada confere checkpoint, boot/hashes existentes, modo e estado antes de comandos. Resumo de cleanup salvo é reconstruído da prova, recusando promoção a readback físico. Antes de unload, exige ownership vazio e caller limpo; consumer removal precede provider release, que precede host restore. Helpers OF ainda não emitem readback físico independente de unmap/status: software_ownership_released não equivale a tradução ou readback físico.
+
+Falha do provider antes de scan distingue start não tentado/index0 de restore necessário/index16. Para caller bound com primary error negativo e sem scan, o contrato exige erro do provider correspondente, nenhuma atribuição, getter resources vazio, final caller/reset/power em ordem e provider release antes de reset. O helper desse caminho é testado diretamente; os fluxos completos do coordenador são positivos, captura inicial inválida, drift antes de efeitos, cleanup pendente e resumo salvo adulterado, com dependências de telefone sintéticas. Não atribuir prova física ou prova de todo caminho de erro a esses testes.
+
+### Gates e reprodução
+
+Mac e Ubuntu ARM64:95 testes unittest e83 mutações por plataforma, nos quatro gates: IOMMU13/27 (12 métodos funcionais e um gate de mutações), held21/30, resource-stage16/26 e link45/0. Fixtures executam o coordenador/caller Python reais; dependências SSH/telefone são modeladas. Fonte dos mutantes é compilada e executada; requer AssertionError, sem ERROR/import/timeout.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_iommu_result.py'
+python3 -B -m unittest discover -s tests -p 'test_n71_held_session.py'
+python3 -B -m unittest discover -s tests -p 'test_n71_resource_stage.py'
+python3 -B -m unittest discover -s tests -p 'test_n71_link_session.py'
+python3 -m flake8 --select E9,F63,F7,F82 scripts/host/n71_iommu_result.py scripts/host/n71-link-session.py scripts/host/n71_held_session.py tests/test_n71_iommu_result.py
+```
+
+O teste integrado expôs colisão real: one() contava bound= dentro do log DART como segunda resposta REG_ON. Validação agora exige regex ancorada e linhas prefixadas do campo; logs originais conservados. Primeiro mutant cleanup-gate produziu KeyError no teste além de assertion e não foi contado como kill. Asserções de shape corrigidas; fixtures de wire getters independem das constantes do parser. Gate novo e quatro regressões finais repetidos completos em ambos os ambientes. Falhas/logs privados preservados. AST e lint fatal passaram; não há typechecker Python.
+
+ABI D16 reutilizada com53 inputs relevantes intactos; nenhum C/headers/kernel/config/Image/exports mudou. Snapshot privado completo dos inputs públicos protegeu582 arquivos na VM, sem instalações/configuração global no Mac. Não repetir build do kernel por mudança apenas no coletor. [CI parent4898914](https://github.com/djalmajr/iphone6s-linux/actions/runs/37584482214) passou os três jobs; cobre D16 publicado, enquanto D17 recebe CI separada após publicação.
+
+Arquivos: plano, coletor, teste, link-session e held-session; doc/prova em fase separada. Mudança opt-in da API interna, sem novo banco/pacote/dependência; formatos antigos conservados e journal sem modo explícito continua default false. Custo: quatro leituras sysfs adicionais e parsing sob orçamento existente por coleta opt-in, sem desempenho físico medido. Próximo: auditoria de aliases/máscaras e seleção/composição do perfil, mantendo uma sessão física agrupada e orçamento de energia. Wi-Fi#9, energia#2, issue40 e goal continuam abertos.
+
+Refinamento de selectors D17: duas mutações adicionais exigem index16 indevidamente quando start não foi tentado e promovem software association a wifi_verified. Ambas morreram por AssertionError nos dois ambientes. Gate IOMMU13/27 repetido completo; produção e25 selectors anteriores intactos. Três gates anteriores reutilizados com inputs relevantes idênticos. Total final95/83 por plataforma.
