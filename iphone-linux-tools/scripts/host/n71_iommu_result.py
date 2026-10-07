@@ -28,13 +28,24 @@ def selected(session, root):
         return
     require(session.scan_hold and session.resource_capable
             and session.release == n71_scan_held_result.RELEASE, 'IOMMU requires the held resource power2 session')
-    proof = json.loads((root / 'docs/evidence/n71-iommu-caller-qualification.json').read_text())
+    proof = json.loads((root / 'docs/evidence/n71-dma-topology-qualification.json').read_text())
     build = proof['kernel_build']
     require(type(proof.get('format')) is int and proof['format'] == 1
             and build['kernel_exit'] == 0 and type(build['kernel_exit']) is int
             and build['loaded'] is False and build['private_wrapper'] is False
             and all(build[key] is True for key in ('production_module_inputs_identical',
                     'baseline_preserved', 'original_tracked_changes_preserved')), 'Exact qualified IOMMU build required')
+    audit = proof['primary_source_audit']
+    require(audit['source_commit'] == build['source_commit'] == '958481f87fee0949ff6a9a4af77f7eb6dac8a149'
+            and audit['tracked_patch_sha256'] == build['original_tracked_patch_sha256']
+            == '6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657'
+            and audit['vmlinux_symbol_binding'] == {'pci_for_each_dma_alias': 'T', 'pci_real_dma_dev': 'W'}
+            and audit['arm64_real_dma_override_files'] == []
+            and audit['exported_group_apis'] == ['iommu_group_get', 'iommu_group_put', 'iommu_group_id']
+            and audit['unexported_alias_helpers'] == ['pci_for_each_dma_alias', 'pci_real_dma_dev']
+            and build['exported_group_apis_present'] is True
+            and build['unexported_alias_helpers_not_referenced'] is True,
+            'Qualified public DMA topology premises required')
     records = [record for record, _ in session.modules if record['module'] == 'n71-pcie-diagnostic.ko']
     require(len(records) == 1 and records[0]['sha256'] == build['module_sha256']
             and type(records[0]['bytes']) is int and records[0]['bytes'] == build['module_bytes']
@@ -87,8 +98,28 @@ def snapshot(session, text, present):
             and state['iommu']['session_error'] == caller.get('cleanup_error', 0), 'IOMMU and caller state disagree')
 
 
+def dma_topology(text):
+    marker = 'N71_PCIE_SCAN_DMA '
+    suffix = '; public topology/source, read-only, no DMA'
+    rows = list(re.finditer(marker + r'bus=(\d+) devfn=([0-9a-f]{2}) rid=([0-9a-f]{4}) '
+                          r'aliases-inferred=(\d+) group=(\d+) streaming=([0-9a-f]{16}) '
+                          r'coherent=([0-9a-f]{16})' + re.escape(suffix) + r'$', text, re.M))
+    require(len(rows) == text.count(marker) == 2
+            and [row.groups()[:3] for row in rows] == [('0', '08', '0008'), ('1', '00', '0100')],
+            'Exact ordered DMA topology required')
+    root, endpoint = [row.groups() for row in rows]
+    require(root[3] == '1' and endpoint[3] in ('1', '2'), 'Inferred alias set differs')
+    require(root[4] == endpoint[4] and 0 <= int(root[4]) <= 2147483647, 'Shared IOMMU group differs')
+    require(all(row[5:] == ('00000000ffffffff', '00000000ffffffff') for row in (root, endpoint)),
+            'Observed streaming/coherent DMA masks differ')
+    return {'requester_ids': [8, 256], 'group_id': int(root[4]), 'mask_bits': 32,
+            'root_aliases_inferred': 1, 'endpoint_aliases_inferred': int(endpoint[3]),
+            'aliases_inferred_from_fixed_source': True, 'physical_translation_verified': False}, rows
+
+
 def acquisition(text):
     n71_scan_held_result.acquisition(text)
+    dma, dma_rows = dma_topology(text)
     provider = n71_scan_held_result.unique(text, 'N71_DART_CYCLE_PROVIDER ',
         r'N71_DART_CYCLE_PROVIDER bound=1 irq-hwirq=248 mapping-new=([01]); no DMA attachment')
     lease = n71_scan_held_result.unique(text, 'N71_DART_LEASE_ACQUIRE ',
@@ -107,10 +138,11 @@ def acquisition(text):
     held = n71_scan_held_result.unique(text, 'N71_PCIE_SESSION_HELD ', n71_scan_held_result.SESSION_PATTERN)
     positions = [provider.start(), lease.start()]
     for index in range(2):
-        positions += [scans[0][index].start(), scans[1][index].start(), devices[index].start()]
+        positions += [scans[0][index].start(), dma_rows[index].start(),
+                      scans[1][index].start(), devices[index].start()]
     positions.append(held.start())
     require(positions == sorted(set(positions)), 'Provider/association publication order differs')
-    return {'observed_devices': len(scans[1]), 'software_association_observed': True,
+    return {'observed_devices': len(scans[1]), 'software_association_observed': True, 'dma_topology': dma,
             'irq_delivery_verified': False, 'dma_translation_verified': False,
             'wifi_verified': False, 'battery_or_charging_verified': False}
 

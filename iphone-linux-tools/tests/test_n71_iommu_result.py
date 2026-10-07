@@ -30,6 +30,9 @@ PROVIDER = ('N71_DART_CYCLE_PROVIDER bound=1 irq-hwirq=248 mapping-new=1; no DMA
 
 def association(bus, devfn):
     return (f'N71_PCIE_SCAN_MSI bus={bus} devfn={devfn} inherited=1; no IRQ allocation\n'
+            f'N71_PCIE_SCAN_DMA bus={bus} devfn={devfn} rid={"0008" if bus == 0 else "0100"} '
+            'aliases-inferred=1 group=7 streaming=00000000ffffffff coherent=00000000ffffffff; '
+            'public topology/source, read-only, no DMA\n'
             f'N71_PCIE_SCAN_IOMMU bus={bus} devfn={devfn} map_sid=0 translated=1; '
             'OF map and core domain, no private SID readback\n')
 
@@ -56,6 +59,9 @@ OPEN = getters() + 'N71_PCIE_HELD held=1\n' + held_fixture.ACTIVE + ACQUIRED
 CLOSED = (getters(False) + 'N71_PCIE_HELD held=0\n' + held_fixture.CLEAN + ACQUIRED
           + held_fixture.REMOVED + DART_CLEAN + held_fixture.CONFIG + held_fixture.PME_RESTORED
           + held_fixture.TLS_RESTORED + held_fixture.RESET + held_fixture.POWER + held_fixture.FINISHED)
+DMA_EXPECTED = dict(requester_ids=[8, 256], group_id=7, mask_bits=32, root_aliases_inferred=1,
+                    endpoint_aliases_inferred=1, aliases_inferred_from_fixed_source=True,
+                    physical_translation_verified=False)
 
 
 class IommuPhone(resource_fixture.ResourcePhone):
@@ -98,7 +104,7 @@ class IommuResultTests(unittest.TestCase):
 
     def test_opt_in_exact_module_and_scope_before_effects(self):
         # Mutations killed: relax boolean, ABI, held/resource scope, bytes/hash/vermagic.
-        proof = json.loads((ROOT / 'docs/evidence/n71-iommu-caller-qualification.json').read_text())['kernel_build']
+        proof = json.loads((ROOT / 'docs/evidence/n71-dma-topology-qualification.json').read_text())['kernel_build']
         record = dict(module='n71-pcie-diagnostic.ko', bytes=proof['module_bytes'], sha256=proof['module_sha256'], vermagic=proof['vermagic'])
         session = SimpleNamespace(iommu_parent=True, scan_hold=True, resource_capable=True,
                                   release=RESULT.n71_scan_held_result.RELEASE, modules=[(record, b'fixture')])
@@ -121,7 +127,8 @@ class IommuResultTests(unittest.TestCase):
         self.accepted(RESULT.retained, self.session, OPEN)
         self.assertEqual(self.session.result['iommu_association'], dict(observed_devices=2,
                          software_association_observed=True, irq_delivery_verified=False,
-                         dma_translation_verified=False, wifi_verified=False, battery_or_charging_verified=False))
+                         dma_translation_verified=False, wifi_verified=False, battery_or_charging_verified=False,
+                         dma_topology=DMA_EXPECTED))
         for row in (PROVIDER.splitlines(True) + association(0, '08').splitlines(True)
                     + association(1, '00').splitlines(True) + getters().splitlines(True)):
             for text in (OPEN.replace(row, '', 1), OPEN + row, OPEN.replace(row, row.rstrip() + ' extra\n')):
@@ -183,7 +190,7 @@ class IommuResultTests(unittest.TestCase):
 
     def execution(self, phone, folder, name, source=None):
         output = folder / 'runtime' / name; output.mkdir(mode=0o700)
-        build = json.loads((ROOT / 'docs/evidence/n71-iommu-caller-qualification.json').read_text())['kernel_build']
+        build = json.loads((ROOT / 'docs/evidence/n71-dma-topology-qualification.json').read_text())['kernel_build']
         modules = [({'module': HELD.MODULES[0], 'bytes': build['module_bytes'], 'sha256': build['module_sha256'], 'vermagic': build['vermagic']}, b'fixture'),
                    ({'module': HELD.MODULES[1], 'sha256': 'b' * 64}, b'reg-fixture')]
         with patch.object(LINK, 'ROOT', ROOT), patch.object(LINK.device_profile, 'ssh_options', return_value=[]):
@@ -285,6 +292,74 @@ class IommuResultTests(unittest.TestCase):
             self.assertEqual(code, 1, session.result); self.assertEqual(len(phone.calls), calls)
 
 
+    def test_dma_group_masks_requesters_and_inferred_aliases_are_strict(self):
+        # Mutations killed: omit exact requester/count, shared group, masks or alias constraints.
+        invalid = [OPEN.replace('rid=0008', 'rid=0009'), OPEN.replace('rid=0100', 'rid=0101'),
+                   OPEN.replace('aliases-inferred=1 group=7', 'aliases-inferred=3 group=7'),
+                   OPEN.replace('devfn=00 rid=0100 aliases-inferred=1 group=7',
+                                'devfn=00 rid=0100 aliases-inferred=1 group=8'),
+                   OPEN.replace('group=7', 'group=2147483648'), OPEN.replace('group=7', 'group=-1'),
+                   OPEN.replace('streaming=00000000ffffffff', 'streaming=ffffffffffffffff'),
+                   OPEN.replace('coherent=00000000ffffffff', 'coherent=0000000000000000')]
+        dma = [row for row in association(0, '08').splitlines(True) if 'N71_PCIE_SCAN_DMA ' in row][0]
+        invalid += [OPEN + dma.rstrip() + ' extra\n', OPEN.replace(dma, '')]
+        msi = association(0, '08').splitlines(True)[0]
+        invalid += [OPEN.replace(msi + dma, dma + msi)]
+        for text in invalid:
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                RESULT.retained(SimpleNamespace(iommu_parent=True, result={}), text)
+
+    def test_legacy_alias_inference_and_group_zero_have_only_software_proof(self):
+        # Mutations killed: reject valid legacy alias/group0 or promote inference to physical proof.
+        for group in (0, 2147483647):
+            text = OPEN.replace('group=7', 'group=' + str(group)).replace(
+                'devfn=00 rid=0100 aliases-inferred=1', 'devfn=00 rid=0100 aliases-inferred=2')
+            session = SimpleNamespace(iommu_parent=True, result={})
+            self.accepted(RESULT.retained, session, text)
+            self.assertEqual(session.result['iommu_association']['dma_topology'],
+                             dict(DMA_EXPECTED, group_id=group, endpoint_aliases_inferred=2))
+            self.assertFalse(session.result['iommu_association']['dma_translation_verified'])
+
+    def test_source_binding_exports_and_previous_abi_refuse_selection(self):
+        # Mutations killed: accept changed weak binding/source/exports or select the superseded D16 ABI.
+        proof = json.loads((ROOT / 'docs/evidence/n71-dma-topology-qualification.json').read_text())
+        build = proof['kernel_build']
+        record = dict(module='n71-pcie-diagnostic.ko', bytes=build['module_bytes'],
+                      sha256=build['module_sha256'], vermagic=build['vermagic'])
+        session = SimpleNamespace(iommu_parent=True, scan_hold=True, resource_capable=True,
+                                  release=RESULT.n71_scan_held_result.RELEASE, modules=[(record, b'fixture')])
+        changes = [('source_commit', 'foreign'), ('tracked_patch_sha256', 'f' * 64),
+                   ('vmlinux_symbol_binding', {'pci_for_each_dma_alias': 'T', 'pci_real_dma_dev': 'T'}),
+                   ('arm64_real_dma_override_files', ['arch/arm64/foreign.c']),
+                   ('exported_group_apis', []), ('unexported_alias_helpers', [])]
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory); target = folder / 'docs/evidence'; target.mkdir(parents=True)
+            for key, value in changes:
+                changed = copy.deepcopy(proof); changed['primary_source_audit'][key] = value
+                (target / 'n71-dma-topology-qualification.json').write_text(json.dumps(changed))
+                with self.subTest(key=key), self.assertRaises(ValueError): RESULT.selected(session, folder)
+            for key in ('exported_group_apis_present', 'unexported_alias_helpers_not_referenced'):
+                changed = copy.deepcopy(proof); changed['kernel_build'][key] = False
+                (target / 'n71-dma-topology-qualification.json').write_text(json.dumps(changed))
+                with self.subTest(key=key), self.assertRaises(ValueError): RESULT.selected(session, folder)
+        previous = json.loads((ROOT / 'docs/evidence/n71-iommu-caller-qualification.json').read_text())['kernel_build']
+        session.modules[0][0].update(bytes=previous['module_bytes'], sha256=previous['module_sha256'])
+        with self.assertRaises(ValueError): RESULT.selected(session, ROOT)
+
+    def test_saved_dma_details_are_reconstructed_before_any_resume_effect(self):
+        # Mutation killed: trust saved DMA fields or remove the new observations from the journal summary.
+        for field, value in (('group_id', 8), ('mask_bits', 64), ('root_aliases_inferred', 2),
+                             ('requester_ids', [8, 257]), ('physical_translation_verified', True)):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
+                folder = Path(directory); (folder / 'runtime').mkdir(mode=0o700); phone = IommuPhone()
+                code, _, source = self.execution(phone, folder, 'acquire'); self.assertEqual(code, 0)
+                path = source / 'held-state-private.json'; data = json.loads(path.read_text())
+                data['result']['iommu_association']['dma_topology'][field] = value
+                path.write_text(json.dumps(data)); calls = len(phone.calls)
+                code, session, _ = self.execution(phone, folder, 'refused', source)
+                self.assertEqual(code, 1, session.result); self.assertEqual(len(phone.calls), calls)
+
+
 class IommuMutationTests(unittest.TestCase):
     @unittest.skipIf(os.environ.get('N71_IOMMU_MUTATION_CHILD'), 'Parent mutation gate only')
     def test_compiled_mutations_fail_by_assertion(self):
@@ -316,6 +391,31 @@ class IommuMutationTests(unittest.TestCase):
             'pre-scan-order': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "text.index('N71_DART_CYCLE_RELEASED ') < reset.start() < power.start() < finished[-1].start()", 'True'),
             'unattempted-restore-index': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "'16' if pending else '0'", "'16'"),
             'proof-tier': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "'wifi_verified': False", "'wifi_verified': True"),
+            'weak-binding': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+                             "audit['vmlinux_symbol_binding'] == {'pci_for_each_dma_alias': 'T', 'pci_real_dma_dev': 'W'}", 'True'),
+            'source-premises': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+                                "audit['source_commit'] == build['source_commit'] == '958481f87fee0949ff6a9a4af77f7eb6dac8a149'", 'True'),
+            'override-premises': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "audit['arm64_real_dma_override_files'] == []", 'True'),
+            'group-api-premises': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+                                  "audit['exported_group_apis'] == ['iommu_group_get', 'iommu_group_put', 'iommu_group_id']", 'True'),
+            'alias-api-premises': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+                                  "audit['unexported_alias_helpers'] == ['pci_for_each_dma_alias', 'pci_real_dma_dev']", 'True'),
+            'module-group-api': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "build['exported_group_apis_present'] is True", 'True'),
+            'module-alias-api': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "build['unexported_alias_helpers_not_referenced'] is True", 'True'),
+            'dma-marker-count': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+                                 'require(len(rows) == text.count(marker) == 2\n            and [row.groups()[:3]',
+                                 'require(len(rows) == 2\n            and [row.groups()[:3]'),
+            'dma-requester': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+                              "[row.groups()[:3] for row in rows] == [('0', '08', '0008'), ('1', '00', '0100')]", 'True'),
+            'dma-alias-set': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "root[3] == '1' and endpoint[3] in ('1', '2')", 'True'),
+            'dma-shared-group': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'root[4] == endpoint[4]', 'True'),
+            'dma-group-bound': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', '0 <= int(root[4]) <= 2147483647', 'True'),
+            'dma-mask': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+                         "all(row[5:] == ('00000000ffffffff', '00000000ffffffff') for row in (root, endpoint))", 'True'),
+            'dma-position': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+                             'scans[0][index].start(), dma_rows[index].start(),', 'scans[0][index].start(),'),
+            'dma-proof-tier': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+                               "'physical_translation_verified': False", "'physical_translation_verified': True"),
         }
         with tempfile.TemporaryDirectory(prefix='n71-iommu-mutations-') as directory:
             for name, (filename, variable, before, after) in variants.items():
