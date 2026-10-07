@@ -50,7 +50,7 @@ class N71PcieScanHost(unittest.TestCase):
         self.assertIn('N71_PCIE_RESOURCE_ASSIGN_OK cases=20', result.stdout)
         self.assertIn('N71_PCIE_MSI_SCAN_OK cases=14', result.stdout)
         self.assertIn('N71_PCIE_CONSUMER_REMOVAL_OK cases=7', result.stdout)
-        self.assertIn('N71_PCIE_DART_SCAN_OK cases=31', result.stdout)
+        self.assertIn('N71_PCIE_DART_SCAN_OK cases=39', result.stdout)
         print(result.stdout.strip(), flush=True)
 
     def test_lifecycle_mutations_die_by_assertion(self):
@@ -171,11 +171,17 @@ class N71PcieScanHost(unittest.TestCase):
             ('ignore-map-state', '!host->dart.mapped ||', 'false ||'),
             ('ignore-owner-identity', '!n71_dart_host_refs_valid(&host->dart) ||', 'false ||'),
             ('ignore-fwspec-guards', '!spec || spec->iommu_fwnode != of_fwnode_handle(host->dart.provider_node) ||\n'
-             '\t    spec->flags || spec->num_ids != 1 || spec->ids[0] != 0 ||', '(false && spec) ||'),
+             '\t    spec->flags || spec->num_ids != 0 ||', '(false && spec) ||'),
             ('foreign-provider-fwnode', 'spec->iommu_fwnode != of_fwnode_handle(host->dart.provider_node) ||', 'false ||'),
             ('foreign-fwspec-flags', 'spec->flags ||', 'false ||'),
-            ('wrong-stream-count', 'spec->num_ids != 1 ||', 'false ||'),
-            ('wrong-stream-id', 'spec->ids[0] != 0 ||', 'false ||'),
+            ('wrong-fwspec-count', 'spec->num_ids != 0 ||', 'false ||'),
+            ('foreign-map-identity', 'of_find_property(host->dart.master_node, "iommu-map", NULL) != host->dart.map_property ||', 'false ||'),
+            ('foreign-status-identity', 'of_find_property(host->dart.provider_node, "status", NULL) != host->dart.status_property ||', 'false ||'),
+            ('wrong-map-size', 'of_property_count_u32_elems(host->dart.master_node, "iommu-map") != 8 ||',
+             '(false && of_property_count_u32_elems(host->dart.master_node, "iommu-map") != 8) ||'),
+            ('ignore-map-read-error', 'of_property_read_u32_index(host->dart.master_node, "iommu-map", index, &value)',
+             '(of_property_read_u32_index(host->dart.master_node, "iommu-map", index, &value), 0)'),
+            ('wrong-map-cell', 'value != map[index]', '(false && value != map[index])'),
             ('ignore-domain-guards', '!domain || domain->type != IOMMU_DOMAIN_DMA ||\n'
              '\t    (host->iommu_domain && host->iommu_domain != domain)', 'false'),
             ('identity-domain-accepted', 'domain->type != IOMMU_DOMAIN_DMA ||', 'false ||'),

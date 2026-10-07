@@ -759,7 +759,7 @@ static unsigned int exercise_dart_scan(void)
 	struct n71_diagnostic state;
 	struct device dev;
 	/* Mutations: prepare after publication, trust missing/wrong core readback, or release a live provider. */
-	for (unsigned int fault=0;fault<17;fault++) {
+	for (unsigned int fault=0;fault<25;fault++) {
 		initialize_case(PME_NONE,true); msi_mock.requested=dart_mock.requested=true;
 		dev=(struct device){.of_node=&msi_mock.node}; dart_mock.provider.dev.parent=&dev;
 		state=(struct n71_diagnostic){.ecam=mock.ecam,.port=mock.port}; dart_mock.core_fault=fault;
@@ -770,8 +770,8 @@ static unsigned int exercise_dart_scan(void)
 		assert(mock.removes==(fault ? 1U : 0U) && mock.scans==1 && !mock.locked);
 		if (!fault) {
 			assert(host->iommu_domain==&dart_mock.domain && host->iommu_devices==2);
-			assert(strstr(mock.log,"N71_PCIE_SCAN_IOMMU bus=0 devfn=08 sid=0 translated=1"));
-			assert(strstr(mock.log,"N71_PCIE_SCAN_IOMMU bus=1 devfn=00 sid=0 translated=1"));
+			assert(strstr(mock.log,"N71_PCIE_SCAN_IOMMU bus=0 devfn=08 map_sid=0 translated=1"));
+			assert(strstr(mock.log,"N71_PCIE_SCAN_IOMMU bus=1 devfn=00 map_sid=0 translated=1"));
 			host->iommu_devices=1; assert(n71_scan_validate_result(host)==-ENODEV); host->iommu_devices=2;
 			assert(n71_scan_validate_result(host)==0 && dart_mock.mapped);
 			assert(state.scan_bridge->enable_device(state.scan_bridge,&mock.endpoint)==-EPERM);
@@ -783,6 +783,8 @@ static unsigned int exercise_dart_scan(void)
 			pci_unlock_rescan_remove();
 		}
 		dart_mock.identity=true;
+		if (fault==17) dart_mock.map_current=&dart_mock.map_property;
+		if (fault==18) dart_mock.status_current=&dart_mock.status_property;
 		unsigned int writes=mock.writes;
 		assert(n71_pcie_scan_cleanup(&state)==-EBUSY && state.scan_bridge);
 		assert(!state.scan_bridge->bus && !host->iommu_domain && !host->iommu_devices);
@@ -945,7 +947,7 @@ int main(void)
 	puts("N71_PCIE_MSI_SCAN_OK cases=14; inherited domains synthetic");
 	assert(exercise_consumer_removal() == 7);
 	puts("N71_PCIE_CONSUMER_REMOVAL_OK cases=7; host retained between phases");
-	assert(exercise_dart_scan()==31);
-	puts("N71_PCIE_DART_SCAN_OK cases=31; core association modeled, no physical DMA");
+	assert(exercise_dart_scan()==39);
+	puts("N71_PCIE_DART_SCAN_OK cases=39; OF map and core domain modeled, no private SID readback");
 	return 0;
 }

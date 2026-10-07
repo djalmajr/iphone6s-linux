@@ -182,16 +182,26 @@ static int n71_scan_report_iommu(struct n71_scan_host *host, struct pci_dev *dev
 {
 	struct iommu_fwspec *spec = dev_iommu_fwspec_get(&dev->dev);
 	struct iommu_domain *domain = iommu_get_domain_for_dev(&dev->dev);
+	const u32 map[8] = {0x0008, host->dart.phandle, 0, 1, 0x0100, host->dart.phandle, 0, 1};
+	u32 value;
+	unsigned int index;
 
 	if (!host->dart.available || !host->dart.mapped || !n71_dart_host_refs_valid(&host->dart) ||
+	    of_find_property(host->dart.master_node, "iommu-map", NULL) != host->dart.map_property ||
+	    of_find_property(host->dart.provider_node, "status", NULL) != host->dart.status_property ||
+	    of_property_count_u32_elems(host->dart.master_node, "iommu-map") != 8 ||
 	    !spec || spec->iommu_fwnode != of_fwnode_handle(host->dart.provider_node) ||
-	    spec->flags || spec->num_ids != 1 || spec->ids[0] != 0 ||
+	    spec->flags || spec->num_ids != 0 ||
 	    !domain || domain->type != IOMMU_DOMAIN_DMA ||
 	    (host->iommu_domain && host->iommu_domain != domain))
 		return n71_scan_report_error(host, -EACCES);
+	/* apple-dart stores SIDs in private stream_maps; its fwspec IDs stay empty. */
+	for (index = 0; index < 8; index++)
+		if (of_property_read_u32_index(host->dart.master_node, "iommu-map", index, &value) || value != map[index])
+			return n71_scan_report_error(host, -EACCES);
 	host->iommu_domain = domain;
 	host->iommu_devices++;
-	dev_info(host->dev, "N71_PCIE_SCAN_IOMMU bus=%u devfn=%02x sid=0 translated=1; core readback only\n",
+	dev_info(host->dev, "N71_PCIE_SCAN_IOMMU bus=%u devfn=%02x map_sid=0 translated=1; OF map and core domain, no private SID readback\n",
 		 dev->bus->number, dev->devfn);
 	return 0;
 }
