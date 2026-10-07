@@ -180,7 +180,11 @@ static int n71_release_power(struct n71_diagnostic *state)
 
 static int n71_session_cleanup(struct n71_diagnostic *state)
 {
-	int error = n71_pcie_scan_cleanup(state);
+	int error = n71_pcie_dart_cleanup(session_device, state);
+
+	if (error || state->dart)
+		return error ? error : -EBUSY;
+	error = n71_pcie_scan_cleanup(state);
 
 	/* Pending rollback owns the link, GPIO, mappings and all power references. */
 	if (error || state->scan_bridge)
@@ -202,7 +206,7 @@ static int n71_session_cleanup(struct n71_diagnostic *state)
 static int n71_finish_cleanup(struct n71_diagnostic *state)
 {
 	state->cleanup_error = n71_session_cleanup(state);
-	if (!state->cleanup_error && !state->scan_bridge && !state->reset_pending &&
+	if (!state->cleanup_error && !state->dart && !state->scan_bridge && !state->reset_pending &&
 	    !state->powered && !state->attached && !state->power_put_pending && state->module_retained) {
 		state->module_retained = false;
 		module_put(THIS_MODULE);
@@ -215,6 +219,7 @@ static int n71_finish_cleanup(struct n71_diagnostic *state)
 }
 
 static int n71_assign_action(void);
+static int n71_dart_action(bool release);
 
 static int n71_cleanup_action(const char *text, const struct kernel_param *parameter)
 {
@@ -223,6 +228,10 @@ static int n71_cleanup_action(const char *text, const struct kernel_param *param
 	(void)parameter;
 	if (sysfs_streq(text, "assign"))
 		return n71_assign_action();
+	if (sysfs_streq(text, "dart-hold"))
+		return n71_dart_action(false);
+	if (sysfs_streq(text, "dart-release"))
+		return n71_dart_action(true);
 	if (!sysfs_streq(text, "cleanup"))
 		return -EINVAL;
 	if (!try_module_get(THIS_MODULE))
@@ -318,6 +327,61 @@ static int n71_resource_status(char *buffer, const struct kernel_param *paramete
 	return length;
 }
 
+static int n71_dart_action(bool release)
+{
+	struct n71_scan_host *host;
+	int error;
+
+	if (!scan_hold)
+		return -EINVAL;
+	if (!try_module_get(THIS_MODULE))
+		return -ENODEV;
+	mutex_lock(&session_lock);
+	if (!session || !session->module_retained || !session->reset_pending ||
+	    session->powered != 4 || session->attached != 4 || session->power_put_pending) {
+		error = -ENODEV;
+	} else if (release) {
+		error = n71_pcie_dart_cleanup(session_device, session);
+	} else if (!n71_session_has_held_bus(session) || session->primary_error || session->cleanup_error) {
+		error = -EBUSY;
+	} else {
+		host = pci_host_bridge_priv(session->scan_bridge);
+		if (!host->resources_assigned || !host->window_claimed || host->resources.active ||
+		    host->windows[1].parent != &iomem_resource || host->resources.error ||
+		    host->config.error || host->io_error) {
+			error = -EACCES;
+		} else {
+			error = n71_pcie_dart_acquire(session_device, session);
+			if (error && error != -EALREADY && !session->primary_error)
+				session->primary_error = error;
+		}
+	}
+	mutex_unlock(&session_lock);
+	module_put(THIS_MODULE);
+	return error;
+}
+
+static int n71_dart_status(char *buffer, const struct kernel_param *parameter)
+{
+	struct n71_dart_provider *provider;
+	int length;
+
+	(void)parameter;
+	mutex_lock(&session_lock);
+	provider = session ? session->dart : NULL;
+	length = scnprintf(buffer, PAGE_SIZE,
+		"ready=%u acquired=%u running=%u pending=%u stopped=%u restored=%u index=%u device=%u mapping_new=%u claimed=%u mapped=%u operation_error=%d restore_error=%d\n",
+		!!session, !!provider, provider ? provider->lease.running : 0,
+		provider ? n71_dart_lease_pending(&provider->lease) : 0,
+		provider ? provider->lease.stopped : 0, provider ? provider->lease.restored : 0,
+		provider ? provider->lease.restore_index : 0, provider ? !!provider->device : 0,
+		provider ? provider->new_mapping : 0, provider ? !!provider->claimed : 0,
+		provider ? !!provider->mmio.regs : 0, provider ? provider->lease.operation_error : 0,
+		provider ? provider->lease.restore_error : 0);
+	mutex_unlock(&session_lock);
+	return length;
+}
+
 static int n71_held_status(char *buffer, const struct kernel_param *parameter)
 {
 	int length;
@@ -333,14 +397,17 @@ static const struct kernel_param_ops cleanup_ops = {.set = n71_cleanup_action};
 static const struct kernel_param_ops status_ops = {.get = n71_session_status};
 static const struct kernel_param_ops held_ops = {.get = n71_held_status};
 static const struct kernel_param_ops resource_ops = {.get = n71_resource_status};
+static const struct kernel_param_ops dart_ops = {.get = n71_dart_status};
 module_param_cb(action, &cleanup_ops, NULL, 0200);
-MODULE_PARM_DESC(action, "assign allocates the held bus; cleanup retries restoration; neither repeats scan");
+MODULE_PARM_DESC(action, "assign, dart-hold, dart-release, cleanup operate on the retained session; no rescan");
 module_param_cb(status, &status_ops, NULL, 0400);
 MODULE_PARM_DESC(status, "Inspect retained ownership and cleanup errors before normal unload");
 module_param_cb(held, &held_ops, NULL, 0400);
 MODULE_PARM_DESC(held, "Read live bus ownership; distinct from pending restoration");
 module_param_cb(resources, &resource_ops, NULL, 0400);
 MODULE_PARM_DESC(resources, "Read assignment and pending ownership; a removed bus is never assigned");
+module_param_cb(dart, &dart_ops, NULL, 0400);
+MODULE_PARM_DESC(dart, "Read DART ownership and recovery progress independently of PCI resources");
 
 static int n71_power(struct device *dev, struct n71_diagnostic *state)
 {
@@ -480,7 +547,8 @@ static int n71_probe_locked(struct platform_device *pdev)
 		stage = "host-scan-hold-proof";
 	}
 done:
-	state->primary_error = error;
+	if (!state->primary_error)
+		state->primary_error = error;
 	cleanup = n71_finish_cleanup(state);
 	if (cleanup && !error) {
 		error = cleanup;

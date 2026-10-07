@@ -1,20 +1,21 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-/* A temporary provider, with original OF status and PCI power ownership held. */
+/* The session owns the provider, original tables and incomplete restoration. */
 #ifndef N71_DART_PROVIDER_H
 #define N71_DART_PROVIDER_H
 #include <linux/irqdomain.h>
 #include <linux/of_irq.h>
-#include "n71-dart-cycle.h"
+#include "n71-dart-lease.h"
 
 struct n71_dart_provider {
 	struct device *parent;
 	struct device_node *node;
 	struct platform_device *device;
 	struct n71_dart_mmio mmio;
-	struct n71_dart_observation saved;
+	struct n71_dart_lease lease;
 	struct resource *claimed;
 	unsigned int irq, snapshots, reads, guards, quiet, writes;
-	bool added, new_mapping, bound;
+	unsigned int snapshot_budget, quiet_budget;
+	bool added, new_mapping, bound, restore_guard;
 };
 
 static int n71_provider_snapshot(void *context, struct n71_dart_observation *out)
@@ -24,8 +25,9 @@ static int n71_provider_snapshot(void *context, struct n71_dart_observation *out
 	unsigned int index;
 	int error;
 
-	if (++provider->snapshots > 4)
+	if (++provider->snapshot_budget > 4)
 		return -E2BIG;
+	provider->snapshots++;
 	provider->mmio.reads = provider->mmio.guards = 0;
 	error = n71_dart_observe(&io, out);
 	provider->reads += provider->mmio.reads;
@@ -35,7 +37,6 @@ static int n71_provider_snapshot(void *context, struct n71_dart_observation *out
 	dev_info(provider->parent, "N71_DART_CYCLE_SNAPSHOT index=%u command=%08x tcr=%08x error=%08x valid=%04x; stable\n",
 		 provider->snapshots, out->command, out->tcr, out->error, out->valid_ttbrs);
 	if (provider->snapshots == 1) {
-		provider->saved = *out;
 		for (index = 0; index < 16; index++)
 			dev_info(provider->parent, "N71_DART_TTBR index=%02u value=%08x; stable\n", index, out->ttbr[index]);
 	}
@@ -45,10 +46,16 @@ static int n71_provider_snapshot(void *context, struct n71_dart_observation *out
 static int n71_provider_quiet(void *context)
 {
 	struct n71_dart_provider *provider = context;
-	if (++provider->quiet > 17)
+	int error;
+
+	provider->restore_guard = false;
+	if (++provider->quiet_budget > 17)
 		return -E2BIG;
+	provider->quiet++;
 	provider->mmio.guards = 0;
-	return n71_dart_quiet(&provider->mmio);
+	error = n71_dart_quiet(&provider->mmio);
+	provider->restore_guard = !error;
+	return error;
 }
 
 static int n71_provider_start(void *context)
@@ -141,6 +148,7 @@ static int n71_provider_stop(void *context)
 		provider->device = NULL;
 		provider->added = false;
 	}
+	provider->bound = false;
 	if (provider->new_mapping)
 		irq_dispose_mapping(provider->irq);
 	provider->irq = 0;
@@ -162,54 +170,108 @@ static int n71_provider_write(void *context, unsigned int index, u32 value)
 {
 	struct n71_dart_provider *provider = context;
 	if (provider->device || !provider->claimed || !provider->mmio.regs ||
-	    index != provider->writes || index >= 16 || provider->quiet != provider->writes + 2 ||
-	    value != provider->saved.ttbr[index])
+	    !provider->lease.stopped || provider->lease.restored || !provider->restore_guard ||
+	    index != provider->lease.restore_index || index >= 16 ||
+	    value != provider->lease.saved.ttbr[index])
 		return -EACCES;
+	provider->restore_guard = false;
 	provider->writes++;
 	writel(value, provider->mmio.regs + 0x40 + index * 4);
 	return 0;
 }
 
-static int n71_pcie_dart_cycle(struct device *dev, struct n71_diagnostic *state)
+static struct n71_dart_cycle_io n71_provider_io(struct n71_dart_provider *provider)
 {
-	struct n71_dart_provider provider = {.parent = dev, .mmio = {.state = state}};
-	struct n71_dart_cycle_io io = {&provider, n71_provider_snapshot, n71_provider_quiet,
+	return (struct n71_dart_cycle_io){provider, n71_provider_snapshot, n71_provider_quiet,
 		n71_provider_start, n71_provider_stop, n71_provider_write};
-	struct n71_dart_cycle_result result = {0};
+}
+
+static int n71_pcie_dart_acquire(struct device *dev, struct n71_diagnostic *state)
+{
+	struct n71_dart_provider *provider;
+	struct n71_dart_cycle_io io;
 	int error;
 
+	if (state->dart)
+		return state->dart->lease.running ? -EALREADY : -EBUSY;
 	if (state->powered != 4 || state->attached != 4)
 		return -EACCES;
 	error = n71_dart_validate(dev);
 	if (error)
-		goto done;
-	provider.node = of_find_node_by_path("/soc/iommu@602008000");
-	if (!provider.node) {
+		return error;
+	provider = kzalloc(sizeof(*provider), GFP_KERNEL);
+	if (!provider)
+		return -ENOMEM;
+	provider->parent = dev;
+	provider->mmio.state = state;
+	/* Publish ownership before any start/probe can partially change hardware. */
+	state->dart = provider;
+	provider->node = of_find_node_by_path("/soc/iommu@602008000");
+	if (!provider->node) {
 		error = -ENODEV;
 		goto done;
 	}
-	provider.claimed = request_mem_region(N71_DART_CPU, N71_DART_BYTES, "n71-dart-cycle");
-	if (!provider.claimed) {
+	provider->claimed = request_mem_region(N71_DART_CPU, N71_DART_BYTES, "n71-dart-cycle");
+	if (!provider->claimed) {
 		error = -EBUSY;
 		goto done;
 	}
-	provider.mmio.regs = ioremap(N71_DART_CPU, N71_DART_BYTES);
-	if (!provider.mmio.regs) {
+	provider->mmio.regs = ioremap(N71_DART_CPU, N71_DART_BYTES);
+	if (!provider->mmio.regs) {
 		error = -ENOMEM;
 		goto done;
 	}
-	error = n71_dart_cycle(&io, &result);
+	io = n71_provider_io(provider);
+	error = n71_dart_lease_acquire(&io, &provider->lease);
 done:
-	if (provider.mmio.regs)
-		iounmap(provider.mmio.regs);
-	if (provider.claimed)
-		release_mem_region(N71_DART_CPU, N71_DART_BYTES);
-	of_node_put(provider.node);
-	dev_info(dev, "N71_DART_CYCLE_RELEASED device=%u mapping-new=%u claimed=0 mapped=0\n",
-		 !!provider.device, provider.new_mapping);
-	dev_info(dev, "N71_DART_CYCLE_RESULT error=%d snapshots=%u reads=%u guards=%u quiet=%u writes=%u attempted=%u stopped=%u restored=%u control-changed=%u; no DMA\n",
-		 error, provider.snapshots, provider.reads, provider.guards, provider.quiet,
-		 provider.writes, result.attempted, result.stopped, result.restored, result.control_changed);
+	provider->lease.operation_error = error;
+	dev_info(dev, "N71_DART_LEASE_ACQUIRE error=%d running=%u pending=%u; no DMA attachment\n",
+		 error, provider->lease.running, n71_dart_lease_pending(&provider->lease));
 	return error;
+}
+
+static int n71_pcie_dart_cleanup(struct device *dev, struct n71_diagnostic *state)
+{
+	struct n71_dart_provider *provider = state->dart;
+	struct n71_dart_cycle_io io;
+	int error;
+
+	if (!provider)
+		return 0;
+	io = n71_provider_io(provider);
+	provider->snapshot_budget = provider->quiet_budget = 0;
+	provider->restore_guard = false;
+	error = n71_dart_lease_cleanup(&io, &provider->lease);
+	if (!state->primary_error && provider->lease.operation_error)
+		state->primary_error = provider->lease.operation_error;
+	if (!error && (provider->device || provider->new_mapping || provider->bound))
+		error = -EBUSY;
+	dev_info(dev, "N71_DART_LEASE_CLEANUP error=%d pending=%u index=%u device=%u mapping-new=%u claimed=%u mapped=%u; ownership retained until restore\n",
+		 error, n71_dart_lease_pending(&provider->lease), provider->lease.restore_index,
+		 !!provider->device, provider->new_mapping, !!provider->claimed, !!provider->mmio.regs);
+	dev_info(dev, "N71_DART_CYCLE_RESULT error=%d snapshots=%u reads=%u guards=%u quiet=%u writes=%u attempted=%u stopped=%u restored=%u control-changed=%u; no DMA\n",
+		 error ? error : provider->lease.operation_error, provider->snapshots,
+		 provider->reads, provider->guards, provider->quiet, provider->writes,
+		 provider->lease.attempted, provider->lease.stopped, provider->lease.restored,
+		 provider->lease.control_changed);
+	if (error)
+		return error;
+	if (provider->mmio.regs)
+		iounmap(provider->mmio.regs);
+	if (provider->claimed)
+		release_mem_region(N71_DART_CPU, N71_DART_BYTES);
+	of_node_put(provider->node);
+	kfree(provider);
+	state->dart = NULL;
+	dev_info(dev, "N71_DART_CYCLE_RELEASED device=0 mapping-new=0 claimed=0 mapped=0\n");
+	return 0;
+}
+
+static int n71_pcie_dart_cycle(struct device *dev, struct n71_diagnostic *state)
+{
+	int error = n71_pcie_dart_acquire(dev, state);
+	int cleanup = n71_pcie_dart_cleanup(dev, state);
+
+	return cleanup ? cleanup : error ? error : state->primary_error;
 }
 #endif /* N71_DART_PROVIDER_H */

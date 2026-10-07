@@ -3,6 +3,8 @@
 #ifndef N71_PCIE_MMIO_H
 #define N71_PCIE_MMIO_H
 
+struct n71_dart_provider;
+
 struct n71_diagnostic {
 	void __iomem *common, *phy, *port, *ecam;
 	struct gpio_desc *perst;
@@ -11,6 +13,7 @@ struct n71_diagnostic {
 	u32 last_link_status;
 	unsigned int link_status_reads;
 	struct pci_host_bridge *scan_bridge;
+	struct n71_dart_provider *dart;
 	bool module_retained, power_put_pending, reset_pending;
 	int primary_error, cleanup_error;
 };

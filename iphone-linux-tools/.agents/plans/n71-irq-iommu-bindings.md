@@ -59,3 +59,20 @@ Nenhuma modificação de firmware/NAND, credenciais de rede, pacote/configuraç�
 - **Reverter:** baixo; helper isolado, sem caller/autoload ou alteração do perfil.
 - **Onde:** arquivos F1a acima; [referência sanitizada](../../docs/evidence/n71-irq-iommu-reference.json), sete recortes por digest. Doc/status/referência/plano compõem a fase de auditoria, quatro arquivos públicos.
 - **Status:** helper F1a passou61 cenários/14 mutações compiladas por assertion no Mac e Ubuntu ARM64, AST/lint fatal e probe kernel Werror/modpost/ELF/vermagic. O runner VM procurou inicialmente `Module.symvers`, ausente; foi corrigido para `vmlinux.symvers`/`KBUILD_EXTRA_SYMBOLS` antes dos testes. Fonte/config/Image/exports preservados; módulo de prova não carregado. Message data, ownership/restore MSI e provider DART retido permanecem pendentes; nenhuma integração de hardware por esta decisão.
+
+## D3. Reter o provider DART e seu rollback na sessão nativa
+
+- **Decisão:** integrar aquisição/retorno do provider ao estado persistente do diagnóstico, com ações explícitas `dart-hold` e `dart-release`. Cleanup deve concluir o DART antes de remover o barramento, GPIO e referências de energia; falhas conservam estado e permitem tentar novamente na mesma sessão.
+- **Por quê:** o ciclo atual usa uma struct local e libera MMIO/node/claim mesmo quando stop ou restauração falham. Isso perde o owner necessário para recuperar. O provider precisa permanecer registrado para a associação PCI posterior. A próxima fatia corrige esse lifecycle sem habilitar MASTER, DMA ou rádio.
+- **Alternativas:** repetir o ciclo e reiniciar o telefone perde estado e exige DFU; liberar o provider imediatamente impede attachment; iniciar brcmfmac mistura gates ainda não comprovados. Rejeitadas.
+- **Reverter:** baixo antes da prova física; sem autoload ou mudança de perfil. O caminho temporário continua disponível com o mesmo contrato de sucesso.
+- **Onde:** F1b toca somente este plano, `phone/kernel/n71-dart-lease.h`, `n71-dart-provider.h`, `n71-pcie-mmio.h` e `n71-pcie-diagnostic.c`. F1c qualifica cenários de aquisição/rollback/retomada com falhas e callbacks reais do backend, build Werror/modpost e reprodução sanitizada.
+- **Status:** em curso offline. Preparar a candidata não libera seu uso físico: ownership IRQ, efeitos de mask/free e baseline/restore ainda devem ser qualificados antes de carregar.
+
+### Contratos F1b/F1c
+
+- [ ] Estado retido desde antes do start, inclusive probe parcial e stop/claim/restauração com erro.
+- [ ] Salvar baseline uma vez, impedir aquisição duplicada, retomar TTBR no primeiro índice não confirmado e verificar todas as palavras ao final. Tentativa de cleanup tem orçamento próprio; não reiniciar nem repetir writes já confirmados sem divergência medida.
+- [ ] `dart-hold` exige host retido, recursos atribuídos e sessão sem erro; `dart-release` preserva host/energia para outros testes. `cleanup` bloqueia remoção PCI/reset/power enquanto houver DART pendente. Getter separado não muda o formato dos getters já usados.
+- [ ] Qualificar falhas antes/depois de start, stop, reads, guards e cada write; idempotência/ownership/retomada e mutações compiladas por asserção, Mac/Ubuntu e módulo nativo completo. Não contar build/import/timeout como kill.
+- [ ] Fechar ownership IRQ antes de qualquer boot da nova candidata; `irq_set_handler(NULL)` pode mascarar o AIC no free, portanto não é operação exclusivamente de software.
