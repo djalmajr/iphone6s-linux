@@ -1,0 +1,71 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T05:47:44.362330+00:00",
+  "code_commit": "a042c8b422eba4112e595d43e419f6de63a03738",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "proof_scope": "Isolated production OF/DART host lease with modeled tree, device and fault dependencies; native ARM64 kernel ABI probe. No caller integration, DMA-domain setup, runtime alias validation or physical execution.",
+  "inputs_sha256": {
+    "phone/kernel/n71-dart-host.h": "51effa6ff20dd040dd2190cc7b3bd10d82ebc2535a30a13d120d4db3d988a1c8",
+    "tests/n71_dart_host_fixture.h": "4dd09ee3262ee596f5ea2912e72f7a84b341321e993841c6629abc6fbb9312ef",
+    "tests/n71_dart_host.c": "6af11cbf204562ade79ca3a1db92548249f051d035d4607475a311bb38800903",
+    "tests/test_n71_dart_host.py": "097553bae9338176824766ebbcaaccac2624ecbdf4ba24d3c479e9e3ae71adc0"
+  },
+  "qualification": {
+    "macos": {
+      "exit": 0,
+      "elapsed_s": 15.14,
+      "baseline_cases": 49,
+      "assertion_kills": 38,
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0
+    },
+    "ubuntu_arm64": {
+      "exit": 0,
+      "baseline_cases": 49,
+      "assertion_kills": 38,
+      "elapsed_s": 3.037,
+      "ast_exit": 0
+    },
+    "mutation_policy": "Each mutation must compile with Werror and terminate through SIGABRT and an assertion. Compile errors, selector ambiguity and timeouts are not kills."
+  },
+  "kernel_probe": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "kernel_exit": 0,
+    "module_sha256": "e7bf28e5cede9bf1fad52be38b3ea468af4b6b7b2140bbc265fb5221adbcc634",
+    "module_bytes": 11456,
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "loaded": false,
+    "probe_init": "EOPNOTSUPP",
+    "generated_inputs_sha256": {
+      "Makefile": "4aa6b0f29a8699380855bd543068707621a8bde3d805b2103270129773234a40",
+      "n71-dart-host-probe.c": "b6f84d0e01ea8e63434e5df845ce2b1d8d2756cbb198001d391e13ae92fedf12"
+    },
+    "baseline_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true,
+    "original_tracked_patch_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+    "original_tracked_changes_preserved": true
+  },
+  "failure_history": {
+    "initial_compile_failures": 8,
+    "initial_selector_ambiguity_failures": 1,
+    "initial_qualified_kills": 29,
+    "first_retry_qualified_kills": 8,
+    "second_retry_qualified_kills": 1,
+    "initial_abi_failure": "Missing linux/of_platform.h declaration; fixed explicitly, then full 49-case/38-mutation gate rerun on both platforms.",
+    "final_evidence_reused_from_earlier_failed_runs": false
+  },
+  "limits": [
+    "Caller must serialize lease, PCI removal and provider teardown and retain its module.",
+    "OF changeset destruction frees entries and node references, not dynamic properties retained by the tree.",
+    "Mapping only contains RIDs 0x0008 and 0x0100 to SID0, length1. Unknown runtime aliases must be refused before future attachment or DMA.",
+    "No physical IRQ/MSI delivery, IOMMU attachment, radio, charge or battery measurement."
+  ],
+  "ci": {
+    "status": "pending_publication",
+    "physical_proof": false
+  }
+}

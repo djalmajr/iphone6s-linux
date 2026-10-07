@@ -340,4 +340,29 @@ python3 -B scripts/build/prepare-n71-topology.py \
 
 A fonte de binding original tem seis alterações tracked de DART/GPIO/power/serdev. Para este build usamos uma cópia Git sparse limpa e separada do commit fixado, com arch/arm64/boot/dts e include. O hash do diff original foi preservado, junto de config/Image/vmlinux.symvers; não fizemos reset, rebuild da Image ou instalação. A referência JSON deve corresponder ao contrato já documentado do preparador, sem nova extração de firmware.
 
-CLI default e opt-in geraram DTBs reais com a mesma baseline. Phandle DART 41 na candidata qualificada; SHA797275305a2bc5fdf49b8639075a8ac46768f8ea1de80fa682ebe460288341bd. DTBs/logs ficam privados. Não houve composição, seleção de perfil, load, novo boot/DFU/PIN ou escrita no telefone. Nenhuma dependência, banco ou configuração global do Mac mudou; custo de runtime não medido. A CI nova será conferida depois da publicação. Próximo: helper D11 de disponibilidade/mapa com refs e rollback, depois integração/collector e física agrupada. Wi-Fi#9, energia#2, issue40 e goal continuam abertos.
+CLI default e opt-in geraram DTBs reais com a mesma baseline. Phandle DART41 na candidata qualificada; SHA797275305a2bc5fdf49b8639075a8ac46768f8ea1de80fa682ebe460288341bd. DTBs/logs ficam privados. [CI de22031b8](https://github.com/djalmajr/iphone6s-linux/actions/runs/37575497590) aprovada nos três jobs em2026-10-07T05:28:11Z. Não houve composição, seleção de perfil, load, novo boot/DFU/PIN ou escrita no telefone. Nenhuma dependência, banco ou configuração global do Mac mudou; custo de runtime não medido. D11 abaixo qualifica o helper; integração/collector e física agrupada continuam pendentes. Wi-Fi#9, energia#2, issue40 e goal permanecem abertos.
+
+## D11 — lease OF recuperável para o host DART
+
+[Helper](../phone/kernel/n71-dart-host.h), códigoa042c8b, [plano D11](../.agents/plans/n71-irq-iommu-bindings.md#d11-preparar-a-associação-ofdart-com-rollback-observável), [prova sanitizada](evidence/n71-dart-host-qualification.json). Prepare valida N71, bridge sem bus, parent/nós fixos, provider manual bound/único, status disabled original e phandle/células. Recusa propriedades IOMMU e flag de população preexistentes. Retém devices/nodes e publica owner antes de alocações/efeitos; duas changesets de uma entry cada disponibilizam o provider e acrescentam o mapa do parent. O mapa contém somente RID0x0008 e RID0x0100, SID0 e length1 por entrada.
+
+O caller deve serializar o lifecycle e manter o módulo. Unmap recusa bus vivo, reverte somente o mapa próprio e conserva disponibilidade/refs. Release recusa qualquer provider registrado para o nó; o caller deve pará-lo depois da remoção dos consumidores e do unmap. Só então são restaurados status disabled e flag própria. A última referência da bridge pode liberar o priv: o helper copia as refs e zera o owner antes dos puts. Ainda não está integrado ao scan/caller, não verifica aliases runtime e não configura domínio DMA.
+
+Apply/revert podem falhar depois de efetivar a propriedade. Identidade e readback distinguem original/próprio/alheio; owner permanece em erro/drift e retry reconhece uma etapa já restaurada sem repetir revert. Não remove provider alheio. Destroy libera entries/refs, sem liberar manualmente properties retidas pela árvore ou alegar todo o heap recuperado.
+
+### Gates e reprodução
+
+Mac e Ubuntu ARM64 passaram49 cenários/38 mutações compiladas por assertion cada. Cobrem guard antes de efeitos, refs enquanto bridge/provider perdem refs de registro, mapa big-endian exato, duplicação de provider, falhas de queue/apply/revert antes e depois dos efeitos, readback divergente, consumidores vivos e retry. Os callbacks prepare/unmap/release são produção; dependências OF/PCI/device são modeladas. Mutantes precisam compilar com Werror e falhar por SIGABRT/asserção; timeout, erro de import, compilação e selector ambíguo não contam como kills.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_dart_host.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_dart_host.py
+```
+
+Na primeira execução houve oito erros de compilação em selectors e uma ambiguidade, sem contá-los como kills. Selectors foram corrigidos e repetidos seletivamente, com logs privados preservados. O primeiro probe ABI detectou falta de include linux/of_platform.h; corrigimos a dependência explícita e repetimos o gate completo nos dois ambientes. A evidência final contém49/38 novos por plataforma, sem reutilizar resultados de execuções com falha. AST/lint fatal passaram no Mac e AST no ARM64; não há typechecker Python.
+
+Para reproduzir ABI, use pasta M separada com o header exato e Makefile `obj-m += n71-dart-host-probe.o`. O probe inclui linux/module.h e n71-dart-host.h, mantém owner estático e três wrappers globais com prototypes que chamam prepare(owner,request), unmap(owner) e release(owner). module_init retorna -EOPNOTSUPP e module_exit é vazio; licença GPL. O probe é somente de compilação: nunca executar insmod. Use make/exports fixados descritos acima, W=1/KCFLAGS=-Werror, sem KBUILD_MODPOST_WARN, e confira hashes antes/depois.
+
+Build/modpost/ELF64 AArch64/vermagic power2 passaram. Módulo11456 bytes/SHAe7bf28e5cede9bf1fad52be38b3ea468af4b6b7b2140bbc265fb5221adbcc634; source/config/Image/vmlinux.symvers e as seis alterações tracked da fonte original foram preservados. Header/fixture/C/Python correspondem aos quatro hashes da prova. Módulo e logs privados, sem load.
+
+Arquivos desta fatia: helper, fixture OF/device, cenários C, runner Python e plano; documentação/prova publicadas separadamente. Sem API/perfil físico alterado, dependência, banco ou configuração global do Mac. Custo: refs e duas changesets durante a lease, properties dinâmicas retidas pelo core; desempenho físico não medido. Próximo: integração pré-scan e cleanup consumidores → mapa → provider → disponibilidade → config/resources/bridge/reset/power. Driver/MASTER, aliases/máscaras, entrega IRQ/DMA, rádio e alimentação permanecem gates abertos. Wi-Fi#9, energia#2, issue40 e goal continuam ativos.

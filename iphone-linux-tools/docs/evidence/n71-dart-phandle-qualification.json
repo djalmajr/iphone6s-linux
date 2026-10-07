@@ -121,5 +121,30 @@
     "D11 OF/DART availability and host map lease with explicit refs and same-session rollback",
     "Caller consumer-before-provider lifecycle/getter, then collector/profile",
     "Grouped physical association/IRQ/energy tests before radio functionality"
-  ]
+  ],
+  "ci": {
+    "headSha": "22031b8b4cadb08373de3b674ded2b58514c1611",
+    "conclusion": "success",
+    "status": "completed",
+    "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37575497590",
+    "completed_at": "2026-10-07T05:28:11Z",
+    "jobs": [
+      {
+        "name": "source (ubuntu-24.04)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T05:27:14Z"
+      },
+      {
+        "name": "source (macos-15)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T05:28:11Z"
+      },
+      {
+        "name": "windows-dns",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T05:17:20Z"
+      }
+    ],
+    "physical_proof": false
+  }
 }

@@ -250,7 +250,7 @@ Unmap exige bridge sem bus e mantém disponibilidade enquanto o provider está v
 - [x] Flag off conserva o default; flag on gera handle válido, único, determinístico e pins anteriores intactos. Recusar overflow, baseline inválida e colisão/drift.
 - [x] Delta opt-in aceita somente o phandle esperado no DART; recusa mapa, status ativo e qualquer outra alteração. Registrar o identificador na provenance somente no modo opt-in.
 - [x] Testes/mutações dos guards e compilação real dtc na VM; comparar baseline/default/candidata com hashes, sem alterar source/config/Image/exports. AST/lint fatal e scope de saída preservados.
-- [x] Reprodução publicada em22031b8 e issue40 atualizada; D11 deverá recusar DTBs sem phandle. CI desse head em execução, sem nova prova de hardware. Nenhum autoload/DFU/hardware novo nesta preparação.
+- [x] Reprodução publicada em22031b8 e issue40 atualizada; D11 recusa DTBs sem phandle. CI desse head aprovada nos três jobs em2026-10-07T05:28:11Z, sem prova de hardware. Nenhum autoload/DFU/hardware novo nesta preparação.
 
 ### D11: detalhes fechados antes do helper
 
