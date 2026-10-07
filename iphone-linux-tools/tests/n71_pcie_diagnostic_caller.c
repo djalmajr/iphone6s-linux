@@ -67,6 +67,9 @@ struct n71_wlan_msi_host {
 };
 struct n71_scan_host {
 	struct n71_wlan_msi_host msi;
+	struct { struct pci_host_bridge *bridge; bool available, mapped; } dart;
+	void *iommu_domain;
+	unsigned int iommu_devices;
 	bool bus_held, resource_attempted, resources_assigned, window_claimed;
 	int held_stop_error, io_error;
 	struct { bool pending, active; int error; } resources;
@@ -79,7 +82,8 @@ struct n71_dart_provider {
 	struct n71_dart_lease lease;
 	struct { void *domain, *fwnode; unsigned int irq; } interrupt;
 	struct { void *regs; } mmio;
-	void *device, *claimed;
+	struct platform_device *device;
+	void *claimed;
 };
 static void *pci_host_bridge_priv(struct pci_host_bridge *bridge) { return &bridge->private; }
 enum n71_pcie_region { N71_PCIE_COMMON, N71_PCIE_PHY };
@@ -123,6 +127,11 @@ static struct {
 	unsigned int assignments;
 	unsigned int dart_acquires, dart_releases;
 	bool dart_live;
+	bool prescan_dart, dart_no_owner, dart_not_running, dart_no_device;
+	unsigned int iommu_scans, consumer_calls, unmaps, host_releases;
+	unsigned int inventories;
+	int consumer_error, unmap_error, host_release_error, iommu_scan_error;
+	struct platform_device dart_device;
 	int dart_acquire_error, dart_cleanup_error;
 	struct n71_dart_provider dart;
 	int assign_error, assign_early_error;
@@ -266,6 +275,7 @@ static int n71_pcie_enumerate_wlan(const struct n71_pcie_link_io *io, const stru
 static int n71_pcie_inventory_collect(const struct n71_pcie_inventory_io *io, struct n71_pcie_inventory *out)
 {
 	u32 value; assert(io->read32(io->context,0,&value)==0 && value==0x43a314e4);
+	mock.inventories++;
 	memset(out,0,sizeof(*out)); return mock.fault==INVENTORY ? -EIO : 0;
 }
 static int n71_pcie_scan(struct device *dev, struct n71_diagnostic *state)
@@ -309,14 +319,29 @@ static int n71_pcie_scan_hold_msi(struct device *dev, struct n71_diagnostic *sta
 	owner->associated=true;
 	return 0;
 }
-static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
+static int n71_pcie_scan_hold_iommu(struct device *dev, struct n71_diagnostic *state,
+				   struct platform_device *provider)
+{
+	struct n71_scan_host *host=&mock.bridge.private;
+	int error;
+	assert(mock.prescan_dart && mock.dart_live && state->dart==&mock.dart);
+	assert(provider==&mock.dart_device && mock.dart.lease.running && !mock.scans);
+	mock.iommu_scans++;
+	error=n71_pcie_scan_hold_msi(dev,state);
+	if (error || !state->scan_bridge) return error;
+	host->dart.bridge=&mock.bridge;
+	host->dart.available=host->dart.mapped=true;
+	host->iommu_domain=&mock.dart; host->iommu_devices=2;
+	return mock.iommu_scan_error;
+}
+static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 {
 	struct n71_wlan_msi_host *owner=&mock.bridge.private.msi;
-	int stop_error;
-	assert(!state->dart && !mock.dart_live);
+	struct n71_scan_host *host=&mock.bridge.private;
 	if (!state->scan_bridge) return 0;
 	assert(mock.bridge.alive && mock.refs && state->powered==4 && state->attached==4);
-	if (mock.fault==SCAN_PENDING) return -EIO;
+	mock.consumer_calls++;
+	if (mock.consumer_error) return mock.consumer_error;
 	if (mock.bridge.bus) {
 		mock.bus_removals++;
 		mock.bridge.bus=NULL;
@@ -326,11 +351,33 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 		if (mock.bridge.private.config.error && !mock.bridge.private.held_stop_error)
 			mock.bridge.private.held_stop_error=mock.bridge.private.config.error;
 	}
+	host->iommu_domain=NULL; host->iommu_devices=0;
 	if (owner->bridge) {
 		owner->associated=false;
 		if (mock.msi_cleanup_error) return mock.msi_cleanup_error;
 		if (owner->native.child || owner->native.domain->mapcount) return -EBUSY;
 		*owner=(struct n71_wlan_msi_host){0}; mock.msi_releases++;
+	}
+	if (host->dart.mapped) {
+		assert(mock.dart_live && state->dart && host->dart.available);
+		if (mock.unmap_error) return mock.unmap_error;
+		host->dart.mapped=false; mock.unmaps++;
+	}
+	return 0;
+}
+static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
+{
+	struct n71_scan_host *host=&mock.bridge.private;
+	int stop_error, error;
+	assert(!state->dart && !mock.dart_live);
+	if (!state->scan_bridge) return 0;
+	if (mock.fault==SCAN_PENDING) return -EIO;
+	error=n71_pcie_scan_remove_consumers(state);
+	if (error) return error;
+	if (host->dart.bridge) {
+		assert(!mock.bridge.bus && !host->dart.mapped);
+		if (mock.host_release_error) return mock.host_release_error;
+		host->dart.bridge=NULL; host->dart.available=false; mock.host_releases++;
 	}
 	if (mock.fault==HOLD_PENDING || mock.fault==HOLD_STOP_AND_RESTORE) return -EIO;
 	stop_error=mock.bridge.private.held_stop_error;
@@ -362,18 +409,25 @@ static int n71_pcie_dart_cycle(struct device *dev, struct n71_diagnostic *state)
 static int n71_pcie_dart_acquire(struct device *dev, struct n71_diagnostic *state)
 {
 	(void)dev;
-	assert(active_lock && *active_lock && mock.refs==2 && mock.bridge.alive && mock.bridge.bus);
+	assert(active_lock && *active_lock);
+	if (mock.prescan_dart) {
+		assert(mock.refs==1 && !mock.bridge.alive && !mock.scans && mock.inventories==1);
+	} else {
+		assert(mock.refs==2 && mock.bridge.alive && mock.bridge.bus);
+		assert(mock.bridge.private.resources_assigned && mock.bridge.private.window_claimed);
+	}
 	assert(state->module_retained && state->reset_pending && state->powered==4 && state->attached==4);
-	assert(mock.bridge.private.resources_assigned && mock.bridge.private.window_claimed);
 	assert(!state->primary_error && !state->cleanup_error && !state->power_put_pending);
 	if (state->dart) return mock.dart.lease.running ? -EALREADY : -EBUSY;
 	mock.dart=(struct n71_dart_provider){0};
 	mock.dart.lease.captured=mock.dart.lease.attempted=true;
-	mock.dart.lease.running=!mock.dart_acquire_error;
+	mock.dart.lease.running=!mock.dart_acquire_error && !mock.dart_not_running;
 	mock.dart.lease.operation_error=mock.dart_acquire_error;
-	mock.dart.device=mock.dart.mmio.regs=mock.dart.interrupt.domain=mock.dart.interrupt.fwnode=&mock.dart;
+	mock.dart.device=mock.dart_no_device ? NULL : &mock.dart_device;
+	mock.dart.mmio.regs=mock.dart.interrupt.domain=mock.dart.interrupt.fwnode=&mock.dart;
 	mock.dart.interrupt.irq=32;
-	state->dart=&mock.dart; mock.dart_live=true; mock.dart_acquires++;
+	state->dart=mock.dart_no_owner ? NULL : &mock.dart;
+	mock.dart_live=!mock.dart_no_owner; mock.dart_acquires++;
 	return mock.dart_acquire_error;
 }
 static int n71_pcie_dart_cleanup(struct device *dev, struct n71_diagnostic *state)
@@ -381,7 +435,10 @@ static int n71_pcie_dart_cleanup(struct device *dev, struct n71_diagnostic *stat
 	(void)dev;
 	if (!state->dart) return 0;
 	assert(active_lock && *active_lock && mock.refs && mock.dart_live);
-	assert(state->powered==4 && state->attached==4 && state->reset_pending && mock.bridge.alive);
+	assert(state->powered==4 && state->attached==4 && state->reset_pending);
+	if (!mock.prescan_dart) assert(mock.bridge.alive);
+	if (mock.bridge.private.dart.bridge)
+		assert(!mock.bridge.bus && !mock.bridge.private.dart.mapped && !mock.bridge.private.msi.bridge);
 	mock.dart.lease.running=false;
 	if (mock.dart_cleanup_error) {
 		mock.dart.lease.restore_error=mock.dart_cleanup_error;
@@ -406,7 +463,7 @@ static struct platform_device setup(void)
 	for (index=0;index<11;index++) p.resources[index]=(struct resource){.start=addresses[index],.end=addresses[index]+(index==0 ? 0x1000000 : index==9 ? 0x8000 : 0x4000)-1};
 	p.dev.of_node=&mock.node;
 	run=enumerate=config_inventory=host_scan=true; bar_sizing=chip_id=dart_observe=dart_cycle=false;
-	scan_pme_disable=scan_hold=msi_parent=false;
+	scan_pme_disable=scan_hold=msi_parent=iommu_parent=false;
 	return p;
 }
 static void finish(struct platform_device *p)
@@ -414,7 +471,7 @@ static void finish(struct platform_device *p)
 	unsigned int index;
 	assert(!mock.refs && !mock.node.refs && !mock.bridge.alive && mock.puts==mock.gets);
 	assert(!mock.bridge.private.msi.bridge && !mock.bridge.private.msi.native.domain);
-	assert(mock.msi_scans==(msi_parent ? 1U : 0U) || !mock.enumerations);
+	assert(mock.msi_scans==(msi_parent && (!mock.prescan_dart || mock.iommu_scans) ? 1U : 0U) || !mock.enumerations);
 	assert(mock.pme_scans==(scan_pme_disable ? mock.scans : 0));
 	for (index=0;index<4;index++) assert(!mock.domains[index].attached && !mock.domains[index].usage);
 	if (session) n71_remove(p);
@@ -826,6 +883,135 @@ static unsigned int exercise_msi_caller(void)
 	return cases;
 }
 
+static struct platform_device setup_iommu(void)
+{
+	struct platform_device p=setup_held();
+	msi_parent=iommu_parent=mock.prescan_dart=true;
+	return p;
+}
+
+static void expect_iommu(const char *expected)
+{
+	char buffer[PAGE_SIZE];
+	assert(iommu_ops.get(buffer,NULL)>0 && !strcmp(buffer,expected));
+	assert(!session_lock && !active_lock);
+}
+
+static unsigned int exercise_iommu_caller(void)
+{
+	struct platform_device p;
+	struct n71_scan_host saved;
+	void *bus;
+	unsigned int index, cases=0;
+	char expected[PAGE_SIZE];
+
+	/* Mutations killed: enable IOMMU by default or publish an owner before probe. */
+	p=setup_held();
+	expect_iommu("requested=0 ready=0 held=0 owner=0 available=0 mapped=0 observed=0 map_checked=0 session_error=0\n");
+	assert(n71_probe(&p)==0 && !mock.dart_acquires && !mock.iommu_scans);
+	expect_iommu("requested=0 ready=1 held=1 owner=0 available=0 mapped=0 observed=0 map_checked=0 session_error=0\n");
+	assert(cleanup_ops.set("cleanup",NULL)==0); finish(&p); cases++;
+	/* Mutations killed: admit IOMMU without the existing MSI/held/PME/inventory contract. */
+	for (index=0;index<6;index++) {
+		p=setup_iommu();
+		switch(index) {
+		case 0: msi_parent=false; break;
+		case 1: scan_hold=false; break;
+		case 2: host_scan=false; break;
+		case 3: scan_pme_disable=false; break;
+		case 4: config_inventory=false; break;
+		default: enumerate=false; break;
+		}
+		assert(n71_init()==-EINVAL && !mock.registered && !mock.refs && !mock.gets && !mock.dart_acquires);
+		finish(&p); cases++;
+	}
+	/* Mutations killed: omit acquisition/selection, stop an associated provider alone, or rescan. */
+	p=setup_iommu();
+	expect_iommu("requested=1 ready=0 held=0 owner=0 available=0 mapped=0 observed=0 map_checked=0 session_error=0\n");
+	assert(n71_init()==0 && !mock.dart_acquires);
+	assert(n71_probe(&p)==0 && mock.dart_acquires==1 && mock.iommu_scans==1 && mock.refs==1);
+	expect_iommu("requested=1 ready=1 held=1 owner=1 available=1 mapped=1 observed=2 map_checked=1 session_error=0\n");
+	assert(cleanup_ops.set("dart-release",NULL)==-EBUSY && mock.dart.lease.running && !mock.dart_releases);
+	assert(mock.bridge.bus && mock.bridge.private.dart.mapped && !mock.consumer_calls && mock.refs==1);
+	assert(n71_probe(&p)==-EBUSY && mock.iommu_scans==1); cases++;
+	/* Mutations killed: getter ignores ownership, partial observations, errors, or live bus loss. */
+	for (index=0;index<9;index++) {
+		saved=mock.bridge.private; bus=mock.bridge.bus;
+		switch(index) {
+		case 0: mock.bridge.private.dart.bridge=NULL; break;
+		case 1: mock.bridge.private.dart.available=false; break;
+		case 2: mock.bridge.private.dart.mapped=false; break;
+		case 3: mock.bridge.private.iommu_domain=NULL; break;
+		case 4: mock.bridge.private.iommu_devices=1; break;
+		case 5: mock.bridge.private.config.error=-EIO; break;
+		case 6: mock.bridge.private.io_error=-EIO; break;
+		case 7: session->cleanup_error=-EAGAIN; break;
+		default: mock.bridge.bus=NULL; break;
+		}
+		snprintf(expected,sizeof(expected),
+			"requested=1 ready=1 held=%u owner=%u available=%u mapped=%u observed=%u map_checked=%u session_error=%d\n",
+			index==8 ? 0U : 1U,index==0 ? 0U : 1U,index==1 ? 0U : 1U,index==2 ? 0U : 1U,
+			index==4 ? 1U : 2U,index==7 ? 1U : 0U,index==7 ? -EAGAIN : 0);
+		expect_iommu(expected);
+		mock.bridge.private=saved; mock.bridge.bus=bus; session->cleanup_error=0; cases++;
+	}
+	assert(cleanup_ops.set("cleanup",NULL)==0 && mock.bus_removals==1 && mock.unmaps==1);
+	assert(mock.dart_releases==1 && mock.host_releases==1 && mock.puts==4 && !mock.refs);
+	expect_iommu("requested=1 ready=1 held=0 owner=0 available=0 mapped=0 observed=0 map_checked=0 session_error=0\n");
+	assert(cleanup_ops.set("cleanup",NULL)==0 && mock.dart_releases==1 && mock.scans==1);
+	n71_exit(); finish(&p);
+	/* Mutations killed: scan with an absent, stopped or device-less successful provider. */
+	for (index=0;index<4;index++) {
+		p=setup_iommu();
+		if (index==0) mock.dart_no_owner=true;
+		if (index==1) mock.dart_not_running=true;
+		if (index==2) mock.dart_no_device=true;
+		if (index==3) mock.dart_acquire_error=-ENOLINK;
+		assert(n71_probe(&p)==(index==3 ? -ENOLINK : -ENODEV));
+		assert(!session && !mock.iommu_scans && !mock.scans && !mock.refs);
+		assert(mock.dart_acquires==1 && mock.dart_releases==(index==0 ? 0U : 1U));
+		finish(&p); cases++;
+	}
+	/* Mutations killed: advance after teardown failure, reset/power early, or lose retry ownership. */
+	for (index=0;index<7;index++) {
+		unsigned int removals, releases;
+		p=setup_iommu(); assert(n71_probe(&p)==0);
+		if (index==0) mock.consumer_error=-EIO;
+		if (index==1) mock.msi_cleanup_error=-EIO;
+		if (index==2) mock.unmap_error=-EIO;
+		if (index==3) mock.dart_cleanup_error=-EIO;
+		if (index==4) mock.host_release_error=-EIO;
+		if (index==5) mock.fault=RESET_READ;
+		if (index==6) { mock.fault=PUT_ERROR; mock.put_fail=3; }
+		assert(cleanup_ops.set("cleanup",NULL)==(index==6 ? -ETIMEDOUT : -EIO) && mock.refs==1);
+		assert(session->module_retained && session->primary_error==0 && mock.iommu_scans==1);
+		if (index<4) assert(session->dart && !mock.dart_releases);
+		if (index<5) assert(session->scan_bridge && !mock.resets && !mock.puts);
+		if (index<3) assert(mock.dart.lease.running && mock.bridge.private.dart.mapped);
+		snprintf(expected,sizeof(expected),
+			"requested=1 ready=1 held=%u owner=%u available=%u mapped=%u observed=%u map_checked=%u session_error=%d\n",
+			index==0 ? 1U : 0U,index<5 ? 1U : 0U,index<5 ? 1U : 0U,index<3 ? 1U : 0U,
+			index==0 ? 2U : 0U,index==0 ? 1U : 0U,index==6 ? -ETIMEDOUT : -EIO);
+		expect_iommu(expected);
+		removals=mock.bus_removals; releases=mock.dart_releases;
+		assert(cleanup_ops.set("cleanup",NULL)<0 && mock.refs==1 && mock.bus_removals==removals && mock.dart_releases==releases);
+		mock.consumer_error=mock.msi_cleanup_error=mock.unmap_error=mock.dart_cleanup_error=mock.host_release_error=0;
+		mock.fault=NONE;
+		assert(cleanup_ops.set("cleanup",NULL)==0 && !mock.refs && !session->dart && !session->scan_bridge);
+		assert(mock.dart_acquires==1 && mock.dart_releases==1 && mock.host_releases==1);
+		assert(mock.iommu_scans==1 && mock.scans==1 && mock.bus_removals==1 && mock.unmaps==1 && mock.puts==4);
+		finish(&p); cases++;
+	}
+	/* Mutation killed: drop the primary scan error while retaining its partial association. */
+	p=setup_iommu(); mock.iommu_scan_error=-ENODEV; mock.unmap_error=-EIO;
+	assert(n71_probe(&p)==0 && session->primary_error==-ENODEV && session->cleanup_error==-EIO);
+	assert(session->dart && session->scan_bridge && mock.refs==1 && !mock.dart_releases && !mock.puts);
+	mock.unmap_error=0;
+	assert(cleanup_ops.set("cleanup",NULL)==0 && session->primary_error==-ENODEV && !mock.refs);
+	finish(&p); cases++;
+	return cases;
+}
+
 int main(void)
 {
 	struct platform_device p; char status[PAGE_SIZE]; unsigned int index, cases=0;
@@ -914,5 +1100,7 @@ int main(void)
 	puts("N71_DART_CALLER_OK cases=22");
 	assert(exercise_msi_caller()==13);
 	puts("N71_MSI_CALLER_OK cases=13");
+	assert(exercise_iommu_caller()==29);
+	puts("N71_IOMMU_CALLER_OK cases=29");
 	return 0;
 }

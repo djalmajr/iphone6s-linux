@@ -7,8 +7,12 @@
 #include <string.h>
 
 struct device { int unused; };
+struct pci_host_bridge;
+struct n71_scan_host { struct { struct pci_host_bridge *bridge; } dart; };
+struct pci_host_bridge { struct n71_scan_host private; };
 struct n71_diagnostic {
-	void *dart, *scan_bridge;
+	void *dart;
+	struct pci_host_bridge *scan_bridge;
 	unsigned int attached, powered;
 	bool module_retained, power_put_pending, reset_pending;
 	int primary_error, cleanup_error;
@@ -19,6 +23,15 @@ static unsigned int fail_stage, released_pins;
 static bool leave_dart;
 static int module;
 #define THIS_MODULE (&module)
+
+static void *pci_host_bridge_priv(struct pci_host_bridge *bridge) { return &bridge->private; }
+static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
+{
+	/* This baseline models the old unattached route; associated coverage is in the caller gate. */
+	(void)state;
+	assert(false);
+	return -EBUSY;
+}
 
 static void dev_info(struct device *dev, const char *format, ...)
 {
@@ -67,9 +80,10 @@ static void module_put(int *owner)
 int main(void)
 {
 	struct n71_diagnostic state;
+	struct pci_host_bridge bridge = {0};
 	unsigned int stage;
 	for (stage = 0; stage <= 2; stage++) {
-		state = (struct n71_diagnostic){.dart = &state, .scan_bridge = &state,
+		state = (struct n71_diagnostic){.dart = &state, .scan_bridge = &bridge,
 			.powered = 4, .attached = 4, .reset_pending = true, .module_retained = true,
 			.primary_error = -ENODEV};
 		current = &state; released_pins = 0; fail_stage = stage; leave_dart = false;
@@ -84,7 +98,7 @@ int main(void)
 		}
 		assert(!state.module_retained && released_pins == 1 && state.primary_error == -ENODEV);
 	}
-	state = (struct n71_diagnostic){.dart = &state, .scan_bridge = &state,
+	state = (struct n71_diagnostic){.dart = &state, .scan_bridge = &bridge,
 		.powered = 4, .attached = 4, .reset_pending = true, .module_retained = true};
 	current = &state; released_pins = 0; leave_dart = true; fail_stage = 0;
 	assert(n71_finish_cleanup(&state) == -EBUSY);

@@ -135,8 +135,8 @@ DART_MUTATIONS = (
     ('dart-getter-hides-pending', 'n71_dart_status', 'provider ? n71_dart_lease_pending(&provider->lease) : 0',
      'false && provider ? n71_dart_lease_pending(&provider->lease) : 0'),
     ('dart-cleanup-skips-owner', 'n71_session_cleanup',
-     'int error = n71_pcie_dart_cleanup(session_device, state);',
-     'int error = false ? n71_pcie_dart_cleanup(session_device, state) : 0;'),
+     'error = n71_pcie_dart_cleanup(session_device, state);',
+     'error = false ? n71_pcie_dart_cleanup(session_device, state) : 0;'),
     ('dart-cleanup-ignores-pending', 'n71_session_cleanup', 'if (error || state->dart)',
      'if (false && (error || state->dart))'),
 )
@@ -184,6 +184,46 @@ MSI_MUTATIONS = (
      'false && session ? session->cleanup_error : 0'),
 )
 
+IOMMU_MUTATIONS = (
+    ('iommu-without-msi-contract', 'n71_init', '(iommu_parent && (!msi_parent || !scan_hold))',
+     '(false && iommu_parent && (!msi_parent || !scan_hold))'),
+    ('iommu-ignore-acquisition', 'n71_probe_locked', 'error = n71_pcie_dart_acquire(dev, state);',
+     'error = false ? n71_pcie_dart_acquire(dev, state) : 0;'),
+    ('iommu-acquire-by-default', 'n71_probe_locked', 'if (!error && iommu_parent)',
+     'if (!error && (true || iommu_parent))'),
+    ('iommu-ignore-selection', 'n71_probe_locked', 'if (iommu_parent)', 'if (false && iommu_parent)'),
+    ('iommu-stopped-provider', 'n71_probe_locked', '!state->dart->lease.running',
+     '(false && !state->dart->lease.running)'),
+    ('iommu-missing-device', 'n71_probe_locked', '!state->dart->device', '(false && !state->dart->device)'),
+    ('iommu-skip-consumers', 'n71_session_cleanup', 'error = n71_pcie_scan_remove_consumers(state);',
+     'error = false ? n71_pcie_scan_remove_consumers(state) : 0;'),
+    ('iommu-ignore-consumer-error', 'n71_session_cleanup', 'if (error)\n\t\t\t\treturn error;',
+     'if (false)\n\t\t\t\treturn error;'),
+    ('iommu-release-live-provider', 'n71_dart_action', 'if (host && host->dart.bridge)',
+     'if (false && host && host->dart.bridge)'),
+    ('iommu-getter-without-lock', 'n71_iommu_status', 'mutex_lock(&session_lock);',
+     'if (false) mutex_lock(&session_lock);'),
+    ('iommu-getter-loses-host', 'n71_iommu_status', 'if (session && session->scan_bridge)',
+     'if (false && session && session->scan_bridge)'),
+    ('iommu-getter-hides-request', 'n71_iommu_status', 'iommu_parent, !!session', 'false && iommu_parent, !!session'),
+    ('iommu-getter-always-ready', 'n71_iommu_status', 'iommu_parent, !!session', 'iommu_parent, 1'),
+    ('iommu-getter-hides-owner', 'n71_iommu_status', 'host ? !!host->dart.bridge : 0', 'false && host ? !!host->dart.bridge : 0'),
+    ('iommu-getter-hides-availability', 'n71_iommu_status', 'host ? host->dart.available : 0', 'false && host ? host->dart.available : 0'),
+    ('iommu-getter-hides-map', 'n71_iommu_status', 'host ? host->dart.mapped : 0', 'false && host ? host->dart.mapped : 0'),
+    ('iommu-getter-hides-observations', 'n71_iommu_status', 'host ? host->iommu_devices : 0', '0U * (host ? host->iommu_devices : 0)'),
+    ('iommu-getter-hides-session-error', 'n71_iommu_status', 'session ? session->cleanup_error : 0', 'false && session ? session->cleanup_error : 0'),
+)
+IOMMU_CHECKS = (
+    'n71_session_has_held_bus(session)', 'host->dart.bridge', 'host->dart.available',
+    'host->dart.mapped', 'host->iommu_domain', 'host->iommu_devices == 2',
+    '!host->config.error', '!host->io_error',
+)
+IOMMU_MUTATIONS += tuple(
+    (f'iommu-check-missing-{index}', 'n71_iommu_status',
+     f'{guard} &&' if index < 7 else f'{guard};',
+     f'(true || {guard}) &&' if index < 7 else f'(true || {guard});')
+    for index, guard in enumerate(IOMMU_CHECKS))
+
 
 def function_span(source, name):
     match = re.search(r'static int (?:__init )?' + re.escape(name) + r'\([^)]*\)\n\{', source)
@@ -225,7 +265,8 @@ class N71PcieCaller(unittest.TestCase):
             variants += tuple((name, before, after, True) for name, before, after in MMIO_MUTATIONS)
             variants += tuple((name, before, after, False) for name, _, before, after in DART_MUTATIONS)
             variants += tuple((name, before, after, False) for name, _, before, after in MSI_MUTATIONS)
-            scoped_functions = {name: function for name, function, _, _ in DART_MUTATIONS + MSI_MUTATIONS}
+            variants += tuple((name, before, after, False) for name, _, before, after in IOMMU_MUTATIONS)
+            scoped_functions = {name: function for name, function, _, _ in DART_MUTATIONS + MSI_MUTATIONS + IOMMU_MUTATIONS}
             for name, before, after, mmio in variants:
                 subject = mmio_source if mmio else source
                 start, end = 0, len(subject)
@@ -256,6 +297,7 @@ class N71PcieCaller(unittest.TestCase):
                     self.assertIn('N71_PCIE_RESOURCE_CALLER_OK cases=27', result.stdout)
                     self.assertIn('N71_DART_CALLER_OK cases=22', result.stdout)
                     self.assertIn('N71_MSI_CALLER_OK cases=13', result.stdout)
+                    self.assertIn('N71_IOMMU_CALLER_OK cases=29', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)

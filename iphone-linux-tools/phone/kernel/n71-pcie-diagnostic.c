@@ -41,6 +41,9 @@ MODULE_PARM_DESC(scan_hold, "Keep the PME host scan and its owners until action=
 static bool msi_parent;
 module_param(msi_parent, bool, 0400);
 MODULE_PARM_DESC(msi_parent, "Associate the private MSI parent before the held scan; no IRQ allocation or DMA");
+static bool iommu_parent;
+module_param(iommu_parent, bool, 0400);
+MODULE_PARM_DESC(iommu_parent, "Associate the retained DART provider before the held MSI scan; no driver or DMA");
 static bool bar_sizing;
 module_param(bar_sizing, bool, 0400);
 MODULE_PARM_DESC(bar_sizing, "Size/restore endpoint BARs directly; no PCI devices, MMIO or DMA");
@@ -183,7 +186,18 @@ static int n71_release_power(struct n71_diagnostic *state)
 
 static int n71_session_cleanup(struct n71_diagnostic *state)
 {
-	int error = n71_pcie_dart_cleanup(session_device, state);
+	struct n71_scan_host *host;
+	int error;
+
+	if (state->scan_bridge) {
+		host = pci_host_bridge_priv(state->scan_bridge);
+		if (host->dart.bridge) {
+			error = n71_pcie_scan_remove_consumers(state);
+			if (error)
+				return error;
+		}
+	}
+	error = n71_pcie_dart_cleanup(session_device, state);
 
 	if (error || state->dart)
 		return error ? error : -EBUSY;
@@ -344,7 +358,13 @@ static int n71_dart_action(bool release)
 	    session->powered != 4 || session->attached != 4 || session->power_put_pending) {
 		error = -ENODEV;
 	} else if (release) {
-		error = n71_pcie_dart_cleanup(session_device, session);
+		host = session->scan_bridge ? pci_host_bridge_priv(session->scan_bridge) : NULL;
+		if (host && host->dart.bridge) {
+			dev_info(session_device, "N71_DART_RELEASE_REFUSED association-owned; use action=cleanup\n");
+			error = -EBUSY;
+		} else {
+			error = n71_pcie_dart_cleanup(session_device, session);
+		}
 	} else if (!n71_session_has_held_bus(session) || session->primary_error || session->cleanup_error) {
 		error = -EBUSY;
 	} else {
@@ -420,12 +440,36 @@ static int n71_msi_status(char *buffer, const struct kernel_param *parameter)
 	return length;
 }
 
+static int n71_iommu_status(char *buffer, const struct kernel_param *parameter)
+{
+	struct n71_scan_host *host = NULL;
+	bool checked;
+	int length;
+
+	(void)parameter;
+	mutex_lock(&session_lock);
+	if (session && session->scan_bridge)
+		host = pci_host_bridge_priv(session->scan_bridge);
+	/* Last OF/core observation; no private SID, translation or IRQ readback. */
+	checked = n71_session_has_held_bus(session) && host && host->dart.bridge && host->dart.available && host->dart.mapped &&
+		host->iommu_domain && host->iommu_devices == 2 && !host->config.error && !host->io_error;
+	length = scnprintf(buffer, PAGE_SIZE,
+		"requested=%u ready=%u held=%u owner=%u available=%u mapped=%u observed=%u map_checked=%u session_error=%d\n",
+		iommu_parent, !!session, n71_session_has_held_bus(session),
+		host ? !!host->dart.bridge : 0, host ? host->dart.available : 0,
+		host ? host->dart.mapped : 0, host ? host->iommu_devices : 0,
+		checked, session ? session->cleanup_error : 0);
+	mutex_unlock(&session_lock);
+	return length;
+}
+
 static const struct kernel_param_ops cleanup_ops = {.set = n71_cleanup_action};
 static const struct kernel_param_ops status_ops = {.get = n71_session_status};
 static const struct kernel_param_ops held_ops = {.get = n71_held_status};
 static const struct kernel_param_ops resource_ops = {.get = n71_resource_status};
 static const struct kernel_param_ops dart_ops = {.get = n71_dart_status};
 static const struct kernel_param_ops msi_ops = {.get = n71_msi_status};
+static const struct kernel_param_ops iommu_ops = {.get = n71_iommu_status};
 module_param_cb(action, &cleanup_ops, NULL, 0200);
 MODULE_PARM_DESC(action, "assign, dart-hold, dart-release, cleanup operate on the retained session; no rescan");
 module_param_cb(status, &status_ops, NULL, 0400);
@@ -438,6 +482,8 @@ module_param_cb(dart, &dart_ops, NULL, 0400);
 MODULE_PARM_DESC(dart, "Read DART ownership and recovery progress independently of PCI resources");
 module_param_cb(msi, &msi_ops, NULL, 0400);
 MODULE_PARM_DESC(msi, "Read MSI association ownership and pending session cleanup; not IRQ delivery proof");
+module_param_cb(iommu, &iommu_ops, NULL, 0400);
+MODULE_PARM_DESC(iommu, "Read OF/core DART association and pending cleanup; not DMA translation proof");
 
 static int n71_power(struct device *dev, struct n71_diagnostic *state)
 {
@@ -540,9 +586,17 @@ static int n71_probe_locked(struct platform_device *pdev)
 			stage = "inventory";
 			error = n71_inventory_report(dev, state);
 		}
+		if (!error && iommu_parent) {
+			stage = "iommu-provider";
+			error = n71_pcie_dart_acquire(dev, state);
+			if (!error && (!state->dart || !state->dart->lease.running || !state->dart->device))
+				error = -ENODEV;
+		}
 		if (!error && host_scan) {
 			stage = scan_hold ? "host-scan-hold" : "host-scan";
-			if (scan_hold)
+			if (iommu_parent)
+				error = n71_pcie_scan_hold_iommu(dev, state, state->dart->device);
+			else if (scan_hold)
 				error = msi_parent ? n71_pcie_scan_hold_msi(dev, state) :
 					n71_pcie_scan_hold(dev, state);
 			else
@@ -634,7 +688,8 @@ static int __init n71_init(void)
 {
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
-	if ((msi_parent && !scan_hold) || (scan_hold && (!host_scan || !scan_pme_disable)) ||
+	if ((iommu_parent && (!msi_parent || !scan_hold)) ||
+	    (msi_parent && !scan_hold) || (scan_hold && (!host_scan || !scan_pme_disable)) ||
 	    (scan_pme_disable && !host_scan) || (config_inventory && !enumerate) ||
 	    ((host_scan || bar_sizing || chip_id || dart_observe || dart_cycle) && !config_inventory) ||
 	    (host_scan + bar_sizing + chip_id + dart_observe + dart_cycle > 1))
