@@ -276,3 +276,20 @@ Antes de soltar a última referência a um device, zerar o owner e guardar local
 - [x] Cleanup antigo mantém restore/free e erros; sete novos cenários executam a etapa real e provam ausência de writes/restauração/free entre as fases.
 - [x] Mac/ARM64: scan86/72, optional18/14, IO1620/17 e PREF6435/17, total159/120. Módulo completoW=1/Werror/modpost/ELF/vermagic; source/config/Image/exports intactos.
 - [ ] Reprodução sanitizada e issue40 publicadas antes da futura integração/candidata física. Nenhum DFU nesta fatia.
+
+## D14. Associar o DART no scan e exigir readback do core IOMMU
+
+- **Decisão:** próxima fatia adiciona owner D11 ao priv do scan e opção interna provider manual, default NULL. Exigir held bus, PME e MSI preparados; o caller futuro fornecerá provider bound adquirido antes do scan. Preparar disponibilidade/mapa antes de pci_scan_root_bus_bridge. Report confere fwspec/fwnode/SID0 e domínio traduzido obtidos pelo core; scan sem associação não é sucesso. Remoção D13 seguida de unmap; cleanup completo só restaura config/resources/free depois de release D11, que recusa provider ainda registrado.
+- **Por quê:** iommu_init_device:469–488 pode chamar pci_dma_configure sem driver; notifier ADD_DEVICE:1820–1824 ignora a falha com NOTIFY_DONE. Bus publicado não prova attachment. O provider precisa sobreviver à remoção dos consumidores, mapa e status disponíveis até seus efeitos terminarem. Auditoria nova em docs/evidence/n71-iommu-publication-audit.json.
+- **Alternativas:** editar mapa depois da publicação perde o caminho normal; alegar sucesso só pela changeset mascara falha silenciosa do core; parar provider dentro do scan duplica seu owner; ignorar modpost de aliases enfraquece ABI. Rejeitadas.
+- **Reverter:** baixo antes do caller/perfil; modo antigo conserva provider NULL. Médio depois da seleção física, por lifetime e estado de cleanup retido.
+- **Onde:** próxima fatia até cinco públicos: este plano, phone/kernel/n71-pcie-scan.h, tests/n71_pcie_scan_host.c, tests/test_n71_pcie_scan_host.py e nova tests/n71_pcie_dart_scan_fixture.h. Fixture nova modela core OF/IOMMU; helper D11 é produção qualificada separadamente. Probe completo retém wrapper privado só enquanto o caller não selecionar a nova rota. Integração do caller/getter em fatia seguinte.
+- **Status:** contrato preparado; implementação ainda não iniciada. APIs iommu_group_get/put e iommu_get_domain_for_dev estão exportadas; dev_iommu_fwspec_get é inline. pci_for_each_dma_alias e pci_real_dma_dev não têm export no kernel fixado: não chamá-los no módulo externo. Driver/MASTER continuam negados; contrato de aliases antes de DMA é pendência explícita.
+
+### Contratos D14
+
+- [ ] Guard before effects: provider opt-in só com held bus/MSI/PME; defaults e wrappers antigos mantêm provider NULL. Disponibilidade/mapa preparados com refs antes da publicação PCI.
+- [ ] Root/endpoint auditados exigem fwspec com fwnode do provider, IDs restritos ao SID0, domínio traduzido e observações consistentes; ausência/drift/core error recusa held success. Nenhum campo significa entrega IRQ ou DMA físico.
+- [ ] Remover consumidores → unmap, mantendo provider disponível; caller futuro para provider → release D11 → restore/free/config/resources → reset/power/unpin. Release pendente impede free da bridge; retry não repete efeitos já concluídos.
+- [ ] Falhas antes/depois de prepare, core association/publication, unmap/release e MSI/remove conservam owner e modelo de restauração. Gates reais de scan e helper D11 separados, mutações assertion Mac/ARM64 e ABI completa sem load.
+- [ ] Caller/getter/collector, aliases/máscaras, seleção de DTB e energia fechados antes de uma única sessão física agrupada. Nenhum novo DFU durante a implementação offline.

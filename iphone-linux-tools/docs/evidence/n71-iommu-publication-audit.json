@@ -1,0 +1,67 @@
+{
+  "format": 1,
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "proof_scope": "Primary-source and export audit only, no live IOMMU configuration or device execution.",
+  "source_sha256": {
+    "drivers/iommu/iommu.c": "27ec62e95f5d5d4e3f7103587e8f955c3722f2a61ae7436daf95615fd1a42875",
+    "drivers/pci/search.c": "86cd467b75760ec05d570f57a3f83dd22669fe251aaac3417fbd6b927b5f9a24",
+    "include/linux/pci.h": "cac298a06cf955ce7bc9f9c1a415345481387e20dfeda153bfca5850659b589d",
+    "include/linux/iommu.h": "ce6d31c2ff1a32ce5678d934519659a7c8d1233186c444c2804eefb73a342ad9"
+  },
+  "facts": [
+    {
+      "path": "drivers/iommu/iommu.c",
+      "lines": [
+        469,
+        488
+      ],
+      "fact": "Device initialization can invoke bus dma_configure before a driver is bound."
+    },
+    {
+      "path": "drivers/iommu/iommu.c",
+      "lines": [
+        1815,
+        1827
+      ],
+      "fact": "ADD_DEVICE probes IOMMU; error returns NOTIFY_DONE. REMOVED_DEVICE releases its IOMMU state. Successful PCI scan alone does not prove association."
+    },
+    {
+      "path": "include/linux/iommu.h",
+      "lines": [
+        1139,
+        1144
+      ],
+      "fact": "fwspec records IOMMU fwnode and stream IDs; getter is inline at1180."
+    },
+    {
+      "path": "include/linux/pci.h",
+      "lines": [
+        1501,
+        1501
+      ],
+      "fact": "pci_real_dma_dev is a declaration, not an inline helper."
+    },
+    {
+      "path": "include/linux/pci.h",
+      "lines": [
+        2831,
+        2833
+      ],
+      "fact": "pci_for_each_dma_alias is declared but absent from fixed vmlinux.symvers."
+    }
+  ],
+  "exported_fixed_symbols": {
+    "iommu_fwspec_free": false,
+    "pci_for_each_dma_alias": false,
+    "iommu_group_put": true,
+    "pci_real_dma_dev": false,
+    "iommu_group_get": true,
+    "iommu_get_domain_for_dev": true
+  },
+  "consequences": [
+    "Prepare provider availability and host map before PCI publication; retain all owners through IOMMU cleanup.",
+    "Require fwspec/provider/SID and translated domain observations after scan before claiming association.",
+    "Do not call unavailable PCI alias helpers from the external module or ignore modpost. A separate bounded alias contract or explicit reviewed kernel export is needed before driver/DMA.",
+    "No physical IRQ/MSI, DMA, radio or energy proof from this audit."
+  ]
+}

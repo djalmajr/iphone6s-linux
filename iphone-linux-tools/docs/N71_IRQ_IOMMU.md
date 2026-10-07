@@ -319,7 +319,7 @@ Tornar o nó disponível aciona o [notifier OF](https://github.com/HoolockLinux/
 
 Há outro limite na API: [apply](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/of/dynamic.c#L767) pode retornar erro de notify depois de aplicar as propriedades. Um retorno negativo não garante que a árvore foi restaurada. É necessário conferir identidade/readback e manter owner/refs para retry quando houver efeitos vivos. [Destroy](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/of/dynamic.c#L533) libera entries e referências, sem liberar a propriedade dinâmica retida pela árvore; não usar propriedade embutida em um owner que será liberado nem declarar todo o heap recuperado.
 
-As APIs changeset e helpers de propriedades estão exportados no kernel fixado. CONFIG_OF_DYNAMIC/OVERLAY estão habilitados e o domínio default é DMA strict. [SID0 da referência N71](evidence/n71-dart-apple-stream-reference.json) continua sendo a entrada para o mapa restrito; máscaras/aliases precisam ser conferidos antes de permitir DMA. A auditoria preservou fonte/config/Image/exports e não aplicou mudanças OF, não carregou módulos nem pediu outro DFU. O helper, a integração do caller e a prova física continuam pendentes na issue40.
+As APIs changeset e helpers de propriedades estão exportados no kernel fixado. CONFIG_OF_DYNAMIC/OVERLAY estão habilitados e o domínio default é DMA strict. [SID0 da referência N71](evidence/n71-dart-apple-stream-reference.json) continua sendo a entrada para o mapa restrito; máscaras/aliases precisam ser conferidos antes de permitir DMA. A auditoria preservou fonte/config/Image/exports e não aplicou mudanças OF, não carregou módulos nem pediu outro DFU. D11 abaixo qualifica o helper isolado; integração do caller e prova física continuam pendentes na issue40.
 
 ## Referência DART na DTB desativada
 
@@ -366,3 +366,33 @@ Para reproduzir ABI, use pasta M separada com o header exato e Makefile `obj-m +
 Build/modpost/ELF64 AArch64/vermagic power2 passaram. Módulo11456 bytes/SHAe7bf28e5cede9bf1fad52be38b3ea468af4b6b7b2140bbc265fb5221adbcc634; source/config/Image/vmlinux.symvers e as seis alterações tracked da fonte original foram preservados. Header/fixture/C/Python correspondem aos quatro hashes da prova. Módulo e logs privados, sem load.
 
 Arquivos desta fatia: helper, fixture OF/device, cenários C, runner Python e plano; documentação/prova publicadas separadamente. Sem API/perfil físico alterado, dependência, banco ou configuração global do Mac. Custo: refs e duas changesets durante a lease, properties dinâmicas retidas pelo core; desempenho físico não medido. Próximo: integração pré-scan e cleanup consumidores → mapa → provider → disponibilidade → config/resources/bridge/reset/power. Driver/MASTER, aliases/máscaras, entrega IRQ/DMA, rádio e alimentação permanecem gates abertos. Wi-Fi#9, energia#2, issue40 e goal continuam ativos.
+
+## D13 — remover consumidores conservando o host
+
+[Scan](../phone/kernel/n71-pcie-scan.h), código269c1c9, [decisão D13](../.agents/plans/n71-irq-iommu-bindings.md#d13-separar-remoção-de-consumidores-da-restauração-do-host-pci), [prova sanitizada](evidence/n71-consumer-removal-qualification.json). A nova etapa n71_pcie_scan_remove_consumers(state) remove o bus sob rescan/remove lock e libera a lease MSI. Config/resources/window/PME/target e a bridge ficam retidos, permitindo ao próximo caller intercalar teardown do provider e disponibilidade OF. O cleanup completo usa essa etapa e mantém a restauração/free anteriores.
+
+Fase de alocação ativa ou bus sem ownership recusa antes de efeitos. Child MSI/release incompleto bloqueia sucesso sem restaurar IO. Retry não repete remoção; held_stop_error permanece até o cleanup completo reportá-lo. Essa extração não muda a ordem DART do caller e não acrescenta attachment/driver/MASTER. É preparação para integrar o helper D11.
+
+### Gates e reprodução
+
+Mac/ARM64: scan86 cenários/72 mutações, optional18/14, IO1620/17 e PREF6435/17, total159/120 por plataforma. Sete cenários novos executam a etapa real e conferem bridge/config/PME/target retidos, ausência de writes/restore/free, erro MSI/stop, retry e API antiga. Três novas mutações detectam skip da fase, perda de stop-error e restauração antecipada. As dependências PCI/MMIO são modeladas; não é prova física.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_scan_host.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_optional_host.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_io16_host.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_pref64_host.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_pcie_scan_host.py
+```
+
+Primeiro gate scan passou baseline86 e71 mutações; uma mutação antiga que zerava o retorno stop-error deixou a variável unused após a extração. Erro de compile não contou como kill. Corrigimos apenas seu selector para consumir a variável e repetimos esse mutante por SIGABRT/asserção nos dois ambientes. Os55 outros inputs, compiler helper e demais selectors permaneceram idênticos; resultados aprovados foram reutilizados. Os três gates compartilhados, ainda não executados na primeira tentativa, foram rodados integralmente. Logs iniciais/retry privados preservados, sem prazo ou critério enfraquecido. AST/lint fatal passaram no Mac e AST no ARM64; não há typechecker Python.
+
+Build de produção em M separado, sem wrapper privado, passouW=1/Werror/modpost/ELF64 AArch64/vermagic power2. Módulo104352 bytes/SHA456134c0783cfffd0ce59676d35234a544993602c665d84b4534f1c0bc7d1c67; nunca carregado.56 inputs protegidos,47 C/headers e nove arquivos de teste;30 includes efetivos. Use cópias exatas phone/kernel e Makefile `obj-m += n71-pcie-diagnostic.o`, mais o make/exports fixados descritos acima. Fonte original com seis alterações tracked, config/Image/vmlinux.symvers intactos; não usar KBUILD_MODPOST_WARN.
+
+Arquivos: scan, cenários C compartilhados, runner Python e plano; doc/prova separadas. Sem pacote, dependência, banco, perfil, configuração global do Mac ou novo DFU. Custo: uma chamada interna adicional de lifecycle; desempenho físico não medido. Próximo: associação DART pré-scan, remoção/unmap, teardown provider e restore da disponibilidade antes da restauração final. IRQ/DMA/radio e energia permanecem abertos na issue40 e no goal.
+
+### Publicação PCI não comprova associação IOMMU
+
+[Auditoria primária](evidence/n71-iommu-publication-audit.json), [contrato D14](../.agents/plans/n71-irq-iommu-bindings.md#d14-associar-o-dart-no-scan-e-exigir-readback-do-core-iommu). Na fonte fixada, iommu_init_device:469–488 chama o dma_configure do bus antes de existir driver. O notifier ADD_DEVICE:1820–1824 retorna NOTIFY_DONE em erro do probe; um scan bem-sucedido, portanto, pode coexistir com associação ausente. Remoção do device dispara a liberação IOMMU. A integração precisará preparar mapa/provider antes da publicação e conferir fwspec/fwnode/SID e domínio traduzido depois, mantendo owners até a remoção dos consumidores.
+
+As consultas iommu_group_get/put e iommu_get_domain_for_dev têm export fixado; dev_iommu_fwspec_get é inline. pci_for_each_dma_alias e pci_real_dma_dev são declarações sem export no vmlinux.symvers utilizado. Não chamá-las de módulo externo nem enfraquecer modpost. O contrato de aliases precisa ser fechado por caminho disponível ou export explícito em futura fatia antes de liberar driver/MASTER. D14 ainda é plano; os dados acima são auditoria de fonte/ABI, sem efeito ou prova física.
