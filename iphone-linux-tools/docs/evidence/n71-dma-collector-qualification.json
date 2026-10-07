@@ -1,0 +1,125 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T08:27:32.129598+00:00",
+  "code_commit": "f8ab47ac7ff1287a103659e034015c062b4dce02",
+  "scope": "Qualified D18 module selection and software DMA observations in the real coordinator/journal; hardware dependencies modeled, no physical session.",
+  "inputs_sha256": {
+    "scripts/host/n71_iommu_result.py": "4a0860f1a2373d12568a101dd37a84a37db99314e63e72671b713d46b963add1",
+    "scripts/host/n71-link-session.py": "ab3dee01984732dc2f0e2e452b2ae92f16a33f7d9306255d4e98189413f451d7",
+    "scripts/host/n71_held_session.py": "f79dac46c0edbb1b8d1b8ee819848ed80ed55aa881f422d021ee2028c8f182ac",
+    "tests/test_n71_iommu_result.py": "dcb80aa8db331ff8a4f2ad0ed13e0084fc72444858f3fe516f9f6384bec0c26f",
+    "docs/evidence/n71-dma-topology-qualification.json": "678b0365200822a98659e74bc9e657df448908d0407b2f34d93fd35cdd426c52"
+  },
+  "qualification": {
+    "tests_per_platform": 99,
+    "compiled_assertion_mutations_per_platform": 98,
+    "iommu_tests": 17,
+    "iommu_mutations": 42,
+    "new_functional_methods": 4,
+    "new_mutations": 15,
+    "macos": {
+      "reports": [
+        {
+          "pattern": "test_n71_iommu_result.py",
+          "exit": 0,
+          "tests": 17,
+          "mutation_kills": 42,
+          "elapsed_s": 15.55
+        },
+        {
+          "pattern": "test_n71_held_session.py",
+          "exit": 0,
+          "tests": 21,
+          "mutation_kills": 30,
+          "elapsed_s": 44.597
+        },
+        {
+          "pattern": "test_n71_resource_stage.py",
+          "exit": 0,
+          "tests": 16,
+          "mutation_kills": 26,
+          "elapsed_s": 37.867
+        },
+        {
+          "pattern": "test_n71_link_session.py",
+          "exit": 0,
+          "tests": 45,
+          "mutation_kills": 0,
+          "elapsed_s": 0.359
+        }
+      ],
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0
+    },
+    "ubuntu_arm64": {
+      "reports": [
+        {
+          "pattern": "test_n71_iommu_result.py",
+          "exit": 0,
+          "tests": 17,
+          "mutation_kills": 42,
+          "elapsed_s": 17.98
+        },
+        {
+          "pattern": "test_n71_held_session.py",
+          "exit": 0,
+          "tests": 21,
+          "mutation_kills": 30,
+          "elapsed_s": 19.929
+        },
+        {
+          "pattern": "test_n71_resource_stage.py",
+          "exit": 0,
+          "tests": 16,
+          "mutation_kills": 26,
+          "elapsed_s": 18.381
+        },
+        {
+          "pattern": "test_n71_link_session.py",
+          "exit": 0,
+          "tests": 45,
+          "mutation_kills": 0,
+          "elapsed_s": 0.234
+        }
+      ],
+      "ast_exit": 0
+    },
+    "mutation_policy": "Count only compiled Python variants failing with AssertionError and no ERROR/import/timeout failure.",
+    "private_snapshot_public_inputs": 584,
+    "dependency_model": "Real Session and held coordinator, checkpoint/load/resume/cleanup; synthetic phone/backend wire data independent of parser constants."
+  },
+  "contract": {
+    "selected_abi": "D18 only; previous offline D16 IOMMU opt-in refused before SSH effects, default modes preserved",
+    "source_premises": "exact source commit/patch digest, weak real_dma_dev with no ARM64 override, public group APIs exported, alias helpers unexported and absent from module undefined symbols",
+    "dma_records": "two complete ordered root/endpoint records, exact RIDs0008/0100, same nonnegative group <= INT_MAX, streaming/coherent32, inferred aliases root1/endpoint1 or2",
+    "order": "provider/lease then MSI/DMA/IOMMU/device for root then endpoint, before held",
+    "saved_summary": "software DMA observations reconstructed from checkpoint; altered group/masks/requester/aliases/proof tier refused before resume effects",
+    "physical_image_binding": "pending subsequent profile selector/composer; no new physical profile yet"
+  },
+  "abi_reuse": {
+    "unchanged_d18_inputs": 84,
+    "exact_abi_reused": true,
+    "d18_module_sha256": "46dfdfda600ad1bfa21606a7a758f7764b899c38959ba877fca819571e49106f"
+  },
+  "limits": {
+    "physical_boot_attempted": false,
+    "kernel_rebuilt": false,
+    "module_loaded": false,
+    "native_wifi_verified": false,
+    "irq_delivery_verified": false,
+    "dma_translation_verified": false,
+    "battery_or_charging_verified": false,
+    "physical_profile_selected": false,
+    "global_mac_install_or_config_changed": false
+  },
+  "reproduction": {
+    "tests": [
+      "test_n71_iommu_result.py",
+      "test_n71_held_session.py",
+      "test_n71_resource_stage.py",
+      "test_n71_link_session.py"
+    ],
+    "fatal_lint": "flake8 --select E9,F63,F7,F82 scripts/host/n71_iommu_result.py tests/test_n71_iommu_result.py",
+    "python_typechecker": "none; AST validation only"
+  }
+}
