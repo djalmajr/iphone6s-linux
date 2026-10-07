@@ -1,0 +1,213 @@
+"""Collect software MSI/OF/core association without claiming IRQ or DMA delivery."""
+import json
+import re
+import n71_scan_held_result
+import n71_scan_target_result
+import n71_resource_stage
+
+PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
+MSI_FIELDS = ('requested', 'ready', 'held', 'associated', 'owner', 'domain', 'mappings', 'child', 'session_error')
+IOMMU_FIELDS = ('requested', 'ready', 'held', 'owner', 'available', 'mapped', 'observed', 'map_checked', 'session_error')
+MSI_ACTIVE = dict(zip(MSI_FIELDS, (1, 1, 1, 1, 1, 1, 0, 0, 0)))
+IOMMU_ACTIVE = dict(zip(IOMMU_FIELDS, (1, 1, 1, 1, 1, 1, 2, 1, 0)))
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def capable(session):
+    value = getattr(session, 'iommu_parent', False)
+    require(type(value) is bool, 'IOMMU selection must be an exact boolean')
+    return value
+
+
+def selected(session, root):
+    if not capable(session):
+        return
+    require(session.scan_hold and session.resource_capable
+            and session.release == n71_scan_held_result.RELEASE, 'IOMMU requires the held resource power2 session')
+    proof = json.loads((root / 'docs/evidence/n71-iommu-caller-qualification.json').read_text())
+    build = proof['kernel_build']
+    require(type(proof.get('format')) is int and proof['format'] == 1
+            and build['kernel_exit'] == 0 and type(build['kernel_exit']) is int
+            and build['loaded'] is False and build['private_wrapper'] is False
+            and all(build[key] is True for key in ('production_module_inputs_identical',
+                    'baseline_preserved', 'original_tracked_changes_preserved')), 'Exact qualified IOMMU build required')
+    records = [record for record, _ in session.modules if record['module'] == 'n71-pcie-diagnostic.ko']
+    require(len(records) == 1 and records[0]['sha256'] == build['module_sha256']
+            and type(records[0]['bytes']) is int and records[0]['bytes'] == build['module_bytes']
+            and records[0]['vermagic'] == build['vermagic']
+            == session.release + ' SMP preempt mod_unload aarch64', 'Selected IOMMU module identity differs')
+
+
+def getter(session):
+    if not capable(session):
+        return ''
+    return ('printf "N71_PCIE_MSI "; cat ' + PCIE + 'msi; '
+            'printf "N71_PCIE_IOMMU "; cat ' + PCIE + 'iommu; '
+            'printf "N71_HELD_PARAM msi_parent="; cat ' + PCIE + 'msi_parent; '
+            'printf "N71_HELD_PARAM iommu_parent="; cat ' + PCIE + 'iommu_parent; ')
+
+
+def live(text):
+    states = []
+    for marker, fields in (('N71_PCIE_MSI ', MSI_FIELDS), ('N71_PCIE_IOMMU ', IOMMU_FIELDS)):
+        pattern = '^' + marker + ' '.join(name + r'=(-?\d+)' for name in fields)
+        row = n71_scan_held_result.unique(text, marker, pattern)
+        state = dict(zip(fields, map(int, row.groups())))
+        require(all(value in (0, 1) for name, value in state.items()
+                    if name not in ('mappings', 'observed', 'session_error'))
+                and -4095 <= state['session_error'] <= 0, 'IOMMU getter values differ')
+        states.append(state)
+    msi, iommu = states
+    require(0 <= msi['mappings'] <= 8 and 0 <= iommu['observed'] <= 2,
+            'Association getter budget differs')
+    require(all(msi[key] == iommu[key] for key in ('requested', 'ready', 'held', 'session_error')),
+            'MSI and IOMMU live state disagree')
+    require(not iommu['map_checked'] or all(iommu[key] for key in ('held', 'owner', 'available', 'mapped'))
+            and iommu['observed'] == 2, 'Checked map lacks its retained owners')
+    require(not iommu['mapped'] or (iommu['available'] and iommu['owner']), 'Map lacks an available owner')
+    return {'msi': msi, 'iommu': iommu}
+
+
+def snapshot(session, text, present):
+    if not capable(session) or not present:
+        return
+    state = live(text)
+    for name in ('msi_parent', 'iommu_parent'):
+        row = n71_scan_held_result.unique(text, 'N71_HELD_PARAM ' + name + '=',
+                                        '^N71_HELD_PARAM ' + name + r'=([YN])')
+        require(row.group(1) == 'Y', 'Held IOMMU immutable selection changed')
+    require(state['iommu']['requested'] == 1
+            and state['iommu']['held'] == n71_scan_held_result.live_held(text), 'IOMMU bus selection differs')
+    caller = n71_scan_target_result.live_status(text)
+    require(state['iommu']['ready'] == caller['ready']
+            and state['iommu']['session_error'] == caller.get('cleanup_error', 0), 'IOMMU and caller state disagree')
+
+
+def acquisition(text):
+    n71_scan_held_result.acquisition(text)
+    provider = n71_scan_held_result.unique(text, 'N71_DART_CYCLE_PROVIDER ',
+        r'N71_DART_CYCLE_PROVIDER bound=1 irq-hwirq=248 mapping-new=([01]); no DMA attachment')
+    lease = n71_scan_held_result.unique(text, 'N71_DART_LEASE_ACQUIRE ',
+        r'N71_DART_LEASE_ACQUIRE error=0 running=1 pending=1; no DMA attachment')
+    scans = []
+    for marker, suffix in (('N71_PCIE_SCAN_MSI ', ' inherited=1; no IRQ allocation'),
+                          ('N71_PCIE_SCAN_IOMMU ', ' map_sid=0 translated=1; OF map and core domain, no private SID readback')):
+        rows = list(re.finditer(marker + r'bus=(\d+) devfn=([0-9a-f]{2})' + re.escape(suffix) + r'$', text, re.M))
+        require(len(rows) == text.count(marker) == 2
+                and [row.groups() for row in rows] == [('0', '08'), ('1', '00')],
+                'Exact ordered root/endpoint association required')
+        scans.append(rows)
+    devices = list(re.finditer(r'N71_PCIE_SCAN_DEVICE bus=(\d+) devfn=([0-9a-f]{2}) .*$', text, re.M))
+    require(len(devices) == 2 and [row.groups() for row in devices] == [('0', '08'), ('1', '00')],
+            'Association device records differ')
+    held = n71_scan_held_result.unique(text, 'N71_PCIE_SESSION_HELD ', n71_scan_held_result.SESSION_PATTERN)
+    positions = [provider.start(), lease.start()]
+    for index in range(2):
+        positions += [scans[0][index].start(), scans[1][index].start(), devices[index].start()]
+    positions.append(held.start())
+    require(positions == sorted(set(positions)), 'Provider/association publication order differs')
+    return {'observed_devices': len(scans[1]), 'software_association_observed': True,
+            'irq_delivery_verified': False, 'dma_translation_verified': False,
+            'wifi_verified': False, 'battery_or_charging_verified': False}
+
+
+def retained(session, text):
+    if not capable(session):
+        return
+    snapshot(session, text, True)
+    require(live(text) == {'msi': MSI_ACTIVE, 'iommu': IOMMU_ACTIVE}, 'Retained MSI/IOMMU association incomplete')
+    require('N71_DART_CYCLE_RELEASED ' not in text and 'N71_DART_LEASE_CLEANUP ' not in text,
+            'Retained provider already released or cleanup attempted')
+    result = acquisition(text)
+    saved = session.result.get('iommu_association')
+    require(saved is None or saved == result, 'Saved IOMMU summary differs')
+    session.result['iommu_association'] = result
+
+
+def resume(session, live_text, prior):
+    if not capable(session):
+        return
+    if 'N71_PCIE_IOMMU ' in live_text or 'N71_PCIE_IOMMU ' in prior:
+        require(live(live_text) == live(prior), 'Live IOMMU ownership changed; no cleanup attempted')
+
+
+def saved(session, data, text):
+    require(data.get('iommu_parent', False) is capable(session), 'Saved IOMMU mode changed')
+    if capable(session):
+        expected = acquisition(text) if 'N71_PCIE_SESSION_HELD ' in text else None
+        require(data['result'].get('iommu_association') == expected, 'Saved association differs from checkpoint')
+
+
+def pre_scan_cleanup(session, text):
+    if not capable(session) or 'N71_PCIE_SCAN_' in text:
+        return None
+    caller = n71_scan_target_result.live_status(text)
+    primary = caller.get('primary_error', 0)
+    if caller['ready'] != 1 or primary >= 0 or 'N71_DART_LEASE_ACQUIRE ' not in text:
+        return None
+    cleanup(session, text)
+    acquired = n71_scan_held_result.unique(text, 'N71_DART_LEASE_ACQUIRE ',
+        r'N71_DART_LEASE_ACQUIRE error=(-?\d+) running=0 pending=([01]); no DMA attachment')
+    require(int(acquired.group(1)) == primary, 'Pre-scan provider and caller failure differ')
+    require(session.resource_attempted is False and session.resource_assignment is None
+            and 'N71_PCIE_RESOURCE_' not in text, 'Pre-scan failure cannot own an assignment')
+    n71_resource_stage.verify_readback(session, text)
+    require(n71_resource_stage.n71_resource_result.live_status(text)
+            == dict.fromkeys(n71_resource_stage.n71_resource_result.FIELDS, 0) | {'error': primary},
+            'Pre-scan resources still owned')
+    finished = list(re.finditer(n71_scan_held_result.CLEANUP_PATTERN + r'$', text, re.M))
+    require(len(finished) == text.count('N71_PCIE_SESSION_CLEANUP ') and finished
+            and tuple(map(int, finished[-1].groups())) == (0, 0, 0, 0, 0, 0, 0, primary)
+            and all(int(row.group(1)) < 0 and row.group(2) == '1' and int(row.group(8)) == primary
+                    for row in finished[:-1]), 'Pre-scan caller release incomplete')
+    reset = n71_scan_held_result.unique(text, 'N71_PCIE_RESET_RESTORED ',
+        r'N71_PCIE_RESET_RESTORED asserted=1 readback=1')
+    power = n71_scan_held_result.unique(text, 'N71_PCIE_POWER_RELEASED ',
+        r'N71_PCIE_POWER_RELEASED powered=0 attached=0')
+    require(text.index('N71_DART_CYCLE_RELEASED ') < reset.start() < power.start() < finished[-1].start(),
+            'Pre-scan provider/reset/power release order differs')
+    return {'stop_error': 0, 'held_acquired': False, 'resource_cleanup_verified': True, 'assignment_error': 0}
+
+
+def cleanup(session, text):
+    if not capable(session):
+        return None
+    snapshot(session, text, True)
+    caller = n71_scan_target_result.live_status(text)
+    require(live(text) == {'msi': dict.fromkeys(MSI_FIELDS, 0) | {'requested': 1, 'ready': caller['ready']},
+                           'iommu': dict.fromkeys(IOMMU_FIELDS, 0) | {'requested': 1, 'ready': caller['ready']}},
+            'MSI/IOMMU ownership still pending')
+    require(n71_scan_target_result.is_clean(caller), 'IOMMU caller cleanup incomplete')
+    if 'N71_PCIE_SESSION_HELD ' in text:
+        result = acquisition(text)
+        require(session.result.get('iommu_association') in (None, result), 'Cleanup association history changed')
+    if 'N71_DART_LEASE_ACQUIRE ' in text:
+        acquired = n71_scan_held_result.unique(text, 'N71_DART_LEASE_ACQUIRE ',
+            r'N71_DART_LEASE_ACQUIRE error=(-?\d+) running=([01]) pending=([01]); no DMA attachment')
+        error, running, pending = map(int, acquired.groups())
+        require((error == 0 and running == pending == 1) or (-4095 <= error < 0 and running == 0),
+                'DART acquisition error/readiness differs')
+        require('N71_PCIE_SESSION_HELD ' in text or error < 0 or caller.get('primary_error', 0) < 0,
+                'Incomplete association lacks a negative caller/provider proof')
+        released = n71_scan_held_result.unique(text, 'N71_DART_CYCLE_RELEASED ',
+            r'N71_DART_CYCLE_RELEASED device=0 mapping-new=0 claimed=0 mapped=0')
+        lease = list(re.finditer(r'N71_DART_LEASE_CLEANUP error=(-?\d+) pending=([01]) index=(\d+) '
+            r'device=([01]) mapping-new=([01]) claimed=([01]) mapped=([01]); ownership retained until restore$', text, re.M))
+        final = lease[-1].groups() if lease else None
+        require(len(lease) == text.count('N71_DART_LEASE_CLEANUP ') and final
+                and final[:5] == ('0', '0', '16' if pending else '0', '0', '0')
+                and (not pending or final[5:] == ('1', '1'))
+                and all(-4095 <= int(row.group(1)) < 0 for row in lease[:-1]), 'Final DART lease restore required')
+        configs = list(re.finditer(r'N71_PCIE_SCAN_CONFIG_RESTORED error=(-?\d+); decode/readback checked$', text, re.M))
+        if 'N71_PCIE_SCAN_BUS_REMOVED ' in text:
+            removed = n71_scan_held_result.unique(text, 'N71_PCIE_SCAN_BUS_REMOVED ',
+                r'N71_PCIE_SCAN_BUS_REMOVED bus-null=1 stop-error=(-?\d+)')
+            require(removed.start() < lease[0].start(), 'DART stop precedes consumer removal')
+        require(lease[-1].start() < released.start() and (not configs or released.start() < configs[0].start()),
+                'Provider release and host restore order differs')
+    return {'software_ownership_released': True, 'physical_of_unmap_readback_verified': False,
+            'irq_delivery_verified': False, 'dma_translation_verified': False}

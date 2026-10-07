@@ -11,6 +11,7 @@ import n71_scan_target_result
 import n71_session_history
 import n71_resource_stage
 import n71_held_history
+import n71_iommu_result
 
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
@@ -34,6 +35,8 @@ def identity(profile_path, profile, modules):
 
 
 def one(text, marker, pattern):
+    require(pattern.startswith('^'), 'Held field protocol must be line anchored')
+    text = '\n'.join(line for line in text.splitlines() if line.startswith(marker))
     rows = re.findall(pattern, text, re.M)
     require(len(rows) == text.count(marker) == 1, 'Unique complete ' + marker + ' required')
     return rows[0]
@@ -60,6 +63,7 @@ def snapshot_command(session):
     for name in TRUE_PARAMETERS + FALSE_PARAMETERS:
         command += 'printf "N71_HELD_PARAM ' + name + '="; cat ' + PCIE + name + '; '
     command += n71_resource_stage.getter(session)
+    command += n71_iommu_result.getter(session)
     command += ('else echo N71_HELD_PCIE_PRESENT=0; fi; '
                 'if [ -d /sys/module/n71_wlan_power_diagnostic ]; then echo N71_HELD_REG_PRESENT=1; '
                 'cat ' + REG + 'state; cat ' + REG + 'control; '
@@ -93,6 +97,7 @@ def snapshot(session, stage):
         n71_scan_held_result.live_held(raw)
         n71_scan_target_result.live_status(raw)
     n71_resource_stage.snapshot(session, raw, pcie)
+    n71_iommu_result.snapshot(session, raw, pcie)
     if reg:
         one(raw, 'bound=', r'^(bound=1 active=[01] restore_pending=[01] original=[0-9a-f]{2})$')
         one(raw, 'N71_REG_ON_CONTROL_READBACK ', r'^N71_REG_ON_CONTROL_READBACK value=([0-9a-f]{2})$')
@@ -128,6 +133,7 @@ class Journal:
                  'reg_attempted': session.reg_attempted, 'activation_attempted': session.activation_attempted,
                  'pcie_attempted': session.pcie_attempted, 'baseline': self.baseline,
                  'proofs': self.proofs, 'checkpoint': self.checkpoint,
+                 'iommu_parent': n71_iommu_result.capable(session),
                  **n71_resource_stage.fields(session)}
         temporary = self.path.with_name('.held-state-' + secrets.token_hex(12))
         try:
@@ -188,6 +194,7 @@ def load_source(session, root, directory, selected_identity):
     require(one(text, 'N71_BOOT_ID ', r'^N71_BOOT_ID ([0-9a-f-]{36})$') == result['boot_id'],
             'Held checkpoint boot differs')
     baseline = Baseline(data.get('baseline'))
+    n71_iommu_result.saved(session, data, baseline.fresh(text))
     require(n71_session_history.kernel_lines(text)[:len(data['baseline'])] == data['baseline'], 'Held baseline differs')
     proofs = data.get('proofs')
     require(isinstance(proofs, dict) and set(proofs).issubset(PROOFS + n71_resource_stage.extra_proofs(session)), 'Held cleanup proof set differs')
@@ -201,9 +208,15 @@ def load_source(session, root, directory, selected_identity):
                 [:len(n71_session_history.kernel_lines(proof))], 'Held cleanup history differs')
         verified[stage] = proof
     n71_resource_stage.load_source(session, data, verified)
+    if 'pcie-cleanup' in verified:
+        iommu_proof = n71_iommu_result.cleanup(session, verified['pcie-cleanup'])
+        if iommu_proof is not None:
+            require(result.get('iommu_cleanup') == iommu_proof, 'Saved IOMMU cleanup differs from proof')
     if 'pcie-unload' in verified:
         require('pcie-cleanup' in verified, 'PCI unload lacks cleanup proof')
-        if n71_resource_stage.capable(session):
+        if n71_iommu_result.pre_scan_cleanup(session, verified['pcie-cleanup']) is not None:
+            pass
+        elif n71_resource_stage.capable(session):
             n71_resource_stage.cleanup(session, verified['pcie-cleanup'])
         else:
             n71_scan_held_result.cleanup(verified['pcie-cleanup'])
@@ -237,13 +250,20 @@ def release(session, journal, presence, live_text):
                                       'if printf "cleanup\n" > ' + PCIE + 'action; then cleanup_exit=0; else cleanup_exit=$?; fi; '
                                       'printf "N71_PCIE_HELD "; cat ' + PCIE + 'held; '
                                       'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; '
-                                      + n71_resource_stage.getter(session) + 'dmesg; exit "$cleanup_exit"')
+                                      + n71_resource_stage.getter(session) + n71_iommu_result.getter(session)
+                                      + 'dmesg; exit "$cleanup_exit"')
             require(process.returncode == 0, 'Held cleanup pending; retain REG_ON and module')
             proof = process.stdout
-        if n71_resource_stage.capable(session):
+        pre_scan = n71_iommu_result.pre_scan_cleanup(session, proof)
+        if pre_scan is not None:
+            cleanup = pre_scan
+        elif n71_resource_stage.capable(session):
             cleanup = n71_resource_stage.cleanup(session, proof)
         else:
             cleanup = n71_scan_held_result.cleanup(proof)
+        iommu_cleanup = n71_iommu_result.cleanup(session, proof)
+        if iommu_cleanup is not None:
+            session.result['iommu_cleanup'] = iommu_cleanup
         session.result['stop_error'] = cleanup['stop_error']
         if 'pcie-cleanup' not in journal.proofs:
             journal.proof('pcie-cleanup', proof)
@@ -291,6 +311,7 @@ def run(session, selected_identity, *, root, source=None, assign=False):
                         int(session.reg_attempted and 'reg-unload' not in verified))
             require(presence[:2] == expected, 'Held module ownership changed; no cleanup attempted')
             n71_resource_stage.resume(session, live, prior)
+            n71_iommu_result.resume(session, live, prior)
             if presence[1]:
                 require(one(live, 'bound=', r'^(bound=1 active=[01] restore_pending=[01] original=[0-9a-f]{2})$') ==
                         one(prior, 'bound=', r'^(bound=1 active=[01] restore_pending=[01] original=[0-9a-f]{2})$')
@@ -327,6 +348,7 @@ def run(session, selected_identity, *, root, source=None, assign=False):
             live, presence = snapshot(session, 'held-acquire-live')
             require(presence == (1, 1, 0), 'Held modules and PCI bus not live')
             n71_resource_stage.retained(session, Baseline(journal.baseline).fresh(live))
+            n71_iommu_result.retained(session, Baseline(journal.baseline).fresh(live))
             require('bound=1 active=1 restore_pending=1 original=80\n' in live
                     and 'N71_REG_ON_CONTROL_READBACK value=81\n' in live, 'Held REG_ON ownership changed')
             session.result['held_verified'] = True
@@ -334,6 +356,7 @@ def run(session, selected_identity, *, root, source=None, assign=False):
         require((presence == (0, 0, 1) if source and not assign else presence == (1, 1, 0)), 'Held final ownership differs')
         if not source or assign:
             n71_resource_stage.retained(session, Baseline(journal.baseline).fresh(final))
+            n71_iommu_result.retained(session, Baseline(journal.baseline).fresh(final))
             require('bound=1 active=1 restore_pending=1 original=80\n' in final
                     and 'N71_REG_ON_CONTROL_READBACK value=81\n' in final, 'Final held REG_ON ownership changed')
     except (ValueError, OSError, KeyError, KeyboardInterrupt) as error:

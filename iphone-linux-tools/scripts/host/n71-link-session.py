@@ -22,6 +22,7 @@ import n71_session_history
 import n71_scan_held_result
 import n71_resource_result
 import n71_held_session
+import n71_iommu_result
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = '7.2.0-iphone6s-dart-serdev1'
@@ -179,7 +180,7 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE, scan_pme_disable=False, scan_hold=False, resource_capable=False):
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE, scan_pme_disable=False, scan_hold=False, resource_capable=False, iommu_parent=False):
         require(type(resource_capable) is bool and (not resource_capable or scan_hold),
                 'Resource session requires an explicit boolean and held mode')
         require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
@@ -189,6 +190,7 @@ class Session:
         require(not scan_hold or (host_scan and scan_link_target and scan_pme_disable and release == BINDING_RELEASE),
                 'Held session requires its explicit power2 host/target/PME candidate')
         self.scan_hold = scan_hold
+        self.iommu_parent = iommu_parent
         self.resource_capable = resource_capable
         self.resource_attempted = False
         self.resource_assignment = None
@@ -200,6 +202,7 @@ class Session:
         self.release = release
         self.output = output
         self.modules = modules
+        n71_iommu_result.selected(self, ROOT)
         self.config_inventory = config_inventory or host_scan or bar_sizing or chip_id or dart_observe or dart_cycle
         self.host_scan = host_scan
         self.bar_sizing = bar_sizing or chip_id
@@ -307,6 +310,8 @@ class Session:
             parameters += ' scan_pme_disable=1'
         if self.scan_hold:
             parameters += ' scan_hold=1'
+        if self.iommu_parent:
+            parameters += ' msi_parent=1 iommu_parent=1'
         if self.chip_id:
             parameters += ' chip_id=1'
         elif self.bar_sizing:
@@ -318,6 +323,7 @@ class Session:
         status = 'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; ' if self.scan_link_target else ''
         if self.scan_hold:
             status += 'printf "N71_PCIE_HELD "; cat ' + PCIE + 'held; '
+        status += n71_iommu_result.getter(self)
         p = self.capture('pcie', 'set -e; '
                          'test "$(cat ' + REG + 'state)" = "' + STATE_ACTIVE + '"; '
                          'test "$(cat ' + REG + 'control)" = "N71_REG_ON_CONTROL_READBACK value=81"; '
@@ -349,6 +355,7 @@ class Session:
             self.result['dart_observation'] = n71_dart_result.parse(p.stdout)
         if self.dart_cycle:
             self.result['dart_cycle'] = n71_dart_cycle_result.parse(p.stdout)
+        n71_iommu_result.retained(self, p.stdout)
 
     def cleanup(self):
         failures = []
