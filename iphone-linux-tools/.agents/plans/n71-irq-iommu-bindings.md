@@ -85,3 +85,24 @@ Nenhuma modificação de firmware/NAND, credenciais de rede, pacote/configuraç�
 - **Reverter:** baixo, código opt-in sem mudança de perfil/DT/Image. O módulo anterior continua disponível.
 - **Onde:** issue40, `phone/kernel/n71-dart-provider.h`, APIs AIC/irqdomain fixadas e próximo collector. [Qualificação e limites](../../docs/evidence/n71-dart-retained-qualification.json).
 - **Status:** na fila de implementação; F0/F1 globais, F2 seleção/perfil e F3 físico continuam abertos. Nenhum novo DFU, PIN ou reboot nesta rodada.
+
+## D5. Domínio privado hierárquico para a IRQ248 do DART
+
+- **Decisão:** substituir lookup/criação/reuso por domínio privado abaixo do AIC. O callback alloc verifica ausência de mapping e chama alloc do parent sob o mesmo root mutex do IRQ core; recusa conflito. O provider recebe somente o virq que esse domínio criou. Stop remove o dispositivo antes de liberar IRQ/domain/fwnode e conserva o owner se handler/IRQ ainda estiver ativo.
+- **Por quê:** callbacks de alloc hierárquicos rodam dentro de `irq_domain_alloc_irqs` com o mutex do root. AIC fixado inicializa todas as IRQs mascaradas; ausência de mapping sob esse lock é uma precondição de baseline derivada da fonte. Probe pode abrir a IRQ e remove/free_irq deve fechá-la; não declarar readback de máscara ou alloc/free sem MMIO.
+- **Alternativas:** reutilizar mapping preexistente mistura owners; bloquear manualmente o root e chamar create_mapping recursivamente pode deadlock; escrever AIC por MMIO presume efeitos de registradores ainda não qualificados. Rejeitadas.
+- **Reverter:** baixo antes do hardware, nenhuma alteração de FDT/Image/perfil/autoload. O ciclo passa a recusar IRQ previamente mapeada.
+- **Onde:** F1d: este plano, `phone/kernel/n71-dart-irq.h`, `n71-dart-provider.h`, `n71-pcie-diagnostic.c` (até quatro arquivos). F1e: fixtures de callbacks reais/IRQ lock/conflict/retry e build completo na VM; publicações sanitizadas em fatia separada.
+- **Status:** em curso. Células0/248/4 e hwirq100f8 da fonte fixada; parent deve ser root hierárquico AIC1. MSI permanece separado até integrar a sua mensagem/domínio.
+
+### Contratos F1d/F1e
+
+- [ ] Checagem de conflito dentro do callback sob root mutex; nenhuma mutação/reuso/dispose de mapping alheio.
+- [ ] Um domínio/fwnode/virq exclusivo com referência OF retida; cada falha parcial permite cleanup idempotente e retry.
+- [ ] Teardown recusa IRQ com action/started/unmasked/enabled e domain com mappings restantes. Não libera recursos enquanto a recuperação depender deles.
+- [ ] Preservar ciclo de sucesso e lease/primeiro erro; atualizar getters e fixtures, qualificar Mac/Ubuntu/ABI/modpost e mutações por asserção.
+- [ ] Collector/perfil e sessão física agrupada, distinguindo baseline de máscara derivada da fonte de readback/entrega IRQ reais. Wi-Fi/carga/telemetria continuam pendentes.
+
+### F1f — regressão de CI do caller completo
+
+A CI de4739cb5 falhou no Mac: o header extraído não terminava em newline e a fixture do caller inteiro não tinha as APIs/tipos DART novos. Corrigir somente essas fixtures/geração, mantendo Werror. Arquivos: `tests/test_n71_dart_provider.py`, `tests/n71_pcie_diagnostic_caller.c`, `tests/test_n71_pcie_diagnostic_caller.py` e este plano. Integrar testes das ações/getter/cleanup e owners DART no caller real; conservar os73/21/27 casos e mutações anteriores. Qualificar o gate afetado Mac/Ubuntu e acompanhar CI do novo head; não declarar CI aprovada por prova local.

@@ -370,14 +370,15 @@ static int n71_dart_status(char *buffer, const struct kernel_param *parameter)
 	mutex_lock(&session_lock);
 	provider = session ? session->dart : NULL;
 	length = scnprintf(buffer, PAGE_SIZE,
-		"ready=%u acquired=%u running=%u pending=%u stopped=%u restored=%u index=%u device=%u mapping_new=%u claimed=%u mapped=%u operation_error=%d restore_error=%d\n",
+		"ready=%u acquired=%u running=%u pending=%u stopped=%u restored=%u index=%u device=%u mapping_new=%u claimed=%u mapped=%u operation_error=%d restore_error=%d irq_domain=%u irq_fwnode=%u\n",
 		!!session, !!provider, provider ? provider->lease.running : 0,
 		provider ? n71_dart_lease_pending(&provider->lease) : 0,
 		provider ? provider->lease.stopped : 0, provider ? provider->lease.restored : 0,
 		provider ? provider->lease.restore_index : 0, provider ? !!provider->device : 0,
-		provider ? provider->new_mapping : 0, provider ? !!provider->claimed : 0,
+		provider ? !!provider->interrupt.irq : 0, provider ? !!provider->claimed : 0,
 		provider ? !!provider->mmio.regs : 0, provider ? provider->lease.operation_error : 0,
-		provider ? provider->lease.restore_error : 0);
+		provider ? provider->lease.restore_error : 0,
+		provider ? !!provider->interrupt.domain : 0, provider ? !!provider->interrupt.fwnode : 0);
 	mutex_unlock(&session_lock);
 	return length;
 }

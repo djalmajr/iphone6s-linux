@@ -2,8 +2,7 @@
 /* The session owns the provider, original tables and incomplete restoration. */
 #ifndef N71_DART_PROVIDER_H
 #define N71_DART_PROVIDER_H
-#include <linux/irqdomain.h>
-#include <linux/of_irq.h>
+#include "n71-dart-irq.h"
 #include "n71-dart-lease.h"
 
 struct n71_dart_provider {
@@ -12,10 +11,11 @@ struct n71_dart_provider {
 	struct platform_device *device;
 	struct n71_dart_mmio mmio;
 	struct n71_dart_lease lease;
+	struct n71_dart_irq interrupt;
 	struct resource *claimed;
-	unsigned int irq, snapshots, reads, guards, quiet, writes;
+	unsigned int snapshots, reads, guards, quiet, writes;
 	unsigned int snapshot_budget, quiet_budget;
-	bool added, new_mapping, bound, restore_guard;
+	bool added, bound, restore_guard;
 };
 
 static int n71_provider_snapshot(void *context, struct n71_dart_observation *out)
@@ -63,12 +63,8 @@ static int n71_provider_start(void *context)
 	struct n71_dart_provider *provider = context;
 	struct of_phandle_args args;
 	struct irq_fwspec spec = {0};
-	struct irq_domain *domain;
-	struct irq_data *data;
 	struct device_node *parent;
 	struct resource resources[2];
-	irq_hw_number_t hwirq;
-	unsigned int prior, type;
 	int error;
 
 	error = of_irq_parse_one(provider->node, 0, &args);
@@ -83,25 +79,7 @@ static int n71_provider_start(void *context)
 	spec.fwnode = of_fwnode_handle(args.np);
 	spec.param_count = 3;
 	memcpy(spec.param, args.args, sizeof(u32) * 3);
-	domain = irq_find_matching_fwspec(&spec, DOMAIN_BUS_WIRED);
-	if (!domain)
-		domain = irq_find_matching_fwspec(&spec, DOMAIN_BUS_ANY);
-	if (!domain || !domain->ops->translate) {
-		error = -ENODEV;
-		goto irq_done;
-	}
-	error = domain->ops->translate(domain, &spec, &hwirq, &type);
-	if (error || type != IRQ_TYPE_LEVEL_HIGH) {
-		error = error ? error : -EINVAL;
-		goto irq_done;
-	}
-	prior = irq_find_mapping(domain, hwirq);
-	provider->irq = irq_create_of_mapping(&args);
-	provider->new_mapping = !prior && provider->irq;
-	data = irq_get_irq_data(provider->irq);
-	if (!provider->irq || !data || data->domain != domain || data->hwirq != hwirq ||
-	    (prior && prior != provider->irq))
-		error = -EINVAL;
+	error = n71_dart_irq_acquire(&provider->interrupt, &spec);
 irq_done:
 	of_node_put(parent);
 	of_node_put(args.np);
@@ -114,7 +92,7 @@ irq_done:
 	provider->device->dev.parent = provider->parent;
 	resources[0] = (struct resource){.start = N71_DART_CPU,
 		.end = N71_DART_CPU + N71_DART_BYTES - 1, .flags = IORESOURCE_MEM};
-	resources[1] = (struct resource){.start = provider->irq, .end = provider->irq,
+	resources[1] = (struct resource){.start = provider->interrupt.irq, .end = provider->interrupt.irq,
 		.flags = IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHLEVEL};
 	error = platform_device_add_resources(provider->device, resources, 2);
 	if (error)
@@ -131,7 +109,7 @@ irq_done:
 		platform_get_drvdata(provider->device);
 	device_unlock(&provider->device->dev);
 	dev_info(provider->parent, "N71_DART_CYCLE_PROVIDER bound=%u irq-hwirq=248 mapping-new=%u; no DMA attachment\n",
-		 provider->bound, provider->new_mapping);
+		 provider->bound, !!provider->interrupt.irq);
 	return provider->bound ? 0 : -ENODEV;
 }
 
@@ -139,6 +117,7 @@ static int n71_provider_stop(void *context)
 {
 	struct n71_dart_provider *provider = context;
 	struct platform_device *owner;
+	int error;
 
 	if (provider->device) {
 		if (provider->added)
@@ -149,10 +128,9 @@ static int n71_provider_stop(void *context)
 		provider->added = false;
 	}
 	provider->bound = false;
-	if (provider->new_mapping)
-		irq_dispose_mapping(provider->irq);
-	provider->irq = 0;
-	provider->new_mapping = false;
+	error = n71_dart_irq_release(&provider->interrupt);
+	if (error)
+		return error;
 	owner = of_find_device_by_node(provider->node);
 	if (owner) {
 		put_device(&owner->dev);
@@ -244,11 +222,12 @@ static int n71_pcie_dart_cleanup(struct device *dev, struct n71_diagnostic *stat
 	error = n71_dart_lease_cleanup(&io, &provider->lease);
 	if (!state->primary_error && provider->lease.operation_error)
 		state->primary_error = provider->lease.operation_error;
-	if (!error && (provider->device || provider->new_mapping || provider->bound))
+	if (!error && (provider->device || provider->interrupt.irq || provider->interrupt.domain ||
+		       provider->interrupt.fwnode || provider->interrupt.node || provider->bound))
 		error = -EBUSY;
 	dev_info(dev, "N71_DART_LEASE_CLEANUP error=%d pending=%u index=%u device=%u mapping-new=%u claimed=%u mapped=%u; ownership retained until restore\n",
 		 error, n71_dart_lease_pending(&provider->lease), provider->lease.restore_index,
-		 !!provider->device, provider->new_mapping, !!provider->claimed, !!provider->mmio.regs);
+		 !!provider->device, !!provider->interrupt.irq, !!provider->claimed, !!provider->mmio.regs);
 	dev_info(dev, "N71_DART_CYCLE_RESULT error=%d snapshots=%u reads=%u guards=%u quiet=%u writes=%u attempted=%u stopped=%u restored=%u control-changed=%u; no DMA\n",
 		 error ? error : provider->lease.operation_error, provider->snapshots,
 		 provider->reads, provider->guards, provider->quiet, provider->writes,
