@@ -13,7 +13,7 @@ DEPENDENCIES = (
     SUBJECT, 'scripts/build/integrate-source-kernel.py', 'scripts/build/kernel_patchset.py',
     'scripts/build/kernel_bundle.py', 'scripts/build/prepare-n71-pcie-diagnostic.py',
     'scripts/build/prepare-n71-topology.py', 'scripts/research/n71_runtime_tunables.py',
-    'scripts/host/device_profile.py', 'scripts/host/profile_image.py',
+    'scripts/host/device_profile.py', 'scripts/host/profile_image.py', 'scripts/host/n71_iommu_build.py',
     'scripts/host/n71_scan_held_result.py', 'scripts/host/n71_scan_pme_result.py',
     'scripts/host/n71_scan_target_result.py', 'scripts/host/n71_scan_result.py',
     'scripts/host/n71_resource_result.py',
