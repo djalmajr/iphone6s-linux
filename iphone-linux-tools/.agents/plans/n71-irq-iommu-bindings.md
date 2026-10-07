@@ -113,3 +113,19 @@ No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo ca
 - [x] Módulo completoW=1/Werror/modpost e ABI passou;38 inputs de produção, fonte/config/Image/exports preservados. Nenhum módulo novo carregado.
 - [ ] Acompanhar a CI do head publicado; corrigir eventual falha concreta sem repetir gates alheios. A intermitência anterior da issue38 não foi encerrada por essa correção.
 - [ ] Fechar lifecycle MSI e attachment PCI/DART; só então preparar seleção/collector e prova física agrupada.
+
+## D6. Mensagem MSI separada do número AIC
+
+- **Decisão:** qualificar um helper de referência que produz address_lo/hi/data somente para N7132/offset256/porta1/base8/count8, endereço0xbffff000 e vectorBase0. Dados esperados8..15; parent AIC264..271 permanece separado. Helper sem integração ao caller/DT/perfil ou alocação IRQ/MMIO; próxima fatia nativa usará esse contrato para compose_msg.
+- **Por quê:** a referência Apple oficial soma firstVector e _vectorBase para pedir a mensagem. No binário N71, a factory chama o allocator tipado com flags0xd1004; o bit0x4 é identificado como Z_ZERO no header Apple8020.140.41 anterior. Init do controlador não grava _vectorBase e coloca o offset256 em outro campo. O bridge escreve o argumento de vetor diretamente no terceiro word da mensagem. VectorBase0 é uma inferência do código e dessa comparação, não estado/mensagem medidos no hardware; a consulta ao tag exato8020.241.44 retornou404.
+- **Alternativas:** usar264 como message data confunde registro parent com vetor; copiar doorbell do driverM1 ignora a propriedade N71; bind do brcmfmac antes do contrato mistura DMA/IRQ/firmware. Rejeitadas.
+- **Reverter:** baixo, quatro arquivos públicos em fatia isolada, sem mudança de runtime/hardware. Evidência primária e limites em publicação separada.
+- **Onde:** este plano, `phone/kernel/n71-wlan-msi-message.h`, `tests/n71_wlan_msi_message.c`, `tests/test_n71_wlan_msi_message.py`. Qualificar C11/Werror/AST/lint/Mac/ARM64 e probeABI na VM dedicada, preservando kernel/exports.
+- **Status:** em curso offline. O head ec09d4f já está na CI; não publicar a próxima fatia até concluir a correção remota em andamento. Sem novo boot/DFU/PIN.
+
+### Contratos F1g
+
+- [x] Oito mensagens de referência esperadas, parâmetros de endereço/base/topologia/índice recusados e output intacto em erro; preservar EINVAL/ERANGE.30 cenários por plataforma.
+- [x]13 mutações compilam e falham por asserção; sem compiler/import/timeout como kill e sem aumentar prazos. Faltava stdbool na primeira fixture; esse erro de compilação foi corrigido e não contado como kill.
+- [x] Mesmos quatro inputs Mac/ARM64; probe kernelW=1/Werror/modpost/ELF/vermagic; sem load/integração ao caller. Kernel e exports preservados, helperAIC anterior intacto e reutilizado.
+- [ ] Guardar hashes/offsets dos recortes primários privados e publicar referência sanitizada, distinguindo inferência estática de entrega MSI real. Fonte XNU8020.140.41 de flags é uma comparação anterior, não a versão exata8020.241.44 do binário.
