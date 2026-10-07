@@ -242,6 +242,32 @@ static void n71_scan_remove_bus(struct pci_host_bridge *bridge)
 	pci_remove_root_bus(bridge->bus);
 }
 
+/* Preserve the host for provider teardown between removal and restoration. */
+static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
+{
+	struct pci_host_bridge *bridge = state->scan_bridge;
+	struct n71_scan_host *host;
+
+	if (!bridge)
+		return 0;
+	host = pci_host_bridge_priv(bridge);
+	if (host->resources.active)
+		return -EBUSY;
+	if (bridge->bus) {
+		if (!host->bus_held)
+			return -EBUSY;
+		pci_lock_rescan_remove();
+		n71_scan_remove_bus(bridge);
+		pci_unlock_rescan_remove();
+		if (bridge->bus)
+			return -EBUSY;
+		host->bus_held = false;
+		host->held_stop_error = host->config.error ? host->config.error : host->io_error;
+		dev_info(host->dev, "N71_PCIE_SCAN_BUS_REMOVED bus-null=1 stop-error=%d\n", host->held_stop_error);
+	}
+	return n71_wlan_msi_host_release(&host->msi);
+}
+
 static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 {
 	struct pci_host_bridge *bridge = state->scan_bridge;
@@ -252,26 +278,11 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 
 	if (!bridge)
 		return 0;
-	host = pci_host_bridge_priv(bridge);
-	if (host->resources.active)
-		return -EBUSY;
-	stop_error = host->held_stop_error;
-	if (bridge->bus) {
-		if (!host->bus_held)
-			return -EBUSY;
-		pci_lock_rescan_remove();
-		n71_scan_remove_bus(bridge);
-		pci_unlock_rescan_remove();
-		if (bridge->bus)
-			return -EBUSY;
-		host->bus_held = false;
-		stop_error = host->config.error ? host->config.error : host->io_error;
-		host->held_stop_error = stop_error;
-		dev_info(host->dev, "N71_PCIE_SCAN_BUS_REMOVED bus-null=1 stop-error=%d\n", stop_error);
-	}
-	error = n71_wlan_msi_host_release(&host->msi);
+	error = n71_pcie_scan_remove_consumers(state);
 	if (error)
 		return error;
+	host = pci_host_bridge_priv(bridge);
+	stop_error = host->held_stop_error;
 	io = (struct n71_scan_io){host, n71_scan_raw_read, n71_scan_raw_write};
 	target_io = (struct n71_link_target_io){host, n71_scan_target_read, n71_scan_target_write};
 	if (host->resources.pending) {

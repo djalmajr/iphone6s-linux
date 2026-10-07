@@ -49,6 +49,7 @@ class N71PcieScanHost(unittest.TestCase):
         self.assertIn('N71_PCIE_HELD_BUS_OK cases=16', result.stdout)
         self.assertIn('N71_PCIE_RESOURCE_ASSIGN_OK cases=20', result.stdout)
         self.assertIn('N71_PCIE_MSI_SCAN_OK cases=14', result.stdout)
+        self.assertIn('N71_PCIE_CONSUMER_REMOVAL_OK cases=7', result.stdout)
         print(result.stdout.strip(), flush=True)
 
     def test_lifecycle_mutations_die_by_assertion(self):
@@ -94,9 +95,16 @@ class N71PcieScanHost(unittest.TestCase):
             ('held-cleanup-before-remove', 'if (bridge->bus) {\n\t\tif (!host->bus_held)',
              'if (false && bridge->bus) {\n\t\tif (!host->bus_held)'),
             ('ignore-held-stop-refusal', 'pci_free_host_bridge(bridge);\n\treturn stop_error;',
-             'pci_free_host_bridge(bridge);\n\treturn 0;'),
+             'pci_free_host_bridge(bridge);\n\t(void)stop_error;\n\treturn 0;'),
             ('forget-held-stop-refusal-on-retry', 'stop_error = host->held_stop_error;',
              'stop_error = 0;'),
+            ('skip-consumer-phase', 'error = n71_pcie_scan_remove_consumers(state);',
+             'error = false ? n71_pcie_scan_remove_consumers(state) : 0;'),
+            ('forget-consumer-stop-error', 'host->held_stop_error = host->config.error ? host->config.error : host->io_error;',
+             'host->held_stop_error = 0;'),
+            ('restore-in-consumer-phase', 'return n71_wlan_msi_host_release(&host->msi);',
+             'struct n71_scan_io early = {host, n71_scan_raw_read, n71_scan_raw_write};\n'
+             '\tn71_scan_restore(&early, &host->config);\n\treturn n71_wlan_msi_host_release(&host->msi);'),
         )
         limits = resource.getrlimit(resource.RLIMIT_CORE)
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
@@ -129,10 +137,10 @@ class N71PcieScanHost(unittest.TestCase):
              'false || false ||'),
             ('omit-device-bus-inheritance', 'dev_get_msi_domain(&dev->bus->dev) != domain ||', 'false ||'),
             ('omit-device-inheritance', 'dev_get_msi_domain(&dev->dev) != domain)', 'false)'),
-            ('skip-msi-cleanup', 'error = n71_wlan_msi_host_release(&host->msi);',
-             'error = false ? n71_wlan_msi_host_release(&host->msi) : 0;'),
-            ('ignore-msi-cleanup-error', 'error = n71_wlan_msi_host_release(&host->msi);\n\tif (error)',
-             'error = n71_wlan_msi_host_release(&host->msi);\n\tif (false)'),
+            ('skip-msi-cleanup', 'return n71_wlan_msi_host_release(&host->msi);',
+             'return false ? n71_wlan_msi_host_release(&host->msi) : 0;'),
+            ('ignore-msi-cleanup-error', 'error = n71_pcie_scan_remove_consumers(state);\n\tif (error)',
+             'error = n71_pcie_scan_remove_consumers(state);\n\tif (false)'),
         )
         limits = resource.getrlimit(resource.RLIMIT_CORE)
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))

@@ -259,3 +259,20 @@ O helper não remove o provider. Caller mantém o pin do módulo e serializa ess
 Changesets de status e mapa possuem exatamente uma entry cada. Identidades das propriedades alocadas pelo core ficam no owner antes de apply. Unmap/release leem estado real, distinguem original/próprio/alheio e só chamam revert para a propriedade própria ainda aplicada. Erro com readback restaurado continua reportado nessa chamada; retry reconhece restauração e não duplica revert. Release exige unmap concluído, ausência do provider registrado, status disabled e flag própria conservada até a restauração. Conservar todo o owner em drift/erro pendente.
 
 Antes de soltar a última referência a um device, zerar o owner e guardar localmente as referências a liberar. Isso também protege owner eventualmente embutido no priv da bridge. Destroy de changesets só libera entries/refs; a árvore retém memória de properties, como documentado na auditoria. Fixtures precisam modelar notifications que falham depois da aplicação e as refs enquanto bridge/provider já perderam a referência de registro. Nenhum campo readback implica entrega IRQ/DMA física.
+
+## D13. Separar remoção de consumidores da restauração do host PCI
+
+- **Decisão:** extrair n71_pcie_scan_remove_consumers(state) do cleanup atual. Remove bus sob rescan/remove lock e libera a lease MSI; conserva bridge/config/resources/window/PME/target e held_stop_error. Cleanup completo chama a etapa e só restaura/free após sucesso. Sem seleção nova ou mudança da ordem DART no caller nesta fatia.
+- **Por quê:** a próxima integração precisa remover consumidores e desfazer o mapa antes de parar o provider, conservando a bridge até restaurar disponibilidade OF. Cleanup monolítico libera o priv cedo demais para essa ordem. Preservar a API antiga permite preparar a integração sem ativar attachment.
+- **Alternativas:** parar DART antes de consumidores contradiz o lifetime IOMMU; liberar bridge antes de availability depende de priv possivelmente liberado; copiar o cleanup em outro caller duplica rollback. Rejeitadas.
+- **Reverter:** baixo nesta fatia; API antiga conserva comportamento e nenhum perfil muda. Médio depois da integração DART que dependerá da etapa.
+- **Onde:** até quatro públicos: este plano, phone/kernel/n71-pcie-scan.h, tests/n71_pcie_scan_host.c e tests/test_n71_pcie_scan_host.py. Funções existentes referenciadas, sem código morto a remover antes da extração. Gates optional/IO16/PREF64 afetados pelo C compartilhado; ABI completa em M separado, sem load.
+- **Status:** extração e API antiga qualificadas offline:159 cenários/120 mutações compiladas por assertion no Mac e ARM64; AST/lint fatal e produçãoW=1/Werror/modpost/ELF/vermagic aprovados. Uma mutação antiga gerou unused-variable após a extração, sem contar compile como kill; selector corrigido e só esse caso repetido, com71 mutações e baseline86 reutilizados por55 inputs idênticos. Gates optional/IO16/PREF64 executados integralmente. Módulo104352 bytes/SHA456134c0783cfffd0ce59676d35234a544993602c665d84b4534f1c0bc7d1c67, sem wrapper/load; source/config/Image/exports preservados. Caller/getter/collector e alias/attachment são próximos, com mínimos boots.
+
+### Contratos D13
+
+- [x] Remover consumidores conserva config/resources/bridge/energia; lease MSI pendente bloqueia retorno de sucesso. Sem bus/lease, retry não repete remoção nem restaura IO.
+- [x] Fase resource ativa e bus alheio recusam antes de efeitos. Stop-error fica registrado e é reportado pelo cleanup completo, mesmo após retry da lease MSI.
+- [x] Cleanup antigo mantém restore/free e erros; sete novos cenários executam a etapa real e provam ausência de writes/restauração/free entre as fases.
+- [x] Mac/ARM64: scan86/72, optional18/14, IO1620/17 e PREF6435/17, total159/120. Módulo completoW=1/Werror/modpost/ELF/vermagic; source/config/Image/exports intactos.
+- [ ] Reprodução sanitizada e issue40 publicadas antes da futura integração/candidata física. Nenhum DFU nesta fatia.

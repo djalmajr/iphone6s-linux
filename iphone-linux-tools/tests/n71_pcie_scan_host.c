@@ -699,6 +699,55 @@ static unsigned int exercise_msi_scan(void)
 	return cases;
 }
 
+static unsigned int exercise_consumer_removal(void)
+{
+	struct n71_diagnostic state = {0};
+	assert(n71_pcie_scan_remove_consumers(&state) == 0);
+	/* Mutations: restore/free between phases, lose stop-error, skip removal/release, or ignore active/foreign bus. */
+	for (unsigned int kind = 0; kind < 7; kind++) {
+		initialize_case(PME_NONE, true);
+		msi_mock.requested = kind >= 1 && kind <= 3;
+		struct device dev = {.of_node = &msi_mock.node};
+		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
+		assert((msi_mock.requested ? n71_pcie_scan_hold_msi(&dev, &state) :
+			n71_pcie_scan_hold(&dev, &state)) == 0);
+		struct pci_host_bridge *bridge = state.scan_bridge;
+		struct n71_scan_host *host = pci_host_bridge_priv(bridge);
+		if (kind == 2) host->msi.native.child = &msi_mock.child;
+		if (kind == 3) msi_mock.release_error = -EIO;
+		if (kind == 4) mock.fault = STOP_WRITE;
+		if (kind == 5) host->resources.active = true;
+		if (kind == 6) host->bus_held = false;
+		unsigned int writes = mock.writes;
+		int expected = kind == 2 || kind >= 5 ? -EBUSY : kind == 3 ? -EIO : 0;
+		assert(n71_pcie_scan_remove_consumers(&state) == expected);
+		assert(state.scan_bridge == bridge && mock.allocations == 1 && !mock.locked);
+		assert(host->config_pending && host->pme.pending && host->target.pending);
+		assert(mock.writes == writes && !mock.pme_restores && !mock.target_restores);
+		assert((mock.ecam[0x80a0 / 4] & 0xffff) == 2);
+		assert(mock.ecam[0x10004c / 4] == 0xabc04008);
+		assert(mock.removes == (kind >= 5 ? 0U : 1U));
+		assert(!!bridge->bus == (kind >= 5));
+		assert(host->held_stop_error == (kind == 4 ? -EPERM : 0));
+		if (kind == 2 || kind == 3) {
+			assert(host->msi.bridge == bridge && msi_mock.domains == 1);
+			assert(n71_pcie_scan_remove_consumers(&state) == expected && mock.removes == 1);
+		}
+		host->resources.active = false; host->bus_held = !!bridge->bus;
+		host->msi.native.child = NULL; msi_mock.release_error = 0;
+		assert(n71_pcie_scan_remove_consumers(&state) == 0);
+		assert(!bridge->bus && !host->msi.bridge && mock.removes == 1 && mock.writes == writes);
+		assert(n71_pcie_scan_remove_consumers(&state) == 0 && mock.removes == 1);
+		assert(state.scan_bridge == bridge && host->config_pending && mock.writes == writes);
+		assert(n71_pcie_scan_cleanup(&state) == (kind == 4 ? -EPERM : 0));
+		assert(!state.scan_bridge && !mock.allocations && mock.removes == 1);
+		assert(mock.pme_restores == 1 && mock.target_restores == 1);
+		assert(n71_pcie_scan_remove_consumers(&state) == 0);
+		free(mock.ecam);
+	}
+	return 7;
+}
+
 int main(void)
 {
 	const int expected[] = {0, -EPERM, -EPERM, -ENOMEM, -ENODEV, -EACCES,
@@ -774,5 +823,7 @@ int main(void)
 	puts("N71_PCIE_RESOURCE_ASSIGN_OK cases=20; PCI allocator synthetic");
 	assert(exercise_msi_scan() == 14);
 	puts("N71_PCIE_MSI_SCAN_OK cases=14; inherited domains synthetic");
+	assert(exercise_consumer_removal() == 7);
+	puts("N71_PCIE_CONSUMER_REMOVAL_OK cases=7; host retained between phases");
 	return 0;
 }
