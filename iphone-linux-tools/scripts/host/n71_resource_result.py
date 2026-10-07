@@ -156,7 +156,9 @@ def cleanup(text, assignment=None):
     return dict(base, resource_cleanup_verified=True, assignment_error=error)
 
 
-def selected_records(root, *, release, pcie_sha256=None):
+def selected_records(root, *, release, pcie_sha256=None, iommu_parent=False):
+    require(type(iommu_parent) is bool and (not iommu_parent or pcie_sha256 is not None),
+            'IOMMU resources require explicit boolean and module hash')
     previous = n71_scan_held_result.selected_records(root, release=release)
     evidence = json.loads((root / 'docs/evidence/n71-pci-resource-assignment.json').read_text())
     require(type(evidence.get('format')) is int and evidence['format'] == 1, 'Assignment evidence format differs')
@@ -191,6 +193,8 @@ def selected_records(root, *, release, pcie_sha256=None):
                 and row.get('vermagic') == release + ' SMP preempt mod_unload aarch64' for row in records),
             'Assignment module bytes/hash/ABI differ')
     require(records[1] == previous[1], 'Assignment REG_ON differs from qualified held profile')
+    if iommu_parent:
+        return n71_resource_build.select(root, records, release=release, pcie_sha256=pcie_sha256, iommu_parent=True)
     if pcie_sha256 is None or pcie_sha256 == records[0]['sha256']:
         return records
     return n71_resource_build.select(root, records, release=release, pcie_sha256=pcie_sha256)

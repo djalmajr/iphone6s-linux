@@ -23,6 +23,7 @@ import n71_scan_held_result
 import n71_resource_result
 import n71_held_session
 import n71_iommu_result
+import n71_iommu_build
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = '7.2.0-iphone6s-dart-serdev1'
@@ -70,9 +71,12 @@ def aspm_payload(profile, metadata):
             and prefix[loader['bytes']:] == ASPM_BOOTARGS
             and metadata.get('bootargs_sha256') == hashlib.sha256(ASPM_BOOTARGS).hexdigest(),
             'Exact ASPM payload bootargs and loader required')
+    return len(prefix)
 
 
-def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False, scan_hold=False, resource_capable=False, resource_module_sha256=None):
+def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False, scan_hold=False, resource_capable=False, resource_module_sha256=None, iommu_parent=False):
+    require(type(iommu_parent) is bool and (not iommu_parent or (resource_capable and scan_hold)),
+            'IOMMU selection requires exact boolean and held resources')
     require(type(resource_capable) is bool and (not resource_capable or scan_hold),
             'Resource capability requires an explicit boolean and held mode')
     require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
@@ -84,6 +88,9 @@ def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_i
             'Held scan requires its explicit power2 host/target/PME candidate')
     if scan_hold:
         if resource_capable:
+            if iommu_parent:
+                selection = {'pcie_sha256': resource_module_sha256, 'iommu_parent': True}
+                return n71_resource_result.selected_records(ROOT, release=release, **selection)
             if resource_module_sha256 is not None:
                 return n71_resource_result.selected_records(ROOT, release=release, pcie_sha256=resource_module_sha256)
             return n71_resource_result.selected_records(ROOT, release=release)
@@ -455,6 +462,7 @@ def main():
     parser.add_argument('--scan-pme-disable', action='store_true', help='Explicit endpoint PME disable/restore candidate; requires ASPM off')
     parser.add_argument('--scan-hold', action='store_true', help='Retain the qualified PCI bus and power owners until explicit same-boot release')
     parser.add_argument('--resource-capable', action='store_true', help='Select the qualified held module with explicit resource assignment support')
+    parser.add_argument('--iommu-parent', action='store_true', help='Select qualified retained IOMMU association; requires held resources and matching Image')
     held_actions = parser.add_mutually_exclusive_group()
     held_actions.add_argument('--release-held', type=Path, help='Release owners from a private held session in this exact boot; requires --scan-hold')
     held_actions.add_argument('--assign-held', type=Path, help='Assign PCI resources in this saved held boot; requires --resource-capable')
@@ -464,6 +472,7 @@ def main():
     modes.add_argument('--dart-cycle', action='store_true', help='Test temporary provider and restore tables; requires prior complete private observation')
     parser.add_argument('--previous-clean', type=Path, help='Continue only after matching private cleanup and this boot history')
     options = parser.parse_args()
+    require(not options.iommu_parent or options.resource_capable, 'IOMMU requires explicit resource capability')
     require(not options.release_held or (options.scan_hold and options.previous_clean is None),
             'Held release requires held mode without previous-clean')
     require(not options.assign_held or (options.resource_capable and options.previous_clean is None and options.scan_hold),
@@ -482,14 +491,19 @@ def main():
     require(metadata.get('pcie_aspm_off', False) is options.scan_pme_disable, 'ASPM profile selection differs')
     require(metadata.get('pcie_scan_hold', False) is options.scan_hold, 'Held profile selection differs')
     require(metadata.get('pcie_resource_capable', False) is options.resource_capable, 'Resource profile selection differs')
+    require(metadata.get('pcie_iommu_parent', False) is options.iommu_parent, 'IOMMU profile selection differs')
     if options.scan_pme_disable:
-        aspm_payload(profile, metadata)
+        prefix_bytes = aspm_payload(profile, metadata)
+    if options.iommu_parent:
+        require(options.scan_hold and options.scan_pme_disable, 'IOMMU requires held power2/PME profile')
+        n71_iommu_build.payload_image(ROOT, profile, metadata, prefix_bytes=prefix_bytes, release=release)
     records = selected_records(options.config_inventory, options.host_scan, options.bar_sizing, options.chip_id,
                                dart_observe=options.dart_observe, dart_cycle=options.dart_cycle, release=release,
                                scan_link_target=options.scan_link_target, scan_pme_noop=options.scan_pme_noop,
                                scan_pme_disable=options.scan_pme_disable, scan_hold=options.scan_hold,
                                resource_capable=options.resource_capable,
-                               resource_module_sha256=metadata['module_sha256'] if options.resource_capable else None)
+                               resource_module_sha256=metadata['module_sha256'] if options.resource_capable else None,
+                               iommu_parent=options.iommu_parent)
     if release == BINDING_RELEASE or options.config_inventory or options.host_scan or options.bar_sizing or options.chip_id or options.dart_observe or options.dart_cycle:
         require(metadata['module_sha256'] == records[0]['sha256'], 'Inventory profile provenance differs')
     modules = [(record, module_bytes(profile['payload'].parent, record, release=release)) for record in records]
@@ -502,7 +516,7 @@ def main():
         if options.release_held or options.assign_held:
             session = Session(ROOT / 'runtime', modules, host_scan=True, scan_link_target=True,
                               scan_pme_disable=True, scan_hold=True, release=release,
-                              resource_capable=options.resource_capable)
+                              resource_capable=options.resource_capable, iommu_parent=options.iommu_parent)
             n71_held_session.load_source(session, ROOT, options.release_held or options.assign_held, held_identity)
         print('N71_SESSION_LOCAL_GATE_OK; no SSH or USB action')
         return 0
@@ -515,7 +529,7 @@ def main():
     if options.scan_hold:
         session = Session(output, modules, host_scan=options.host_scan, scan_link_target=options.scan_link_target,
                           scan_pme_disable=options.scan_pme_disable, scan_hold=True, release=release, history=history,
-                          resource_capable=options.resource_capable)
+                          resource_capable=options.resource_capable, iommu_parent=options.iommu_parent)
         return n71_held_session.run(session, held_identity, root=ROOT, source=options.release_held or options.assign_held,
                                     assign=options.assign_held is not None)
     return Session(output, modules, config_inventory=options.config_inventory,

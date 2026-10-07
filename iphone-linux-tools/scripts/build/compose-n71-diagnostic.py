@@ -15,6 +15,7 @@ import device_profile
 import profile_image
 import n71_scan_held_result
 import n71_resource_result
+import n71_iommu_build
 
 
 def module(name, path):
@@ -88,6 +89,8 @@ def private_write(path, raw):
 def held_reg_module(options, driver, *, kernel_release):
     selector = n71_resource_result if options.pcie_resource_capable else n71_scan_held_result
     kwargs = {'pcie_sha256': hashlib.sha256(driver).hexdigest()} if selector is n71_resource_result else {}
+    if options.pcie_iommu_parent:
+        kwargs['iommu_parent'] = True
     records = selector.selected_records(ROOT, release=kernel_release, **kwargs)
     pcie, reg = records
     if len(driver) != pcie['bytes'] or hashlib.sha256(driver).hexdigest() != pcie['sha256']:
@@ -115,8 +118,11 @@ def main():
     parser.add_argument('--pcie-aspm-off', action='store_true', help='Disable ASPM only in this diagnostic RAM boot candidate')
     parser.add_argument('--pcie-scan-hold', action='store_true', help='Compose the qualified power2 held PCI/REG_ON candidate')
     parser.add_argument('--pcie-resource-capable', action='store_true', help='Select the qualified assignment-capable module; requires --pcie-scan-hold')
+    parser.add_argument('--pcie-iommu-parent', action='store_true', help='Select the qualified IOMMU association and exact power2 Image; requires held resources')
     parser.add_argument('--reg-on-module', type=Path, help='Qualified private REG_ON module; required only with --pcie-scan-hold')
     options = parser.parse_args()
+    if options.pcie_iommu_parent and not options.pcie_resource_capable:
+        raise ValueError('IOMMU profile requires explicit resource selection')
     if options.pcie_resource_capable and not options.pcie_scan_hold:
         raise ValueError('Resource-capable profile requires explicit held selection')
     if options.pcie_scan_hold:
@@ -135,6 +141,8 @@ def main():
         else:
             os.environ['IPHONE_LINUX_PROFILE'] = previous
     kernel, record = KERNEL.kernel_inputs(options.kernel_dir.absolute(), options.kernel_patchset)
+    if options.pcie_iommu_parent:
+        n71_iommu_build.kernel_image(ROOT, kernel['Image.gz'], release=record['build']['kernel_release'])
     folder = DIAGNOSTIC.TUNABLES.private_path(options.diagnostic_dir, directory=True)
     path = DIAGNOSTIC.TUNABLES.private_path(folder / 'diagnostic-private.dtb')
     if path.stat().st_size > 4 * 1024 * 1024:
@@ -199,6 +207,7 @@ def main():
         'pcie_aspm_off': options.pcie_aspm_off, 'bootargs_sha256': KERNEL.digest(bootargs(options.pcie_aspm_off)),
         'pcie_scan_hold': options.pcie_scan_hold,
         'pcie_resource_capable': options.pcie_resource_capable,
+        'pcie_iommu_parent': options.pcie_iommu_parent,
         'module_automatic_load': False, 'requires_explicit_run': True,
         'requires_explicit_enumerate': True, 'physical_boot_tested': False,
         'default_profile_changed': False, 'wifi_verified': False}

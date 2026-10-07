@@ -2,6 +2,11 @@
 import hashlib
 import json
 import re
+import n71_iommu_build
+
+IOMMU_POLICIES = ('n71-pcie-contract.h', 'n71-pcie-resource-assign.h', 'n71-pcie-resource-write.h',
+                  'n71-pcie-scan-config.h', 'n71-pcie-bar-sizing.h', 'n71-pcie-pme-control.h',
+                  'n71-pcie-io16-upper.h', 'n71-pcie-pref64-disable.h', 'n71-pcie-scan-link-target.h')
 
 FLAGS = ('same_write_permissions', 'existing_io_only', 'first_failure_retained', 'failed_callback_not_valid',
          'raw_callback_errors_preserved', 'verified_write_counter_only', 'one_record_before_result',
@@ -73,9 +78,31 @@ def extended_evidence(root, original, request):
     return candidate
 
 
-def select(root, previous, *, release, pcie_sha256):
+def iommu_records(root, previous, *, release, pcie_sha256):
+    build = n71_iommu_build.qualified(root, release=release)
+    n71_iommu_build.image_record(root, release=release)
+    require(pcie_sha256 == build['module_sha256'], 'Explicit qualified IOMMU module required')
+    base = n71_iommu_build.evidence(root, 'n71-pci-pref64-unsized-build.json')['real_module_build']
+    proof = n71_iommu_build.evidence(root, 'n71-dma-topology-qualification.json')
+    require(base['protected_outputs'] == build['baseline_sha256'], 'IOMMU assignment kernel base changed')
+    for name in IOMMU_POLICIES:
+        path = 'phone/kernel/' + name
+        digest = base['inputs'][path]['sha256']
+        require(proof['inputs_sha256'].get(path) == digest
+                and hashlib.sha256((root / path).read_bytes()).hexdigest() == digest,
+                'IOMMU assignment policy changed')
+    records = select(root, previous, release=release, pcie_sha256=base['modules']['n71-pcie-diagnostic.ko']['sha256'])
+    records[0].update(bytes=build['module_bytes'], sha256=build['module_sha256'],
+                      vermagic=build['vermagic'], iommu_parent=True)
+    return records
+
+
+def select(root, previous, *, release, pcie_sha256, iommu_parent=False):
+    require(type(iommu_parent) is bool, 'IOMMU build selection must be an exact boolean')
     require(isinstance(pcie_sha256, str) and re.fullmatch(r'[0-9a-f]{64}', pcie_sha256),
             'Explicit qualified PCI module hash required')
+    if iommu_parent:
+        return iommu_records(root, previous, release=release, pcie_sha256=pcie_sha256)
     path = root / 'docs/evidence/n71-pci-resource-readback.json'
     require(path.is_file() and not path.is_symlink() and path.stat().st_size <= 256 * 1024,
             'Qualified readback module evidence missing or invalid')
