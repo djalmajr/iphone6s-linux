@@ -206,7 +206,18 @@
     "mac_global_configuration_or_installs": false,
     "private_modules_firmware_or_raw_logs_published": false
   },
-  "new_remote_ci": "Pending publication and completion; previous cdb0395 CI proves F1i, not this new scan integration.",
+  "new_remote_ci": {
+    "head": "0ae592286b54e80a4b90e71742d82c8152070802",
+    "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37572779793",
+    "conclusion": "success",
+    "completed_at_utc": "2026-10-07T04:54:34Z",
+    "jobs": {
+      "source (macos-15)": "success",
+      "source (ubuntu-24.04)": "success",
+      "windows-dns": "success"
+    },
+    "complete_ci_passed": true
+  },
   "private_evidence_sha256": {
     "arm64-result-private.json": "75f11c4b0461296350f5caa0e21608912f68e5e45c6bd4cade50b82830f58227",
     "arm64-kernel-private.log": "cd1a7c10ab9ad55e8f5b8d9e0763762c36d34b3908c620f836d1c138ba94f5ed",

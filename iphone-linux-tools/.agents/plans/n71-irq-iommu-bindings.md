@@ -182,7 +182,7 @@ A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLO
 - **Alternativas:** aplicar setter em dispositivos já escaneados exige snapshot de várias associações; criar domínio fora do owner da bridge quebra lifetime; ligar o driver antes de attachment DART mistura gates ainda abertos. Rejeitadas.
 - **Reverter:** baixo antes do hardware; API nova opt-in, wrappers atuais intactos. Campo adicional de lease é interno ao módulo, ainda sem seletor/collector.
 - **Onde:** até cinco públicos: este plano, phone/kernel/n71-pcie-scan.h, tests/n71_pcie_scan_host.c, tests/n71_pcie_msi_scan_fixture.h, tests/test_n71_pcie_scan_host.py. O modelo MSI novo fica no header de fixture, mantendo dependências separadas dos casos PCI existentes. O runner de mutações scan-config permanece intacto. As fixtures optional/IO16/PREF64 reutilizam o C base e precisam do gate afetado por essa dependência.
-- **Status:** aplicada e qualificada offline no commit36998e8; documentação0ae5922 publicada e CI em execução. As funções existentes do scan estão referenciadas; não há função morta a remover. Firmware, Image/config/exports e Mac permanecem intactos; nenhuma nova sessão física até integração/collector/gates necessários.
+- **Status:** aplicada e qualificada offline no commit36998e8; documentação0ae5922 publicada e CI aprovada nos três jobs em2026-10-07T04:54:34Z. As funções existentes do scan estão referenciadas; não há função morta a remover. Firmware, Image/config/exports e Mac permanecem intactos; nenhuma nova sessão física até integração/collector/gates necessários.
 
 ### Contratos F1j
 
