@@ -38,7 +38,7 @@ Sem alteração de hardware nesta investigação. Não há nova prova de IRQ/DMA
 
 [Referência selecionada](evidence/n71-irq-iommu-reference.json). O log de aquisição da sessão física já concluída contém `interrupt=00000100`, portanto line0/pin1, e capability MSI em58/header00886805: endereço64 bits, até16 vetores, MSI desativado e MSI-X ausente. A leitura teve error0/19 reads. Reutilizamos esse log pelo hash, sem outro boot ou escrita de config. Pin1 não prova rota INTx funcional.
 
-O ADT N71 fixado declara `msi-address=0xbffff000`, `msi-vector-offset=256`, total32 e parent AIC phandle16. A bridge1 declara base8/count8. O driver Apple lê essas propriedades e acrescenta o offset do controlador ao índice lógico ao publicar a interrupção no parent: os números AIC de registro são264..271. Isso é referência estática, não entrega de IRQ no Linux. A codificação do **message data** ainda precisa ser fechada separadamente; não confundir o índice lógico8 com o número AIC264.
+O ADT N71 fixado declara `msi-address=0xbffff000`, `msi-vector-offset=256`, total32 e parent AIC phandle0x16 (22). A bridge1 declara base8/count8. O driver Apple lê essas propriedades e acrescenta o offset do controlador ao índice lógico ao publicar a interrupção no parent: os números AIC de registro são264..271. Isso é referência estática, não entrega de IRQ no Linux. A referência do **message data** foi inferida na F1g abaixo; entrega e mensagem física permanecem sem prova. Não confundir o índice lógico8 com o número AIC264.
 
 O ADT Apple usa uma célula no AIC; o FDT Linux fixado usa três. A função `aic_irq_domain_translate` aceita três/quatro, trata célula0 como tipo e aplica sua própria codificação de hwirq. Para MSI, a referência de requisição Linux é `<0, 264 + índice, 1>` (edge rising), índice0..7. Um virq Linux ou hwirq interno não pode ser comparado diretamente com264. [Fonte AIC fixada](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/irqchip/irq-apple-aic.c#L683).
 
@@ -176,3 +176,28 @@ python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_dart_irq.py tests/test_n
 O build externo usa uma pasta M nova, os38 inputs de produção registrados no JSON, Makefile com `obj-m += n71-pcie-diagnostic.o` e o comando make já documentado acima. Compare todos os hashes antes/depois. Nenhuma dependência, banco ou pacote/configuração global do Mac mudou; logs, módulo e firmware permanecem privados. Custo adicional: domínio/fwnode/virq e referência OF por owner DART até release comprovado; desempenho físico não medido.
 
 F1d/F1e/F1f locais concluídos; F0/F1 globais, F2 perfil/collector e F3 físico permanecem abertos. Próximo desenvolvimento: mensagem/domínio MSI e lifecycle das máscaras, attachment PCI/IOMMU e política de enable, depois collector/perfil por SHA e um boot agrupado. Wi-Fi e carga/gauge ainda não funcionam nesta candidata. Nenhum novo reboot/DFU/PIN nesta rodada; iPhone detectado no iOS para carregar enquanto o trabalho offline avança. O goal e as issues40/9/2 permanecem ativos.
+
+## F1g — referência da mensagem MSI, sem integração física
+
+O [helper](../phone/kernel/n71-wlan-msi-message.h), commit0c1fbe5, exige a topologia N71 já qualificada, address_lo0xbffff000/high0 e controller vectorBase0. Produz três words da mensagem e a requisição AIC em campos separados. Os oito dados esperados são8..15; os números parent AIC são264..271. Endereço/base/topologia divergentes ou índice fora da porta são recusados com EINVAL/ERANGE e output intacto. Não cria IRQ/domain, não escreve config/MMIO e não foi ligado ao caller/perfil/autoload.
+
+### Referência primária e incerteza explícita
+
+[Nove recortes por hash/offset](evidence/n71-msi-message-reference.json), binário/ADT já fixados e privados. A factory N71 de216 bytes aponta ao allocator tipado; o import resolve para OSObject_typed_operator_new, cujos flags de zone são0xd1004. O [header oficial anterior8020.140.41](https://github.com/apple-oss-distributions/xnu/blob/xnu-8020.140.41/osfmk/kern/zalloc.h) identifica bit0x4 como Z_ZERO e0x1000 como VM tag. O tag exato8020.241.44 retornou404 na API oficial e não foi usado como fonte. O caminho completo de zeroing do binário não foi fechado; portanto vectorBase0 permanece inferência pela comparação e init que não grava esse campo, sem claim de leitura física da memória inicial.
+
+A [fonte IOPCIFamily fixada](https://github.com/apple-oss-distributions/IOPCIFamily/blob/4822b27a36e2de70e231ecf2bf3021384fab6ec2/IOPCIMessagedInterruptController.cpp#L501) separa firstVector + _vectorBase do registro parent. O binário soma o campoA0 ao firstVector para o argumento de mensagem; a bridge copia esse argumento do x5 para o terceiro word, enquanto o offset de registro256 reside emC4. A propriedade ADT fornece o endereço0xbffff000. Esse encadeamento sustenta os valores de referência; ainda não prova entrega MSI, máscara, firmware ou DMA.
+
+### Verificação e reprodução
+
+[Qualificação sanitizada](evidence/n71-wlan-msi-message-qualification.json):30 cenários/13 mutações compiladas e detectadas por SIGABRT/asserção no Mac e Ubuntu ARM64. O teste cobre oito mensagens, endereços/high/base recusados, seis topologias, índices adjacentes/extremos, nulos, erro combinado e preservação de output. A primeira fixture não incluía stdbool para mutants com false; a falha de compilação foi corrigida e não contada como kill. O processo da fixture Linux desabilita dumpability para evitar handler externo de crash, sem mudar configuração da máquina.
+
+Quatro inputs idênticos por SHA; helper AIC anterior permanece intacto e seus gates são reutilizados. C11/Wall/Wextra/Werror/pedantic, AST/lint fatal passaram; sem typechecker Python. Probe ABI na VM passou W=1/Werror/modpost/ELF64 AArch64/vermagic power2,5.736 bytes/SHAe0abf356ebe8b42f2050c320f8caa310e940e876b84ce6f90c0f09cb064dca06, sem load. Fonte/config/Image/vmlinux.symvers preservados, exports explícitos e sem KBUILD_MODPOST_WARN. Esse probe valida contexto kernel do helper; não implementa domínio MSI.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_wlan_msi_message.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_wlan_msi_message.py
+```
+
+Para ABI, crie pasta M nova na VM e copie os dois headers registrados no JSON; crie módulo GPL de prova que chame n71_wlan_msi_message no init com os valores N71 e Makefile `obj-m += n71-wlan-msi-abi-probe.o`. Compile pelo comando make já documentado, confira hashes/ELF/vermagic e conserve o probe privadamente, sem executá-lo. Para conferir a referência binária, use o procedimento Python dos recortes acima com o novo JSON e seus nove source_windows. Firmware, bytes e disassembly não foram publicados.
+
+Nenhum pacote/configuração global, banco, dependência ou estado físico foi alterado. Custo: cálculo e structs locais, sem recurso persistente; desempenho físico não medido. F1g offline concluída e pronta para o domínio nativo; CI do código IRQ/caller e publicação final seguem registradas no plano. Próximo desenvolvimento: bitmap/alocação exclusiva dos oito parents MSI com rollback, máscaras/teardown, attachment PCI/IOMMU e enable controlado. Wi-Fi/carga/gauge e goal continuam pendentes; não houve novo boot/DFU/PIN.
