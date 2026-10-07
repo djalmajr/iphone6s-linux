@@ -309,7 +309,7 @@ Não há typechecker Python; AST/lint fatal passaram no Mac e AST no ARM64. Os d
 
 ProduçãoW=1/Werror/modpost/ELF64 AArch64/vermagic power2 passou.48 inputs protegidos,46 C/headers arquivados,30 includes efetivos. A pasta M usa cópias exatas da produção e Makefile `obj-m += n71-pcie-diagnostic.o`; agora não há wrapper privado. Use o make/exports fixados descritos anteriormente e confira fonte/config/Image/vmlinux.symvers antes/depois. modinfo confirma msi_parent/msi e nm confirma o getter e a API nativa retida. Módulo104288 bytes/SHA0c0783806158eb88a4bc390644a3186d474d1fe20d2026a046719751f875f8a5; não carregado nem publicado. Image/config/exports preservados, sem KBUILD_MODPOST_WARN.
 
-F1k offline concluída; CI nova depende da publicação. Sem banco, dependência, pacote/configuração global do Mac, novo boot/DFU/PIN ou escrita no telefone. Custo adicional: getter sob lock e seleção opt-in; desempenho físico não medido. Próximo: associação PCI/DART antes de device publication/binding/MASTER, teardown de consumidores antes do provider, collector/perfil e preparação de energia para coletas agrupadas. Wi-Fi#9, carga/gauge#2, issue40 e goal permanecem abertos.
+F1k offline concluída e [CI de2192cbe](https://github.com/djalmajr/iphone6s-linux/actions/runs/37573824732) aprovada nos três jobs em2026-10-07T05:06:28Z. Sem banco, dependência, pacote/configuração global do Mac, novo boot/DFU/PIN ou escrita no telefone. Custo adicional: getter sob lock e seleção opt-in; desempenho físico não medido. Próximo: associação PCI/DART antes de device publication/binding/MASTER, teardown de consumidores antes do provider, collector/perfil e preparação de energia para coletas agrupadas. Wi-Fi#9, carga/gauge#2, issue40 e goal permanecem abertos.
 
 ## Disponibilidade OF do DART antes da associação
 
@@ -320,3 +320,24 @@ Tornar o nó disponível aciona o [notifier OF](https://github.com/HoolockLinux/
 Há outro limite na API: [apply](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/of/dynamic.c#L767) pode retornar erro de notify depois de aplicar as propriedades. Um retorno negativo não garante que a árvore foi restaurada. É necessário conferir identidade/readback e manter owner/refs para retry quando houver efeitos vivos. [Destroy](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/of/dynamic.c#L533) libera entries e referências, sem liberar a propriedade dinâmica retida pela árvore; não usar propriedade embutida em um owner que será liberado nem declarar todo o heap recuperado.
 
 As APIs changeset e helpers de propriedades estão exportados no kernel fixado. CONFIG_OF_DYNAMIC/OVERLAY estão habilitados e o domínio default é DMA strict. [SID0 da referência N71](evidence/n71-dart-apple-stream-reference.json) continua sendo a entrada para o mapa restrito; máscaras/aliases precisam ser conferidos antes de permitir DMA. A auditoria preservou fonte/config/Image/exports e não aplicou mudanças OF, não carregou módulos nem pediu outro DFU. O helper, a integração do caller e a prova física continuam pendentes na issue40.
+
+## Referência DART na DTB desativada
+
+[Preparador](../scripts/build/prepare-n71-topology.py), [D12](../.agents/plans/n71-irq-iommu-bindings.md#d12-gerar-primeiro-um-phandle-dart-estável-na-dtb-desativada), [prova sanitizada](evidence/n71-dart-phandle-qualification.json). A topologia anterior não referencia o label DART e sua delta exige exatamente os campos sem phandle. Antes do helper de associação, o novo modo `--dart-phandle` reserva um identificador válido e exclusivo, igual ao maior phandle da baseline mais um. Pins da baseline continuam intactos; dtc aloca os providers novos em outros números.
+
+O modo default continua sem phandle DART ou novo campo de provenance. Opt-in admite somente o phandle reservado no DART, registra seu valor e recusa overflow, baseline inválida, colisão/drift, status ativo, mapa IOMMU ou qualquer outra alteração. UART/DART/PCIe permanecem desativados. Isso prepara uma referência para o mapa futuro, sem ativar provider, DMA ou rádio.
+
+Mac: 16 testes passaram, cinco testes de compilação nativa foram pulados e 13 mutações falharam por assertion. Ubuntu ARM64: todos os 21 testes e 15 mutações passaram, incluindo GCC/dtc reais e opt-in, em 23,528 segundos. Mutantes precisam de `FAIL` do unittest, sem `ERROR`; import/compile/runtime não contam como kills. AST e lint fatal passaram no Mac; AST também no ARM64. Não há typechecker Python.
+
+```sh
+python3 -B tests/run_n71_topology_mutations.py
+IPHONE_N71_VM_SOURCE=/CAMINHO/FONTE_LIMPA python3 -B tests/run_n71_topology_mutations.py
+python3 -B scripts/build/prepare-n71-topology.py \
+  --source-dir /CAMINHO/FONTE_LIMPA \
+  --reference /CAMINHO/REFERENCIA_N71.json \
+  --output-dir /CAMINHO/SAIDA_NOVA --dart-phandle
+```
+
+A fonte de binding original tem seis alterações tracked de DART/GPIO/power/serdev. Para este build usamos uma cópia Git sparse limpa e separada do commit fixado, com arch/arm64/boot/dts e include. O hash do diff original foi preservado, junto de config/Image/vmlinux.symvers; não fizemos reset, rebuild da Image ou instalação. A referência JSON deve corresponder ao contrato já documentado do preparador, sem nova extração de firmware.
+
+CLI default e opt-in geraram DTBs reais com a mesma baseline. Phandle DART 41 na candidata qualificada; SHA797275305a2bc5fdf49b8639075a8ac46768f8ea1de80fa682ebe460288341bd. DTBs/logs ficam privados. Não houve composição, seleção de perfil, load, novo boot/DFU/PIN ou escrita no telefone. Nenhuma dependência, banco ou configuração global do Mac mudou; custo de runtime não medido. A CI nova será conferida depois da publicação. Próximo: helper D11 de disponibilidade/mapa com refs e rollback, depois integração/collector e física agrupada. Wi-Fi#9, energia#2, issue40 e goal continuam abertos.

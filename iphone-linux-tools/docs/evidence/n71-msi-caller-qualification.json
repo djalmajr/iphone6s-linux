@@ -172,7 +172,18 @@
     "mac_global_configuration_or_installs": false,
     "private_modules_firmware_or_raw_logs_published": false
   },
-  "new_remote_ci": "Pending publication and completion; 0ae5922 CI covers the previous scan integration, not this caller.",
+  "new_remote_ci": {
+    "head": "2192cbe3e24b5e68327a3cd7c557ad2b934dac2e",
+    "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37573824732",
+    "conclusion": "success",
+    "completed_at_utc": "2026-10-07T05:06:28Z",
+    "jobs": {
+      "windows-dns": "success",
+      "source (macos-15)": "success",
+      "source (ubuntu-24.04)": "success"
+    },
+    "complete_ci_passed": true
+  },
   "private_evidence_sha256": {
     "local-result-private.json": "0ac483b76cfafe420b573717b3cdeb39336a723d47f8d4c329c3141722fd6d23",
     "local-private.log": "850a0c8896a384f3690896146541c1efbd5a1a19eff721c969f2d468e8c8867b",
