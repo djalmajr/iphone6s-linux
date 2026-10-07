@@ -393,8 +393,40 @@ Build de produção em M separado, sem wrapper privado, passouW=1/Werror/modpost
 
 Arquivos: scan, cenários C compartilhados, runner Python e plano; doc/prova separadas. Sem pacote, dependência, banco, perfil, configuração global do Mac ou novo DFU. Custo: uma chamada interna adicional de lifecycle; desempenho físico não medido. Próximo: associação DART pré-scan, remoção/unmap, teardown provider e restore da disponibilidade antes da restauração final. IRQ/DMA/radio e energia permanecem abertos na issue40 e no goal.
 
+[CI de83924a8](https://github.com/djalmajr/iphone6s-linux/actions/runs/37579331022) aprovada nos três jobs em2026-10-07T06:14:19Z; cobre a remoção D13 publicada. A integração D14/D15 posterior ainda requer sua própria CI e prova física.
+
 ### Publicação PCI não comprova associação IOMMU
 
 [Auditoria primária](evidence/n71-iommu-publication-audit.json), [contrato D14](../.agents/plans/n71-irq-iommu-bindings.md#d14-associar-o-dart-no-scan-e-exigir-readback-do-core-iommu). Na fonte fixada, iommu_init_device:469–488 chama o dma_configure do bus antes de existir driver. O notifier ADD_DEVICE:1820–1824 retorna NOTIFY_DONE em erro do probe; um scan bem-sucedido, portanto, pode coexistir com associação ausente. Remoção do device dispara a liberação IOMMU. A integração precisará preparar mapa/provider antes da publicação e conferir fwspec/fwnode/SID e domínio traduzido depois, mantendo owners até a remoção dos consumidores.
 
-As consultas iommu_group_get/put e iommu_get_domain_for_dev têm export fixado; dev_iommu_fwspec_get é inline. pci_for_each_dma_alias e pci_real_dma_dev são declarações sem export no vmlinux.symvers utilizado. Não chamá-las de módulo externo nem enfraquecer modpost. O contrato de aliases precisa ser fechado por caminho disponível ou export explícito em futura fatia antes de liberar driver/MASTER. D14 ainda é plano; os dados acima são auditoria de fonte/ABI, sem efeito ou prova física.
+As consultas iommu_group_get/put e iommu_get_domain_for_dev têm export fixado; dev_iommu_fwspec_get é inline. pci_for_each_dma_alias e pci_real_dma_dev são declarações sem export no vmlinux.symvers utilizado. Não chamá-las de módulo externo nem enfraquecer modpost. O contrato de aliases precisa ser fechado por caminho disponível ou export explícito em futura fatia antes de liberar driver/MASTER. D14/D15 abaixo implementam a integração e corrigem o contrato Apple; os dados desta auditoria são de fonte/ABI, sem prova física.
+
+## D14 — associação DART antes do scan e readback IOMMU
+
+[Scan](../phone/kernel/n71-pcie-scan.h), integraçãof11a91a e correçãoAppleea49c7e, [contrato D14](../.agents/plans/n71-irq-iommu-bindings.md#d14-associar-o-dart-no-scan-e-exigir-readback-do-core-iommu), [prova final](evidence/n71-dart-scan-qualification.json). Options internos incluem provider manual, default NULL. O wrapper hold_iommu exige provider não nulo, held bus/MSI/PME e prepara o owner OF/DART após PME/target e antes de PCI publication. Wrappers anteriores conservam provider NULL. Nenhum parâmetro do caller, perfil ou autoload seleciona essa rota nesta fatia.
+
+Report exige disponibilidade e identidade das propriedades status/mapa próprios, exatamente oito células e todos os valores RID0x0008/0x0100, phandle do owner, SID0/range1. Fwspec deve ter fwnode do provider, num_ids0 e flags0. Ambos os dispositivos devem observar o mesmo domínio IOMMU_DOMAIN_DMA strict. Ausência/drift/erro, domínio identity/blocked/diferente e contagem incompleta recusam sucesso. O log usa map_sid0 e explica que não há readback privado do SID; não expõe ponteiros ou chama aliases sem export. Isso é observação de software, sem prova física de tradução/IRQ/rádio.
+
+[Auditoria D15](evidence/n71-dart-fwspec-audit.json): apple-dart.c:913–961 guarda SIDs no stream_maps privado e não preenche fwspec.ids. O core inicializa fwspec zerado e delega of_xlate. A primeira fixture/modelo190/146 assumiu um ID0 e passou ABI, mas esse contrato recusaria a associação real. A leitura primária detectou o erro antes de selecionar o caller ou executar no telefone; corrigimos produção e fixture, sem reutilizar essa prova inicial para o contrato final. SID0 é inferido da leitura exata do mapa e da rotina xlate fixada; não é leitura do estado privado ou teste DMA. Não espelhar layout interno do driver para fabricar essa observação.
+
+Remove_consumers remove bus/MSI e desfaz o mapa; limpa ponteiro de domínio emprestado e contagem depois de bus gone, mesmo com erro MSI. A bridge permanece retida. Cleanup completo tenta release D11 antes de restaurar config/resources/window/PME/target/free: provider registrado retorna busy e preserva estado. O próximo caller precisa intercalar provider stop entre as etapas. Retry conserva refs e não repete unmap já comprovado. Driver/enable/MASTER permanecem negados.
+
+### Gates e reprodução
+
+Mac/ARM64: scan125 cenários/102 mutações, optional18/14, IO1620/17 e PREF6435/17, total198/150 por plataforma. São39 cenários/30 mutações DART. Cobrem prepare antes de publication, guards/default, falhas antes/depois de efeitos, fwspec Apple/provider/flags/domínio, identidade/tamanho/células/read-error do mapa, MSI pendente, unmap/release e retry. Scan/report/cleanup são produção; API da lease D11 e core IOMMU são dependências modeladas. Prova isolada D11 reutilizada com input de produção intacto.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_scan_host.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_optional_host.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_io16_host.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_pref64_host.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_pcie_scan_host.py
+```
+
+O baseline scout inicial esperava que retry repetisse um erro de unmap pos-efeito. Readback já comprova o mapa restaurado; retry avança e retorna busy pelo provider registrado. A expectativa foi corrigida. Após o ajuste Apple, baseline125 e100 mutações passaram; dois selectors geraram unused de função/array, sem contar compile como kill. Corrigimos só esses selectors e repetimos os dois mutantes por SIGABRT/asserção. Os56 demais inputs e compiler helper permaneceram idênticos; a prova válida125/100 foi reutilizada. Os três gates compartilhados pendentes rodaram completos. Mutantes exigem Werror, SIGABRT/assertion; timeout/import/compile não são kills. AST/lint fatal passaram no Mac e AST no ARM64; não há typechecker Python.
+
+ABI finalW=1/Werror/modpost/ELF64 AArch64/vermagic power2 passou.57 inputs protegidos:47 C/headers e dez testes,31 includes efetivos. Módulo privado110520 bytes/SHA17df226eea6d767cb05a042809e355751ad114fd6170d67ef80fea07fdef8bc0, nunca carregado. Fonte original com seis patches tracked, config/Image/vmlinux.symvers intactos; sem KBUILD_MODPOST_WARN ou pacote/configuração global do Mac.
+
+Para reproduzir ABI, copie os phone/kernel exatos do JSON para M separado e use Makefile `obj-m += n71-pcie-diagnostic.o`. Só na cópia privada do caller, acrescente prototype global `int n71_iommu_scan_probe(struct device *, struct n71_diagnostic *, struct platform_device *);` e a função correspondente que retorna n71_pcie_scan_hold_iommu(dev,state,provider). Esse wrapper mantém a rota no objeto enquanto o caller público não a seleciona. Use make/exports fixados, compare todos os hashes e não carregue o probe nem trate esse artefato como candidata física.
+
+Arquivos: scan, C compartilhado, runner Python, fixture DART e plano; stubs IOMMU nos quatro runners preparados separadamente em36aa20d. Sem dependência/banco/perfil físico novo. Custo: lease OF retida e consultas de fwspec/domínio por dispositivo; desempenho físico não medido. Próximo: seleção/getter do caller e cleanup consumidores/unmap → provider stop → release/restore/free. Alias/máscaras, collector/perfil e energia antes da sessão física agrupada. Wi-Fi#9, energia#2, issue40 e goal permanecem abertos.

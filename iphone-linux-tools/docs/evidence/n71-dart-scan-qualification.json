@@ -1,9 +1,11 @@
 {
   "format": 1,
-  "date_utc": "2026-10-07T05:55:15.566672+00:00",
-  "code_commit": "269c1c9e411153cf603c86c29eb5b520ce1376f8",
+  "date_utc": "2026-10-07T06:35:21.152184+00:00",
+  "code_commit": "ea49c7ec007fc8ab272649c82f8a408134fd8539",
+  "initial_scan_commit": "f11a91a8bceb4a86f38c052db53cf29b3031aab8",
+  "compiler_harness_commit": "36aa20d",
   "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
-  "proof_scope": "Production PCI consumer-removal phase and unchanged complete cleanup with modeled PCI/MMIO dependencies; native production ARM64 module ABI. No caller DART integration or physical execution.",
+  "proof_scope": "Production pre-scan OF/DART association, exact live map and core-IOMMU domain validation, with modeled OF-lease/IOMMU dependencies. Native ARM64 full-module ABI probe retains a private hold_iommu wrapper. No public caller/profile selection or physical execution.",
   "inputs_sha256": {
     "phone/kernel/n71-dart-cycle.h": "08b39c05a41b87936962b341525d7188a28909c91613ea902c5b899e9d431a4a",
     "phone/kernel/n71-dart-host.h": "51effa6ff20dd040dd2190cc7b3bd10d82ebc2535a30a13d120d4db3d988a1c8",
@@ -41,7 +43,7 @@
     "phone/kernel/n71-pcie-resource-write.h": "015ea311c511ce43b1bfe9b307c3d2b8f8e3b1b6b06fee663d0b3b69d0db5250",
     "phone/kernel/n71-pcie-scan-config.h": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8",
     "phone/kernel/n71-pcie-scan-link-target.h": "1af47829908937d28de30b5a05c10ca406a08db22c7657c642e94f3e71534dea",
-    "phone/kernel/n71-pcie-scan.h": "34c18b69d321524eb08c4e33cf5b9ab0fedd87d2c0ad06a7003873d286338f89",
+    "phone/kernel/n71-pcie-scan.h": "f4049a61c188c833f1affd6cee1d972d4c51b294eff322b1d75f9343ca7d377b",
     "phone/kernel/n71-pmgr-access.h": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae",
     "phone/kernel/n71-pmgr-power-observe.c": "fec9d8d28ae34deef0c0da1528f0b341a1dd043e4917b3677c789a182070fc99",
     "phone/kernel/n71-sn2400-input-reference.h": "f67d5fcb3ffa5e9fdfec80f6091f52b6ae965e0a6eac5aef5187f43d61c8a161",
@@ -52,31 +54,34 @@
     "phone/kernel/n71-wlan-power-contract.h": "2034977747e830da0464bc8b9df29a98c176e7dcf6e4e8dbe1137ed10f1a8013",
     "phone/kernel/n71-wlan-power-diagnostic.c": "1dc9ef28bafaa49cb15c3faa0d1e6caf9c728ec2fcb7ee8aaa074587aaf8c34e",
     "phone/kernel/n71-wlan-power.h": "bcdf5f0bf675d9a113cb2d7e7d4910fd4ea6b1c7444f9eac02cf9d807a982bd9",
+    "tests/n71_pcie_dart_scan_fixture.h": "85ed4534ba18980807362c007f019dc3564d104cde9731b15a7c52774edd603c",
     "tests/n71_pcie_io16_host.c": "bc21f39cd5310d71e744c2bd2507dd13494221e67df1df38eec55b51db21983c",
     "tests/n71_pcie_msi_scan_fixture.h": "8bd7a64ea797e60ed8a7668a22754b316ee3ea43dae925a80dd96a9bbc2bf2fc",
     "tests/n71_pcie_optional_host.c": "3fea8adb75b1d0497a63833e1cb7e1b117b58970e76193fea7993b4e2b4dba4c",
     "tests/n71_pcie_pref64_host.c": "5f7b673e998cc93622584b9650b64ac3c103780a6b450250a6847c05c377f74a",
-    "tests/n71_pcie_scan_host.c": "3661aad9f6514631f3c14022f55d1761d5497c52b096dfe4572134cfe1b2852c",
-    "tests/test_n71_pcie_io16_host.py": "ebc3018c017527e437a58d8d8aaacad25f7dd0e53072fd50ab1b186512765958",
-    "tests/test_n71_pcie_optional_host.py": "4e1d66809145bde93cae729b5a787375f915153afe58ab8eec65a5a2b83f24a9",
-    "tests/test_n71_pcie_pref64_host.py": "f7375dad5e5b3062e61a470a482607f7e35b3d17ebfe64bce212bf4f71ad16f0",
-    "tests/test_n71_pcie_scan_host.py": "90d0eb79251b8953d73fa906cce7f05603d28ed704884bc53b85403a6e5d10a4"
+    "tests/n71_pcie_scan_host.c": "40096c3ba8cb1a15ccea315d0576c5d296ed49146dd32e635789a26388fd9647",
+    "tests/test_n71_pcie_io16_host.py": "23b1442e41b4521f5c2cdeef5ebb996d9676649d7e7e174a74bbdf442fc65e63",
+    "tests/test_n71_pcie_optional_host.py": "2283598ab5895c1c0acdeca8ac4a9d8f07d5631f891d9927a07b8e596d0c6a6b",
+    "tests/test_n71_pcie_pref64_host.py": "334ed9edb8f060d03bc061e0a2a870fb26fd4fea31c58f1a2175ca4c6522e236",
+    "tests/test_n71_pcie_scan_host.py": "72d5177ba014698e5eefeb984a0e514355d62c96285734b6d7845e57ae135200"
   },
   "qualification": {
-    "baseline_cases_total": 159,
-    "compiled_assertion_mutations_total": 120,
+    "baseline_cases_total": 198,
+    "compiled_assertion_mutations_total": 150,
+    "dart_cases": 39,
+    "dart_mutations": 30,
     "macos": {
       "native_exit": 0,
-      "native_elapsed_s": 24.199,
-      "assertion_kills": 120,
+      "native_elapsed_s": 22.681,
+      "assertion_kills": 150,
       "reports": [
         {
           "pattern": "test_n71_pcie_scan_host.py",
           "exit": 0,
-          "baseline_cases_reused": 86,
-          "compiled_assertion_kills_reused": 71,
-          "compiled_assertion_kills_fresh": 1,
-          "baseline_scope": "Unchanged production/backend/helper; only failed selector rerun."
+          "baseline_cases_reused": 125,
+          "compiled_assertion_kills_reused": 100,
+          "compiled_assertion_kills_fresh": 2,
+          "source_and_other_selectors_unchanged": true
         },
         {
           "pattern": "test_n71_pcie_optional_host.py",
@@ -106,16 +111,16 @@
     },
     "ubuntu_arm64": {
       "native_exit": 0,
-      "native_elapsed_s": 13.656,
-      "assertion_kills": 120,
+      "native_elapsed_s": 12.266,
+      "assertion_kills": 150,
       "reports": [
         {
           "pattern": "test_n71_pcie_scan_host.py",
           "exit": 0,
-          "baseline_cases_reused": 86,
-          "compiled_assertion_kills_reused": 71,
-          "compiled_assertion_kills_fresh": 1,
-          "baseline_scope": "Unchanged production/backend/helper; only failed selector rerun."
+          "baseline_cases_reused": 125,
+          "compiled_assertion_kills_reused": 100,
+          "compiled_assertion_kills_fresh": 2,
+          "source_and_other_selectors_unchanged": true
         },
         {
           "pattern": "test_n71_pcie_optional_host.py",
@@ -145,27 +150,39 @@
       "ast_exit": 0
     },
     "fatal_flake8_exit": 0,
-    "mutation_policy": "Compile with Werror; SIGABRT and assertion required. Compile failure or timeout is not a kill.",
     "reuse": {
-      "unchanged_inputs": 55,
-      "changed_only_selector": "ignore-held-stop-refusal",
-      "previous_qualified_scan_mutations": 71,
-      "previous_scan_baseline_cases": 86,
-      "prior_method_exit": 1,
-      "compiler_failure_counted_as_kill": false
-    }
+      "unchanged_inputs": 56,
+      "changed_only_selectors": [
+        "wrong-map-size",
+        "wrong-map-cell"
+      ],
+      "reused_scan_baseline_cases": 125,
+      "reused_compiled_scan_assertion_mutations": 100,
+      "initial_scan_method_exit": 1,
+      "initial_compile_failures": 2,
+      "compiler_failures_counted_as_kills": false,
+      "old190_contract_proof_reused": false
+    },
+    "reused_gate": "Unchanged isolated D11 production OF lease; modeled as a dependency in scan fixture.",
+    "mutation_policy": "Compile with Werror and fail through SIGABRT/assertion. Compiler/import/timeout errors are not kills. Two unused selectors corrected and rerun alone; remaining shared gates executed completely."
   },
-  "kernel_module": {
+  "kernel_probe": {
     "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
     "kernel_exit": 0,
-    "module_sha256": "456134c0783cfffd0ce59676d35234a544993602c665d84b4534f1c0bc7d1c67",
-    "module_bytes": 104352,
+    "module_sha256": "17df226eea6d767cb05a042809e355751ad114fd6170d67ef80fea07fdef8bc0",
+    "module_bytes": 110520,
     "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
     "loaded": false,
-    "private_wrapper": false,
-    "production_module_inputs_identical": true,
+    "private_wrapper": true,
+    "production_headers_identical": true,
+    "production_caller_plus_exact_private_wrapper": true,
+    "generated_inputs_sha256": {
+      "Makefile": "3e5172ba2bb306f9030e4362722e271dcac4bf872ce4ad89fba88bc62e4210d9",
+      "n71-pcie-diagnostic.c": "d6a9ec6280303581eb45c39c0e1000d9cb6074f05aacc261f7fc0c25dd0485bb"
+    },
     "effective_module_basenames": [
       "n71-dart-cycle.h",
+      "n71-dart-host.h",
       "n71-dart-irq.h",
       "n71-dart-lease.h",
       "n71-dart-mmio.h",
@@ -196,7 +213,6 @@
       "n71-wlan-msi-message.h",
       "n71-wlan-msi-native.h"
     ],
-    "module_parameter_and_native_msi_symbols_present": true,
     "baseline_sha256": {
       ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
       "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
@@ -206,34 +222,30 @@
     "original_tracked_patch_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
     "original_tracked_changes_preserved": true
   },
+  "superseded_contract": {
+    "commit": "f11a91a8bceb4a86f38c052db53cf29b3031aab8",
+    "baseline_cases": 190,
+    "mutations": 146,
+    "assumption": "One fwspec SID0; contradicted by actual Apple DART source storing SIDs in private stream_maps and keeping fwspec IDs empty.",
+    "reused_as_proof_of_corrected_contract": false,
+    "loaded_or_selected_in_phone_profile": false,
+    "discovered": "Primary-source audit before public caller or physical selection."
+  },
+  "contracts": [
+    "Provider opt-in only with held MSI/PME bus; previous wrappers provider NULL.",
+    "OF availability/map prepared before PCI publication, retained through cleanup.",
+    "Live status/map property identity and all eight exact RID/phandle/SID/range cells validated.",
+    "Apple fwspec IDs empty, flags0 and provider fwnode matched; same strict translated DMA domain across both audited devices.",
+    "map_sid0 comes from OF map validation, not private SID readback or physical translation.",
+    "Borrowed domain/count cleared after bus removal; unmap before provider stop, full restoration/free only after D11 release."
+  ],
   "limits": [
-    "Consumer removal retains bridge, config, resource state, PME, link target and stop error; this is software proof only.",
-    "The caller still stops its unattached DART provider before complete PCI cleanup; ordering will change in future association integration.",
-    "No IOMMU-domain setup, DMA, physical IRQ/MSI, radio, charge or battery measurement."
+    "Public caller does not yet select hold_iommu or interleave provider stop with consumer removal and D11 release.",
+    "Core and lease dependencies modeled; no direct private stream_maps readback, physical IRQ, translation, radio, charge or gauge proof.",
+    "PCI alias/mask contract still required before driver or MASTER; do not call helpers without fixed exports."
   ],
   "ci": {
-    "headSha": "83924a89bd0ef272d5a06f578aad71b5407ec5a4",
-    "status": "completed",
-    "conclusion": "success",
-    "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37579331022",
-    "completed_at": "2026-10-07T06:14:19Z",
-    "jobs": [
-      {
-        "name": "source (macos-15)",
-        "conclusion": "success",
-        "completedAt": "2026-10-07T06:12:29Z"
-      },
-      {
-        "name": "windows-dns",
-        "conclusion": "success",
-        "completedAt": "2026-10-07T06:03:30Z"
-      },
-      {
-        "name": "source (ubuntu-24.04)",
-        "conclusion": "success",
-        "completedAt": "2026-10-07T06:14:19Z"
-      }
-    ],
+    "status": "pending_publication",
     "physical_proof": false
   }
 }
