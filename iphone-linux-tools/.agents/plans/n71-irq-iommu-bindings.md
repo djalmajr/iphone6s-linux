@@ -207,3 +207,20 @@ A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLO
 - [x] Falhas de acquire/teardown conservam bridge/pin/reset/power; retry sem scan ou put duplicado. Getter mantém session_error até cleanup bem-sucedido.
 - [x] Caller completo Mac/ARM64 com cenários antigos e novos/mutações compiladas por assertion; AST/lint fatal; produção W=1/Werror/modpost/ELF/vermagic com hashes/baselines preservados. Não repetir gates independentes com inputs intactos.
 - [ ] Documentar prova/limites e CI na issue40; depois preparar attachment DART, collector/perfil e energia antes da sessão física agrupada.
+
+## D11. Preparar a associação OF/DART com rollback observável
+
+- **Decisão:** próximo helper n71-dart-host.h terá duas changesets de uma propriedade cada: disponibilidade do provider manual e iommu-map do parent do host. Validar nó/driver/provider/SID0 e recusar mapa/máscara preexistentes. Manter refs explícitas de bridge/devices/nodes; claim exclusivo de OF_POPULATED evita outro probe ao tornar o DART disponível. O caller futuro remove consumidores PCI, desfaz o mapa, para o provider manual e só então restaura status/flag. Sem bind/MASTER/DMA nesta fatia isolada.
+- **Por quê:** of_iommu_xlate:28 recusa status disabled. OF notifier:743/764 controla criação/remoção por OF_POPULATED; reverter status enquanto o provider ainda existe pode removê-lo fora do owner. Kernel dynamic.c:767 retorna erro de notify sem reverter propriedades já aplicadas; readback de identidade é obrigatório em todo erro/retry. Changeset destroy libera entries/refs, não a propriedade dinâmica retida pelo tree; não liberar manualmente essa memória nem declarar recuperação completa do heap.
+- **Alternativas:** status okay no DT de boot antecipa probe antes dos owners/baselines do diagnóstico; setters brutos no valor status ignoram notificações/lifetime; ignorar disponibilidade permite falso sucesso de associação; copiar a topologia M1 não prova o stream N71. Rejeitadas.
+- **Reverter:** médio na integração futura; envolve refs e duas fases de teardown. Baixo no helper isolado, sem seleção no caller/perfil/autoload. Manter props alocadas pelo próprio core OF e owner até restauração comprovada.
+- **Onde:** futura fatia de até cinco públicos: este plano, phone/kernel/n71-dart-host.h, tests/n71_dart_host_fixture.h, tests/n71_dart_host.c e tests/test_n71_dart_host.py. Fonte958481f: drivers/iommu/of_iommu.c:22–57,114–167; apple-dart.c:913–961,1393–1425; drivers/of/platform.c:726–790; dynamic.c:533–547,767–801,860–895,1032–1065. Referência stream0 já publicada; não repetir extração de firmware.
+- **Status:** auditoria concluída; helper na fila. APIs changeset e helpers de propriedades estão exportados, CONFIG_OF_DYNAMIC/OVERLAY=y, default DMA strict; Image/config/exports preservados. Recortes primários privados e hashes salvos, nenhuma mudança OF ou escrita no aparelho nesta rodada.
+
+### Contratos planejados da próxima fatia
+
+- [ ] Validate-before-effects: bridge sem bus, parent/of_node fixos, provider manual bound/único, status disabled original, OF_POPULATED não reivindicado, SID0/células e mapa/máscara ausentes. Preservar mappings/flags/refcounts alheios.
+- [ ] Preparar domínio visível antes de PCI device publication; mapear somente RIDs N71 auditados para SID0, recusando qualquer alias fora do contrato. Reportar associação como estado de software, sem alegar DMA físico.
+- [ ] Erro de apply/notify ou revert deve ser interpretado com identidade/readback das propriedades. Conservar owner/refs quando ainda houver efeito vivo ou drift; retry sem aplicar/reverter a mesma etapa já comprovada duas vezes.
+- [ ] Unmap recusa bus vivo; ref da bridge sobrevive ao put do scan. Release da disponibilidade recusa provider registrado; restaurar status disabled e só depois a flag própria. Nenhum provider alheio removido pelo notifier.
+- [ ] Callbacks reais com dependências OF/PCI modeladas e falhas antes/depois da aplicação; mutações compiladas por assertion Mac/ARM64; ABI fixadaWerror/modpost sem load. Integração do caller/getter/collector e prova física posteriores, agrupadas com energia.
