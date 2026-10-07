@@ -30,7 +30,9 @@ DIAGNOSTIC = module('n71_private_diagnostic', ROOT / 'scripts/build/prepare-n71-
 TOPOLOGY = DIAGNOSTIC.TOPOLOGY
 
 
-def validate_dtb(baseline, candidate):
+def validate_dtb(baseline, candidate, *, dart_phandle=0):
+    if type(dart_phandle) is not int or not 0 <= dart_phandle < 0xffffffff:
+        raise ValueError('DART reference must be an exact bounded integer')
     before, after = TOPOLOGY.parse_dtb(baseline), TOPOLOGY.parse_dtb(candidate)
     if TOPOLOGY.PCIE not in after:
         raise ValueError('Diagnostic PCIe node missing')
@@ -52,7 +54,24 @@ def validate_dtb(baseline, candidate):
     pcie.update({'compatible': b'apple,s8000-pcie\0', 'status': b'disabled\0'})
     restored = dict(after)
     restored[TOPOLOGY.PCIE] = pcie
+    if dart_phandle:
+        dart = dict(restored[TOPOLOGY.DART])
+        reference = dart.pop('phandle', None)
+        restored[TOPOLOGY.DART] = dart
+        if (reference != TOPOLOGY.cells(dart_phandle)
+                or dart_phandle != TOPOLOGY.reserve_dart_phandle(restored)):
+            raise ValueError('DART reference differs from the complete preserved topology')
     TOPOLOGY.verify_delta(before, restored)
+
+
+def iommu_dtb(baseline, candidate):
+    validate_dtb(baseline, candidate)
+    nodes = TOPOLOGY.parse_dtb(candidate)
+    handle = TOPOLOGY.reserve_dart_phandle(nodes)
+    nodes[TOPOLOGY.DART]['phandle'] = TOPOLOGY.cells(handle)
+    result = DIAGNOSTIC.serialize_dtb(candidate, nodes)
+    validate_dtb(baseline, result, dart_phandle=handle)
+    return result, handle
 
 
 def bootargs(pcie_aspm_off):
@@ -61,8 +80,8 @@ def bootargs(pcie_aspm_off):
     return KERNEL.BOOTARGS.rstrip(b'\n') + b' pcie_aspm=off\n' if pcie_aspm_off else KERNEL.BOOTARGS
 
 
-def compose(original, loader, baseline_dtb, diagnostic_dtb, kernel, initramfs, *, pcie_aspm_off=False):
-    validate_dtb(baseline_dtb, diagnostic_dtb)
+def compose(original, loader, baseline_dtb, diagnostic_dtb, kernel, initramfs, *, pcie_aspm_off=False, dart_phandle=0):
+    validate_dtb(baseline_dtb, diagnostic_dtb, dart_phandle=dart_phandle)
     expected = loader + KERNEL.BOOTARGS + baseline_dtb + kernel + initramfs
     if original != expected:
         raise ValueError('Source payload is not the exact preserved layout')
@@ -168,8 +187,12 @@ def main():
     initramfs = source['initramfs'].read_bytes()
     if source['payload'].stat().st_size > profile_image.MAX_IMAGE_BYTES:
         raise ValueError('Payload size refused')
+    dart_phandle = 0
+    if options.pcie_iommu_parent:
+        dtb, dart_phandle = iommu_dtb(kernel['s8000-n71.dtb'], dtb)
     payload = compose(source['payload'].read_bytes(), loader, kernel['s8000-n71.dtb'],
-                      dtb, kernel['Image.gz'], initramfs, pcie_aspm_off=options.pcie_aspm_off)
+                      dtb, kernel['Image.gz'], initramfs, pcie_aspm_off=options.pcie_aspm_off,
+                      dart_phandle=dart_phandle)
     destination = options.output_dir.absolute()
     runtime = DIAGNOSTIC.TUNABLES.private_path(ROOT / 'runtime', directory=True)
     if destination.parent != runtime or destination.exists() or destination.is_symlink():
@@ -214,6 +237,8 @@ def main():
     if options.pcie_scan_hold:
         provenance.update(pcie_scan_link_target=True, pcie_scan_pme_noop=False, pcie_scan_pme_disable=True,
                           reg_on_module_sha256=hashlib.sha256(reg_driver).hexdigest())
+    if options.pcie_iommu_parent:
+        provenance['dart_phandle'] = dart_phandle
     private_write(destination / 'provenance.json', (json.dumps(provenance, indent=2) + '\n').encode())
     print('N71_DIAGNOSTIC_PROFILE_VERIFIED; no USB action; not boot qualified')
 

@@ -94,7 +94,7 @@ class IommuProfileTests(unittest.TestCase):
                 patch.dict(os.environ), contextlib.redirect_stdout(io.StringIO()):
             return held.LINK.main()
 
-    def test_new_profile_preserves_payload_reg_on_and_required_reports(self):
+    def test_new_profile_preserves_kernel_reg_on_and_required_reports(self):
         # Mutations killed: lose new module/flags, alter REG_ON or skip composer kernel qualification.
         records = self.accepted(self.select)
         self.assertEqual(records[0]['bytes'], len(self.driver)); self.assertEqual(records[0]['sha256'], self.args[-1])
@@ -103,13 +103,58 @@ class IommuProfileTests(unittest.TestCase):
         self.assertEqual(records[1]['sha256'], hashlib.sha256(self.reg).hexdigest())
         output = self.compose_ok('iommu-profile', self.iommu_flags)
         self.assertEqual({p.name for p in output.iterdir()}, held.PROFILE_FILES)
-        for name in ('payload.bin', 'deployment.json', 'initramfs.gz', 'client_ed25519', 'known_hosts', 'n71-wlan-power-diagnostic.ko'):
+        for name in ('initramfs.gz', 'client_ed25519', 'known_hosts', 'n71-wlan-power-diagnostic.ko'):
             self.assertEqual((output / name).read_bytes(), (self.prior / name).read_bytes(), name)
+        baseline, diagnostic = held.inputs()
+        topology = held.MODULE.TOPOLOGY
+        nodes = topology.parse_dtb(diagnostic)
+        handle = topology.reserve_dart_phandle(nodes)
+        nodes[topology.DART]['phandle'] = topology.cells(handle)
+        expected_dtb = held.MODULE.DIAGNOSTIC.serialize_dtb(diagnostic, nodes)
+        expected = self.loader + held.LINK.ASPM_BOOTARGS + expected_dtb + self.kernel['Image.gz'] + self.source['initramfs'].read_bytes()
+        self.assertEqual((output / 'payload.bin').read_bytes(), expected)
+        self.assertEqual(held.MODULE.TOPOLOGY.parse_dtb(expected_dtb), nodes)
+        self.assertEqual(json.loads((output / 'deployment.json').read_text()),
+                         dict(json.loads((self.prior / 'deployment.json').read_text()), sha256=hashlib.sha256(expected).hexdigest()))
         self.assertEqual((output / 'n71-pcie-diagnostic.ko').read_bytes(), self.driver)
         metadata = json.loads((output / 'provenance.json').read_text())
         self.assertIs(metadata['pcie_iommu_parent'], True); self.assertIs(metadata['module_automatic_load'], False)
+        self.assertEqual(metadata['dart_phandle'], handle)
+        self.assertEqual(metadata['dtb_sha256'], hashlib.sha256(expected_dtb).hexdigest())
+        self.assertNotIn('dart_phandle', json.loads((self.prior / 'provenance.json').read_text()))
         self.assertEqual(self.accepted(self.cli, output), 0)
         self.assertFalse(self.phone.calls)
+
+    def test_iommu_reference_is_unique_disabled_and_only_accepted_from_preserved_dtb(self):
+        # Mutations killed: lose the reserved reference or select a different handle.
+        baseline, diagnostic = held.inputs(); topology = held.MODULE.TOPOLOGY
+        raw, handle = self.accepted(held.MODULE.iommu_dtb, baseline, diagnostic)
+        before, after = topology.parse_dtb(diagnostic), topology.parse_dtb(raw)
+        expected = copy.deepcopy(before)
+        expected[topology.DART]['phandle'] = topology.cells(handle)
+        self.assertEqual(after, expected)
+        self.assertEqual(after[topology.DART]['status'], b'disabled\0')
+        self.assertEqual(sum(props.get('phandle') == topology.cells(handle) for props in after.values()), 1)
+        self.assertNotIn('iommu-map', after[topology.PCIE])
+        for value in (False, 1.0, None, -1, 0xffffffff):
+            with self.assertRaises(ValueError): held.MODULE.validate_dtb(baseline, diagnostic, dart_phandle=value)
+        # Real artifact regression: staged providers can already use the baseline's next handle.
+        occupied = copy.deepcopy(before)
+        used = topology.reserve_dart_phandle(topology.parse_dtb(baseline))
+        occupied[topology.AUX]['phandle'] = topology.cells(used)
+        occupied[topology.PCIE]['power-domains'] = b''.join(occupied[p]['phandle'] for p in
+            (topology.PCIE_PD, topology.AUX, topology.REF, topology.LINK1))
+        candidate = held.MODULE.DIAGNOSTIC.serialize_dtb(diagnostic, occupied)
+        corrected, reserved = self.accepted(held.MODULE.iommu_dtb, baseline, candidate)
+        self.assertEqual(reserved, used + 1)
+        occupied[topology.DART]['phandle'] = topology.cells(reserved)
+        self.assertEqual(topology.parse_dtb(corrected), occupied)
+        for path, key, value in ((topology.DART, 'phandle', topology.cells(handle)),
+                                 (topology.UART, 'status', b'okay\0'),
+                                 (topology.PCIE, 'iommu-map', topology.cells(0, handle, 0, 1))):
+            changed = copy.deepcopy(before); changed[path][key] = value
+            candidate = held.MODULE.DIAGNOSTIC.serialize_dtb(diagnostic, changed)
+            with self.assertRaises(ValueError): held.MODULE.iommu_dtb(baseline, candidate)
 
     def test_explicit_mode_hash_and_unchanged_assignment_policy_are_required(self):
         # Mutations killed: bypass exact bool/hash, baseline linkage or current/qualified policy hashes.
@@ -224,6 +269,16 @@ class IommuProfileMutations(unittest.TestCase):
                                 "n71_iommu_build.kernel_image(ROOT, kernel['Image.gz'], release=record['build']['kernel_release'])", 'None'),
             'composer-mode': ('scripts/build/compose-n71-diagnostic.py', 'N71_DIAGNOSTIC_COMPOSER_SCRIPT',
                                "'pcie_iommu_parent': options.pcie_iommu_parent", "'pcie_iommu_parent': False"),
+            'composer-dart-reference': ('scripts/build/compose-n71-diagnostic.py', 'N71_DIAGNOSTIC_COMPOSER_SCRIPT',
+                                        "dtb, dart_phandle = iommu_dtb(kernel['s8000-n71.dtb'], dtb)", 'pass'),
+            'composer-dart-reserved-handle': ('scripts/build/compose-n71-diagnostic.py', 'N71_DIAGNOSTIC_COMPOSER_SCRIPT',
+                                             'handle = TOPOLOGY.reserve_dart_phandle(nodes)',
+                                             'handle = TOPOLOGY.reserve_dart_phandle(nodes) + 1'),
+            'composer-dart-complete-topology': ('scripts/build/compose-n71-diagnostic.py', 'N71_DIAGNOSTIC_COMPOSER_SCRIPT',
+                                               'handle = TOPOLOGY.reserve_dart_phandle(nodes)',
+                                               'handle = TOPOLOGY.reserve_dart_phandle(TOPOLOGY.parse_dtb(baseline))'),
+            'composer-dart-handle-type': ('scripts/build/compose-n71-diagnostic.py', 'N71_DIAGNOSTIC_COMPOSER_SCRIPT',
+                                         'type(dart_phandle) is not int', 'False'),
             'link-scope-before-identities': ('scripts/host/n71-link-session.py', 'N71_HELD_READBACK_SESSION_SCRIPT',
                                              'require(not options.iommu_parent or options.resource_capable,', 'require(True,'),
             'link-profile-mode': ('scripts/host/n71-link-session.py', 'N71_HELD_READBACK_SESSION_SCRIPT',
