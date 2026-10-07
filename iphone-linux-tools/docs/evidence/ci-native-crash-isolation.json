@@ -1,0 +1,96 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T03:11:59.526938+00:00",
+  "code_commit": "5a5da7d921044531c2988ad2f28ba7657984d730",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/41",
+  "proof_scope": "Mocked crash-handler policy on macOS and Ubuntu ARM64; paired native assertion gate on dedicated VM with exact kernel.core_pattern restore. No complete new-head remote CI proof yet.",
+  "inputs_relative_to": "Git root",
+  "inputs_sha256": {
+    "iphone-linux-tools/scripts/ci/isolate-native-crashes.sh": "bec52fdd24bd55e6b695b094b4066b25aada94cc46ddb739e57b997c7223f428",
+    "iphone-linux-tools/tests/test_ci_native_crashes.py": "864e14128103c47241eb60cb5db5404a8570b741fa6acaa6f06a6ddf52bc430f",
+    ".github/workflows/ci.yml": "f4514e8056f350caf7c84f0a8846afee35ab9f4bab8f69b9e05616cac5d100e2"
+  },
+  "all_qualified_inputs": {
+    "files": 3,
+    "project_manifest_sha256": "6a753edcdaa86774a8f7e59a8cdde04e22b63db120cedfff67e0121e4aa8d2be",
+    "git_root_manifest_sha256": "07044b74dead4bbe9a2908e6a7e1fec68c0e683c8b76ef1480304dd446d772ac",
+    "same_on_macos_and_ubuntu_arm64": true
+  },
+  "qualification": {
+    "macos": {
+      "tests": 2,
+      "cases": 15,
+      "syntax_valid_assertion_mutations": 8,
+      "exit": 0,
+      "bash_syntax_exit": 0,
+      "shellcheck_exit": 0,
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0
+    },
+    "ubuntu_arm64": {
+      "tests": 2,
+      "cases": 15,
+      "syntax_valid_assertion_mutations": 8,
+      "exit": 0,
+      "bash_syntax_exit": 0,
+      "ast_exit": 0,
+      "only_mock_sysctl_and_sudo": true,
+      "real_vm_handler_unchanged": true
+    },
+    "mutation_policy": "Each mutant passes bash -n then fails a contract by AssertionError; syntax/import/timeout failures are not kills"
+  },
+  "paired_vm_gate": {
+    "cases_per_gate": 61,
+    "compiled_assertion_mutations_per_gate": 14,
+    "inputs_sha256": {
+      "iphone-linux-tools/phone/kernel/n71-wlan-irq-reference.h": "92a4766835a0d4884c4da168542ee94ab3512a5200279405d932c0d9ddf71b3f",
+      "iphone-linux-tools/tests/n71_wlan_irq_reference.c": "1173ab1f51a1d9dd602af05a23ded82b2dd89daf1876642675e854e31258cd91",
+      "iphone-linux-tools/tests/test_n71_wlan_irq_reference.py": "a086b980932d6a2c4d430b0fd2a1d94b7577ae9f01e255bd414b6989d700517d"
+    },
+    "piped_handler": "Apport",
+    "piped_elapsed_s": 19.508,
+    "file_handler": "core",
+    "file_elapsed_s": 0.717,
+    "both_exit": 0,
+    "original_handler_restored_exactly": true,
+    "tests_assertions_and_timeouts_unchanged": true,
+    "github_timeout_root_cause_proved": false
+  },
+  "admission": {
+    "github_actions_true": true,
+    "runner_os_linux": true,
+    "runner_environment_github_hosted": true,
+    "arguments_refused": true,
+    "outside_admission_no_sysctl_or_sudo": true,
+    "write_only_if_current_handler_is_pipe": true,
+    "sudo_noninteractive": true,
+    "readback_required": true,
+    "read_write_readback_failure_refuses_success": true,
+    "file_handler_unchanged_without_write": true
+  },
+  "old_ci": {
+    "head": "ec09d4fba2ce49416008355c1361691432f89e63",
+    "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37562583685",
+    "macos": "success",
+    "windows_dns": "success",
+    "ubuntu": "cancelled",
+    "annotation": "The job has exceeded the maximum execution time of 15m0s",
+    "job_timeout_minutes_unchanged": 15,
+    "job_log_unavailable_at_checks": true
+  },
+  "new_remote_ci": "Pending publication; requires all three jobs success on new head",
+  "private_evidence_sha256": {
+    "local-policy-result-private.json": "816f2d3bab4f47d70d68449bfc7f55a370ad9760e0b965af695219227b0af946",
+    "arm64-policy-result-private.json": "614c00e0b8fad3fdd493f2661ab5799cef4fd44cb55dd4de10df2591dd5cd06f",
+    "paired-vm-result-private.json": "233739efb201332850b3befe0138b1a40dc848dc5c28584404255109fb60728a",
+    "ci-timeout-annotations-private.json": "e5b0b9cbdf760b780017ebe9926bcddc2da9c74337e3a0b5a56c7bfcff2973a8"
+  },
+  "limits": {
+    "new_remote_ci_passed": false,
+    "global_mac_config_or_packages_changed": false,
+    "phone_or_production_remote_changed": false,
+    "native_wifi_or_linux_charge_gauge_verified": false,
+    "new_boot_or_dfu": false
+  },
+  "next_gate": "Publish qualified feature branch and complete CI; if another hotspot remains, investigate concrete failing step without changing mutation criteria."
+}

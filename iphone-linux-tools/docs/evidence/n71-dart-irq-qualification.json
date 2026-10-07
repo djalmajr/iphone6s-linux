@@ -141,7 +141,17 @@
       "Final newline missing in extracted cleanup header",
       "Complete caller fixture missing retained DART dependencies and types"
     ],
-    "new_head_remote_ci": "Pending feature branch publication; local/ARM64 success does not imply CI success"
+    "new_head_remote_ci": {
+      "head": "ec09d4fba2ce49416008355c1361691432f89e63",
+      "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37562583685",
+      "macos": "success",
+      "windows_dns": "success",
+      "ubuntu": "cancelled after maximum execution time of 15m0s",
+      "complete_ci_passed": false,
+      "follow_up_issue": "https://github.com/djalmajr/iphone6s-linux/issues/41",
+      "offline_fix_commit": "5a5da7d921044531c2988ad2f28ba7657984d730",
+      "next_ci": "Required after publishing qualified fix; pending"
+    }
   },
   "failed_attempts_preserved": {
     "initial_const_fwspec_werror": true,

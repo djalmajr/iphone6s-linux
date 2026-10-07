@@ -111,7 +111,7 @@ No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo ca
 
 - [x] Caller completo143 cenários/89 mutações no Mac e ARM64; cleanup corrigido4/3 em ambos. IRQ37/21 e backend27/14 reutilizados com inputs pertinentes intactos;50 inputs finais conferidos nas duas plataformas.
 - [x] Módulo completoW=1/Werror/modpost e ABI passou;38 inputs de produção, fonte/config/Image/exports preservados. Nenhum módulo novo carregado.
-- [ ] Acompanhar a CI do head publicado; corrigir eventual falha concreta sem repetir gates alheios. A intermitência anterior da issue38 não foi encerrada por essa correção.
+- [ ] Acompanhar a CI do head publicado; Mac/Windows de ec09d4f passaram, Ubuntu excedeu15 minutos e foi cancelado. [Issue41](https://github.com/djalmajr/iphone6s-linux/issues/41) trata o custo de crashes nativos com correção offline qualificada; nova CI completa ainda necessária. A intermitência anterior da issue38 não foi encerrada.
 - [ ] Fechar lifecycle MSI e attachment PCI/DART; só então preparar seleção/collector e prova física agrupada.
 
 ## D6. Mensagem MSI separada do número AIC
@@ -121,7 +121,7 @@ No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo ca
 - **Alternativas:** usar264 como message data confunde registro parent com vetor; copiar doorbell do driverM1 ignora a propriedade N71; bind do brcmfmac antes do contrato mistura DMA/IRQ/firmware. Rejeitadas.
 - **Reverter:** baixo, quatro arquivos públicos em fatia isolada, sem mudança de runtime/hardware. Evidência primária e limites em publicação separada.
 - **Onde:** este plano, `phone/kernel/n71-wlan-msi-message.h`, `tests/n71_wlan_msi_message.c`, `tests/test_n71_wlan_msi_message.py`. Qualificar C11/Werror/AST/lint/Mac/ARM64 e probeABI na VM dedicada, preservando kernel/exports.
-- **Status:** em curso offline. O head ec09d4f já está na CI; não publicar a próxima fatia até concluir a correção remota em andamento. Sem novo boot/DFU/PIN.
+- **Status:** qualificada offline nos commits0c1fbe5/0720cf6. A CI de ec09d4f terminou com timeout Ubuntu; publicar MSI junto da correção da issue41 já qualificada para produzir nova prova remota. Sem claim de green, novo boot/DFU/PIN ou domínio MSI implementado.
 
 ### Contratos F1g
 
@@ -129,3 +129,19 @@ No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo ca
 - [x]13 mutações compilam e falham por asserção; sem compiler/import/timeout como kill e sem aumentar prazos. Faltava stdbool na primeira fixture; esse erro de compilação foi corrigido e não contado como kill.
 - [x] Mesmos quatro inputs Mac/ARM64; probe kernelW=1/Werror/modpost/ELF/vermagic; sem load/integração ao caller. Kernel e exports preservados, helperAIC anterior intacto e reutilizado.
 - [x] Guardar hashes/offsets de nove recortes primários privados e preparar referência sanitizada, distinguindo inferência estática de entrega MSI real. Fonte XNU8020.140.41 de flags é uma comparação anterior, não a versão exata8020.241.44 do binário; zeroing completo ainda não fechado. [Reprodução e limites](../../docs/N71_IRQ_IOMMU.md#f1g--referência-da-mensagem-msi-sem-integração-física).
+
+## D7. Próxima fatia: domínio MSI nativo e rollback de vetores
+
+- **Decisão:** usar msi_create_parent_irq_domain e msi_lib_init_dev_msi_info fixados/exportados, somente MSI/multi-MSI, sem MSI-X. Domínio/fwnode/OF ref privados e allocator limitado aos oito slots da porta. Lookup de conflito e alloc dos parentsAIC264..271 sob o root mutex; rollback do grant em todo erro parcial. Parent/data/message permanecem tipos distintos.
+- **Por quê:** o kernel tem a API MSI-parent moderna; a bridge Apple atual serve de referência de API, não de registradores A9. O exports fixado contém msi_create_parent_irq_domain, mas não bitmap_find_free_region/bitmap_release_region. Usar allocator de oito bits local com testes de alinhamento/contagem/rollback evita dependência não exportada, sem patch do kernel ou rebuild de Image.
+- **Alternativas:** copiar offsets/doorbellM1 não qualifica N71; usar bitmaps não exportados quebra modpost; iniciar brcmfmac agora mistura IRQ/DMA/firmware. Rejeitadas.
+- **Reverter:** baixo antes da integração física; header novo e fixtures isolados. Perfil/caller existente não muda nesta fatia.
+- **Onde:** F1h de até cinco arquivos: este plano, `phone/kernel/n71-wlan-msi-native.h`, `tests/n71_wlan_msi_native_fixture.h`, `tests/n71_wlan_msi_native.c`, `tests/test_n71_wlan_msi_native.py`. Probe ABI privado na VM; publicação sanitizada separada.
+- **Status:** na fila, após qualificar/publicar a correção CI. Conferidos include/linux/msi.h SHA93b85e1e508914ef1c41e880bf399356b719ed383bf81eff58b1451c682829aa e exports da fonte958481f. Sem domínio/IRQ/MSI/config/MMIO novo no telefone.
+
+### Contratos F1h planejados
+
+- [ ] Allocation count1/2/4/8 alinhada; recusar conflito/owner/tipo/cells/chip, nunca reutilizar/dispose mapping alheio. Bitmap/parent rollback observado em falhas; preserve grants vivos em outras regiões.
+- [ ] Free pelo lifecycle do IRQ core e teardown do dispositivo; release do domínio recusa bitmap/mapcount restante. Não declarar free sem MMIO ou máscara física lida.
+- [ ] Compose usa o helper de referência, recusando valores fora da porta; fixture executa callbacks nativos, kernel module ABI/modpost passa com exports explícitos.
+- [ ] Integrar ao PCI/caller apenas em fatia posterior com owners/pins/cleanup e guards DMA. Perfil/collector e sessão física continuam depois dos gates de máscara/attachment; sem novo boot para esta fase offline.

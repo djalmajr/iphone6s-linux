@@ -29,6 +29,8 @@ Na VM dedicada, RLIMIT_CORE=0 não impediu o handler piped Apport e um mutant te
 - [x] Bash syntax/ShellCheck, AST/lint fatal passaram no Mac; fixtures15 cenários/8 mutações por AssertionError passaram no Mac e ARM64. Três inputs idênticos; testes usam somente mocks e mantêm handler real da VM intacto. Não contar import/timeout/syntax como kill.
 - [ ] Public guard/commit/push na branch, acompanhar CI remota completa; registrar resultados e limites sanitizados.
 
+Código qualificado:5a5da7d. [Reprodução e prova](../../docs/CI_NATIVE_CRASHES.md). Publicação conjunta com os dois commits MSI locais qualificados; só encerrar issue41 com os três jobs remotos passando. Não repetir gates de código/ABI intactos apenas pela mudança da política de CI.
+
 ## Verificação
 
 Nenhuma instalação ou configuração global do Mac, telefone, cloud/account ou main. Não usar o helper público na VM local: experimento usa runner privado com backup/finally; testes do helper usam somente mocks. Não reduzir testes, assertions, mutation criteria ou limite de15 minutos. CI pode ainda apresentar outro hotspot; só concluir com três jobs passados no head novo. Wi-Fi/energia e goal principal continuam abertos, sem novo reboot/DFU/PIN.
