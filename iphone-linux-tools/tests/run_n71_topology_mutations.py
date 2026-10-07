@@ -19,6 +19,20 @@ MUTATIONS = (
     ('symlink', 'for parent in (path,) + tuple(path.parents):\n        if parent.is_symlink():',
      'for parent in (path,) + tuple(path.parents):\n        if False:'),
 )
+PHANDLE_MUTATIONS = (
+    ('dart-reservation', 'if dart_phandle and dart_phandle != reserve_dart_phandle(before):',
+     'if False:', 'test_n71_topology.TopologyContract.test_dart_phandle_refusal_is_strict'),
+    ('dart-exact-value', "values['phandle'] = cells(dart_phandle)",
+     "values['phandle'] = phandle(DART)", 'test_n71_topology.TopologyContract.test_dart_phandle_refusal_is_strict'),
+    ('dart-unique', "if sum(n.get('phandle') == value for n in after.values()) != 1:",
+     'if False:', 'test_n71_topology.TopologyContract.test_dart_phandle_refusal_is_strict'),
+    ('dart-overflow', 'if value >= 0xffffffff:', 'if False:',
+     'test_n71_topology.TopologyContract.test_reserve_dart_phandle_validates_baseline_and_range'),
+    ('dart-pin-validation', '    freeze_phandles(nodes)\n    used =', '    used =',
+     'test_n71_topology.TopologyContract.test_reserve_dart_phandle_validates_baseline_and_range'),
+    ('dart-reuse-baseline', 'value = max(used, default=0) + 1', 'value = max(used, default=0)',
+     'test_n71_topology.TopologyContract.test_reserve_dart_phandle_validates_baseline_and_range'),
+)
 
 
 def suite(environment, case=None):
@@ -35,9 +49,13 @@ def main():
         raise RuntimeError('N71 topology baseline failed: ' + output)
     print(output, end='', flush=True)
     mutations = [(name, before, after, None) for name, before, after in MUTATIONS]
+    mutations.extend(PHANDLE_MUTATIONS)
     if os.environ.get('IPHONE_N71_VM_SOURCE') and sys.platform == 'linux':
         mutations.append(('phandle-pins', "return ''.join(result)", "return ''",
                           'test_n71_topology.NativeCompilation.test_phandle_pins_preserve_existing_references'))
+        mutations.append(('dart-ignore-opt-in', "if getattr(options, 'dart_phandle', False) else 0",
+                          'if False else 0',
+                          'test_n71_topology.NativeCompilation.test_real_dart_phandle_is_unique_and_keeps_disabled_default'))
     else:
         print('N71_NATIVE_PHANDLE_MUTATION_SKIPPED; dedicated Linux source/compiler required')
     for name, before, after, case in mutations:

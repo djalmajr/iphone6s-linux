@@ -206,7 +206,7 @@ A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLO
 - [x] Getter sob lock, valores exatos antes/depois do scan/release e com owner pendente sem bus; mapcount privado e child distintos de entrega física.
 - [x] Falhas de acquire/teardown conservam bridge/pin/reset/power; retry sem scan ou put duplicado. Getter mantém session_error até cleanup bem-sucedido.
 - [x] Caller completo Mac/ARM64 com cenários antigos e novos/mutações compiladas por assertion; AST/lint fatal; produção W=1/Werror/modpost/ELF/vermagic com hashes/baselines preservados. Não repetir gates independentes com inputs intactos.
-- [ ] Documentar prova/limites e CI na issue40; depois preparar attachment DART, collector/perfil e energia antes da sessão física agrupada.
+- [x] Prova/limites documentados e issue40 atualizada; CI2192cbe aprovada nos três jobs em2026-10-07T05:06:28Z. Attachment DART, collector/perfil e energia continuam antes da sessão física agrupada.
 
 ## D11. Preparar a associação OF/DART com rollback observável
 
@@ -242,11 +242,11 @@ Unmap exige bridge sem bus e mantém disponibilidade enquanto o provider está v
 - **Alternativas:** adicionar só a propriedade phandle em runtime presume atualização do campo/cache OF; escolher número arbitrário pode colidir; permitir qualquer propriedade extra no DART enfraquece a boundary. Rejeitadas.
 - **Reverter:** baixo; flag default off, sem Image/config/exports, perfil físico, status ativo, probe ou novo boot.
 - **Onde:** próxima fatia de quatro públicos: este plano, scripts/build/prepare-n71-topology.py, tests/test_n71_topology.py e tests/run_n71_topology_mutations.py. Depois, docs/prova sanitizada separadas. Fonte e fragmento anteriores preservados.
-- **Status:** implementação offline autorizada pelo goal em curso; nova precondição derivada da leitura completa do preparador/fragmento, sem modificar telefone.
+- **Status:** aplicada e qualificada offline: Mac16 testes aprovados/5 native skips e13 mutações; ARM64todos21 testes e15 mutações por assertion,23.528s. CLI default e opt-in compilaram DTBs reais, DART phandle41 exclusivo, todos os nós novos desativados. Usamos cópia sparse limpa em pasta separada; as seis alterações tracked da fonte de binding original foram preservadas por hash do diff, assim como config/Image/exports. Nenhum load/composição/DFU.
 
 ### Contratos D12
 
-- [ ] Flag off conserva o default; flag on gera handle válido, único, determinístico e pins anteriores intactos. Recusar overflow, baseline inválida e colisão/drift.
-- [ ] Delta opt-in aceita somente o phandle esperado no DART; recusa mapa, status ativo e qualquer outra alteração. Registrar o identificador na provenance somente no modo opt-in.
-- [ ] Testes/mutações dos guards e compilação real dtc na VM; comparar baseline/default/candidata com hashes, sem alterar source/config/Image/exports. AST/lint fatal e scope de saída preservados.
+- [x] Flag off conserva o default; flag on gera handle válido, único, determinístico e pins anteriores intactos. Recusar overflow, baseline inválida e colisão/drift.
+- [x] Delta opt-in aceita somente o phandle esperado no DART; recusa mapa, status ativo e qualquer outra alteração. Registrar o identificador na provenance somente no modo opt-in.
+- [x] Testes/mutações dos guards e compilação real dtc na VM; comparar baseline/default/candidata com hashes, sem alterar source/config/Image/exports. AST/lint fatal e scope de saída preservados.
 - [ ] Documentar reprodução e issue40; D11 deverá recusar DTBs sem phandle. Nenhum autoload/DFU/hardware novo nesta preparação.

@@ -84,7 +84,59 @@ def encode(nodes):
     return header + b'\0' * 16 + structure + strings
 
 
+def dart_phandle_model():
+    before, after = model()
+    before['/soc/pinned'] = {'phandle': word(100)}
+    after['/soc/pinned'] = copy.deepcopy(before['/soc/pinned'])
+    after[topology.DART]['phandle'] = word(101)
+    return before, after
+
+
 class TopologyContract(unittest.TestCase):
+    def test_reserve_dart_phandle_validates_baseline_and_range(self):
+        # Mutations captured: skip pin validation, reuse the max handle, or allow overflow.
+        before, _ = model()
+        self.assertEqual(topology.reserve_dart_phandle(before), 4)
+        self.assertEqual(topology.reserve_dart_phandle({'/': {}}), 1)
+        for value in (b'\x01', word(0), word(0xffffffff), word(0xfffffffe), word(1)):
+            bad = copy.deepcopy(before)
+            bad['/soc/extra'] = {'phandle': value}
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                topology.reserve_dart_phandle(bad)
+
+    def test_dart_phandle_is_explicit_exact_and_disabled(self):
+        before, after = dart_phandle_model()
+        self.assertEqual(topology.reserve_dart_phandle(before), 101)
+        topology.verify_delta(before, after, dart_phandle=101)
+        self.assertEqual(after[topology.DART]['status'], b'disabled\0')
+        self.assertNotIn('iommu-map', after[topology.PCIE])
+        with self.assertRaises(ValueError):
+            topology.verify_delta(before, after)
+
+    def test_dart_phandle_refusal_is_strict(self):
+        # Mutations captured: accept a different reservation, incoming handle or collision.
+        for index in range(7):
+            before, after = dart_phandle_model()
+            requested = 101
+            if index == 0:
+                requested = 102
+                after[topology.DART]['phandle'] = word(102)
+            elif index == 1:
+                after[topology.DART]['phandle'] = word(102)
+            elif index == 2:
+                after[topology.AUX]['phandle'] = word(101)
+                after[topology.PCIE]['power-domains'] = word(3, 101, 5, 6)
+            elif index == 3:
+                after[topology.DART]['status'] = b'okay\0'
+            elif index == 4:
+                after[topology.DART].pop('phandle')
+            elif index == 5:
+                after[topology.DART]['phandle'] = b'\x01'
+            else:
+                after[topology.PCIE]['iommu-map'] = word(8, 101, 0, 1)
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                topology.verify_delta(before, after, dart_phandle=requested)
+
     def test_fdt_roundtrip_and_exact_disabled_addition(self):
         # Mutation captured: removing the baseline-property preservation guard.
         before, after = model()
@@ -236,6 +288,35 @@ class NativeCompilation(unittest.TestCase):
             self.assertEqual(set(report['added_nodes']), {topology.UART, topology.DART, topology.PCIE})
             self.assertEqual(options.output_dir.stat().st_mode & 0o777, 0o700)
             self.assertTrue((options.output_dir / 'candidate.dtb').is_file())
+
+    def test_real_dart_phandle_is_unique_and_keeps_disabled_default(self):
+        # Mutation captured: ignoring the explicit phandle preparation option.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            normal = self.options(root)
+            normal.output_dir = root / 'default'
+            baseline_report = topology.prepare(normal)
+            self.assertNotIn('dart_phandle', baseline_report)
+            default = topology.parse_dtb((normal.output_dir / 'candidate.dtb').read_bytes())
+            self.assertNotIn('phandle', default[topology.DART])
+            options = self.options(root)
+            options.dart_phandle = True
+            report = topology.prepare(options)
+            self.assertIn('dart_phandle', report)
+            before = topology.parse_dtb((options.output_dir / 'baseline.dtb').read_bytes())
+            after = topology.parse_dtb((options.output_dir / 'candidate.dtb').read_bytes())
+            handle = topology.reserve_dart_phandle(before)
+            self.assertEqual(report['dart_phandle'], handle)
+            self.assertEqual(after[topology.DART]['phandle'], word(handle))
+            self.assertEqual(sum(node.get('phandle') == word(handle) for node in after.values()), 1)
+            topology.verify_delta(before, after, dart_phandle=handle)
+            self.assertEqual(baseline_report['baseline_sha256'], report['baseline_sha256'])
+            for path in (topology.UART, topology.DART, topology.PCIE):
+                self.assertEqual(after[path]['status'], b'disabled\0')
+            for path, props in before.items():
+                for key, value in props.items():
+                    self.assertEqual(after[path][key], value)
+            self.assertNotIn('iommu-map', after[topology.PCIE])
 
     def test_existing_and_linked_outputs_preserve_contents(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -109,11 +109,13 @@ def parse_dtb(data):
     raise ValueError('DTB truncated before end.')
 
 
-def verify_delta(before, after):
+def verify_delta(before, after, *, dart_phandle=0):
     if b'apple,n71' not in before.get('/', {}).get('compatible', b'').split(b'\0'):
         raise ValueError('Baseline is not N71.')
     if set(after) - set(before) != {UART, DART, PCIE} or set(before) - set(after):
         raise ValueError('Candidate must add exactly three staged resource nodes.')
+    if dart_phandle and dart_phandle != reserve_dart_phandle(before):
+        raise ValueError('Reserved DART phandle differs from the baseline.')
     for path, properties in before.items():
         allowed = dict(properties)
         if path in (UART_PD, AUX, REF, LINK1) and 'phandle' not in allowed:
@@ -145,6 +147,10 @@ def verify_delta(before, after):
         values['power-domains'] = phandle(UART_PD if path == UART else PCIE_PD)
         if path == UART:
             values['clocks'] = phandle(CLOCK_REF) * 2
+        elif path == DART and dart_phandle:
+            values['phandle'] = cells(dart_phandle)
+            if phandle(DART) != values['phandle']:
+                raise ValueError('DART phandle differs from the reserved value.')
         elif path == PCIE:
             values['power-domains'] += phandle(AUX) + phandle(REF) + phandle(LINK1)
         if after[path] != values:
@@ -163,6 +169,16 @@ def freeze_phandles(nodes):
         used.add(value)
         result.append(f'&{{{path}}} {{ phandle = <0x{int.from_bytes(value, "big"):x}>; }};\n')
     return ''.join(result)
+
+
+def reserve_dart_phandle(nodes):
+    freeze_phandles(nodes)
+    used = [int.from_bytes(props['phandle'], 'big')
+            for props in nodes.values() if 'phandle' in props]
+    value = max(used, default=0) + 1
+    if value >= 0xffffffff:
+        raise ValueError('No safe phandle remains for DART.')
+    return value
 
 
 def regular(path):
@@ -223,12 +239,14 @@ def prepare(options):
     compile_dts((destination / 'baseline.dts', kernel), destination / 'baseline.dtb')
     baseline = (destination / 'baseline.dtb').read_bytes()
     before = parse_dtb(baseline)
+    dart_phandle = reserve_dart_phandle(before) if getattr(options, 'dart_phandle', False) else 0
     wrapper = destination / 'candidate.dts'
-    wrapper.write_text(includes + freeze_phandles(before) + '#include "n71-peripherals.dtsi"\n')
+    dart_pin = f'&n71_dart1 {{ phandle = <0x{dart_phandle:x}>; }};\n' if dart_phandle else ''
+    wrapper.write_text(includes + freeze_phandles(before) + '#include "n71-peripherals.dtsi"\n' + dart_pin)
     wrapper.chmod(0o600)
     compile_dts((wrapper, kernel), destination / 'candidate.dtb')
     candidate = (destination / 'candidate.dtb').read_bytes()
-    verify_delta(before, parse_dtb(candidate))
+    verify_delta(before, parse_dtb(candidate), dart_phandle=dart_phandle)
     if not clean():
         raise ValueError('Kernel checkout changed during preparation.')
     manifest = {'format': 1, 'source_commit': head, 'reference_adt_sha256': ADT_HASH,
@@ -239,6 +257,8 @@ def prepare(options):
                 'existing_properties_preserved': True, 'kernel_checkout_unchanged': True,
                 'hardware_probe_tested': False, 'boot_qualified': False,
                 'wifi_enabled': False, 'charging_validation': 'unverified'}
+    if dart_phandle:
+        manifest['dart_phandle'] = dart_phandle
     path = destination / 'provenance.json'
     path.write_text(json.dumps(manifest, indent=2) + '\n')
     path.chmod(0o600)
@@ -251,6 +271,8 @@ def main():
     parser.add_argument('--source-dir', type=Path, required=True)
     parser.add_argument('--reference', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--dart-phandle', action='store_true',
+                        help='Pin a unique DART reference while preserving disabled staging')
     try:
         prepare(parser.parse_args())
     except (OSError, ValueError, KeyError, struct.error, subprocess.SubprocessError) as error:
