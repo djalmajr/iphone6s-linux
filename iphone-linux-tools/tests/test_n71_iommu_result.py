@@ -16,6 +16,10 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts/host'))
 SOURCE = ROOT / 'scripts/host/n71_iommu_result.py'
+BUILD_SPEC = importlib.util.spec_from_file_location('n71_iommu_build', os.environ.get('N71_IOMMU_BUILD_SCRIPT', ROOT / 'scripts/host/n71_iommu_build.py'))
+BUILD = importlib.util.module_from_spec(BUILD_SPEC)
+sys.modules['n71_iommu_build'] = BUILD
+BUILD_SPEC.loader.exec_module(BUILD)
 SPEC = importlib.util.spec_from_file_location('n71_iommu_result', os.environ.get('N71_IOMMU_RESULT_SCRIPT', SOURCE))
 RESULT = importlib.util.module_from_spec(SPEC)
 sys.modules['n71_iommu_result'] = RESULT
@@ -391,17 +395,17 @@ class IommuMutationTests(unittest.TestCase):
             'pre-scan-order': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "text.index('N71_DART_CYCLE_RELEASED ') < reset.start() < power.start() < finished[-1].start()", 'True'),
             'unattempted-restore-index': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "'16' if pending else '0'", "'16'"),
             'proof-tier': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "'wifi_verified': False", "'wifi_verified': True"),
-            'weak-binding': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+            'weak-binding': ('n71_iommu_build.py', 'N71_IOMMU_BUILD_SCRIPT',
                              "audit['vmlinux_symbol_binding'] == {'pci_for_each_dma_alias': 'T', 'pci_real_dma_dev': 'W'}", 'True'),
-            'source-premises': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+            'source-premises': ('n71_iommu_build.py', 'N71_IOMMU_BUILD_SCRIPT',
                                 "audit['source_commit'] == build['source_commit'] == '958481f87fee0949ff6a9a4af77f7eb6dac8a149'", 'True'),
-            'override-premises': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "audit['arm64_real_dma_override_files'] == []", 'True'),
-            'group-api-premises': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+            'override-premises': ('n71_iommu_build.py', 'N71_IOMMU_BUILD_SCRIPT', "audit['arm64_real_dma_override_files'] == []", 'True'),
+            'group-api-premises': ('n71_iommu_build.py', 'N71_IOMMU_BUILD_SCRIPT',
                                   "audit['exported_group_apis'] == ['iommu_group_get', 'iommu_group_put', 'iommu_group_id']", 'True'),
-            'alias-api-premises': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
+            'alias-api-premises': ('n71_iommu_build.py', 'N71_IOMMU_BUILD_SCRIPT',
                                   "audit['unexported_alias_helpers'] == ['pci_for_each_dma_alias', 'pci_real_dma_dev']", 'True'),
-            'module-group-api': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "build['exported_group_apis_present'] is True", 'True'),
-            'module-alias-api': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "build['unexported_alias_helpers_not_referenced'] is True", 'True'),
+            'module-group-api': ('n71_iommu_build.py', 'N71_IOMMU_BUILD_SCRIPT', "build['exported_group_apis_present'] is True", 'True'),
+            'module-alias-api': ('n71_iommu_build.py', 'N71_IOMMU_BUILD_SCRIPT', "build['unexported_alias_helpers_not_referenced'] is True", 'True'),
             'dma-marker-count': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT',
                                  'require(len(rows) == text.count(marker) == 2\n            and [row.groups()[:3]',
                                  'require(len(rows) == 2\n            and [row.groups()[:3]'),

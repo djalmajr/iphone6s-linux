@@ -1,6 +1,6 @@
 """Collect software MSI/OF/core association without claiming IRQ or DMA delivery."""
-import json
 import re
+import n71_iommu_build
 import n71_scan_held_result
 import n71_scan_target_result
 import n71_resource_stage
@@ -28,24 +28,7 @@ def selected(session, root):
         return
     require(session.scan_hold and session.resource_capable
             and session.release == n71_scan_held_result.RELEASE, 'IOMMU requires the held resource power2 session')
-    proof = json.loads((root / 'docs/evidence/n71-dma-topology-qualification.json').read_text())
-    build = proof['kernel_build']
-    require(type(proof.get('format')) is int and proof['format'] == 1
-            and build['kernel_exit'] == 0 and type(build['kernel_exit']) is int
-            and build['loaded'] is False and build['private_wrapper'] is False
-            and all(build[key] is True for key in ('production_module_inputs_identical',
-                    'baseline_preserved', 'original_tracked_changes_preserved')), 'Exact qualified IOMMU build required')
-    audit = proof['primary_source_audit']
-    require(audit['source_commit'] == build['source_commit'] == '958481f87fee0949ff6a9a4af77f7eb6dac8a149'
-            and audit['tracked_patch_sha256'] == build['original_tracked_patch_sha256']
-            == '6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657'
-            and audit['vmlinux_symbol_binding'] == {'pci_for_each_dma_alias': 'T', 'pci_real_dma_dev': 'W'}
-            and audit['arm64_real_dma_override_files'] == []
-            and audit['exported_group_apis'] == ['iommu_group_get', 'iommu_group_put', 'iommu_group_id']
-            and audit['unexported_alias_helpers'] == ['pci_for_each_dma_alias', 'pci_real_dma_dev']
-            and build['exported_group_apis_present'] is True
-            and build['unexported_alias_helpers_not_referenced'] is True,
-            'Qualified public DMA topology premises required')
+    build = n71_iommu_build.qualified(root, release=session.release)
     records = [record for record, _ in session.modules if record['module'] == 'n71-pcie-diagnostic.ko']
     require(len(records) == 1 and records[0]['sha256'] == build['module_sha256']
             and type(records[0]['bytes']) is int and records[0]['bytes'] == build['module_bytes']
