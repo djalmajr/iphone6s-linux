@@ -13,7 +13,7 @@ MUTATIONS = (
      'if (false)\n\t\treturn error;\n\tif (provider->mmio.regs)'),
     ('lose-owner', 'state->dart = provider;', 'state->dart = NULL;'),
     ('forget-bound', 'provider->bound = false;', '(void)0;'),
-    ('dispose-existing', 'if (provider->new_mapping)', 'if (provider->irq)'),
+    ('skip-irq-release', 'error = n71_dart_irq_release(&provider->interrupt);', 'error = 0;'),
     ('skip-stopped', '!provider->lease.stopped ||', 'false ||'),
     ('skip-guard', '!provider->restore_guard ||', 'false ||'),
     ('skip-index', 'index != provider->lease.restore_index ||', 'false ||'),
@@ -42,7 +42,7 @@ class DartProviderTests(unittest.TestCase):
                 depth += (source[position] == '{') - (source[position] == '}')
                 position += 1
             functions.append(source[match.start():position])
-        extracted = '\n'.join(functions)
+        extracted = '\n'.join(functions) + '\n'
         mutations = (
             ('ignore-dart-pending', 'if (error || state->dart)', 'if (false)'),
             ('ignore-scan-pending', 'if (error || state->scan_bridge)', 'if (false)'),
@@ -87,9 +87,9 @@ class DartProviderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='n71-dart-provider-') as directory:
             folder = Path(directory)
             (folder / 'linux').mkdir()
-            for name in ('irqdomain.h', 'of_irq.h'):
+            for name in ('irq.h', 'irqdomain.h', 'of_irq.h'):
                 (folder / 'linux' / name).write_text('/* APIs supplied by the resource fixture. */\n')
-            for name in ('n71-dart-lease.h', 'n71-dart-cycle.h', 'n71-dart-observe.h', 'n71-pcie-contract.h'):
+            for name in ('n71-dart-irq.h', 'n71-dart-lease.h', 'n71-dart-cycle.h', 'n71-dart-observe.h', 'n71-pcie-contract.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
             header, binary = folder / 'n71-dart-provider.h', folder / 'provider'
             for name, before, after in (('baseline', None, None),) + MUTATIONS:

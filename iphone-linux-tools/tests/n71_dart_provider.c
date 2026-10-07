@@ -10,56 +10,34 @@
 
 #define N71_DART_CPU 0x602008000ULL
 #define N71_DART_BYTES 0x4000U
-#define IRQ_TYPE_LEVEL_HIGH 4U
-#define DOMAIN_BUS_WIRED 1
-#define DOMAIN_BUS_ANY 0
 #define PLATFORM_DEVID_AUTO -1
 #define IORESOURCE_MEM 1
 #define IORESOURCE_IRQ 2
 #define IORESOURCE_IRQ_HIGHLEVEL 4
 #define GFP_KERNEL 0
-typedef unsigned long irq_hw_number_t;
-
-struct device_node { unsigned int refs; };
+#include "n71_dart_irq_fixture.h"
 struct device_driver { const char *name; };
 struct device { struct device_node *of_node; struct device *parent; struct device_driver *driver; };
 struct platform_device { struct device dev; bool added; };
 struct resource { unsigned long long start, end; unsigned int flags; };
-struct irq_fwspec { void *fwnode; unsigned int param_count, param[4]; };
-struct of_phandle_args { struct device_node *np; unsigned int args_count, args[4]; };
-struct irq_domain;
-struct irq_domain_ops { int (*translate)(struct irq_domain *, struct irq_fwspec *, irq_hw_number_t *, unsigned int *); };
-struct irq_domain { struct irq_domain_ops *ops; };
-struct irq_data { struct irq_domain *domain; irq_hw_number_t hwirq; };
 struct n71_dart_provider;
 struct n71_diagnostic { unsigned int powered, attached; struct n71_dart_provider *dart; int primary_error; };
 struct n71_dart_mmio { struct n71_diagnostic *state; void *regs; unsigned int reads, guards; };
 
 struct fixture {
 	u32 regs[N71_DART_BYTES / 4], original[16];
+	char result[512], release[128];
 	struct device_node dart, aic;
 	struct platform_device other;
-	unsigned int heap, mappings, devices, irq_owned, irq_disposals, claims, writes;
+	unsigned int heap, mappings, devices, claims, writes;
 	unsigned int fail_stage;
-	bool mmio_claimed, provider_claimed, fail_claim, other_owner, fail_quiet, prior_irq;
+	bool mmio_claimed, provider_claimed, fail_claim, other_owner, fail_quiet, lingering_irq;
 };
 static struct fixture fixture;
 static struct device_driver dart_driver = {"apple-dart"};
-static struct irq_domain domain;
-static struct irq_data irq_data;
 static struct resource claimed;
 static unsigned int cases;
 
-static struct device_node *of_node_get(struct device_node *node)
-{
-	if (node) node->refs++;
-	return node;
-}
-static void of_node_put(struct device_node *node)
-{
-	if (node) { assert(node->refs); node->refs--; }
-}
-static void *of_fwnode_handle(struct device_node *node) { return node; }
 static int of_irq_parse_one(struct device_node *node, int index, struct of_phandle_args *args)
 {
 	assert(node == &fixture.dart && index == 0);
@@ -70,37 +48,6 @@ static struct device_node *of_irq_find_parent(struct device_node *node)
 {
 	assert(node == &fixture.aic);
 	return of_node_get(node);
-}
-static int translate(struct irq_domain *root, struct irq_fwspec *spec,
-		     irq_hw_number_t *number, unsigned int *type)
-{
-	assert(root == &domain && spec->param_count == 3 && spec->param[1] == 248);
-	*number = 0x10000 + spec->param[1]; *type = spec->param[2];
-	return 0;
-}
-static struct irq_domain_ops domain_ops = {translate};
-static struct irq_domain *irq_find_matching_fwspec(struct irq_fwspec *spec, int bus)
-{
-	assert(spec->fwnode == &fixture.aic && (bus == DOMAIN_BUS_WIRED || bus == DOMAIN_BUS_ANY));
-	return &domain;
-}
-static unsigned int irq_find_mapping(struct irq_domain *root, irq_hw_number_t number)
-{
-	assert(root == &domain && number == 0x10000 + 248);
-	return fixture.prior_irq ? 32 : 0;
-}
-static unsigned int irq_create_of_mapping(struct of_phandle_args *args)
-{
-	assert(args->np == &fixture.aic);
-	fixture.irq_owned = !fixture.prior_irq;
-	irq_data = (struct irq_data){&domain, 0x10000 + 248};
-	return 32;
-}
-static struct irq_data *irq_get_irq_data(unsigned int irq) { assert(irq == 32); return &irq_data; }
-static void irq_dispose_mapping(unsigned int irq)
-{
-	assert(irq == 32 && fixture.irq_owned && !fixture.devices);
-	fixture.irq_owned = 0; fixture.irq_disposals++;
 }
 static void *kzalloc(size_t bytes, int flags)
 {
@@ -136,7 +83,7 @@ static void *ioremap(unsigned long long base, unsigned int bytes)
 }
 static void iounmap(void *pointer)
 {
-	assert(pointer == fixture.regs && fixture.mappings == 1 && !fixture.devices && !fixture.irq_owned);
+	assert(pointer == fixture.regs && fixture.mappings == 1 && !fixture.devices && !irq_fixture.descriptors);
 	fixture.mappings--;
 }
 static void writel(u32 value, void *pointer)
@@ -148,7 +95,14 @@ static void writel(u32 value, void *pointer)
 }
 static void dev_info(struct device *dev, const char *format, ...)
 {
-	(void)dev; (void)format;
+	va_list arguments;
+	(void)dev;
+	va_start(arguments, format);
+	if (strncmp(format, "N71_DART_CYCLE_RESULT", 21) == 0)
+		vsnprintf(fixture.result, sizeof(fixture.result), format, arguments);
+	if (strncmp(format, "N71_DART_CYCLE_RELEASED", 23) == 0)
+		vsnprintf(fixture.release, sizeof(fixture.release), format, arguments);
+	va_end(arguments);
 }
 static struct platform_device *platform_device_alloc(const char *name, int id)
 {
@@ -157,7 +111,7 @@ static struct platform_device *platform_device_alloc(const char *name, int id)
 	fixture.devices++;
 	return calloc(1, sizeof(struct platform_device));
 }
-static void device_set_node(struct device *dev, void *node) { dev->of_node = node; }
+static void device_set_node(struct device *dev, struct fwnode_handle *node) { dev->of_node = to_of_node(node); }
 static int platform_device_add_resources(struct platform_device *dev, struct resource *resources, int count)
 {
 	assert(dev && count == 2 && resources[0].start == N71_DART_CPU && resources[1].start == 32);
@@ -170,7 +124,16 @@ static int platform_device_add(struct platform_device *dev)
 	dev->added = true;
 	fixture.provider_claimed = true;
 	memset(fixture.regs + 0x40 / 4, 0, sizeof(fixture.original));
-	if (fixture.fail_stage != 7) dev->dev.driver = &dart_driver;
+	assert(irq_fixture.descriptors && irq_fixture.state.type == 4);
+	irq_fixture.action = true; irq_fixture.state.started = true; irq_fixture.state.disabled = false;
+	irq_fixture.leaf_data.chip->irq_unmask(&irq_fixture.leaf_data);
+	if (fixture.fail_stage != 7) {
+		dev->dev.driver = &dart_driver;
+	} else {
+		/* A failed probe releases its devres IRQ before add returns. */
+		irq_fixture.action = false; irq_fixture.state.started = false; irq_fixture.state.disabled = true;
+		irq_fixture.leaf_data.chip->irq_mask(&irq_fixture.leaf_data);
+	}
 	return 0;
 }
 static void platform_device_put(struct platform_device *dev)
@@ -181,6 +144,10 @@ static void platform_device_put(struct platform_device *dev)
 static void platform_device_unregister(struct platform_device *dev)
 {
 	assert(dev && dev->added && fixture.provider_claimed);
+	irq_fixture.action = false; irq_fixture.state.started = false; irq_fixture.state.disabled = true;
+	irq_fixture.leaf_data.chip->irq_mask(&irq_fixture.leaf_data);
+	if (fixture.lingering_irq)
+		irq_fixture.action = true;
 	fixture.provider_claimed = false; dev->added = false;
 	platform_device_put(dev);
 }
@@ -218,7 +185,7 @@ static void initialize(struct n71_diagnostic *state)
 	cases++;
 	memset(&fixture, 0, sizeof(fixture));
 	*state = (struct n71_diagnostic){.powered = 4, .attached = 4};
-	domain.ops = &domain_ops;
+	irq_fixture_initialize(&fixture.aic);
 	fixture.regs[0] = 0xf02; fixture.regs[0x10 / 4] = 0x100;
 	for (index = 0; index < 16; index++)
 		fixture.regs[0x40 / 4 + index] = fixture.original[index] = 0x80123400 + index;
@@ -226,7 +193,8 @@ static void initialize(struct n71_diagnostic *state)
 static void released(struct n71_diagnostic *state)
 {
 	assert(!state->dart && !fixture.heap && !fixture.devices && !fixture.mappings);
-	assert(!fixture.mmio_claimed && !fixture.provider_claimed && !fixture.irq_owned);
+	assert(!fixture.mmio_claimed && !fixture.provider_claimed);
+	irq_fixture_released(&fixture.aic);
 	assert(!fixture.dart.refs && !fixture.aic.refs);
 	assert(memcmp(fixture.regs + 0x40 / 4, fixture.original, sizeof(fixture.original)) == 0);
 	assert(state->powered == 4 && state->attached == 4);
@@ -249,8 +217,8 @@ int main(void)
 	fixture.fail_claim = true;
 	assert(n71_pcie_dart_cleanup(&dev, &state) == -EBUSY);
 	assert(state.dart == owner && fixture.heap == 1 && fixture.mappings == 1 && fixture.dart.refs == 1);
-	assert(!owner->device && !owner->new_mapping && !owner->bound && !owner->lease.stopped);
-	assert(!fixture.writes && fixture.irq_disposals == 1);
+	assert(!owner->device && !owner->interrupt.irq && !owner->bound && !owner->lease.stopped);
+	assert(!fixture.writes && irq_fixture.irq_frees == 1);
 	fixture.fail_claim = false;
 	assert(n71_pcie_dart_cleanup(&dev, &state) == 0);
 	released(&state);
@@ -258,7 +226,9 @@ int main(void)
 	assert(n71_pcie_dart_cleanup(&dev, &state) == 0 && fixture.writes == before);
 	assert(n71_pcie_dart_cycle(&dev, &state) == 0);
 	released(&state);
-	assert(fixture.writes == 32 && fixture.irq_disposals == 2);
+	assert(fixture.writes == 32 && irq_fixture.irq_frees == 2);
+	assert(strcmp(fixture.result, "N71_DART_CYCLE_RESULT error=0 snapshots=4 reads=152 guards=156 quiet=17 writes=16 attempted=1 stopped=1 restored=1 control-changed=0; no DMA\n") == 0);
+	assert(strcmp(fixture.release, "N71_DART_CYCLE_RELEASED device=0 mapping-new=0 claimed=0 mapped=0\n") == 0);
 
 	for (index = 1; index <= 7; index++) {
 		initialize(&state); fixture.fail_stage = index;
@@ -266,10 +236,26 @@ int main(void)
 		assert(n71_pcie_dart_cleanup(&dev, &state) == 0);
 		released(&state);
 	}
-	initialize(&state); fixture.prior_irq = true;
-	assert(n71_pcie_dart_cycle(&dev, &state) == 0);
+	initialize(&state); irq_fixture.conflict = true;
+	assert(n71_pcie_dart_cycle(&dev, &state) == -EBUSY);
 	released(&state);
-	assert(fixture.irq_disposals == 0 && fixture.writes == 16);
+	assert(irq_fixture.irq_frees == 0 && fixture.writes == 16 && irq_fixture.conflict);
+	for (index = 1; index <= 11; index++) {
+		initialize(&state); irq_fixture.fail_stage = index;
+		assert(n71_pcie_dart_acquire(&dev, &state) < 0);
+		assert(n71_pcie_dart_cleanup(&dev, &state) == 0);
+		released(&state);
+	}
+	initialize(&state);
+	assert(n71_pcie_dart_acquire(&dev, &state) == 0);
+	owner = state.dart; fixture.lingering_irq = true;
+	assert(n71_pcie_dart_cleanup(&dev, &state) == -EBUSY);
+	assert(state.dart == owner && !owner->device && owner->interrupt.irq);
+	assert(owner->interrupt.domain && owner->interrupt.fwnode && fixture.mappings == 1 && fixture.heap == 1);
+	assert(!fixture.writes && fixture.aic.refs == 1 && !irq_fixture.irq_frees);
+	irq_fixture.action = false;
+	assert(n71_pcie_dart_cleanup(&dev, &state) == 0);
+	released(&state);
 	initialize(&state);
 	assert(n71_pcie_dart_acquire(&dev, &state) == 0);
 	owner = state.dart; fixture.other_owner = true;
