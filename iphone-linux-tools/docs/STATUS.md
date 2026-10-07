@@ -4,7 +4,7 @@
 
 A candidata15617e32 passou no hardware: atribuição error0/assigned1,17 tentativas/cinco escritas verificadas, IO16 noops1 e PREF64 writes1. Um DFU/um boot reuniu inventário, reuso sem segundo setter, cleanup na primeira tentativa, SSH/Bash/Herdr/HTTP e snapshot44/sync/retorno automático ao iOS.100→100%, carregando após o retorno. [Prova física](evidence/n71-pci-pref64-unsized-physical.json).
 
-Root MEM7c0000000..7c04fffff; BAR0 7c0400000..7c0407fff/BAR2 7c0000000..7c03fffff. Decode/master/driver/radio permaneceram desligados. IRQ255/0, links IOMMU/of_node/driver ausentes e power_supply0 não comprovam IRQ/DMA/Wi-Fi/carga. Issue39 conclui host retido/atribuição/rollback; próxima fatia trata associação IRQ/IOMMU para Wi-Fi (#9). Alimentação/gauge continuam na #2.
+Root MEM7c0000000..7c04fffff; BAR0 7c0400000..7c0407fff/BAR2 7c0000000..7c03fffff. Decode/master/driver/radio permaneceram desligados. IRQ255/0, links IOMMU/of_node/driver ausentes e power_supply0 não comprovam IRQ/DMA/Wi-Fi/carga. Issue39 conclui host retido/atribuição/rollback; próxima fatia trata associação IRQ/IOMMU na [issue40](https://github.com/djalmajr/iphone6s-linux/issues/40), para Wi-Fi (#9). [Plano inicial](../.agents/plans/n71-irq-iommu-bindings.md), [auditoria de fontes](N71_IRQ_IOMMU.md). Alimentação/gauge continuam na #2.
 
 ### Qualificação offline da candidata física
 
