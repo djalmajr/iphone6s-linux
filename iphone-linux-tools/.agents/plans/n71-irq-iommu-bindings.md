@@ -215,15 +215,16 @@ A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLO
 - **Alternativas:** status okay no DT de boot antecipa probe antes dos owners/baselines do diagnóstico; setters brutos no valor status ignoram notificações/lifetime; ignorar disponibilidade permite falso sucesso de associação; copiar a topologia M1 não prova o stream N71. Rejeitadas.
 - **Reverter:** médio na integração futura; envolve refs e duas fases de teardown. Baixo no helper isolado, sem seleção no caller/perfil/autoload. Manter props alocadas pelo próprio core OF e owner até restauração comprovada.
 - **Onde:** futura fatia de até cinco públicos: este plano, phone/kernel/n71-dart-host.h, tests/n71_dart_host_fixture.h, tests/n71_dart_host.c e tests/test_n71_dart_host.py. Fonte958481f: drivers/iommu/of_iommu.c:22–57,114–167; apple-dart.c:913–961,1393–1425; drivers/of/platform.c:726–790; dynamic.c:533–547,767–801,860–895,1032–1065. Referência stream0 já publicada; não repetir extração de firmware.
-- **Status:** auditoria concluída; helper na fila. APIs changeset e helpers de propriedades estão exportados, CONFIG_OF_DYNAMIC/OVERLAY=y, default DMA strict; Image/config/exports preservados. Recortes primários privados e hashes salvos, nenhuma mudança OF ou escrita no aparelho nesta rodada.
+- **Status:** helper isolado qualificado offline:49 cenários e38 mutações compiladas por assertion no Mac e ARM64; AST/lint fatal e probeW=1/Werror/modpost/ELF/vermagic aprovados. Primeiro build detectou include of_platform.h ausente, corrigido explicitamente; gate completo repetido nos dois ambientes após a correção. Probe11456 bytes/SHAe7bf28e5cede9bf1fad52be38b3ea468af4b6b7b2140bbc265fb5221adbcc634, init recusa execução e nunca foi carregado. Fonte/config/Image/exports preservados. Integração/aliases/attachment e prova física continuam pendentes; nenhum efeito no aparelho.
 
 ### Contratos planejados da próxima fatia
 
-- [ ] Validate-before-effects: bridge sem bus, parent/of_node fixos, provider manual bound/único, status disabled original, OF_POPULATED não reivindicado, SID0/células e mapa/máscara ausentes. Preservar mappings/flags/refcounts alheios.
-- [ ] Preparar domínio visível antes de PCI device publication; mapear somente RIDs N71 auditados para SID0, recusando qualquer alias fora do contrato. Reportar associação como estado de software, sem alegar DMA físico.
-- [ ] Erro de apply/notify ou revert deve ser interpretado com identidade/readback das propriedades. Conservar owner/refs quando ainda houver efeito vivo ou drift; retry sem aplicar/reverter a mesma etapa já comprovada duas vezes.
-- [ ] Unmap recusa bus vivo; ref da bridge sobrevive ao put do scan. Release da disponibilidade recusa provider registrado; restaurar status disabled e só depois a flag própria. Nenhum provider alheio removido pelo notifier.
-- [ ] Callbacks reais com dependências OF/PCI modeladas e falhas antes/depois da aplicação; mutações compiladas por assertion Mac/ARM64; ABI fixadaWerror/modpost sem load. Integração do caller/getter/collector e prova física posteriores, agrupadas com energia.
+- [x] Validate-before-effects: bridge sem bus, parent/of_node fixos, provider manual bound/único, status disabled original, OF_POPULATED não reivindicado, SID0/células e mapa/máscara ausentes. Preservar mappings/flags/refcounts alheios.
+- [x] Helper prepara somente RIDs0x0008/0x0100 para SID0, mantendo status/mapa separados e refs. Não configura domínio DMA nem verifica aliases runtime nesta fatia isolada.
+- [ ] Integrar antes de PCI publication e recusar alias fora do contrato antes de attachment/DMA; associação OF sozinha não comprova domínio ou DMA físico.
+- [x] Erro de apply/notify ou revert interpretado com identidade/readback das propriedades. Owner/refs conservados em efeito vivo/drift; retry sem aplicar/reverter a mesma etapa já restaurada duas vezes.
+- [x] Unmap recusa bus vivo; ref da bridge sobrevive ao put do scan. Release da disponibilidade recusa provider registrado; restaura status disabled e só depois flag própria. Nenhum provider alheio removido pelo notifier.
+- [x] Produção executada com dependências OF/PCI modeladas e falhas antes/depois dos efeitos;49 cenários/38 mutações por plataforma. ABI fixadaWerror/modpost sem load. Integração/getter/collector e física posteriores, agrupadas com energia.
 
 ### Interface e ordem da próxima implementação
 
@@ -249,4 +250,12 @@ Unmap exige bridge sem bus e mantém disponibilidade enquanto o provider está v
 - [x] Flag off conserva o default; flag on gera handle válido, único, determinístico e pins anteriores intactos. Recusar overflow, baseline inválida e colisão/drift.
 - [x] Delta opt-in aceita somente o phandle esperado no DART; recusa mapa, status ativo e qualquer outra alteração. Registrar o identificador na provenance somente no modo opt-in.
 - [x] Testes/mutações dos guards e compilação real dtc na VM; comparar baseline/default/candidata com hashes, sem alterar source/config/Image/exports. AST/lint fatal e scope de saída preservados.
-- [ ] Documentar reprodução e issue40; D11 deverá recusar DTBs sem phandle. Nenhum autoload/DFU/hardware novo nesta preparação.
+- [x] Reprodução publicada em22031b8 e issue40 atualizada; D11 deverá recusar DTBs sem phandle. CI desse head em execução, sem nova prova de hardware. Nenhum autoload/DFU/hardware novo nesta preparação.
+
+### D11: detalhes fechados antes do helper
+
+O helper não remove o provider. Caller mantém o pin do módulo e serializa essas operações com scan/teardown. Prepare só publica ownership depois dos guards iniciais, mas antes de alocações das properties/claim/apply; falhas posteriores mantêm refs para cleanup. Ambos os nós, os três devices e os phandles originais devem permanecer identificáveis. Provider manual deve corresponder ao lookup OF, nome n71-dart-cycle, parent do host, driver apple-dart e drvdata presente.
+
+Changesets de status e mapa possuem exatamente uma entry cada. Identidades das propriedades alocadas pelo core ficam no owner antes de apply. Unmap/release leem estado real, distinguem original/próprio/alheio e só chamam revert para a propriedade própria ainda aplicada. Erro com readback restaurado continua reportado nessa chamada; retry reconhece restauração e não duplica revert. Release exige unmap concluído, ausência do provider registrado, status disabled e flag própria conservada até a restauração. Conservar todo o owner em drift/erro pendente.
+
+Antes de soltar a última referência a um device, zerar o owner e guardar localmente as referências a liberar. Isso também protege owner eventualmente embutido no priv da bridge. Destroy de changesets só libera entries/refs; a árvore retém memória de properties, como documentado na auditoria. Fixtures precisam modelar notifications que falham depois da aplicação e as refs enquanto bridge/provider já perderam a referência de registro. Nenhum campo readback implica entrega IRQ/DMA física.
