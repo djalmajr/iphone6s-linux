@@ -38,7 +38,7 @@ F3 hardware: um boot com todas as coletas/estágios preparados; SSH/Bash/Herdr/H
 - [x] Confirmar na fonte fixada os hooks de alloc/OF/IRQ/DMA e ler o lifecycle do provider existente.
 - [x] Recuperar pin1/MSI64/capability física do log já salvo, sem novo boot; fixar ADT32/offset256/porta1/base8/count8, registro AIC264..271 e células Linux.
 - [ ] F0: fechar a identificação de INTx/MSI/cells/streams e as provas ainda necessárias; guardar hashes/recortes privados e relatório sanitizado.
-- [ ] F1a: qualificar o cálculo de requisição AIC isolado no Mac/Ubuntu e contexto kernel, sem integração física.
+- [x] F1a: qualificar o cálculo de requisição AIC isolado no Mac/Ubuntu e contexto kernel, sem integração física.
 - [ ] F1: definir e implementar a candidata em fatias qualificadas.
 - [ ] F2: build/seleção/composição/check e reprodução.
 - [ ] F3: comprovar no hardware associações/IRQ e teardown, antes de rádio funcional.
@@ -58,4 +58,4 @@ Nenhuma modificação de firmware/NAND, credenciais de rede, pacote/configuraç�
 - **Alternativas:** INTx exige rota ainda não comprovada; copiar domínio/offsets M1 para S8000 presume equivalência; registrar driver agora mistura MASTER/DMA/firmware. Rejeitadas nesta etapa.
 - **Reverter:** baixo; helper isolado, sem caller/autoload ou alteração do perfil.
 - **Onde:** arquivos F1a acima; [referência sanitizada](../../docs/evidence/n71-irq-iommu-reference.json), sete recortes por digest. Doc/status/referência/plano compõem a fase de auditoria, quatro arquivos públicos.
-- **Status:** referência preparada, qualificação F1a seguinte. Message data, ownership/restore MSI e provider DART retido permanecem pendentes; nenhuma integração de hardware por esta decisão.
+- **Status:** helper F1a passou61 cenários/14 mutações compiladas por assertion no Mac e Ubuntu ARM64, AST/lint fatal e probe kernel Werror/modpost/ELF/vermagic. O runner VM procurou inicialmente `Module.symvers`, ausente; foi corrigido para `vmlinux.symvers`/`KBUILD_EXTRA_SYMBOLS` antes dos testes. Fonte/config/Image/exports preservados; módulo de prova não carregado. Message data, ownership/restore MSI e provider DART retido permanecem pendentes; nenhuma integração de hardware por esta decisão.
