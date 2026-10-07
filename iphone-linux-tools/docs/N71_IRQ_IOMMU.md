@@ -259,4 +259,31 @@ python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_wlan_msi_host.py
 
 Probe ABI composto com os quatro headers phone/kernel registrados no JSON: funções globais previamente declaradas chamam n71_wlan_msi_host_acquire/release; init retorna `-EOPNOTSUPP`, exit vazio. Makefile `obj-m += n71-wlan-msi-host-abi-probe.o`, pasta M nova e o make/exports já documentados. W=1/Werror/modpost/ELF64 AArch64/vermagic power2 passaram. Fonte/config/Image/vmlinux.symvers intactos. Probe privado13400 bytes/SHA6980b4d0501478cfbff7899574c35d6b1fedb2127dc824f98ce734f4a8d508b2, não carregado/publicado.
 
-F1i offline concluída; a CI da F1h passou, mas não cobre este helper novo. Nova CI necessária após a publicação. Não houve dependência, banco, pacote/configuração global do Mac, novo boot/DFU/PIN ou escrita no telefone. Custo: identidade da bridge, flag salva e owner nativo embutido até release; desempenho físico não medido. Próximo: F1j liga a lease antes do scan com opt-in/guard/getter/cleanup e fixtures do caller. Wi-Fi#9, energia#2, issue40 e goal continuam abertos.
+F1i offline concluída e [CI de cdb0395](https://github.com/djalmajr/iphone6s-linux/actions/runs/37569239640) aprovada nos três jobs em2026-10-07T04:08:24Z. Essa prova antecede a integração ao scan abaixo. Não houve dependência, banco, pacote/configuração global do Mac, novo boot/DFU/PIN ou escrita no telefone. Custo: identidade da bridge, flag salva e owner nativo embutido até release; desempenho físico não medido. Próximo: F1j liga a lease antes do scan com opt-in/guard/getter/cleanup e fixtures do caller. Wi-Fi#9, energia#2, issue40 e goal continuam abertos.
+
+
+## F1j — herança MSI durante o scan PCI
+
+[Scan](../phone/kernel/n71-pcie-scan.h), código36998e8, [plano D9](../.agents/plans/n71-irq-iommu-bindings.md#d9-associar-msi-antes-do-scan-preservando-o-diagnóstico-padrão), [prova sanitizada](evidence/n71-msi-scan-qualification.json). O host incorpora a lease MSI. Options internos exigem held bus e PME preparado para MSI; wrappers existentes permanecem MSI-off. O novo hold_msi prepara o parent OF, equilibra referências temporárias e conclui acquire/associação antes do core scan. Ainda não há parâmetro de seleção ou getter MSI no caller.
+
+Report confere a identidade do domínio na bridge, root bus, root port, child bus e endpoint; divergência é recusada. Guard de driver/MASTER e enable negado permanecem. Não acrescenta bind, IRQ alocada ou DMA. Cleanup remove o bus antes de liberar a lease. Filho ainda referenciado/erro nativo retém bridge/config/resources/power e impede restauração antecipada; retry usa a mesma sessão sem rescan.
+
+### Gates e reprodução
+
+Mac e Ubuntu ARM64:152 cenários/117 mutações compiladas por assertion por plataforma. Scan79/69 conserva os29 casos de scan,16 held bus e20 resource, além de14 MSI; optional18/14, IO1620/17 e PREF6435/17. A nova fixture MSI modela core inheritance/OF/native release; scan, report, host lease e cleanup são produção. Os callbacks MSI nativos mantêm seus gates separados, reutilizados com fonte intacta. Sem typechecker Python; AST e lint fatal passaram no Mac, AST também no ARM64.
+
+Duas mutações skip-call iniciais falharam na compilação por função unused. Não contam como kills. Os selectors mantêm agora uma referência não avaliada à função, preservando Werror; o método MSI passou por SIGABRT/asserção nos dois ambientes. Três métodos antigos aprovados (baseline e57 mutações) e compile helper foram reutilizados por hash/AST idênticos, junto dos54 outros inputs intactos; somente o método MSI corrigido foi repetido. Optional/IO16/PREF64 foram executados por compartilharem o C alterado. Nenhum prazo ou critério foi enfraquecido.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_scan_host.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_optional_host.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_io16_host.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_pref64_host.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_pcie_scan_host.py
+```
+
+Build completoW=1/Werror/modpost/ELF64 AArch64/vermagic power2 passou.55 inputs protegidos:46 C/headers arquivados e nove testes, dos quais30 arquivos de produção são includes efetivos do objeto. A cópia de build do caller contém um wrapper global privado que chama hold_msi e mantém a nova rota no objeto, pois o caller público ainda usa os wrappers padrões. SHA288ae87c8c43ee67d732d8e7c4f11f7e696cbe73c0d5f504f0c8ae2c49408819,102888 bytes; esse probe não é o futuro artefato físico selecionado. Fonte/config/Image/vmlinux.symvers preservados, exports explícitos, sem KBUILD_MODPOST_WARN, load ou publicação do módulo/logs.
+
+Para reproduzir ABI, use pasta M separada com os arquivos phone/kernel do JSON e Makefile `obj-m += n71-pcie-diagnostic.o`. Na cópia privada de n71-pcie-diagnostic.c, acrescente declaração e função global n71_msi_scan_probe(device,state) que retorna n71_pcie_scan_hold_msi(device,state). Use make/exports fixados já documentados, confira todos os hashes, ELF/vermagic e mantenha o probe privado, sem insmod. O primeiro parser de includes buscou paths absolutos e retornou zero; corrigimos por basenames e conferimos as30 dependências, sem rebuild.
+
+F1j offline concluída; nova CI necessária depois da publicação. Nenhuma dependência, banco, pacote/configuração global do Mac, novo boot/DFU/PIN ou escrita no telefone. O campo lease é interno ao módulo; perfil anterior não foi alterado. Custo adicional: conferências de identidade por dispositivo e lease retida até cleanup; desempenho físico não medido. Próximo: F1k seleciona a rota/getter no caller e qualifica seu lifecycle; attachment DART, collector/perfil e física continuam antes de rádio funcional. Wi-Fi#9, energia#2, issue40 e goal permanecem abertos.

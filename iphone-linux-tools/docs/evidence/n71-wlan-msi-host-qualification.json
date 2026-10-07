@@ -88,7 +88,18 @@
     "mac_global_configuration_or_installs": false,
     "private_modules_firmware_or_logs_published": false
   },
-  "new_remote_ci": "Pending publication and new-head completion; F1h CI success does not cover this host code.",
+  "new_remote_ci": {
+    "head": "cdb03958111cf00a92069fe387e111421c02e845",
+    "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37569239640",
+    "conclusion": "success",
+    "completed_at_utc": "2026-10-07T04:08:24Z",
+    "jobs": {
+      "windows-dns": "success",
+      "source (ubuntu-24.04)": "success",
+      "source (macos-15)": "success"
+    },
+    "complete_ci_passed": true
+  },
   "private_evidence_sha256": {
     "local-result-private.json": "1684f26b7b2be5e3d6a91a8060dc65f3daeef8c7e850a43c3be1df3698e793d5",
     "arm64-result-private.json": "be2f1caac957582e6f06571ae611fa2ecc9e42f33188e8cf719a0632b4307541",
