@@ -3,7 +3,7 @@
   "date_utc": "2026-10-07T03:11:59.526938+00:00",
   "code_commit": "5a5da7d921044531c2988ad2f28ba7657984d730",
   "issue": "https://github.com/djalmajr/iphone6s-linux/issues/41",
-  "proof_scope": "Mocked crash-handler policy on macOS and Ubuntu ARM64; paired native assertion gate on dedicated VM with exact kernel.core_pattern restore. No complete new-head remote CI proof yet.",
+  "proof_scope": "Mocked policy on macOS/Ubuntu ARM64, paired VM assertion gate with exact restore, and all three hosted CI jobs successful on head19ffb03. No device execution.",
   "inputs_relative_to": "Git root",
   "inputs_sha256": {
     "iphone-linux-tools/scripts/ci/isolate-native-crashes.sh": "bec52fdd24bd55e6b695b094b4066b25aada94cc46ddb739e57b997c7223f428",
@@ -78,7 +78,21 @@
     "job_timeout_minutes_unchanged": 15,
     "job_log_unavailable_at_checks": true
   },
-  "new_remote_ci": "Pending publication; requires all three jobs success on new head",
+  "new_remote_ci": {
+    "head": "19ffb039263695956c40aba71a8e4ebb92422f21",
+    "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37566057928",
+    "conclusion": "success",
+    "completed_at_utc": "2026-10-07T03:28:36Z",
+    "jobs": {
+      "windows-dns": "success",
+      "source (macos-15)": "success",
+      "source (ubuntu-24.04)": "success"
+    },
+    "ubuntu_preflight": "success",
+    "macos_preflight": "skipped",
+    "job_timeout_minutes_unchanged": 15,
+    "complete_ci_passed": true
+  },
   "private_evidence_sha256": {
     "local-policy-result-private.json": "816f2d3bab4f47d70d68449bfc7f55a370ad9760e0b965af695219227b0af946",
     "arm64-policy-result-private.json": "614c00e0b8fad3fdd493f2661ab5799cef4fd44cb55dd4de10df2591dd5cd06f",
@@ -86,11 +100,11 @@
     "ci-timeout-annotations-private.json": "e5b0b9cbdf760b780017ebe9926bcddc2da9c74337e3a0b5a56c7bfcff2973a8"
   },
   "limits": {
-    "new_remote_ci_passed": false,
+    "new_remote_ci_passed": true,
     "global_mac_config_or_packages_changed": false,
     "phone_or_production_remote_changed": false,
     "native_wifi_or_linux_charge_gauge_verified": false,
     "new_boot_or_dfu": false
   },
-  "next_gate": "Publish qualified feature branch and complete CI; if another hotspot remains, investigate concrete failing step without changing mutation criteria."
+  "next_gate": "Native MSI lifecycle and PCI/DART attachment; Wi-Fi, charge and gauge require separate physical proof."
 }

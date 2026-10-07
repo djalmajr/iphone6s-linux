@@ -111,7 +111,7 @@ No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo ca
 
 - [x] Caller completo143 cenários/89 mutações no Mac e ARM64; cleanup corrigido4/3 em ambos. IRQ37/21 e backend27/14 reutilizados com inputs pertinentes intactos;50 inputs finais conferidos nas duas plataformas.
 - [x] Módulo completoW=1/Werror/modpost e ABI passou;38 inputs de produção, fonte/config/Image/exports preservados. Nenhum módulo novo carregado.
-- [ ] Acompanhar a CI do head publicado; Mac/Windows de ec09d4f passaram, Ubuntu excedeu15 minutos e foi cancelado. [Issue41](https://github.com/djalmajr/iphone6s-linux/issues/41) trata o custo de crashes nativos com correção offline qualificada; nova CI completa ainda necessária. A intermitência anterior da issue38 não foi encerrada.
+- [x] A CI de [19ffb03](https://github.com/djalmajr/iphone6s-linux/actions/runs/37566057928) passou nos três jobs após a correção da issue41. O timeout Ubuntu anterior de ec09d4f fica preservado; prazo de15 minutos intacto. A intermitência anterior da issue38 não foi encerrada.
 - [ ] Fechar lifecycle MSI e attachment PCI/DART; só então preparar seleção/collector e prova física agrupada.
 
 ## D6. Mensagem MSI separada do número AIC
@@ -137,11 +137,17 @@ No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo ca
 - **Alternativas:** copiar offsets/doorbellM1 não qualifica N71; usar bitmaps não exportados quebra modpost; iniciar brcmfmac agora mistura IRQ/DMA/firmware. Rejeitadas.
 - **Reverter:** baixo antes da integração física; header novo e fixtures isolados. Perfil/caller existente não muda nesta fatia.
 - **Onde:** F1h de até cinco arquivos: este plano, `phone/kernel/n71-wlan-msi-native.h`, `tests/n71_wlan_msi_native_fixture.h`, `tests/n71_wlan_msi_native.c`, `tests/test_n71_wlan_msi_native.py`. Probe ABI privado na VM; publicação sanitizada separada.
-- **Status:** na fila, após qualificar/publicar a correção CI. Conferidos include/linux/msi.h SHA93b85e1e508914ef1c41e880bf399356b719ed383bf81eff58b1451c682829aa e exports da fonte958481f. Sem domínio/IRQ/MSI/config/MMIO novo no telefone.
+- **Status:** em implementação offline; CI corrigida e três jobs aprovados no head19ffb03. Conferidos include/linux/msi.h SHA93b85e1e508914ef1c41e880bf399356b719ed383bf81eff58b1451c682829aa e exports da fonte958481f. Sem domínio/IRQ/MSI/config/MMIO novo no telefone.
 
 ### Contratos F1h planejados
 
 - [ ] Allocation count1/2/4/8 alinhada; recusar conflito/owner/tipo/cells/chip, nunca reutilizar/dispose mapping alheio. Bitmap/parent rollback observado em falhas; preserve grants vivos em outras regiões.
-- [ ] Free pelo lifecycle do IRQ core e teardown do dispositivo; release do domínio recusa bitmap/mapcount restante. Não declarar free sem MMIO ou máscara física lida.
+- [ ] O core fixado libera cada vetor com count1 mesmo após alloc multi-MSI; não usar free de região arredondada. Free observa/reset/free-parent por vetor. Release recusa bitmap/mapcount e domínio filho ainda registrado; MSI disabled não remove o filho. Não declarar free sem MMIO ou máscara física lida.
 - [ ] Compose usa o helper de referência, recusando valores fora da porta; fixture executa callbacks nativos, kernel module ABI/modpost passa com exports explícitos.
 - [ ] Integrar ao PCI/caller apenas em fatia posterior com owners/pins/cleanup e guards DMA. Perfil/collector e sessão física continuam depois dos gates de máscara/attachment; sem novo boot para esta fase offline.
+
+### D7: precondições de lifetime antes do código
+
+A fonte fixada cria o domínio MSI por dispositivo em kernel/irq/msi.c:1029–1105 e só o remove por devres/remoção explícita em1113–1133. PCI free_irqs deixa esse domínio vivo (drivers/pci/msi/irqdomain.c:235–249). Não basta bitmap/mapcount zero. A fatia isolada instalará prepare/teardown que retêm a identidade do único filho WLAN, recusando release mesmo sem vetores. O caller futuro precisa excluir criação/teardown e release concorrentes, remover/quiescer PCI e soltar suas referências antes de liberar MSI; teardown roda antes de irq_domain_remove do filho. A exclusão de lifetime é uma precondição do consumidor, ainda sem integração física. Não associar o domínio ao PCI nesta fatia.
+
+Allocation sob root mutex exige descriptor do dispositivo retido, count1/2/4/8, eight-slot grant e parents exclusivos. Free do core é por vetor; conferir identidade, preservar os outros grants e não reutilizar mapping alheio. Callback compose exige owner/domain/slot válido. Fixtures executam callbacks reais com modelos separados de core/OF/MSI; probe ABI usa fonte/exports fixados.

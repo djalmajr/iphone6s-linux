@@ -150,7 +150,21 @@
       "complete_ci_passed": false,
       "follow_up_issue": "https://github.com/djalmajr/iphone6s-linux/issues/41",
       "offline_fix_commit": "5a5da7d921044531c2988ad2f28ba7657984d730",
-      "next_ci": "Required after publishing qualified fix; pending"
+      "next_ci": {
+        "head": "19ffb039263695956c40aba71a8e4ebb92422f21",
+        "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37566057928",
+        "conclusion": "success",
+        "completed_at_utc": "2026-10-07T03:28:36Z",
+        "jobs": {
+          "windows-dns": "success",
+          "source (macos-15)": "success",
+          "source (ubuntu-24.04)": "success"
+        },
+        "ubuntu_preflight": "success",
+        "macos_preflight": "skipped",
+        "job_timeout_minutes_unchanged": 15,
+        "complete_ci_passed": true
+      }
     }
   },
   "failed_attempts_preserved": {

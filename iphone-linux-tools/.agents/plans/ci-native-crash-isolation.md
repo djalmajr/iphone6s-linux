@@ -27,7 +27,7 @@ Na VM dedicada, RLIMIT_CORE=0 não impediu o handler piped Apport e um mutant te
 - [x] Conferir GITHUB_ACTIONS/RUNNER_OS/RUNNER_ENVIRONMENT na documentação oficial; medir fixture nativa com inputs intactos na VM e restore obrigatório.
 - [x] Implementar helper/step com benefício medido; recusa antes de qualquer efeito fora da admissão GitHub Actions/Linux/github-hosted. Leitura/write/readback obrigatórios; setter usa sudo não interativo.
 - [x] Bash syntax/ShellCheck, AST/lint fatal passaram no Mac; fixtures15 cenários/8 mutações por AssertionError passaram no Mac e ARM64. Três inputs idênticos; testes usam somente mocks e mantêm handler real da VM intacto. Não contar import/timeout/syntax como kill.
-- [ ] Public guard/commit/push na branch, acompanhar CI remota completa; registrar resultados e limites sanitizados.
+- [x] Public guard/commit/push na branch e CI remota completa: [run 37566057928](https://github.com/djalmajr/iphone6s-linux/actions/runs/37566057928), head19ffb03, os três jobs passaram em 2026-10-07T03:28:36Z; preflight Ubuntu success/Mac skipped. Prazo de15 minutos intacto. Evidência sanitizada atualizada; issue41 pode ser encerrada.
 
 Código qualificado:5a5da7d. [Reprodução e prova](../../docs/CI_NATIVE_CRASHES.md). Publicação conjunta com os dois commits MSI locais qualificados; só encerrar issue41 com os três jobs remotos passando. Não repetir gates de código/ABI intactos apenas pela mudança da política de CI.
 

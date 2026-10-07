@@ -38,4 +38,4 @@ Bash syntax, ShellCheck, AST e lint fatal passaram no Mac; Bash syntax e AST pas
 
 ## Limites e próximo gate
 
-O patch offline foi qualificado, commit 5a5da7d; a issue permanece aberta até a CI remota completa passar nos três jobs. Outro hotspot pode permanecer. Caso isso ocorra, investigar a etapa concreta, conservando critérios e prazo. A intermitência anterior de retorno ao iOS na issue 38 não foi encerrada. Wi-Fi, carga/gauge e goal principal continuam pendentes; esta rodada não fez novo boot/DFU/PIN.
+O [run PR de 19ffb03](https://github.com/djalmajr/iphone6s-linux/actions/runs/37566057928) terminou em 2026-10-07T03:28:36Z com os três jobs aprovados: Ubuntu, macOS e Windows DNS. O preflight passou no Ubuntu real e foi ignorado no Mac; o prazo de 15 minutos permaneceu. Essa prova encerra a issue 41. O resultado confirma a correção nesse head; não estabelece isoladamente a causa inteira do timeout anterior. A intermitência anterior de retorno ao iOS na issue 38 não foi encerrada. Wi-Fi, carga/gauge e goal principal continuam pendentes; esta rodada não fez novo boot/DFU/PIN.
