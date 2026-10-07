@@ -327,3 +327,12 @@ Contrato corrigido em D15: fwspec tem num_ids0/flags0 e fwnode do provider; conf
 Preparação D16: o gate isolado de cleanup usa bridge tipado sem associação para preservar os quatro casos anteriores; cobertura associada executa o caller real com falhas independentes em consumidores/MSI, unmap, provider, host, reset e runtime-PM. Esta fase altera cinco arquivos públicos (plano, caller, fixture do caller, runner do caller, fixture isolada de cleanup).
 
 Qualificação D16: primeiro pacote ARM64 omitiu tests/n71_dart_irq_fixture.h; caller passou mas provider teve 15 falhas de compilação, sem contar como kills. Pacote corrigido em pasta VM separada e provider completo repetido. Fixture do caller corrigida para limpar domínio/count antes de release MSI, como produção; getter verificado em cada falha de teardown e caller completo repetido nos dois ambientes. Mac provider reutilizado com todos os inputs relevantes intactos; D14/D11 helpers e gates conservam hashes. Sem load, reboot/DFU, pacote novo ou alteração global do Mac.
+
+## D17. Coleta verificável antes de compor candidata física
+
+- **Decisão:** criar parser separado de estado/eventos MSI/IOMMU e conectar a coleta à sessão retida existente. Exigir getter antes/depois, observações root/EP exatas, ownership e ordem de teardown, recusando ausência/duplicação/erro sem marcar IRQ/DMA/Wi-Fi. Default/perfis anteriores permanecem iguais. Compor opt-in só depois de gates/aliases/máscaras e orçamento energético preparados.
+- **Por quê:** o caller agora seleciona a rota, mas getters sem coleta reproduzível não bastam para orientar uma única sessão física; parsing conservador permite distinguir associação de software de prova funcional.
+- **Alternativas:** analisar logs manualmente a cada DFU aumenta repetição; considerar getter como prova DMA produz falso sucesso. Rejeitadas.
+- **Reverter:** baixo antes da candidata, por parser/interface separada e default off.
+- **Onde:** próxima fase lê scripts/host/n71_resource_result.py, n71_scan_held_result.py e a coleta física existente; até cinco públicos por fatia: plano, parser, teste e integração de coleta. Perfil/artefato em fase seguinte.
+- **Status:** em fila; D16 offline concluída. Nenhuma nova solicitação de DFU enquanto collector/alias/energia não estiverem prontos.

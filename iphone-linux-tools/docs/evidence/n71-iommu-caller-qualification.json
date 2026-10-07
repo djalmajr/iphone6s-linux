@@ -1,0 +1,213 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T06:57:20.497565+00:00",
+  "code_commit": "311cf7761180b8cecafd70269ac31d8ac4e7f7ef",
+  "scope": "Offline retained caller lifecycle; no phone load or physical IOMMU proof.",
+  "inputs_sha256": {
+    "phone/kernel/n71-dart-cycle.h": "08b39c05a41b87936962b341525d7188a28909c91613ea902c5b899e9d431a4a",
+    "phone/kernel/n71-dart-host.h": "51effa6ff20dd040dd2190cc7b3bd10d82ebc2535a30a13d120d4db3d988a1c8",
+    "phone/kernel/n71-dart-irq.h": "f2a744ce3545d902933dae07e9935917c94ee26edf596b4a75af180c53026a10",
+    "phone/kernel/n71-dart-lease.h": "00614a4ccc6e9dd7c22bfd3df4bb3dbed2acf4ebd9a909c4e10909840bbab368",
+    "phone/kernel/n71-dart-mmio.h": "b76e50b078bd8b8c764093c6fb6b101ca19b9c11b27cd77e76a05a3a47187d97",
+    "phone/kernel/n71-dart-observe.h": "fa65e2c487b80b52d16edbacd9a7450892f14acf2d6bbed1362f7cc94120b4af",
+    "phone/kernel/n71-dart-provider.h": "b621933a29e29a53b43f6a0d79785d47971a2932ef62ce39ce40905f4808fcd4",
+    "phone/kernel/n71-hdq-codec.h": "f71ceb810d5f9ee654b8b26598f5ebac213a7f56e2cec9c2d852d5e73e449176",
+    "phone/kernel/n71-hdq-gpio-observe.c": "37c6a6d2e9b3ccf220ed041d1785a65cad91d6fa7ae77248309296ec949c371f",
+    "phone/kernel/n71-hdq-handshake.h": "07740deeeee260326684898fc463dcfbdd3741c27c9ba608c3fb9fd6b2962032",
+    "phone/kernel/n71-hdq-pinmux.h": "8c84a6fad766ce8347afc4d93144d212b4e91437900113bd478db06aef6049a4",
+    "phone/kernel/n71-hdq-release-plan.h": "d77ef3d965e52311ca58f15c3b523e79791fa2e4bfeee0439948a1c2159416ee",
+    "phone/kernel/n71-i2c-controller-observe.h": "8b86f579023ca4270c7eb04a387ce9990f18f825fd4ee395b240e1a1b1ade78a",
+    "phone/kernel/n71-i2c-genpd.h": "6d772609640235a03b381ca0c7bcd49eb2d2cbbe5ef053ca1844bcf3b2488fea",
+    "phone/kernel/n71-i2c-power-diagnostic.c": "5dc4d053efd9df7e9a977712a48bc395e23e5e25782567f465b839b6afbfab4b",
+    "phone/kernel/n71-i2c-power-lifecycle.h": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2",
+    "phone/kernel/n71-i2c-topology-observe.c": "5dc56e1dcbcc8e91b671ae4e6eeae53289550a6e7a7bdf42dfbdfc99ccf2223d",
+    "phone/kernel/n71-pcie-bar-sizing.h": "9242d467d90feca8a286d8d7d7931a314e083f7eecbb6459f6867e5a119336cb",
+    "phone/kernel/n71-pcie-chip-id.h": "a71b62b785def3344b2539db660167f3adf2dd86ca1aa48d7743b5338a567405",
+    "phone/kernel/n71-pcie-chip-mmio.h": "e37a65f3e7b846937d84654180657c5a3981200ea470a5f571f867a719e7fe6c",
+    "phone/kernel/n71-pcie-contract.h": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8",
+    "phone/kernel/n71-pcie-control-reference.h": "6ac0fd634272206f70ec8ad12ba5bdf9aa4517a4e8ce0807f62e2661533ef764",
+    "phone/kernel/n71-pcie-diagnostic.c": "f3e28c90dec63775fab21467515622c0fca4e42e1e838683eda1da1b5e6dcb73",
+    "phone/kernel/n71-pcie-ecam.h": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3",
+    "phone/kernel/n71-pcie-init.h": "bcb0b842d7a46e47b061a69b481750b50c6f4e412f0dbdd605803ac3e6ed1158",
+    "phone/kernel/n71-pcie-inventory.h": "507d9a7a7d5a848377453f66d8366f77f99cf3c8466a6cc433f940d4bc8a052e",
+    "phone/kernel/n71-pcie-io16-upper.h": "69182167556a90a46a5a6ef9c250c1cafb260fef1070df5befcfd5c14007100c",
+    "phone/kernel/n71-pcie-link.h": "a4ddb3ab756450388d4734f555295e2b801930eaaa746767fbc20adbdef0f237",
+    "phone/kernel/n71-pcie-mmio.h": "63f8c22a5ab0bd2b5c962dcd56dea3acd97deb2cdc35ebd5833d1769371cf8c5",
+    "phone/kernel/n71-pcie-pme-control.h": "4e555a50eda36e15d8170c40eaaf4202be4a36bcd0d7e1f0f556bdabdcfcd418",
+    "phone/kernel/n71-pcie-port.h": "ac155857e994d6e8d60c05527a3fb9e9169925219585696349a8b7ed3ba828bb",
+    "phone/kernel/n71-pcie-pref64-disable.h": "be4ebe34c7fa1ba8e110d52ffdabbe902103058e1f968221d0ac369afb55fa33",
+    "phone/kernel/n71-pcie-resource-assign.h": "a68ed2952d978988c7d3a976ffb1c6c5d053a35e2406c3018357e0c6d8d71aa8",
+    "phone/kernel/n71-pcie-resource-write.h": "015ea311c511ce43b1bfe9b307c3d2b8f8e3b1b6b06fee663d0b3b69d0db5250",
+    "phone/kernel/n71-pcie-scan-config.h": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8",
+    "phone/kernel/n71-pcie-scan-link-target.h": "1af47829908937d28de30b5a05c10ca406a08db22c7657c642e94f3e71534dea",
+    "phone/kernel/n71-pcie-scan.h": "f4049a61c188c833f1affd6cee1d972d4c51b294eff322b1d75f9343ca7d377b",
+    "phone/kernel/n71-pmgr-access.h": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae",
+    "phone/kernel/n71-pmgr-power-observe.c": "fec9d8d28ae34deef0c0da1528f0b341a1dd043e4917b3677c789a182070fc99",
+    "phone/kernel/n71-sn2400-input-reference.h": "f67d5fcb3ffa5e9fdfec80f6091f52b6ae965e0a6eac5aef5187f43d61c8a161",
+    "phone/kernel/n71-wlan-irq-reference.h": "92a4766835a0d4884c4da168542ee94ab3512a5200279405d932c0d9ddf71b3f",
+    "phone/kernel/n71-wlan-msi-host.h": "dc7ec1d6fc37f1cb5056a25b273b3a89418c18bc9867e48a45805b6478423ae3",
+    "phone/kernel/n71-wlan-msi-message.h": "57279c73f6af1396a744586971f294c135f22b05661fa0452c90e3bdc0832e2b",
+    "phone/kernel/n71-wlan-msi-native.h": "6f8eec77d769783cbcfaaf7001294823698b254fc0f179968f9545050dc4c0f3",
+    "phone/kernel/n71-wlan-power-contract.h": "2034977747e830da0464bc8b9df29a98c176e7dcf6e4e8dbe1137ed10f1a8013",
+    "phone/kernel/n71-wlan-power-diagnostic.c": "1dc9ef28bafaa49cb15c3faa0d1e6caf9c728ec2fcb7ee8aaa074587aaf8c34e",
+    "phone/kernel/n71-wlan-power.h": "bcdf5f0bf675d9a113cb2d7e7d4910fd4ea6b1c7444f9eac02cf9d807a982bd9",
+    "tests/n71_dart_cleanup.c": "5de6dc4eafd304530e9d858ea418dec1fc7219a419c89c0702d0fafda5c4deef",
+    "tests/n71_dart_irq_fixture.h": "294a201d295225f70a77a194ed2afb369ba4c09dcbd84219f10bba525c584f6f",
+    "tests/n71_dart_provider.c": "4b0fd090453d9e8ae1d02b9fbee9b1b57f385fc06ba6cf055d48633a50675315",
+    "tests/n71_pcie_diagnostic_caller.c": "de10b14fd3c71408aa714de41dd8989940a27483125afe43f63d79fa7772dd52",
+    "tests/test_n71_dart_provider.py": "7c2bcb73997ae6bd1f14dd62fe013f6487560284e5b952561ef624f4cc4a624e",
+    "tests/test_n71_pcie_diagnostic_caller.py": "8c7fe81489fd404e29449cbbce57eb505fa74387bab7b8ab9862903255bcde67"
+  },
+  "qualification": {
+    "cases_per_platform": 216,
+    "compiled_assertion_mutations_per_platform": 146,
+    "caller_cases": 185,
+    "new_iommu_cases": 29,
+    "caller_mutations": 129,
+    "new_iommu_mutations": 26,
+    "provider_cases": 27,
+    "isolated_cleanup_cases": 4,
+    "provider_and_cleanup_mutations": 17,
+    "macos": {
+      "native_exit": 0,
+      "assertion_kills": 129,
+      "baseline": [
+        "N71_PCIE_CALLER_OK cases=73",
+        "N71_PCIE_HELD_CALLER_OK cases=21",
+        "N71_PCIE_RESOURCE_CALLER_OK cases=27",
+        "N71_DART_CALLER_OK cases=22",
+        "N71_MSI_CALLER_OK cases=13",
+        "N71_IOMMU_CALLER_OK cases=29"
+      ],
+      "provider_exit": 0,
+      "provider_baseline": [
+        "N71_DART_PROVIDER_OK cases=27",
+        "N71_DART_CLEANUP_OK cases=4"
+      ],
+      "provider_compiled_assertion_kills": 17,
+      "provider_evidence_reused_inputs_unchanged": true,
+      "fatal_flake8_exit": 0,
+      "ast_exit": 0,
+      "dart_scan_gate_unchanged_inputs": 56
+    },
+    "ubuntu_arm64": {
+      "native_exit": 0,
+      "native_elapsed_s": 51.622,
+      "assertion_kills": 129,
+      "baseline": [
+        "N71_PCIE_CALLER_OK cases=73",
+        "N71_PCIE_HELD_CALLER_OK cases=21",
+        "N71_PCIE_RESOURCE_CALLER_OK cases=27",
+        "N71_DART_CALLER_OK cases=22",
+        "N71_MSI_CALLER_OK cases=13",
+        "N71_IOMMU_CALLER_OK cases=29"
+      ],
+      "provider_exit": 0,
+      "provider_baseline": [
+        "N71_DART_PROVIDER_OK cases=27",
+        "N71_DART_CLEANUP_OK cases=4"
+      ],
+      "ast_exit": 0
+    },
+    "failure_history": [
+      "Initial ARM64 transfer omitted the existing IRQ fixture header; provider had 15 compile failures, not mutation kills. Corrected package tested in a separate VM directory.",
+      "Caller dependency model moved borrowed domain/count clearing before MSI release to match real scan; added getter assertions during seven cleanup faults. Full caller repeated on both platforms."
+    ],
+    "reused": [
+      "Mac provider/isolated cleanup result with relevant inputs unchanged.",
+      "D14/D15 scan gates: 56 non-caller inputs unchanged; isolated D11 production lease unchanged."
+    ],
+    "mutation_policy": "Every counted mutant compiles with Werror and dies by SIGABRT/assertion. No compile/import/timeout failures counted."
+  },
+  "kernel_build": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "kernel_exit": 0,
+    "module_sha256": "6250c41b4f5427586e69764f12b0fae01b234cda8839082b74a3197a0996547b",
+    "module_bytes": 112832,
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "loaded": false,
+    "private_wrapper": false,
+    "production_module_inputs_identical": true,
+    "effective_module_basenames": [
+      "n71-dart-cycle.h",
+      "n71-dart-host.h",
+      "n71-dart-irq.h",
+      "n71-dart-lease.h",
+      "n71-dart-mmio.h",
+      "n71-dart-observe.h",
+      "n71-dart-provider.h",
+      "n71-pcie-bar-sizing.h",
+      "n71-pcie-chip-id.h",
+      "n71-pcie-chip-mmio.h",
+      "n71-pcie-contract.h",
+      "n71-pcie-control-reference.h",
+      "n71-pcie-diagnostic.c",
+      "n71-pcie-ecam.h",
+      "n71-pcie-init.h",
+      "n71-pcie-inventory.h",
+      "n71-pcie-io16-upper.h",
+      "n71-pcie-link.h",
+      "n71-pcie-mmio.h",
+      "n71-pcie-pme-control.h",
+      "n71-pcie-port.h",
+      "n71-pcie-pref64-disable.h",
+      "n71-pcie-resource-assign.h",
+      "n71-pcie-resource-write.h",
+      "n71-pcie-scan-config.h",
+      "n71-pcie-scan-link-target.h",
+      "n71-pcie-scan.h",
+      "n71-wlan-irq-reference.h",
+      "n71-wlan-msi-host.h",
+      "n71-wlan-msi-message.h",
+      "n71-wlan-msi-native.h"
+    ],
+    "baseline_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true,
+    "original_tracked_patch_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+    "original_tracked_changes_preserved": true
+  },
+  "contracts": [
+    "iommu_parent bool0400 default false, requires held MSI/PME/inventory guards before registration.",
+    "Provider acquired after inventory before PCI publication; absent/stopped/device-less successful owner rejected.",
+    "Associated cleanup removes PCI/MSI and OF map before provider stop, then releases availability and restores the host/reset/power. Any failure preserves owners and module pin; retry does not rescan or double release.",
+    "dart-release refuses while the OF association owner exists and directs action=cleanup.",
+    "iommu getter is locked and reports requested/ready/held/owner/available/mapped/observed/map_checked/session_error. map_checked is last OF/core observation of a live held bus, not private SID or DMA readback.",
+    "Older getter formats and unattached modes preserved."
+  ],
+  "limits": [
+    "No physical boot, module load, IRQ delivery, DMA translation, Wi-Fi, gauge or charging proof in this slice.",
+    "Collector/profile and PCI alias/mask contract still required before grouped physical session or driver/MASTER.",
+    "Native Linux charging remains unproved; observed discharge prevents claiming continuous server operation."
+  ],
+  "parent_ci": {
+    "head_sha": "e8307e94ae8f03a590e9481b379dbff830b8faf6",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37582690113",
+    "jobs": [
+      {
+        "name": "source (ubuntu-24.04)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T06:50:49Z"
+      },
+      {
+        "name": "source (macos-15)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T06:50:30Z"
+      },
+      {
+        "name": "windows-dns",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T06:40:02Z"
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending_publication",
+    "physical_proof": false
+  }
+}

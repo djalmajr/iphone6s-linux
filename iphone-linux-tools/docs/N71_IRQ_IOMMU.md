@@ -430,3 +430,29 @@ ABI finalW=1/Werror/modpost/ELF64 AArch64/vermagic power2 passou.57 inputs prote
 Para reproduzir ABI, copie os phone/kernel exatos do JSON para M separado e use Makefile `obj-m += n71-pcie-diagnostic.o`. Só na cópia privada do caller, acrescente prototype global `int n71_iommu_scan_probe(struct device *, struct n71_diagnostic *, struct platform_device *);` e a função correspondente que retorna n71_pcie_scan_hold_iommu(dev,state,provider). Esse wrapper mantém a rota no objeto enquanto o caller público não a seleciona. Use make/exports fixados, compare todos os hashes e não carregue o probe nem trate esse artefato como candidata física.
 
 Arquivos: scan, C compartilhado, runner Python, fixture DART e plano; stubs IOMMU nos quatro runners preparados separadamente em36aa20d. Sem dependência/banco/perfil físico novo. Custo: lease OF retida e consultas de fwspec/domínio por dispositivo; desempenho físico não medido. Próximo: seleção/getter do caller e cleanup consumidores/unmap → provider stop → release/restore/free. Alias/máscaras, collector/perfil e energia antes da sessão física agrupada. Wi-Fi#9, energia#2, issue40 e goal permanecem abertos.
+
+## D16 — seleção IOMMU e lifecycle completo no caller
+
+[Caller](../phone/kernel/n71-pcie-diagnostic.c), código311cf77, [prova sanitizada](evidence/n71-iommu-caller-qualification.json), [decisão D16](../.agents/plans/n71-irq-iommu-bindings.md#d16-selecionar-iommu-no-caller-e-intercalar-teardown-do-provider). iommu_parent é bool0400, default false, exigindo msi_parent e scan_hold, além dos guards PME/inventário existentes. Depois do inventário e antes do scan, o caller adquire o provider e recusa owner ausente, lease não running ou device ausente antes de selecionar hold_iommu. Nenhum perfil/autoload físico seleciona a rota nesta fatia.
+
+Cleanup associado remove consumidores PCI/MSI e desfaz o mapa antes de parar o provider; então release D11 restaura disponibilidade/status, seguido por config/resources/bridge/reset/power. Erro bloqueia a próxima etapa e conserva owners/pin. Retry opera na mesma sessão, sem rescan nem releases duplicados. Modos anteriores sem associação conservam a ordem antiga. dart-release recusa enquanto existir owner OF e orienta action=cleanup. Getters anteriores preservados.
+
+Getter iommu sob session_lock: requested, ready, held, owner, available, mapped, observed, map_checked, session_error. map_checked só resume a última observação OF/core com barramento ainda retido; não lê SID privado, não comprova tradução DMA, IRQ ou rádio. Após remoção do bus, domínio emprestado/count desaparecem mesmo com falha MSI; falha posterior pode conservar owner/status enquanto mapped já é zero.
+
+### Verificação e reprodução
+
+Mac/ARM64: caller185 cenários/129 mutações compiladas, incluindo29 cenários/26 mutações IOMMU; provider27 e cleanup isolado4 cenários/17 mutações, total216/146 por plataforma. Caller e cleanup são produção; dependências kernel/PCI/provider modeladas. D14/D15 com56 inputs não caller idênticos e helper isolado D11 foram reutilizados. Mac provider foi reutilizado com inputs relevantes intactos.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_diagnostic_caller.py' -v
+python3 -B -m unittest discover -s tests -p 'test_n71_dart_provider.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_pcie_diagnostic_caller.py tests/test_n71_dart_provider.py
+```
+
+O primeiro pacote ARM64 omitiu o header existente n71_dart_irq_fixture.h: caller passou, provider teve15 falhas de compile, sem contar como kills. Pacote corrigido executado em pasta VM separada. A fixture do caller foi corrigida para limpar domínio/count antes do release MSI, como produção; adicionamos conferência do getter em sete falhas de teardown e repetimos caller completo nos dois ambientes. Produção não mudou nessa correção de fixture. Logs/falhas privados preservados. Mutantes exigem compileWerror e SIGABRT/asserção; AST/lint fatal passaram. Não há typechecker Python; ABI real é o gate de tipos/kernel.
+
+Build exato, sem wrapper privado: W=1/Werror/modpost/ELF64 AArch64/vermagic power2 passou. Módulo112832 bytes/SHA6250c41b4f5427586e69764f12b0fae01b234cda8839082b74a3197a0996547b, nunca carregado.53 inputs:47 C/headers de produção e seis testes/fixtures; fonte original com seis patches tracked, config/Image/vmlinux.symvers intactos. Reprodução em M separado com cópias exatas phone/kernel e Makefile obj-m += n71-pcie-diagnostic.o; use make/exports fixados acima, sem KBUILD_MODPOST_WARN e sem wrapper.
+
+[CI do parent e8307e9](https://github.com/djalmajr/iphone6s-linux/actions/runs/37582690113) passou os três jobs em2026-10-07T06:50:49Z. Essa CI comprova a publicação D14/D15; D16 exige sua própria CI após publicação.
+
+Arquivos desta fase: plano, caller, C/runner do caller e fixture isolada de cleanup; doc/prova separadas. Mudança de API opt-in sem quebrar modos antigos. Sem pacote/dependência/banco, instalação/configuração global no Mac, novo boot/DFU ou load. Custo: provider retido durante o scan e leitura de estado sob mutex; desempenho físico não medido. Próximo: collector/perfil e contrato de aliases/máscaras, depois sessão física agrupada com orçamento de energia. Wi-Fi#9, energia#2, issue40 e goal permanecem abertos.
