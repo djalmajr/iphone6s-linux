@@ -137,7 +137,7 @@ No primeiro gate completo ARM64, uma mutação ultrapassou5 segundos; o mesmo ca
 - **Alternativas:** copiar offsets/doorbellM1 não qualifica N71; usar bitmaps não exportados quebra modpost; iniciar brcmfmac agora mistura IRQ/DMA/firmware. Rejeitadas.
 - **Reverter:** baixo antes da integração física; header novo e fixtures isolados. Perfil/caller existente não muda nesta fatia.
 - **Onde:** F1h de até cinco arquivos: este plano, `phone/kernel/n71-wlan-msi-native.h`, `tests/n71_wlan_msi_native_fixture.h`, `tests/n71_wlan_msi_native.c`, `tests/test_n71_wlan_msi_native.py`. Probe ABI privado na VM; publicação sanitizada separada.
-- **Status:** F1h aplicada e qualificada offline no commit295c7c2. CI anterior corrigida e três jobs aprovados no head19ffb03; nova CI da F1h pendente. Conferidos include/linux/msi.h SHA93b85e1e508914ef1c41e880bf399356b719ed383bf81eff58b1451c682829aa e exports da fonte958481f. Sem domínio/IRQ/MSI/config/MMIO novo no telefone.
+- **Status:** F1h aplicada e qualificada offline no commit295c7c2. CI anterior corrigida e três jobs aprovados no head19ffb03; [CI da F1h](https://github.com/djalmajr/iphone6s-linux/actions/runs/37568094109) aprovada nos três jobs em2026-10-07T03:54:41Z. Conferidos include/linux/msi.h SHA93b85e1e508914ef1c41e880bf399356b719ed383bf81eff58b1451c682829aa e exports da fonte958481f. Sem domínio/IRQ/MSI/config/MMIO novo no telefone.
 
 ### Contratos F1h planejados
 
@@ -168,3 +168,8 @@ Allocation sob root mutex exige descriptor do dispositivo retido, count1/2/4/8, 
 - [x] Cleanup remove associação própria antes de destruir parent; bus vivo, domínio alheio ou flag divergente recusam. Falha nativa mantém lease/bridge para retry; reter módulo/bridge é precondição do futuro caller, sem integração nesta fatia.
 - [x] Helper real executado com dependências PCI/MSI modeladas, falhas parciais, idempotência e22 mutações compiladas por assertion; Mac/ARM64 e probe ABI compostoWerror/modpost com hashes/baselines preservados. Native MSI gate anterior foi reutilizado com seus inputs intactos.
 - [ ] F1j integrará os dois helpers antes do primeiro scan, com guard/getter/cleanup e fixtures do caller/scan; manter enable negado e não adicionar bind ou DMA nesta etapa. Sessão física continua agrupada após collector/perfil e gates restantes.
+
+
+### Guard de binding confirmado para a próxima integração
+
+A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLOW_BINDING estiver desligado. drivers/pci/bus.c:370–375 libera esse bit antes de device_initial_probe, no pci_bus_add_device. O diagnóstico atual não chama esse estágio; seu enable_device também permanece negado. Device_add durante scan ainda publica o dispositivo e aciona notifiers IOMMU. Não substituir essa distinção por "scan não registra dispositivo". A F1j irá associar MSI antes do scan, manter binding/enable negados e preservar a bridge até release completo; attachment DART requer configuração antes da publicação/IOMMU e teardown de consumidores antes do provider na fase seguinte.

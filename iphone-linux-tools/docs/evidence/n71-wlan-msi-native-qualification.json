@@ -114,7 +114,18 @@
     "all_three_jobs": "success",
     "covers_this_new_native_code": false
   },
-  "new_remote_ci": "Required on published native MSI head; pending",
+  "new_remote_ci": {
+    "head": "fcb1326483e2f607fabe6d5d762eeb491223a107",
+    "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37568094109",
+    "conclusion": "success",
+    "completed_at_utc": "2026-10-07T03:54:41Z",
+    "jobs": {
+      "source (ubuntu-24.04)": "success",
+      "source (macos-15)": "success",
+      "windows-dns": "success"
+    },
+    "complete_ci_passed": true
+  },
   "private_evidence_sha256": {
     "local-final-result-private.json": "5c6065cedb3fc11572e80233faa01c611603e6ac273af7b0571a97c7e5b4c9f4",
     "arm64-result-private.json": "7285f2a6d57b595eea1fe2f1ec90058e8b1ee8a2ba778a24b486fa3fafeeeba9",
