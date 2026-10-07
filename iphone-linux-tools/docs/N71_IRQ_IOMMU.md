@@ -264,7 +264,7 @@ F1i offline concluída e [CI de cdb0395](https://github.com/djalmajr/iphone6s-li
 
 ## F1j — herança MSI durante o scan PCI
 
-[Scan](../phone/kernel/n71-pcie-scan.h), código36998e8, [plano D9](../.agents/plans/n71-irq-iommu-bindings.md#d9-associar-msi-antes-do-scan-preservando-o-diagnóstico-padrão), [prova sanitizada](evidence/n71-msi-scan-qualification.json). O host incorpora a lease MSI. Options internos exigem held bus e PME preparado para MSI; wrappers existentes permanecem MSI-off. O novo hold_msi prepara o parent OF, equilibra referências temporárias e conclui acquire/associação antes do core scan. Ainda não há parâmetro de seleção ou getter MSI no caller.
+[Scan](../phone/kernel/n71-pcie-scan.h), código36998e8, [plano D9](../.agents/plans/n71-irq-iommu-bindings.md#d9-associar-msi-antes-do-scan-preservando-o-diagnóstico-padrão), [prova sanitizada](evidence/n71-msi-scan-qualification.json). O host incorpora a lease MSI. Options internos exigem held bus e PME preparado para MSI; wrappers existentes permanecem MSI-off. O novo hold_msi prepara o parent OF, equilibra referências temporárias e conclui acquire/associação antes do core scan. Nesta fatia ainda não havia parâmetro de seleção ou getter MSI no caller; F1k abaixo os acrescenta.
 
 Report confere a identidade do domínio na bridge, root bus, root port, child bus e endpoint; divergência é recusada. Guard de driver/MASTER e enable negado permanecem. Não acrescenta bind, IRQ alocada ou DMA. Cleanup remove o bus antes de liberar a lease. Filho ainda referenciado/erro nativo retém bridge/config/resources/power e impede restauração antecipada; retry usa a mesma sessão sem rescan.
 
@@ -287,3 +287,26 @@ Build completoW=1/Werror/modpost/ELF64 AArch64/vermagic power2 passou.55 inputs 
 Para reproduzir ABI, use pasta M separada com os arquivos phone/kernel do JSON e Makefile `obj-m += n71-pcie-diagnostic.o`. Na cópia privada de n71-pcie-diagnostic.c, acrescente declaração e função global n71_msi_scan_probe(device,state) que retorna n71_pcie_scan_hold_msi(device,state). Use make/exports fixados já documentados, confira todos os hashes, ELF/vermagic e mantenha o probe privado, sem insmod. O primeiro parser de includes buscou paths absolutos e retornou zero; corrigimos por basenames e conferimos as30 dependências, sem rebuild.
 
 F1j offline concluída; nova CI necessária depois da publicação. Nenhuma dependência, banco, pacote/configuração global do Mac, novo boot/DFU/PIN ou escrita no telefone. O campo lease é interno ao módulo; perfil anterior não foi alterado. Custo adicional: conferências de identidade por dispositivo e lease retida até cleanup; desempenho físico não medido. Próximo: F1k seleciona a rota/getter no caller e qualifica seu lifecycle; attachment DART, collector/perfil e física continuam antes de rádio funcional. Wi-Fi#9, energia#2, issue40 e goal permanecem abertos.
+
+## F1k — seleção MSI e estado recuperável no caller
+
+[Caller](../phone/kernel/n71-pcie-diagnostic.c), códigoe65c709, [decisão D10](../.agents/plans/n71-irq-iommu-bindings.md#d10-selecionar-msi-no-caller-e-expor-ownership-sem-mudar-o-perfil-físico), [prova sanitizada](evidence/n71-msi-caller-qualification.json). Parâmetro msi_parent default false/0400; exige scan_hold e os guards anteriores de PME/host_scan/inventory/enumerate. MSI sem hold é recusado antes do registro do driver. Somente o opt-in seleciona hold_msi. Nenhuma mudança de perfil ou autoload nesta fatia; não executar insmod como parte da reprodução offline.
+
+O getter msi/0400 usa session_lock e mantém os formatos anteriores intactos. requested indica a opção solicitada; ready indica sessão existente; held exige bus vivo/retido. associated é o estado da associação salva pelo owner, e owner/domain indicam a lease e o parent privado retidos. mappings é mapcount desse domínio privado; child indica filho MSI ainda retido. session_error é cleanup_error da sessão inteira, podendo continuar negativo depois de a lease MSI ter sido liberada. Esses campos não provam entrega IRQ, identidade física da máscara, attachment DMA ou rádio.
+
+Falhas de acquire ou teardown deixam a bridge/pin do módulo/reset/power retidos. O getter diferencia owner pendente de bus já removido. Depois de quiescer a dependência, action=cleanup tenta novamente na mesma sessão sem rescan nem put duplicado. Provider DART ainda é removido antes do PCI na rota atual sem attachment/DMA; essa ordem precisa mudar antes de habilitar consumidores DMA.
+
+### Gates e reprodução
+
+Mac e Ubuntu ARM64 passaram156 cenários/103 mutações compiladas por assertion por plataforma. São143 cenários antigos e13 MSI;89 mutações antigas e14 MSI. Cobertura inclui default, guard antes de efeitos, seleção, campos exatos sob lock, mapping/filho pendente, erro parcial, retry e erro de reset após release. Caller/init/probe/getters/actions/cleanup e MMIO executam produção; PCI/MSI/kernel APIs são dependências modeladas. Gates nativos de scan/MSI permanecem separados e foram reutilizados com seus inputs intactos.
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_pcie_diagnostic_caller.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_pcie_diagnostic_caller.py
+```
+
+Não há typechecker Python; AST/lint fatal passaram no Mac e AST no ARM64. Os dois corpos de produção extraídos pelo gate de cleanup DART estão idênticos por hash; reutilizamos seus quatro cenários/três mutações anteriores. A fixture de caller atual executou seu gate completo uma vez por ambiente. Sem falhas de compile/assertion nessa rodada; nenhum prazo enfraquecido.
+
+ProduçãoW=1/Werror/modpost/ELF64 AArch64/vermagic power2 passou.48 inputs protegidos,46 C/headers arquivados,30 includes efetivos. A pasta M usa cópias exatas da produção e Makefile `obj-m += n71-pcie-diagnostic.o`; agora não há wrapper privado. Use o make/exports fixados descritos anteriormente e confira fonte/config/Image/vmlinux.symvers antes/depois. modinfo confirma msi_parent/msi e nm confirma o getter e a API nativa retida. Módulo104288 bytes/SHA0c0783806158eb88a4bc390644a3186d474d1fe20d2026a046719751f875f8a5; não carregado nem publicado. Image/config/exports preservados, sem KBUILD_MODPOST_WARN.
+
+F1k offline concluída; CI nova depende da publicação. Sem banco, dependência, pacote/configuração global do Mac, novo boot/DFU/PIN ou escrita no telefone. Custo adicional: getter sob lock e seleção opt-in; desempenho físico não medido. Próximo: associação PCI/DART antes de device publication/binding/MASTER, teardown de consumidores antes do provider, collector/perfil e preparação de energia para coletas agrupadas. Wi-Fi#9, carga/gauge#2, issue40 e goal permanecem abertos.
