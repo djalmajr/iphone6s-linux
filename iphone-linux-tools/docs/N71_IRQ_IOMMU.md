@@ -68,3 +68,30 @@ for w in e['source_windows']:
 A [fonte oficial IOPCIFamily fixada](https://github.com/apple-oss-distributions/IOPCIFamily/blob/4822b27a36e2de70e231ecf2bf3021384fab6ec2/IOPCIMessagedInterruptController.cpp) separa alocação de vetor e message data. Serve para conferir o contrato; o driver N71 privado é a referência dos registradores. Referências selecionadas status100/mask104/MSI config124/base128 não são autorização para leitura/escrita: efeitos de leitura e contrato completo de restore ainda não foram qualificados.
 
 Energia: os dois cycles genpd/inspect de I2C1 já passaram no hardware, conforme [N71_HDQ](N71_HDQ.md#primeira-sessão-física-power2--ciclos-e-inspeção-verificados). Pinos/clock/IRQ/controller restore e SN2400/HDQ continuam necessários; não iniciar transferência no carregador apenas porque o domínio responde. O iPhone está no iOS durante a preparação offline.
+
+## F1a — células AIC qualificadas, sem alocação de IRQ
+
+O [helper isolado](../phone/kernel/n71-wlan-irq-reference.h) valida a topologia32/offset256/porta1/base8/count8/células3 e calcula os oito pedidos Linux. Recusa topologia diferente com EINVAL e índice fora da porta com ERANGE, preservando output em erro. Não converte para virq/hwirq interno nem produz message data. Nenhum caller, perfil, initramfs ou Image foi alterado; não houve carga no telefone. [Prova selecionada](evidence/n71-wlan-aic-reference.json).
+
+Mac e Ubuntu ARM64 passaram61 cenários/14 mutações compiladas por SIGABRT/asserção: oito vetores,48 topologias recusadas, três índices inválidos e dois contratos nulos. As mutações cobrem guards, fronteira, erro, soma do offset, células tipo/IRQ/trigger e output em recusa. Falha de compilação/import/timeout não conta como kill. AST e lint fatal passaram; não há typechecker Python neste projeto. C usa C11/Wall/Wextra/Werror/pedantic.
+
+Probe kernel na VM passou W=1/Werror/modpost/ELF64 AArch64/vermagic power2. Fonte958481f, config, Image e vmlinux.symvers permaneceram nos hashes fixados. O runner tentou primeiro o nome ausente Module.symvers e parou antes de executar os gates; corrigimos para vmlinux.symvers com KBUILD_EXTRA_SYMBOLS. A descrição ausente do módulo de prova foi adicionada e somente o build afetado foi repetido; os testes nativos foram reutilizados com os três inputs intactos. A baseline avisa que Module.symvers da raiz está ausente; exports explícitos são fornecidos e erros de símbolos não foram permitidos. O módulo de prova é privado e não foi carregado.
+
+### Reproduzir os contratos
+
+```sh
+python3 -B -m unittest discover -s tests -p 'test_n71_wlan_irq_reference.py' -v
+python3 -m flake8 --select E9,F63,F7,F82 tests/test_n71_wlan_irq_reference.py
+```
+
+Para o probe ABI, use a VM dedicada e os diretórios de fonte/build já fixados. Crie uma pasta M nova, copie o header e use um módulo mínimo com licença GPL/descrição que chame `n71_wlan_irq_reference` no init com `{3,32,256,1,8,8,0}`. **Apenas compile**; esse probe não é módulo de diagnóstico para o aparelho. Makefile: `obj-m += n71-wlan-irq-abi-probe.o`. Na VM:
+
+```sh
+source_dir=/home/ubuntu/kernel-n71-binding-source-20261005
+build_dir=/home/ubuntu/kernel-n71-binding-build-20261005
+probe_dir=/home/ubuntu/SUA_PASTA_M_NOVA
+make -C "$source_dir" O="$build_dir" M="$probe_dir" W=1 KCFLAGS=-Werror \
+  KBUILD_EXTRA_SYMBOLS="$build_dir/vmlinux.symvers" modules -j2
+```
+
+Compare config/Image/exports antes/depois com os hashes do JSON; confira ELF/vermagic e preserve logs privadamente. Sem dependências/pacotes novos ou alteração de configuração do Mac. Testes anteriores de PCI/transportes conservam sua validade porque o helper não foi integrado. O próximo resultado esperado é fechar message data e ownership/restore MSI/provider DART retido; #40/#9/#2 e o goal permanecem abertos.
