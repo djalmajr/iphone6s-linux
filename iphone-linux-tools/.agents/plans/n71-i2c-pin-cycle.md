@@ -30,7 +30,7 @@ Ler cache, hardware duas vezes, cache, de ambos os pinos em cada fase. Antes de 
 - [x] Conferir fonte primária, flags, callbacks e exports no build power2 preservado.
 - [x] Implementar módulo e fixtures com falhas de escopo, referência, aquisição e leitura.
 - [x] Compilar e executar cenários/mutações no Mac e Ubuntu ARM64; compilar módulo real na VM, sem alterar fonte/config/Image/exports.
-- [ ] Documentar hashes, comandos, limites e integrar o gate à CI.
+- [x] Documentar hashes, comandos, limites e integrar o gate à CI.
 - [ ] Carregar por SSH em sessão física agrupada, preservar serviços/snapshot e registrar somente prova sanitizada.
 
 ## Verificação
@@ -43,6 +43,6 @@ Mac/Ubuntu ARM64: um gate Python por plataforma executou107 cenários nativos e2
 
 Build real Werror/modpost na fonte/build power2 preservados: módulo13.720 bytes, SHA256 `95bc260634fe6fa065e00f15553a4059fbc6acf95db2f2079cb4361b7b9a180e`, vermagic `7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64`. Quatro inputs idênticos nas duas máquinas; fonte/patch/config/Image/exports conferidos antes/depois. AST e Flake8 fatal passaram; não há type checker Python configurado. Não foi carregado no telefone.
 
-O build de Image não tem `Module.symvers` agregado e modpost emitiu o aviso genérico correspondente. O comando fornece o `vmlinux.symvers` preservado via KBUILD_EXTRA_SYMBOLS;39 imports do ELF64/AArch64 foram conferidos individualmente contra ele, sem ausências. Não foi usado KBUILD_MODPOST_WARN nem criado/copied arquivo no build preservado para ocultar o aviso.
+O build de Image não tem `Module.symvers` agregado e modpost emitiu o aviso genérico correspondente. O comando fornece o `vmlinux.symvers` preservado via KBUILD_EXTRA_SYMBOLS;39 imports do ELF64/AArch64 foram conferidos individualmente contra ele, sem ausências. Não foi usado KBUILD_MODPOST_WARN nem criado ou copiado arquivo no build preservado para ocultar o aviso. [Reprodução e limites](../../docs/N71_I2C_PINS.md), [prova offline](../../docs/evidence/n71-i2c-pin-cycles.json). O gate já faz parte da descoberta de testes existente da CI; sua execução remota desta versão permanece separada.
 
 Referências: [GPIO consumer](https://docs.kernel.org/driver-api/gpio/consumer.html), fonte local fixada `drivers/gpio/gpiolib.c`, `drivers/pinctrl/pinmux.c`, `drivers/pinctrl/pinctrl-apple-gpio.c` e `drivers/base/core.c`. A documentação geral não substitui a auditoria dos callbacks Apple.
