@@ -65,7 +65,28 @@
     "No physical IRQ/MSI delivery, IOMMU attachment, radio, charge or battery measurement."
   ],
   "ci": {
-    "status": "pending_publication",
+    "headSha": "04ae2830ca771e5b2777915b85e99c5cfe7212fe",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37578130334",
+    "completed_at": "2026-10-07T05:59:44Z",
+    "jobs": [
+      {
+        "name": "windows-dns",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T05:49:15Z"
+      },
+      {
+        "name": "source (ubuntu-24.04)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T05:59:44Z"
+      },
+      {
+        "name": "source (macos-15)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T05:59:24Z"
+      }
+    ],
     "physical_proof": false
   }
 }

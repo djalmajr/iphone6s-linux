@@ -217,6 +217,8 @@ A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLO
 - **Onde:** futura fatia de até cinco públicos: este plano, phone/kernel/n71-dart-host.h, tests/n71_dart_host_fixture.h, tests/n71_dart_host.c e tests/test_n71_dart_host.py. Fonte958481f: drivers/iommu/of_iommu.c:22–57,114–167; apple-dart.c:913–961,1393–1425; drivers/of/platform.c:726–790; dynamic.c:533–547,767–801,860–895,1032–1065. Referência stream0 já publicada; não repetir extração de firmware.
 - **Status:** helper isolado qualificado offline:49 cenários e38 mutações compiladas por assertion no Mac e ARM64; AST/lint fatal e probeW=1/Werror/modpost/ELF/vermagic aprovados. Primeiro build detectou include of_platform.h ausente, corrigido explicitamente; gate completo repetido nos dois ambientes após a correção. Probe11456 bytes/SHAe7bf28e5cede9bf1fad52be38b3ea468af4b6b7b2140bbc265fb5221adbcc634, init recusa execução e nunca foi carregado. Fonte/config/Image/exports preservados. Integração/aliases/attachment e prova física continuam pendentes; nenhum efeito no aparelho.
 
+CI da publicação04ae283 aprovada nos três jobs em2026-10-07T05:59:44Z. [Prova sanitizada](../../docs/evidence/n71-dart-host-qualification.json) inclui o head e resultados; não é prova de hardware.
+
 ### Contratos planejados da próxima fatia
 
 - [x] Validate-before-effects: bridge sem bus, parent/of_node fixos, provider manual bound/único, status disabled original, OF_POPULATED não reivindicado, SID0/células e mapa/máscara ausentes. Preservar mappings/flags/refcounts alheios.
@@ -275,7 +277,7 @@ Antes de soltar a última referência a um device, zerar o owner e guardar local
 - [x] Fase resource ativa e bus alheio recusam antes de efeitos. Stop-error fica registrado e é reportado pelo cleanup completo, mesmo após retry da lease MSI.
 - [x] Cleanup antigo mantém restore/free e erros; sete novos cenários executam a etapa real e provam ausência de writes/restauração/free entre as fases.
 - [x] Mac/ARM64: scan86/72, optional18/14, IO1620/17 e PREF6435/17, total159/120. Módulo completoW=1/Werror/modpost/ELF/vermagic; source/config/Image/exports intactos.
-- [ ] Reprodução sanitizada e issue40 publicadas antes da futura integração/candidata física. Nenhum DFU nesta fatia.
+- [x] Reprodução sanitizada publicada emf656ab1 e issue40 atualizada no comentário6031987027 antes da futura integração/candidata física. CI desse head ainda em execução na publicação; nenhuma claim de green ou DFU nesta fatia.
 
 ## D14. Associar o DART no scan e exigir readback do core IOMMU
 

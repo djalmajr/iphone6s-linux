@@ -365,6 +365,8 @@ Para reproduzir ABI, use pasta M separada com o header exato e Makefile `obj-m +
 
 Build/modpost/ELF64 AArch64/vermagic power2 passaram. Módulo11456 bytes/SHAe7bf28e5cede9bf1fad52be38b3ea468af4b6b7b2140bbc265fb5221adbcc634; source/config/Image/vmlinux.symvers e as seis alterações tracked da fonte original foram preservados. Header/fixture/C/Python correspondem aos quatro hashes da prova. Módulo e logs privados, sem load.
 
+[CI de04ae283](https://github.com/djalmajr/iphone6s-linux/actions/runs/37578130334) concluída nos três jobs em2026-10-07T05:59:44Z. Essa CI prova a publicação do helper D11; a extração D13 foi publicada depois e tem sua CI própria, ainda pendente nesta atualização.
+
 Arquivos desta fatia: helper, fixture OF/device, cenários C, runner Python e plano; documentação/prova publicadas separadamente. Sem API/perfil físico alterado, dependência, banco ou configuração global do Mac. Custo: refs e duas changesets durante a lease, properties dinâmicas retidas pelo core; desempenho físico não medido. Próximo: integração pré-scan e cleanup consumidores → mapa → provider → disponibilidade → config/resources/bridge/reset/power. Driver/MASTER, aliases/máscaras, entrega IRQ/DMA, rádio e alimentação permanecem gates abertos. Wi-Fi#9, energia#2, issue40 e goal continuam ativos.
 
 ## D13 — remover consumidores conservando o host
