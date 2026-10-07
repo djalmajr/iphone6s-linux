@@ -4,7 +4,7 @@
 
 O módulo `phone/kernel/i2c-pins/n71-i2c-pin-cycle.c` está qualificado offline para o Image power2 preservado. Ainda não foi carregado no aparelho. Ele prepara o acesso ao controlador de carga, reservando e liberando descriptors GPIO115/114, sem selecionar mux, configurar direção/valor ou ativar I2C1.
 
-Mac e Ubuntu ARM64 executaram o módulo real contra APIs kernel sintéticas:107 cenários por plataforma e22 mutações compiladas terminaram por SIGABRT com asserção. O build real produziu um módulo ELF64/AArch64 de13.720 bytes, SHA256 `95bc260634fe6fa065e00f15553a4059fbc6acf95db2f2079cb4361b7b9a180e`, vermagic `7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64`. [Prova sanitizada](evidence/n71-i2c-pin-cycles.json), [plano e decisão](../.agents/plans/n71-i2c-pin-cycle.md), [energia/I2C1](N71_HDQ.md#i2c1-driver-existente-aquisição-ainda-não-qualificada).
+Mac e Ubuntu ARM64 executaram o módulo real contra APIs kernel sintéticas: 107 cenários por plataforma e 22 mutações compiladas terminaram por SIGABRT com asserção. O build real produziu um módulo ELF64/AArch64 de 13.720 bytes, SHA256 `95bc260634fe6fa065e00f15553a4059fbc6acf95db2f2079cb4361b7b9a180e`, vermagic `7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64`. [Prova sanitizada](evidence/n71-i2c-pin-cycles.json), [plano e decisão](../.agents/plans/n71-i2c-pin-cycle.md), [energia/I2C1](N71_HDQ.md#i2c1-driver-existente-aquisição-ainda-não-qualificada).
 
 ## Contrato da fonte fixada
 
@@ -26,9 +26,9 @@ Referências gerais: [GPIO consumer](https://docs.kernel.org/driver-api/gpio/con
 
 ## Sequência do módulo
 
-1. Exige `run=1`, board N71, I2C1 disabled sem filhos/platform/adapter e recurso exato. Confere GPIO Apple ativo,208 pinos e recurso `20f100000/100000`.
+1. Exige `run=1`, board N71, I2C1 disabled sem filhos/platform/adapter e recurso exato. Confere GPIO Apple ativo, 208 pinos e recurso `20f100000/100000`.
 2. Mantém `device_lock` do provider durante toda a operação. Identifica gpio_device por fwnode, valida label contra o provider e confirma que a resolução por label retorna o mesmo objeto.
-3. Obtém amostra inicial dos dois pinos e recusa incoerência/mux fora do alvo. Registra um consumidor root único e uma tabela de lookup própria para offsets115/114, flags padrão.
+3. Obtém amostra inicial dos dois pinos e recusa incoerência/mux fora do alvo. Registra um consumidor root único e uma tabela de lookup própria para offsets 115/114, flags padrão.
 4. Pede os dois descriptors via `gpiod_get_index(..., GPIOD_ASIS)`, verifica identidade e offset, compara os registros enquanto a reserva está ativa, libera em ordem inversa e confere o readback posterior. Repete uma vez no mesmo insmod.
 5. Remove tabela, consumidor e referências antes de soltar o provider. Em erro conserva o primeiro errno e registra separadamente erro de readback após liberação. Não tenta restaurar registradores inteiros por suposição.
 
@@ -54,9 +54,9 @@ readelf -h "$N71_PIN_MODULE_DIR/n71-i2c-pin-cycle.ko"
 nm -u "$N71_PIN_MODULE_DIR/n71-i2c-pin-cycle.ko"
 ```
 
-O build de Image preservado não tem `Module.symvers` agregado, gerando aviso genérico do modpost. `KBUILD_EXTRA_SYMBOLS` forneceu o vmlinux.symvers correto; todos os39 imports foram conferidos individualmente contra seus exports, sem ausências. Não foi usado KBUILD_MODPOST_WARN. Fonte, patch, configuração, Image e exports permaneceram iguais antes/depois. AST e Flake8 fatal passaram; não há type checker Python configurado.
+O build de Image preservado não tem `Module.symvers` agregado, gerando aviso genérico do modpost. `KBUILD_EXTRA_SYMBOLS` forneceu o vmlinux.symvers correto; todos os 39 imports foram conferidos individualmente contra seus exports, sem ausências. Não foi usado KBUILD_MODPOST_WARN. Fonte, patch, configuração, Image e exports permaneceram iguais antes/depois. AST e Flake8 fatal passaram; não há type checker Python configurado.
 
-O gate já integra a descoberta `test_*.py` da CI Ubuntu/macOS. CI verifica software, sem acesso ao iPhone.
+O gate integra a descoberta `test_*.py` da CI Ubuntu/macOS. As duas execuções do head exato `ba9473c` concluíram com sucesso, com seis jobs aprovados. Os quatro logs de fonte confirmaram a execução do gate novo, 107 cenários/22 mutações por job. [Prova terminal da CI](evidence/n71-i2c-pin-cycles-ci.json). CI verifica software, sem acesso ao iPhone.
 
 ## Próximo teste físico agrupado
 
