@@ -11,6 +11,7 @@
 #include "n71-pcie-scan-link-target.h"
 #include "n71-pcie-pme-control.h"
 #include "n71-pcie-resource-write.h"
+#include "n71-wlan-msi-host.h"
 
 struct n71_scan_host {
 	struct device *dev;
@@ -20,6 +21,7 @@ struct n71_scan_host {
 	struct n71_link_target target;
 	struct n71_pme_state pme;
 	struct n71_resource_write_state resources;
+	struct n71_wlan_msi_host msi;
 	bool config_pending;
 	bool bus_held;
 	bool resource_attempted, resources_assigned, window_claimed;
@@ -186,6 +188,19 @@ static int n71_scan_report_device(struct pci_dev *dev, void *context)
 	error = pci_read_config_word(dev, PCI_COMMAND, &command);
 	if (error || (command & PCI_COMMAND_MASTER) || dev->driver)
 		return n71_scan_report_error(host, -EACCES);
+	if (host->msi.bridge) {
+		struct irq_domain *domain = host->msi.native.domain;
+		struct pci_host_bridge *bridge = host->msi.bridge;
+
+		if (!host->msi.associated || !domain || !bridge->bus ||
+		    dev_get_msi_domain(&bridge->dev) != domain ||
+		    dev_get_msi_domain(&bridge->bus->dev) != domain ||
+		    dev_get_msi_domain(&dev->bus->dev) != domain ||
+		    dev_get_msi_domain(&dev->dev) != domain)
+			return n71_scan_report_error(host, -EACCES);
+		dev_info(host->dev, "N71_PCIE_SCAN_MSI bus=%u devfn=%02x inherited=1; no IRQ allocation\n",
+			 dev->bus->number, dev->devfn);
+	}
 	dev_info(host->dev, "N71_PCIE_SCAN_DEVICE bus=%u devfn=%02x id=%04x%04x class=%06x command=%04x driver=none\n",
 		 dev->bus->number, dev->devfn, dev->device, dev->vendor, dev->class, command);
 	if (root)
@@ -254,6 +269,9 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 		host->held_stop_error = stop_error;
 		dev_info(host->dev, "N71_PCIE_SCAN_BUS_REMOVED bus-null=1 stop-error=%d\n", stop_error);
 	}
+	error = n71_wlan_msi_host_release(&host->msi);
+	if (error)
+		return error;
 	io = (struct n71_scan_io){host, n71_scan_raw_read, n71_scan_raw_write};
 	target_io = (struct n71_link_target_io){host, n71_scan_target_read, n71_scan_target_write};
 	if (host->resources.pending) {
@@ -301,8 +319,31 @@ static int n71_pcie_scan_cleanup(struct n71_diagnostic *state)
 	return stop_error;
 }
 
-static int n71_pcie_scan_with_mode(struct device *dev, struct n71_diagnostic *state,
-				  bool disable_pme, bool hold_bus)
+struct n71_scan_options {
+	bool disable_pme, hold_bus, msi_parent;
+};
+
+static int n71_scan_msi_acquire(struct pci_host_bridge *bridge, struct device *dev)
+{
+	struct n71_scan_host *host = pci_host_bridge_priv(bridge);
+	struct device_node *parent = of_irq_find_parent(dev->of_node);
+	struct irq_fwspec spec = {.param_count = 3, .param = {0, 264, IRQ_TYPE_EDGE_RISING}};
+	const struct n71_wlan_msi_request message = {
+		.irq = {3, 32, 256, 1, 8, 8, 0}, .address_lo = 0xbffff000U,
+	};
+	struct n71_wlan_msi_host_request request = {.bridge = bridge, .message = &message, .spec = &spec};
+	int error;
+
+	if (!parent)
+		return -ENODEV;
+	spec.fwnode = of_fwnode_handle(parent);
+	error = n71_wlan_msi_host_acquire(&host->msi, &request);
+	of_node_put(parent);
+	return error;
+}
+
+static int n71_pcie_scan_with_options(struct device *dev, struct n71_diagnostic *state,
+				     const struct n71_scan_options *options)
 {
 	struct pci_host_bridge *bridge;
 	struct n71_scan_host *host;
@@ -313,11 +354,14 @@ static int n71_pcie_scan_with_mode(struct device *dev, struct n71_diagnostic *st
 	unsigned int windows = 0;
 	struct n71_control_reference reference;
 	unsigned int function, word;
+	bool disable_pme = options->disable_pme, hold_bus = options->hold_bus;
 	int error, restore;
 
 	if (state->scan_bridge)
 		return -EBUSY;
 	if (hold_bus && !disable_pme)
+		return -EINVAL;
+	if (options->msi_parent && !hold_bus)
 		return -EINVAL;
 	bridge = pci_alloc_host_bridge(sizeof(*host));
 	if (!bridge)
@@ -373,6 +417,13 @@ static int n71_pcie_scan_with_mode(struct device *dev, struct n71_diagnostic *st
 	bridge->no_inc_mrrs = true;
 	bridge->native_aer = bridge->native_pcie_hotplug = bridge->native_shpc_hotplug = 0;
 	bridge->native_pme = bridge->native_ltr = bridge->native_dpc = bridge->native_cxl_error = 0;
+	if (options->msi_parent) {
+		error = n71_scan_msi_acquire(bridge, dev);
+		dev_info(dev, "N71_PCIE_SCAN_MSI_PREPARED error=%d associated=%u; no IRQ allocation\n",
+			 error, host->msi.associated);
+		if (error)
+			goto restore;
+	}
 	pci_lock_rescan_remove();
 	error = n71_link_target_prepare(&target_io, &host->target);
 	dev_info(dev, "N71_PCIE_SCAN_TARGET_PREPARED error=%d pending=%u prepared=%u; no retrain\n",
@@ -422,6 +473,19 @@ restore:
 		 error, report.devices, report.endpoints, report.reads,
 		 report.config.attempts, report.config.writes, report.config.refusals);
 	return error;
+}
+
+static int n71_pcie_scan_with_mode(struct device *dev, struct n71_diagnostic *state,
+				  bool disable_pme, bool hold_bus)
+{
+	const struct n71_scan_options options = {.disable_pme = disable_pme, .hold_bus = hold_bus};
+	return n71_pcie_scan_with_options(dev, state, &options);
+}
+
+static inline int n71_pcie_scan_hold_msi(struct device *dev, struct n71_diagnostic *state)
+{
+	const struct n71_scan_options options = {.disable_pme = true, .hold_bus = true, .msi_parent = true};
+	return n71_pcie_scan_with_options(dev, state, &options);
 }
 
 static int n71_pcie_scan_with_pme(struct device *dev, struct n71_diagnostic *state,

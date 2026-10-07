@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
 #include "n71-pcie-contract.h"
 typedef uint16_t u16;
 #define __iomem
@@ -36,14 +39,15 @@ typedef int spinlock_t;
 #define spin_lock_irqsave(lock, flags) do { assert(!*(lock)); *(lock) = 1; (flags) = 0; } while (0)
 #define spin_unlock_irqrestore(lock, flags) do { assert(*(lock)); *(lock) = 0; (void)(flags); } while (0)
 
-struct device { struct device *parent; };
+struct device { struct device *parent; struct device_node *of_node; struct irq_domain *msi_domain; };
 struct resource { const char *name; uint64_t start, end; unsigned long flags; struct resource *parent, *child; };
 static struct resource iomem_resource, foreign_resource;
 static uint64_t resource_size(const struct resource *res) { return res->end - res->start + 1; }
 struct resource_entry { struct resource_entry *next; struct resource *res; uint64_t offset; };
 struct resource_list { struct resource_entry *first; };
-struct pci_bus { void *sysdata; unsigned int number; struct pci_dev *self; unsigned int bridge_ctl; };
+struct pci_bus { struct device dev; void *sysdata; unsigned int number; struct pci_dev *self; unsigned int bridge_ctl; };
 struct pci_dev {
+	struct device dev;
 	struct pci_bus *bus;
 	unsigned int devfn, vendor, device, class;
 	void *driver;
@@ -62,6 +66,7 @@ struct pci_host_bridge {
 	void *sysdata;
 	int (*enable_device)(struct pci_host_bridge *, struct pci_dev *);
 	bool no_ext_tags, no_inc_mrrs;
+	bool msi_domain;
 	unsigned int native_aer, native_pcie_hotplug, native_shpc_hotplug, native_pme;
 	unsigned int native_ltr, native_dpc, native_cxl_error;
 	struct resource_list windows;
@@ -102,6 +107,7 @@ static struct {
 	char log[16384];
 	size_t used;
 } mock;
+#include "n71_pcie_msi_scan_fixture.h"
 
 static u32 readl(const void *address)
 {
@@ -213,6 +219,7 @@ static struct pci_host_bridge *pci_alloc_host_bridge(size_t size)
 		return NULL;
 	}
 	mock.allocations++;
+	mock.bridge = bridge;
 	return bridge;
 }
 static void *pci_host_bridge_priv(struct pci_host_bridge *bridge) { return bridge->private; }
@@ -221,11 +228,13 @@ static void pci_free_host_bridge(struct pci_host_bridge *bridge)
 	struct resource_entry *entry = bridge->windows.first;
 	while (entry) { struct resource_entry *next = entry->next; free(entry); entry = next; }
 	assert(mock.allocations == 1 && (!mock.scans || mock.removes == 1));
+	assert(!msi_mock.domains && !msi_mock.names && !msi_mock.node.refs && !bridge->dev.msi_domain);
 	assert(!mock.resource_mode || (!iomem_resource.child && !mock.references));
 	assert((mock.ecam[0x80a0 / 4] & 0xffff) == 1);
 	if (mock.pme)
 		assert(mock.ecam[0x10004c / 4] & 0x100);
 	free(bridge); mock.allocations--;
+	mock.bridge = NULL;
 }
 static void pci_add_resource_offset(struct resource_list *list, struct resource *res, uint64_t offset)
 {
@@ -265,6 +274,7 @@ static int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
 	mock.endpoint = (struct pci_dev){.bus = &mock.endpoint_bus, .vendor = 0x14e4,
 		.device = 0x43a3, .class = 0x028000};
 	mock.root.subordinate = &mock.endpoint_bus; mock.endpoint_bus.self = &mock.root;
+	msi_fixture_inherit(bridge);
 	mock.endpoint.resource[0] = (struct resource){.start = 0x7c0000000ULL,
 		.end = 0x7c0003fffULL, .flags = IORESOURCE_MEM | IORESOURCE_MEM_64};
 	if (mock.fault == SCAN_PARTIAL_FAIL) {
@@ -432,7 +442,11 @@ static void pci_bus_assign_resources(const struct pci_bus *bus)
 
 static void initialize_case(enum fault index, bool pme)
 {
+#ifdef __linux__
+	assert(prctl(PR_SET_DUMPABLE, 0) == 0);
+#endif
 	memset(&mock, 0, sizeof(mock)); mock.fault = index;
+	msi_fixture_initialize();
 	mock.pme = pme;
 	mock.ecam = calloc(0x1000000 / 4, sizeof(u32)); assert(mock.ecam);
 	mock.ecam[0x8000 / 4] = 0x1004106b; mock.ecam[0x100000 / 4] = 0x43a314e4;
@@ -608,6 +622,83 @@ static unsigned int exercise_resource_assignment(void)
 	return fault;
 }
 
+static unsigned int exercise_msi_scan(void)
+{
+	struct device dev;
+	struct n71_diagnostic state;
+	unsigned int cases = 0;
+	/* Mutations: skip opt-in/acquire, associate after scan, omit inherited identity or release before bus removal. */
+	for (unsigned int kind = 0; kind < 9; kind++) {
+		initialize_case(PME_NONE, true); msi_mock.requested = true;
+		dev = (struct device){.of_node = &msi_mock.node};
+		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
+		if (kind < 4) {
+			if (kind == 1) msi_mock.missing_parent = true;
+			if (kind >= 2) msi_mock.failure = kind - 1;
+		} else msi_mock.drift = kind - 3;
+		int error = n71_pcie_scan_hold_msi(&dev, &state);
+		assert(error == (!kind ? 0 : kind == 1 ? -ENODEV : kind == 2 ? -EINVAL : kind == 3 ? -ENOMEM : -EACCES));
+		if (!kind) {
+			struct n71_scan_host *host = pci_host_bridge_priv(state.scan_bridge);
+			assert(host->msi.associated && host->msi.bridge == state.scan_bridge);
+			assert(msi_mock.domains == 1 && msi_mock.names == 1 && msi_mock.node.refs == 1);
+			assert(state.scan_bridge->dev.msi_domain == &msi_mock.domain);
+			assert(mock.root.dev.msi_domain == &msi_mock.domain && mock.endpoint.dev.msi_domain == &msi_mock.domain);
+			assert(mock.endpoint_bus.dev.msi_domain == &msi_mock.domain);
+			assert(strstr(mock.log, "N71_PCIE_SCAN_MSI bus=0 devfn=08 inherited=1"));
+			assert(strstr(mock.log, "N71_PCIE_SCAN_MSI bus=1 devfn=00 inherited=1"));
+			assert(!mock.removes && !mock.pme_restores && !mock.target_restores);
+			assert(state.scan_bridge->enable_device(state.scan_bridge, &mock.endpoint) == -EPERM);
+			assert(n71_pcie_scan_cleanup(&state) == 0);
+		}
+		if (kind == 4) {
+			/* Foreign bridge identity blocks cleanup even after core removed the bus. */
+			assert(state.scan_bridge && !state.scan_bridge->bus && mock.removes == 1);
+			struct n71_scan_host *host = pci_host_bridge_priv(state.scan_bridge);
+			assert(host->msi.associated && state.scan_bridge->dev.msi_domain == &msi_mock.foreign);
+			assert(msi_mock.domains == 1 && !mock.pme_restores && !mock.target_restores);
+			state.scan_bridge->dev.msi_domain = &msi_mock.domain;
+			assert(n71_pcie_scan_cleanup(&state) == 0);
+		}
+		assert(!state.scan_bridge && !mock.allocations && !msi_mock.node.refs && !msi_mock.names && !msi_mock.domains);
+		assert(!mock.locked && mock.scans <= 1);
+		free(mock.ecam); cases++;
+	}
+	/* Mutations: ignore incomplete child/native release and restore/free owners too early. */
+	for (unsigned int kind = 0; kind < 3; kind++) {
+		initialize_case(PME_NONE, true); msi_mock.requested = true;
+		dev = (struct device){.of_node = &msi_mock.node};
+		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
+		if (kind == 2) { msi_mock.failure = 3; msi_mock.release_error = -EIO; }
+		assert(n71_pcie_scan_hold_msi(&dev, &state) == (kind == 2 ? -ENOMEM : 0));
+		struct n71_scan_host *host = pci_host_bridge_priv(state.scan_bridge);
+		if (!kind) host->msi.native.child = &msi_mock.child;
+		if (kind == 1) msi_mock.release_error = -EIO;
+		unsigned int writes = mock.writes;
+		assert(n71_pcie_scan_cleanup(&state) == (!kind ? -EBUSY : -EIO));
+		assert(state.scan_bridge && !state.scan_bridge->bus && !host->msi.associated);
+		assert(host->msi.bridge == state.scan_bridge && host->config_pending && msi_mock.node.refs == 1);
+		assert(!mock.pme_restores && !mock.target_restores && mock.writes == writes);
+		assert(n71_pcie_scan_hold_msi(&dev, &state) == -EBUSY);
+		assert(n71_pcie_scan_cleanup(&state) == (!kind ? -EBUSY : -EIO) && mock.writes == writes);
+		host->msi.native.child = NULL; msi_mock.release_error = 0;
+		assert(n71_pcie_scan_cleanup(&state) == 0 && !state.scan_bridge);
+		assert(!msi_mock.node.refs && !msi_mock.names && !msi_mock.domains && !mock.allocations);
+		assert(msi_mock.acquire_calls == 1 && mock.scans == (kind == 2 ? 0U : 1U));
+		free(mock.ecam); cases++;
+	}
+	for (unsigned int kind = 0; kind < 2; kind++) {
+		initialize_case(PME_NONE, true);
+		dev = (struct device){.of_node = &msi_mock.node};
+		state = (struct n71_diagnostic){.ecam = mock.ecam, .port = mock.port};
+		const struct n71_scan_options options = {.disable_pme = !kind, .hold_bus = kind, .msi_parent = true};
+		assert(n71_pcie_scan_with_options(&dev, &state, &options) == -EINVAL);
+		assert(!mock.allocations && !mock.scans && !msi_mock.acquire_calls);
+		free(mock.ecam); cases++;
+	}
+	return cases;
+}
+
 int main(void)
 {
 	const int expected[] = {0, -EPERM, -EPERM, -ENOMEM, -ENODEV, -EACCES,
@@ -681,5 +772,7 @@ int main(void)
 	puts("N71_PCIE_HELD_BUS_OK cases=16");
 	assert(exercise_resource_assignment() == 20);
 	puts("N71_PCIE_RESOURCE_ASSIGN_OK cases=20; PCI allocator synthetic");
+	assert(exercise_msi_scan() == 14);
+	puts("N71_PCIE_MSI_SCAN_OK cases=14; inherited domains synthetic");
 	return 0;
 }

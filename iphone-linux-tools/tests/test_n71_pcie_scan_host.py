@@ -48,6 +48,7 @@ class N71PcieScanHost(unittest.TestCase):
         self.assertIn('N71_PCIE_SCAN_HOST_OK cases=29', result.stdout)
         self.assertIn('N71_PCIE_HELD_BUS_OK cases=16', result.stdout)
         self.assertIn('N71_PCIE_RESOURCE_ASSIGN_OK cases=20', result.stdout)
+        self.assertIn('N71_PCIE_MSI_SCAN_OK cases=14', result.stdout)
         print(result.stdout.strip(), flush=True)
 
     def test_lifecycle_mutations_die_by_assertion(self):
@@ -106,6 +107,42 @@ class N71PcieScanHost(unittest.TestCase):
                     self.assertEqual(result.returncode, -6, result.stderr)
                     self.assertIn('assert', result.stderr.lower())
                     print(f'N71_SCAN_HOST_ASSERTION_KILL {name}', flush=True)
+        finally:
+            resource.setrlimit(resource.RLIMIT_CORE, limits)
+
+    def test_msi_scan_mutations_die_by_assertion(self):
+        mutations = (
+            ('skip-msi-prepare', 'error = n71_scan_msi_acquire(bridge, dev);',
+             'error = false ? n71_scan_msi_acquire(bridge, dev) : 0;'),
+            ('ignore-msi-prepare-error', 'error, host->msi.associated);\n\t\tif (error)',
+             'error, host->msi.associated);\n\t\tif (false)'),
+            ('msi-without-held-bus', 'if (options->msi_parent && !hold_bus)', 'if (false)'),
+            ('skip-parent-put', 'of_node_put(parent);', '(void)parent;'),
+            ('missing-pre-scan-opt-in', '.hold_bus = true, .msi_parent = true',
+             '.hold_bus = true, .msi_parent = false'),
+            ('msi-by-default', '.disable_pme = disable_pme, .hold_bus = hold_bus}',
+             '.disable_pme = disable_pme, .hold_bus = hold_bus, .msi_parent = true}'),
+            ('omit-bridge-inheritance', 'dev_get_msi_domain(&bridge->dev) != domain ||', 'false ||'),
+            # Root reports reach the same bus through both pointers; remove both guards together.
+            ('omit-root-bus-inheritance',
+             'dev_get_msi_domain(&bridge->bus->dev) != domain ||\n\t\t    dev_get_msi_domain(&dev->bus->dev) != domain ||',
+             'false || false ||'),
+            ('omit-device-bus-inheritance', 'dev_get_msi_domain(&dev->bus->dev) != domain ||', 'false ||'),
+            ('omit-device-inheritance', 'dev_get_msi_domain(&dev->dev) != domain)', 'false)'),
+            ('skip-msi-cleanup', 'error = n71_wlan_msi_host_release(&host->msi);',
+             'error = false ? n71_wlan_msi_host_release(&host->msi) : 0;'),
+            ('ignore-msi-cleanup-error', 'error = n71_wlan_msi_host_release(&host->msi);\n\tif (error)',
+             'error = n71_wlan_msi_host_release(&host->msi);\n\tif (false)'),
+        )
+        limits = resource.getrlimit(resource.RLIMIT_CORE)
+        resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
+        try:
+            for name, before, after in mutations:
+                with self.subTest(mutation=name):
+                    result = self.compile_and_run(mutation=(before, after))
+                    self.assertEqual(result.returncode, -6, 'Compilation/timeout is not a kill: ' + name + result.stderr)
+                    self.assertIn('assert', result.stderr.lower(), name)
+                    print('N71_MSI_SCAN_ASSERTION_KILL ' + name, flush=True)
         finally:
             resource.setrlimit(resource.RLIMIT_CORE, limits)
 

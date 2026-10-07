@@ -173,3 +173,20 @@ Allocation sob root mutex exige descriptor do dispositivo retido, count1/2/4/8, 
 ### Guard de binding confirmado para a próxima integração
 
 A fonte958481f em drivers/pci/pci.h:804–806 recusa match enquanto PCI_DEV_ALLOW_BINDING estiver desligado. drivers/pci/bus.c:370–375 libera esse bit antes de device_initial_probe, no pci_bus_add_device. O diagnóstico atual não chama esse estágio; seu enable_device também permanece negado. Device_add durante scan ainda publica o dispositivo e aciona notifiers IOMMU. Não substituir essa distinção por "scan não registra dispositivo". A F1j irá associar MSI antes do scan, manter binding/enable negados e preservar a bridge até release completo; attachment DART requer configuração antes da publicação/IOMMU e teardown de consumidores antes do provider na fase seguinte.
+
+
+## D9. Associar MSI antes do scan, preservando o diagnóstico padrão
+
+- **Decisão:** F1j integra a lease no n71_scan_host e adiciona options internos para MSI somente com held bus/PME preparado. Os wrappers existentes continuam MSI-off. Novo wrapper hold_msi prepara parent OF e lease antes de pci_scan_root_bus_bridge; report recusa herança divergente na bridge, root bus, bus/dispositivos. Cleanup remove o bus antes de liberar a lease e para em erro nativo antes de restaurar config/resources/liberar bridge. A seleção pelo módulo/getter será F1k depois das fixtures.
+- **Por quê:** o kernel herda o domínio durante device_add/scan. O owner precisa existir antes desse estágio e pode permanecer necessário após bus removal quando filhos têm referências externas. Preservar os wrappers permite verificar os29/16/20 casos antigos junto da nova rota, sem mudar o perfil físico ou bind/DMA.
+- **Alternativas:** aplicar setter em dispositivos já escaneados exige snapshot de várias associações; criar domínio fora do owner da bridge quebra lifetime; ligar o driver antes de attachment DART mistura gates ainda abertos. Rejeitadas.
+- **Reverter:** baixo antes do hardware; API nova opt-in, wrappers atuais intactos. Campo adicional de lease é interno ao módulo, ainda sem seletor/collector.
+- **Onde:** até cinco públicos: este plano, phone/kernel/n71-pcie-scan.h, tests/n71_pcie_scan_host.c, tests/n71_pcie_msi_scan_fixture.h, tests/test_n71_pcie_scan_host.py. O modelo MSI novo fica no header de fixture, mantendo dependências separadas dos casos PCI existentes. O runner de mutações scan-config permanece intacto. As fixtures optional/IO16/PREF64 reutilizam o C base e precisam do gate afetado por essa dependência.
+- **Status:** em implementação offline. As funções existentes do scan estão referenciadas; não há função morta a remover. Estender o lifecycle sem refatorar/remover os caminhos de scan/rollback já comprovados. Firmware, Image/config/exports e Mac permanecem intactos; nenhuma nova sessão física até integração/collector/gates necessários.
+
+### Contratos F1j
+
+- [x] MSI exige hold/PME opt-in; parent OF com referências equilibradas; acquire/associação antes do core scan. Wrappers padrões não criam domínio.
+- [x] Herança nas cinco associações e divergências verificadas na fixture; enable permanece negado e guard de driver/MASTER preservado. Sem IRQ/bind/DMA novo nessa fatia.
+- [x] Bus removido antes da lease; falha nativa conserva bridge/config/power e permite retry sem rescan/restauração antecipada. Falhas parciais de acquire/scan exercitadas.
+- [x] Gates afetados Mac/ARM64 passaram152 cenários/117 mutações por assertion cada; ABI completoW=1/Werror/modpost/ELF/vermagic com wrapper MSI privado,55 inputs/baselines conferidos.57 mutações e três métodos antigos reutilizados por hashes/AST intactos. Duas falhas iniciais de compile não contam como kills; selectors corrigidos e somente o método MSI repetido. F1k selecionará a rota no caller/getter.
