@@ -17,7 +17,7 @@ class N71PcieScanHost(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='n71-scan-host-') as directory:
             folder = Path(directory)
             (folder / 'linux').mkdir()
-            for name in ('pci.h', 'spinlock.h', 'ioport.h'):
+            for name in ('pci.h', 'spinlock.h', 'ioport.h', 'iommu.h'):
                 (folder / 'linux' / name).write_text('/* PCI API supplied by the harness. */\n')
             for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)

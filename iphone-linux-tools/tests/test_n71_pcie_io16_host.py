@@ -48,7 +48,7 @@ class IO16HostTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='n71-io16-host-') as directory:
             folder = Path(directory)
             (folder / 'linux').mkdir()
-            for name in ('pci.h', 'spinlock.h', 'ioport.h'):
+            for name in ('pci.h', 'spinlock.h', 'ioport.h', 'iommu.h'):
                 (folder / 'linux' / name).write_text('/* PCI API supplied by the harness. */\n')
             header, binary = folder / 'n71-pcie-resource-assign.h', folder / 'host'
             for name, before, after in (('baseline', None, None),) + MUTATIONS:
