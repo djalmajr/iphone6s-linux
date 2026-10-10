@@ -180,3 +180,28 @@ def action(text, expected):
         else:
             require(state['pending'] == 0, 'Successful driver release still owns resources')
     return state
+
+
+def cleanup_cause(session, text):
+    if not capable(session):
+        return 0
+    import n71_driver_runtime_stage as stage
+    import n71_session_history as history
+    entries = stage.fields(session)['driver_runtime_journal']
+    state = live(text, required=True); immutable(session, text, state)
+    require(re.findall(r'^N71_BOOT_ID (' + stage.BOOT + ')$', text, re.M) == [session.result.get('boot_id')],
+            'Driver cleanup belongs to another boot')
+    if not entries:
+        require(not state['pending'] and not state['published'], 'Driver cleanup lacks its native lifetime')
+        return 0
+    entry = entries[-1]; completion = entry['completion']
+    require(entry['action'] == 'release' and completion is not None and completion['native']['error'] == 0
+            and not completion['state']['pending'], 'Driver cleanup lacks a proved successful release')
+    require(not state['pending'] and not state['held'] and not state['ready'], 'Driver cleanup still owns its host')
+    lines = history.kernel_lines(text)
+    require(lines[:len(entry['history'])] == entry['history'], 'Driver cleanup release prefix changed')
+    native = action('\n'.join(line for line in lines[len(entry['history']):] if ACTION_MARKER in line), 'release')
+    require(native == completion['native'], 'Driver cleanup release result differs')
+    error = completion['state']['error']
+    require(not error or state['error'] == error, 'Driver cleanup discarded its first cause')
+    return error

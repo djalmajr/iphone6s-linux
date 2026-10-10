@@ -3,6 +3,7 @@ import re
 import n71_iommu_result
 import n71_resource_result
 import n71_scan_held_result
+import n71_driver_runtime_result
 
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
@@ -178,6 +179,10 @@ def cleanup(session, proof):
     verify_readback(session, proof)
     provider = n71_iommu_result.cleanup(session, proof)
     provider_error = provider.get('provider_operation_error', 0) if provider is not None else 0
+    driver_error = n71_driver_runtime_result.cleanup_cause(session, proof)
+    if driver_error:
+        return n71_resource_result.cleanup_errors(proof, session.resource_assignment,
+            {'driver_error': driver_error, 'provider_error': provider_error})
     return n71_resource_result.cleanup(proof, session.resource_assignment, provider_error=provider_error)
 
 

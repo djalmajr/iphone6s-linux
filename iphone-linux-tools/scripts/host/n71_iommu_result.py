@@ -249,6 +249,7 @@ def cleanup(session, text):
                            'iommu': dict.fromkeys(IOMMU_FIELDS, 0) | {'requested': 1, 'ready': caller['ready']}},
             'MSI/IOMMU ownership still pending')
     require(n71_scan_target_result.is_clean(caller), 'IOMMU caller cleanup incomplete')
+    driver_error = n71_driver_runtime_result.cleanup_cause(session, text)
     unbound = unbound_prepare_failure(text, caller)
     if 'N71_PCIE_SESSION_HELD ' in text:
         result = acquisition(text)
@@ -299,6 +300,8 @@ def cleanup(session, text):
             if cycle['control_changed']:
                 assignment = n71_resource_result.event(text)
                 first_error = (assignment['error'] if assignment else 0) or cycle['error']
+                if driver_error and not (assignment and assignment['error']):
+                    first_error = driver_error
                 require(cycle == dict(error=-5, snapshots=4, reads=152, guards=156, quiet=17, writes=16,
                                       attempted=1, stopped=1, restored=1, control_changed=1)
                         and (error, running, pending) == (0, 1, 1)

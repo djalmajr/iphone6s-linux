@@ -106,10 +106,20 @@ def outcome(text):
 
 
 def cleanup(text, assignment=None, *, provider_error=0):
+    return cleanup_errors(text, assignment, {'driver_error': 0, 'provider_error': provider_error})
+
+
+def cleanup_errors(text, assignment, errors):
+    require(isinstance(errors, dict) and set(errors) == {'driver_error', 'provider_error'},
+            'Resource cleanup cause schema differs')
+    driver_error, provider_error = errors['driver_error'], errors['provider_error']
     error = assignment['error'] if assignment else 0
     require(type(error) is int and -4095 <= error <= 0, 'Invalid assignment primary error')
+    require(type(driver_error) is int and -4095 <= driver_error <= 0, 'Invalid driver primary error')
     require(type(provider_error) is int and -4095 <= provider_error <= 0, 'Invalid provider operation error')
     primary_error = error or provider_error
+    if not error and driver_error:
+        primary_error = driver_error
     result = event(text)
     require(result == (assignment['event'] if assignment else None), 'Assignment history changed')
     state = live_status(text)
@@ -159,6 +169,9 @@ def cleanup(text, assignment=None, *, provider_error=0):
     if provider_error:
         proof['cleanup_primary_error'] = primary_error
         proof['provider_operation_error'] = provider_error
+    if driver_error:
+        proof['cleanup_primary_error'] = primary_error
+        proof['driver_primary_error'] = driver_error
     return proof
 
 
