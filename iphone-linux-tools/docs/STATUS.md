@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — staging e caminho do firmware qualificados isoladamente
+## Checkpoint atual — firmware integrado ao fluxo de sessão
+
+9293239 liga os dados antes dos módulos e o caminho antes de WCC; verifica em observe e restaura após unload antes de cleanup do provider. **Novo5/4; matriz21 testes/35 mutações por plataforma Mac/ARM64**,601 inputs iguais, AST/lint fatal. O gate local do perfil calibrado e pacote reais passou. [Reprodução](N71_BRCMFMAC_RUNTIME.md#integração-de-firmware-ao-coordenador--c6c2-b), [evidência](evidence/n71-firmware-integration-qualified.json).
+
+Ainda falta expor --firmware-dir no entry (C), reaquisição de host no mesmo boot ([issue42](https://github.com/djalmajr/iphone6s-linux/issues/42)), energia e prova física. Nenhuma ação no iPhone nem pedido ao operador. Kernel/imagem/identidades/módulos/defaults/Mac global preservados. Goal e issues9/2/40 continuam abertos; #41 permanece aberta após os cancelamentos da CI d9d2089. Não pedir confirmações rotineiras.
+
+## Histórico — staging e caminho do firmware qualificados isoladamente
 
 Em daad6ba, biblioteca prepara dados por sessão, conserva intent no journal, confere hashes e restaura o caminho do loader somente com stack vazia. **9 testes/10 mutações por plataforma Mac/ARM64**,58 inputs iguais, AST/lint fatal; sysfs real da VM6.8 confirmou bind sem newline e restauração NUL com original vazio restaurado. [Reprodução](N71_BRCMFMAC_RUNTIME.md#staging-e-caminho-temporário-do-firmware--c6c2-a), [evidência](evidence/n71-firmware-session-qualified.json).
 

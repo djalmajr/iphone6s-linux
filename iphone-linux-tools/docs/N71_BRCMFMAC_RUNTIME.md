@@ -657,3 +657,38 @@ python3 -B -m unittest discover -s tests -p test_n71_driver_firmware_session.py 
 O primeiro harness confundia /proc/sys na tradução e, no ARM64, lia stdin mesmo para comandos sem dados. As falhas foram corrigidas; FileExistsError de mutant e timeouts não contaram como kills. Logs permanecem privados. Não há typechecker Python, dependência nova, banco ou configuração global do Mac. Kernel/payload/initramfs/módulos intactos; gates inalterados reutilizados.
 
 A biblioteca ainda precisa ser ligada ao CLI/Session/coordenador (B/C). Prova de requests/regdb/rádio, associação OF/calibração e energia continua pendente. O goal e as issues9/2/40 permanecem abertos; nenhum DFU ou outra intervenção foi solicitado nesta fase.
+
+
+### Integração de firmware ao coordenador — C6c2 B
+
+9293239 liga a bibliotecaA ao fluxo existente. Session.preflight prepara os três dados antes dos módulos/REG_ON. Start define o caminho antes de WCC; observe valida dados/boot/path; stop restaura o valor vazio depois do unload WCC/nativa e antes de liberar o provider PCI/REG_ON. A metadata copiada do source mantém o opt-in; cleanup pode restaurar o path sem arquivos locais perdidos ou dados remotos corrompidos, exigindo stack vazia e ownership exato.
+
+O helper aceita request legado de cinco campos e request com firmware Path/None. Por enquanto a entrada argparse ainda não expõe --firmware-dir; C vai acrescentá-la. É possível conferir localmente o perfil e pacote reais com a API, sem SSH/USB/output:
+
+```python
+from pathlib import Path
+import sys
+root = Path.cwd().resolve()
+sys.path.insert(0, str(root / "scripts/host"))
+import n71_driver_runtime_cli as runtime
+runtime.run(root, {
+    "action": "acquire", "check": True,
+    "profile": root / "runtime/n71-pci-calibration-profile-20261010/deployment.json",
+    "source": None, "output": None,
+    "firmware": root / "runtime/n71-trusted-firmware-20261010",
+})
+```
+
+Esse gate real passou com a imagem, identidades, módulos e dados fixados atuais. Não seleciona o perfil como default. Reprodução da matriz afetada:
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_firmware_runtime_integration.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_cli.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_session.py -v
+```
+
+**Novo gate5 testes/4 mutações; conjunto21 testes/35 mutações AssertionError por plataforma**,601 inputs idênticos,270 AST/lint fatal. CLI/Session/journal/source/coordenador/shell/arquivos são reais. PCI/WCC, SSH/UID0/sysfs e identidades de imagem da fixture são fronteiras modeladas. Provas anteriores com inputs intactos foram reutilizadas; A9/10 e a restauração real do sysfsVM permanecem separados. [Evidência](evidence/n71-firmware-integration-qualified.json).
+
+A fixture mínima recebeu scan_hold e a execução de processos de preflight passou a permitir somente o transporte privado. Âncora/sintaxe de duas mutações antigas foram preservadas no código; todos os20+11 kills legados continuam válidos. Essas falhas de infraestrutura não contaram como kills. Sem typechecker Python, banco/dependência/configuração global nova ou efeito no telefone; desempenho físico não medido.
+
+Reaquisição depois de stop ainda precisa de um modo explícito com source stopped: acquire atual recusa histórico N71_PCIE anterior e não aceita source. A [issue42](https://github.com/djalmajr/iphone6s-linux/issues/42) registra o incremento que permitirá novos ciclos sem outro DFU. Não contornar com apagamento de dmesg ou relaxamento de ownership. C, reaquisição, energia e reprodução completa de regdb precedem a prova física agrupada. Wi-Fi/associação/IRQ/DMA/gauge/carga e o goal continuam pendentes.

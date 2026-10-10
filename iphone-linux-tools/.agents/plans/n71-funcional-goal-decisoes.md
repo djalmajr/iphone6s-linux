@@ -326,3 +326,8 @@ Seleção implementada em `b14a04b` e qualificada em Mac/ARM64 com5 testes/10 mu
 ### D34 — resultado A e escopo B
 
 Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA idênticos; Session.capture/journal/shell/filesystem reais e SSH/sysfs/UID0 modelados. Parâmetro real da VM6.8 aceitou bind sem newline e restauração NUL com original vazio restaurado. B terá quatro arquivos exatos, incluindo gate de integração. O bundle do composer não depende destes imports; lista preservada após inspeção. Nenhuma integração/rádio/iPhone executados ainda. [Evidência](../../docs/evidence/n71-firmware-session-qualified.json).
+
+
+### D34 — integração B qualificada
+
+9293239 liga staging antes dos módulos/REG_ON, bind antes de WCC, verify em observe e restore depois de unload/nativa antes de held.release. Requests legados preservados. Novo gate5/4 e matriz21/35 em Mac/ARM64,601 inputs idênticos, AST/lint fatal; --check do perfil real/pacote real passou. C ainda precisa expor --firmware-dir. Reaquisição same-boot após stop foi registrada na issue42, para evitar DFU entre ajustes. [Evidência](../../docs/evidence/n71-firmware-integration-qualified.json). Fonte, kernel, imagem, defaults e Mac global preservados; nenhuma ação no iPhone.
