@@ -2,6 +2,9 @@
 /* Compile the real caller and genpd backend; kernel API fixtures are not hardware proof. */
 #include <stdarg.h>
 #include "n71_i2c_genpd_fixture.c"
+#ifndef EUCLEAN
+#define EUCLEAN 117
+#endif
 
 #define N71_PMGR_PATH "/soc/power-management@20e000000"
 #define PAGE_SIZE 4096
@@ -62,6 +65,66 @@ static struct device_node *diagnostic_find_node(const char *path)
 #define __iomem
 #define N71_CONTROLLER_INTEGRATION
 #include "n71_i2c_controller_observe.c"
+/* Pin/controller dependencies have separate real-header gates and kernel builds. */
+#define N71_I2C_CONTROLLER_H
+#define N71_I2C_PIN_OWNER_H
+enum { N71_I2C_SMSTA=1, N71_I2C_CTL=4 };
+struct n71_i2c_pin_owner { int cleanup_error; bool cleanup_pending,selected,held; };
+struct n71_i2c_controller { int cleanup_error; bool claimed,restore_pending,clock_enabled; u32 saved[5]; };
+struct n71_i2c_controller_request {
+	struct device *consumer;
+	void *pin_context;
+	const struct n71_i2c_power_state *power;
+	int (*verify_pins)(void *);
+};
+static int config_pin_acquire_error, config_pin_release_error, config_controller_acquire_error;
+static int config_controller_release_error;
+static unsigned int config_pin_acquires, config_pin_releases, config_controller_acquires;
+static bool config_pins_live, config_controller_live;
+static bool n71_i2c_pin_owner_clean(const struct n71_i2c_pin_owner *owner)
+{ return !owner->held && !owner->cleanup_pending && !owner->selected; }
+static bool n71_i2c_controller_clean(const struct n71_i2c_controller *state)
+{ return !state->claimed && !state->restore_pending && !state->clock_enabled; }
+static int n71_i2c_pin_owner_acquire(struct device *device, struct n71_i2c_pin_owner *owner)
+{
+	assert(device==&consumer && device->registered && n71_i2c_pin_owner_clean(owner));
+	assert(!config_pins_live && !config_controller_live && !virtual_device.refs);
+	config_pin_acquires++;
+	if (config_pin_acquire_error && !config_pin_release_error) return config_pin_acquire_error;
+	owner->held=owner->selected=owner->cleanup_pending=config_pins_live=true;
+	return config_pin_acquire_error;
+}
+static int n71_i2c_pin_owner_verify(void *context)
+{ struct n71_i2c_pin_owner *owner=context; assert(owner->held && owner->selected && config_pins_live); return 0; }
+static int n71_i2c_pin_owner_release(struct n71_i2c_pin_owner *owner)
+{
+	assert(!config_controller_live);
+	if (n71_i2c_pin_owner_clean(owner)) return 0;
+	assert(config_pins_live && owner->held); config_pin_releases++;
+	if (config_pin_release_error) { owner->cleanup_error=config_pin_release_error; return config_pin_release_error; }
+	*owner=(struct n71_i2c_pin_owner){0}; config_pins_live=false; return 0;
+}
+static int n71_i2c_controller_acquire(const struct n71_i2c_controller_request *request,
+		struct n71_i2c_controller *state)
+{
+	assert(request->consumer==&consumer && request->power->active && request->power->usage_held);
+	assert(request->verify_pins==n71_i2c_pin_owner_verify && request->verify_pins(request->pin_context)==0);
+	assert(n71_i2c_controller_clean(state) && !config_controller_live); config_controller_acquires++;
+	state->saved[N71_I2C_CTL]=0x2a; state->saved[N71_I2C_SMSTA]=0x08010100;
+	if (config_controller_acquire_error && !config_controller_release_error) return config_controller_acquire_error;
+	state->claimed=state->restore_pending=state->clock_enabled=config_controller_live=true;
+	return config_controller_acquire_error;
+}
+static int n71_i2c_controller_release(const struct n71_i2c_controller_request *request,
+		struct n71_i2c_controller *state)
+{
+	if (n71_i2c_controller_clean(state)) return 0;
+	assert(config_controller_live && config_pins_live && request->power->active && request->power->usage_held);
+	assert(request->verify_pins(request->pin_context)==0);
+	if (config_controller_release_error) { state->cleanup_error=config_controller_release_error; return config_controller_release_error; }
+	state->claimed=state->restore_pending=state->clock_enabled=config_controller_live=false;
+	state->cleanup_error=0; return 0;
+}
 #include "n71-i2c-power-diagnostic.c"
 #undef of_find_node_by_path
 
@@ -73,6 +136,10 @@ static void caller_reset(void)
 	diagnostic_pmgr=diagnostic_node=NULL; diagnostic_ready=diagnostic_retained=false;
 	run=true; root_error=root_validation_error=unregisters=0; missing_node=-1; module_live=true; last_log[0]=0;
 	observe_reset(); controller_log[0]=0;
+	assert(!config_pins_live && !config_controller_live);
+	diagnostic_pins=(struct n71_i2c_pin_owner){0}; diagnostic_controller=(struct n71_i2c_controller){0};
+	config_pin_acquire_error=config_pin_release_error=config_controller_acquire_error=config_controller_release_error=0;
+	config_pin_acquires=config_pin_releases=config_controller_acquires=0;
 }
 static void caller_clean(void)
 {
@@ -175,6 +242,37 @@ int main(void)
 	caller_reset(); caller_init(); suspend_error=-ETIMEDOUT; assert(n71_diagnostic_action("inspect",NULL)==-ETIMEDOUT);
 	assert(observe_reads==6 && observe_releases==1 && module_refs==1 && diagnostic_retained && !detaches); cases++;
 	suspend_error=0; assert(n71_diagnostic_action("cleanup",NULL)==0); caller_idle(); caller_exit(); cases++;
+	/* Mutations captured: power/module release before controller or pin cleanup. */
+	caller_reset(); assert(n71_diagnostic_action("configure",NULL)==-ENODEV); caller_clean(); cases++;
+	caller_reset(); caller_init(); assert(n71_diagnostic_action("configure\n",NULL)==0);
+	assert(config_pin_acquires==1 && config_pin_releases==1 && config_controller_acquires==1 && put_calls==1);
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_pin_acquire_error=-ENXIO;
+	assert(n71_diagnostic_action("configure",NULL)==-ENXIO && !attaches && !config_controller_acquires);
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_pin_acquire_error=-ENXIO; config_pin_release_error=-EIO;
+	assert(n71_diagnostic_action("configure",NULL)==-ENXIO && module_refs==1 && diagnostic_retained && !attaches && config_pins_live);
+	assert(n71_diagnostic_action("cycle",NULL)==-EBUSY && !attaches); cases++;
+	config_pin_release_error=0; assert(n71_diagnostic_action("cleanup",NULL)==0); caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); resume_error=-EIO;
+	assert(n71_diagnostic_action("configure",NULL)==-EIO && !config_pins_live && !config_controller_acquires);
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_controller_acquire_error=-ENXIO;
+	assert(n71_diagnostic_action("configure",NULL)==-ENXIO && put_calls==1 && !config_pins_live);
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_controller_acquire_error=-ENXIO; config_controller_release_error=-EIO;
+	assert(n71_diagnostic_action("configure",NULL)==-ENXIO && !put_calls && module_refs==1 && config_pins_live && config_controller_live);
+	assert(n71_diagnostic_configuration_status(status,NULL)>0 && strstr(status,"controller_pending=1") && strstr(status,"controller_error=-5")); cases++;
+	assert(n71_diagnostic_action("inspect",NULL)==-EBUSY && !put_calls);
+	assert(n71_diagnostic_action("cleanup",NULL)==-EIO && !put_calls && module_refs==1); cases++;
+	config_controller_release_error=0;
+	assert(n71_diagnostic_action("cleanup",NULL)==0 && put_calls==1); caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_pin_release_error=-EIO;
+	assert(n71_diagnostic_action("configure",NULL)==-EIO && !config_controller_live && config_pins_live && !put_calls && module_refs==1); cases++;
+	config_pin_release_error=0; assert(n71_diagnostic_action("cleanup",NULL)==0 && put_calls==1); caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); suspend_error=-EIO;
+	assert(n71_diagnostic_action("configure",NULL)==-EIO && !config_controller_live && !config_pins_live && put_calls==1 && module_refs==1); cases++;
+	suspend_error=0; assert(n71_diagnostic_action("cleanup",NULL)==0 && put_calls==1); caller_idle(); caller_exit(); cases++;
 	printf("N71_I2C_CALLER_OK cases=%u\n",cases);
 	return 0;
 }

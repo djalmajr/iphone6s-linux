@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Explicit genpd cycle or bounded controller reads; no adapter or charger I/O. */
+/* Explicit genpd/configuration cycles; no adapter, FIFO or charger I/O. */
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/string.h>
 #include "n71-i2c-genpd.h"
 #include "n71-i2c-controller-observe.h"
+#include "n71-i2c-controller.h"
+#include "n71-i2c-pin-owner.h"
 
 static bool run;
 module_param(run, bool, 0400);
@@ -13,6 +15,8 @@ static DEFINE_MUTEX(diagnostic_lock);
 static struct n71_i2c_genpd diagnostic_backend;
 static struct n71_i2c_power_state diagnostic_state;
 static struct n71_i2c_power_io diagnostic_io;
+static struct n71_i2c_controller diagnostic_controller;
+static struct n71_i2c_pin_owner diagnostic_pins;
 static struct device_node *diagnostic_pmgr, *diagnostic_node;
 static bool diagnostic_ready, diagnostic_retained;
 
@@ -20,17 +24,59 @@ static bool n71_diagnostic_clean(void)
 {
 	return !diagnostic_state.active && !diagnostic_state.attached &&
 		!diagnostic_state.cleanup_pending && !diagnostic_state.usage_held &&
-		!diagnostic_backend.domain;
+		!diagnostic_backend.domain && n71_i2c_controller_clean(&diagnostic_controller) &&
+		n71_i2c_pin_owner_clean(&diagnostic_pins);
+}
+
+static struct n71_i2c_controller_request n71_diagnostic_controller_request(void)
+{
+	return (struct n71_i2c_controller_request) {
+		.consumer = diagnostic_backend.consumer, .pin_context = &diagnostic_pins,
+		.power = &diagnostic_state, .verify_pins = n71_i2c_pin_owner_verify,
+	};
+}
+
+static int n71_diagnostic_configuration_cleanup(void)
+{
+	struct n71_i2c_controller_request request = n71_diagnostic_controller_request();
+	int error;
+
+	error = n71_i2c_controller_release(&request, &diagnostic_controller);
+	if (error || !n71_i2c_controller_clean(&diagnostic_controller))
+		return error ? error : -EUCLEAN;
+	error = n71_i2c_pin_owner_release(&diagnostic_pins);
+	if (error || !n71_i2c_pin_owner_clean(&diagnostic_pins))
+		return error ? error : -EUCLEAN;
+	return n71_i2c_power_release(&diagnostic_io, &diagnostic_state);
+}
+
+static int n71_diagnostic_configure(void)
+{
+	struct n71_i2c_controller_request request = n71_diagnostic_controller_request();
+	int error, cleanup_error;
+
+	error = n71_i2c_pin_owner_acquire(diagnostic_backend.consumer, &diagnostic_pins);
+	if (!error)
+		error = n71_i2c_power_acquire(&diagnostic_io, &diagnostic_state);
+	if (!error)
+		error = n71_i2c_controller_acquire(&request, &diagnostic_controller);
+	cleanup_error = n71_diagnostic_configuration_cleanup();
+	pr_info("N71_I2C_CONFIGURE error=%d cleanup_error=%d pins_pending=%u controller_pending=%u last_saved_ctl=%08x last_saved_smsta=%08x charger_io=0\n",
+		error, cleanup_error, diagnostic_pins.cleanup_pending,
+		diagnostic_controller.restore_pending, diagnostic_controller.saved[N71_I2C_CTL],
+		diagnostic_controller.saved[N71_I2C_SMSTA]);
+	return error ? error : cleanup_error;
 }
 
 static int n71_diagnostic_action(const char *text, const struct kernel_param *parameter)
 {
+	bool configure = sysfs_streq(text, "configure");
 	bool cycle = sysfs_streq(text, "cycle");
 	bool inspect = sysfs_streq(text, "inspect");
 	int error;
 
 	(void)parameter;
-	if (!cycle && !inspect && !sysfs_streq(text, "cleanup"))
+	if (!cycle && !inspect && !configure && !sysfs_streq(text, "cleanup"))
 		return -EINVAL;
 	if (!try_module_get(THIS_MODULE))
 		return -ENODEV;
@@ -39,7 +85,7 @@ static int n71_diagnostic_action(const char *text, const struct kernel_param *pa
 		error = -ENODEV;
 		goto unlock;
 	}
-	if (cycle || inspect) {
+	if (cycle || inspect || configure) {
 		if (!n71_diagnostic_clean() || diagnostic_retained) {
 			error = -EBUSY;
 			goto unlock;
@@ -47,6 +93,10 @@ static int n71_diagnostic_action(const char *text, const struct kernel_param *pa
 		/* Keep all caller objects and code alive until verified detach. */
 		__module_get(THIS_MODULE);
 		diagnostic_retained = true;
+		if (configure) {
+			error = n71_diagnostic_configure();
+			goto finished;
+		}
 		error = n71_i2c_power_acquire(&diagnostic_io, &diagnostic_state);
 		if (!error) {
 			int cleanup_error;
@@ -55,20 +105,28 @@ static int n71_diagnostic_action(const char *text, const struct kernel_param *pa
 				struct n71_i2c_controller_observation observation;
 
 				error = n71_i2c_controller_observe(diagnostic_backend.consumer,
-						&diagnostic_state, &observation);
+								   &diagnostic_state, &observation);
 				pr_info("N71_I2C_CONTROLLER complete=%u stable=%u idle_status=%u error=%d rev=%08x,%08x smsta=%08x,%08x xfsta=%08x,%08x controller_writes=0 charger_io=0\n",
-					observation.complete, observation.stable, observation.idle_status, error,
-					observation.words[0][N71_I2C_OBSERVE_REV], observation.words[1][N71_I2C_OBSERVE_REV],
-					observation.words[0][N71_I2C_OBSERVE_SMSTA], observation.words[1][N71_I2C_OBSERVE_SMSTA],
-					observation.words[0][N71_I2C_OBSERVE_XFSTA], observation.words[1][N71_I2C_OBSERVE_XFSTA]);
+					observation.complete, observation.stable,
+					observation.idle_status, error,
+					observation.words[0][N71_I2C_OBSERVE_REV],
+					observation.words[1][N71_I2C_OBSERVE_REV],
+					observation.words[0][N71_I2C_OBSERVE_SMSTA],
+					observation.words[1][N71_I2C_OBSERVE_SMSTA],
+					observation.words[0][N71_I2C_OBSERVE_XFSTA],
+					observation.words[1][N71_I2C_OBSERVE_XFSTA]);
 			}
 			cleanup_error = n71_i2c_power_release(&diagnostic_io, &diagnostic_state);
 			if (!error)
 				error = cleanup_error;
 		}
+	} else if (!n71_i2c_controller_clean(&diagnostic_controller) ||
+		   !n71_i2c_pin_owner_clean(&diagnostic_pins)) {
+		error = n71_diagnostic_configuration_cleanup();
 	} else {
 		error = n71_i2c_power_release(&diagnostic_io, &diagnostic_state);
 	}
+finished:
 	if (diagnostic_retained && n71_diagnostic_clean()) {
 		diagnostic_retained = false;
 		module_put(THIS_MODULE);
@@ -90,10 +148,10 @@ static int n71_diagnostic_status(char *buffer, const struct kernel_param *parame
 	(void)parameter;
 	mutex_lock(&diagnostic_lock);
 	length = scnprintf(buffer, PAGE_SIZE,
-		"ready=%u active=%u attached=%u cleanup_pending=%u usage_held=%u module_retained=%u cleanup_error=%d\n",
-		diagnostic_ready, diagnostic_state.active, diagnostic_state.attached,
-		diagnostic_state.cleanup_pending, diagnostic_state.usage_held,
-		diagnostic_retained, diagnostic_state.cleanup_error);
+			   "ready=%u active=%u attached=%u cleanup_pending=%u usage_held=%u module_retained=%u cleanup_error=%d\n",
+			   diagnostic_ready, diagnostic_state.active, diagnostic_state.attached,
+			   diagnostic_state.cleanup_pending, diagnostic_state.usage_held,
+			   diagnostic_retained, diagnostic_state.cleanup_error);
 	mutex_unlock(&diagnostic_lock);
 	return length;
 }
@@ -101,9 +159,30 @@ static int n71_diagnostic_status(char *buffer, const struct kernel_param *parame
 static const struct kernel_param_ops action_ops = {.set = n71_diagnostic_action};
 static const struct kernel_param_ops status_ops = {.get = n71_diagnostic_status};
 module_param_cb(action, &action_ops, NULL, 0200);
-MODULE_PARM_DESC(action, "cycle acquires/releases; inspect reads three MMIO registers twice; cleanup retries release");
+MODULE_PARM_DESC(action, "cycle toggles genpd; inspect reads MMIO; configure resets/restores with retained pins; cleanup retries release");
 module_param_cb(status, &status_ops, NULL, 0400);
 MODULE_PARM_DESC(status, "Inspect pending cleanup and retained module before unload; never force unload");
+
+static int n71_diagnostic_configuration_status(char *buffer, const struct kernel_param *parameter)
+{
+	int length;
+
+	(void)parameter;
+	mutex_lock(&diagnostic_lock);
+	length = scnprintf(buffer, PAGE_SIZE,
+			   "pins_pending=%u pins_selected=%u pins_error=%d controller_pending=%u controller_error=%d controller_claimed=%u\n",
+			   diagnostic_pins.cleanup_pending, diagnostic_pins.selected,
+			   diagnostic_pins.cleanup_error, diagnostic_controller.restore_pending,
+			   diagnostic_controller.cleanup_error, diagnostic_controller.claimed);
+	mutex_unlock(&diagnostic_lock);
+	return length;
+}
+
+static const struct kernel_param_ops configuration_status_ops = {
+	.get = n71_diagnostic_configuration_status,
+};
+module_param_cb(configuration_status, &configuration_status_ops, NULL, 0400);
+MODULE_PARM_DESC(configuration_status, "Read pin/controller cleanup independently of legacy status");
 
 static void n71_diagnostic_drop_refs(void)
 {
@@ -189,9 +268,9 @@ static void __exit n71_i2c_power_diagnostic_exit(void)
 	diagnostic_ready = false;
 	n71_diagnostic_drop_refs();
 	mutex_unlock(&diagnostic_lock);
-	pr_info("N71_I2C_POWER_UNLOADED controller_writes=0 charger_io=0\n");
+	pr_info("N71_I2C_POWER_UNLOADED controller_clean=1 pins_clean=1 charger_io=0\n");
 }
 module_init(n71_i2c_power_diagnostic_init);
 module_exit(n71_i2c_power_diagnostic_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("N71 explicit I2C1 genpd cycle with retained cleanup ownership");
+MODULE_DESCRIPTION("N71 explicit I2C1 genpd/controller cycles with retained cleanup ownership");

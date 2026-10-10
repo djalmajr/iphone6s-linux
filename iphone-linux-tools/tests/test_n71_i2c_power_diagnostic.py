@@ -26,6 +26,13 @@ MUTATIONS = (
     ('overwrite-inspect-error', 'if (!error)\n\t\t\t\terror = cleanup_error;', 'if (true)\n\t\t\t\terror = cleanup_error;'),
     ('skip-release-after-inspect-failure', 'cleanup_error = n71_i2c_power_release(&diagnostic_io, &diagnostic_state);',
      'cleanup_error = error ? 0 : n71_i2c_power_release(&diagnostic_io, &diagnostic_state);'),
+    ('skip-configure', 'error = n71_diagnostic_configure();', 'error = false ? n71_diagnostic_configure() : 0;'),
+    ('skip-controller-release', 'error = n71_i2c_controller_release(&request, &diagnostic_controller);',
+     'error = false ? n71_i2c_controller_release(&request, &diagnostic_controller) : 0;'),
+    ('skip-pin-release', 'error = n71_i2c_pin_owner_release(&diagnostic_pins);',
+     'error = false ? n71_i2c_pin_owner_release(&diagnostic_pins) : 0;'),
+    ('ignore-controller-pending', 'if (error || !n71_i2c_controller_clean(&diagnostic_controller))', 'if (false)'),
+    ('ignore-pin-pending', 'if (error || !n71_i2c_pin_owner_clean(&diagnostic_pins))', 'if (false)'),
 )
 
 
@@ -53,7 +60,8 @@ class N71I2CControlTests(unittest.TestCase):
             (folder / 'linux').mkdir()
             for name in ('i2c', 'pm_domain', 'pm_runtime', 'module', 'mutex', 'string', 'io', 'ioport', 'of_address'):
                 (folder / 'linux' / (name + '.h')).write_text('/* Kernel APIs supplied by harness. */\n')
-            for name in ('n71-i2c-genpd.h', 'n71-i2c-power-lifecycle.h', 'n71-pmgr-access.h', 'n71-i2c-controller-observe.h'):
+            for name in ('n71-i2c-genpd.h', 'n71-i2c-power-lifecycle.h', 'n71-pmgr-access.h',
+                         'n71-i2c-controller-observe.h', 'n71-i2c-controller.h', 'n71-i2c-pin-owner.h'):
                 (folder / name).write_bytes((ROOT / 'phone/kernel' / name).read_bytes())
             (folder / 'n71_i2c_genpd_fixture.c').write_text(fixture)
             module, binary = folder / 'n71-i2c-power-diagnostic.c', folder / 'caller'
@@ -68,7 +76,7 @@ class N71I2CControlTests(unittest.TestCase):
                 result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5, cwd=folder)
                 if before is None:
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertIn('N71_I2C_CALLER_OK cases=52', result.stdout)
+                    self.assertIn('N71_I2C_CALLER_OK cases=66', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
