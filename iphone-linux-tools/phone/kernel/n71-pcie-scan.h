@@ -17,6 +17,7 @@
 #include "n71-wlan-msi-host.h"
 #include "n71-wlan-msi-config.h"
 #include "n71-msi-allocation-lease.h"
+#include "n71-brcmfmac-config.h"
 #include "n71-dart-host.h"
 
 struct n71_scan_host {
@@ -30,6 +31,9 @@ struct n71_scan_host {
 	struct n71_wlan_msi_host msi;
 	struct n71_msi_config msi_config;
 	struct n71_msi_allocation msi_allocation;
+	struct n71_brcmfmac_config brcmfmac;
+	struct pci_dev *driver_root, *driver_endpoint;
+	bool driver_pm, driver_root_override, driver_endpoint_override, driver_published;
 	struct n71_dart_host dart;
 	/* Borrowed while PCI consumers are alive; cleared after bus removal. */
 	struct iommu_domain *iommu_domain;
@@ -39,7 +43,7 @@ struct n71_scan_host {
 	bool bus_held;
 	bool resource_attempted, resources_assigned, window_claimed;
 	struct resource windows[3];
-	unsigned int reads, devices, endpoints;
+	unsigned int reads, driver_reads, devices, endpoints;
 	int io_error, held_stop_error;
 };
 
@@ -55,7 +59,9 @@ static int n71_scan_raw_read(void *context, bool root, u32 where,
 				     where, size, &location);
 	if (error || !value)
 		return error ? error : -EINVAL;
-	if (++host->reads > 4096 && host->config.active)
+	if (host->brcmfmac.active)
+		host->driver_reads++;
+	else if (++host->reads > 4096 && host->config.active)
 		return -E2BIG;
 	if (!root) {
 		status = readl(host->port + 0x88);
@@ -149,13 +155,22 @@ static int n71_scan_config_write(struct pci_bus *bus, unsigned int devfn,
 	error = n71_pcie_ecam_locate(0x1000000, bus->number, devfn, where, size, &location);
 	spin_lock_irqsave(&host->lock, flags);
 	if (error) {
-		if (host->msi_config.phase != N71_MSI_CONFIG_EMPTY)
+		if (host->brcmfmac.active)
+			n71_brcmfmac_error(&host->brcmfmac, error);
+		else if (host->msi_config.phase != N71_MSI_CONFIG_EMPTY)
 			n71_msi_config_error(&host->msi_config, error);
 		else
 			n71_scan_refuse(&host->config, error);
 	} else {
 		request = (struct n71_scan_request){location.root, where, value, size};
-		if (host->msi_config.phase != N71_MSI_CONFIG_EMPTY) {
+		if (host->brcmfmac.active) {
+			const struct n71_msi_config_request runtime_request = {
+				.config = request,
+				.slots = host->msi.native.slots,
+			};
+
+			error = n71_brcmfmac_write(&io, &host->brcmfmac, &runtime_request);
+		} else if (host->msi_config.phase != N71_MSI_CONFIG_EMPTY) {
 			const struct n71_msi_config_request msi_request = {
 				.config = request, .slots = host->msi.native.slots,
 			};
@@ -186,6 +201,14 @@ static struct pci_ops n71_scan_ops = {
 
 static int n71_scan_deny_enable(struct pci_host_bridge *bridge, struct pci_dev *dev)
 {
+	struct n71_scan_host *host = pci_host_bridge_priv(bridge);
+
+	if (host->brcmfmac.active && host->driver_pm && host->bus_held && host->resources_assigned &&
+	    host->dart.available && host->dart.mapped &&
+	    host->driver_root_override && host->driver_endpoint_override &&
+	    host->driver_root && host->driver_endpoint &&
+	    (dev == host->driver_root || dev == host->driver_endpoint) && dev->bus->sysdata == host)
+		return 0;
 	(void)bridge;
 	(void)dev;
 	return -EPERM;
@@ -366,6 +389,8 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 	if (!bridge)
 		return 0;
 	host = pci_host_bridge_priv(bridge);
+	if (host->brcmfmac.active || host->driver_root || host->driver_endpoint)
+		return -EBUSY;
 	if (host->resources.active || host->msi_config.phase != N71_MSI_CONFIG_EMPTY)
 		return -EBUSY;
 	if (bridge->bus) {

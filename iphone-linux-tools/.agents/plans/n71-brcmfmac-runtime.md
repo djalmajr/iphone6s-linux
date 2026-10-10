@@ -21,11 +21,18 @@ Capture separado conserva COMMAND dos dois devices, MSI, BAR0_WINDOW e Link Cont
 
 Restore exige ausência de driver registrado/bound, MSI software e grants/mappings. Depois verifica identidade, desabilita MSI/decode/MASTER, restaura mensagem/window/link/COMMAND e verifica todos os baselines antes de liberar o owner. Erro ou drift conserva o owner para retry. Esse contrato não substitui a API PCI nem garante stop-before-free se o hardware falhar durante o remove upstream; o erro de write/readback será conservado e impedirá declarar o experimento bem-sucedido. O caller deve conservar energia/providers até restore verificado.
 
+## Detalhes da fase2
+
+Fase2a (cinco arquivos): este plano, `phone/kernel/n71-pcie-scan.h`, novo `phone/kernel/n71-pcie-brcmfmac.h`, `tests/n71_pcie_brcmfmac.c` e `tests/test_n71_pcie_brcmfmac.py`. Integrar estado/configuração ao host, callbacks ECAM/enable e guarda de consumer removal. Adapter retém referências PCI dos dois devices e runtime PM sem transição de hardware; usa `device_set_driver_override` exportado pelo kernel7.2 para root=`none` e endpoint=`brcmfmac`, antes de `pci_bus_add_devices`. Publicação é explícita/separada e não comprova fim do firmware. Release requer unload normal/nenhum driver registrado ou bound, software MSI/grants/mapcounts zerados e contadores enable0/1; balanceia enables PCI, restaura configuração, limpa só overrides próprios/verificados, balanceia PM e libera refs. Falha/ownership parcial conserva o host para retry. Usar APIs públicas/exports existentes; não acessar private driver data nem escrever diretamente driver_override.
+
+Fase2b, antes de selecionar/carregar: guarda de exclusão mútua no adaptador MSI manual e fixture; caller com opt-in, prepare/publish/release/getter e cleanup serializados; fixtures específicas e build completo em fatias subsequentes de até cinco arquivos. Não publicar/selecionar a candidata física só com o adapter: o caller e journal ainda precisam provar uso ordenado e causalidade dos erros. Gate de host legado deve continuar passando; `.enable_device` continua recusando o default.
+
 ## Tarefas
 
 - [x] Implementar política runtime e regressões/mutações compiladas.
 - [x] Qualificar Mac/Ubuntu ARM64 e objeto real do kernel, preservando baseline.
-- [ ] Integrar adapter/caller e cleanup retido, sem ativação automática.
+- [x] Integrar adapter/callbacks e guarda de consumer removal; qualificar sem ativação automática.
+- [ ] Integrar caller/opt-in/actions/getter e exclusão mútua MSI, com cleanup retido.
 - [ ] Integrar journal/seleção/firmware/energia e candidata agrupada.
 - [ ] Comprovar Wi-Fi e telemetria/carga fisicamente; atualizar issues9/2/40.
 
@@ -34,3 +41,7 @@ Restore exige ausência de driver registrado/bound, MSI software e grants/mappin
 Testar recusas sem IO, grants/messages incorretos, MASTER/decode permitidos somente no modo ativo, W1C preservado, doorbells repetidas, readback falho, erro positivo normalizado, primeira causa, owner retido/retry e baseline completo. Mutações devem compilar e morrer por asserção; compilação/timeout não contam como kill. AST/lint fatal dos inputs Python. Objeto W=1/Werror contra kernel power2 preservado, sem MODPOST_WARN/instalação. Nenhum typechecker Python configurado. Prova offline não comprova IRQ entregue, tradução DMA, firmware compatível, rádio ou carga Linux.
 
 Fase1:58 cenários/23 mutações compiladas por plataforma, AST/lint fatal aprovados. Probe ARM64 real11.184 bytes/SHAbcb2b125, ELF/vermagic e dois imports conferidos; os sete inputs e fonte/config/Image/exports foram conservados e o binário foi auditado no Mac. O primeiro ensaio da fixture falhou porque a injeção de drift usava uma leitura posterior ao fim do capture; corrigida para a segunda leitura de BAR0_WINDOW e gates repetidos. Nenhum kill dessa rodada inválida foi usado como prova. O probe somente compila as três funções reais; não é caller, driver ou teste físico. Nenhum módulo/perfil/carga/DFU alterado. Próxima tarefa: integrar o contrato ao scan/adapter/caller retido, antes do journal e da candidata física agrupada.
+
+Fase2a:24 cenários/23 mutações novas e host183/147 por plataforma, total207/170; AST/lint fatal aprovados. Mac conservou os quatro métodos intactos e retomou só os dois com âncoras antigas afetadas pelo callback/guarda; VM executou os seis métodos. Não contar ambiguidade de âncora, SIGSEGV inicial da fixture ou erro de staging como kill. O callback agora verifica a referência antes de acessar o bus; a fixture modela pci_disable_device sem retorno de erro e exige readback no restore. O helper is_added é privado ao core PCI7.2, portanto não foi usado: published registra intenção emitida e `pci_device_is_present` só comprova resposta ao config, não fim de registro/binding/firmware. Reads de runtime têm contador próprio e não consomem o orçamento finito de scan/rollback.
+
+Diagnóstico completo ARM64:129.416 bytes/SHA2c743b7d,127 imports; probe de adapter+diagnóstico real137.368 bytes/SHAb7340c49,135 imports incluindo cinco APIs públicas novas. ELF/vermagic/bytes/hashes foram conferidos no Mac;63 inputs e fonte/config/Image/exports conservados. Lint VM encontrou diretório scripts ausente no staging; criado apenas esse diretório e retomado o lint/auditoria, preservando gates/build já aprovados. Nenhuma seleção, carga, publicação PCI física, firmware ou DFU. Próximo gate obrigatório antes do aparelho: fase2b caller/exclusão MSI; depois journal/seleção/firmware/energia e prova física agrupada.
