@@ -1,8 +1,16 @@
 # N71: IRQ e IOMMU antes do rádio
 
-## Checkpoint — 2026-10-06
+## Checkpoint — 2026-10-09
 
 [Issue40](https://github.com/djalmajr/iphone6s-linux/issues/40), [plano](../.agents/plans/n71-irq-iommu-bindings.md). A atribuição/retomada/cleanup da [issue39](https://github.com/djalmajr/iphone6s-linux/issues/39) está concluída no hardware. IRQ255/0 e links of_node/IOMMU ausentes foram medidos com enable0/sem driver, sem MASTER/DMA. Esses valores descrevem a sessão; não demonstram entrega IRQ, attachment ou defeito da associação.
+
+### Primeiro boot D20 — recusa antes do scan; recuperação sem outro DFU
+
+A candidata D20/ABI D18 iniciou no DFU USB1227 confirmado, restaurou o snapshot e respondeu por SSH/Bash/Herdr/HTTP. MSI preparou a associação com error0; o provider Apple DART inicializou. A preparação OF/IOMMU recusou com ENODEV (-19), available0/mapped0, antes de publicar dispositivos PCI. Não houve atribuição de recursos, driver de rádio, IRQ entregue ou DMA. [Prova física](evidence/n71-iommu-pins-physical.json).
+
+O kernel registrou cleanup completo, remoção do provider, restauração dos16 TTBRs, reset e energia liberados. Os getters vivos mostraram ready0 e todos os owners zerados. O collector conservador recusou o cleanup porque esse status de probe desassociado não conserva primary_error; ele também espera configuração restaurada depois da liberação DART, enquanto esta falha antes do scan restaura config antes do cleanup do provider. A recuperação específica exigiu o erro negativo coincidente de scan/caller, estado atual, barramento vazio, ordem e readback de restauração; somente então descarregou os módulos normalmente e restaurou REG_ON, sem force unload.
+
+Depois disso, dois ciclos GPIO115/114 passaram neste mesmo boot. Snapshot/sync passaram; retorno automático não foi confirmado pelo USB, e o operador confirmou a tela de bloqueio após fallback físico, sem PIN. A próxima correção offline deve conferir a identificação dos nós OF pela fonte kernel fixada e aceitar somente a sequência negativa completa no verificador. Não repetir DFU para investigar essas duas falhas de software.
 
 ## Fontes fixadas e fatos observados offline
 

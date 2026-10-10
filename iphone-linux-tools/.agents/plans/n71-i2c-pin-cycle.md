@@ -31,7 +31,7 @@ Ler cache, hardware duas vezes, cache, de ambos os pinos em cada fase. Antes de 
 - [x] Implementar módulo e fixtures com falhas de escopo, referência, aquisição e leitura.
 - [x] Compilar e executar cenários/mutações no Mac e Ubuntu ARM64; compilar módulo real na VM, sem alterar fonte/config/Image/exports.
 - [x] Documentar hashes, comandos, limites e integrar o gate à CI.
-- [ ] Carregar por SSH em sessão física agrupada, preservar serviços/snapshot e registrar somente prova sanitizada.
+- [x] Carregar por SSH em sessão física agrupada, preservar serviços/snapshot e registrar somente prova sanitizada.
 
 ## Verificação
 
@@ -48,3 +48,7 @@ O build de Image não tem `Module.symvers` agregado e modpost emitiu o aviso gen
 CI do head `ba9473c`: PR37613054924/push37613048208 concluíram com sucesso, seis jobs aprovados; os quatro logs de fonte confirmaram 107 cenários/22 mutações por job. [Prova terminal](../../docs/evidence/n71-i2c-pin-cycles-ci.json). O teste físico permanece pendente: duas conferências USB voltaram vazias após o DFU informado; reconexão solicitada. Tentativa agrupada IRQ/IOMMU+pinos preparada e conferida localmente, sem início/envio de payload. Esta fase final altera somente documentação; gates de código/ABI permanecem válidos com seus quatro inputs intactos.
 
 Referências: [GPIO consumer](https://docs.kernel.org/driver-api/gpio/consumer.html), fonte local fixada `drivers/gpio/gpiolib.c`, `drivers/pinctrl/pinmux.c`, `drivers/pinctrl/pinctrl-apple-gpio.c` e `drivers/base/core.c`. A documentação geral não substitui a auditoria dos callbacks Apple.
+
+### Resultado físico — 2026-10-09
+
+Dois ciclos passaram por SSH no mesmo boot do diagnóstico D20: error0/cleanup-readback-error0, baseline nova00076221 em ambos os pinos e preservação integral. Módulo/consumidor/descriptors/lookup e arquivos próprios removidos; SSH/Bash/HTTP preservados, snapshot/sync verificados. Retorno automático não confirmado no USB; operador confirmou a tela de bloqueio após fallback físico, sem PIN. [Prova sanitizada](../../docs/evidence/n71-iommu-pins-physical.json). Mux/controller/IRQ/clock/SN2400/gauge/corrente continuam fora da prova.

@@ -2,7 +2,7 @@
 
 ## Estado
 
-O módulo `phone/kernel/i2c-pins/n71-i2c-pin-cycle.c` está qualificado offline para o Image power2 preservado. Ainda não foi carregado no aparelho. Ele prepara o acesso ao controlador de carga, reservando e liberando descriptors GPIO115/114, sem selecionar mux, configurar direção/valor ou ativar I2C1.
+O módulo `phone/kernel/i2c-pins/n71-i2c-pin-cycle.c` está qualificado offline e passou no aparelho em 2026-10-09, com o Image power2 preservado. Ele prepara o acesso ao controlador de carga, reservando e liberando descriptors GPIO115/114, sem selecionar mux, configurar direção/valor ou ativar I2C1.
 
 Mac e Ubuntu ARM64 executaram o módulo real contra APIs kernel sintéticas: 107 cenários por plataforma e 22 mutações compiladas terminaram por SIGABRT com asserção. O build real produziu um módulo ELF64/AArch64 de 13.720 bytes, SHA256 `95bc260634fe6fa065e00f15553a4059fbc6acf95db2f2079cb4361b7b9a180e`, vermagic `7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64`. [Prova sanitizada](evidence/n71-i2c-pin-cycles.json), [plano e decisão](../.agents/plans/n71-i2c-pin-cycle.md), [energia/I2C1](N71_HDQ.md#i2c1-driver-existente-aquisição-ainda-não-qualificada).
 
@@ -58,8 +58,14 @@ O build de Image preservado não tem `Module.symvers` agregado, gerando aviso ge
 
 O gate integra a descoberta `test_*.py` da CI Ubuntu/macOS. As duas execuções do head exato `ba9473c` concluíram com sucesso, com seis jobs aprovados. Os quatro logs de fonte confirmaram a execução do gate novo, 107 cenários/22 mutações por job. [Prova terminal da CI](evidence/n71-i2c-pin-cycles-ci.json). CI verifica software, sem acesso ao iPhone.
 
-## Próximo teste físico agrupado
+## Primeiro teste físico agrupado — 2026-10-09
+
+Um DFU e um boot reuniram restore, diagnóstico IRQ/IOMMU, recuperação dos recursos, ciclos GPIO e serviços. O módulo foi transferido por SSH após a limpeza PCIe/REG_ON, sem outro reboot. Os dois ciclos retornaram `error=0 cleanup-readback-error=0 descriptors-released=1`; o resumo registrou pinos115/114, baseline nova `00076221,00076221` e `unchanged=1`. O unload, ausência do módulo/consumidor e remoção dos arquivos próprios passaram. SSH/Bash/HTTP permaneceram funcionais. [Prova física sanitizada](evidence/n71-iommu-pins-physical.json).
+
+O snapshot e sync passaram antes do reboot. O retorno automático não foi confirmado por USB no prazo; o operador confirmou a tela de bloqueio após reinicialização física, sem PIN. O aparelho permanece no iOS para recarga durante desenvolvimento offline. A associação IOMMU foi recusada com ENODEV antes de publicar PCI; isso não impediu os ciclos GPIO depois da recuperação verificada na mesma sessão.
+
+## Reprodução de uma coleta física
 
 O módulo pode ser transferido por SSH ao Linux power2 existente: não exige Image/DTB novo nem DFU adicional. A sessão agrupada deverá conferir perfil/kernel/módulo por hashes, ausência de módulo/consumidor anterior e I2C1 desativado; colher dmesg somente em log privado; executar um insmod explícito `run=1`; exigir dois registros `N71_I2C_PIN_CYCLE error=0 cleanup-readback-error=0` e um `N71_I2C_PIN_CYCLES_OK`; descarregar e conferir ausência do módulo/consumidor, SSH e HTTP. Em recusa/drift, registrar os dois errnos e preservar a evidência antes da análise.
 
-Essa prova ainda não existe. Reserva GPIO não comprova exclusividade de mux, comportamento elétrico, aquisição do adapter/IRQ/clock, register map SN2400, leitura HDQ/gauge ou corrente líquida de carga. Wi-Fi e carga Linux continuam nas [issues9](https://github.com/djalmajr/iphone6s-linux/issues/9) e [2](https://github.com/djalmajr/iphone6s-linux/issues/2). Durante preparação offline, a recarga depende do iOS.
+Reserva GPIO não comprova exclusividade de mux, comportamento elétrico, aquisição do adapter/IRQ/clock, register map SN2400, leitura HDQ/gauge ou corrente líquida de carga. Wi-Fi e carga Linux continuam nas [issues9](https://github.com/djalmajr/iphone6s-linux/issues/9) e [2](https://github.com/djalmajr/iphone6s-linux/issues/2). Durante preparação offline, a recarga depende do iOS.

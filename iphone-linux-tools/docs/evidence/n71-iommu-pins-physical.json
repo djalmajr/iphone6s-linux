@@ -1,0 +1,86 @@
+{
+  "format": 1,
+  "date": "2026-10-09",
+  "code_commit": "76929bfc91ba00ad62a32d5f2f9786db0ae23ee4",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "session": {
+    "dfu_sequences": 1,
+    "dfu_usb_product": "0x1227",
+    "linux_usb_product": "0x4142",
+    "linux_boots": 1,
+    "intermediate_reboots": 0,
+    "boot_and_snapshot_restore_verified": true
+  },
+  "iommu": {
+    "pcie_module_sha256": "46dfdfda600ad1bfa21606a7a758f7764b899c38959ba877fca819571e49106f",
+    "endpoint_identified": true,
+    "endpoint_id": "43a314e4",
+    "msi_prepare_error": 0,
+    "msi_prepared_associated": true,
+    "dart_provider_initialized": true,
+    "dart_prepare_error": -19,
+    "of_status_available": false,
+    "iommu_map_installed": false,
+    "pci_devices_published": 0,
+    "held_acquisition_verified": false,
+    "assignment_attempted": false,
+    "host_collector_cleanup_verified": false,
+    "host_collector_refusal": "Incomplete association lacks a negative caller/provider proof",
+    "same_boot_recovery": {
+      "unbound_matching_negative_scan_and_caller_proof_verified": true,
+      "msi_iommu_resource_owners_zero": true,
+      "pci_bus_empty": true,
+      "dart_provider_removed": true,
+      "ttbr_words_restored": 16,
+      "reset_power_released": true,
+      "pcie_normal_unload_verified": true,
+      "reg_on_restored_to_original": true,
+      "reg_on_normal_unload_verified": true,
+      "cleanup_verified": true,
+      "force_unload_used": false
+    }
+  },
+  "i2c_pins": {
+    "module_sha256": "95bc260634fe6fa065e00f15553a4059fbc6acf95db2f2079cb4361b7b9a180e",
+    "load_exit": 0,
+    "unload_exit": 0,
+    "cycles": 2,
+    "hardware_offsets": [115, 114],
+    "baseline_registers": ["00076221", "00076221"],
+    "reservation_verified": true,
+    "full_registers_unchanged": true,
+    "cycle_errors": [0, 0],
+    "cleanup_readback_errors": [0, 0],
+    "descriptors_lookup_consumer_and_module_absent_after_cleanup": true,
+    "own_phone_files_removed": true,
+    "mux_selected": false,
+    "i2c_controller_activated": false,
+    "charger_io_performed": false
+  },
+  "services": {
+    "ssh_before_after": true,
+    "bash_before_after": true,
+    "http_before_after": true,
+    "herdr_status_before": true,
+    "herdr_binary_after": true,
+    "power_supply_count": 0,
+    "usb_declared_maxpower_ma": 500
+  },
+  "return": {
+    "snapshot_verified": true,
+    "sync_verified": true,
+    "automatic_ios_usb_return_verified": false,
+    "manual_ios_lock_screen_reported_by_operator": true,
+    "pin_required": false
+  },
+  "limits": {
+    "wifi_verified": false,
+    "irq_delivery_verified": false,
+    "dma_translation_verified": false,
+    "mux_exclusive_ownership_verified": false,
+    "battery_gauge_verified": false,
+    "charging_current_verified": false,
+    "internal_storage_written": false,
+    "private_logs_firmware_keys_or_device_identifiers_published": false
+  }
+}

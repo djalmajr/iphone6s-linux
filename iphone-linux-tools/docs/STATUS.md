@@ -1,6 +1,10 @@
-# iPhone 6s Linux — atualizado em 2026-10-07
+# iPhone 6s Linux — atualizado em 2026-10-09
 
 ## Checkpoint atual — atribuição PCIe física positiva; IRQ/IOMMU e energia pendentes
+
+Em2026-10-09, um DFU/um boot confirmou restore e SSH/Bash/Herdr/HTTP. O primeiro teste D20 inicializou o provider DART, mas recusou a associação OF/IOMMU com ENODEV antes de publicar PCI. Cleanup do kernel foi comprovado; uma incompatibilidade do verificador host exigiu recuperação específica no mesmo boot, com unload normal e REG_ON restaurado. Os dois ciclos de reserva/liberação GPIO115/114 passaram, registros integrais preservados, todos os owners/arquivos próprios removidos. Snapshot/sync passaram; retorno automático não foi confirmado pelo USB e o operador confirmou iOS bloqueado após fallback físico, sem PIN. [Prova agrupada](evidence/n71-iommu-pins-physical.json), [pinos](N71_I2C_PINS.md), [associação e recusa](N71_IRQ_IOMMU.md#primeiro-boot-d20--recusa-antes-do-scan-recuperação-sem-outro-dfu).
+
+Próximo trabalho offline: corrigir a guarda OF e o verificador dessa sequência negativa completa. Durante isso, manter o aparelho no iOS para recarregar. Não há carga Linux, gauge, rádio, entrega IRQ ou tradução DMA comprovados; power_supply continua0 e MaxPower500 é apenas a potência declarada pelo gadget.
 
 A candidata15617e32 passou no hardware: atribuição error0/assigned1,17 tentativas/cinco escritas verificadas, IO16 noops1 e PREF64 writes1. Um DFU/um boot reuniu inventário, reuso sem segundo setter, cleanup na primeira tentativa, SSH/Bash/Herdr/HTTP e snapshot44/sync/retorno automático ao iOS.100→100%, carregando após o retorno. [Prova física](evidence/n71-pci-pref64-unsized-physical.json).
 
@@ -10,7 +14,7 @@ Root MEM7c0000000..7c04fffff; BAR0 7c0400000..7c0407fff/BAR2 7c0000000..7c03ffff
 
 Um módulo separado reserva/libera GPIO115/114 com ASIS em dois ciclos síncronos, usando consumidor/lookup próprios e leituras cache/bypassed antes/durante/depois. Não seleciona mux nem ativa I2C1. Mac/Ubuntu ARM64: 107 cenários e 22 mutações compiladas por asserção por plataforma. Build real de 13.720 bytes, ELF64/AArch64/vermagic power2; 39 imports conferidos no vmlinux.symvers preservado, fornecido por KBUILD_EXTRA_SYMBOLS após o aviso de Module.symvers agregado ausente. Fonte/patch/config/Image/exports intactos; AST/lint fatal passaram. [Procedimento e limites](N71_I2C_PINS.md), [prova offline](evidence/n71-i2c-pin-cycles.json), [plano](../.agents/plans/n71-i2c-pin-cycle.md).
 
-O gate integra a descoberta de testes da CI existente. As duas execuções do head `ba9473c` concluíram com seis jobs aprovados; os quatro logs de fonte confirmaram 107 cenários/22 mutações do gate novo por job. [Prova terminal](evidence/n71-i2c-pin-cycles-ci.json). O módulo pode ser transferido por SSH no mesmo boot, mas ainda não foi carregado fisicamente. Na última conferência, o Mac não detectou o iPhone por dois métodos USB; o DFU informado pelo operador não pôde ser confirmado. Nova coleta depende de recuperar a conexão, mantendo USB-A traseiro. GPIO ownership, mux, I2C/SN2400, gauge e carga Linux seguem sem prova nova; nenhuma reinicialização/payload foi feita nesta etapa.
+O gate integra a descoberta de testes da CI existente. As duas execuções do head `ba9473c` concluíram com seis jobs aprovados; os quatro logs de fonte confirmaram 107 cenários/22 mutações do gate novo por job. [Prova terminal](evidence/n71-i2c-pin-cycles-ci.json). Em2026-10-09, o módulo passou por SSH no mesmo boot D20: dois ciclos de descriptors GPIO e readback integral, unload e cleanup comprovados. Mux, I2C/SN2400, gauge e carga Linux seguem pendentes; GPIO reservation não equivale a essas provas.
 
 ### D20 — perfil IOMMU composto e qualificado; teste físico preparado
 
