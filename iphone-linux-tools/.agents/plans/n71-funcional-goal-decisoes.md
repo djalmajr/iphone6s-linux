@@ -350,3 +350,21 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 - **Reverter:** baixo, helper puro aplicado nos pontos de cleanup/loader, sem schema ou efeito remoto.
 - **Onde:** resource_stage, held_session e regressão CLI de dois ciclos; cinco executáveis na faseB.
 - **Status:** aplicada em8d0b47a; regressão reproduzida e dois ciclos aprovados em Mac/ARM64, incluindo o loader/check sobre o segundo stop. Parsers mantêm unicidade e proofs/journals originais ficam completos. Nenhuma ação no iPhone.
+
+## D37. Inicializar I2C1 por polling com restauração própria
+
+- **Decisão:** usar polling já suportado pelo PASemi fixado, com aquisição exclusiva de MMIO, referências próprias de clkref e reset/restauração explícitos. Antes de executar no aparelho, integrar descriptors realmente retidos e seu callback de verificação.
+- **Por quê:** a revisão física é2; criar um mapping AIC não é necessário para esse transporte inicial. O probe padrão altera CTL/IMASK e registra adapter sem restauração explícita. O novo contrato mantém recursos e obrigação em erro, permitindo retry no mesmo boot.
+- **Alternativas:** probe/overlay amplia efeitos e não restaura os registradores; IRQ novo exige ownership/disposal e entrega física; omitir reset deixa inicialização do transporte sem contrato. Polling consome CPU durante transações curtas.
+- **Reverter:** baixo; header novo, sem mudar Image, DT, módulos atuais ou defaults.
+- **Onde:** [plano I2C1](n71-i2c-controller.md), `phone/kernel/n71-i2c-controller.h`, issue2.
+- **Status:** fase1 aplicada em609dd39; 50 cenários/15 mutações Mac/ARM64 e probe kernel Werror/modpost passaram. Não há caller operacional de pinos, transferências SN2400, gauge ou carga Linux comprovados.
+
+## D38. Dar tempo suficiente ao gate completo da CI
+
+- **Decisão:** elevar somente o timeout dos jobs source de15 para45min; manter jobs, scripts, verificações e timeouts internos dos testes.
+- **Por quê:** as anotações oficiais dos dois jobs do PR38088842866 dizem explicitamente que excederam15min. Ubuntu parou no unittest discovery; macOS parou em Source kernel integration mutations. O cancelamento não era um resultado verde.
+- **Alternativas:** repetir o mesmo job não corrige o limite; remover testes enfraquece o gate; sharding pode reduzir duração futura, mas demanda uma mudança maior e qualificação do particionamento. Prazo45min permanece limitado e permite obter a primeira medição completa.
+- **Reverter:** baixo; uma linha no workflow.
+- **Onde:** `.github/workflows/ci.yml`, issue41.
+- **Status:** aplicada; aceite remoto do próximo head ainda pendente. Windows passou no run anterior; ambos os jobs source foram cancelados por timeout.

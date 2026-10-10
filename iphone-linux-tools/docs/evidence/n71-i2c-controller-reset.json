@@ -1,0 +1,147 @@
+{
+  "format": 1,
+  "status": "phase1_qualified_no_operational_pin_caller_or_physical_reset",
+  "code_commit": "609dd3952e256dd42c5ffa85f886cad1763eb508",
+  "ci_commit": "5fe4534b6b44ee2b4ad2256bae534f0be6cdf3e7",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "sources": {
+    "phone/kernel/n71-i2c-controller.h": {
+      "bytes": 7509,
+      "sha256": "60624c630263f765aaf2a5974566b32d8254175d01a33f53b4a56596a0655619"
+    },
+    "phone/kernel/n71-i2c-controller-observe.h": {
+      "bytes": 2842,
+      "sha256": "8b86f579023ca4270c7eb04a387ce9990f18f825fd4ee395b240e1a1b1ade78a"
+    },
+    "phone/kernel/n71-i2c-power-lifecycle.h": {
+      "bytes": 3013,
+      "sha256": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2"
+    },
+    "tests/n71_i2c_controller.c": {
+      "bytes": 13062,
+      "sha256": "23a2772aa6dac4a73e1bae16f9ddcce3ea18d8eddb7c83b07e38428e2d9d0c20"
+    },
+    "tests/test_n71_i2c_controller.py": {
+      "bytes": 4429,
+      "sha256": "b7ab57ffe4a361d6edd777e4da4e3d6d7452cf2258d8111821bb978b8b16df72"
+    }
+  },
+  "primary_kernel_sources": {
+    "drivers/i2c/busses/i2c-pasemi-core.c": "79fba3545729becc1c42f9706f01e5fd782dc06b152a219739d07ca5eeb98181",
+    "drivers/i2c/busses/i2c-pasemi-platform.c": "39c368ba1d90b872dadbac150716d5bf2b42cd034eee39cbe278eb91c148edf6",
+    "arch/arm64/boot/dts/apple/s800-0-3.dtsi": "7dea8e989e58b12b56a33f127b40b332814fa78d46ae4c11ac57bcc0e2f30525",
+    "include/linux/clk.h": "470df6235438d6b05e4f22f36627b7bb74c919ef3ca9a82654f6a982caecaee1",
+    "drivers/clk/clk.c": "a26af5a1ea1626c8010898fb0c751664b60134a7f05231140fc4e2349042ec48"
+  },
+  "contract": {
+    "mmio_base": "20a111000",
+    "mmio_size": "1000",
+    "clkref_hz": 24000000,
+    "controller_revision": 2,
+    "target_bus_hz": 100000,
+    "initial_ctl": "070f",
+    "baseline_offsets": [
+      "28",
+      "14",
+      "0c",
+      "18",
+      "1c"
+    ],
+    "baseline_samples": 2,
+    "max_poll_waits": 100,
+    "nominal_wait_us": [
+      1000,
+      1100
+    ],
+    "foreign_irq_mask_refused": true,
+    "baseline_command_bits_refused": true,
+    "restore_obligation_before_first_write": true,
+    "failed_restore_retains_mmio_clock_and_obligation": true,
+    "caller_must_retain_pins_consumer_power_module": true,
+    "pin_callback_backend_implemented": false,
+    "adapter_registered": false,
+    "irq_mapping_created": false,
+    "fifo_access": false,
+    "smsta_writes": false,
+    "charger_or_current_limit_writes": false
+  },
+  "native": {
+    "platforms": [
+      "macOS",
+      "Ubuntu ARM64"
+    ],
+    "cases_per_platform": 50,
+    "assertion_mutations_per_platform": 15,
+    "all_mutations_compiled": true,
+    "kill_is_sigabrt_and_assertion": true,
+    "mac_seconds": 11.206,
+    "arm_seconds": 19.23,
+    "kernel_apis_and_pin_ownership_are_fixtures": true
+  },
+  "build": {
+    "probe_bytes": 11192,
+    "probe_sha256": "1f5f4ebb1356ede6717cf603fb2daf7bdbfe8350272b68816853c031ca2549d3",
+    "probe_source_sha256": "fcc13098f087a24093f3b9d04aa14e3fdaeb8616a5c02f43c2fa9fece9cdfbd8",
+    "imports": 26,
+    "imports_absent": 0,
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "elf": "ELF64 REL AArch64",
+    "W": 1,
+    "KCFLAGS": "-Werror",
+    "modpost": true,
+    "probe_refuses_load_enodev": true,
+    "operational_module": false,
+    "module_symvers_aggregate_absent_warning": true,
+    "vmlinux_symvers_supplied_and_all_imports_verified": true,
+    "kbuild_modpost_warn_used": false
+  },
+  "style": {
+    "checkpatch_errors": 0,
+    "checkpatch_warnings": 0,
+    "checkpatch_checks": 0,
+    "python_ast_both": true,
+    "fatal_lint_both": true,
+    "python_type_checker_configured": false
+  },
+  "preservation": {
+    "protected_build_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "new_image_built": false,
+    "current_caller_or_deployment_profile_changed": false,
+    "old_observer_power_lifecycle_sources_unchanged": true,
+    "private_directory_mode": "0700",
+    "private_file_mode": "0600"
+  },
+  "ci_timeout": {
+    "old_minutes": 15,
+    "new_minutes": 45,
+    "prior_pr_run": 38088842866,
+    "prior_push_run": 38088839441,
+    "prior_jobs": [
+      114320918411,
+      114320918460
+    ],
+    "official_annotation": "The job has exceeded the maximum execution time of 15m0s",
+    "previous_conclusion": "cancelled",
+    "gates_removed": 0,
+    "new_head_remote_acceptance_pending": true
+  },
+  "physical": {
+    "phone_accessed": false,
+    "usb_ssh_dfu_reboot": false,
+    "controller_reset_or_restore_proved": false,
+    "sn2400_transfer_proved": false,
+    "gauge_telemetry_proved": false,
+    "linux_charging_proved": false
+  },
+  "remaining": [
+    "Implement retained GPIO descriptor owner and operational caller with valid provider references and module lifetime.",
+    "Qualify controller reset/restore physically in a grouped session.",
+    "Complete bounded SN2400/HDQ transport and gauge revision/ABI before interpreting sensors.",
+    "Prove actual net charging and native Wi-Fi, preserving services and snapshots."
+  ]
+}
