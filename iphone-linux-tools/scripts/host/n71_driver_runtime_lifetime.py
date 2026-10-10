@@ -211,6 +211,12 @@ def retained(session, text, value):
         'wifi_verified': False, 'battery_or_charging_verified': False, 'primary_error': primary}
 
 
+def unassigned(session, proofs):
+    return (getattr(session, 'resource_attempted', None) is False
+        and getattr(session, 'resource_assignment', None) is None
+        and session.result.get('resource_assignment') is None and 'resource-assignment' not in proofs)
+
+
 def removed(session, text, value):
     import n71_resource_stage
     native, wlan = context(session, value); boot(session, text)
@@ -229,7 +235,8 @@ def removed(session, text, value):
     else:
         assignment = getattr(session, 'resource_assignment', None)
         require(not native and not wlan and assignment is not None and 'resource-assignment' in proofs
-                and resources.outcome(proofs['resource-assignment']) == assignment,
+                and resources.outcome(proofs['resource-assignment']) == assignment
+                or (not native and not wlan and unassigned(session, proofs)),
                 'Unprepared runtime cleanup lacks its proved assignment')
         baseline = value['baseline']
         for evidence in [text] + list(proofs.values()):

@@ -36,6 +36,28 @@ def validate(session, observation):
         return cleanup.get('cleanup_primary_error', cleanup['assignment_error'])
     require(presence == (1, 1, 0), 'Runtime coordinator lacks its retained host')
     assignment = getattr(session, 'resource_assignment', None)
+    if assignment is None:
+        require(not entries and not stack and lifetime.unassigned(session, value['proofs']),
+            'Unassigned runtime has an assignment intent or native/module owners')
+        lifetime.boot(session, text)
+        prior = value['checkpoint']; require(isinstance(prior, str), 'Unassigned runtime lacks its acquired checkpoint')
+        lifetime.boot(session, prior)
+        lines = history.kernel_lines(text); anchor = history.kernel_lines(prior); baseline = value['baseline']
+        require(lines[:len(baseline)] == baseline and lines[:len(anchor)] == anchor,
+            'Unassigned runtime history or checkpoint changed')
+        if lines != anchor:
+            held.n71_held_history.verify(text, prior, reg_present=True)
+        require(not any(native.result.ACTION_MARKER in line for line in lines[len(baseline):]),
+            'Unassigned runtime has an unrecorded native action')
+        wlan.resume(session, text, context=value)
+        resources.retained(session, session.history.fresh(text)); iommu.retained(session, text)
+        state = native.live(session, text, session.result['boot_id']); vector = allocation.live(text)
+        require(all(state[name] == 0 for name in native.result.OWNERS
+            + ('pending', 'published', 'operation_error', 'reads', 'error', 'session_error'))
+            and vector is not None and vector['error'] == 0
+            and all(vector[name] == 0 for name in allocation.FIELDS if name not in ('ready', 'held', 'error')),
+            'Unassigned runtime has unrecorded native or MSI owners')
+        return 0
     require(assignment is not None and 'resource-assignment' in value['proofs'], 'Runtime coordinator lacks assignment')
     if assignment['error'] == 0:
         return lifetime.retained(session, text, value)['primary_error']
@@ -81,7 +103,8 @@ def copy_source(session, request, loaded):
 
 def start(session, journal, live):
     entries = native.fields(session)['driver_runtime_journal']
-    require(session.resource_assignment['assignment_verified'] and session.resource_assignment['error'] == 0,
+    require(session.resource_assignment is not None
+        and session.resource_assignment['assignment_verified'] and session.resource_assignment['error'] == 0,
         'Runtime start requires a successful assignment')
     require('pcie-cleanup' not in journal.proofs, 'Runtime start cannot reuse a removed host')
     require(not entries or (entries[-1]['action'] in ('prepare', 'publish')
