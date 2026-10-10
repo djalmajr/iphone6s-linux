@@ -6,6 +6,14 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## Encerrar antes de prepare — fase B2b3d1
+
+Em `a5c38c2`, uma sessão WCC explicitamente selecionada pode ser encerrada antes do primeiro efeito nativo. São necessários assignment rederivado igual ao resumo, ledgers vazios, stack fresco vazio e cleanup/unload completos do mesmo boot. Nenhum resultado nativo novo pode aparecer no snapshot ou nas provas. Assignment negativo conserva a causa; não é tratado como início bem-sucedido. Os contratos anteriores de lifetime e de cleanup permanecem obrigatórios.
+
+Reprodução: `python3 -B -m unittest discover -s tests -p test_n71_runtime_unprepared_stop.py -v`. O novo gate tem **5 testes/4 mutações por AssertionError**; cinco gates afetados aprovaram **53 testes/70 mutações por plataforma Mac/Ubuntu ARM64**, com285 inputs íntegros, AST/lint fatal. Não há typechecker Python configurado. Loader/recovery/journal/filesystem reais; kernel/SSH sintéticos. Fixtures negativas incompletas e uma mutação mascarada por prefixos foram corrigidas; rodadas falhas não contaram como prova. [Evidência sanitizada](evidence/n71-runtime-unprepared-stop-qualified.json), logs privados em `runtime/n71-runtime-unprepared-final-20261010/` e pasta equivalente da VM.
+
+Gates com entradas relevantes inalteradas e os builds C são reutilizados da fase anterior. Nenhum pacote/configuração global, kernel, Image, firmware ou acesso ao iPhone mudou. Próximo: coordenador start/observe/stop e seleção da candidata; Wi-Fi e carga física continuam pendentes. Não solicitar confirmação de retorno ao iOS sem uma ação que dependa dela.
+
 ## Captura integral e origem removida — fase B2b3c
 
 Em `78071d1`, o getter M1 fica fora do bloco condicional PCIe e observa os oito módulos mesmo após unload do diagnóstico. Os efeitos runtime/WCC imprimem e conferem boot antes de escrever ou remover módulos. O parser e o journal recebem o log privado completo, incluindo stderr, com proteção de arquivo, nome de stage canônico e limite inclusivo de 2 MiB. O caminho legacy conserva seus comandos, stdout e formato de proofs.

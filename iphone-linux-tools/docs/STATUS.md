@@ -1,6 +1,10 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — captura integral e origem removida qualificadas; coordenador pendente
+## Checkpoint atual — encerramento pré-prepare qualificado; coordenador em implementação
+
+Em `a5c38c2`, cleanup anterior a prepare e assignment negativo conservam causa/provas sem inventar efeitos nativos. Cinco gates afetados passaram53 testes/70 mutações por plataforma Mac/Ubuntu ARM64,285 inputs íntegros, AST/lint fatal. [Reprodução](N71_BRCMFMAC_RUNTIME.md#encerrar-antes-de-prepare--fase-b2b3d1), [evidência](evidence/n71-runtime-unprepared-stop-qualified.json). Nenhuma ação no iPhone. Coordenador no mesmo boot é o próximo incremento; seleção/firmware/energia e prova física continuam pendentes. Goal/issues40/9/2 permanecem ativos.
+
+## Histórico — captura integral e origem removida qualificadas
 
 Em `78071d1`, M1 observa módulos após unload do diagnóstico, os efeitos conferem boot e os proofs conservam logs privados completos. Loader/recovery de origem removida validam lifetime/stack e conservam arquivos de origem sem replay. Nove gates revalidados: **123 testes/197 mutações por plataforma Mac/Ubuntu ARM64**, 283 inputs íntegros, AST/lint fatal; novo gate11/19, sem typechecker Python. [Reprodução/limites](N71_BRCMFMAC_RUNTIME.md#captura-integral-e-origem-removida--fase-b2b3c), [evidência](evidence/n71-runtime-held-capture-qualified.json).
 

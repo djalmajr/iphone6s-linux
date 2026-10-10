@@ -223,8 +223,12 @@
 - **Alternativas:** stop apenas após start mantém essa lacuna; cleanup automático após qualquer erro pode repetir operações ou perder evidência. A validação explícita mantém o controle no mesmo boot e dispensa reboot intermediário.
 - **Reverter:** baixo antes da seleção C; coordenador opt-in e helper passivo, sem mudança de kernel/perfis antigos.
 - **Onde:** próxima fatia B2b3d, helper/teste de coordenador e lifetime/teste. Fechar interfaces/aceite antes do código.
-- **Status:** na fila; Wi-Fi/energia e sessão física ainda pendentes. Nenhuma ação do operador necessária.
+- **Status:** em curso; B2b3d1 aplicada em a5c38c2,53/70 Mac/ARM64. Coordenador B2b3d2 a seguir; Wi-Fi/energia e sessão física ainda pendentes.
 
 ### D25 — ordem de implementação
 
 A validação de encerramento pré-prepare será B2b3d1 (lifetime e teste próprio), seguida do coordenador B2b3d2. A prova exige assignment/cleanup completo, ledgers vazios, stack ausente e nenhum efeito nativo novo no histórico. Isso permite sair de uma sessão adquirida sem inventar prepare/release para produzir um ledger. Nenhum boot físico intermediário; não altera a definição de conclusão do goal.
+
+### Interação física
+
+Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicialização física, sem pedir confirmação da tela de bloqueio. Isso não equivale a prova observada por USB. Somente uma ação indispensável a teste preparado pode motivar nova solicitação; nenhuma pergunta sobre conexão, console ou temperatura por rotina.

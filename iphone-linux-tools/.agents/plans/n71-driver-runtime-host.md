@@ -167,5 +167,30 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** novo gate `python3 -B -m unittest discover -s tests -p test_n71_runtime_unprepared_stop.py -v`, usando resource/IOMMU/lifetime/held loader reais, filesystem privado e kernel/SSH sintéticos. Provar cleanup anterior a prepare, assignment com causa negativa, diagnóstico removido, source loader/recovery sem efeitos e origem intacta. Recusar ledger/proof/boot/stack/prefixo/causa divergentes e resultado nativo não registrado. Mutation baseline verde e kills por AssertionError, AST/lint Mac/ARM64, gates afetados; preservar69 C/módulos/builds e entradas legacy.
 
-- [ ] Integrar e qualificar encerramento sem lifetime nativo.
+- [x] Integrar e qualificar encerramento sem lifetime nativo.
 - [ ] Fechar o contrato B2b3d2 e implementar start/observe/stop no mesmo boot.
+
+**B2b3d1 qualificada em a5c38c2:**5/4 novos,53/70 nos cinco gates afetados por plataforma Mac/Ubuntu ARM64,285 inputs íntegros, AST/lint fatal. Loader/recovery/parsers reais, kernel/SSH sintéticos; rodadas falhas descartadas. Nenhum acesso ao telefone ou alteração de kernel/build/configuração global.
+
+### B2b3d2. Coordenador no mesmo boot — contrato fechado
+
+**Contexto:** ligar as APIs já qualificadas de native.act, module.act, lifetime e held release. A entrada held.run legacy executa cleanup no resume; não serve para manter o driver vivo entre desenvolvimentos. Não alterar esse caminho.
+
+**Arquivos executáveis (dois):** novo `scripts/host/n71_driver_runtime_session.py` e novo `tests/test_n71_driver_runtime_session.py`. Nenhuma CLI/perfil, kernel, firmware, instalação global ou ação física nesta fatia.
+
+**Interface:** `run(session, request)` com exatamente action (`start`, `observe`, `stop`), root (Path raiz), source (diretório privado runtime) e identity. Exigir seleção explícita runtime/WCC/resource/IOMMU. Carregar/reconciliar a origem pelas APIs existentes e observar o boot corrente; uma origem válida é necessária, sem aquisição inicial implícita. Fonte, órfãos e receipts nunca são sobrescritos. Saída é resumo `{action, phase, primary_error, successful}` e fica no result/journal privado. Isso não prova IRQ/DMA, Wi-Fi ou energia.
+
+**Fonte e journal:** root/output/source protegidos, distintos, dentro do runtime; saída nova/exclusiva. Copiar só proofs registrados e checkpoint, preservando bytes completos e SHA. Quando recovery cria fork comprovado, copiar desse fork e conservar a origem inicial. Hash/boot/history/owners divergentes recusam efeitos. Observação atual valida módulo diagnóstico/REG_ON conforme attempts/proofs, stack, prefixos e resources/providers. Estado removido exige lifetime.removed; estado retido saudável exige lifetime.retained. Assignment negativo anterior a qualquer efeito nativo usa os validadores passivos resource/IOMMU/history e stack vazio, sem autorizar start.
+
+**Start:** assignment saudável e prefixo próprio. Fazer prepare se ainda não houve ação nativa; carregar os cinco módulos em ordem somente onde falta um owner comprovado; publicar após WCC completo. Repetir start em uma publicação já comprovada só observa, sem load/setter. Retomar prefixo de loads completos é permitido pelas preconditions existentes; native prepare/publicação negativa ou release anterior não autoriza novo start. Falha conserva owners/intent e causa; nada de cleanup/reboot automático.
+
+**Observe:** apenas snapshots e validação; salvar checkpoint/journal próprios. Nenhum insmod/rmmod/setter, mesmo no estado removido. Pending só avança pela recuperação qualificada, nunca por replay.
+
+**Stop:** unload normal na ordem inversa somente dos módulos registrados como vivos. Busy/ref/holder ou completion negativa interrompe, conservando providers/REG_ON. Com stack vazio, release nativa se houve preparação e ainda não há release bem-sucedida; release negativa comprovada pode ser tentada novamente pelas APIs existentes. Depois held.release, snapshot final e lifetime.removed, exigindo ausência de diagnóstico/REG_ON/PCI. Stop removido só observa; stop pré-prepare usa B2b3d1. Causa negativa retorna successful=false mesmo com cleanup completo.
+
+**Falhas:** após criar journal, registrar erro privado e tentar checkpoint read-only para preservar evidência. Não esconder a falha nem executar ação compensatória automática. Crash antes da completion continua pendente; próximo processo utiliza recovery. Nenhuma remoção forçada, unbind, replay de receipt ou reboot.
+
+**Verificação:** fixture kernel/SSH sintética, parsers/lifetimes/act/journal/filesystem/loader/recovery reais. Provar start → observe → stop no mesmo boot, start já publicado e stop já removido sem novos efeitos, prefixo parcial retomado, busy/transport conservando owners, negativa pré-prepare, boot/hash/history recusados antes de efeito e origem/órfãos íntegros. Mutations reais após baseline verde, só AssertionError; AST/lint Mac/ARM64 e gates afetados, reuso C/artifacts intactos. C permanece fechada até esse aceite; seleção/composição, firmware/calibração/regdb/energia seguem depois.
+
+- [ ] Implementar e qualificar coordenador start/observe/stop.
+- [ ] Ligar seleção/composição C após a qualificação, antes do teste físico agrupado.
