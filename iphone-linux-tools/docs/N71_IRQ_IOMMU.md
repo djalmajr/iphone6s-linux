@@ -12,6 +12,16 @@ O kernel registrou cleanup completo, remoção do provider, restauração dos16 
 
 Depois disso, dois ciclos GPIO115/114 passaram neste mesmo boot. Snapshot/sync passaram; retorno automático não foi confirmado pelo USB, e o operador confirmou a tela de bloqueio após fallback físico, sem PIN. A próxima correção offline deve conferir a identificação dos nós OF pela fonte kernel fixada e aceitar somente a sequência negativa completa no verificador. Não repetir DFU para investigar essas duas falhas de software.
 
+### Correções offline após a coleta — identidade OF e cleanup negativo
+
+A fonte fixada confirma que `populate_node` copia `fdt_get_name` para full_name (`drivers/of/fdt.c:201–217`) e `of_node_full_name` devolve esse campo (`include/linux/of.h:261`). Os nomes são `pcie@610000000`/`iommu@602008000`; comparar esse campo com caminhos absolutos causava a recusa ENODEV. O fixture anterior oferecia nomes absolutos e mascarava a falha. Primeiro reproduzimos a asserção do caminho positivo usando nomes reais; depois corrigimos o helper para lookup absoluto e igualdade de ponteiro, soltando a referência do lookup em todos os casos. Nó estrangeiro com mesmo basename e lookup ausente continuam recusados. [Plano](../.agents/plans/n71-of-scope-negative-cleanup.md), [prova offline](evidence/n71-of-scope-negative-cleanup.json).
+
+O parser agora admite somente a sequência negativa completa antes de publicação: prepare/scan/caller com erro coincidente e limitado, devices/attempts/writes0, status vivo ready0, owners0, nenhuma lease de barramento/atribuição, config restaurada antes do cleanup da lease DART, restauração16 e liberação antes de reset/power/caller. Prova ausente/duplicada, erro ou ordem divergentes conservam a recusa. O coordinator sintético preserva o erro de aquisição e descarrega os owners sem segundo scan/action. O log físico original passou pelo novo parser sem alterações; isso não equivale a nova execução física do collector.
+
+Mac/Ubuntu ARM64: OF51 cenários/40 mutações compiladas por asserção por plataforma; parser/journal19 testes/45 mutações por AssertionError por plataforma, incluindo modos positivos anteriores. Um mutant C inicialmente não compilou por parâmetro não usado, outro parser mutant era redundante, e um teste novo gerou KeyError sob mutação; nenhum foi contado como kill. Corrigidos os testes, os gates finais passaram com asserções e sem ERROR. AST/Flake8 fatal passaram; não há typechecker Python configurado.
+
+O módulo PCIe recompilado tem114.120 bytes/SHA256 `48df330a6ddf6da524ad47979df9b056a6ffa8b793002a03814e1885c6739dc9`, ELF64/AArch64/vermagic power2. Build W=1/Werror e modpost passaram com os123 imports no vmlinux.symvers explícito. O aviso genérico de Module.symvers agregado ausente permanece; não foi usado KBUILD_MODPOST_WARN. Fonte/patch/config/Image/exports preservados. O módulo é privado, ainda não foi selecionado pelo perfil/composer nem carregado no telefone. Próximo: qualificar a seleção da nova ABI e compor candidata separada, antes de um único teste físico agrupado. Nenhum novo DFU foi usado para essas correções.
+
 ## Fontes fixadas e fatos observados offline
 
 Fonte958481f87fee0949ff6a9a4af77f7eb6dac8a149, já preservada na VM de build. A leitura não modificou fonte/config/Image/exports nem o telefone.

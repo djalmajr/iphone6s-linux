@@ -1,0 +1,89 @@
+{
+  "format": 1,
+  "date": "2026-10-09",
+  "of_code_commit": "82bb499",
+  "parser_code_commit": "a0f27d8",
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "inputs_sha256": {
+    "phone/kernel/n71-dart-host.h": "f676c5e3270c504df30eaa5df238e358a6155ef62212510ad0826f310279940e",
+    "tests/n71_dart_host.c": "a829708ccf9341dc6ee36c04626a7e55f56901847c117518f7c276d49429ba25",
+    "tests/n71_dart_host_fixture.h": "1734a2a77fba657830ff53ddd22be3bf3d8e245ee635ae6750b6d189fa29dee5",
+    "tests/test_n71_dart_host.py": "6137596c6ab04cf54cff4dce90261419d5cfbb27d0671ffbb6d0202118a50329",
+    "scripts/host/n71_iommu_result.py": "36ef7a4ad9f1837adc85cc6b8a8cbecaeac4789dffc010b2f17b1e9e16f2a7e7",
+    "tests/test_n71_iommu_result.py": "6f2dc25fbf1f1bb015b3820630651148226e0fe47ac4bacef4b1b66bfd401de9"
+  },
+  "source_audit": {
+    "kernel_full_name_is_fdt_node_name": true,
+    "absolute_path_lookup_requires_pointer_identity": true,
+    "lookup_reference_put_on_success_and_refusal": true,
+    "same_basename_foreign_nodes_and_missing_paths_refused": true,
+    "old_source_with_real_leaf_names_reproduced_assertion_failure": true
+  },
+  "of_native_gate": {
+    "platforms": [
+      "macOS",
+      "Ubuntu ARM64"
+    ],
+    "cases_per_platform": 51,
+    "compiled_assertion_mutants_per_platform": 40,
+    "compile_import_timeout_counted_as_kills": false
+  },
+  "cleanup_parser_gate": {
+    "platforms": [
+      "macOS",
+      "Ubuntu ARM64"
+    ],
+    "tests_per_platform": 19,
+    "assertion_mutants_per_platform": 45,
+    "mac_seconds": 23.189,
+    "ubuntu_seconds": 87.276,
+    "original_physical_log_reparsed_without_changes": true,
+    "positive_held_coordinator_and_negative_unbound_coordinator_verified": true,
+    "unload_or_reg_on_release_with_incomplete_proof_refused": true
+  },
+  "kernel_build": {
+    "format": 1,
+    "stages": {
+      "host-ubuntu": {
+        "exit": 0,
+        "seconds": 2.73
+      },
+      "module-build": {
+        "exit": 0,
+        "seconds": 1.95
+      }
+    },
+    "baseline_before": {
+      "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "tracked_patch_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+      "config_sha256": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "image_sha256": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "exports_sha256": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_after": {
+      "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "tracked_patch_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+      "config_sha256": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "image_sha256": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "exports_sha256": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true,
+    "module_sha256": "48df330a6ddf6da524ad47979df9b056a6ffa8b793002a03814e1885c6739dc9",
+    "module_bytes": 114120,
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "elf64_aarch64": true,
+    "imports_verified": 123,
+    "missing_imports": [],
+    "loaded_on_phone": false
+  },
+  "limits": {
+    "new_module_loaded_on_phone": false,
+    "profile_selector_or_candidate_updated": false,
+    "new_physical_boot_performed_for_fixes": false,
+    "wifi_verified": false,
+    "irq_delivery_verified": false,
+    "dma_translation_verified": false,
+    "battery_or_charging_verified": false,
+    "private_logs_firmware_keys_or_device_identifiers_published": false
+  }
+}
