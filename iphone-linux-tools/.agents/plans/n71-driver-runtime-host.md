@@ -297,3 +297,18 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 - [x] Corrigir e qualificar bundle sem falha de import.
 
 **C5a qualificada em9300cf4:**22 testes/34 kills AssertionError no Mac e ARM64,382 inputs públicos preservados e AST/lint fatal. Imports transitivos corrigidos, mutações/timeouts intactos. C5/builds reutilizados. O CI completo permanece sujeito ao prazo15min; issue41 aberta.
+
+### C6a. Extrair a calibração em cache com contrato público reproduzível
+
+**Contexto:** captura completa Pongo contém wifi-calibration-msf de1024 bytes em /device-tree/arm-io/uart4/wlan. kboot fixado copia a propriedade para brcm,cal-blob; of/common a consomem. Regdb2026.09.03 já passou CMS explícito e negativa. Nenhum novo DFU necessário para esta etapa. Compatibilidade de firmware e rota DT continuam pendentes.
+
+**Arquivos executáveis (três):** scripts/research/n71_runtime_tunables.py, novo scripts/research/n71_wifi_calibration.py e novo tests/test_n71_wifi_calibration.py. A inspeção confirmou que não existe runner separado dos tunables; conservar os cinco testes existentes e colocar mutações reais no novo teste, seguindo o padrão atual do projeto. Extrair somente o parser compartilhado de propriedades do parse_capture existente, preservando exatamente a API/comportamento dos tunables e a cobertura antiga. Sem refatorar paths, kernel, perfil, loader, firmware staging ou CLI runtime nesta fatia.
+
+**Interfaces:** properties_capture(data, selections), com selections dict de pares (path,key) para (label,limite_em_bytes), valida request e devolve dict label→bytes imutáveis. Path canônico sob /device-tree, labels únicos, limites inteiros positivos até131072, tabela não vazia até32 entradas. Manter captura completa/bounded2MiB, até4000 blocos, hierarquia/nomes/framing, duplicatas e ausências recusadas. parse_capture usa a tabela antiga e decode_records, conservando o formato/hash/records atual.
+
+**Extrator:** CLI --input/--output-dir obrigatórios com private_path existente. Source privada/regular≤2MiB; output novo diretamente sob runtime. Selecionar somente a propriedade no caminho N71 exato e exigir1024 bytes antes de criar output. Gravar blob e relatório de provenance privados700/600; report identifica board/path/key/captureSHA/size/sha privadamente e declara hardware_writes=false, firmware_executed=false, physical_acceptance=false. Restaurar umask em finally; stdout somente marcador genérico sem hash/identificador/dado de calibração. Nenhuma antena ou identidade inventada.
+
+**Verificação:** fixture Pongo sintética e filesystem reais; tunables antigos idênticos, calibração exata/imutável, captura truncada/duplicada/nó incorreto/tamanho errado/byte inválido/paths/links/output existente recusados antes de arquivo novo, origem intacta, modos/env/umask. Mutações reais somente AssertionError após baseline verde; gates afetados Mac/ARM64, AST/lint fatal e hashes preservados. Executar extrator sobre captura real existente, sem imprimir valores. Reutilizar C5/builds inalterados; nenhum telefone/DFU.
+
+- [ ] Implementar e qualificar extrator compartilhado e CLI privada.
+- [ ] Fechar rota de DT do endpoint/antenna e staging firmware/regdb após esse aceite, antes da sessão física única.

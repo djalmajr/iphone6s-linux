@@ -277,3 +277,14 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Reverter:** baixo; somente a lista pública da cópia descartável.
 - **Onde:** C5a no plano host; tests/run_n71_diagnostic_payload_mutations.py; issue41 existente.
 - **Status:** aplicada em9300cf4;22/34 Mac/ARM64,382 inputs íntegros. Nenhuma intervenção no aparelho.
+
+## D31. Reutilizar calibração capturada e regdb assinada antes de novo boot
+
+- **Decisão:** extrair a propriedade WLAN N71 já capturada com parser compartilhado; conservar bytes/hashes privados. Usar regdb oficial com CMS contra certificado explícito da fonte do kernel.
+- **Por quê:** a captura existente evita DFU adicional; fonte do loader confirma msf→cal-blob, mas rota N71 e aceitação física ainda precisam de prova.
+- **Alternativas:** dados D111/A10 não pertencem ao aparelho; inventar NVRAM/antenna oculta incompatibilidade; nova coleta repete dados que já temos.
+- **Reverter:** baixo antes de perfil/loader; somente artefatos privados extraídos e parser compatível.
+- **Onde:** C6a no plano host; nova evidência regdb/calibração; issue9 existente.
+- **Status:** pesquisa/crypto concluídas; extração pública em curso, rota DT e hardware pendentes. Nenhum pedido ao operador.
+
+**Ajuste factual D31:** não existe tests/run_n71_runtime_tunables_mutations.py; o contrato C6a usa três arquivos e conserva os cinco testes existentes, com mutações no teste novo. Corrigido antes de implementação.

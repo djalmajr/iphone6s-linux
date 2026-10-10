@@ -6,6 +6,22 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## Regdb e calibração em cache — preparação C6
+
+Dados `regulatory.db`/`.p7s` da versão2026.09.03 foram extraídos de arquivos regulares específicos do tar oficial, com limites de download/tamanho e SHA do arquivo conferido contra sha256sums.asc. A assinatura PGP externa não foi verificada. A assinatura CMS dos dados foi verificada na VM usando exclusivamente o certificado `wens.hex` da fonte do kernel; `-nointern` recusou confiar em certificados transportados na assinatura. Alterar um byte do banco produziu recusa.
+
+```bash
+# Na VM, converter o DER obtido de net/wireless/certs/wens.hex para PEM.
+openssl x509 -inform DER -in kernel-wens-private.der -out kernel-wens-private.pem
+openssl cms -verify -binary -inform DER -in regulatory.db.p7s \
+  -content regulatory.db -certfile kernel-wens-private.pem \
+  -nointern -noverify -out verified-output-private
+```
+
+`-noverify` desativa a validação da cadeia X.509; a assinatura continua sendo verificada contra o certificado explicitamente fixado do kernel. Comparar o output aos bytes originais e exigir falha com banco alterado. Dados/scripts/logs ficam privados em `runtime/n71-regdb-candidate-20261010/`; não houve instalação no Mac. [Origem oficial](https://www.kernel.org/pub/software/network/wireless-regdb/), [evidência](evidence/n71-regdb-calibration-source-audit.json).
+
+A captura Pongo já existente foi examinada localmente, sem telefone: quatro propriedades binárias WLAN foram conservadas privadamente, incluindo `wifi-calibration-msf` de1024 bytes. `rx-calibration-temp` é escalar renderizado e não foi reconstruído. O [kboot fixado](https://github.com/HoolockLinux/m1n1/blob/d5a10ac52a6468484854419a6c5130f1d62073eb/src/kboot.c#L1028) transfere msf para `brcm,cal-blob`; of.c lê essa propriedade e common.c a envia por calload. O loader espera `/arm-io/wlan`/wifi0, mas o N71 capturado tem `/arm-io/uart4/wlan`, sem a propriedade de antena esperada. Essas diferenças permanecem abertas antes de compor/publicar DT e carregar o rádio. Isso é contrato estático, sem aceitação física da calibração ou associação.
+
 ## CLI explícita — fase C5
 
 `637ba88` acrescenta entrypoint/helper próprios. Profile fica selecionado somente durante a operação; ambiente/umask retornam ao estado anterior inclusive em erro. Profile/source/output ficam em pastas privadas diretamente sob runtime; efeitos exigem output novo.

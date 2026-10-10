@@ -2,6 +2,14 @@
 
 Estado atualizado em2026-10-04: **Wi-Fi nativo ainda não habilitado**. No mesmo boot, o projeto comprovou link/identidade PCI, BAR0 de32KiB/BAR2 de4MiB, leitura interna BCM4350/rev8 e observação estável do DART separado. SSH/HTTP e snapshots foram preservados após cada cleanup, sem novo DFU para essas continuações. [Procedimento e provas físicas](N71_LINK_EXPERIMENT.md).
 
+## Firmware, regdb e calibração já capturada — 2026-10-10
+
+A base `wireless-regdb-2026.09.03` veio do [servidor oficial](https://www.kernel.org/pub/software/network/wireless-regdb/). Seu CMS passou com o certificado `wens` da fonte fixada do kernel; a versão alterada foi recusada. O kernel exige regdb assinada. Isso qualifica os arquivos, sem provar seu carregamento no telefone.
+
+A captura live Pongo existente contém `wifi-calibration-msf` de1024 bytes no WLAN N71. O [loader já fixado](https://github.com/HoolockLinux/m1n1/blob/d5a10ac52a6468484854419a6c5130f1d62073eb/src/kboot.c#L999) publica essa mesma propriedade como `brcm,cal-blob`, consumida pelo driver para `calload`. A rota N71 difere da esperada pelo loader; endpoint DT, antena e aceitação real precisam de qualificação. O parser OTP Apple desta revisão não contempla BCM4350. Não reutilizar calibração D111/A10 nem reconstruir valores escalares do dump.
+
+Nenhum novo DFU, firmware no rádio ou dado privado publicado. [Evidência sanitizada](evidence/n71-regdb-calibration-source-audit.json).
+
 **Prioridade operacional atual: alimentação.** Após relato de descarga no
 Linux, iOS reportou5% e carregamento ativo. Novos testes físicos foram
 interrompidos; o aparelho recarrega no iOS. A candidata de captura de controls
