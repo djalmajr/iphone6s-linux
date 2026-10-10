@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — protocolo WCC qualificado; journal/coordenador e ativação pendentes
+## Checkpoint atual — journal WCC qualificado; coordenador e ativação pendentes
+
+Em `4d857bf`, o journal WCC conserva intenções, propriedade dos módulos e resultados diretos/observados. Recupera perda de transporte após load ou unload normal por leitura do mesmo boot, sem replay, preservando origem/órfão. A publicação entre load e unload exige prova nativa. Mac/Ubuntu ARM64:131 testes/230 mutações por plataforma,276 inputs íntegros, AST/lint fatal; nenhum typechecker Python configurado. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#journal-dos-módulos-wcc--fase-b2b2-m2), [evidência](evidence/n71-wcc-module-journal-qualified.json).
+
+Gates host afetados executados novamente;69 inputs C iguais permitem reutilizar575/455 e build anterior. Oito módulos oficiais byte/SHA conferidos, sem rebuild. Nenhum acesso/reboot/DFU do iPhone, pacote/configuração global ou perfil/CLI habilitado. Próximo trecho: coordenador start/observe/stop e causalidade resources/cleanup, depois seleção C e firmware/energia para a sessão agrupada. Wi-Fi/carga Linux/goal/issues40/9/2 continuam abertos; nenhuma ação do operador necessária.
+
+CI anterior `0d9bb3c`: [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38051789020) success; [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38051791946) com Ubuntu/Windows success e Mac cancelado durante o gate de sessão física. A nova implementação terá CI própria; não declarar o cancelamento como aprovação.
+
+## Histórico — protocolo WCC qualificado
 
 Em `0a315b9`, o protocolo seleciona cinco módulos WCC/1.211.120 bytes, valida manifest/ABI/boot/hashes e registra receipt exclusivo antes de cada efeito. Ordem: prepare → dependências/core/WCC → publish; unload normal inverso, recusando pins/holders ocupados e replay. Mac/Ubuntu ARM64:9 testes/18 mutações novos,258 inputs íntegros, AST/lint fatal; shell/filesystem reais, kernel insmod/rmmod sintético e nenhum typechecker Python configurado. [Reprodução](N71_BRCMFMAC_RUNTIME.md#protocolo-dos-módulos-wcc--fase-b2b2-m1), [evidência](evidence/n71-wcc-module-protocol-qualified.json).
 

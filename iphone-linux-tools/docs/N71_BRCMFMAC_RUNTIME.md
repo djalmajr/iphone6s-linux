@@ -204,6 +204,33 @@ python3 -B -m unittest discover -s tests -p test_n71_driver_modules.py -v
 
 Mac/Ubuntu ARM64:9 testes novos/18 mutações por AssertionError,258 inputs finais íntegros, AST/lint fatal; POSIX shell/filesystem reais e insmod/rmmod sintéticos, sem executar ARM no Mac. Nenhum typechecker Python configurado. Reutilizados110/196 host com270 inputs iguais e575/455 C com69 iguais; esses gates não foram repetidos. Os oito artefatos oficiais tiveram bytes/SHA novamente conferidos, sem novo build/instalação. Nenhum acesso/DFU/reboot do iPhone, pacote/configuração global, mudança de banco ou dependência externa. Próximo trecho: ledger, resultado/reconciliação e hooks de snapshot/source; depois coordenador/causalidade/seleção e firmware/energia. Wi-Fi/carga continuam sem prova física.
 
+## Journal dos módulos WCC — fase B2b2 M2
+
+Em `4d857bf`, o journal grava e sincroniza a intenção antes de cada load/unload, registra o proof completo e deriva o resultado da operação, transporte e presença dos módulos. O manifest qualificado permanece imutável. A propriedade começa vazia, cresce em prefixo fixo e diminui em ordem inversa; uma operação recusada só permite nova tentativa depois de ter resultado comprovado. A passagem entre load antes de publish e unload depois de publish exige a action nativa comprovada e seu histórico. [Evidência](evidence/n71-wcc-module-journal-qualified.json), [plano](../.agents/plans/n71-driver-runtime-host.md#b2b2-módulos-wcc-e-barreira-de-unload--contrato-fechado).
+
+O snapshot/loader held e a recuperação runtime agora incluem o getter de módulos e o receipt da última intenção. Um resultado direto exige exits da operação e SSH iguais. Depois de perda de transporte, uma leitura nova pode reconciliar o receipt e a presença no mesmo boot, com `shell_exit=null`. Receipt iniciado sem exit só permite completion quando a transição observada é exatamente a do target; o exit da operação permanece desconhecido. Ausência dessa transição conserva a intenção pendente e recusa replay.
+
+Origem, hashes registrados, checkpoint existente e prefixos são conferidos antes da recuperação. Uma cópia privada exclusiva recebe a leitura nova; a origem e um proof órfão permanecem byte por byte intactos. Foram exercitadas perdas após load e após unload normal do WCC publicado, sem segundo efeito. A recuperação não promove output órfão, não presume sucesso do SSH e não admite outra propriedade mudada sem intenção.
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_module_stage.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_recovery.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_modules.py -v
+```
+
+Mac/Ubuntu ARM64:12 testes novos/16 mutações por AssertionError. A matriz afetada completa reuniu131 testes/230 mutações por plataforma,276 inputs íntegros, AST/lint fatal; nenhum typechecker Python configurado. Journal, filesystem, loader e snapshot reais, dependências kernel/SSH sintéticas. Os gates host afetados foram executados novamente;69 inputs C iguais permitem reutilizar575/455 e build anteriores. Oito módulos oficiais tiveram bytes/SHA revalidados, sem rebuild. A primeira rodada de mutações continha um IndexError de fixture e seletores redundantes; ela foi descartada, e só a matriz final verde com falhas por AssertionError foi aceita.
+
+| Item | Resultado |
+| --- | --- |
+| Arquivos | Helper e teste novos; hooks localizados em held/recovery. |
+| Plano | M1/M2 qualificadas; coordenador start/observe/stop, causalidade, seleção C e candidata física pendentes. |
+| Compatibilidade | Caminhos legacy preservados; perfil/CLI não habilitados. |
+| Banco/dependências | Sem banco, pacote ou configuração global nova. |
+| Custo | Ledger/proofs privados e leitura de recuperação somente quando necessária; desempenho físico não medido. |
+| CI anterior | Push `0d9bb3c` aprovado; PR com Ubuntu/Windows aprovados e Mac cancelado no gate de sessão física. Cancelamento não é aprovação. A nova implementação terá CI própria. |
+
+Nenhum acesso, DFU ou reboot do iPhone ocorreu nesta fase. O próximo trecho integra a execução do ciclo completo no mesmo boot e o cleanup que conserva a primeira causa, antes da seleção/composição C e firmware/calibração/regdb/energia. Wi-Fi e carga Linux continuam sem prova física; goal/issues40/9/2 permanecem abertos. Nenhuma ação do operador é necessária agora.
+
 ## Candidato privado de firmware — origem verificada
 
 A revisão oficial `31ec35bf14df835e2f9f7c8b1a8516a34f836df5` de [linux-firmware](https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/31ec35bf14df835e2f9f7c8b1a8516a34f836df5/brcm/) contém `brcmfmac4350-pcie.bin`. O candidato privado tem626.140 bytes, SHA256 `5691d1e0ceb70baf18efb7a0ec6cb84feb9edd2d0700c525b42930c4e7e4b845`; o blob Git foi conferido contra o índice fixado. WHENCE vincula o arquivo à licença Broadcom, também baixada e conferida pelo blob/hash da mesma revisão. [Metadados sanitizados](evidence/n71-firmware-candidate-origin.json).

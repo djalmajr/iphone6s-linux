@@ -187,4 +187,4 @@
 - **Alternativas:** publicar antes de carregar WCC exige autoload ainda não preparado no rootfs; carregar core antes de prepare viola a guarda nativa; remover core antes do vendor conflita com sua dependência; force/unbind perde a barreira de lifetime e foi descartado.
 - **Reverter:** baixo antes da ativação; módulos/perfil antigos e defaults legacy conservados, sem mudança no kernel.
 - **Onde:** plano hostB2b2, protocolo e journal de módulos, depois coordenador e seleção C.
-- **Status:** M1 aplicada em0a315b9,9/18 novos Mac/ARM64,258 inputs íntegros, AST/lint. M2 ledger/coordenador e seleção física continuam em curso; nenhum boot/load no aparelho.
+- **Status:** M1 aplicada em0a315b9 e M2 em4d857bf; matriz afetada131/230 Mac/ARM64,276 inputs íntegros, AST/lint. Ledger/hooks/recuperação de módulos qualificados offline; coordenador/causalidade/seleção física continuam em curso.69 C e oito módulos byte/SHA preservados; nenhum boot/load no aparelho.
