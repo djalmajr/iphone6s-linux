@@ -24,6 +24,8 @@ import n71_resource_result
 import n71_held_session
 import n71_iommu_result
 import n71_iommu_build
+import n71_driver_runtime_profile
+import n71_driver_runtime_result
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = '7.2.0-iphone6s-dart-serdev1'
@@ -187,7 +189,7 @@ def inventory_result(text):
 
 
 class Session:
-    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE, scan_pme_disable=False, scan_hold=False, resource_capable=False, iommu_parent=False):
+    def __init__(self, output, modules, *, config_inventory=False, host_scan=False, bar_sizing=False, chip_id=False, dart_observe=False, dart_cycle=False, history=None, scan_link_target=False, release=RELEASE, scan_pme_disable=False, scan_hold=False, resource_capable=False, iommu_parent=False, runtime=None):
         require(type(resource_capable) is bool and (not resource_capable or scan_hold),
                 'Resource session requires an explicit boolean and held mode')
         require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
@@ -209,6 +211,12 @@ class Session:
         self.release = release
         self.output = output
         self.modules = modules
+        self.driver_runtime = False
+        self.driver_modules = None
+        self.driver_module_data = []
+        self.driver_runtime_journal = []; self.driver_module_journal = []
+        if runtime is not None:
+            n71_driver_runtime_profile.configure(self, {'root': ROOT, 'modules': runtime})
         n71_iommu_result.selected(self, ROOT)
         self.config_inventory = config_inventory or host_scan or bar_sizing or chip_id or dart_observe or dart_cycle
         self.host_scan = host_scan
@@ -248,6 +256,7 @@ class Session:
         return process
 
     def preflight(self):
+        n71_driver_runtime_profile.selected(self, ROOT)
         p = self.capture('preflight', 'set -e; uname -r; uptime; '
                          'printf "N71_BOOT_ID "; cat /proc/sys/kernel/random/boot_id; '
                          'test ! -d /sys/module/n71_wlan_power_diagnostic; '
@@ -280,7 +289,11 @@ class Session:
         if self.host_scan or self.bar_sizing or self.dart_observe or self.dart_cycle or self.history:
             p = self.capture('pci-empty', 'set -e; test -z "$(ls /sys/bus/pci/devices)"; echo N71_PCI_PREFLIGHT_EMPTY')
             require(p.returncode == 0, 'Pre-existing PCI devices refused')
-        for record, raw in self.modules:
+        if n71_driver_runtime_result.capable(self):
+            p = self.capture('runtime-stack-empty', n71_driver_runtime_profile.preflight_command())
+            require(p.returncode == 0 and p.stdout.splitlines().count('N71_RUNTIME_STACK_EMPTY') == 1,
+                    'Pre-existing runtime modules or driver refused')
+        for record, raw in self.modules + n71_driver_runtime_profile.staged(self):
             target = self.module_directory + '/' + record['module']
             p = self.capture('transfer-' + record['module'],
                              'umask 077; set -C; cat > ' + target, raw)
@@ -319,6 +332,8 @@ class Session:
             parameters += ' scan_hold=1'
         if self.iommu_parent:
             parameters += ' msi_parent=1 iommu_parent=1'
+        if n71_driver_runtime_result.capable(self):
+            parameters += ' driver_runtime=1'
         if self.chip_id:
             parameters += ' chip_id=1'
         elif self.bar_sizing:

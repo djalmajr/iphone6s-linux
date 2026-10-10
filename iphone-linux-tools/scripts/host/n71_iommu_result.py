@@ -28,6 +28,10 @@ def capable(session):
 
 
 def selected(session, root):
+    if n71_driver_runtime_result.capable(session):
+        import n71_driver_runtime_profile
+        n71_driver_runtime_profile.selected(session, root)
+        return
     if not capable(session):
         return
     require(session.scan_hold and session.resource_capable
