@@ -288,3 +288,12 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Status:** aplicada em e482f86;14/14 Mac/ARM64 e extração real privada. Regdb CMS aprovada; rota DT/firmware/energia e hardware pendentes. Nenhum pedido ao operador.
 
 **Ajuste factual D31:** não existe tests/run_n71_runtime_tunables_mutations.py; o contrato C6a usa três arquivos e conserva os cinco testes existentes, com mutações no teste novo. Corrigido antes de implementação.
+
+## D32. Entregar calibração por nós PCI OF preservando kernel e loader
+
+- **Decisão:** criar perfil opt-in separado com nós rootport/endpoint e cal-blob no DT; conservar binaries e identidades atuais. Sem alias/compatible/antena/MAC inventados.
+- **Por quê:** fonte PCI associa o parent OF e filhos por devfn; loader atual busca outro caminho ADT. O blob já capturado permite preparar tudo localmente antes do boot.
+- **Alternativas:** alterar loader exige rebuild e outra cadeia de prova; injetar dados D111 não corresponde ao N71; carregar um rádio sem qualificar a rota não prova calibração.
+- **Reverter:** baixo; candidato privado separado, source/default/kernel preservados.
+- **Onde:** C6b no plano host; novo compositor/teste, issue9 existente.
+- **Status:** contrato fechado em curso; associação OF/firmware/carga ainda sem prova física.
