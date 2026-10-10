@@ -32,8 +32,25 @@ def decode_records(data, aperture):
     return result
 
 
-def parse_capture(data):
-    if not data or len(data) > MAX_CAPTURE or not data.rstrip().endswith(b'pongoOS>'):
+def properties_capture(data, selections):
+    if not isinstance(selections, dict) or not selections or len(selections) > 32:
+        raise ValueError('Bounded property selection required')
+    labels = set()
+    for pair, item in selections.items():
+        if (not isinstance(pair, tuple) or len(pair) != 2
+                or not isinstance(item, tuple) or len(item) != 2):
+            raise ValueError('Property selection shape refused')
+        path, key = pair
+        label, limit = item
+        if (not isinstance(path, str) or not re.fullmatch(r'/device-tree(?:/[A-Za-z0-9,_.+-]+)*', path)
+                or any(part in ('.', '..') for part in path.split('/'))
+                or not isinstance(key, str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9,_.+-]{0,31}', key)
+                or not isinstance(label, str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]{0,31}', label)
+                or label in labels or type(limit) is not int or not 0 < limit <= 131072):
+            raise ValueError('Property selection scope or budget refused')
+        labels.add(label)
+    if (not isinstance(data, (bytes, bytearray)) or not data or len(data) > MAX_CAPTURE
+            or not data.rstrip().endswith(b'pongoOS>')):
         raise ValueError('Complete bounded Pongo capture required')
     text = data.decode('ascii', errors='replace')
     blocks = re.split(r'(?m)^-{128}\r?$', text)
@@ -55,7 +72,7 @@ def parse_capture(data):
             raise ValueError('DT node hierarchy refused')
         stack = stack[:depth] + [name]
         path = '/' + '/'.join(stack)
-        wanted = {key: item for (node, key), item in TABLES.items() if node == path}
+        wanted = {key: item for (node, key), item in selections.items() if node == path}
         if not wanted:
             continue
         current = None
@@ -79,19 +96,27 @@ def parse_capture(data):
             if not re.fullmatch(r'(?:[0-9a-f]{2}(?: +|$)){1,16}', payload):
                 raise ValueError('Tunable hexdump row refused')
             chunks[current].extend(bytes.fromhex(payload))
-            if len(chunks[current]) > 24 * 512:
-                raise ValueError('Tunable property bound refused')
+            if len(chunks[current]) > wanted[current][1]:
+                raise ValueError('Selected property bound refused')
         for key, raw in chunks.items():
-            label, aperture = wanted[key]
+            label, _ = wanted[key]
             if label in selected:
                 raise ValueError('Repeated selected node refused')
-            selected[label] = {'path': path, 'property': key,
-                               'raw_sha256': hashlib.sha256(raw).hexdigest(),
-                               'bytes': len(raw), 'aperture': aperture,
-                               'records': decode_records(raw, aperture)}
-    if set(selected) != {item[0] for item in TABLES.values()}:
-        raise ValueError('All four N71 host/port1 tunable properties required')
+            selected[label] = bytes(raw)
+    if set(selected) != labels:
+        raise ValueError('All selected properties required')
     return selected
+
+
+def parse_capture(data):
+    selections = {pair: (item[0], 24 * 512) for pair, item in TABLES.items()}
+    metadata = {label: (path, key, aperture) for (path, key), (label, aperture) in TABLES.items()}
+    result = {}
+    for label, raw in properties_capture(data, selections).items():
+        path, key, aperture = metadata[label]
+        result[label] = {'path': path, 'property': key, 'raw_sha256': hashlib.sha256(raw).hexdigest(),
+                         'bytes': len(raw), 'aperture': aperture, 'records': decode_records(raw, aperture)}
+    return result
 
 
 def private_path(path, directory=False):
