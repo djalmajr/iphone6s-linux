@@ -168,7 +168,7 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 **Verificação:** novo gate `python3 -B -m unittest discover -s tests -p test_n71_runtime_unprepared_stop.py -v`, usando resource/IOMMU/lifetime/held loader reais, filesystem privado e kernel/SSH sintéticos. Provar cleanup anterior a prepare, assignment com causa negativa, diagnóstico removido, source loader/recovery sem efeitos e origem intacta. Recusar ledger/proof/boot/stack/prefixo/causa divergentes e resultado nativo não registrado. Mutation baseline verde e kills por AssertionError, AST/lint Mac/ARM64, gates afetados; preservar69 C/módulos/builds e entradas legacy.
 
 - [x] Integrar e qualificar encerramento sem lifetime nativo.
-- [ ] Fechar o contrato B2b3d2 e implementar start/observe/stop no mesmo boot.
+- [x] Fechar o contrato B2b3d2 e implementar start/observe/stop no mesmo boot.
 
 **B2b3d1 qualificada em a5c38c2:**5/4 novos,53/70 nos cinco gates afetados por plataforma Mac/Ubuntu ARM64,285 inputs íntegros, AST/lint fatal. Loader/recovery/parsers reais, kernel/SSH sintéticos; rodadas falhas descartadas. Nenhum acesso ao telefone ou alteração de kernel/build/configuração global.
 
@@ -192,5 +192,7 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** fixture kernel/SSH sintética, parsers/lifetimes/act/journal/filesystem/loader/recovery reais. Provar start → observe → stop no mesmo boot, start já publicado e stop já removido sem novos efeitos, prefixo parcial retomado, busy/transport conservando owners, negativa pré-prepare, boot/hash/history recusados antes de efeito e origem/órfãos íntegros. Mutations reais após baseline verde, só AssertionError; AST/lint Mac/ARM64 e gates afetados, reuso C/artifacts intactos. C permanece fechada até esse aceite; seleção/composição, firmware/calibração/regdb/energia seguem depois.
 
-- [ ] Implementar e qualificar coordenador start/observe/stop.
+- [x] Implementar e qualificar coordenador start/observe/stop.
 - [ ] Ligar seleção/composição C após a qualificação, antes do teste físico agrupado.
+
+**B2b3d2 qualificada em 80538d2:**9/11 no Mac e Ubuntu ARM64,288 inputs íntegros, AST/lint fatal.285 inputs anteriores iguais,53/70 e builds C reutilizados. Start/observe/stop e recuperação conservam origem/provas no mesmo boot simulado. CLI/perfil/seleção C, firmware/energia e prova física ainda pendentes; nenhuma intervenção do operador necessária nesta fatia.

@@ -223,7 +223,7 @@
 - **Alternativas:** stop apenas após start mantém essa lacuna; cleanup automático após qualquer erro pode repetir operações ou perder evidência. A validação explícita mantém o controle no mesmo boot e dispensa reboot intermediário.
 - **Reverter:** baixo antes da seleção C; coordenador opt-in e helper passivo, sem mudança de kernel/perfis antigos.
 - **Onde:** próxima fatia B2b3d, helper/teste de coordenador e lifetime/teste. Fechar interfaces/aceite antes do código.
-- **Status:** em curso; B2b3d1 aplicada em a5c38c2,53/70 Mac/ARM64. Coordenador B2b3d2 a seguir; Wi-Fi/energia e sessão física ainda pendentes.
+- **Status:** aplicada; B2b3d1 em a5c38c2 (53/70) e coordenador em 80538d2 (9/11 Mac/ARM64). Seleção da candidata, Wi-Fi/energia e sessão física ainda pendentes.
 
 ### D25 — ordem de implementação
 

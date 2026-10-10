@@ -6,11 +6,25 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## Coordenador no mesmo boot — fase B2b3d2
+
+Em `80538d2`, `n71_driver_runtime_session.run(session, request)` liga as operações explícitas start/observe/stop de uma origem privada qualificada. O request contém action, root, source e identity. O resultado contém action, phase, primary_error e successful. Ainda não há CLI/perfil selecionável para esse caller; não é um comando pronto para executar no telefone.
+
+Start prepara o lifetime nativo, carrega rfkill/cfg80211/brcmutil/brcmfmac/WCC em ordem e publica. Uma publicação já comprovada apenas é observada. Observe salva checkpoint sem efeitos. Stop faz unload normal na ordem inversa, release nativa, cleanup dos providers e restore/unload de REG_ON. Estado já removido não repete efeitos. Uma carga completa que falhou pode retomar apenas o prefixo ainda ausente; busy/pending/transport conservam owners e provas, sem force/unbind/reboot automático. Assignment negativo não autoriza start e conserva sua causa após cleanup completo.
+
+O journal novo copia somente provas/checkpoint registrados, preservando bytes completos, inclusive stderr, e verificando novamente SHA antes da cópia. Quando a recuperação cria um fork validado, usa essa origem; nunca promove órfãos. Origem inicial permanece byte a byte intacta. Erro salva diagnóstico privado e tenta checkpoint somente de leitura. Uma rodada posterior bem-sucedida move o erro anterior para previous_driver_coordinator_error.
+
+### Reprodução e limites
+
+`python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_session.py -v` passou **9 testes/11 mutações por AssertionError** no Mac e Ubuntu ARM64, com 288 inputs íntegros, AST/lint fatal. Não há typechecker Python configurado. Os285 inputs da fase anterior permanecem idênticos; seus 53 testes/70 mutações e os gates/builds C anteriores foram reutilizados. [Evidência sanitizada](evidence/n71-runtime-coordinator-qualified.json), runners/logs privados em `runtime/n71-runtime-coordinator-final-20261010/` e pasta equivalente da VM dedicada.
+
+Filesystem, journal, parsers, loaders, recovery e stages são reais; kernel/SSH são sintéticos. A fixture passou a reproduzir os REG_ON_READ que dão ordem às ações sem eventos nativos, e o resumo usa a causa comprovada de cleanup em vez de presumir um campo opcional. Rodadas iniciais incompletas não contaram como qualificação. Nenhuma ação no iPhone, configuração/pacote global ou rebuild ocorreu. Próximo: seleção/composição C para o caller qualificado e staging WCC, depois firmware/calibração/regdb e energia antes da sessão física agrupada. Wi-Fi, carga e goal continuam pendentes.
+
 ## Encerrar antes de prepare — fase B2b3d1
 
 Em `a5c38c2`, uma sessão WCC explicitamente selecionada pode ser encerrada antes do primeiro efeito nativo. São necessários assignment rederivado igual ao resumo, ledgers vazios, stack fresco vazio e cleanup/unload completos do mesmo boot. Nenhum resultado nativo novo pode aparecer no snapshot ou nas provas. Assignment negativo conserva a causa; não é tratado como início bem-sucedido. Os contratos anteriores de lifetime e de cleanup permanecem obrigatórios.
 
-Reprodução: `python3 -B -m unittest discover -s tests -p test_n71_runtime_unprepared_stop.py -v`. O novo gate tem **5 testes/4 mutações por AssertionError**; cinco gates afetados aprovaram **53 testes/70 mutações por plataforma Mac/Ubuntu ARM64**, com285 inputs íntegros, AST/lint fatal. Não há typechecker Python configurado. Loader/recovery/journal/filesystem reais; kernel/SSH sintéticos. Fixtures negativas incompletas e uma mutação mascarada por prefixos foram corrigidas; rodadas falhas não contaram como prova. [Evidência sanitizada](evidence/n71-runtime-unprepared-stop-qualified.json), logs privados em `runtime/n71-runtime-unprepared-final-20261010/` e pasta equivalente da VM.
+Reprodução: `python3 -B -m unittest discover -s tests -p test_n71_runtime_unprepared_stop.py -v`. O novo gate tem **5 testes/4 mutações por AssertionError**; cinco gates afetados aprovaram **53 testes/70 mutações por plataforma Mac/Ubuntu ARM64**, com 285 inputs íntegros, AST/lint fatal. Não há typechecker Python configurado. Loader/recovery/journal/filesystem reais; kernel/SSH sintéticos. Fixtures negativas incompletas e uma mutação mascarada por prefixos foram corrigidas; rodadas falhas não contaram como prova. [Evidência sanitizada](evidence/n71-runtime-unprepared-stop-qualified.json), logs privados em `runtime/n71-runtime-unprepared-final-20261010/` e pasta equivalente da VM.
 
 Gates com entradas relevantes inalteradas e os builds C são reutilizados da fase anterior. Nenhum pacote/configuração global, kernel, Image, firmware ou acesso ao iPhone mudou. Próximo: coordenador start/observe/stop e seleção da candidata; Wi-Fi e carga física continuam pendentes. Não solicitar confirmação de retorno ao iOS sem uma ação que dependa dela.
 

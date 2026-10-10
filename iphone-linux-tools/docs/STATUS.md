@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — encerramento pré-prepare qualificado; coordenador em implementação
+## Checkpoint atual — coordenador no mesmo boot qualificado; seleção da candidata pendente
+
+Em `80538d2`, start/observe/stop ligam os stages qualificados, conservando origem/provas e permitindo recuperação por leitura sem replay. Ciclo completo no mesmo boot simulado, start/stop repetidos sem efeitos, prefixo parcial, busy, transporte e causa negativa passaram **9 testes/11 mutações por plataforma Mac/Ubuntu ARM64**, 288 inputs íntegros, AST/lint fatal. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#coordenador-no-mesmo-boot--fase-b2b3d2), [evidência](evidence/n71-runtime-coordinator-qualified.json).285 inputs anteriores iguais permitem reuso de 53/70 e dos builds/gates C.
+
+Nenhuma ação no telefone. Próximo: selecionar/compor caller e WCC, firmware/calibração/regdb e energia antes do teste físico agrupado. Wi-Fi/carga, goal e issues40/9/2 continuam pendentes. Não solicitar confirmação da tela de bloqueio sem uma ação dependente.
+
+CI4a26efd: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38062332832) cancelado em Mac/Ubuntu por prazo15m, Windows aprovado; [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38062329114) com Ubuntu/Windows aprovados e Mac cancelado por prazo15m. #41 permanece aberta; nenhuma repetição de runs ou alteração de prazo/cobertura.
+
+## Histórico — encerramento pré-prepare qualificado
 
 Em `a5c38c2`, cleanup anterior a prepare e assignment negativo conservam causa/provas sem inventar efeitos nativos. Cinco gates afetados passaram53 testes/70 mutações por plataforma Mac/Ubuntu ARM64,285 inputs íntegros, AST/lint fatal. [Reprodução](N71_BRCMFMAC_RUNTIME.md#encerrar-antes-de-prepare--fase-b2b3d1), [evidência](evidence/n71-runtime-unprepared-stop-qualified.json). Nenhuma ação no iPhone. Coordenador no mesmo boot é o próximo incremento; seleção/firmware/energia e prova física continuam pendentes. Goal/issues40/9/2 permanecem ativos.
 
