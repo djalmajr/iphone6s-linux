@@ -134,7 +134,7 @@ class RuntimeComposeTests(unittest.TestCase):
         self.assertEqual((output/'client_ed25519').read_bytes(),original['client_key'])
         self.assertEqual((output/'known_hosts').read_bytes(),original['known_hosts'])
         self.assertEqual(original,{k:v.read_bytes() for k,v in self.source.items() if isinstance(v,Path)})
-        self.assertEqual(dict(os.environ),environment)
+        self.assertTrue(dict(os.environ)==environment, 'Composer changed its process environment')
         self.assertEqual(output.stat().st_mode&0o777,0o700)
         self.assertTrue(all(p.stat().st_mode&0o777==0o600 for p in output.iterdir()))
 
