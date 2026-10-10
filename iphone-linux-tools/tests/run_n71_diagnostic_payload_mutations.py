@@ -21,6 +21,13 @@ DEPENDENCIES = (
     'scripts/host/n71_resource_optional.py',
     'scripts/host/n71_resource_io16.py',
     'scripts/host/n71_resource_pref64.py',
+    'scripts/host/n71_driver_modules.py',
+    'scripts/host/n71_driver_runtime_build.py',
+    'scripts/host/n71_driver_runtime_compose.py',
+    'scripts/host/n71_driver_runtime_result.py',
+    'scripts/host/n71_driver_runtime_stage.py',
+    'scripts/host/n71_msi_allocation_result.py',
+    'scripts/host/n71_session_history.py',
 )
 MUTATIONS = (
     ('known-abi', 'if kernel_release not in known:', 'if False:'),
