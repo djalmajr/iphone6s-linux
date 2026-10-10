@@ -161,3 +161,12 @@
 - **Reverter:** baixo; staging novo descartável, baseline e perfil anteriores conservados, sem ativação física.
 - **Onde:** .agents/plans/n71-brcmfmac-pcie-build.md e staging privado da VM; pendência registrada na issue9.
 - **Status:** aplicada ao staging; oito módulos/1.245.480 bytes/ABI/imports/alias qualificados e auditados no Mac, baseline intacto. Journal/seleção/calibração/energia e compatibilidade física ainda pendentes.
+
+## D19. Observação MSI durante o driver com publicação comprovada
+
+- **Decisão:** aceitar somente o vetor único e o domínio child retido no modo runtime comprovado pelo ledger; preservar providers, owners e primeira causa. Não remover domínio vazio manualmente.
+- **Por quê:** a fonte oficial deixa o domínio do dispositivo vivo depois de liberar vetores; igualdade legacy recusaria callbacks legítimos e forçaria retomadas desnecessárias. O kernel adapter já permite child vazio e conserva o provider até consumer removal.
+- **Alternativas:** igualdade total bloqueia o driver ativo; permitir qualquer drift pela flag aceita grants/owners não comprovados; remover domínio manualmente interfere no lifetime core e não é necessário.
+- **Reverter:** baixo antes da ativação, helper opcional e defaults/formatos antigos preservados.
+- **Onde:** plano hostB2a, n71_driver_runtime_result.py e n71_iommu_result.py, fixture de continuidade/coordinator.
+- **Status:** em curso; coordenador/histórico/resources/cleanup e seleção C ainda exigem integração antes do teste físico agrupado.
