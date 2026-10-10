@@ -188,6 +188,27 @@ def pre_scan_cleanup(session, text):
     return {'stop_error': 0, 'held_acquired': False, 'resource_cleanup_verified': True, 'assignment_error': 0}
 
 
+def unbound_prepare_failure(text, caller):
+    if caller['ready'] or 'N71_PCIE_SCAN_DART_PREPARED ' not in text:
+        return None
+    n71_scan_target_result.cleanup(text)
+    prepared = n71_scan_held_result.unique(text, 'N71_PCIE_SCAN_DART_PREPARED ',
+        r'N71_PCIE_SCAN_DART_PREPARED error=(-?\d+) available=0 mapped=0; before PCI publication')
+    primary = int(prepared.group(1))
+    scan = n71_scan_target_result.n71_scan_result.summary(n71_scan_target_result.normalize(text))
+    require(-4095 <= primary < 0 and scan['error'] == primary
+            and all(scan[name] == 0 for name in ('devices', 'endpoints', 'attempts', 'writes', 'refusals')),
+            'Unbound DART prepare requires a matching negative unpublished scan')
+    require('N71_PCIE_SESSION_HELD ' not in text and 'N71_PCIE_SCAN_BUS_REMOVED ' not in text,
+            'Unbound DART prepare cannot own a published bus')
+    require('N71_DART_LEASE_ACQUIRE ' in text, 'Unbound DART prepare lacks its provider lease')
+    finished = list(re.finditer(n71_scan_held_result.CLEANUP_PATTERN + r'$', text, re.M))
+    require(len(finished) == text.count('N71_PCIE_SESSION_CLEANUP ') == 1
+            and tuple(map(int, finished[0].groups())) == (0, 0, 0, 0, 0, 0, 0, primary),
+            'Unbound DART prepare requires matching complete caller cleanup')
+    return prepared
+
+
 def cleanup(session, text):
     if not capable(session):
         return None
@@ -197,6 +218,7 @@ def cleanup(session, text):
                            'iommu': dict.fromkeys(IOMMU_FIELDS, 0) | {'requested': 1, 'ready': caller['ready']}},
             'MSI/IOMMU ownership still pending')
     require(n71_scan_target_result.is_clean(caller), 'IOMMU caller cleanup incomplete')
+    unbound = unbound_prepare_failure(text, caller)
     if 'N71_PCIE_SESSION_HELD ' in text:
         result = acquisition(text)
         require(session.result.get('iommu_association') in (None, result), 'Cleanup association history changed')
@@ -206,7 +228,9 @@ def cleanup(session, text):
         error, running, pending = map(int, acquired.groups())
         require((error == 0 and running == pending == 1) or (-4095 <= error < 0 and running == 0),
                 'DART acquisition error/readiness differs')
-        require('N71_PCIE_SESSION_HELD ' in text or error < 0 or caller.get('primary_error', 0) < 0,
+        require(unbound is None or (error, running, pending) == (0, 1, 1),
+                'Unbound DART prepare requires a running provider lease')
+        require('N71_PCIE_SESSION_HELD ' in text or error < 0 or caller.get('primary_error', 0) < 0 or unbound is not None,
                 'Incomplete association lacks a negative caller/provider proof')
         released = n71_scan_held_result.unique(text, 'N71_DART_CYCLE_RELEASED ',
             r'N71_DART_CYCLE_RELEASED device=0 mapping-new=0 claimed=0 mapped=0')
@@ -222,7 +246,19 @@ def cleanup(session, text):
             removed = n71_scan_held_result.unique(text, 'N71_PCIE_SCAN_BUS_REMOVED ',
                 r'N71_PCIE_SCAN_BUS_REMOVED bus-null=1 stop-error=(-?\d+)')
             require(removed.start() < lease[0].start(), 'DART stop precedes consumer removal')
-        require(lease[-1].start() < released.start() and (not configs or released.start() < configs[0].start()),
-                'Provider release and host restore order differs')
+        require(lease[-1].start() < released.start(), 'Provider release precedes lease restoration')
+        if unbound is not None:
+            reset = n71_scan_held_result.unique(text, 'N71_PCIE_RESET_RESTORED ',
+                r'N71_PCIE_RESET_RESTORED asserted=1 readback=1')
+            power = n71_scan_held_result.unique(text, 'N71_PCIE_POWER_RELEASED ',
+                r'N71_PCIE_POWER_RELEASED powered=0 attached=0')
+            require(len(configs) == text.count('N71_PCIE_SCAN_CONFIG_RESTORED ') == 1
+                    and unbound.start() < configs[0].start()
+                    and configs[-1].start() < lease[0].start()
+                    and released.start() < reset.start() < power.start() < text.index('N71_PCIE_SESSION_CLEANUP '),
+                    'Unpublished scan config/provider/reset/power release order differs')
+        else:
+            require(not configs or released.start() < configs[0].start(),
+                    'Provider release and host restore order differs')
     return {'software_ownership_released': True, 'physical_of_unmap_readback_verified': False,
             'irq_delivery_verified': False, 'dma_translation_verified': False}

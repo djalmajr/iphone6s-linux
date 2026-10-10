@@ -63,6 +63,16 @@ OPEN = getters() + 'N71_PCIE_HELD held=1\n' + held_fixture.ACTIVE + ACQUIRED
 CLOSED = (getters(False) + 'N71_PCIE_HELD held=0\n' + held_fixture.CLEAN + ACQUIRED
           + held_fixture.REMOVED + DART_CLEAN + held_fixture.CONFIG + held_fixture.PME_RESTORED
           + held_fixture.TLS_RESTORED + held_fixture.RESET + held_fixture.POWER + held_fixture.FINISHED)
+UNBOUND_GETTERS = getters(False).replace('ready=1', 'ready=0')
+UNBOUND_STATUS = 'N71_PCIE_STATUS ready=0 retained=0\n'
+UNBOUND_RESOURCES = 'N71_PCIE_RESOURCES ready=0 attempted=0 assigned=0 pending=0 claimed=0 active=0 error=0\n'
+UNBOUND_PREPARE = 'N71_PCIE_SCAN_DART_PREPARED error=-19 available=0 mapped=0; before PCI publication\n'
+UNBOUND_HISTORY = (PROVIDER + held_fixture.ACQUIRED.split('N71_PCIE_SCAN_DEVICE ')[0] + UNBOUND_PREPARE
+                   + held_fixture.CONFIG + held_fixture.PME_RESTORED + held_fixture.TLS_RESTORED
+                   + 'N71_PCIE_SCAN_RESULT error=-19 devices=0 endpoints=0 reads=149 attempts=0 writes=0 refusals=0; counts before cleanup, no DMA or radio\n'
+                   + DART_CLEAN + held_fixture.RESET + held_fixture.POWER
+                   + held_fixture.FINISHED.replace('primary_error=0', 'primary_error=-19'))
+UNBOUND = UNBOUND_GETTERS + 'N71_PCIE_HELD held=0\n' + UNBOUND_STATUS + UNBOUND_RESOURCES + UNBOUND_HISTORY
 DMA_EXPECTED = dict(requester_ids=[8, 256], group_id=7, mask_bits=32, root_aliases_inferred=1,
                     endpoint_aliases_inferred=1, aliases_inferred_from_fixed_source=True,
                     physical_translation_verified=False)
@@ -204,6 +214,53 @@ class IommuResultTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             code = HELD.run(session, {'modules': {r['module']: r['sha256'] for r, _ in modules}}, root=folder, source=source)
         return code, session, output
+
+    def test_unbound_prepare_failure_requires_matching_negative_complete_release(self):
+        self.assertTrue(self.accepted(RESULT.cleanup, self.session, UNBOUND)['software_ownership_released'])
+        invalid = [UNBOUND.replace('SCAN_RESULT error=-19', 'SCAN_RESULT error=-5'),
+                   UNBOUND.replace('primary_error=-19', 'primary_error=-5'),
+                   UNBOUND.replace('devices=0 endpoints=0', 'devices=2 endpoints=1'),
+                   UNBOUND.replace('available=0 mapped=0; before', 'available=1 mapped=0; before'),
+                   UNBOUND.replace(UNBOUND_PREPARE, ''), UNBOUND + UNBOUND_PREPARE,
+                   UNBOUND.replace(held_fixture.FINISHED.replace('primary_error=0', 'primary_error=-19'), ''),
+                   UNBOUND + held_fixture.FINISHED.replace('primary_error=0', 'primary_error=-19'),
+                   UNBOUND.replace('error=-19', 'error=-5000'),
+                   UNBOUND.replace(held_fixture.RESET, ''), UNBOUND.replace(held_fixture.POWER, ''),
+                   UNBOUND.replace(held_fixture.CONFIG, '') + held_fixture.CONFIG,
+                   UNBOUND.replace(UNBOUND_PREPARE, held_fixture.CONFIG + UNBOUND_PREPARE).replace(held_fixture.CONFIG + held_fixture.PME_RESTORED, held_fixture.PME_RESTORED),
+                   UNBOUND.replace(DART_CLEAN, ''), UNBOUND.replace(PROVIDER, ''),
+                   UNBOUND.replace('error=0 running=1 pending=1', 'error=-5 running=0 pending=1'),
+                   UNBOUND.replace('index=16', 'index=15'), UNBOUND + held_fixture.CONFIG,
+                   UNBOUND.replace(held_fixture.RESET + held_fixture.POWER, held_fixture.POWER + held_fixture.RESET),
+                   UNBOUND.replace('ready=0 held=0 owner=0', 'ready=0 held=0 owner=1')]
+        for text in invalid:
+            with self.subTest(text=text), self.assertRaises(ValueError): RESULT.cleanup(self.session, text)
+
+    def test_actual_coordinator_cleans_unbound_probe_failure_without_second_scan(self):
+        class UnboundPhone(IommuPhone):
+            @staticmethod
+            def acquired(phone, session, text):
+                phone.held = False; phone.empty = True; phone.status = UNBOUND_STATUS
+                phone.resources = dict.fromkeys(resource_fixture.STAGE.n71_resource_result.FIELDS, 0)
+                phone.history = held_fixture.BASELINE + held_fixture.timestamp(held_fixture.LINK + held_fixture.INVENTORY + UNBOUND_HISTORY, 10)
+                return 0, UNBOUND_GETTERS + UNBOUND_RESOURCES + 'N71_PCIE_HELD held=0\n' + phone.status + phone.history
+
+            def snapshot(self, session):
+                return super().snapshot(session).replace(getters(False), UNBOUND_GETTERS)
+
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory); (folder / 'runtime').mkdir(mode=0o700); phone = UnboundPhone()
+            code, session, _ = self.execution(phone, folder, 'failed-prepare')
+            self.assertEqual(code, 1, session.result)
+            self.assertTrue(session.result['cleanup_verified'], session.result)
+            self.assertTrue(session.result.get('iommu_cleanup', {}).get('software_ownership_released'))
+            self.assertFalse(phone.pcie or phone.reg or phone.active)
+            stages = [stage for stage, _ in phone.calls]
+            self.assertEqual(stages.count('pcie'), 1)
+            self.assertEqual(stages.count('held-pcie-unload'), 1)
+            self.assertEqual(stages.count('held-reg-unload'), 1)
+            self.assertNotIn('held-cleanup', stages)
+            self.assertNotIn('held-assign', stages)
 
     def test_actual_coordinator_acquires_resumes_and_releases_without_rescan(self):
         # Mutations killed: omit module args/getters, journal selection or unload without association cleanup.
@@ -383,6 +440,9 @@ class IommuMutationTests(unittest.TestCase):
             'lease-restore': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "final[:5] == ('0', '0', '16' if pending else '0', '0', '0')", 'True'),
             'consumer-order': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'removed.start() < lease[0].start()', 'True'),
             'config-order': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'released.start() < configs[0].start()', 'True'),
+            'unbound-error-bounds': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', '-4095 <= primary < 0', 'True'),
+            'unbound-unique-caller': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "len(finished) == text.count('N71_PCIE_SESSION_CLEANUP ') == 1", 'True'),
+            'unbound-order': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'configs[-1].start() < lease[0].start()', 'True'),
             'module-args': ('n71-link-session.py', 'N71_HELD_LINK_SCRIPT', "parameters += ' msi_parent=1 iommu_parent=1'", "parameters += ''"),
             'initial-proof': ('n71-link-session.py', 'N71_HELD_LINK_SCRIPT', 'n71_iommu_result.retained(self, p.stdout)', 'pass'),
             'checkpoint-getter': ('n71_held_session.py', 'N71_HELD_SESSION_SCRIPT', 'command += n71_iommu_result.getter(session)', "command += ''"),
