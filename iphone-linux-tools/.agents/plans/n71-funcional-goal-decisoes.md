@@ -178,4 +178,4 @@
 - **Alternativas:** exigir sempre checkpoint bloqueia recuperação legítima; confiar no órfão fabrica a prova de transporte; reconstruir a origem apaga a evidência do crash.
 - **Reverter:** baixo antes da ativação; caminho limitado ao runtime com ledger, loader legacy preservado.
 - **Onde:** plano hostB2b1 e helper runtime de recuperação, chamada localizada no coordinator held.
-- **Status:** em curso; unload/coordenador/resources/cleanup e seleção física continuam pendentes.
+- **Status:** aplicada em4e4177f;110/196 por plataforma Mac/ARM64,270 inputs íntegros, AST/lint e69 C preservados. Origem/órfão intactos e observação sem exit inventado; unload/coordenador/resources/cleanup e seleção física continuam pendentes.

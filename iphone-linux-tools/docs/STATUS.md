@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — continuidade do driver qualificada; recuperação e ativação física pendentes
+## Checkpoint atual — recuperação de intent/checkpoint qualificada; ativação física pendente
+
+Em `4e4177f`, recuperação runtime usa o snapshot completo do mesmo boot para reconciliar a action interrompida, conservando a origem e o arquivo órfão. Completion observada não inventa exit SSH; proof registrado conserva seu resultado direto. Checkpoint antigo/ausente e resultado já presente no checkpoint são cobertos, sem repetir setter. Mac/Ubuntu ARM64:110 testes/196 mutações por AssertionError,270 inputs íntegros, AST/lint fatal; nenhum typechecker Python configurado. [Reprodução e relatório](N71_BRCMFMAC_RUNTIME.md#recuperação-read-only-de-intentcheckpoint--fase-b2b1), [evidência](evidence/n71-driver-runtime-recovery-qualified.json).
+
+69 inputs C preservados permitem reutilizar575/455 e o build anterior. Nenhum acesso/reboot/DFU do iPhone, pacote ou configuração global. Próximo trecho: coordenar carregamento/unload normal, causalidade resources/cleanup e seleção explícita; depois calibração/regdb e energia para a sessão física agrupada. Wi-Fi/carga Linux e goal/issues40/9/2 continuam pendentes. Nenhuma ação do operador necessária agora.
+
+CI72f7d99 anterior terminou success nos eventos [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38048306455) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38048303031). A recuperação nova terá CI própria. A CI3d6ca35 dos módulos também terminou success em [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38045511235) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38045508711); ela não comprova ativação física.
+
+## Histórico — continuidade do driver qualificada
 
 Em `c8ab8ee`, retomada e retained validam a publicação pelo ledger, owners completos, boot e providers antes de admitir o vetor único. O domínio vazio continua retido após free_irq_vectors; MSI manual, perda de domínio, drift de owners/providers e primeira causa apagada são recusados. Mac/Ubuntu ARM64:98 testes/186 mutações por AssertionError,267 inputs íntegros, AST/lint fatal; sem typechecker Python. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#continuidade-da-associação-publicada--fase-b2a), [evidência](evidence/n71-driver-runtime-continuation-qualified.json).
 

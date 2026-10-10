@@ -165,6 +165,31 @@ Esse gate tem8 testes/17 mutações por AssertionError. Com journal10/15, result
 
 Os69 inputs C e módulos oficiais/diagnóstico continuam íntegros, sem rebuild. Nenhum acesso ao iPhone, setter, seleção de perfil, módulo/firmware, DFU/reboot ou configuração global ocorreu. Ainda faltam execução pelo coordenador, unload normal, histórico/resources/cleanup e recuperação antes do hash ou com checkpoint ausente; depois seleção C, calibração/regdb e energia. Wi-Fi e carga Linux permanecem sem prova física.
 
+## Recuperação read-only de intent/checkpoint — fase B2b1
+
+Em `4e4177f`, o coordenador runtime recupera a action interrompida usando uma observação completa do mesmo boot. Diretório privado, identidade, ABI, flags, hashes registrados e checkpoint existente são validados antes da leitura SSH. Checkpoint ausente ou anterior à action não exige repetir o setter. Um único resultado nativo e getter coerente produzem completion `observed`, com `shell_exit=null`; um proof registrado conserva o resultado direto já comprovado. Sem resultado nativo completo, a recuperação recusa qualquer novo efeito. [Evidência](evidence/n71-driver-runtime-recovery-qualified.json), [plano](../.agents/plans/n71-driver-runtime-host.md#b2b1-recuperação-read-only-de-checkpointintent--contrato-fechado).
+
+A origem permanece intacta. Proof órfão sem hash registrado não autoriza uma completion nem um exit SSH: uma cópia privada e exclusiva recebe a observação nova, os proofs validados e um checkpoint completo. O loader held existente revalida a cópia e o journal seguinte grava seus próprios proofs/intents antes de efeitos. Boot, módulos, prefixo histórico e erro/owners precisam concordar; uma action extra é recusada. A janela do histórico começa no intent, mesmo quando o checkpoint já contém o resultado da action. A cópia permanece como evidência privada de recuperação.
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_recovery.py -v
+```
+
+O gate novo tem12 testes/10 mutações por AssertionError. Com os oito gates B2a,110 testes/196 mutações por plataforma em Mac/Ubuntu ARM64,270 inputs finais íntegros, AST/lint fatal. O primeiro seletor de mutação de prefixo era redundante com a validação da action; o caso passou a proteger o timestamp do checkpoint. IndexError de harness não contou como kill. O gate resource encontrou expressão duplicada na nova chamada; a composição do allowlist ficou no helper e a cobertura legacy foi preservada. A rodada final completa é a aceita. Um aviso de encerramento gRPC do CLI Multipass ocorreu depois do resultado final e exit0; os arquivos de resultados e seus hashes foram recolhidos, sem repetir os gates.
+
+| Item do relatório | Resultado |
+| --- | --- |
+| Arquivos | Novo helper de recuperação, integração localizada no coordinator held e novo gate. |
+| Plano | B2a/B2b1 qualificadas; unload/coordenador/resources/cleanup, seleção C e prova física pendentes. |
+| Compatibilidade | Loader/defaults legacy preservados; nenhuma nova flag física habilitada. |
+| Testes |110/196 por plataforma; loader/journal/filesystem e snapshot reais com dependência de telefone sintética. |
+| Types/lint | AST e lint fatal aprovados; nenhum typechecker Python configurado. |
+| Banco/dependências | Sem banco, pacote ou instalação; somente stdlib e helpers existentes. |
+| Custo | Uma leitura SSH extra somente na recuperação necessária e cópia privada dos metadados/proofs. |
+| Reuso |69 inputs C iguais:575/455 e build anteriores reutilizados, sem rebuild. |
+
+Nenhum acesso/reboot/DFU do iPhone ocorreu na qualificação. Ainda não foram integrados os crash points de insmod/rmmod, o unload normal, causalidade resources/cleanup e seleção C. A configuração do cfg80211 compilado exige regdb assinado e usa os certificados oficiais do kernel; banco compatível, calibração N71 e energia continuam pendentes antes da sessão física. A [documentação oficial do wireless-regdb](https://wireless.docs.kernel.org/en/latest/en/developers/regulatory/wireless-regdb.html) identifica o repositório e a distribuição oficiais; nenhum banco novo foi instalado nessa etapa. Wi-Fi e carga Linux permanecem sem prova física, goal/issues40/9/2 abertos. Não é necessária ação do operador agora.
+
 ## Candidato privado de firmware — origem verificada
 
 A revisão oficial `31ec35bf14df835e2f9f7c8b1a8516a34f836df5` de [linux-firmware](https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/31ec35bf14df835e2f9f7c8b1a8516a34f836df5/brcm/) contém `brcmfmac4350-pcie.bin`. O candidato privado tem626.140 bytes, SHA256 `5691d1e0ceb70baf18efb7a0ec6cb84feb9edd2d0700c525b42930c4e7e4b845`; o blob Git foi conferido contra o índice fixado. WHENCE vincula o arquivo à licença Broadcom, também baixada e conferida pelo blob/hash da mesma revisão. [Metadados sanitizados](evidence/n71-firmware-candidate-origin.json).
