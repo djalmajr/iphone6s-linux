@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-09
 
-## Checkpoint atual — associação IOMMU e atribuição físicas positivas; IRQ/DMA, Wi-Fi e energia pendentes
+## Checkpoint atual — brcmfmac corrigido e recompilado; integração do rádio pendente
+
+A correção do retorno MSI passou gates offline no Mac/Ubuntu ARM64 e build dos oito módulos com ABI power2. Uma falha MSI agora retorna antes do request IRQ. Fonte/kernel/Image/config/exports e os oito módulos de rollback foram preservados; somente o novo brcmfmac mudou,499.496 bytes/SHA1c54194c.16 cenários C,13 mutações compiladas mais regressão original,15 testes/24 mutações do builder por plataforma; AST/lint fatal e verificação independente dos artefatos passaram. [Reprodução e limites](N71_WIFI_MODULES.md#correção-de-falha-msi--2026-10-09), [evidência](evidence/n71-brcmfmac-msi-error-qualified.json).
+
+Nenhum novo DFU, reboot, instalação ou módulo/firmware carregado nesta etapa. As provas físicas abaixo permanecem válidas. A integração PCI/MSI/driver/DMA e a validação de Wi-Fi nativo e carga/gauge permanecem nas issues #40/#9/#2 e no goal ativo. Só será pedida uma ação física indispensável, com todos os testes preparados. CI desta publicação será acompanhada na própria branch; nenhuma integração em main.
+
+## Associação IOMMU e atribuição físicas positivas; IRQ/DMA, Wi-Fi e energia pendentes
 
 A candidata corrigida SHA48df330a passou em um DFU/boot: associação MSI/OF/core dos dois dispositivos ao mesmo grupo IOMMU0, RIDs0008/0100, masks32/map_sid0 e atribuição error0/assigned1,17 tentativas/cinco escritas. SSH/Bash/HTTP/Herdr/restore passaram. O gate GPIO já aprovado não foi repetido. [Prova física atual](evidence/n71-of-scope-association-physical.json), [procedimento e limites](N71_IRQ_IOMMU.md#associação-física-após-corrigir-of--erro-preservado-no-cleanup).
 

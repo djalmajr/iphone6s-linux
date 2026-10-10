@@ -1,5 +1,31 @@
 # Módulos Wi-Fi PCIe sem reconstruir o kernel
 
+## Correção de falha MSI — 2026-10-09
+
+A [função upstream fixada](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c#L968) ignorava `pci_enable_msi` e tentava registrar a IRQ mesmo após erro. O [patch0008](../phone/kernel/patches/0008-brcmfmac-msi-error.patch) captura e devolve esse erro antes de `request_threaded_irq`. O sucesso, argumentos da IRQ e rollback após falha de request permanecem como no upstream. Nenhum fallback INTx foi acrescentado.
+
+O builder aplica o patch somente ao `brcmfmac/pcie.c` copiado, exigindo hashes exatos de patch, método, blob original e blob corrigido. A procedência separa os hashes das fontes originais e a correção da cópia. O patch não integra o bundle do kernel e não muda a fonte preservada, Image, config ou exports. Oito módulos compilaram com ABI `7.2.0-iphone6s-dart-serdev-power2`; somente brcmfmac mudou:499.496 bytes/SHA `1c54194cca3edd2bbe98fcfdce6e79fbc34de5dea6e37a1aa7e7d654bb560b00`. Os outros sete coincidem com a build anterior; os oito anteriores permanecem disponíveis para rollback. [Evidência e hashes](evidence/n71-brcmfmac-msi-error-qualified.json), [plano](../.agents/plans/n71-brcmfmac-msi-error.md).
+
+Mac e Ubuntu ARM64:16 cenários C,13 mutações compiladas e regressão original rejeitada por asserção;15 testes do builder/24 mutações Python por asserção. Na VM, o método testado também foi extraído do blob original completo fixado. AST e lint fatal passaram; não há typechecker Python configurado. Build ARM64 Werror/modpost, símbolos PCIe/MSGBUF, alias e dependências passaram. Mac recalculou hashes/tamanhos/ELF/vermagic; artefatos privados com diretórios700/arquivos600.
+
+Reprodução, na VM dedicada e com checkout público atualizado em uma pasta nova:
+
+```sh
+cd /home/ubuntu/n71-brcmfmac-msi-inputs-20261009-v1
+N71_BRCMFMAC_PCIE_SOURCE=/home/ubuntu/kernel-n71-binding-source-20261005/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c python3 -B -m unittest discover -s tests -p test_n71_wifi_irq.py -v
+python3 -B -m unittest discover -s tests -p test_n71_wifi_modules.py -v
+python3 -B tests/run_n71_wifi_modules_mutations.py
+python3 -B scripts/build/build-n71-wifi-modules.py \
+  --profile n71-dart-serdev-power-v2 \
+  --source /home/ubuntu/kernel-n71-binding-source-20261005 \
+  --kernel-output /home/ubuntu/kernel-n71-binding-build-20261005 \
+  --output-dir /home/ubuntu/NOVO-OUTPUT-WIFI-MSI
+```
+
+A saída efetivamente validada foi `/home/ubuntu/n71-brcmfmac-msi-module-build-20261009-v1`; não reutilizar output existente. O input contém o builder, `kernel_bundle.py`, `kernel_patchset.py`, os oito patches e os quatro arquivos de teste acima. Binários/procedência/logs ficam privados em `runtime/n71-brcmfmac-msi-error-20261009/`. Nenhum pacote foi instalado no Mac/VM, módulo carregado no iPhone, firmware selecionado ou novo DFU solicitado. Esta prova offline não demonstra alocação MSI, entrega IRQ, DMA ou rádio. Próxima integração: writes PCI/MSI controlados, attach assíncrono brcmfmac e cleanup, seguidos de interface/scan/associação físicos; energia/gauge continuam pendentes.
+
+## Build PCIe original — 2026-10-03
+
 Em 2026-10-03, o driver Broadcom e suas dependências compilaram como módulos
 externos para `7.2.0-iphone6s-dart-serdev1`. Os oito artefatos passaram por
 Werror/modpost, ELF AArch64, ABI e dependências; hashes foram recalculados no

@@ -44,3 +44,12 @@
 - **Reverter:** baixo; solicitar novamente apenas uma ação concreta quando um bloqueio físico impedir o trabalho autorizado.
 - **Onde:** wrapper/execução supervisionada, documentação atual e próximos testes agrupados; preferência explícita do operador nesta sessão.
 - **Status:** aplicada; nenhuma ação do operador é necessária durante as correções offline.
+
+## D6. Corrigir a falha MSI na cópia do pacote Wi-Fi
+
+- **Decisão:** devolver o erro de `pci_enable_msi` antes do request IRQ, aplicando patch fixado por hashes apenas ao brcmfmac copiado pelo builder; preservar kernel e conjunto original para rollback.
+- **Por quê:** a associação do provider não garante alocação MSI. O driver upstream ignorava a falha e tentava uma IRQ sem sucesso MSI comprovado. O pacote externo permite corrigir isso sem outro kernel/DFU.
+- **Alternativas:** carregar o driver original arrisca fallback/IRQ inválida; alterar o kernel inteiro aumenta custo/reboots sem necessidade; acrescentar fallback INTx não corresponde ao transporte qualificado para N71.
+- **Reverter:** baixo; os oito módulos anteriores continuam intactos e não houve carga no aparelho.
+- **Onde:** [plano](n71-brcmfmac-msi-error.md), [reprodução](../../docs/N71_WIFI_MODULES.md#correção-de-falha-msi--2026-10-09), [evidência](../../docs/evidence/n71-brcmfmac-msi-error-qualified.json), issues9/40.
+- **Status:** patch, regressão C e gates/build Mac/Ubuntu ARM64 aprovados; integração e prova física de IRQ/DMA/rádio permanecem na fila.

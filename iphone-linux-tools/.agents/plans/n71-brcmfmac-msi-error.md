@@ -21,8 +21,6 @@ Não modificar fonte/kernel/config/Image/exports preservados. Não carregar mód
 - [ ] Documentar comandos, hashes, limites e atualizar branch/issues autorizadas; acompanhar CI sem integrar main.
 - [ ] Prosseguir com política PCI/MSI e ciclo explícito do driver/DMA/firmware; agrupar as provas físicas necessárias em sessão posterior.
 
-## Verificação
-
 ## Relatório da implementação offline — agile-status
 
 Fonte: plano acima e issues9/40. Modo: fechamento da correção offline, dentro do goal ainda ativo. Todos os arquivos alterados correspondem a patch/build, contrato/regressão ou documentação previstos; não houve ampliação de escopo. Patch copia a função upstream, sem fallback IRQ novo; as APIs do builder conservam seus argumentos e acrescentam somente procedência da correção.
@@ -40,6 +38,8 @@ Fonte: plano acima e issues9/40. Modo: fechamento da correção offline, dentro 
 | Documentação |Reprodução, evidência sanitizada, status e decisão D6 registrados |
 
 Dependências/banco: nenhuma instalação, pacote novo ou mudança de banco. Desempenho: somente um branch no erro MSI; nenhuma medição de rádio feita. Limite restante: ciclo PCI/MSI/driver e tradução/entrega reais precisam de integração e prova física; carga/gauge continuam em issue2. Próximo passo observável: callbacks PCI/MSI restritos e attach/quiesce do driver qualificados offline, antes de uma sessão física agrupada. Acompanhar CI da publicação; não encerrar o goal nem integrar main.
+
+O diffcheck normal aprovou código/docs. A representação unified do patch tem prefixos de contexto com espaço antes de tabs/linhas vazias, reconhecidos como whitespace pelo Git ao adicionar o patch inteiro. Conferir somente esse arquivo com opções de whitespace no comando, sem alterar Git config; os métodos original/corrigido não têm trailing whitespace e os hashes da transformação completa foram verificados. Isso não altera hooks ou gates de código.
 
 ### Comandos de verificação
 
