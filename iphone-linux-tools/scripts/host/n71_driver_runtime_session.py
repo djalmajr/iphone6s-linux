@@ -11,6 +11,7 @@ import n71_iommu_result as iommu
 import n71_msi_allocation_result as allocation
 import n71_resource_stage as resources
 import n71_session_history as history
+import n71_driver_firmware_session as firmware
 
 
 def require(condition, message):
@@ -109,6 +110,7 @@ def start(session, journal, live):
     require('pcie-cleanup' not in journal.proofs, 'Runtime start cannot reuse a removed host')
     require(not entries or (entries[-1]['action'] in ('prepare', 'publish')
         and entries[-1]['completion']['native']['error'] == 0), 'Runtime start cannot repeat failed or released native actions')
+    firmware.bind(session, journal)
     if entries and entries[-1]['action'] == 'publish':
         require(native.live(session, live, session.result['boot_id'])['published'] == 1, 'Runtime publication changed')
         return
@@ -144,6 +146,7 @@ def stop(session, journal, observation):
             proved = native.act(session, journal, {'action': 'release', 'live': live})
             require(proved['native']['error'] == 0, 'Runtime native release failed; providers retained')
             live, presence, _ = observe(session, journal, 'runtime-after-release')
+    firmware.restore(session, journal)
     held.release(session, journal, presence, live)
 
 
@@ -164,6 +167,7 @@ def run(session, request):
     try:
         if request['action'] == 'start': start(session, journal, live)
         elif request['action'] == 'stop': stop(session, journal, (live, presence))
+        if request['action'] == 'observe': firmware.verify(session, journal)
         live, presence = journal.finish()
         primary = validate(session, {'text': live, 'presence': presence, 'context': context(journal)})
         if 'pcie-cleanup' in journal.proofs:

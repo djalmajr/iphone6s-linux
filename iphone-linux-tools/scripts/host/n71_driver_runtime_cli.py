@@ -8,6 +8,7 @@ import n71_driver_runtime_compose as files
 import n71_driver_runtime_session as coordinator
 import n71_held_session as held
 import n71_iommu_build as iommu
+import n71_driver_firmware_session as firmware
 
 ACTIONS = ('acquire', 'assign', 'start', 'observe', 'stop')
 TRUE_FLAGS = ('kernel_initramfs_identities_preserved', 'pcie_driver_runtime', 'pcie_aspm_off', 'pcie_scan_hold',
@@ -24,10 +25,17 @@ def require(condition, message):
 
 def paths(root, request):
     require(isinstance(root, Path) and root == root.absolute(), 'Absolute runtime root required')
-    require(isinstance(request, dict) and set(request) == {'action', 'check', 'output', 'profile', 'source'}
+    fields = {'action', 'check', 'output', 'profile', 'source'}
+    require(isinstance(request, dict) and (set(request) == {'action', 'check', 'output', 'profile', 'source'}
+        or set(request) == fields | {'firmware'})
         and type(request['check']) is bool and type(request['action']) is str and request['action'] in ACTIONS,
         'Runtime CLI request differs')
     runtime = root / 'runtime'; device_profile.protected(runtime, directory=True)
+    package = request.get('firmware')
+    if package is not None:
+        require(isinstance(package, Path) and package.is_absolute() and package.parent == runtime,
+            'Firmware package must be private and directly under runtime')
+        device_profile.protected(package, directory=True)
     profile, source, output = request['profile'], request['source'], request['output']
     require(isinstance(profile, Path) and profile.is_absolute() and profile.name == 'deployment.json'
         and profile.parent.parent == runtime, 'Runtime profile must be private and directly under runtime')
@@ -85,9 +93,13 @@ def run(root, request):
         output = request['output'] if not request['check'] else root / 'runtime'
         session = link.Session(output, modules, host_scan=True, scan_link_target=True, scan_pme_disable=True,
             scan_hold=True, resource_capable=True, iommu_parent=True, release=release, runtime=selected['drivers'])
+        if request.get('firmware') is not None:
+            firmware.configure(session, {'root': root, 'directory': request['firmware']})
         if request['check']:
             if request['source'] is not None:
                 held.load_source(session, root, request['source'], identity)
+                if firmware.KEY in session.result:
+                    firmware.state(session)
             print('N71_RUNTIME_LOCAL_GATE_OK; no SSH or USB action', flush=True)
             return 0
         output.mkdir(mode=0o700)

@@ -26,6 +26,7 @@ import n71_iommu_result
 import n71_iommu_build
 import n71_driver_runtime_profile
 import n71_driver_runtime_result
+import n71_driver_firmware_session
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = '7.2.0-iphone6s-dart-serdev1'
@@ -293,6 +294,7 @@ class Session:
             p = self.capture('runtime-stack-empty', n71_driver_runtime_profile.preflight_command())
             require(p.returncode == 0 and p.stdout.splitlines().count('N71_RUNTIME_STACK_EMPTY') == 1,
                     'Pre-existing runtime modules or driver refused')
+        n71_driver_firmware_session.stage(self)
         for record, raw in self.modules + n71_driver_runtime_profile.staged(self):
             target = self.module_directory + '/' + record['module']
             p = self.capture('transfer-' + record['module'],
