@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — coordenador no mesmo boot qualificado; seleção da candidata pendente
+## Checkpoint atual — seleção caller/WCC qualificada; Session/staging e composição pendentes
+
+Em `317c89c`, a seleção explícita liga caller e cinco WCC à mesma base de kernel, revalida os 69 inputs compilados e conserva os controles de assignment/IOMMU e REG_ON. **9 testes/14 mutações por plataforma Mac/Ubuntu ARM64**, 360 inputs íntegros, AST/lint fatal; sete binários/1.371.040 bytes revalidados por bytes/SHA/ELF/ABI, sem carga ou rebuild. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#seleção-vinculada-do-caller-e-wcc--fase-c1), [evidência](evidence/n71-runtime-selection-qualified.json). 288 inputs host e 69 C anteriores iguais permitem reutilizar os gates/builds anteriores.
+
+Session ainda não recebe a seleção runtime, e a CLI/perfil não foi alterada. Próximo: staging WCC antes do getter, flag runtime explícita e integração de aquisição/assignment/start/observe/stop; preservar a saída pré-assignment antes de expor o fluxo. Depois firmware/calibração/regdb e energia, antes de um teste físico agrupado. Wi-Fi/carga, goal e issues40/9/2 continuam pendentes. Nenhuma ação do operador necessária agora.
+
+CIad6eefd anterior: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38064786088) aprovou os três jobs; [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38064783023) aprovou Mac/Windows e cancelou Ubuntu por prazo oficial de 15 minutos. #41 permanece aberta; nenhuma repetição de run ou alteração de prazo/cobertura.
+
+## Histórico — coordenador no mesmo boot qualificado
 
 Em `80538d2`, start/observe/stop ligam os stages qualificados, conservando origem/provas e permitindo recuperação por leitura sem replay. Ciclo completo no mesmo boot simulado, start/stop repetidos sem efeitos, prefixo parcial, busy, transporte e causa negativa passaram **9 testes/11 mutações por plataforma Mac/Ubuntu ARM64**, 288 inputs íntegros, AST/lint fatal. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#coordenador-no-mesmo-boot--fase-b2b3d2), [evidência](evidence/n71-runtime-coordinator-qualified.json).285 inputs anteriores iguais permitem reuso de 53/70 e dos builds/gates C.
 
@@ -48,7 +56,7 @@ CI anterior `0d9bb3c`: [push](https://github.com/djalmajr/iphone6s-linux/actions
 
 Em `0a315b9`, o protocolo seleciona cinco módulos WCC/1.211.120 bytes, valida manifest/ABI/boot/hashes e registra receipt exclusivo antes de cada efeito. Ordem: prepare → dependências/core/WCC → publish; unload normal inverso, recusando pins/holders ocupados e replay. Mac/Ubuntu ARM64:9 testes/18 mutações novos,258 inputs íntegros, AST/lint fatal; shell/filesystem reais, kernel insmod/rmmod sintético e nenhum typechecker Python configurado. [Reprodução](N71_BRCMFMAC_RUNTIME.md#protocolo-dos-módulos-wcc--fase-b2b2-m1), [evidência](evidence/n71-wcc-module-protocol-qualified.json).
 
-Host110/196 com270 inputs iguais e C575/455 com69 iguais reutilizados; oito módulos oficiais byte/SHA novamente conferidos, sem rebuild. Nenhum acesso/reboot/DFU do iPhone, pacote/configuração global ou perfil/CLI habilitado. Agora integrar ledger/reconciliação/source/snapshot, depois unload/coordenador/causalidade, seleção e firmware/energia para a sessão agrupada. Wi-Fi/carga Linux/goal/issues40/9/2 permanecem abertos. Nenhuma ação do operador necessária.
+Host110/196 com270 inputs iguais e C 575/455 com69 iguais reutilizados; oito módulos oficiais byte/SHA novamente conferidos, sem rebuild. Nenhum acesso/reboot/DFU do iPhone, pacote/configuração global ou perfil/CLI habilitado. Agora integrar ledger/reconciliação/source/snapshot, depois unload/coordenador/causalidade, seleção e firmware/energia para a sessão agrupada. Wi-Fi/carga Linux/goal/issues40/9/2 permanecem abertos. Nenhuma ação do operador necessária.
 
 ## Histórico — recuperação de intent/checkpoint qualificada
 
@@ -62,7 +70,7 @@ CI72f7d99 anterior terminou success nos eventos [PR](https://github.com/djalmajr
 
 Em `c8ab8ee`, retomada e retained validam a publicação pelo ledger, owners completos, boot e providers antes de admitir o vetor único. O domínio vazio continua retido após free_irq_vectors; MSI manual, perda de domínio, drift de owners/providers e primeira causa apagada são recusados. Mac/Ubuntu ARM64:98 testes/186 mutações por AssertionError,267 inputs íntegros, AST/lint fatal; sem typechecker Python. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#continuidade-da-associação-publicada--fase-b2a), [evidência](evidence/n71-driver-runtime-continuation-qualified.json).
 
-Build C575/455 e oito módulos oficiais anteriores reutilizados com69 inputs C iguais, sem novo build. Nenhum acesso ou reboot/DFU do iPhone, pacote/configuração global ou seleção de firmware/módulo/perfil. Próximo trecho: recuperação do journal e coordenador/unload/cleanup no mesmo boot, antes de seleção C, calibração/regdb e energia. Wi-Fi/carga Linux e goal/issues40/9/2 seguem abertos. Nenhuma ação do operador necessária agora.
+Build C 575/455 e oito módulos oficiais anteriores reutilizados com69 inputs C iguais, sem novo build. Nenhum acesso ou reboot/DFU do iPhone, pacote/configuração global ou seleção de firmware/módulo/perfil. Próximo trecho: recuperação do journal e coordenador/unload/cleanup no mesmo boot, antes de seleção C, calibração/regdb e energia. Wi-Fi/carga Linux e goal/issues40/9/2 seguem abertos. Nenhuma ação do operador necessária agora.
 
 ## Histórico — módulos Wi-Fi PCIe e ledger qualificados
 

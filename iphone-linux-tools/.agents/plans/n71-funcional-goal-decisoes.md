@@ -240,4 +240,4 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Alternativas:** sobrescrever a seleção antiga altera o fluxo legacy; selecionar apenas pelo vermagic aceita módulos construídos contra outra base; recompilar o kernel não resolve esse contrato e adiciona reinicializações.
 - **Reverter:** baixo antes da ativação física; helper/teste novos e seleção opt-in.
 - **Onde:** C1 no plano host; novo runtime_build/teste; Session/staging/composição/CLI depois.
-- **Status:** em curso com contrato fechado; nenhuma ação do operador necessária.
+- **Status:** aplicada em 317c89c;9/14 Mac/ARM64,360 inputs íntegros e sete artefatos revalidados. Session/staging/composição/CLI e firmware/energia permanecem pendentes; nenhuma ação do operador necessária.

@@ -6,6 +6,18 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## Seleção vinculada do caller e WCC — fase C1
+
+Em `317c89c`, `n71_driver_runtime_build.qualified(root, request)` e `select(root, request)` recebem release e pcie_sha256 explícitos. Recusam o módulo IOMMU antigo, ABI incompatível e mistura de source/patch/config/Image/exports/gzip entre caller, WCC e kernel. Select devolve diagnostics (caller e REG_ON), drivers (cinco WCC ordenados) e kernel_outputs. Mantém os controles anteriores de assignment/IOMMU e o registro REG_ON; a identidade do caller muda para 142.232 bytes/SHA b4888de1 e recebe driver_runtime=true.
+
+O escopo opt-in, defaults sem preparo/firmware automático, actions/getter/owners e primeira causa são revalidados. Os 69 inputs compilados usam um SHA do conjunto de nomes, paths canônicos dentro do escopo público, arquivos sem links, tamanho e SHA de conteúdo. O getter isolado ou o vermagic não basta para selecionar um conjunto misturado. Nenhum seletor legacy foi modificado.
+
+### Reprodução e limites
+
+`python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_build.py -v` passou **9 testes/14 mutações por AssertionError** no Mac e Ubuntu ARM64. 360 inputs íntegros, AST/lint fatal; sem typechecker Python configurado. Seletores/arquivos/evidências reais e roots temporárias para recusas. Os 288 inputs anteriores e 69 inputs C permanecem iguais; coordenador 9/11, matrizes host anteriores e C 575/455 são reutilizados. Sete binários aceitos (dois diagnósticos e cinco WCC), **1.371.040 bytes**, foram revalidados privadamente por bytes/SHA/ELF64/AArch64/vermagic. Não foram carregados nem recompilados. [Evidência sanitizada](evidence/n71-runtime-selection-qualified.json), runners/logs privados em `runtime/n71-runtime-selection-final-20261010/` e pasta correspondente da VM.
+
+O helper ainda precisa ser ligado a Session/staging, à composição e à CLI. WCC deve ser transferido e verificado antes do primeiro snapshot que lê seus arquivos; o probe só recebe driver_runtime=1 na seleção explícita. A integração deve preservar a distinção entre aquisição e assignment, sem encaminhar estados já preparados ao resume legacy que remove providers. A saída anterior a assignment também precisa de um contrato comprovado antes de expor esse fluxo. Firmware/calibração/NVRAM/regdb, energia e prova física seguem pendentes. Nenhuma ação no iPhone ou alteração global do Mac nesta fatia.
+
 ## Coordenador no mesmo boot — fase B2b3d2
 
 Em `80538d2`, `n71_driver_runtime_session.run(session, request)` liga as operações explícitas start/observe/stop de uma origem privada qualificada. O request contém action, root, source e identity. O resultado contém action, phase, primary_error e successful. Ainda não há CLI/perfil selecionável para esse caller; não é um comando pronto para executar no telefone.
@@ -219,7 +231,7 @@ python3 -B -m unittest discover -s tests -p test_n71_resource_stage.py -v
 python3 -B -m unittest discover -s tests -p test_n71_held_history.py -v
 ```
 
-Mac e Ubuntu ARM64:80 testes/154 mutações por AssertionError, sendo novo protocolo8/22, IOMMU21/53, MSI7/16, held21/30, resources16/26 e histórico7/7. Shell real com sysfs temporário somente de leitura, integração com coordinator real, AST e lint fatal passaram; não há typechecker Python configurado.260 inputs finais conservados. Erro de harness por IndexError na primeira mutação de unicidade não contou; corrigido o mutante para duplicidade, a rodada final completa passou. Os69 inputs C anteriores permanecem iguais: reutilizados575/455 e o build qualificado, sem rebuild.
+Mac e Ubuntu ARM64:80 testes/154 mutações por AssertionError, sendo novo protocolo8/22, IOMMU21/53, MSI7/16, held21/30, resources16/26 e histórico7/7. Shell real com sysfs temporário somente de leitura, integração com coordinator real, AST e lint fatal passaram; não há typechecker Python configurado.260 inputs finais conservados. Erro de harness por IndexError na primeira mutação de unicidade não contou; corrigido o mutante para duplicidade, a rodada final completa passou. Os 69 inputs C anteriores permanecem iguais: reutilizados575/455 e o build qualificado, sem rebuild.
 
 A CI anterior `6e1cc9c` concluiu os seis jobs verdes nos eventos [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38039049902) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38039046638). Ela não cobre `3dfa1cb`; o novo head terá CI própria. Nenhum módulo/perfil/firmware selecionado, setter, reboot/DFU ou pacote/configuração global alterado. O goal amplo e as issues40/9/2 permanecem abertos; próxima fase registra intent/proof de actions e unload/release antes da seleção e da candidata física agrupada.
 
@@ -245,7 +257,7 @@ python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_continuation
 
 Esse gate tem8 testes/17 mutações por AssertionError. Com journal10/15, resultado8/22, IOMMU21/53, MSI7/16, held21/30, resources16/26 e histórico7/7:98 testes/186 mutações por plataforma no Mac/Ubuntu ARM64.267 inputs finais conferidos, AST e lint fatal aprovados; nenhum typechecker Python configurado. A fixture inicial compartilhava um dict alterado pelo teste de publicação falha; seus kills não foram aceitos. A fixture agora clona os estados e o gate de mutações exige baseline verde. A âncora antiga de retained foi atualizada conservando a mutação. Somente a matriz final é a prova aceita.
 
-Os69 inputs C e módulos oficiais/diagnóstico continuam íntegros, sem rebuild. Nenhum acesso ao iPhone, setter, seleção de perfil, módulo/firmware, DFU/reboot ou configuração global ocorreu. Ainda faltam execução pelo coordenador, unload normal, histórico/resources/cleanup e recuperação antes do hash ou com checkpoint ausente; depois seleção C, calibração/regdb e energia. Wi-Fi e carga Linux permanecem sem prova física.
+Os 69 inputs C e módulos oficiais/diagnóstico continuam íntegros, sem rebuild. Nenhum acesso ao iPhone, setter, seleção de perfil, módulo/firmware, DFU/reboot ou configuração global ocorreu. Ainda faltam execução pelo coordenador, unload normal, histórico/resources/cleanup e recuperação antes do hash ou com checkpoint ausente; depois seleção C, calibração/regdb e energia. Wi-Fi e carga Linux permanecem sem prova física.
 
 ## Recuperação read-only de intent/checkpoint — fase B2b1
 

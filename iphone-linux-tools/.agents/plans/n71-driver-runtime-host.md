@@ -211,5 +211,22 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** roots temporárias com cópias das evidências/69 inputs e seletores reais, sem mock das funções sob teste. Provar composição caller+REG_ON+WCC ordenado, flags antigas preservadas, origem imutável, hash explícito/ABI/Base incompatíveis recusados, escopo e causa/defaults divergem recusados, input alterado/omitido/link/traversal/budget inválidos recusados. Executar mutações reais após baseline verde e aceitar somente AssertionError; AST/lint Mac/ARM64, novo gate e reuso dos anteriores com inputs relevantes iguais. Conferir privadamente bytes/SHA dos artefatos aceitos, sem rebuild, SSH, load, perfil ou DFU.
 
-- [ ] Implementar e qualificar a seleção explícita do caller/WCC.
+- [x] Implementar e qualificar a seleção explícita do caller/WCC.
 - [ ] Integrar Session/staging e depois composição/CLI, mantendo o teste físico agrupado.
+
+**C1 qualificada em 317c89c:**9/14 Mac/ARM64,360 inputs íntegros, AST/lint fatal; sete artefatos/1.371.040 bytes revalidados por SHA/ELF/ABI.288 inputs host e69 C iguais permitem reuso. Nenhuma alteração de Session/CLI/perfis ou ação no iPhone. Próxima fatia deve fechar staging e a sequência de aquisição/assignment antes de integrar o coordenador, incluindo saída pré-assignment sem inventar proof.
+
+### C2. Session e staging explícitos — contrato fechado
+
+**Contexto:** C1 qualifica os registros, mas Session ainda chama o seletor IOMMU antigo e só transfere os dois diagnósticos. Ligar a seleção à instância e transferir WCC antes do getter; a CLI continua fechada nesta fatia. A sequência de aquisição/assignment e sua saída pré-assignment será resolvida antes de expor o fluxo na fatia seguinte.
+
+**Arquivos executáveis (quatro):** novo `scripts/host/n71_driver_runtime_profile.py`, novo `tests/test_n71_driver_runtime_profile.py`, alterações localizadas em `scripts/host/n71-link-session.py` (constructor/preflight/parameters) e `scripts/host/n71_iommu_result.py` (selected). Nenhum outro arquivo executável, kernel/build, CLI/proveniência/firmware ou ação no iPhone.
+
+**Interface:** Session recebe keyword `runtime=None` ou uma lista de cinco pares `(registro WCC, bytes)`. Com None, comportamento/seleção/comandos legacy permanecem. Helper `configure(session, request)` recebe root e modules; `selected(session, root)` valida; `staged(session)` devolve os cinco pares próprios somente no runtime explícito. Driver_runtime/manifest/ledgers são registrados separadamente dos dois diagnósticos. Exigir held/resource/IOMMU power2 e registros exatamente iguais à seleção C1; bytes devem ser imutáveis e coincidir com tamanho/SHA. Não aceitar vendor estrangeiro, manifest incompleto ou mistura de diagnósticos.
+
+**Dispatch:** IOMMU.selected mantém o caminho antigo quando runtime não está selecionado; no explícito usa a validação do helper/C1. O constructor configura os campos antes dessa validação. Preflight revalida os dados runtime antes do primeiro SSH e verifica por leitura que os oito módulos observados e o registro brcmfmac estão ausentes. Transferir e verificar SHA dos dois diagnósticos e cinco WCC no diretório exclusivo, antes de qualquer insmod de diagnóstico/REG_ON e antes do primeiro getter WCC. WCC nunca é carregado por preflight/probe. Probe acrescenta apenas driver_runtime=1 na seleção explícita; prepare/publicação continuam exclusivamente no coordenador.
+
+**Verificação:** constructor/Session/preflight/experiment/selected reais, dados/SSH/kernel sintéticos onde necessário; filesystem e bytes/SHA reais. Provar default inalterado, diagnóstico/manifest/ABI/flags recusados antes de efeito, transferência dos sete arquivos sem WCC insmod, erro de hash sem REG_ON/PCI insmod, getter somente depois dos arquivos e parâmetro runtime somente no opt-in. Mutações reais com baseline verde e AssertionError; AST/lint Mac/ARM64, gates afetados e reuso C/builds inalterados. Não declarar associação/carga/IRQ/DMA a partir desse aceite.
+
+- [ ] Implementar e qualificar Session/staging runtime sem alterar a CLI.
+- [ ] Fechar aquisição/assignment/saída e composição/CLI antes da candidata física.
