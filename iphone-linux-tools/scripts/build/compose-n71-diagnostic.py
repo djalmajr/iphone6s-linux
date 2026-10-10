@@ -16,6 +16,8 @@ import profile_image
 import n71_scan_held_result
 import n71_resource_result
 import n71_iommu_build
+import n71_driver_runtime_build
+import n71_driver_runtime_compose
 
 
 def module(name, path):
@@ -110,7 +112,11 @@ def held_reg_module(options, driver, *, kernel_release):
     kwargs = {'pcie_sha256': hashlib.sha256(driver).hexdigest()} if selector is n71_resource_result else {}
     if options.pcie_iommu_parent:
         kwargs['iommu_parent'] = True
-    records = selector.selected_records(ROOT, release=kernel_release, **kwargs)
+    if getattr(options, 'pcie_driver_runtime', False):
+        records = n71_driver_runtime_build.select(ROOT,
+            {'release': kernel_release, 'pcie_sha256': hashlib.sha256(driver).hexdigest()})['diagnostics']
+    else:
+        records = selector.selected_records(ROOT, release=kernel_release, **kwargs)
     pcie, reg = records
     if len(driver) != pcie['bytes'] or hashlib.sha256(driver).hexdigest() != pcie['sha256']:
         raise ValueError('Held PCI module differs from the qualified build')
@@ -138,8 +144,14 @@ def main():
     parser.add_argument('--pcie-scan-hold', action='store_true', help='Compose the qualified power2 held PCI/REG_ON candidate')
     parser.add_argument('--pcie-resource-capable', action='store_true', help='Select the qualified assignment-capable module; requires --pcie-scan-hold')
     parser.add_argument('--pcie-iommu-parent', action='store_true', help='Select the qualified IOMMU association and exact power2 Image; requires held resources')
+    parser.add_argument('--pcie-driver-runtime', action='store_true', help='Compose the explicit runtime caller and five WCC files; requires held IOMMU mode')
+    parser.add_argument('--wcc-dir', type=Path, help='Private directory containing the five qualified WCC module files; requires runtime selection')
     parser.add_argument('--reg-on-module', type=Path, help='Qualified private REG_ON module; required only with --pcie-scan-hold')
     options = parser.parse_args()
+    if options.pcie_driver_runtime and (not options.pcie_iommu_parent or options.wcc_dir is None):
+        raise ValueError('Runtime profile requires explicit IOMMU mode and private WCC files')
+    if options.wcc_dir is not None and not options.pcie_driver_runtime:
+        raise ValueError('WCC files require explicit runtime selection')
     if options.pcie_iommu_parent and not options.pcie_resource_capable:
         raise ValueError('IOMMU profile requires explicit resource selection')
     if options.pcie_resource_capable and not options.pcie_scan_hold:
@@ -180,6 +192,8 @@ def main():
         raise ValueError('Module differs from recorded build hash')
     validate_module(driver, kernel_release=record['build']['kernel_release'])
     reg_driver = held_reg_module(options, driver, kernel_release=record['build']['kernel_release']) if options.pcie_scan_hold else None
+    runtime_modules = n71_driver_runtime_compose.select(ROOT, {'release': record['build']['kernel_release'],
+        'pcie_sha256': options.module_sha256, 'directory': options.wcc_dir.absolute()}) if options.pcie_driver_runtime else None
     loader = (ROOT / 'artifacts/m1n1.bin').read_bytes()
     expected = json.loads((ROOT / 'docs/evidence/m1n1-rebuild.json').read_text())['shallow_clone']
     if not expected['matches_original'] or KERNEL.digest(loader) != expected['sha256']:
@@ -206,6 +220,9 @@ def main():
         private_write(destination / name, data)
     if reg_driver is not None:
         private_write(destination / 'n71-wlan-power-diagnostic.ko', reg_driver)
+    if runtime_modules is not None:
+        for entry, raw in runtime_modules['drivers']:
+            private_write(destination / entry['module'], raw)
     profile = {'format': 1, 'payload': 'payload.bin', 'sha256': KERNEL.digest(payload),
                'initramfs': 'initramfs.gz', 'initramfs_sha256': KERNEL.digest(initramfs),
                'client_key': 'client_ed25519', 'known_hosts': 'known_hosts',
@@ -239,6 +256,8 @@ def main():
                           reg_on_module_sha256=hashlib.sha256(reg_driver).hexdigest())
     if options.pcie_iommu_parent:
         provenance['dart_phandle'] = dart_phandle
+    if runtime_modules is not None:
+        provenance.update(pcie_driver_runtime=True, driver_modules=[entry for entry, _ in runtime_modules['drivers']])
     private_write(destination / 'provenance.json', (json.dumps(provenance, indent=2) + '\n').encode())
     print('N71_DIAGNOSTIC_PROFILE_VERIFIED; no USB action; not boot qualified')
 
