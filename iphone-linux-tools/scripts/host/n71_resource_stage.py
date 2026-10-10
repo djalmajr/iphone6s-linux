@@ -1,9 +1,11 @@
 """Retain one PCI assignment with durable intent, proof and same-boot cleanup."""
+import copy
 import re
 import n71_iommu_result
 import n71_resource_result
 import n71_scan_held_result
 import n71_driver_runtime_result
+import n71_session_history
 
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
@@ -178,7 +180,27 @@ def assign(session, journal, live):
     journal.proof(PROOF, process.stdout)
 
 
+def cleanup_view(session, text, baseline=None):
+    if not n71_driver_runtime_result.capable(session):
+        return session, text
+    baseline = baseline if baseline is not None else getattr(session, 'history', None)
+    if baseline is None:
+        return session, text
+    prefix = baseline.lines
+    require(isinstance(prefix, list) and n71_session_history.kernel_lines('\n'.join(prefix)) == prefix
+        and baseline.known == frozenset(prefix), 'Cleanup baseline is not canonical')
+    require(n71_session_history.kernel_lines(text)[:len(prefix)] == prefix, 'Cleanup baseline prefix changed')
+    view = copy.copy(session)
+    view.history = copy.copy(baseline); view.history.lines = []; view.history.known = frozenset()
+    view.driver_runtime_journal = []
+    for entry in session.driver_runtime_journal:
+        require(entry['history'][:len(prefix)] == prefix, 'Cleanup native baseline prefix changed')
+        view.driver_runtime_journal.append(dict(entry, history=entry['history'][len(prefix):]))
+    return view, baseline.fresh(text)
+
+
 def cleanup(session, proof):
+    session, proof = cleanup_view(session, proof)
     require(not session.resource_attempted or session.resource_assignment is not None,
             'Cannot clean up an unproved assignment intent')
     verify_readback(session, proof)

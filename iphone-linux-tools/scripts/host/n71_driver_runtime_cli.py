@@ -9,8 +9,9 @@ import n71_driver_runtime_session as coordinator
 import n71_held_session as held
 import n71_iommu_build as iommu
 import n71_driver_firmware_session as firmware
+import n71_driver_reacquire as reacquire
 
-ACTIONS = ('acquire', 'assign', 'start', 'observe', 'stop')
+ACTIONS = ('acquire', 'assign', 'start', 'observe', 'stop', 'reacquire')
 TRUE_FLAGS = ('kernel_initramfs_identities_preserved', 'pcie_driver_runtime', 'pcie_aspm_off', 'pcie_scan_hold',
     'pcie_resource_capable', 'pcie_iommu_parent', 'pcie_scan_link_target', 'pcie_scan_pme_disable',
     'requires_explicit_run', 'requires_explicit_enumerate')
@@ -95,14 +96,20 @@ def run(root, request):
             scan_hold=True, resource_capable=True, iommu_parent=True, release=release, runtime=selected['drivers'])
         if request.get('firmware') is not None:
             firmware.configure(session, {'root': root, 'directory': request['firmware']})
+        if not request['check']:
+            output.mkdir(mode=0o700)
+        if request['action'] == 'reacquire':
+            reacquire.prepare(session, {'root': root, 'source': request['source'],
+                'identity': identity, 'check': request['check']})
         if request['check']:
-            if request['source'] is not None:
+            if request['source'] is not None and request['action'] != 'reacquire':
                 held.load_source(session, root, request['source'], identity)
                 if firmware.KEY in session.result:
                     firmware.state(session)
             print('N71_RUNTIME_LOCAL_GATE_OK; no SSH or USB action', flush=True)
             return 0
-        output.mkdir(mode=0o700)
+        if request['action'] == 'reacquire':
+            return held.run(session, identity, root=root, source=None, assign=False)
         if request['action'] in ('acquire', 'assign'):
             return held.run(session, identity, root=root, source=request['source'], assign=request['action'] == 'assign')
         result = coordinator.run(session, {'action': request['action'], 'root': root,

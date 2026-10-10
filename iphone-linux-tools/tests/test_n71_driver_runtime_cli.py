@@ -128,7 +128,7 @@ class RuntimeCliTests(unittest.TestCase):
     def test_each_explicit_action_writes_only_its_handler_contract(self):
         # Mutations: route runtime to legacy release, change source/assignment or omit WCC in Session.
         original=(self.source/'retained-private.json').read_bytes()
-        for action in self.subject.ACTIONS:
+        for action in ('acquire', 'assign', 'start', 'observe', 'stop'):
             request=self.request(action,check=False); code,_=self.accepted(request); self.assertEqual(code,0)
             self.assertEqual({p.name for p in request['output'].iterdir()},{'handler-contract-private.json'})
             value=json.loads((request['output']/'handler-contract-private.json').read_text())

@@ -111,6 +111,7 @@ def snapshot(session, stage):
 class Baseline:
     def __init__(self, lines):
         require(isinstance(lines, list) and all(isinstance(line, str) for line in lines), 'Invalid held baseline')
+        self.lines = list(lines)
         self.known = frozenset(lines)
 
     def fresh(self, text):
@@ -236,15 +237,16 @@ def load_source(session, root, directory, selected_identity):
         session.module_directory = data['module_directory']
         session.result = dict(result)
     if 'pcie-cleanup' in verified:
-        iommu_proof = n71_iommu_result.cleanup(session, verified['pcie-cleanup'])
+        cleanup_session, cleanup_text = n71_resource_stage.cleanup_view(session, verified['pcie-cleanup'], baseline)
+        iommu_proof = n71_iommu_result.cleanup(cleanup_session, cleanup_text)
         if iommu_proof is not None:
             require(result.get('iommu_cleanup') == iommu_proof, 'Saved IOMMU cleanup differs from proof')
     if 'pcie-unload' in verified:
         require('pcie-cleanup' in verified, 'PCI unload lacks cleanup proof')
-        if n71_iommu_result.pre_scan_cleanup(session, verified['pcie-cleanup']) is not None:
+        if n71_iommu_result.pre_scan_cleanup(cleanup_session, cleanup_text) is not None:
             pass
         elif n71_resource_stage.capable(session):
-            n71_resource_stage.cleanup(session, verified['pcie-cleanup'])
+            n71_resource_stage.cleanup(cleanup_session, cleanup_text)
         else:
             n71_scan_held_result.cleanup(verified['pcie-cleanup'])
         require(verified['pcie-unload'].splitlines().count('N71_PCIE_UNLOADED') == 1, 'Held PCI unload not proved')
@@ -292,6 +294,19 @@ def proof_output(session, stage, process):
     return raw
 
 
+def cleanup_current(session, proof):
+    session, proof = n71_resource_stage.cleanup_view(session, proof)
+    pre_scan = n71_iommu_result.pre_scan_cleanup(session, proof)
+    if pre_scan is not None:
+        cleanup = pre_scan
+    elif n71_resource_stage.capable(session):
+        cleanup = n71_resource_stage.cleanup(session, proof)
+    else:
+        cleanup = n71_scan_held_result.cleanup(proof)
+    iommu_cleanup = n71_iommu_result.cleanup(session, proof)
+    return cleanup, iommu_cleanup
+
+
 def release(session, journal, presence, live_text):
     pcie, reg, empty = presence
     if session.pcie_attempted and 'pcie-unload' not in journal.proofs:
@@ -309,14 +324,7 @@ def release(session, journal, presence, live_text):
                                       + 'dmesg; exit "$cleanup_exit"')
             require(process.returncode == 0, 'Held cleanup pending; retain REG_ON and module')
             proof = proof_output(session, 'held-cleanup', process)
-        pre_scan = n71_iommu_result.pre_scan_cleanup(session, proof)
-        if pre_scan is not None:
-            cleanup = pre_scan
-        elif n71_resource_stage.capable(session):
-            cleanup = n71_resource_stage.cleanup(session, proof)
-        else:
-            cleanup = n71_scan_held_result.cleanup(proof)
-        iommu_cleanup = n71_iommu_result.cleanup(session, proof)
+        cleanup, iommu_cleanup = cleanup_current(session, proof)
         if iommu_cleanup is not None:
             session.result['iommu_cleanup'] = iommu_cleanup
         session.result['stop_error'] = cleanup['stop_error']
