@@ -205,4 +205,13 @@
 - **Alternativas:** exigir outro DFU após cada diferença perde a sessão; ignorar diferenças perde ownership e erro; ampliar o parser legacy afeta perfis anteriores. O contrato runtime separado conserva esses limites.
 - **Reverter:** baixo antes da ativação; helper passivo e hooks específicos, sem mudança de kernel/perfil/CLI.
 - **Onde:** plano hostB2b3b e lifetime/module-ledger/recovery/resource-retained; coordenador na fatia seguinte.
-- **Status:** na fila, com contrato fechado; Wi-Fi/energia e prova física ainda pendentes. Nenhuma ação do operador necessária agora.
+- **Status:** aplicada em 18568c5;160/294 Mac/ARM64,281 inputs íntegros, AST/lint fatal. Contexto/proofs/causa/histórico e recuperação retida qualificados offline. Captura/loader de host removido e coordenador precedem seleção física; Wi-Fi/energia pendentes.
+
+## D24. Fechar captura integral antes do coordenador
+
+- **Decisão:** separar boot/log integral, getter M1 com diagnóstico ausente e origem removida em uma fatia de dois arquivos; depois start/observe/stop explícitos. Conservar stdout/contratos legacy fora da seleção WCC.
+- **Por quê:** lifetime já está validado, mas held ainda não produz todos os campos após unload nem conserva boot/log integral dos efeitos. Ligar coordenador antes disso cria recovery não demonstrado.
+- **Alternativas:** juntar captura/coordenador amplia a superfície da mudança; fabricar getters ou dispensar proofs perde propriedade/causa. A separação mantém aceite concreto sem boot físico intermediário.
+- **Reverter:** baixo antes da ativação; helpers/loader específicos, defaults/kernel preservados.
+- **Onde:** plano hostB2b3c, held/teste próprio; coordenador em B2b3d.
+- **Status:** na fila com contrato fechado; nenhuma ação do operador necessária. Não pedir confirmação da tela de bloqueio sem ação dependente.

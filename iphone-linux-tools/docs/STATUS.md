@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — journal WCC e causalidade qualificados; coordenador e ativação pendentes
+## Checkpoint atual — continuidade runtime qualificada; captura held e coordenador pendentes
+
+Em `18568c5`, continuidade runtime valida boot/manifest/proofs, causa, providers e janelas de intent/efeito. Recupera publicação/release/unload pendentes por observação, sem repetir comandos nem alterar origem/órfão. Getter vazio não substitui prova de unload/cleanup. Mac/Ubuntu ARM64:160 testes/294 mutações por plataforma,281 inputs íntegros, AST/lint fatal; novo gate13/21. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#continuidade-do-runtime--fase-b2b3b), [evidência](evidence/n71-driver-runtime-lifetime-qualified.json).
+
+Nenhum acesso, reboot, DFU, firmware/módulo ou configuração global do Mac alterado.69 C/oito módulos oficiais preservados, builds e575/455 reutilizados. Captura M1 fora do PCIe, boot/log integral, source removido e start/observe/stop precedem seleção C/firmware/energia. Wi-Fi/carga, goal e issues40/9/2 pendentes. Nenhuma ação do operador necessária; não solicitar confirmação da tela de bloqueio sem ação dependente.
+
+CI c3721d2 anterior: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38055377050) success, [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38055374394) cancelado em Mac/Ubuntu por prazo15m; Windows passou. #41 permanece aberta, sem alterar prazo/gate nem repetir runs. A CI desta publicação terá seus próprios handles.
+
+## Histórico — causalidade do cleanup qualificada
 
 Em `b8fdd56`, cleanup resource/IOMMU conserva a causa anterior do driver com release nativa completa e comprovada no mesmo boot. Assignment anterior e provider posterior permanecem separados; pending/refusal/causa apagada não autoriza cleanup. Mac/Ubuntu ARM64:147 testes/273 mutações por plataforma,278 inputs íntegros, AST/lint fatal; nenhum typechecker Python configurado. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#primeira-causa-no-cleanup-runtime--fase-b2b3a), [evidência](evidence/n71-driver-runtime-cleanup-qualified.json).
 

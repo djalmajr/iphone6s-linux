@@ -6,6 +6,38 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## Continuidade do runtime — fase B2b3b
+
+Em `18568c5`, o helper passivo revalida boot, manifest e proofs registrados por hash, rederiva completions e ordena as janelas de intent/efeito. Recusa action não comprovada, prefixo alterado ou duas operações na mesma linha. A entrada `retained_runtime(session, text, context)` é explícita; o retained legacy conserva sua API e suas recusas.
+
+Com publicação e stack WCC próprios comprovados, admite somente recusas ECAM canônicas vinculadas à primeira causa negativa do driver e ao endpoint/config access permitido. Conserva assignment, providers e REG_ON, sem tomar a lease MSI manual. Vetor0→1→0 e domínio child retido após free continuam sendo estados de software, sem prova de entrega IRQ, DMA, Wi-Fi ou carga.
+
+Unload completo permite a ponte para uma release nativa registrada, inclusive preservando owners parciais numa release recusada. Host removido exige o último stack comprovadamente vazio, getter fresco vazio de todos os módulos e proofs de cleanup/unload. Seu parser passou; a ligação ao loader completo de origem removida ainda depende da próxima fatia de captura held. Ausência de getter/proof continua recusada.
+
+### Reprodução e níveis de prova
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_lifetime.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_module_stage.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_recovery.py -v
+```
+
+Novo gate13 testes/21 mutações por AssertionError; matriz afetada160/294 por plataforma Mac/Ubuntu ARM64,281 inputs íntegros, AST/lint fatal. Após a guarda de marker duplo, somente os três gates acima foram revalidados; os11 gates restantes conservam resultados com código relevante inalterado. A [evidência](evidence/n71-driver-runtime-lifetime-qualified.json) registra manifests inicial/final e hashes dos logs. O discovery `test_*.py` do workflow existente inclui o novo gate. Nenhum typechecker Python configurado.
+
+Loader/journal/filesystem e shell POSIX de teste são reais; kernel/getters/SSH do telefone são fixtures. Recuperação de publicação, release e unload interrompidos observa o mesmo boot, conserva origem/órfão byte a byte e mantém `shell_exit=null`. O shortcut de checkpoint completo revalida o histórico assíncrono antes do loader legacy. Nenhum efeito foi executado no iPhone.
+
+Um subprocesso de um mutante legacy held excedeu10s no Mac; esse resultado foi descartado e só o gate held repetido, com21/30 aprovados. A primeira rodada de mutations novas tinha âncora ambígua, guardas redundantes e TypeError de harness; não contou como prova. Os casos finais distinguem boot externo com host removido e providers/lease após release; a guarda de marker duplo impede outra operação no prefixo de uma linha aceita. Logs, tarballs e runners privados ficam em `runtime/n71-runtime-lifetime-final-20261010/` e na pasta correspondente `/home/ubuntu/n71-runtime-lifetime-final-20261010/` da VM dedicada; não publicar esses logs.
+
+### Relatório desta fatia
+
+- **Arquivos/plano:** helper/teste lifetime, ponte module-stage, recovery e entrada resource-stage; B2b3b concluída offline. Captura held e coordenador precedem seleção C.
+- **Compatibilidade/dependências:** defaults, legacy, perfil e CLI conservados.69 C e oito módulos oficiais byte/SHA conferidos;575/455 e builds anteriores reutilizados, sem rebuild. Nenhuma dependência, banco ou configuração global alterada.
+- **Verificação:**160/294 por plataforma, AST/lint fatal, sem typechecker Python; desempenho físico não medido.
+- **CI anterior c3721d2:** [PR aprovado](https://github.com/djalmajr/iphone6s-linux/actions/runs/38055377050), [push cancelado](https://github.com/djalmajr/iphone6s-linux/actions/runs/38055374394) por prazo15m em Mac/Ubuntu. [Issue41](https://github.com/djalmajr/iphone6s-linux/issues/41#issuecomment-6098438874) permanece aberta; não confundir com a CI desta implementação. Nenhum prazo/gate alterado ou run repetido.
+- **Próximo:** M1 fora do bloco PCIe, boot/log integral e loader de host removido; depois start/observe/stop, seleção/composição e firmware/energia. Goal e issues40/9/2 seguem ativos, sem prova física de Wi-Fi/carga.
+
+Não há ação necessária do operador. Solicitar só DFU/ação física indispensável após candidata e monitor prontos; não pedir confirmação de tela de bloqueio sem ação dependente. Uma transição não observada não será declarada como prova USB/física.
+
 ## Uma sessão para várias operações
 
 O probe continua apenas adquirindo o diagnóstico retido. `driver_runtime` inicia em `false`; ativá-lo permite actions explícitas e exige `iommu_parent`, que já depende de MSI/scan held/PME/inventory. Não prepara o driver, publica devices ou carrega firmware automaticamente.
