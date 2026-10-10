@@ -15,7 +15,7 @@ Manter o iPhone no iOS para recarga durante as correções. Separar fases de no 
 - [x] Corrigir lookup OF/fixtures/mutações, verificar Mac e Ubuntu ARM64.
 - [x] Corrigir parser negativo com casos de prova incompleta, erro e ordem divergentes; verificar journal e modos anteriores.
 - [x] Compilar módulo separado na VM power2, conferir exports/vermagic e preservar fonte/config/Image/artefatos anteriores.
-- [ ] Registrar evidência sanitizada, atualizar issues e publicar somente a branch autorizada.
+- [x] Registrar evidência sanitizada, atualizar issues e publicar somente a branch autorizada.
 - [x] Preparar próxima candidata agrupada, sem boot nesta etapa offline.
 
 ## Gates e limites
@@ -31,3 +31,5 @@ OF51 cenários/40 mutações compiladas por SIGABRT/asserção, parser/journal19
 O registro qualificado foi atualizado para SHA48df330a, mantendo o build anterior e seu histórico. Somente o header OF diverge dos84 inputs anteriores; os gates PCI independentes são reutilizados, e o helper mudou com seu gate específico51/40. Os50 inputs copiados na VM foram conferidos byte a byte por SHA; imports group get/put/id presentes e helpers de alias não exportados ausentes.
 
 Seleção/Image8 testes/24 mutações e perfil/composer8/21 passaram no Mac e Ubuntu ARM64. Composer real e collector `--check` passaram: oito arquivos700/600; payload/DTB/kernel/loader/bootargs/deployment, initramfs/chaves/identidades e REG_ON são idênticos ao D20 anterior. Somente módulo PCIe e seu SHA na provenance mudaram. Defaults e candidata anterior preservados, sem boot. A tentativa agrupada privada está preparada com o último snapshot manual validado; não repetirá o gate GPIO já aprovado. [Prova da candidata](../../docs/evidence/n71-of-scope-profile-qualified.json). CI nova e teste físico seguem pendentes.
+
+Publicado somente em feat/display-console, sem merge/tag/release. Evidências e pendências atualizadas nas issues2/9/38/40. A conferência USB atual voltou vazia por ioreg e idevice_id depois do fallback ao iOS; reconexão somente da ponta Lightning solicitada, sem PIN/botões. A candidata corrigida ainda não foi iniciada. As execuções CI6ad8d7f foram substituídas pelo novo push; conclusão cancelled não conta como aprovação. A CI completa do head mais recente precisa terminar antes do teste físico seguinte.
