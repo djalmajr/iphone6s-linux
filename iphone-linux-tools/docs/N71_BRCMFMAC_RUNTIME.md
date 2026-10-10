@@ -6,6 +6,34 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## Captura integral e origem removida — fase B2b3c
+
+Em `78071d1`, o getter M1 fica fora do bloco condicional PCIe e observa os oito módulos mesmo após unload do diagnóstico. Os efeitos runtime/WCC imprimem e conferem boot antes de escrever ou remover módulos. O parser e o journal recebem o log privado completo, incluindo stderr, com proteção de arquivo, nome de stage canônico e limite inclusivo de 2 MiB. O caminho legacy conserva seus comandos, stdout e formato de proofs.
+
+O loader exige hash/boot/histórico completo para os quatro proofs held runtime e carrega o contexto nativo antes de validar a causa do cleanup. Usa lifetime.removed para exigir stack comprovadamente vazio e getter fresco vazio. Recuperação com checkpoint ausente após teardown valida a observação e cria uma cópia privada, sem alterar origem/órfãos nem repetir efeitos. Host já limpo registra a observação completa em vez de reemitir cleanup. Boot inválido após unload conserva REG_ON e não registra a prova incompleta nem segue para restore.
+
+### Reprodução e provas
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_runtime_held_capture.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_lifetime.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_module_stage.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_recovery.py -v
+```
+
+Novo gate: **11 testes/19 mutações por AssertionError**. Nove gates afetados revalidados no Mac e Ubuntu ARM64: **123 testes/197 mutações por plataforma**, 283 inputs íntegros, AST/lint fatal; nenhum typechecker Python configurado. Seis gates com código relevante inalterado, 48/116, reutilizados da fase anterior. As 69 entradas C e oito módulos oficiais byte/SHA permanecem iguais, permitindo reuso de 575/455 e dos builds. O discovery `test_*.py` da CI inclui o novo teste. [Evidência e hashes](evidence/n71-runtime-held-capture-qualified.json).
+
+Shell, arquivos/proteções, parsers, journal, loader e recovery são reais. Kernel/SSH são dependências sintéticas; a árvore POSIX temporária traduz os caminhos de execução e de saída para o protocolo canônico. Isso não é prova de hardware. O primeiro baseline revelou a tradução ausente, referência de fixture inválida e que read_private separa stderr; foi corrigido usando leitura integral protegida. Uma âncora duplicada foi limitada à função effect_boot, e o teste de boot de unload evita mascaramento por outro guard de cleanup. Rodadas falhas não contaram como kills; somente a final foi aceita. Logs/runners privados em `runtime/n71-runtime-held-capture-final-20261010/` e na pasta correspondente da VM dedicada.
+
+### Relatório e próximos passos
+
+- **Arquivos/plano:** held e novo teste; B2b3c qualificada. Não havia import morto em held antes da edição. Nenhuma API legacy, dependência, banco ou configuração global mudou.
+- **Verificação:** 123/197 nas duas plataformas e AST/lint fatal; 48/116 host e 575/455 C reutilizados. Desempenho físico não medido; nenhuma ação no iPhone.
+- **CI anterior 907af26:** [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38059761266) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38059759198) aprovaram Mac/Windows; Ubuntu cancelou no prazo oficial de 15 minutos. #41 permanece aberta; não repetir runs nem declarar os eventos completos aprovados.
+- **Próximo:** B2b3d iniciar/observar/parar o driver explicitamente, preservando fontes e journal. Fechar também a validação de stop antes da primeira preparação, pois o helper removed atual exige lifetime registrado. Depois seleção/composição C, firmware/calibração e energia antes da sessão física agrupada.
+
+Wi-Fi, IRQ/DMA e carga ainda exigem prova física. Goal e issues40/9/2 permanecem ativos; nenhuma ação do operador necessária agora.
+
 ## Continuidade do runtime — fase B2b3b
 
 Em `18568c5`, o helper passivo revalida boot, manifest e proofs registrados por hash, rederiva completions e ordena as janelas de intent/efeito. Recusa action não comprovada, prefixo alterado ou duas operações na mesma linha. A entrada `retained_runtime(session, text, context)` é explícita; o retained legacy conserva sua API e suas recusas.

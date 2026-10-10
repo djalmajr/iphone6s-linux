@@ -151,6 +151,8 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Aceite:** executar `python3 -B -m unittest discover -s tests -p test_n71_runtime_held_capture.py -v` com árvore POSIX temporária, dependências kernel sintéticas e source loader/recovery/filesystem reais. Provar M1 com diagnóstico ausente, stdout filtrado diferente do log integral, boot errado/duplicado, proof alterado, módulo vivo/ledger não vazio, falta de cleanup/unload e origem imutável. Mutations com baseline verde e AssertionError, sem erro de harness/timeout; gates afetados, AST/lint Mac/ARM64,69 C/módulos/builds preservados. Discovery CI inclui o novo teste. Nenhuma CLI/DFU nesta fase.
 
-- [ ] Integrar captura/loader de origem removida, conservando legacy.
-- [ ] Qualificar shell/source/recovery e registrar reprodução/limites.
+- [x] Integrar captura/loader de origem removida, conservando legacy.
+- [x] Qualificar shell/source/recovery e registrar reprodução/limites.
 - [ ] Fechar start/observe/stop em B2b3d antes da candidata física.
+
+**B2b3c qualificada em 78071d1:**11/19 novos e nove gates123/197 por plataforma Mac/Ubuntu ARM64,283 inputs íntegros, AST/lint fatal, sem typechecker Python. Loader/recovery/shell/proofs integrais reais, kernel/SSH sintéticos. Seis gates48/116 inalterados e C69/575/455 preservados; oito módulos iguais. Baselines/âncoras iniciais falhos descartados. Nenhuma ação física, pacote/configuração global ou CLI nova. B2b3d segue para o coordenador, incluindo stop antes de prepare: removed hoje exige names não vazio, lacuna que deve ser resolvida explicitamente antes da seleção C.

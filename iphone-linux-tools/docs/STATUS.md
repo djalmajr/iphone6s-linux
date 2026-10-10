@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — continuidade runtime qualificada; captura held e coordenador pendentes
+## Checkpoint atual — captura integral e origem removida qualificadas; coordenador pendente
+
+Em `78071d1`, M1 observa módulos após unload do diagnóstico, os efeitos conferem boot e os proofs conservam logs privados completos. Loader/recovery de origem removida validam lifetime/stack e conservam arquivos de origem sem replay. Nove gates revalidados: **123 testes/197 mutações por plataforma Mac/Ubuntu ARM64**, 283 inputs íntegros, AST/lint fatal; novo gate11/19, sem typechecker Python. [Reprodução/limites](N71_BRCMFMAC_RUNTIME.md#captura-integral-e-origem-removida--fase-b2b3c), [evidência](evidence/n71-runtime-held-capture-qualified.json).
+
+Seis gates host inalterados (48/116), 69 entradas C (575/455) e oito módulos byte/SHA preservados; nenhum rebuild, instalação global ou ação no iPhone. Próximo: iniciar/observar/parar explicitamente, incluindo stop anterior a prepare, depois seleção C e firmware/energia. Goal/issues40/9/2 e provas físicas de Wi-Fi/carga permanecem pendentes. Nenhuma ação do operador necessária.
+
+CI 907af26 anterior: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38059761266) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38059759198) com Mac/Windows aprovados e Ubuntu cancelado por prazo15m; #41 aberta. A nova publicação terá handles próprios, sem repetir runs terminados.
+
+## Histórico — continuidade runtime qualificada
 
 Em `18568c5`, continuidade runtime valida boot/manifest/proofs, causa, providers e janelas de intent/efeito. Recupera publicação/release/unload pendentes por observação, sem repetir comandos nem alterar origem/órfão. Getter vazio não substitui prova de unload/cleanup. Mac/Ubuntu ARM64:160 testes/294 mutações por plataforma,281 inputs íntegros, AST/lint fatal; novo gate13/21. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#continuidade-do-runtime--fase-b2b3b), [evidência](evidence/n71-driver-runtime-lifetime-qualified.json).
 

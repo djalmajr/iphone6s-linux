@@ -214,4 +214,13 @@
 - **Alternativas:** juntar captura/coordenador amplia a superfície da mudança; fabricar getters ou dispensar proofs perde propriedade/causa. A separação mantém aceite concreto sem boot físico intermediário.
 - **Reverter:** baixo antes da ativação; helpers/loader específicos, defaults/kernel preservados.
 - **Onde:** plano hostB2b3c, held/teste próprio; coordenador em B2b3d.
-- **Status:** na fila com contrato fechado; nenhuma ação do operador necessária. Não pedir confirmação da tela de bloqueio sem ação dependente.
+- **Status:** aplicada em 78071d1;123/197 nas duas plataformas,283 inputs íntegros, AST/lint. Captura/loader de origem removida qualificados; coordenador/seleção física continuam pendentes, sem ação do operador.
+
+## D25. Coordenar operações explícitas e o encerramento antes de prepare
+
+- **Decisão:** implementar start/observe/stop com journal e fontes validadas no mesmo boot; observar sem efeitos e parar com unload normal, release e cleanup comprovados. Fechar o caso de stop antes de preparar o driver com validação explícita de ausência de efeitos nativos, stack vazio e cleanup completo.
+- **Por quê:** captura e recuperação já estão qualificadas. O helper removed exige lifetime registrado; excluir o encerramento pré-prepare deixaria uma sessão adquirida sem um caminho completo de saída.
+- **Alternativas:** stop apenas após start mantém essa lacuna; cleanup automático após qualquer erro pode repetir operações ou perder evidência. A validação explícita mantém o controle no mesmo boot e dispensa reboot intermediário.
+- **Reverter:** baixo antes da seleção C; coordenador opt-in e helper passivo, sem mudança de kernel/perfis antigos.
+- **Onde:** próxima fatia B2b3d, helper/teste de coordenador e lifetime/teste. Fechar interfaces/aceite antes do código.
+- **Status:** na fila; Wi-Fi/energia e sessão física ainda pendentes. Nenhuma ação do operador necessária.
