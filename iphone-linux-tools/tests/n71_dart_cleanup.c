@@ -34,6 +34,12 @@ static int module;
 #define THIS_MODULE (&module)
 
 static void *pci_host_bridge_priv(struct pci_host_bridge *bridge) { return &bridge->private; }
+static int n71_driver_cleanup(struct n71_diagnostic *state, struct n71_scan_host *host)
+{
+	/* This route owns no driver runtime; its recovery is covered by the complete caller. */
+	assert(state == current && state->scan_bridge && host == &state->scan_bridge->private);
+	return 0;
+}
 static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 {
 	/* This baseline models the old unattached route; associated coverage is in the caller gate. */
