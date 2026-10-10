@@ -62,3 +62,12 @@
 - **Reverter:** baixo para o opt-in; owner vazio mantém o caminho anterior. Driver/DMA precisam de contrato próprio antes de liberar decode/MASTER.
 - **Onde:** [plano](n71-wlan-msi-config.md), [reprodução](../../docs/N71_IRQ_IOMMU.md#configuração-msi--owner-e-callback-qualificados), [evidência](../../docs/evidence/n71-msi-config-qualified.json), issues40/9.
 - **Status:** helper/callback e build ARM64 qualificados; caller/getter/collector/journal e driver/energia em curso. Sem teste físico isolado de alocação.
+
+## D8. Alocar um vetor pelo core e conservar a referência até restore
+
+- **Decisão:** usar `pci_alloc_irq_vectors` com min/max1 e somente MSI; API D0 exportada após PMCSR4008 e guarda de identidade/COMMAND. Recusar ASPM existente no pai, validar hierarquia AIC/tupla/configuração e conservar endpoint/owner em falha. Stop/readback precedem free; IRQ inicial, grants/mappings e baseline precedem put.
+- **Por quê:** o core exige cache D0; atribuí-lo manualmente omite a API e o readback. A fonte fixada chama reconfiguração ASPM pela API D0, portanto a ausência do link é uma condição explícita. O retorno PCI sozinho não comprova mensagem/hardware.
+- **Alternativas:** permitir INTx fallback muda o transporte; usar cache manual contorna o estado real; reconstruir kernel para exportar outro helper aumenta o custo. Teardown automático sem stop/readback pode liberar vetores enquanto MSI permanece ativo.
+- **Reverter:** baixo; adaptador ainda não exposto no aparelho. Os defaults, kernel e perfil físico anteriores continuam preservados.
+- **Onde:** [plano](n71-wlan-msi-config.md), [reprodução](../../docs/N71_IRQ_IOMMU.md#adaptador-de-alocação-msi--qualificação-sem-ação-no-aparelho), [evidência](../../docs/evidence/n71-msi-allocation-qualified.json), issues40/9.
+- **Status:** adaptador e probe ARM64 qualificados; ação/getter/cleanup e integração driver/energia seguem em curso, sem DFU isolado.

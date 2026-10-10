@@ -1,10 +1,18 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — configuração MSI qualificada; caller e rádio pendentes
+## Checkpoint atual — adaptador MSI qualificado; integração ao módulo e rádio pendentes
+
+O adaptador de alocação/release acrescenta retenção do endpoint, API D0 com readback, recusa de ASPM existente no pai, vetor único e validação da hierarquia IRQ/AIC. Mac/Ubuntu ARM64:55 cenários/29 mutações compiladas por asserção, AST/lint fatal. Probe real124.504 bytes/SHA9d6f7664,127 imports resolvidos, ELF/vermagic/bytes/hash conferidos. Fonte/config/Image/exports preservados. Ainda não há ação pública de alocação nem prova física de IRQ/DMA/rádio. [Reprodução](N71_IRQ_IOMMU.md#adaptador-de-alocação-msi--qualificação-sem-ação-no-aparelho), [evidência](evidence/n71-msi-allocation-qualified.json).
+
+Nenhum DFU, reboot ou carga solicitado nesta rodada. Próximo: ação/getter/cleanup, collector/journal/seleção/perfil e ciclo de vida driver/DMA/firmware, reunidos à preparação de energia antes de um teste físico. Wi-Fi e carregamento/gauge Linux permanecem abertos nas issues40/9/2; nenhuma ação do operador necessária agora.
+
+## Configuração MSI — gates e CI aprovados
 
 O owner de configuração MSI e o callback PCI passaram no Mac/Ubuntu ARM64:91 cenários/27 mutações do owner e183 cenários/147 mutações do host. O módulo completo passou W=1/Werror/modpost,116.192 bytes/SHA59dc95da,123 imports/ELF/vermagic conferidos. Kernel/config/Image/exports e a candidata física anterior foram preservados. AST/lint fatal passaram; não há typechecker Python. Na VM, o runner atingiu180s; três métodos completos foram reutilizados com inputs intactos, e os três restantes passaram na retomada. [Reprodução](N71_IRQ_IOMMU.md#configuração-msi--owner-e-callback-qualificados), [evidência](evidence/n71-msi-config-qualified.json).
 
 O controle exige grant único, mensagem/readback exatos e MSI off comprovado antes de free/restore. Replays idênticos do core não escrevem; mensagens zeradas são aceitas somente depois de stop. Enable/decode/MASTER continuam negados. Caller nativo, collector/journal/perfil, driver/DMA/firmware e prova física Wi-Fi/energia permanecem pendentes. Nenhum módulo foi carregado, nem DFU/reboot solicitado; não há ação necessária do operador nesta fase.
+
+CI do headcceccab terminou com sucesso nos dois eventos: seis jobs Mac/Ubuntu/Windows. [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38024596572), [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38024594280). O adaptador novo terá CI própria; esses resultados anteriores não a substituem.
 
 ## Etapa anterior — brcmfmac corrigido e recompilado
 

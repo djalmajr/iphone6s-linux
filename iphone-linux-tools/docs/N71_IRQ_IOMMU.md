@@ -689,3 +689,33 @@ Build externa real: módulo116.192 bytes/SHA59dc95da412ddef3adc710b7e7160f68093a
 Auditoria primária da fonte fixada: [PCI MSI](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/msi/msi.c) exige cache PCI_D0, mas ignora retornos dos writes; [IRQ MSI](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/kernel/irq/msi.c) faz replay/zero da mensagem e conserva o child device-domain entre alocações. `pci_set_power_state` está exportado; `pci_update_current_state` não está. O caller futuro deve validar PMCSR D0 real, chamar a API exportada e conferir cache/readback/erro do host; não atribuir estado manualmente.
 
 Esta etapa não expõe caller de alocação nem comprova IRQ entregue, DMA, firmware, rádio ou energia. Nenhuma carga ou reinicialização ocorreu. O helper sem decode/MASTER precisa de contrato de driver/DART antes de servir ao brcmfmac; callback de firmware assíncrono também precisa terminar antes de teardown. Caller/getter/collector/journal/perfil e essa integração continuam nas issues40/9/2. A próxima sessão física reunirá esses testes; não pedir DFU somente para esta alocação.
+
+## Adaptador de alocação MSI — qualificação sem ação no aparelho
+
+`n71-pcie-msi-allocate.h` reutiliza a verificação de recursos e o owner real. Exige bus/providers retidos, dois dispositivos próprios, PMCSR4008, cache UNKNOWN/D0 e nenhum driver ou decode/MASTER. `pci_set_power_state` atualiza o cache por API; guarda prévia de identidade/config e readback posterior são obrigatórios. Na fonte [pci.c](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/pci.c#L1289), D0 físico pula a escrita e NO_SOFT_RESET de4008 evita restore de BAR. A mesma API chama ASPM; o adaptador recusa `root->link_state` existente, cujo efeito consta em [aspm.c](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/pcie/aspm.c#L1369).
+
+O core recebe min/max1/PCI_IRQ_MSI, sem INTx. Sucesso exige software enabled, um slot/mapcount, child próprio, cadeia leaf→N71→AIC, hwirq0x10108+slot, edge rising e mensagem/COMMAND/MSI enable físicos exatos. A referência do endpoint é retida até stop/readback, free do core, IRQ inicial/grants/mapcount restaurados e baseline verificado. Erros posteriores ao capture conservam owner e primeira causa para release explícito. Child permanece para a remoção dos consumidores. Não há request_irq/handler ou transferência DMA.
+
+Gates de fonte:
+
+```sh
+python3 -B -m unittest discover -s iphone-linux-tools/tests -p test_n71_pcie_msi_allocate.py -v
+```
+
+Mac/Ubuntu ARM64:55 cenários/29 mutações compiladas, com exit0 da compilação, SIGABRT e texto de asserção. Incluem oito slots, APIs D0/vetor/erro/readback, hierarquia IRQ, referências, stop/free/restore e retries no mesmo estado. APIs PCI/IRQ e a dependência de recursos são modeladas; o adaptador/config owner são reais. O gate anterior do host/recursos foi reutilizado com inputs intactos. Erros de compilação por funções sintéticas não usadas foram corrigidos e não contaram como kills; o erro original de D0 também passou a ser comparado exatamente. AST/lint fatal passaram; não há typechecker Python.
+
+Probe ARM64: cópia privada de `n71-pcie-diagnostic.c`, com include do adaptador e uma função `static __used` que referencia allocate/release, preservando o arquivo público original. Build `obj-m += n71-pcie-msi-probe.o`, W=1/KCFLAGS=-Werror/KBUILD_EXTRA_SYMBOLS=vmlinux.symvers, sem MODPOST_WARN.124.504 bytes/SHA9d6f7664867a156d5a1fa2a9e3e3d6ffcc251c1af1df561a520ce0cdfb3d1dd9; ELF64/AArch64/vermagic power2,127 imports disponíveis incluindo oito APIs PCI/IRQ. Fonte/config/Image/exports e51 inputs intactos; artefato conferido no Mac. [Prova limitada](evidence/n71-msi-allocation-qualified.json).
+
+Para reproduzir o probe, numa cópia dos headers públicos e do diagnóstico em pasta privada de build, acrescente à cópia `n71-pcie-msi-probe.c`:
+
+```c
+#include "n71-pcie-msi-allocate.h"
+static __used int n71_allocation_build_probe(struct pci_host_bridge *bridge,
+    struct n71_scan_host *host, struct n71_msi_allocation *lease)
+{
+    int error = n71_pcie_msi_allocate(bridge, host, lease);
+    return error ? error : n71_pcie_msi_release(host, lease);
+}
+```
+
+Use a fonte/build/exports power2 preservados e o procedimento de módulo externo já documentado; conferir `modinfo -F vermagic`, `readelf -h`, `nm -u` contra exports e SHA/bytes. O probe qualifica ABI e compila o adaptador, sem ação pública de alocação. Não foi carregado, nem selecionado para boot; nenhum DFU nesta etapa. Próximo: armazenar lease na sessão, integrar action/getter/cleanup ao módulo e collector/journal/seleção/perfil, depois driver/DMA/firmware e energia antes do teste agrupado. A CI completa de cceccab aprovou os seis jobs dos dois eventos; esta nova etapa terá head/CI próprios.
