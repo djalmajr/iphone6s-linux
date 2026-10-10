@@ -143,3 +143,12 @@
 - **Reverter:** baixo antes da seleção física; helper/coleta opcionais e nenhum setter, perfil, módulo ou firmware ativado. A próxima fase integra journal/actions/unload e a seleção explícita.
 - **Onde:** [plano host](n71-driver-runtime-host.md), `n71_driver_runtime_result.py`, `n71_iommu_result.py` e fixture do protocolo/coordinator.
 - **Status:** coleta/parser/coordinator qualificados com80 testes/154 mutações por AssertionError em Mac/Ubuntu ARM64,260 inputs finais e AST/lint íntegros. Kernel/caller/build anterior intactos; CI6e1cc9c terminou com seis jobs verdes nos dois eventos. Actions/journal/seleção e firmware/energia continuam em curso; goal e issues40/9/2 abertos, sem ação necessária do operador.
+
+## D17. Journal de actions antes de habilitar a candidata
+
+- **Decisão:** registrar cada prepare/publish/release com intent fsync, native result e getter; reconciliar interrupção apenas por leitura no mesmo boot. Habilitação do perfil/CLI fica após unload/cleanup e integração MSI/DMA.
+- **Por quê:** evita reexecutar um setter após perda de SSH e reduz a necessidade de DFU para recuperar uma sessão retida.
+- **Alternativas:** repetir setter sem proof perde a distinção entre execução e transporte; liberar providers automaticamente pode descartar owners; adiar todo o journal até o teste físico aumentaria reboot/intervenção.
+- **Reverter:** baixo antes da ativação; ledger privado novo e defaults false, sem seleção física alterada.
+- **Onde:** .agents/plans/n71-driver-runtime-host.md faseB1 e scripts/host/n71_driver_runtime_stage.py, integração no journal held.
+- **Status:** em curso; B1 qualificada90/169 com263 inputs e defaults preservados. B2 deve integrar unload/cleanup/MSI-DMA e a janela anterior ao hash/checkpoint; C e firmware/energia continuam necessários antes do DFU.
