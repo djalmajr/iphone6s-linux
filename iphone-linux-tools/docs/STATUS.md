@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — ledger runtime qualificado e firmware privado; rádio/energia pendentes
+## Checkpoint atual — módulos Wi-Fi PCIe e ledger qualificados; ativação física pendente
+
+A falta do driver PCIe foi resolvida no staging: a cópia do build habilita apenas PCIe/MSGBUF e produziu oito módulos/1.245.480 bytes, W=1/Werror/modpost, sem warnings finais. brcmfmac498.800 bytes/SHAffc713a0,269 imports e alias14e4:43a3, ELF64/AArch64/vermagic power2 conferidos; todos os módulos auditados no Mac. Source/config/Image/gzip/exports/status originais íntegros. [Receita e limites](N71_BRCMFMAC_MODULES.md), [evidência](evidence/n71-brcmfmac-pcie-modules-qualified.json), [plano](../.agents/plans/n71-brcmfmac-pcie-build.md).
+
+Ledger runtime90/169 Mac/ARM64 e firmware privado de origem verificada permanecem qualificados. Nenhum módulo/perfil/firmware no telefone, DFU/reboot, Image nova ou pacote/configuração global do Mac. Próximo trecho: journal/coordenador/normal unload/recovery e seleção dos módulos/vendor, regdb assinado/calibração e energia, antes da sessão física agrupada. Wi-Fi/carga Linux e goal/issues9/40/2 continuam abertos; nenhum pedido ao operador necessário agora.
+
+CI3a25390 concluiu seis jobs verdes em [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38043917207) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38043914412). Os módulos foram compilados/auditados na VM e no Mac; essa CI cobre o journal e os sources do repositório, sem prova física dos módulos.
+
+## Histórico — ledger runtime qualificado
 
 Em `71b8c37`, o journal grava intent antes das actions nativas e conserva proof/owners/primeira causa; recupera intent por leitura e completion por proof registrado. Mac/Ubuntu ARM64:90 testes/169 mutações por AssertionError,263 inputs preservados, AST/lint fatal; nenhum typechecker Python configurado. Kernel575/455/build reutilizados com69 inputs iguais, sem rebuild. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#journal-das-actions-nativas--fase-b1), [evidência](evidence/n71-driver-runtime-journal-qualified.json).
 

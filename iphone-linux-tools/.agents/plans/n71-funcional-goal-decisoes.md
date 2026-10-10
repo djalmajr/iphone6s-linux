@@ -152,3 +152,12 @@
 - **Reverter:** baixo antes da ativação; ledger privado novo e defaults false, sem seleção física alterada.
 - **Onde:** .agents/plans/n71-driver-runtime-host.md faseB1 e scripts/host/n71_driver_runtime_stage.py, integração no journal held.
 - **Status:** em curso; B1 qualificada90/169 com263 inputs e defaults preservados. B2 deve integrar unload/cleanup/MSI-DMA e a janela anterior ao hash/checkpoint; C e firmware/energia continuam necessários antes do DFU.
+
+## D18. Módulos PCIe com configuração de build isolada
+
+- **Decisão:** copiar o O preservado e habilitar somente BRCMFMAC_PCIE/PROTO_MSGBUF nessa cópia, compilando módulos oficiais com outputs MO separados e exports conferidos. Não mudar source/config/Image do baseline nem instalar no Mac/iPhone.
+- **Por quê:** o build atual só seleciona SDIO/BCDC; firmware e runtime caller sozinhos não fornecem o driver PCIe necessário para Wi-Fi. MO é suportado pela fonte e evita outputs dentro dela.
+- **Alternativas:** flags/header shim por módulo ocultariam divergência de Kconfig; reconstruir/substituir a Image base ampliaria o teste físico e o rollback; continuar sem módulo PCIe não permite o objetivo de rádio.
+- **Reverter:** baixo; staging novo descartável, baseline e perfil anteriores conservados, sem ativação física.
+- **Onde:** .agents/plans/n71-brcmfmac-pcie-build.md e staging privado da VM; pendência registrada na issue9.
+- **Status:** aplicada ao staging; oito módulos/1.245.480 bytes/ABI/imports/alias qualificados e auditados no Mac, baseline intacto. Journal/seleção/calibração/energia e compatibilidade física ainda pendentes.
