@@ -294,4 +294,6 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** gate diagnóstico completo Mac/VM ARM64 sobre mesmos inputs públicos, baseline verde e kills AssertionError; AST/lint fatal. Reutilizar C5 e C/builds intactos. Publicar uma vez na branch; não reiniciar CI durante observação.
 
-- [ ] Corrigir e qualificar bundle sem falha de import.
+- [x] Corrigir e qualificar bundle sem falha de import.
+
+**C5a qualificada em9300cf4:**22 testes/34 kills AssertionError no Mac e ARM64,382 inputs públicos preservados e AST/lint fatal. Imports transitivos corrigidos, mutações/timeouts intactos. C5/builds reutilizados. O CI completo permanece sujeito ao prazo15min; issue41 aberta.

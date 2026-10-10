@@ -6,7 +6,7 @@ Em `637ba88`, a CLI separada controla acquire/assign/start/observe/stop e `--che
 
 Próximo: firmware/calibração/regdb e energia antes da sessão física agrupada. Wi-Fi/carga, goal e issues40/9/2 continuam pendentes. Não solicitar confirmações rotineiras de tela, cabo, console ou temperatura.
 
-CI `a1c4e40`: [PR38072766411](https://github.com/djalmajr/iphone6s-linux/actions/runs/38072766411) cancelado por prazo15min em Ubuntu/Mac; Windows aprovado. [Push38072762066](https://github.com/djalmajr/iphone6s-linux/actions/runs/38072762066) aprovou Windows, cancelou Mac pelo prazo e falhou Ubuntu por dependência ausente no bundle diagnóstico. #41 aberta; C5a corrige os imports. Sem rerun, aumento de prazo ou redução de cobertura.
+CI `a1c4e40`: [PR38072766411](https://github.com/djalmajr/iphone6s-linux/actions/runs/38072766411) cancelado por prazo15min em Ubuntu/Mac; Windows aprovado. [Push38072762066](https://github.com/djalmajr/iphone6s-linux/actions/runs/38072762066) aprovou Windows, cancelou Mac pelo prazo e falhou Ubuntu por dependência ausente no bundle diagnóstico. #41 aberta; C5a corrigiu os imports em9300cf4 e passou22 testes/34 mutações por plataforma. [Evidência](evidence/n71-ci-bundle-qualified.json). Sem rerun, aumento de prazo ou redução de cobertura.
 
 ## Histórico — coordenador no mesmo boot qualificado
 

@@ -276,4 +276,4 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Alternativas:** rerun sem código repete o erro; copiar runtime privado amplia escopo e expõe dados.
 - **Reverter:** baixo; somente a lista pública da cópia descartável.
 - **Onde:** C5a no plano host; tests/run_n71_diagnostic_payload_mutations.py; issue41 existente.
-- **Status:** em curso, nenhuma intervenção no aparelho necessária.
+- **Status:** aplicada em9300cf4;22/34 Mac/ARM64,382 inputs íntegros. Nenhuma intervenção no aparelho.
