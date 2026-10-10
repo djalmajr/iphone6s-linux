@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — política PCI do brcmfmac qualificada; integração e rádio pendentes
+## Checkpoint atual — host brcmfmac retido qualificado; caller e rádio pendentes
+
+Em662e162, o adapter prepara configuração/referências PCI/runtime PM, restringe root=`none` e endpoint=`brcmfmac`, emite publicação explícita e exige unload/IRQ/MSI quiescentes antes de restore/put. O scan usa a política runtime, libera enable apenas para as referências próprias e recusa consumer/DART removal enquanto o modo ou as referências estiverem pendentes. Reads de runtime não consomem o orçamento de scan/rollback. Ainda não há opt-in/actions/getter de caller ou exclusão no MSI manual; não selecionar/carregar essa etapa isoladamente no telefone. [Relatório e reprodução](N71_BRCMFMAC_RUNTIME.md#host-retido-e-adapter--fase2a), [evidência](evidence/n71-brcmfmac-host-adapter-qualified.json).
+
+Mac/Ubuntu ARM64:24 cenários/23 mutações novos e host183/147, total207/170 por plataforma. AST/lint fatal e build W=1/Werror/modpost passaram. Diagnóstico completo129.416 bytes/SHA2c743b7d,127 imports; probe de adapter+diagnóstico137.368 bytes/SHAb7340c49,135 imports. Ambos ELF/vermagic/hash/bytes auditados no Mac;63 inputs/fonte/config/Image/exports preservados. Falhas de fixture/âncora/staging não foram contadas; somente métodos/etapa afetados foram retomados. Nenhum typechecker Python configurado, pacote/configuração global, perfil físico ou DFU alterado.
+
+CIc7240a1 anterior: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38034484984) aprovou os três jobs; [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38034481962) aprovou Windows/Ubuntu, com Mac cancelado. Não declarar os seis verdes nem reiniciar pelo cancelamento quando o mesmo head já passou os três gates no PR. A publicação atual terá CI própria. Próxima tarefa: caller/opt-in/actions/getter/cleanup e exclusão MSI, depois journal/seleção/firmware/calibração/energia e a sessão física agrupada. Goal e issues9/2/40 continuam abertos; nenhuma ação do operador necessária agora.
+
+## Histórico — política PCI runtime
 
 Em5a1c8df, a política runtime do driver permite decode/MASTER e os writes PCI auditados, com capture/readback/restore próprios. MSI de diagnóstico permanece separado; a primeira causa e o owner sobrevivem a falhas. Link Control DWORD vira WORD para preservar STATUS W1C; mailbox repetida continua emitindo os dois eventos.58 cenários/23 mutações compiladas por plataforma, Mac/Ubuntu ARM64, AST/lint fatal passaram. Probe de três funções reais ARM64:11.184 bytes/SHAbcb2b125, ELF/vermagic/dois imports e binário conferidos no Mac; sete inputs e kernel/config/Image/exports preservados. Ainda não está ligado ao scan/caller nem carregado no aparelho. [Reprodução, relatório e limites](N71_BRCMFMAC_RUNTIME.md), [evidência](evidence/n71-brcmfmac-runtime-config-qualified.json), [plano](../.agents/plans/n71-brcmfmac-runtime.md).
 

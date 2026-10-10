@@ -116,3 +116,12 @@
 - **Reverter:** baixo nesta fase; contrato novo ainda não ligado ao scan/caller ou selecionado no aparelho. Baselines e perfis anteriores permanecem intactos.
 - **Onde:** [plano](n71-brcmfmac-runtime.md), política `n71-brcmfmac-config.h`, fixtures compiladas; issues9/40 e demanda de energia2.
 - **Status:** política com58 cenários/23 mutações, AST/lint fatal e probe ARM64 Werror/ELF/vermagic/hash qualificados, sem ativação. Integração e prova física de rádio/energia em curso. CI6a9ed79 confirmou os seis jobs dos dois eventos verdes; essa prova pertence ao head anterior.
+
+## D14. Reter energia e referências PCI e usar somente APIs públicas para attach
+
+- **Decisão:** adapter retém os dois devices e PM usage sem transição de hardware, antes de publicar. Overrides pela API do kernel7.2 limitam root=`none` e endpoint=`brcmfmac`. Release bloqueia driver registrado/bound, MSI/grants/mapcounts e enables estranhos; restore e limpeza dos overrides próprios antecedem PM/ref put. Guardar intenção de publicação; não copiar a flag privada is_added. O callback valida a referência antes de acessar o bus. Contador de reads runtime separado do orçamento de scan/rollback.
+- **Por quê:** brcmfmac inicializa firmware de modo assíncrono; bus/power não podem desaparecer com callbacks vivos. `pci_bus_add_devices` retorna void e pci_dev_is_added pertence ao header interno do core. A API pública de presença verifica config, não registro completo ou rádio. O orçamento finito do diagnóstico não serve a um driver duradouro nem deve prejudicar o rollback após uso runtime.
+- **Alternativas:** copiar priv_flags acopla o código a detalhe interno; inferir registro/firmware pelo retorno0 cria prova incorreta; permitir qualquer driver amplia o experimento; consumir o contador de scan com cada acesso runtime pode impedir a restauração. Remover PCI/PM refs antes de readback deixa owners sem proteção.
+- **Reverter:** baixo para esta etapa sem seleção/carga; os defaults e perfis anteriores permanecem disponíveis. A futura seleção só ocorrerá após caller/journal e exclusão MSI completos.
+- **Onde:** [fase2a](n71-brcmfmac-runtime.md), `n71-pcie-scan.h`, `n71-pcie-brcmfmac.h`, fixtures e [prova](../../docs/evidence/n71-brcmfmac-host-adapter-qualified.json), issues40/9.
+- **Status:** aplicada em662e162;207 cenários/170 mutações por plataforma, AST/lint fatal, diagnóstico completo e probe real ARM64 qualificados com63 inputs/kernel intactos. Caller/guardas MSI/journal/seleção e prova física de rádio/energia em curso; nenhum DFU adicional.
