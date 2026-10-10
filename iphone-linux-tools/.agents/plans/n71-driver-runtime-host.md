@@ -348,3 +348,24 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 - [x] Implementar e qualificar seleção do pacote local. `b14a04b`:5 testes/10 mutações Mac/ARM64, cinco inputs iguais; pacote real633.573 bytes aceito sem efeitos.
 - [ ] Fechar staging no Session e identidade/recuperação antes de um único boot agrupado com energia.
+
+
+### C6c2. Staging e caminho temporário do loader — contrato fechado
+
+**Decisão:** usar a pasta exclusiva `module_directory/firmware` no RAM rootfs e o parâmetro runtime `/sys/module/firmware_class/parameters/path`. A fonte fixada `drivers/base/firmware_loader/main.c` SHA fef0d9e7dc4b650beab1a70211a229f8fc1be528643919e92b267da702460f48 declara caminho256 bytes, prioridade e modo0644. `kernel/params.c` SHA51c0eb1dc55d1fcb6b32f6cd66a2ff93d2b516864e6b28a4e4bb583169b8771f mostra setter de string/strnlen e getter com newline; restaurar vazio exige escrita de um byte NUL, não write de zero bytes. A leitura deve conferir hex exato (vazio=0a; diretório ASCII+0a), evitando confundir newlines com vazio.
+
+**Fases executáveis:** A) novo scripts/host/n71_driver_firmware_session.py e novo tests/test_n71_driver_firmware_session.py; B) Session, CLIhelper, coordenador e import whitelist do bundle CI (quatro arquivos); C) entry CLI e regressão (dois). Cada fase qualificada antes da próxima. Nenhuma alteração de kernel/initramfs/defaults; nenhuma ação no telefone para qualificação local. A autorização do goal cobre estas subdecisões.
+
+**API/seleção:** configure(session,request) com root/directory exatos, usando C6c1; cópia própria dos três records e bytes imutáveis. FaseA expõe stage(session), verify(session,journal=None), bind(session,journal), restore(session,journal). ABI, opt-in runtime/held/resources/IOMMU, boot UUID e diretório /run/n71-link-24hex obrigatórios. Nenhum arquivo remoto ou param arbitrário. Bytes/records conferidos contra catálogo antes de efeito; source/result continua no journal existente, sem novo schema top-level.
+
+**Estado:** result.firmware_package com exatamente format1,boot_id,directory,manifest,status(intent/ready),path(idle/binding/bound/restoring/restored). Vínculo exato ao mesmo boot/module_directory e catálogo. Intent salvo pelo Journal antes de mkdir/transfer/bind/restore; transferência interrompida nunca repetida. Staging cria somente diretórios novos700, arquivos600 por noclobber; hashes/tamanhos/modos/UID0/nlink1/ausência de links e conteúdo exato de diretórios conferidos. Logs reservados por Session.capture. Dados mantidos em RAM junto aos módulos, sem exclusão ampla.
+
+**Loader:** durante staging exigir stackWCC/foreign ausente, path vazio exato e nenhuma pasta/symlink /lib/firmware anterior. Antes de cfg80211/WCC, confirmar dados e bind sem newline, com precondition ainda vazio e stack vazio; readback exato. bind-intent com readback próprio pode ser reconciliado por leitura, nunca reexecutado; vazio divergente conserva intent para stop. Observe confere bytes/path/boot sem writes. Restore somente após todos os oito módulos ausentes, identidade/path ainda próprios ou já vazios; salvar intent antes da escrita NUL e conferir vazio exato. Busy/foreign path conserva owners; nenhum reboot/force/unbind/limpeza implícita. Retry de restore é uma ação stop explícita após readback/stack vazio, jamais write às cegas.
+
+**Integração B/C:** Session.preflight transfere os dados antes de módulos/REG_ON, usando before_effect=Journal.save já existente. CLI recebe firmware opcional preservando contrato antigo; start com opt-in exige staging pronto e bind antes do primeiro load. Source com metadata ativa continua selecionado mesmo sem nova pasta local; observe/stop podem restaurar sem depender de arquivos locais perdidos, com catálogo fixo e readback. Stop restaura depois do unload WCC/nativa e antes da liberação do provider. Expor --firmware-dir sem instalar qualquer dependência.
+
+**Verificação:** parsing/estado/manifest/bytes e Journal/Session reais; SSH e sysfs são fronteiras modeladas na fixture, declaradas. Baseline e mutações reais somente AssertionError; Mac/ARM64, AST/lint fatal, fonte/input hashes. Exercitar comandos gerados no shell isolado sem iPhone; conferir newline/NUL pela fonte e, se disponível, sysfs da VM dedicada com valor original vazio/restaurado. Gates relevantes antigos reusados até imports/interfaces mudarem. Nenhuma prova física de rádio/energia inferida.
+
+- [ ] A: staging/bind/restore e testes próprios.
+- [ ] B: ligar ao Session/coordenador preservando source/recuperação/CI bundle.
+- [ ] C: expor CLI e reprodução completa; preparar energia antes de sessão física agrupada.

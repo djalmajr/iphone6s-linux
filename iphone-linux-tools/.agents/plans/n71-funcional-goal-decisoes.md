@@ -311,3 +311,13 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 ### D33 — resultado C6c1
 
 Seleção implementada em `b14a04b` e qualificada em Mac/ARM64 com5 testes/10 mutações AssertionError por plataforma, cinco inputs idênticos, AST/lint fatal. O pacote real foi selecionado; nada foi executado ou transferido ao telefone. C6b/kernel/C/defaults preservados. Staging e prova física continuam em curso. [Evidência](../../docs/evidence/n71-firmware-selection-qualified.json).
+
+
+## D34. Caminho temporário por sessão no firmware loader
+
+- **Decisão:** usar diretório RAM exclusivo sob module_directory e firmware_class.path, com journal antes de writes, readback exato e restauração após unload WCC.
+- **Por quê:** API upstream permite mudar dados sem outra imagem/DFU; evita ocupar /lib/firmware ou sobrescrever arquivos desconhecidos. A fonte fixa sustenta limpeza com NUL e getter newline.
+- **Alternativas:** /lib/firmware fixa conflita com nova aquisição no mesmo boot; embed muda initramfs/identidades; alterar bootargs exige novo boot. Nenhum deles resolve o ciclo com menos intervenções.
+- **Reverter:** baixo antes do hardware; modo opt-in separado, kernel e defaults intactos.
+- **Onde:** C6c2 no plano host; novo módulo/tests, depois integração em fases de no máximo5 arquivos; issue9.
+- **Status:** em curso; só pesquisa/qualificação local nesta rodada, nenhum pedido ao operador.
