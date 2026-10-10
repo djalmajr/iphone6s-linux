@@ -222,10 +222,21 @@ def removed(session, text, value):
     require(not any(state['present'] for state in current['states'].values()), 'Runtime removed still owns WCC modules')
     proofs = value['proofs']; require('pcie-cleanup' in proofs, 'Runtime removed lacks its registered cleanup proof')
     names = driver.extra_proofs(session, driver.fields(session)) + modules.extra_proofs(session, modules.fields(session))
-    require(bool(names), 'Runtime removed lacks its recorded lifetime')
-    last = max((proofs[name] for name in names), key=lambda proof: len(history.kernel_lines(proof)))
-    _, proved, _, _ = timeline(session, last, dict(value, checkpoint=None))
-    require(history.kernel_lines(last) == proved, 'Runtime removed lifetime includes an unproved operation')
+    if names:
+        last = max((proofs[name] for name in names), key=lambda proof: len(history.kernel_lines(proof)))
+        _, proved, _, _ = timeline(session, last, dict(value, checkpoint=None))
+        require(history.kernel_lines(last) == proved, 'Runtime removed lifetime includes an unproved operation')
+    else:
+        assignment = getattr(session, 'resource_assignment', None)
+        require(not native and not wlan and assignment is not None and 'resource-assignment' in proofs
+                and resources.outcome(proofs['resource-assignment']) == assignment,
+                'Unprepared runtime cleanup lacks its proved assignment')
+        baseline = value['baseline']
+        for evidence in [text] + list(proofs.values()):
+            lines = history.kernel_lines(evidence)
+            fresh = lines[len(baseline):] if lines[:len(baseline)] == baseline else lines
+            require(not any(driver.result.ACTION_MARKER in line for line in fresh),
+                    'Unprepared runtime cleanup includes an unrecorded native action')
     cleanup = n71_resource_stage.cleanup(session, proofs['pcie-cleanup'])
     require(cleanup['resource_cleanup_verified'], 'Runtime removed resource cleanup is incomplete')
     require(re.findall(r'^N71_HELD_PCI_EMPTY=1$', text, re.M) == ['N71_HELD_PCI_EMPTY=1'], 'Runtime removed bus remains present')
