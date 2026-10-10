@@ -22,6 +22,7 @@ ACTIVE = EMPTY | dict(requested=1, ready=1, held=1, pending=1, active=1, publish
                       root=1, endpoint=1, pm=1, root_override=1, endpoint_override=1, reads=3)
 CALLER = dict(ready=1, scan_pending=1, primary_error=0, cleanup_error=0)
 SELECTED = SimpleNamespace(driver_runtime=True, iommu_parent=True)
+BOOT = '12345678-1234-1234-1234-123456789abc'
 ASSOCIATION = ('N71_PCIE_MSI requested=1 ready=1 held=1 associated=1 owner=1 domain=1 mappings=0 child=0 session_error=0\n'
                'N71_PCIE_IOMMU requested=1 ready=1 held=1 owner=1 available=1 mapped=1 observed=2 map_checked=1 session_error=0\n'
                'N71_HELD_PARAM msi_parent=Y\nN71_HELD_PARAM iommu_parent=Y\nN71_PCIE_HELD held=1\n'
@@ -41,6 +42,24 @@ def action_row(action, **changes):
     state.update(changes)
     return '[  12.345] N71_PCIE_DRIVER_RESULT action=' + action + ' ' + ' '.join(
         f'{name}={state[name]}' for name in RESULT.ACTION_FIELDS) + '; not firmware or radio proof\n'
+
+
+def runtime_session():
+    initial = EMPTY | dict(requested=1, ready=1, held=1)
+    prepared = ACTIVE | dict(published=0, reads=1)
+    entries = []
+    for action, before, after in [('prepare', initial, prepared), ('publish', prepared, ACTIVE)]:
+        native = {name: after[name] for name in RESULT.ACTION_FIELDS}
+        entries.append(dict(action=action, before=dict(before), history=[], completion={
+            'mode': 'direct', 'shell_exit': 0, 'state': dict(after), 'native': native}))
+    return SimpleNamespace(driver_runtime=True, iommu_parent=True, driver_runtime_journal=entries,
+                           result={'boot_id': BOOT})
+
+
+def allocation_row(state=None):
+    fields = RESULT.n71_msi_allocation_result.FIELDS
+    values = dict.fromkeys(fields, 0) | dict(ready=1, held=1) | (state or {})
+    return 'N71_PCIE_MSI_ALLOCATION ' + ' '.join(f'{name}={values[name]}' for name in fields) + '\n'
 
 
 class DriverContract(unittest.TestCase):
@@ -158,8 +177,10 @@ class DriverContract(unittest.TestCase):
         self.assertEqual(coordinator.getter(SimpleNamespace(iommu_parent=False)), '')
         coordinator.snapshot(SELECTED, ASSOCIATION + row(ACTIVE), True)
         with self.assertRaises(ValueError): coordinator.snapshot(SELECTED, ASSOCIATION + row(ACTIVE | dict(ready=0)), True)
-        coordinator.resume(SELECTED, row(ACTIVE), row(ACTIVE))
-        with self.assertRaises(ValueError): coordinator.resume(SELECTED, row(ACTIVE | dict(root=0)), row(ACTIVE))
+        selected = runtime_session()
+        prior = 'N71_BOOT_ID ' + BOOT + '\n' + ASSOCIATION + allocation_row() + row(ACTIVE)
+        coordinator.resume(selected, prior, prior)
+        with self.assertRaises(ValueError): coordinator.resume(selected, prior.replace(' root=1', ' root=0'), prior)
         legacy = SimpleNamespace(iommu_parent=True)
         coordinator.snapshot(legacy, ASSOCIATION, True)
         self.assertEqual(coordinator.saved(legacy, {'iommu_parent':True, 'result':{}}, ASSOCIATION), None)
@@ -190,9 +211,16 @@ class DriverContract(unittest.TestCase):
         methods = [name for name in unittest.defaultTestLoader.getTestCaseNames(DriverContract)
                    if name not in ('test_source_mutations_fail_by_assertion', 'test_real_association_coordinator_collects_validates_and_resumes')]
         for name, before, after in mutations:
-            self.assertEqual(source.count(before), 1, name)
+            target = source
+            prefix = suffix = ''
+            scope = {'ownership-drift': 'resume', 'incomplete-activation': 'action'}.get(name)
+            if scope:
+                node = next(node for node in ast.parse(source).body if isinstance(node, ast.FunctionDef) and node.name == scope)
+                lines = source.splitlines(keepends=True)
+                prefix, target, suffix = ''.join(lines[:node.lineno - 1]), ''.join(lines[node.lineno - 1:node.end_lineno]), ''.join(lines[node.end_lineno:])
+            self.assertEqual(target.count(before), 1, name)
             subject = ModuleType('mutated_driver_result')
-            exec(compile(ast.parse(source.replace(before, after, 1)), str(SOURCE), 'exec'), subject.__dict__)
+            exec(compile(ast.parse(prefix + target.replace(before, after, 1) + suffix), str(SOURCE), 'exec'), subject.__dict__)
             tests = [DriverContract(method) for method in methods]
             for test in tests: test.subject = subject
             result = unittest.TextTestRunner(stream=io.StringIO()).run(unittest.TestSuite(tests))
@@ -204,7 +232,7 @@ class DriverContract(unittest.TestCase):
         for name, before, after in (
             ('coordinator-collection', '+ n71_driver_runtime_result.getter()', "+ ''"),
             ('coordinator-snapshot', "n71_driver_runtime_result.snapshot(session, text, {'caller': caller, 'held': state['iommu']['held']})", 'pass'),
-            ('coordinator-continuation', 'n71_driver_runtime_result.resume(session, live_text, prior)', 'pass'),
+            ('coordinator-continuation', "n71_driver_runtime_result.association_resume(session, {\n            'published': driver_published(session), 'current': live_text, 'prior': prior,\n            'before': live(prior), 'after': live(live_text), 'initial': {'msi': MSI_ACTIVE, 'iommu': IOMMU_ACTIVE}})", 'pass'),
         ):
             self.assertEqual(source.count(before), 1, name)
             coordinator = ModuleType('mutated_driver_coordinator')

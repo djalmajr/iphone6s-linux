@@ -488,7 +488,7 @@ class IommuMutationTests(unittest.TestCase):
             'scope': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'session.scan_hold and session.resource_capable', 'True'),
             'hash': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "records[0]['sha256'] == build['module_sha256']", 'True'),
             'bytes': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "records[0]['bytes'] == build['module_bytes']", 'True'),
-            'active': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "live(text) == {'msi': MSI_ACTIVE, 'iommu': IOMMU_ACTIVE}", 'True'),
+            'active': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "exposed or live(text) == initial", 'True'),
             'topology': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "[row.groups() for row in rows] == [('0', '08'), ('1', '00')]", 'True'),
             'publication-order': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'positions == sorted(set(positions))', 'True'),
             'budget': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "0 <= iommu['observed'] <= 2", 'True'),

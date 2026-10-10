@@ -2,6 +2,7 @@
 import re
 import n71_dart_cycle_result
 import n71_driver_runtime_result
+import n71_driver_runtime_stage
 import n71_iommu_build
 import n71_msi_allocation_result
 import n71_resource_result
@@ -140,7 +141,10 @@ def retained(session, text):
     if not capable(session):
         return
     snapshot(session, text, True)
-    require(live(text) == {'msi': MSI_ACTIVE, 'iommu': IOMMU_ACTIVE}, 'Retained MSI/IOMMU association incomplete')
+    initial = {'msi': MSI_ACTIVE, 'iommu': IOMMU_ACTIVE}
+    exposed = n71_driver_runtime_result.capable(session) and n71_driver_runtime_result.association(
+        session, text, {'published': driver_published(session), 'actual': live(text), 'initial': initial})
+    require(exposed or live(text) == initial, 'Retained MSI/IOMMU association incomplete')
     require('N71_DART_CYCLE_RELEASED ' not in text and 'N71_DART_LEASE_CLEANUP ' not in text,
             'Retained provider already released or cleanup attempted')
     result = acquisition(text)
@@ -149,8 +153,25 @@ def retained(session, text):
     session.result['iommu_association'] = result
 
 
+def driver_published(session):
+    entries = n71_driver_runtime_stage.fields(session)['driver_runtime_journal']
+    return any(entry['action'] == 'publish' and entry['completion'] is not None
+               and entry['completion']['native']['published'] == 1 for entry in entries)
+
+
 def resume(session, live_text, prior):
     if not capable(session):
+        return
+    if n71_driver_runtime_result.capable(session):
+        boot = session.result.get('boot_id', '')
+        require(re.fullmatch(n71_driver_runtime_stage.BOOT, boot), 'Runtime continuation lacks its boot identity')
+        for text in (prior, live_text):
+            row = n71_scan_held_result.unique(text, 'N71_BOOT_ID ', '^N71_BOOT_ID (' + n71_driver_runtime_stage.BOOT + ')$')
+            require(row.group(1) == boot, 'Driver continuation belongs to another boot')
+            snapshot(session, text, True)
+        n71_driver_runtime_result.association_resume(session, {
+            'published': driver_published(session), 'current': live_text, 'prior': prior,
+            'before': live(prior), 'after': live(live_text), 'initial': {'msi': MSI_ACTIVE, 'iommu': IOMMU_ACTIVE}})
         return
     if 'N71_PCIE_IOMMU ' in live_text or 'N71_PCIE_IOMMU ' in prior:
         require(live(live_text) == live(prior), 'Live IOMMU ownership changed; no cleanup attempted')

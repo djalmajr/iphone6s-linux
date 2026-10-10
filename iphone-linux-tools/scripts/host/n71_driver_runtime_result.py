@@ -1,6 +1,7 @@
 """Observe the PCI runtime contract; publication never proves firmware or radio."""
 import re
 import n71_msi_allocation_result
+import n71_scan_target_result
 
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
 MARKER = 'N71_PCIE_DRIVER '
@@ -115,6 +116,55 @@ def resume(session, current, prior):
     require(after['reads'] >= before['reads'], 'Driver counter moved backwards')
     require(all(before[name] == 0 or before[name] == after[name] for name in ('operation_error', 'error')),
             'Driver first cause changed or disappeared')
+
+
+def association(session, text, observation):
+    require(capable(session) and type(observation['published']) is bool,
+            'Driver association requires explicit publication proof')
+    state = live(text, required=True)
+    immutable(session, text, state)
+    require(not state['published'] or observation['published'], 'Driver publication lacks its journal proof')
+    exposed = observation['published'] and state['ready'] == state['held'] == state['published'] == 1 \
+        and all(state[name] == 1 for name in OWNERS)
+    if not exposed:
+        return False
+    actual, initial = observation['actual'], observation['initial']
+    require(actual['iommu'] == initial['iommu'], 'Published driver changed its IOMMU providers')
+    require({name: value for name, value in actual['msi'].items() if name not in ('mappings', 'child')}
+            == {name: value for name, value in initial['msi'].items() if name not in ('mappings', 'child')},
+            'Published driver changed its MSI providers')
+    require(actual['msi']['mappings'] in (0, 1) and actual['msi']['child'] in (0, 1)
+            and (not actual['msi']['mappings'] or actual['msi']['child']), 'Driver vector budget or domain differs')
+    allocation = n71_msi_allocation_result.live(text)
+    require(allocation is not None and all(allocation[name] == 0 for name in
+            ('owner', 'phase', 'vector', 'default_irq', 'software_enabled')), 'Driver mixed the manual MSI lease')
+    require(allocation['slots'] in (0, 1) and allocation['mappings'] in (0, 1)
+            and (not (allocation['slots'] or allocation['mappings']) or allocation['child']),
+            'Driver allocation exceeds its vector or domain budget')
+    return True
+
+
+def association_resume(session, observation):
+    current, prior = observation['current'], observation['prior']
+    resume(session, current, prior)
+    exposed = [association(session, text, {'published': observation['published'], 'actual': actual,
+               'initial': observation['initial']}) for text, actual in
+               ((prior, observation['before']), (current, observation['after']))]
+    if not all(exposed):
+        require(observation['before'] == observation['after'], 'Unproved driver changed MSI/IOMMU ownership')
+        n71_msi_allocation_result.resume(current, prior)
+        return
+    before, after = n71_msi_allocation_result.live(prior), n71_msi_allocation_result.live(current)
+    stable = tuple(name for name in before if name not in ('slots', 'mappings', 'child', 'error'))
+    require(all(before[name] == after[name] for name in stable), 'Driver changed manual MSI ownership')
+    require(not before['child'] or after['child'], 'Driver removed its retained MSI device domain')
+    require(not observation['before']['msi']['child'] or observation['after']['msi']['child'],
+            'Driver association lost its device domain')
+    old_caller, new_caller = n71_scan_target_result.live_status(prior), n71_scan_target_result.live_status(current)
+    override = old_caller.get('primary_error', 0) == 0 and new_caller.get('primary_error', 0) < 0 \
+        and after['error'] == new_caller['primary_error'] == live(current, required=True)['error']
+    require(before['error'] == 0 or before['error'] == after['error'] or override,
+            'Driver allocation lost its error without caller precedence')
 
 
 def action(text, expected):
