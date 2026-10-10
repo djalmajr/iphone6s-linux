@@ -170,3 +170,12 @@
 - **Reverter:** baixo antes da ativação, helper opcional e defaults/formatos antigos preservados.
 - **Onde:** plano hostB2a, n71_driver_runtime_result.py e n71_iommu_result.py, fixture de continuidade/coordinator.
 - **Status:** aplicada em c8ab8ee;98/186 por plataforma Mac/ARM64,267 inputs íntegros e69 C preservados, AST/lint. Coordenador/histórico/resources/cleanup e seleção C ainda exigem integração antes do teste físico agrupado.
+
+## D20. Recuperar por observação sem alterar a evidência interrompida
+
+- **Decisão:** revalidar a origem e observar o boot atual; produzir uma cópia privada com completion observada/checkpoint novo para o loader existente. Proof órfão sem hash registrado permanece intacto e não prova exit SSH.
+- **Por quê:** um crash pode acontecer depois da action e antes do hash/checkpoint. Repetir o setter ou sobrescrever o proof causa efeitos duplicados ou perde a evidência; a observação nativa no mesmo boot resolve a janela comprovável sem DFU.
+- **Alternativas:** exigir sempre checkpoint bloqueia recuperação legítima; confiar no órfão fabrica a prova de transporte; reconstruir a origem apaga a evidência do crash.
+- **Reverter:** baixo antes da ativação; caminho limitado ao runtime com ledger, loader legacy preservado.
+- **Onde:** plano hostB2b1 e helper runtime de recuperação, chamada localizada no coordinator held.
+- **Status:** em curso; unload/coordenador/resources/cleanup e seleção física continuam pendentes.
