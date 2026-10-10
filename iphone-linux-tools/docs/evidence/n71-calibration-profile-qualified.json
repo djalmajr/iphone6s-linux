@@ -1,0 +1,69 @@
+{
+  "format": 1,
+  "code_commit": "0d6735977474a6c77cf20ed45f1ac660032968de",
+  "status": "private_pci_of_calibration_profile_qualified_firmware_staging_energy_and_physical_proof_pending",
+  "input_count": 383,
+  "input_manifest_sha256": "b6f1c2967a3339d65704ed4cbc44db17a8fc2df925784506bf624053a575d545",
+  "changed_inputs": {
+    "scripts/build/compose-n71-calibration.py": {
+      "sha256": "d0acd4a0d932a07d224ff82c9985cda38936a49524dac0b6c7adc1faa7a15a64",
+      "bytes": 9221
+    },
+    "tests/test_n71_calibration_profile.py": {
+      "sha256": "ebcf3c10657c8bc0eafefcaffccf7bade1542213f8f7e38408296336336bfd17",
+      "bytes": 14315
+    }
+  },
+  "tests_per_platform": 8,
+  "assertion_mutations_per_platform": 14,
+  "platforms": {
+    "mac": {
+      "exit": 0,
+      "tests": 8,
+      "assertion_mutations": 14,
+      "log_sha256": "69933aafde295273d22a308cd1eb682bcd35f23eb131a63cf1689dfefcc34507"
+    },
+    "ubuntu_arm64": {
+      "exit": 0,
+      "tests": 8,
+      "assertion_mutations": 14,
+      "log_sha256": "05f1ac977bbb221e0d923cbaea162da37254e27665f4a67a52e579a773900886"
+    }
+  },
+  "production_composition_mac": {
+    "source_profile_payload_still_identical_to_prior_qualified_profile": true,
+    "source_file_count": 13,
+    "candidate_file_count": 14,
+    "unchanged_source_files": 10,
+    "prefix_kernel_and_initramfs_bytes_preserved": true,
+    "private_key_known_hosts_and_modules_preserved": true,
+    "exact_dt_delta_verified": true,
+    "calibration_candidate_bytes": 1024,
+    "private_modes_verified": true,
+    "real_composer_and_two_local_kernel_identity_gates_passed": true,
+    "default_profile_changed": false,
+    "iphone_accessed": false,
+    "physical_of_association_or_radio_acceptance": false
+  },
+  "ast": true,
+  "fatal_lint": true,
+  "compiled_c_inputs_preserved": 69,
+  "kernel_image_exports_and_module_binaries_unchanged": true,
+  "primary_source": {
+    "commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "files": {
+      "drivers/pci/of.c": "0af204ae618dfb72dd72da3c5a1d1b629db11ad1179a44884228c3864ab9abc3",
+      "drivers/pci/probe.c": "c14188e7d25a8a33d09bd415c50f70c62be91ebb3a240627fee6c6c5298765d6",
+      "Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml": "10b0cebe1fe4c8448fcb0f055cae75f1568c9d766d13d5b9f68cf53c202e216b"
+    }
+  },
+  "limits": [
+    "Eight tests include complete baseline and fourteen real source mutations; AssertionError only, no infrastructure kills.",
+    "Tests use actual selectors/Session/DT/parser/serializer and filesystem; kernel and identity verification I/O are synthetic boundaries.",
+    "Production composition used actual source profile, calibration, kernel/identity/seven-module local gates; fourteen files, ten unchanged source files, exact DT delta and payload suffix preserved.",
+    "PCI OF association is a source-based expectation, not yet physical proof. No compatible/alias/antenna/MAC invented.",
+    "No Python type checker configured; AST and fatal lint passed on Mac/Ubuntu ARM64.",
+    "No firmware staging, phone/USB/SSH/DFU action, radio acceptance/association, IRQ/DMA or charging proof.",
+    "Private payload/keys/calibration bytes, hashes and identifiers not published; previous default unchanged."
+  ]
+}

@@ -1,12 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — calibração extraída sem novo DFU
+## Checkpoint atual — candidata PCI OF com calibração qualificada localmente
 
-Em `e482f86`, parser compartilhado e CLI extraem privadamente `wifi-calibration-msf` da captura N71 já existente. **14 testes/14 mutações AssertionError por plataforma Mac/Ubuntu ARM64**, AST/lint fatal. CLI real extraiu1024 bytes; source, modos700/600 e JSON completo dos tunables anteriores permaneceram íntegros. Os69 inputs C/builds estão iguais. [Reprodução](N71_BRCMFMAC_RUNTIME.md#extrator-reproduzível--c6a), [evidência](evidence/n71-calibration-extraction-qualified.json). Regdb oficial também passou CMS com certificado explícito do kernel.
+Em `0d67359`, compositor opt-in cria perfil privado de14 arquivos com rootport devfn8, endpoint0 e cal-blob N71 no Device Tree. **8 testes/14 mutações AssertionError por plataforma Mac/Ubuntu ARM64**,383 inputs íntegros, AST/lint fatal. Composição real e dois --check passaram no Mac; kernel/initramfs/prefixo/identidades/sete módulos e dez arquivos de source idênticos. Source/default preservados,69 inputs C/builds iguais. [Reprodução](N71_BRCMFMAC_RUNTIME.md#perfil-pci-of-de-calibração--c6b), [evidência](evidence/n71-calibration-profile-qualified.json).
 
-CLI runtime C5, staging/snapshots e perfil anterior preservados. Próximo: rota DT do endpoint e antena ausente, staging firmware/regdb e condições de energia antes da sessão física agrupada. Calibração ainda não foi aceita fisicamente pelo rádio; Wi-Fi/carga, goal e issues40/9/2 permanecem pendentes. Nenhuma ação do operador necessária agora. Não pedir confirmação rotineira de tela/cabo/console/temperatura.
+Nenhuma ação no telefone. Associação OF é previsão baseada na fonte, ainda sem prova física. Próximo: staging firmware/regdb e contrato de energia antes da sessão agrupada. Wi-Fi/carga, goal e issues40/9/2 continuam abertos. Não solicitar confirmações rotineiras de tela/cabo/console/temperatura.
 
-CI `e1a0838`: [PR38075183293](https://github.com/djalmajr/iphone6s-linux/actions/runs/38075183293) e [push38075178887](https://github.com/djalmajr/iphone6s-linux/actions/runs/38075178887) terminaram: Windows verde nos dois; Ubuntu/Mac cancelados. As quatro anotações oficiais confirmam limite15min. O erro de import anterior foi corrigido em9300cf4 e passou22/34 Mac/ARM64; #41 permanece aberta pelo prazo do CI completo. Sem rerun, aumento de prazo ou redução de cobertura. A próxima publicação será única após essa confirmação terminal.
+CI `9bc0588`: [PR38077415666](https://github.com/djalmajr/iphone6s-linux/actions/runs/38077415666) aprovou Windows, cancelou Ubuntu/Mac; [push38077412284](https://github.com/djalmajr/iphone6s-linux/actions/runs/38077412284) aprovou Ubuntu/Windows, cancelou Mac. Três anotações oficiais confirmam15min. #41 continua aberta; nenhum rerun, aumento de prazo ou remoção de gate. Próxima publicação após estes estados terminais.
 
 ## Histórico — coordenador no mesmo boot qualificado
 

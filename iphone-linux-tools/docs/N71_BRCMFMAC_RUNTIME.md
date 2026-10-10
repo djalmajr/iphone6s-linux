@@ -37,6 +37,26 @@ A fonte deve ser a captura completa já existente do próprio aparelho, privada 
 
 14 testes/14 mutações AssertionError por plataforma; quatro inputs públicos íntegros, AST/lint fatal. Nove testes novos incluem baseline funcional seguido das mutações; cinco testes existentes preservados. CLI real no Mac extraiu o candidato da captura, verificou modos/bytes e conservou source e JSON de tunables anterior idêntico. O primeiro contraexemplo do prompt ainda era recusado pelo framing de outra linha; foi reduzido a corpo completo sem prompt antes de aceitar o kill. Os ensaios que sobreviveram não contaram como prova. Logs privados em runtime/n71-calibration-final-20261010 e runtime/n71-regdb-candidate-20261010; [evidência sanitizada](evidence/n71-calibration-extraction-qualified.json). Rota DT/antena/aceitação firmware e energia permanecem pendentes; nenhum typechecker Python ou prova de Wi-Fi/carga física.
 
+### Perfil PCI OF de calibração — C6b
+
+`0d67359` cria candidata separada, preservando source/default. O [PCI core fixado](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/of.c#L53) usa o parent OF do host, associa o rootport por devfn e entrega esse nó ao bus subordinado. O caller já define bridge.dev.parent. Isso permite descrever PCIe→pci@1,0→wifi@0,0 no DT, sem alterar kernel/loader/módulos. Não é prova física da associação.
+
+O delta contém somente dois nós e #address-cells=3/#size-cells=2 no PCIe. Rootport reg tem cinco cells começando em0x800 (devfn8); endpoint reg é zero (devfn0) e contém o cal-blob privado1024 bytes. Não há compatible/alias wifi0/board-type/antena/MAC inventados, BAR fixo, IRQmap ou IOMMUmap novo. O validator remove exatamente os novos nós/props e exige igualdade integral dos demais dados. O driver lê cal-blob antes da lógica SDIO; o binding consultado não lista BCM4350.
+
+```bash
+python3 -B scripts/build/compose-n71-calibration.py \
+  --source-profile runtime/n71-runtime-composed-profile-20261010/deployment.json \
+  --calibration-dir runtime/n71-wifi-calibration-qualified-20261010 \
+  --output-dir "$TASK_NEW_CALIBRATED_PROFILE"
+python3 -B scripts/host/n71-runtime-session.py \
+  --profile "$TASK_NEW_CALIBRATED_PROFILE/deployment.json" --action acquire --check
+python3 -B -m unittest discover -s tests -p test_n71_calibration_profile.py -v
+```
+
+Calibração precisa de provenance C6a/captureSHA igual ao pin do diagnóstico e bytes/hash/flags/tipos exatos. Source C4 privado de13 arquivos canônicos; output novo sob runtime. Só FDT muda no payload; kernel/initramfs/prefixo, chaves/known_hosts/módulos e dez arquivos de source idênticos. Deployment muda payloadSHA; provenance muda DT/payloadSHA e inclui identidade privada/opt-in. Candidata tem14 arquivos700/600. Falha conserva source/default e output parcial privado para análise; ambiente/umask retornam ao estado anterior.
+
+Qualificação8/14 Mac/ARM64,383 inputs, AST/lint fatal; kernel/identidade sintéticos na fixture, seletores/Session/DT/arquivos reais. CLI real no Mac passou source/candidate --check com kernel/identidades/sete módulos reais. O primeiro contraexemplo de tamanho era também recusado pelo hash; o teste foi ajustado para conteúdo curto com hash coerente, provando recusa antes de identidade. Sobrevivência inicial não contou como kill. Logs/artefatos privados em runtime/n71-calibration-profile-final-20261010 e runtime/n71-pci-calibration-profile-20261010; [evidência](evidence/n71-calibration-profile-qualified.json). Staging de firmware/regdb, energia e aceitação pelo rádio ainda pendentes. Não há typechecker Python ou prova física de Wi-Fi/carga.
+
 ## CLI explícita — fase C5
 
 `637ba88` acrescenta entrypoint/helper próprios. Profile fica selecionado somente durante a operação; ambiente/umask retornam ao estado anterior inclusive em erro. Profile/source/output ficam em pastas privadas diretamente sob runtime; efeitos exigem output novo.

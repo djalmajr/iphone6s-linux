@@ -296,4 +296,4 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Alternativas:** alterar loader exige rebuild e outra cadeia de prova; injetar dados D111 não corresponde ao N71; carregar um rádio sem qualificar a rota não prova calibração.
 - **Reverter:** baixo; candidato privado separado, source/default/kernel preservados.
 - **Onde:** C6b no plano host; novo compositor/teste, issue9 existente.
-- **Status:** contrato fechado em curso; associação OF/firmware/carga ainda sem prova física.
+- **Status:** aplicada em0d67359;8/14 Mac/ARM64 e candidata real14 arquivos com dois gates locais completos. Associação OF/firmware/carga ainda sem prova física.
