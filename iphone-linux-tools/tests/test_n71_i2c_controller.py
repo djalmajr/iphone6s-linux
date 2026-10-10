@@ -21,7 +21,7 @@ MUTATIONS = (
     ('wrong-initial-divider', 'iowrite32(0x70f,', 'iowrite32(0x70e,'),
     ('skip-pins-before-write', 'error = n71_i2c_controller_pins(request);\n\tif (error)\n\t\tgoto failed;\n\tstate->restore_pending',
      'error = 0;\n\tif (error)\n\t\tgoto failed;\n\tstate->restore_pending'),
-    ('ignore-restore-readback', 'for (word = 0; word < N71_I2C_WORDS; word++) {\n\t\t\tif (words[word] != state->saved[word]) {',
+    ('ignore-restore-readback', 'for (word = 0; word < N71_I2C_WORDS; word++) {\n\t\t\tif (words[word] != n71_i2c_controller_expected(state, word)) {',
      'for (word = 0; word < N71_I2C_WORDS; word++) {\n\t\t\tif (false) {'),
     ('leaked-mapping', 'iounmap(state->base);', 'if (false) iounmap(state->base);'),
     ('extra-poll', 'attempt < 100;', 'attempt <= 100;'),

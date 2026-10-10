@@ -34,12 +34,22 @@ struct n71_i2c_controller {
 	struct device *consumer;
 	bool restore_pending;
 	u32 saved[N71_I2C_WORDS];
+	bool status_acknowledged;
+	bool transfer_pending;
 };
 
 static inline bool n71_i2c_controller_clean(const struct n71_i2c_controller *state)
 {
 	return !state->base && !state->clock && !state->consumer && !state->claimed &&
-		!state->clock_enabled && !state->clock_protected && !state->restore_pending;
+		!state->clock_enabled && !state->clock_protected && !state->restore_pending &&
+		!state->status_acknowledged && !state->transfer_pending;
+}
+
+static inline u32 n71_i2c_controller_expected(const struct n71_i2c_controller *state,
+					      unsigned int word)
+{
+	return word == N71_I2C_SMSTA && state->status_acknowledged ?
+		state->saved[word] & ~(1U << 27) : state->saved[word];
 }
 
 static inline bool n71_i2c_controller_powered(const struct n71_i2c_controller_request *request)
@@ -102,6 +112,10 @@ static inline int n71_i2c_controller_release(const struct n71_i2c_controller_req
 		return 0;
 	if (state->consumer != request->consumer)
 		return -EINVAL;
+	if (state->transfer_pending) {
+		error = -EBUSY;
+		goto pending;
+	}
 	if (state->restore_pending) {
 		if (!n71_i2c_controller_powered(request) || !state->base || !state->clock_enabled) {
 			error = -EINVAL;
@@ -123,7 +137,7 @@ static inline int n71_i2c_controller_release(const struct n71_i2c_controller_req
 		if (error)
 			goto pending;
 		for (word = 0; word < N71_I2C_WORDS; word++) {
-			if (words[word] != state->saved[word]) {
+			if (words[word] != n71_i2c_controller_expected(state, word)) {
 				error = -EUCLEAN;
 				goto pending;
 			}
@@ -152,6 +166,7 @@ static inline int n71_i2c_controller_release(const struct n71_i2c_controller_req
 	}
 	state->consumer = NULL;
 	state->cleanup_error = 0;
+	state->status_acknowledged = false;
 	return 0;
 pending:
 	state->cleanup_error = error;
