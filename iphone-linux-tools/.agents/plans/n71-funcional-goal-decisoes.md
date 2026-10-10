@@ -107,3 +107,12 @@
 - **Reverter:** baixo; alteração de fixture/runner, sem produção ou artefatos físicos.
 - **Onde:** [plano](n71-dart-cleanup-msi-fixture.md), [evidência](../../docs/evidence/n71-msi-passive-collector-qualified.json), issue40.
 - **Status:**31 cenários/17 mutações C e AST/lint fatal aprovados em Mac/Ubuntu ARM64. Falha original preservada; CI do head corrigido em acompanhamento.
+
+## D13. Dar ao driver um modo PCI próprio e usar unload normal como barreira
+
+- **Decisão:** fechar primeiro o contrato do brcmfmac real, depois integrar seu journal. Configuração runtime permite decode/MASTER e writes fixados do driver/core PCI, com capture/readback/restore próprios; não reutiliza a lease manual de diagnóstico. Unload normal deve terminar antes de release/remoção dos consumidores/providers. Probe0 não comprova firmware assíncrono concluído. Modo ativo permitirá agrupar testes e recarregar módulos por SSH antes do cleanup final, sem um DFU por operação.
+- **Por quê:** a política qualificada de diagnóstico recusa os writes necessários ao brcmfmac; registrar só `msi-hold` no journal adia a integração do rádio. A fonte fixada do firmware loader mantém referências de módulo/device até depois do callback; o core recusa unload com referências ativas e termina o remove antes de retornar.
+- **Alternativas:** ampliar a política de diagnóstico invalida seus limites e evidências; liberar configuração geral aceita efeitos não auditados; acrescentar notifier/ABI de callbacks ao driver duplica a barreira já fornecida pelo kernel. O modo runtime ainda precisa de adapter/caller e acompanhamento assíncrono explícitos. Writes indiretos via MMIO e o free IRQ upstream pertencem ao driver confiável, não são interceptados pela política ECAM; não declarar stop-before-free comprovado em falha de hardware.
+- **Reverter:** baixo nesta fase; contrato novo ainda não ligado ao scan/caller ou selecionado no aparelho. Baselines e perfis anteriores permanecem intactos.
+- **Onde:** [plano](n71-brcmfmac-runtime.md), política `n71-brcmfmac-config.h`, fixtures compiladas; issues9/40 e demanda de energia2.
+- **Status:** política com58 cenários/23 mutações, AST/lint fatal e probe ARM64 Werror/ELF/vermagic/hash qualificados, sem ativação. Integração e prova física de rádio/energia em curso. CI6a9ed79 confirmou os seis jobs dos dois eventos verdes; essa prova pertence ao head anterior.
