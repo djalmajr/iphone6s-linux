@@ -33,11 +33,45 @@ REQUIRED = {'CONFIG_BRCMFMAC': 'm', 'CONFIG_BRCMFMAC_PCIE': 'n',
             'CONFIG_MODVERSIONS': 'n', 'CONFIG_PCI': 'y', 'CONFIG_RFKILL': 'm'}
 ALIAS = 'pci:v000014E4d000043A3sv*sd*bc02sc80i*'
 FLAGS = b'\nsubdir-ccflags-y += -DCONFIG_BRCMFMAC_PCIE=1 -DCONFIG_BRCMFMAC_PROTO_MSGBUF=1\n'
+IRQ_TARGET = BROADCOM + '/brcmfmac/pcie.c'
+IRQ_PATCH = kernel_bundle.ROOT / 'phone/kernel/patches/0008-brcmfmac-msi-error.patch'
+IRQ_PATCH_SHA = '6f5702cd509bf076c1e69a2acfef49ab4938bc7edcd9d940bceff0f29439d29a'
+IRQ_METHOD_SHA = '21b36a0e65c0385bb7cecf4aa92a784d8568727adc2bc2edc5f0dd4f7e5f8b28'
+IRQ_SOURCE_SHA = '2bc4ff2f06eb515b404e08973a39c029ec975155a17a7baaf6f62e76ca181b4c'
+IRQ_RESULT_SHA = 'a7cfdcdd40c317704b8e7799cc2aa6f776dfc856e7a6983e65fdb6a3c9a39ff1'
 
 
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+def irq_patch_method():
+    raw = kernel_bundle.kernel_patchset.plain_file(IRQ_PATCH)
+    require(hashlib.sha256(raw).hexdigest() == IRQ_PATCH_SHA, 'Pinned IRQ patch differs')
+    lines = raw.decode().splitlines()
+    require(lines[:3] == ['--- a/' + IRQ_TARGET, '+++ b/' + IRQ_TARGET, '@@ -968,20 +968,25 @@'],
+            'IRQ patch target or hunk differs')
+    before, after = [], []
+    for line in lines[3:]:
+        require(line[:1] in (' ', '-', '+'), 'Unexpected IRQ patch framing')
+        if line[0] in (' ', '-'):
+            before.append(line[1:])
+        if line[0] in (' ', '+'):
+            after.append(line[1:])
+    old = ('\n'.join(before) + '\n').encode()
+    new = ('\n'.join(after) + '\n').encode()
+    require(hashlib.sha256(old).hexdigest() == IRQ_METHOD_SHA, 'Pinned IRQ method differs')
+    return old, new
+
+
+def irq_patch_source(raw):
+    require(hashlib.sha256(raw).hexdigest() == IRQ_SOURCE_SHA, 'Pinned PCIe source differs')
+    before, after = irq_patch_method()
+    require(raw.count(before) == 1, 'IRQ method is not unique')
+    changed = raw.replace(before, after, 1)
+    require(hashlib.sha256(changed).hexdigest() == IRQ_RESULT_SHA, 'Patched PCIe source differs')
+    return changed
 
 
 def configuration(text):
@@ -140,6 +174,8 @@ def build(source, output, target, *, profile=kernel_bundle.BUNDLE):
         package = target / name
         source_hashes.update(copy_package(source, package, prefix))
         if name == 'brcm80211':
+            irq_source = package / 'brcmfmac/pcie.c'
+            irq_source.write_bytes(irq_patch_source(kernel_bundle.kernel_patchset.plain_file(irq_source)))
             makefile = package / 'Makefile'
             makefile.write_bytes(makefile.read_bytes() + FLAGS)
         command = make_command(output, package, exports, pcie=name == 'brcm80211')
@@ -171,6 +207,9 @@ def build(source, output, target, *, profile=kernel_bundle.BUNDLE):
     report = {'format': 1, 'source_commit': kernel_bundle.BASE, 'kernel_profile': profile, 'kernel_release': release,
               'preserved_kernel_sha256': hashes, 'config': config, 'macro_files': sorted(paths),
               'source_sha256': source_hashes, 'commands': commands, 'modules': modules,
+              'irq_correction': {'target': IRQ_TARGET, 'patch_sha256': IRQ_PATCH_SHA,
+                                 'source_sha256': IRQ_SOURCE_SHA, 'result_sha256': IRQ_RESULT_SHA,
+                                 'applied_to_package_copy_only': True},
               'pci_alias_verified': ALIAS, 'pcie_msgbuf_symbols_linked': True,
               'werror_modpost_passed': True, 'kernel_source_and_image_preserved': True,
               'installed': False, 'loaded_on_phone': False, 'firmware_selected': False, 'wifi_verified': False}
