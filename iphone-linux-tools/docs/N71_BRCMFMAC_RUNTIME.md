@@ -153,6 +153,18 @@ O gate novo tem10 testes/15 mutações por AssertionError; com os seis gates da 
 
 Essa fase não chama actions automaticamente nem habilita perfil/CLI. B2 ainda deve integrar unload normal, cleanup e estado MSI/DMA/histórico com driver ativo; também deve recuperar a janela anterior ao hash de proof e checkpoint antigo/ausente. Não declarar todos os pontos de crash recuperáveis. A seleção C aguarda essas condições e a candidata firmware/energia; nenhum efeito físico novo ocorreu.
 
+## Continuidade da associação publicada — fase B2a
+
+Em `c8ab8ee`, a associação runtime aceita o único vetor do brcmfmac somente com publicação comprovada pelo ledger e os seis owners retidos. Boot, providers MSI/IOMMU, parâmetros imutáveis e lease MSI manual são conferidos antes de aceitar a retomada. Child pode nascer antes do vetor e continuar vivo depois de `pci_free_irq_vectors`; child observado não desaparece enquanto os consumidores seguem retidos. A causa negativa não pode ser apagada ou substituída arbitrariamente; a precedência do caller exige concordância dos snapshots. Getters sequenciais não são uma captura atômica nem prova de IRQ/DMA. [Evidência](evidence/n71-driver-runtime-continuation-qualified.json), [plano](../.agents/plans/n71-driver-runtime-host.md#b2a-continuidade-das-observações-durante-o-driver--contrato-fechado).
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_continuation.py -v
+```
+
+Esse gate tem8 testes/17 mutações por AssertionError. Com journal10/15, resultado8/22, IOMMU21/53, MSI7/16, held21/30, resources16/26 e histórico7/7:98 testes/186 mutações por plataforma no Mac/Ubuntu ARM64.267 inputs finais conferidos, AST e lint fatal aprovados; nenhum typechecker Python configurado. A fixture inicial compartilhava um dict alterado pelo teste de publicação falha; seus kills não foram aceitos. A fixture agora clona os estados e o gate de mutações exige baseline verde. A âncora antiga de retained foi atualizada conservando a mutação. Somente a matriz final é a prova aceita.
+
+Os69 inputs C e módulos oficiais/diagnóstico continuam íntegros, sem rebuild. Nenhum acesso ao iPhone, setter, seleção de perfil, módulo/firmware, DFU/reboot ou configuração global ocorreu. Ainda faltam execução pelo coordenador, unload normal, histórico/resources/cleanup e recuperação antes do hash ou com checkpoint ausente; depois seleção C, calibração/regdb e energia. Wi-Fi e carga Linux permanecem sem prova física.
+
 ## Candidato privado de firmware — origem verificada
 
 A revisão oficial `31ec35bf14df835e2f9f7c8b1a8516a34f836df5` de [linux-firmware](https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/31ec35bf14df835e2f9f7c8b1a8516a34f836df5/brcm/) contém `brcmfmac4350-pcie.bin`. O candidato privado tem626.140 bytes, SHA256 `5691d1e0ceb70baf18efb7a0ec6cb84feb9edd2d0700c525b42930c4e7e4b845`; o blob Git foi conferido contra o índice fixado. WHENCE vincula o arquivo à licença Broadcom, também baixada e conferida pelo blob/hash da mesma revisão. [Metadados sanitizados](evidence/n71-firmware-candidate-origin.json).

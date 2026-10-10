@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — módulos Wi-Fi PCIe e ledger qualificados; ativação física pendente
+## Checkpoint atual — continuidade do driver qualificada; recuperação e ativação física pendentes
+
+Em `c8ab8ee`, retomada e retained validam a publicação pelo ledger, owners completos, boot e providers antes de admitir o vetor único. O domínio vazio continua retido após free_irq_vectors; MSI manual, perda de domínio, drift de owners/providers e primeira causa apagada são recusados. Mac/Ubuntu ARM64:98 testes/186 mutações por AssertionError,267 inputs íntegros, AST/lint fatal; sem typechecker Python. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#continuidade-da-associação-publicada--fase-b2a), [evidência](evidence/n71-driver-runtime-continuation-qualified.json).
+
+Build C575/455 e oito módulos oficiais anteriores reutilizados com69 inputs C iguais, sem novo build. Nenhum acesso ou reboot/DFU do iPhone, pacote/configuração global ou seleção de firmware/módulo/perfil. Próximo trecho: recuperação do journal e coordenador/unload/cleanup no mesmo boot, antes de seleção C, calibração/regdb e energia. Wi-Fi/carga Linux e goal/issues40/9/2 seguem abertos. Nenhuma ação do operador necessária agora.
+
+## Histórico — módulos Wi-Fi PCIe e ledger qualificados
 
 A falta do driver PCIe foi resolvida no staging: a cópia do build habilita apenas PCIe/MSGBUF e produziu oito módulos/1.245.480 bytes, W=1/Werror/modpost, sem warnings finais. brcmfmac498.800 bytes/SHAffc713a0,269 imports e alias14e4:43a3, ELF64/AArch64/vermagic power2 conferidos; todos os módulos auditados no Mac. Source/config/Image/gzip/exports/status originais íntegros. [Receita e limites](N71_BRCMFMAC_MODULES.md), [evidência](evidence/n71-brcmfmac-pcie-modules-qualified.json), [plano](../.agents/plans/n71-brcmfmac-pcie-build.md).
 

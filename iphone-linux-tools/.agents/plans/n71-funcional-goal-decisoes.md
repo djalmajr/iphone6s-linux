@@ -169,4 +169,4 @@
 - **Alternativas:** igualdade total bloqueia o driver ativo; permitir qualquer drift pela flag aceita grants/owners não comprovados; remover domínio manualmente interfere no lifetime core e não é necessário.
 - **Reverter:** baixo antes da ativação, helper opcional e defaults/formatos antigos preservados.
 - **Onde:** plano hostB2a, n71_driver_runtime_result.py e n71_iommu_result.py, fixture de continuidade/coordinator.
-- **Status:** em curso; coordenador/histórico/resources/cleanup e seleção C ainda exigem integração antes do teste físico agrupado.
+- **Status:** aplicada em c8ab8ee;98/186 por plataforma Mac/ARM64,267 inputs íntegros e69 C preservados, AST/lint. Coordenador/histórico/resources/cleanup e seleção C ainda exigem integração antes do teste físico agrupado.
