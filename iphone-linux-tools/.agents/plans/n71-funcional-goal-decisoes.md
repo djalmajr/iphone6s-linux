@@ -224,3 +224,7 @@
 - **Reverter:** baixo antes da seleção C; coordenador opt-in e helper passivo, sem mudança de kernel/perfis antigos.
 - **Onde:** próxima fatia B2b3d, helper/teste de coordenador e lifetime/teste. Fechar interfaces/aceite antes do código.
 - **Status:** na fila; Wi-Fi/energia e sessão física ainda pendentes. Nenhuma ação do operador necessária.
+
+### D25 — ordem de implementação
+
+A validação de encerramento pré-prepare será B2b3d1 (lifetime e teste próprio), seguida do coordenador B2b3d2. A prova exige assignment/cleanup completo, ledgers vazios, stack ausente e nenhum efeito nativo novo no histórico. Isso permite sair de uma sessão adquirida sem inventar prepare/release para produzir um ledger. Nenhum boot físico intermediário; não altera a definição de conclusão do goal.

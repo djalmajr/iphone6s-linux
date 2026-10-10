@@ -156,3 +156,16 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 - [ ] Fechar start/observe/stop em B2b3d antes da candidata física.
 
 **B2b3c qualificada em 78071d1:**11/19 novos e nove gates123/197 por plataforma Mac/Ubuntu ARM64,283 inputs íntegros, AST/lint fatal, sem typechecker Python. Loader/recovery/shell/proofs integrais reais, kernel/SSH sintéticos. Seis gates48/116 inalterados e C69/575/455 preservados; oito módulos iguais. Baselines/âncoras iniciais falhos descartados. Nenhuma ação física, pacote/configuração global ou CLI nova. B2b3d segue para o coordenador, incluindo stop antes de prepare: removed hoje exige names não vazio, lacuna que deve ser resolvida explicitamente antes da seleção C.
+
+### B2b3d1. Encerrar antes de prepare — contrato fechado
+
+**Arquivos executáveis (dois):** scripts/host/n71_driver_runtime_lifetime.py e novo tests/test_n71_runtime_unprepared_stop.py. Plano/decisão antes do código; depois B2b3d2 coordenador. Não alterar CLI, kernel, imagem, módulos ou firmware, nem pedir ação física.
+
+**Resultado:** a entrada removed existente aceita também a sessão explicitamente selecionada que nunca iniciou efeitos nativos/WCC. Exigir ambos os ledgers vazios, getter fresco completo com todos os módulos ausentes, proof de assignment completo e rederivado igual ao resumo salvo, mesmo boot/prefixos, cleanup completo dos providers e unload quando o diagnóstico já estiver ausente. Assignment negativo completo pode ser encerrado conservando sua causa; não transformar isso em sucesso de start.
+
+**Histórico:** sem lifetime registrado, nenhum resultado de action nativa pode aparecer no trecho novo de qualquer proof registrado ou no snapshot. Comparar depois do baseline quando a prova traz prefixo completo, e todo o delta quando ela é anterior no formato assignment. O getter nativo do cleanup deve continuar canônico e sem propriedade/publicação; os parsers resource/IOMMU continuam comprovando causa e liberação. O caminho com lifetime registrado mantém suas verificações atuais. Getters vazios sozinhos não autorizam cleanup/unload nem promoção de órfãos.
+
+**Verificação:** novo gate `python3 -B -m unittest discover -s tests -p test_n71_runtime_unprepared_stop.py -v`, usando resource/IOMMU/lifetime/held loader reais, filesystem privado e kernel/SSH sintéticos. Provar cleanup anterior a prepare, assignment com causa negativa, diagnóstico removido, source loader/recovery sem efeitos e origem intacta. Recusar ledger/proof/boot/stack/prefixo/causa divergentes e resultado nativo não registrado. Mutation baseline verde e kills por AssertionError, AST/lint Mac/ARM64, gates afetados; preservar69 C/módulos/builds e entradas legacy.
+
+- [ ] Integrar e qualificar encerramento sem lifetime nativo.
+- [ ] Fechar o contrato B2b3d2 e implementar start/observe/stop no mesmo boot.
