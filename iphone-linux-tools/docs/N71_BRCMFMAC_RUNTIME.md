@@ -231,6 +231,31 @@ Mac/Ubuntu ARM64:12 testes novos/16 mutações por AssertionError. A matriz afet
 
 Nenhum acesso, DFU ou reboot do iPhone ocorreu nesta fase. O próximo trecho integra a execução do ciclo completo no mesmo boot e o cleanup que conserva a primeira causa, antes da seleção/composição C e firmware/calibração/regdb/energia. Wi-Fi e carga Linux continuam sem prova física; goal/issues40/9/2 permanecem abertos. Nenhuma ação do operador é necessária agora.
 
+## Primeira causa no cleanup runtime — fase B2b3a
+
+Em `b8fdd56`, os parsers resource/IOMMU conservam a falha anterior do driver quando a release termina corretamente. A causa runtime só é admitida com seleção explícita, ledger revalidado, release nativa completa/bem-sucedida, boot e histórico correspondentes, owners vazios e getter final coerente. Uma intenção pendente, release recusada ou causa apagada/alterada recusa cleanup dos providers. [Evidência](evidence/n71-driver-runtime-cleanup-qualified.json), [plano](../.agents/plans/n71-driver-runtime-host.md#b2b3a-primeira-causa-no-cleanup-runtime--contrato-fechado).
+
+A implementação compartilhada preserva a API legacy e a ordem causal: assignment anterior → causa comprovada na release → erro posterior do provider. `assignment_error` e `provider_operation_error` permanecem separados; `driver_primary_error` registra a causa conservada quando presente. Release0 prova liberação de ownership, sem transformar uma operação anterior falha em sucesso ou comprovar rádio/IRQ/DMA.
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_cleanup.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_result.py -v
+python3 -B -m unittest discover -s tests -p test_n71_iommu_result.py -v
+```
+
+Mac/Ubuntu ARM64:6 testes novos/11 mutações por AssertionError; matriz afetada147 testes/273 mutações por plataforma,278 inputs íntegros, AST/lint fatal. Parsers e dispatch reais, dependência kernel sintética; nenhum typechecker Python configurado. A verificação de tipos booleanos ganhou um caso `False`; duas âncoras legacy mudadas pela primeira integração foram conservadas com sua cobertura original. Rodadas incompletas não contaram como qualificação.69 inputs C/build anteriores permanecem preservados, reutilizando575/455 sem recompilar.
+
+| Item | Resultado |
+| --- | --- |
+| Arquivos | Helper runtime, implementação resource compartilhada, dispatch resource/IOMMU e teste novo. |
+| Plano | Causalidade qualificada offline; continuidade/histórico/source e coordenador start/observe/stop pendentes. |
+| Compatibilidade | API/defaults legacy e âncoras de mutação conservados; perfil/CLI fechados. |
+| Banco/dependências | Sem banco, instalação ou configuração global. |
+| Custo | Validação passiva de ledger/getter/histórico; desempenho físico não medido. |
+| CI anterior | Head `d4cd8c6`: PR Mac/Windows success, Ubuntu cancelado; push Ubuntu/Windows success, Mac cancelado. Anotações confirmam limite15 minutos; #41 reaberta, sem rerun nem mudança de prazo. |
+
+O collector runtime held ainda precisa imprimir a identidade de boot e conservar o log completo no cleanup, além de integrar continuidade de recursos/histórico e release ao ciclo completo. Essa integração vem antes de selecionar/carregar a candidata. Nenhum acesso, DFU ou reboot do iPhone ocorreu; firmware/calibração/regdb, energia e prova física continuam pendentes. Goal/issues40/9/2 permanecem abertos; nenhuma ação do operador necessária agora.
+
 ## Candidato privado de firmware — origem verificada
 
 A revisão oficial `31ec35bf14df835e2f9f7c8b1a8516a34f836df5` de [linux-firmware](https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/31ec35bf14df835e2f9f7c8b1a8516a34f836df5/brcm/) contém `brcmfmac4350-pcie.bin`. O candidato privado tem626.140 bytes, SHA256 `5691d1e0ceb70baf18efb7a0ec6cb84feb9edd2d0700c525b42930c4e7e4b845`; o blob Git foi conferido contra o índice fixado. WHENCE vincula o arquivo à licença Broadcom, também baixada e conferida pelo blob/hash da mesma revisão. [Metadados sanitizados](evidence/n71-firmware-candidate-origin.json).

@@ -117,6 +117,18 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** parsers e dispatch resource/IOMMU reais com fixtures de release/cleanup completo, sucesso, causa negativa prévia, erro provider posterior e precedência. Rejeitar boot diferente, causa apagada/alterada, owners vivos, completion/resultado/histórico ausentes e release malsucedida. Mutations executadas com baseline verde, somente AssertionError; AST/lint Mac/ARM64 e gates host afetados. Reutilizar gates/build C69 intactos. Coordenador/histórico/source depois; seleção C e firmware/energia ainda fechados, sem DFU nem pergunta ao operador.
 
-- [ ] Implementar o helper e os três consumidores sem relaxar o caminho legacy.
-- [ ] Qualificar causa, precedência e recusas nas duas plataformas; documentar reprodução e limites.
+- [x] Implementar o helper e os três consumidores sem relaxar o caminho legacy.
+- [x] Qualificar causa, precedência e recusas nas duas plataformas; documentar reprodução e limites.
 - [ ] Seguir para start/observe/stop, histórico e source antes da seleção física.
+
+**B2b3a qualificada em b8fdd56:**6/11 novos e matriz afetada147/273 por plataforma Mac/Ubuntu ARM64,278 inputs íntegros, AST/lint fatal; sem typechecker Python. API legacy e precedência conservadas. Caso booleano False e âncoras antigas corrigidos, sem retirar cobertura; somente rodada final completa aceita.69 C/build575/455 reutilizados, sem efeito no telefone. Captura held com boot/log integral, continuidade/histórico/source e coordenador ainda pendentes antes de C/firmware/energia. CI d4cd8c6 teve timeouts oficiais15m em Ubuntu PR e Mac push; #41 reaberta sem alterar prazo ou repetir runs.
+
+### B2b3b. Continuidade de lifetime e histórico — contrato fechado
+
+**Arquivos executáveis (cinco):** novo scripts/host/n71_driver_runtime_lifetime.py, novo tests/test_n71_driver_runtime_lifetime.py, scripts/host/n71_driver_module_stage.py (ponte de release), scripts/host/n71_driver_runtime_recovery.py (histórico runtime validado) e scripts/host/n71_resource_stage.py (entrada opcional de retained runtime). Não alterar o caminho legacy ou acionar o telefone.
+
+**Resultado:** continuidade passiva exige boot/manifest, prefixos de proofs e ações nativas completas, recursos/REG_ON/providers retidos e nenhuma lease MSI manual. Comparar o caller mantendo flags/owners e permitindo somente a primeira causa runtime coerente; resource assigned pode cair quando a causa for latcheada, conservando pending/claimed. Getters não autorizam efeitos. Histórico novo admite REG_ON_READ correto e, somente na publicação comprovada com lifetime/stack próprios, refusals ECAM canônicos vinculados à causa negativa do driver; nenhuma action extra, cleanup ou mudança de provider sem intenção/prova. A fonte C emite N71_PCIE_SCAN_WRITE_REFUSED também no caminho runtime; tratar esse caso sem aceitar qualquer linha N71.
+
+**Release e origem:** bridge do ledger de módulos exige release nativa comprovada depois de unload completo. Não exigir owners runtime antigos após uma release legítima nem dispensar a prova. Host removido só é aceito com módulos vazios e proofs de cleanup/unload validados, sem inventar getter ausente. Recuperação continua read-only, fonte/órfão intactos; preservar as janelas pendentes e negar novo efeito sem completion. A CLI/perfil permanece fechado.
+
+**Verificação:** parsers/filesystem/source reais; publicação e release intercaladas, owners/cause/refusal/prefix/boot coerentes e drift recusado; módulos vazios após cleanup e caminho legacy inalterado. Mutations executadas, baseline verde, AssertionError; AST/lint Mac/ARM64 e gates afetados, reuso C69 intacto. Depois fechar a fatia do coordenador (helper/teste/held), incluindo boot/log integral no cleanup e start/observe/stop explícitos, antes de seleção C e candidata física.

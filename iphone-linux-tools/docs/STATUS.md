@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — journal WCC qualificado; coordenador e ativação pendentes
+## Checkpoint atual — journal WCC e causalidade qualificados; coordenador e ativação pendentes
+
+Em `b8fdd56`, cleanup resource/IOMMU conserva a causa anterior do driver com release nativa completa e comprovada no mesmo boot. Assignment anterior e provider posterior permanecem separados; pending/refusal/causa apagada não autoriza cleanup. Mac/Ubuntu ARM64:147 testes/273 mutações por plataforma,278 inputs íntegros, AST/lint fatal; nenhum typechecker Python configurado. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#primeira-causa-no-cleanup-runtime--fase-b2b3a), [evidência](evidence/n71-driver-runtime-cleanup-qualified.json).
+
+Nenhum acesso/reboot/DFU do iPhone, instalação global, build/kernel ou perfil/CLI ativado.69 C preservados permitem reutilizar575/455. Próximo trecho: continuidade/histórico/source, ciclo start/observe/stop e captura held completa, depois seleção/composição C e firmware/energia. Wi-Fi/carga Linux e goal/issues40/9/2 continuam pendentes; nenhuma ação do operador necessária.
+
+CI `d4cd8c6`: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38053858714) Mac/Windows success, Ubuntu cancelado; [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38053856585) Ubuntu/Windows success, Mac cancelado. Anotações oficiais confirmam prazo15 minutos. #41 reaberta para investigar o custo/gates; nenhum run repetido ou prazo alterado. Os eventos completos não estão aprovados.
+
+## Histórico — journal WCC qualificado
 
 Em `4d857bf`, o journal WCC conserva intenções, propriedade dos módulos e resultados diretos/observados. Recupera perda de transporte após load ou unload normal por leitura do mesmo boot, sem replay, preservando origem/órfão. A publicação entre load e unload exige prova nativa. Mac/Ubuntu ARM64:131 testes/230 mutações por plataforma,276 inputs íntegros, AST/lint fatal; nenhum typechecker Python configurado. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#journal-dos-módulos-wcc--fase-b2b2-m2), [evidência](evidence/n71-wcc-module-journal-qualified.json).
 

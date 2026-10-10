@@ -196,4 +196,13 @@
 - **Alternativas:** inferir pelo getter sozinho dispensa prova de release; usar sempre erro provider perde a ordem causal; ignorar a causa transformaria uma operação falha em sucesso. A prova da release e seu histórico mantém o escopo explícito.
 - **Reverter:** baixo antes da ativação; helpers passivos e caminho legacy conservado, sem mudança de kernel/perfil.
 - **Onde:** plano hostB2b3a e helpers runtime/resource/IOMMU, teste de cleanup runtime.
-- **Status:** em curso; M1/M2 permanecem qualificadas, coordenador/seleção/candidata física ainda pendentes. Nenhuma ação do operador necessária nesta fase.
+- **Status:** aplicada em b8fdd56,147/273 por plataforma Mac/ARM64,278 inputs íntegros, AST/lint. C/build preservados, nenhuma ação física. Continuidade/histórico/source, coordenador/seleção/candidata física ainda pendentes; captura held deverá acrescentar boot e log completo.
+
+## D23. Limitar a continuidade ao lifetime comprovado
+
+- **Decisão:** usar validação passiva específica para o runtime, conservando os contratos legacy. Aceitar publicação/release somente pelo ledger/proofs e recusas ECAM assíncronas somente dentro do driver publicado, vinculadas à sua causa e ao mesmo boot.
+- **Por quê:** igualdade de snapshots antigos recusaria mudanças legítimas do driver; relaxar todo o histórico/ownership poderia admitir outro efeito sem intenção. A ponte comprovada permite continuar o desenvolvimento por SSH no mesmo boot.
+- **Alternativas:** exigir outro DFU após cada diferença perde a sessão; ignorar diferenças perde ownership e erro; ampliar o parser legacy afeta perfis anteriores. O contrato runtime separado conserva esses limites.
+- **Reverter:** baixo antes da ativação; helper passivo e hooks específicos, sem mudança de kernel/perfil/CLI.
+- **Onde:** plano hostB2b3b e lifetime/module-ledger/recovery/resource-retained; coordenador na fatia seguinte.
+- **Status:** na fila, com contrato fechado; Wi-Fi/energia e prova física ainda pendentes. Nenhuma ação do operador necessária agora.
