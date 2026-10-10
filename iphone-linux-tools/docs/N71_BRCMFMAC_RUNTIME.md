@@ -14,10 +14,10 @@ O probe continua apenas adquirindo o diagnóstico retido. `driver_runtime` inici
 flowchart TD
     H[Host PCIe retido com MSI e DART] --> A[Atribuição de recursos]
     A --> P[driver-prepare]
-    P --> B[driver-publish]
-    B --> F[Carregar módulos e observar firmware]
-    F --> W[Testar rádio, rede e serviços no mesmo boot]
-    W --> U[Unload normal do brcmfmac]
+    P --> F[Carregar dependências, core e WCC]
+    F --> B[driver-publish]
+    B --> W[Observar firmware e testar rede e serviços]
+    W --> U[Unload normal de WCC, core e dependências]
     U --> R[driver-release]
     R --> C[cleanup dos consumidores, DART, reset e energia]
     C --> S[Snapshot e retorno ao iOS para recarga]
@@ -189,6 +189,20 @@ O gate novo tem12 testes/10 mutações por AssertionError. Com os oito gates B2a
 | Reuso |69 inputs C iguais:575/455 e build anteriores reutilizados, sem rebuild. |
 
 Nenhum acesso/reboot/DFU do iPhone ocorreu na qualificação. Ainda não foram integrados os crash points de insmod/rmmod, o unload normal, causalidade resources/cleanup e seleção C. A configuração do cfg80211 compilado exige regdb assinado e usa os certificados oficiais do kernel; banco compatível, calibração N71 e energia continuam pendentes antes da sessão física. A [documentação oficial do wireless-regdb](https://wireless.docs.kernel.org/en/latest/en/developers/regulatory/wireless-regdb.html) identifica o repositório e a distribuição oficiais; nenhum banco novo foi instalado nessa etapa. Wi-Fi e carga Linux permanecem sem prova física, goal/issues40/9/2 abertos. Não é necessária ação do operador agora.
+
+## Protocolo dos módulos WCC — fase B2b2 M1
+
+Em `0a315b9`, o protocolo seleciona cinco módulos da evidência PCIe qualificada: rfkill, cfg80211, brcmutil, brcmfmac e brcmfmac-wcc,1.211.120 bytes. A tabela PCI da fonte fixada seleciona WCC para BCM4350. Prepare precisa ocorrer com core ausente; depois carregam-se core/vendor enquanto binding PCI ainda está bloqueado, e só então publish permite o probe. A ordem evita depender de request_module/modprobe no rootfs experimental. BCA/CYW/rfkill-gpio não são carregados. [Evidência](evidence/n71-wcc-module-protocol-qualified.json), [plano](../.agents/plans/n71-driver-runtime-host.md#b2b2-módulos-wcc-e-barreira-de-unload--contrato-fechado).
+
+Getter read-only observa os oito nomes conhecidos, initstate/refcnt/holders, registro PCI, boot e hashes/bytes staged. Manifest, ordem, tipos, ABI e registros completos/canônicos são obrigatórios. Cada comando revalida ABI/boot/arquivos/presença e, para load, prepare completo/publicação0/causas0. Antes de unload normal, target precisa de refs0/holders vazios; WCC também exige core com somente seu holder/refcnt1. Essas leituras não são uma prova atômica nem prova física DMA; o unload permanece sujeito às recusas normais do kernel. Não há force, unbind ou autoload.
+
+Um receipt exclusivo indexado é gravado antes de insmod/rmmod, com boot, módulo e SHA; o exit da operação é gravado depois. Receipt existente impede replay e conserva seus bytes. O parser distingue operação completa, operação desconhecida e receipt ausente; ele não fabrica exit SSH. A integração desse protocolo ao journal/coordenador é a fase M2 seguinte, ainda sem perfil/CLI habilitado.
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_modules.py -v
+```
+
+Mac/Ubuntu ARM64:9 testes novos/18 mutações por AssertionError,258 inputs finais íntegros, AST/lint fatal; POSIX shell/filesystem reais e insmod/rmmod sintéticos, sem executar ARM no Mac. Nenhum typechecker Python configurado. Reutilizados110/196 host com270 inputs iguais e575/455 C com69 iguais; esses gates não foram repetidos. Os oito artefatos oficiais tiveram bytes/SHA novamente conferidos, sem novo build/instalação. Nenhum acesso/DFU/reboot do iPhone, pacote/configuração global, mudança de banco ou dependência externa. Próximo trecho: ledger, resultado/reconciliação e hooks de snapshot/source; depois coordenador/causalidade/seleção e firmware/energia. Wi-Fi/carga continuam sem prova física.
 
 ## Candidato privado de firmware — origem verificada
 

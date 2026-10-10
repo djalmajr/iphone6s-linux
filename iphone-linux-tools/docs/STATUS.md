@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — recuperação de intent/checkpoint qualificada; ativação física pendente
+## Checkpoint atual — protocolo WCC qualificado; journal/coordenador e ativação pendentes
+
+Em `0a315b9`, o protocolo seleciona cinco módulos WCC/1.211.120 bytes, valida manifest/ABI/boot/hashes e registra receipt exclusivo antes de cada efeito. Ordem: prepare → dependências/core/WCC → publish; unload normal inverso, recusando pins/holders ocupados e replay. Mac/Ubuntu ARM64:9 testes/18 mutações novos,258 inputs íntegros, AST/lint fatal; shell/filesystem reais, kernel insmod/rmmod sintético e nenhum typechecker Python configurado. [Reprodução](N71_BRCMFMAC_RUNTIME.md#protocolo-dos-módulos-wcc--fase-b2b2-m1), [evidência](evidence/n71-wcc-module-protocol-qualified.json).
+
+Host110/196 com270 inputs iguais e C575/455 com69 iguais reutilizados; oito módulos oficiais byte/SHA novamente conferidos, sem rebuild. Nenhum acesso/reboot/DFU do iPhone, pacote/configuração global ou perfil/CLI habilitado. Agora integrar ledger/reconciliação/source/snapshot, depois unload/coordenador/causalidade, seleção e firmware/energia para a sessão agrupada. Wi-Fi/carga Linux/goal/issues40/9/2 permanecem abertos. Nenhuma ação do operador necessária.
+
+## Histórico — recuperação de intent/checkpoint qualificada
 
 Em `4e4177f`, recuperação runtime usa o snapshot completo do mesmo boot para reconciliar a action interrompida, conservando a origem e o arquivo órfão. Completion observada não inventa exit SSH; proof registrado conserva seu resultado direto. Checkpoint antigo/ausente e resultado já presente no checkpoint são cobertos, sem repetir setter. Mac/Ubuntu ARM64:110 testes/196 mutações por AssertionError,270 inputs íntegros, AST/lint fatal; nenhum typechecker Python configurado. [Reprodução e relatório](N71_BRCMFMAC_RUNTIME.md#recuperação-read-only-de-intentcheckpoint--fase-b2b1), [evidência](evidence/n71-driver-runtime-recovery-qualified.json).
 
