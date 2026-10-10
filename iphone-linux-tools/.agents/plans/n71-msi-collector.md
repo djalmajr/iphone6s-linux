@@ -12,9 +12,9 @@ Parser opcional do marcador `N71_PCIE_MSI_ALLOCATION `:12 campos exatos/ordenado
 
 ## Tarefas
 
-- [ ] Implementar parser e coleta passiva usados por snapshot/resume existentes.
-- [ ] Verificar estados completos/parciais, dados inválidos, shell de leitura real e continuidade; executar mutações que removem as guardas.
-- [ ] Rodar gate de associação existente, AST e lint fatal; conservar gates/kernel/artefatos anteriores.
+- [x] Implementar parser e coleta passiva usados por snapshot/resume existentes.
+- [x] Verificar estados completos/parciais, dados inválidos, shell de leitura real e continuidade; executar mutações que removem as guardas.
+- [x] Rodar gate de associação existente, AST e lint fatal; conservar gates/kernel/artefatos anteriores.
 - [ ] Documentar/publicar evidência e CI na branch existente.
 - [ ] Integrar depois intent/proof de alocação, causalidade do primeiro erro de cleanup, seleção/perfil e driver/DMA/firmware/energia antes do DFU agrupado.
 
