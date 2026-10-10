@@ -1,5 +1,6 @@
 """Retain one PCI assignment with durable intent, proof and same-boot cleanup."""
 import re
+import n71_iommu_result
 import n71_resource_result
 import n71_scan_held_result
 
@@ -175,7 +176,9 @@ def cleanup(session, proof):
     require(not session.resource_attempted or session.resource_assignment is not None,
             'Cannot clean up an unproved assignment intent')
     verify_readback(session, proof)
-    return n71_resource_result.cleanup(proof, session.resource_assignment)
+    provider = n71_iommu_result.cleanup(session, proof)
+    provider_error = provider.get('provider_operation_error', 0) if provider is not None else 0
+    return n71_resource_result.cleanup(proof, session.resource_assignment, provider_error=provider_error)
 
 
 def success(session):

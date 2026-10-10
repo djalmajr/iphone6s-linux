@@ -1,9 +1,10 @@
 """Collect software MSI/OF/core association without claiming IRQ or DMA delivery."""
 import re
+import n71_dart_cycle_result
 import n71_iommu_build
+import n71_resource_result
 import n71_scan_held_result
 import n71_scan_target_result
-import n71_resource_stage
 
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
 MSI_FIELDS = ('requested', 'ready', 'held', 'associated', 'owner', 'domain', 'mappings', 'child', 'session_error')
@@ -170,6 +171,7 @@ def pre_scan_cleanup(session, text):
     require(int(acquired.group(1)) == primary, 'Pre-scan provider and caller failure differ')
     require(session.resource_attempted is False and session.resource_assignment is None
             and 'N71_PCIE_RESOURCE_' not in text, 'Pre-scan failure cannot own an assignment')
+    import n71_resource_stage
     n71_resource_stage.verify_readback(session, text)
     require(n71_resource_stage.n71_resource_result.live_status(text)
             == dict.fromkeys(n71_resource_stage.n71_resource_result.FIELDS, 0) | {'error': primary},
@@ -222,6 +224,8 @@ def cleanup(session, text):
     if 'N71_PCIE_SESSION_HELD ' in text:
         result = acquisition(text)
         require(session.result.get('iommu_association') in (None, result), 'Cleanup association history changed')
+    proof = {'software_ownership_released': True, 'physical_of_unmap_readback_verified': False,
+             'irq_delivery_verified': False, 'dma_translation_verified': False}
     if 'N71_DART_LEASE_ACQUIRE ' in text:
         acquired = n71_scan_held_result.unique(text, 'N71_DART_LEASE_ACQUIRE ',
             r'N71_DART_LEASE_ACQUIRE error=(-?\d+) running=([01]) pending=([01]); no DMA attachment')
@@ -260,5 +264,20 @@ def cleanup(session, text):
         else:
             require(not configs or released.start() < configs[0].start(),
                     'Provider release and host restore order differs')
-    return {'software_ownership_released': True, 'physical_of_unmap_readback_verified': False,
-            'irq_delivery_verified': False, 'dma_translation_verified': False}
+        if 'N71_DART_CYCLE_RESULT ' in text:
+            cycle = n71_dart_cycle_result.summary(text)
+            require(text.count('N71_DART_CYCLE_RESULT ') == 1, 'Unique complete DART cycle required')
+            if cycle['control_changed']:
+                assignment = n71_resource_result.event(text)
+                first_error = (assignment['error'] if assignment else 0) or cycle['error']
+                require(cycle == dict(error=-5, snapshots=4, reads=152, guards=156, quiet=17, writes=16,
+                                      attempted=1, stopped=1, restored=1, control_changed=1)
+                        and (error, running, pending) == (0, 1, 1)
+                        and 'N71_PCIE_SESSION_HELD ' in text
+                        and caller.get('primary_error', 0) == first_error,
+                        'Changed DART control requires complete restored negative operation proof')
+                n71_dart_cycle_result.cleanup(text)
+                require(lease[-1].start() < text.index('N71_DART_CYCLE_RESULT ') < released.start(),
+                        'DART operation result must follow restore and precede provider release')
+                proof['provider_operation_error'] = cycle['error']
+    return proof

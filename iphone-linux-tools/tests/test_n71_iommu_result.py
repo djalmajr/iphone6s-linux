@@ -48,6 +48,8 @@ for bus, devfn in ((0, '08'), (1, '00')):
 DART_CLEAN = ('N71_DART_CYCLE_REMOVED device=0 mapping-new=0 claimed=1; restore ownership held\n'
               'N71_DART_LEASE_CLEANUP error=0 pending=0 index=16 device=0 mapping-new=0 claimed=1 mapped=1; ownership retained until restore\n'
               'N71_DART_CYCLE_RELEASED device=0 mapping-new=0 claimed=0 mapped=0\n')
+DART_CONTROL_ERROR = ('N71_DART_CYCLE_RESULT error=-5 snapshots=4 reads=152 guards=156 quiet=17 '
+                      'writes=16 attempted=1 stopped=1 restored=1 control-changed=1; no DMA\n')
 
 
 def getters(active=True):
@@ -202,7 +204,7 @@ class IommuResultTests(unittest.TestCase):
             released = DART_CLEAN.splitlines(True)[-1]
             self.assertTrue(self.accepted(RESULT.cleanup, self.session, prefix + acquired + lease + released)['software_ownership_released'])
 
-    def execution(self, phone, folder, name, source=None):
+    def execution(self, phone, folder, name, source=None, *, assign=False):
         output = folder / 'runtime' / name; output.mkdir(mode=0o700)
         build = json.loads((ROOT / 'docs/evidence/n71-dma-topology-qualification.json').read_text())['kernel_build']
         modules = [({'module': HELD.MODULES[0], 'bytes': build['module_bytes'], 'sha256': build['module_sha256'], 'vermagic': build['vermagic']}, b'fixture'),
@@ -211,9 +213,66 @@ class IommuResultTests(unittest.TestCase):
             session = LINK.Session(output, modules, host_scan=True, scan_link_target=True, scan_pme_disable=True,
                                    scan_hold=True, resource_capable=True, iommu_parent=True, release=LINK.BINDING_RELEASE)
         session.capture = lambda *args, **kwargs: phone.capture(session, *args, **kwargs)
-        with contextlib.redirect_stdout(io.StringIO()):
-            code = HELD.run(session, {'modules': {r['module']: r['sha256'] for r, _ in modules}}, root=folder, source=source)
+        with contextlib.redirect_stdout(io.StringIO()), patch.object(HELD, 'n71_resource_stage', resource_fixture.STAGE):
+            code = HELD.run(session, {'modules': {r['module']: r['sha256'] for r, _ in modules}}, root=folder, source=source, assign=assign)
         return code, session, output
+
+    def test_restored_control_error_retains_negative_operation_without_pending_owners(self):
+        # Mutations killed: erase provider EIO, accept incomplete/duplicate restore or lose causal first error.
+        released = DART_CLEAN.splitlines(True)[-1]
+        text = (CLOSED.replace(held_fixture.CLEAN, held_fixture.CLEAN.replace('primary_error=0', 'primary_error=-5'))
+                .replace(held_fixture.FINISHED, held_fixture.FINISHED.replace('primary_error=0', 'primary_error=-5'))
+                .replace(released, DART_CONTROL_ERROR + released))
+        proof = self.accepted(RESULT.cleanup, self.session, text)
+        self.assertEqual(proof.get('provider_operation_error'), -5)
+        self.assertTrue(proof['software_ownership_released'])
+        self.assertFalse(proof['dma_translation_verified'])
+        invalid = [text + DART_CONTROL_ERROR, text + 'N71_DART_CYCLE_RESULT malformed\n',
+                   text.replace('primary_error=-5', 'primary_error=-13'),
+                   text.replace('snapshots=4', 'snapshots=3'), text.replace('reads=152', 'reads=151'),
+                   text.replace('guards=156', 'guards=155'), text.replace('quiet=17', 'quiet=16'),
+                   text.replace('writes=16', 'writes=15'), text.replace('stopped=1', 'stopped=0'),
+                   text.replace('restored=1', 'restored=0'), text.replace('attempted=1', 'attempted=0'),
+                   text.replace('CYCLE_RESULT error=-5', 'CYCLE_RESULT error=-13'),
+                   text.replace('CYCLE_RESULT error=-5', 'CYCLE_RESULT error=-4096'),
+                   text.replace('LEASE_CLEANUP error=0 pending=0', 'LEASE_CLEANUP error=-5 pending=1'),
+                   text.replace(DART_CLEAN.splitlines(True)[0], ''),
+                   text.replace(DART_CONTROL_ERROR, '').replace(held_fixture.CONFIG, held_fixture.CONFIG + DART_CONTROL_ERROR)]
+        for changed in invalid:
+            with self.subTest(text=changed), self.assertRaises(ValueError):
+                RESULT.cleanup(self.session, changed)
+
+    def test_actual_coordinator_releases_restored_control_error_and_reuses_cleanup_proof(self):
+        # Mutations killed: omit provider proof/passing EIO or repeat cleanup/assignment on resume.
+        class ControlErrorPhone(IommuPhone):
+            @staticmethod
+            def cleaned(phone, session, text):
+                IommuPhone.cleaned(phone, session, text)
+                first_error = phone.assignment_error or -5
+                phone.status = phone.status.replace('primary_error=0', 'primary_error=' + str(first_error))
+                phone.resources['error'] = first_error
+                release = held_fixture.timestamp(DART_CLEAN, 90)
+                inserted = held_fixture.timestamp(DART_CLEAN.replace(DART_CLEAN.splitlines(True)[-1],
+                                                 DART_CONTROL_ERROR + DART_CLEAN.splitlines(True)[-1]), 90)
+                phone.history = phone.history.replace(release, inserted).replace(held_fixture.FINISHED,
+                                       held_fixture.FINISHED.replace('primary_error=0', 'primary_error=' + str(first_error)))
+                return 0, getters(False) + phone.getter() + 'N71_PCIE_HELD held=0\n' + phone.status + phone.history
+
+        for assignment_error in (0, -13):
+            with self.subTest(assignment_error=assignment_error), tempfile.TemporaryDirectory() as directory:
+                folder = Path(directory); (folder / 'runtime').mkdir(mode=0o700); phone = ControlErrorPhone()
+                phone.assignment_error = assignment_error
+                code, _, source = self.execution(phone, folder, 'acquire'); self.assertEqual(code, 0)
+                code, _, source = self.execution(phone, folder, 'assign', source, assign=True); self.assertEqual(code, int(assignment_error != 0))
+                code, session, source = self.execution(phone, folder, 'release', source)
+                self.assertEqual(code, int(assignment_error != 0), session.result)
+                self.assertTrue(session.result['cleanup_verified'])
+                self.assertEqual(session.result['resource_assignment']['error'], assignment_error)
+                self.assertEqual(session.result.get('iommu_cleanup', {}).get('provider_operation_error'), -5)
+                self.assertFalse(phone.pcie or phone.reg or phone.active)
+                code, session, _ = self.execution(phone, folder, 'resume-clean', source)
+                self.assertEqual(code, int(assignment_error != 0), session.result)
+                self.assertEqual((phone.assignments, phone.cleanup_calls), (1, 1))
 
     def test_unbound_prepare_failure_requires_matching_negative_complete_release(self):
         self.assertTrue(self.accepted(RESULT.cleanup, self.session, UNBOUND)['software_ownership_released'])
@@ -443,6 +502,14 @@ class IommuMutationTests(unittest.TestCase):
             'unbound-error-bounds': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', '-4095 <= primary < 0', 'True'),
             'unbound-unique-caller': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "len(finished) == text.count('N71_PCIE_SESSION_CLEANUP ') == 1", 'True'),
             'unbound-order': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'configs[-1].start() < lease[0].start()', 'True'),
+            'control-error-unique': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "text.count('N71_DART_CYCLE_RESULT ') == 1", 'True'),
+            'control-error-complete': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'cycle == dict(error=-5, snapshots=4, reads=152, guards=156, quiet=17, writes=16,\n                                      attempted=1, stopped=1, restored=1, control_changed=1)', 'True'),
+            'control-error-first': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "caller.get('primary_error', 0) == first_error", 'True'),
+            'control-error-first-assignment': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "first_error = (assignment['error'] if assignment else 0) or cycle['error']", "first_error = cycle['error']"),
+            'control-error-removed': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', 'n71_dart_cycle_result.cleanup(text)', 'pass'),
+            'control-error-order': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "lease[-1].start() < text.index('N71_DART_CYCLE_RESULT ') < released.start()", 'True'),
+            'control-error-preserved': ('n71_iommu_result.py', 'N71_IOMMU_RESULT_SCRIPT', "proof['provider_operation_error'] = cycle['error']", "proof['provider_operation_error'] = 0"),
+            'control-error-passed': ('n71_resource_stage.py', 'N71_RESOURCE_STAGE_SCRIPT', 'provider_error=provider_error)', 'provider_error=0)'),
             'module-args': ('n71-link-session.py', 'N71_HELD_LINK_SCRIPT', "parameters += ' msi_parent=1 iommu_parent=1'", "parameters += ''"),
             'initial-proof': ('n71-link-session.py', 'N71_HELD_LINK_SCRIPT', 'n71_iommu_result.retained(self, p.stdout)', 'pass'),
             'checkpoint-getter': ('n71_held_session.py', 'N71_HELD_SESSION_SCRIPT', 'command += n71_iommu_result.getter(session)', "command += ''"),

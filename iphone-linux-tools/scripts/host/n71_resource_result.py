@@ -105,14 +105,16 @@ def outcome(text):
             'assignment_verified': error == 0, 'early_refusal': result is None}
 
 
-def cleanup(text, assignment=None):
+def cleanup(text, assignment=None, *, provider_error=0):
     error = assignment['error'] if assignment else 0
     require(type(error) is int and -4095 <= error <= 0, 'Invalid assignment primary error')
+    require(type(provider_error) is int and -4095 <= provider_error <= 0, 'Invalid provider operation error')
+    primary_error = error or provider_error
     result = event(text)
     require(result == (assignment['event'] if assignment else None), 'Assignment history changed')
     state = live_status(text)
-    require(state == dict.fromkeys(FIELDS, 0) | {'error': error}, 'Resource ownership still pending')
-    base = n71_scan_held_result.cleanup(text, primary_error=error)
+    require(state == dict.fromkeys(FIELDS, 0) | {'error': primary_error}, 'Resource ownership still pending')
+    base = n71_scan_held_result.cleanup(text, primary_error=primary_error)
     restored = rows(text, 'N71_PCIE_RESOURCE_RESTORED ',
                     r'N71_PCIE_RESOURCE_RESTORED error=(-?\d+) pending=([01])')
     released = rows(text, 'N71_PCIE_RESOURCE_WINDOW_RELEASED ',
@@ -153,7 +155,11 @@ def cleanup(text, assignment=None):
                             r'size=[124] value=[0-9a-f]{8} error=(-\d+)')
             require(all(row.start() > text.index('N71_PCIE_RESOURCE_RESULT ') for row in refusals),
                     'A successful assignment cannot follow a refused write')
-    return dict(base, resource_cleanup_verified=True, assignment_error=error)
+    proof = dict(base, resource_cleanup_verified=True, assignment_error=error)
+    if provider_error:
+        proof['cleanup_primary_error'] = primary_error
+        proof['provider_operation_error'] = provider_error
+    return proof
 
 
 def selected_records(root, *, release, pcie_sha256=None, iommu_parent=False):

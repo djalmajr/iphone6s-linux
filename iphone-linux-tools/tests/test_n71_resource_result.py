@@ -47,6 +47,33 @@ def failed(*, pending=1, claimed=1):
 
 
 class ResourceResultTests(unittest.TestCase):
+    def test_provider_cleanup_error_is_separate_and_cannot_replace_first_assignment_error(self):
+        # Mutations killed: replace the first assignment error, drop provider EIO or accept invalid error types.
+        result = RESOURCE.outcome(OPEN)
+        closed = (CLOSED.replace(fixture.CLEAN, fixture.CLEAN.replace('primary_error=0', 'primary_error=-5'))
+                  .replace(fixture.FINISHED, fixture.FINISHED.replace('primary_error=0', 'primary_error=-5'))
+                  .replace(EMPTY, EMPTY.replace('error=0', 'error=-5')))
+        try:
+            proof = RESOURCE.cleanup(closed, result, provider_error=-5)
+        except ValueError as error:
+            self.fail('Completed provider cleanup refused: ' + str(error))
+        self.assertEqual((proof.get('assignment_error'), proof.get('cleanup_primary_error'), proof.get('provider_operation_error')), (0, -5, -5))
+        self.assertTrue(proof['resource_cleanup_verified'])
+        with self.assertRaises(ValueError):
+            RESOURCE.cleanup(closed, result)
+        active, closed = failed()
+        result = RESOURCE.outcome(active)
+        try:
+            proof = RESOURCE.cleanup(closed, result, provider_error=-5)
+        except ValueError as error:
+            self.fail('First assignment error was replaced: ' + str(error))
+        self.assertEqual((proof.get('assignment_error'), proof.get('cleanup_primary_error')), (-13, -13))
+        for value in (True, False, None, 1, -4096):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                RESOURCE.cleanup(closed, result, provider_error=value)
+        with self.assertRaises(ValueError):
+            RESOURCE.cleanup(closed.replace('primary_error=-13', 'primary_error=-5'), result, provider_error=-5)
+
     def test_success_keeps_live_owners_and_measured_result(self):
         # Mutations killed: accept nonzero action exit, missing assignment event, stale owners or zero writes.
         result = RESOURCE.outcome(OPEN)
@@ -261,7 +288,10 @@ class ResourceMutationsTests(unittest.TestCase):
             'first-refusal-error': ('int(row.group(1)) == error', 'True'),
             'refusal-order': ("< text.index('N71_PCIE_RESOURCE_RESULT ')", '< len(text)'),
             'cleanup-history': ("result == (assignment['event'] if assignment else None)", 'True'),
-            'cleanup-getter': ("state == dict.fromkeys(FIELDS, 0) | {'error': error}", 'True'),
+            'cleanup-getter': ("state == dict.fromkeys(FIELDS, 0) | {'error': primary_error}", 'True'),
+            'provider-error-type': ('type(provider_error) is int', 'type(provider_error) in (int, bool)'),
+            'provider-error-bounds': ('-4095 <= provider_error <= 0', 'True'),
+            'first-error-preserved': ('primary_error = error or provider_error', 'primary_error = provider_error or error'),
             'no-unknown-cleanup-events': ("text.count('N71_PCIE_RESOURCE_') == int(result is not None) + len(restored) + len(released)", 'True'),
             'extra-restore-final': ("restored[-1].groups() == ('0', '0')", 'True'),
             'extra-restore-retry': ("-4095 <= int(row.group(1)) < 0 and row.group(2) == '1'", 'True'),
