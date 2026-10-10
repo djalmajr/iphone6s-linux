@@ -6,7 +6,7 @@
   "inputs_sha256": {
     "phone/kernel/Makefile": "b7bd176e3fa4bb925bed34d2a6af5a861fe2d611d966cc53eae275c3107a1edc",
     "phone/kernel/n71-dart-cycle.h": "08b39c05a41b87936962b341525d7188a28909c91613ea902c5b899e9d431a4a",
-    "phone/kernel/n71-dart-host.h": "51effa6ff20dd040dd2190cc7b3bd10d82ebc2535a30a13d120d4db3d988a1c8",
+    "phone/kernel/n71-dart-host.h": "f676c5e3270c504df30eaa5df238e358a6155ef62212510ad0826f310279940e",
     "phone/kernel/n71-dart-irq.h": "f2a744ce3545d902933dae07e9935917c94ee26edf596b4a75af180c53026a10",
     "phone/kernel/n71-dart-lease.h": "00614a4ccc6e9dd7c22bfd3df4bb3dbed2acf4ebd9a909c4e10909840bbab368",
     "phone/kernel/n71-dart-mmio.h": "b76e50b078bd8b8c764093c6fb6b101ca19b9c11b27cd77e76a05a3a47187d97",
@@ -238,6 +238,114 @@
   "kernel_build": {
     "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
     "kernel_exit": 0,
+    "module_sha256": "48df330a6ddf6da524ad47979df9b056a6ffa8b793002a03814e1885c6739dc9",
+    "module_bytes": 114120,
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "loaded": false,
+    "private_wrapper": false,
+    "production_module_inputs_identical": true,
+    "source_makefile_preserved": true,
+    "isolated_makefile_target_selector": "obj-m += n71-pcie-diagnostic.o",
+    "effective_module_basenames": [
+      "n71-dart-cycle.h",
+      "n71-dart-host.h",
+      "n71-dart-irq.h",
+      "n71-dart-lease.h",
+      "n71-dart-mmio.h",
+      "n71-dart-observe.h",
+      "n71-dart-provider.h",
+      "n71-pcie-bar-sizing.h",
+      "n71-pcie-chip-id.h",
+      "n71-pcie-chip-mmio.h",
+      "n71-pcie-contract.h",
+      "n71-pcie-control-reference.h",
+      "n71-pcie-diagnostic.c",
+      "n71-pcie-ecam.h",
+      "n71-pcie-init.h",
+      "n71-pcie-inventory.h",
+      "n71-pcie-io16-upper.h",
+      "n71-pcie-link.h",
+      "n71-pcie-mmio.h",
+      "n71-pcie-pme-control.h",
+      "n71-pcie-port.h",
+      "n71-pcie-pref64-disable.h",
+      "n71-pcie-resource-assign.h",
+      "n71-pcie-resource-write.h",
+      "n71-pcie-scan-config.h",
+      "n71-pcie-scan-link-target.h",
+      "n71-pcie-scan.h",
+      "n71-wlan-irq-reference.h",
+      "n71-wlan-msi-host.h",
+      "n71-wlan-msi-message.h",
+      "n71-wlan-msi-native.h"
+    ],
+    "baseline_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true,
+    "original_tracked_patch_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+    "original_tracked_changes_preserved": true,
+    "exported_group_apis_present": true,
+    "unexported_alias_helpers_not_referenced": true,
+    "imports_verified": 123,
+    "of_scope_followup_build": true
+  },
+  "observed_contract": {
+    "root_rid": 8,
+    "endpoint_rid": 256,
+    "streaming_bits": 32,
+    "coherent_bits": 32,
+    "local_alias_bitmap": "absent or empty",
+    "root_type": "PCIe root port or legacy non-PCIe bridge",
+    "endpoint_type": "PCIe endpoint or legacy endpoint",
+    "sriov_or_multifunction": "refused",
+    "special_alias_flags": "refused",
+    "group": "same nonnegative ID through balanced exported get/id/put; no retained group reference",
+    "inferred_alias_count": {
+      "root": 1,
+      "endpoint_under_pcie_root": 1,
+      "endpoint_under_legacy_bridge": 2
+    },
+    "inference_requires": "fixed weak pci_real_dma_dev and validated public two-device graph; requester translation not physically measured",
+    "cleanup": "observed ID cleared after PCI removal before MSI release, also on later release failure"
+  },
+  "limits": {
+    "physical_load": false,
+    "physical_irq_delivery": false,
+    "physical_dma_translation": false,
+    "wifi_verified": false,
+    "battery_gauge_verified": false,
+    "linux_charging_verified": false,
+    "physical_profile_selected": false,
+    "driver_or_master_enabled": false,
+    "kernel_or_image_changed": false,
+    "global_mac_install_or_config_changed": false
+  },
+  "ci_parent": {
+    "head": "6aeb88cda79fbd742ffd01688eed45849fd577a9",
+    "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37588573148",
+    "three_jobs": "success"
+  },
+  "reproduction": {
+    "gates": [
+      "test_n71_pcie_scan_host.py",
+      "test_n71_pcie_optional_host.py",
+      "test_n71_pcie_io16_host.py",
+      "test_n71_pcie_pref64_host.py"
+    ],
+    "kernel_flags": [
+      "W=1",
+      "KCFLAGS=-Werror",
+      "KBUILD_EXTRA_SYMBOLS=<fixed-build>/vmlinux.symvers"
+    ],
+    "module_target_selector": "obj-m += n71-pcie-diagnostic.o",
+    "copy_policy": "Exact production C/headers in isolated M; no wrapper or modpost warning bypass; source Makefile retained unchanged."
+  },
+  "previous_kernel_build_before_of_scope_fix": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "kernel_exit": 0,
     "module_sha256": "46dfdfda600ad1bfa21606a7a758f7764b899c38959ba877fca819571e49106f",
     "module_bytes": 114008,
     "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
@@ -290,55 +398,16 @@
     "exported_group_apis_present": true,
     "unexported_alias_helpers_not_referenced": true
   },
-  "observed_contract": {
-    "root_rid": 8,
-    "endpoint_rid": 256,
-    "streaming_bits": 32,
-    "coherent_bits": 32,
-    "local_alias_bitmap": "absent or empty",
-    "root_type": "PCIe root port or legacy non-PCIe bridge",
-    "endpoint_type": "PCIe endpoint or legacy endpoint",
-    "sriov_or_multifunction": "refused",
-    "special_alias_flags": "refused",
-    "group": "same nonnegative ID through balanced exported get/id/put; no retained group reference",
-    "inferred_alias_count": {
-      "root": 1,
-      "endpoint_under_pcie_root": 1,
-      "endpoint_under_legacy_bridge": 2
-    },
-    "inference_requires": "fixed weak pci_real_dma_dev and validated public two-device graph; requester translation not physically measured",
-    "cleanup": "observed ID cleared after PCI removal before MSI release, also on later release failure"
-  },
-  "limits": {
-    "physical_load": false,
-    "physical_irq_delivery": false,
-    "physical_dma_translation": false,
-    "wifi_verified": false,
-    "battery_gauge_verified": false,
-    "linux_charging_verified": false,
-    "physical_profile_selected": false,
-    "driver_or_master_enabled": false,
-    "kernel_or_image_changed": false,
-    "global_mac_install_or_config_changed": false
-  },
-  "ci_parent": {
-    "head": "6aeb88cda79fbd742ffd01688eed45849fd577a9",
-    "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37588573148",
-    "three_jobs": "success"
-  },
-  "reproduction": {
-    "gates": [
-      "test_n71_pcie_scan_host.py",
-      "test_n71_pcie_optional_host.py",
-      "test_n71_pcie_io16_host.py",
-      "test_n71_pcie_pref64_host.py"
-    ],
-    "kernel_flags": [
-      "W=1",
-      "KCFLAGS=-Werror",
-      "KBUILD_EXTRA_SYMBOLS=<fixed-build>/vmlinux.symvers"
-    ],
-    "module_target_selector": "obj-m += n71-pcie-diagnostic.o",
-    "copy_policy": "Exact production C/headers in isolated M; no wrapper or modpost warning bypass; source Makefile retained unchanged."
+  "of_scope_followup": {
+    "date": "2026-10-09",
+    "code_commit": "82bb499",
+    "evidence": "n71-of-scope-negative-cleanup.json",
+    "previous_host_header_sha256": "51effa6ff20dd040dd2190cc7b3bd10d82ebc2535a30a13d120d4db3d988a1c8",
+    "baseline_gates_reused_with_their_effective_inputs_unchanged": true,
+    "additional_host_cases_per_platform": 51,
+    "additional_compiled_assertion_mutations_per_platform": 40,
+    "copied_inputs_verified": 50,
+    "old_module_preserved_privately": true,
+    "profile_selection_pending_composer_check": false
   }
 }

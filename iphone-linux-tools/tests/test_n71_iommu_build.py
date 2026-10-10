@@ -66,7 +66,7 @@ class IommuBuildTests(unittest.TestCase):
         expected = hashlib.sha256(self.image).hexdigest()
         self.assertEqual(self.accepted(BUILD.kernel_image, self.root, self.compressed, release=RELEASE), expected)
         self.assertEqual(self.accepted(self.verify_payload), expected)
-        self.assertEqual(BUILD.qualified(self.root, release=RELEASE)['module_bytes'], 114008)
+        self.assertEqual(BUILD.qualified(self.root, release=RELEASE)['module_bytes'], 114120)
         self.payload(self.dtb, self.compressed, self.tail + b'extra')
         with self.assertRaises(ValueError): self.verify_payload()
 

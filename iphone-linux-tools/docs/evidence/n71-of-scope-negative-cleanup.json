@@ -74,11 +74,14 @@
     "elf64_aarch64": true,
     "imports_verified": 123,
     "missing_imports": [],
-    "loaded_on_phone": false
+    "loaded_on_phone": false,
+    "production_inputs_verified_identical": 50,
+    "exported_group_apis_present": true,
+    "unexported_alias_helpers_not_referenced": true
   },
   "limits": {
     "new_module_loaded_on_phone": false,
-    "profile_selector_or_candidate_updated": false,
+    "profile_selector_or_candidate_updated": true,
     "new_physical_boot_performed_for_fixes": false,
     "wifi_verified": false,
     "irq_delivery_verified": false,

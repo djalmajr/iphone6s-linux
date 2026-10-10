@@ -16,7 +16,7 @@ Manter o iPhone no iOS para recarga durante as correções. Separar fases de no 
 - [x] Corrigir parser negativo com casos de prova incompleta, erro e ordem divergentes; verificar journal e modos anteriores.
 - [x] Compilar módulo separado na VM power2, conferir exports/vermagic e preservar fonte/config/Image/artefatos anteriores.
 - [ ] Registrar evidência sanitizada, atualizar issues e publicar somente a branch autorizada.
-- [ ] Preparar próxima candidata agrupada, sem boot nesta etapa offline.
+- [x] Preparar próxima candidata agrupada, sem boot nesta etapa offline.
 
 ## Gates e limites
 
@@ -25,3 +25,9 @@ Somente asserções de programas compilados ou testes que reproduzam o contrato 
 ## Resultado offline — 2026-10-09
 
 OF51 cenários/40 mutações compiladas por SIGABRT/asserção, parser/journal19 testes/45 mutações por AssertionError, por plataforma Mac/Ubuntu ARM64. Build PCIe114.120 bytes/SHA48df330a, ELF64/AArch64/vermagic power2,123 imports conferidos e baseline preservada. Log físico original revalidado sem alterações; módulo novo não selecionado no perfil nem carregado. [Evidência](../../docs/evidence/n71-of-scope-negative-cleanup.json), [procedimento/limites](../../docs/N71_IRQ_IOMMU.md#correções-offline-após-a-coleta--identidade-of-e-cleanup-negativo). AST/lint fatal passaram. Correções não instalaram pacotes ou alteraram configuração global do Mac e não exigiram outro DFU.
+
+### Seleção e candidata seguinte
+
+O registro qualificado foi atualizado para SHA48df330a, mantendo o build anterior e seu histórico. Somente o header OF diverge dos84 inputs anteriores; os gates PCI independentes são reutilizados, e o helper mudou com seu gate específico51/40. Os50 inputs copiados na VM foram conferidos byte a byte por SHA; imports group get/put/id presentes e helpers de alias não exportados ausentes.
+
+Seleção/Image8 testes/24 mutações e perfil/composer8/21 passaram no Mac e Ubuntu ARM64. Composer real e collector `--check` passaram: oito arquivos700/600; payload/DTB/kernel/loader/bootargs/deployment, initramfs/chaves/identidades e REG_ON são idênticos ao D20 anterior. Somente módulo PCIe e seu SHA na provenance mudaram. Defaults e candidata anterior preservados, sem boot. A tentativa agrupada privada está preparada com o último snapshot manual validado; não repetirá o gate GPIO já aprovado. [Prova da candidata](../../docs/evidence/n71-of-scope-profile-qualified.json). CI nova e teste físico seguem pendentes.

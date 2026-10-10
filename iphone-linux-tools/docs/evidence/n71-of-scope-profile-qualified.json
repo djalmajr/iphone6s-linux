@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "date": "2026-10-09",
+  "compose_exit": 0,
+  "local_check_exit": 0,
+  "private_files": 8,
+  "directory_mode": "0700",
+  "file_modes": "0600",
+  "payload_kernel_dtb_loader_bootargs_and_deployment_identical": true,
+  "initramfs_keys_host_identity_and_reg_on_identical": true,
+  "only_pcie_module_and_its_provenance_sha_changed": true,
+  "pcie_module_bytes": 114120,
+  "pcie_module_sha256": "48df330a6ddf6da524ad47979df9b056a6ffa8b793002a03814e1885c6739dc9",
+  "source_qualified_module_sha256": "46dfdfda600ad1bfa21606a7a758f7764b899c38959ba877fca819571e49106f",
+  "dart_phandle": 45,
+  "module_automatic_load": false,
+  "requires_explicit_run": true,
+  "default_profile_changed": false,
+  "physical_boot_attempted": false,
+  "wifi_verified": false,
+  "irq_delivery_verified": false,
+  "dma_translation_verified": false,
+  "battery_or_charging_verified": false,
+  "private_material_published": false,
+  "selection_gates": {
+    "macOS": [
+      {
+        "tests": 8,
+        "seconds": 2.601,
+        "assertion_mutants": 24,
+        "exit": 0
+      },
+      {
+        "tests": 8,
+        "seconds": 18.292,
+        "assertion_mutants": 21,
+        "exit": 0
+      }
+    ],
+    "Ubuntu ARM64": [
+      {
+        "tests": 8,
+        "seconds": 1.673,
+        "assertion_mutants": 24,
+        "exit": 0
+      },
+      {
+        "tests": 8,
+        "seconds": 10.205,
+        "assertion_mutants": 21,
+        "exit": 0
+      }
+    ]
+  }
+}
