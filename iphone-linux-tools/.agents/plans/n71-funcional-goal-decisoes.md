@@ -188,3 +188,12 @@
 - **Reverter:** baixo antes da ativação; módulos/perfil antigos e defaults legacy conservados, sem mudança no kernel.
 - **Onde:** plano hostB2b2, protocolo e journal de módulos, depois coordenador e seleção C.
 - **Status:** M1 aplicada em0a315b9 e M2 em4d857bf; matriz afetada131/230 Mac/ARM64,276 inputs íntegros, AST/lint. Ledger/hooks/recuperação de módulos qualificados offline; coordenador/causalidade/seleção física continuam em curso.69 C e oito módulos byte/SHA preservados; nenhum boot/load no aparelho.
+
+## D22. Conservar a causa runtime ao limpar os providers
+
+- **Decisão:** integrar uma causa de cleanup somente quando a release nativa completa e bem-sucedida estiver comprovada no ledger/histórico do mesmo boot. Assignment anterior precede essa causa; provider posterior não a substitui. Usar implementação compartilhada de cleanup e conservar a entrada legacy.
+- **Por quê:** release0 remove ownership, mas não apaga a falha anterior do driver. O collector atual só conhece assignment/provider e recusaria a limpeza legítima ou perderia sua causa.
+- **Alternativas:** inferir pelo getter sozinho dispensa prova de release; usar sempre erro provider perde a ordem causal; ignorar a causa transformaria uma operação falha em sucesso. A prova da release e seu histórico mantém o escopo explícito.
+- **Reverter:** baixo antes da ativação; helpers passivos e caminho legacy conservado, sem mudança de kernel/perfil.
+- **Onde:** plano hostB2b3a e helpers runtime/resource/IOMMU, teste de cleanup runtime.
+- **Status:** em curso; M1/M2 permanecem qualificadas, coordenador/seleção/candidata física ainda pendentes. Nenhuma ação do operador necessária nesta fase.
