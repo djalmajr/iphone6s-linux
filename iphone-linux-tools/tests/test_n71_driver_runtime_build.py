@@ -32,6 +32,10 @@ class RuntimeBuildTests(unittest.TestCase):
         self.proof = json.loads((self.folder / CALLER).read_text()); self.wcc = json.loads((self.folder / WCC).read_text())
         for name in self.proof['inputs']:
             target = self.root / name; target.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(ROOT / name, target)
+            # Synthetic proof covers this disposable copy; production evidence remains historical.
+            raw = target.read_bytes()
+            self.proof['inputs'][name] = {'bytes':len(raw), 'sha256':hashlib.sha256(raw).hexdigest()}
+        self.save()
         self.request = {'release':WLAN.RELEASE, 'pcie_sha256':self.proof['module']['sha256']}
 
     def save(self):
