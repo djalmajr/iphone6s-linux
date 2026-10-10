@@ -719,3 +719,13 @@ static __used int n71_allocation_build_probe(struct pci_host_bridge *bridge,
 ```
 
 Use a fonte/build/exports power2 preservados e o procedimento de módulo externo já documentado; conferir `modinfo -F vermagic`, `readelf -h`, `nm -u` contra exports e SHA/bytes. O probe qualifica ABI e compila o adaptador, sem ação pública de alocação. Não foi carregado, nem selecionado para boot; nenhum DFU nesta etapa. Próximo: armazenar lease na sessão, integrar action/getter/cleanup ao módulo e collector/journal/seleção/perfil, depois driver/DMA/firmware e energia antes do teste agrupado. A CI completa de cceccab aprovou os seis jobs dos dois eventos; esta nova etapa terá head/CI próprios.
+
+### Lease compartilhada e preparação do caller
+
+Em6982995, `n71-msi-allocation-lease.h` conserva o tipo endpoint/default_irq/vector e o host passa a armazená-lo junto do owner de configuração; remove-se a declaração anterior do adaptador. A política e os comandos dos gates acima permanecem. Ação/getter/cleanup usam esse armazenamento na próxima fase; nenhum módulo/candidata foi carregado ou selecionado. [Plano](../.agents/plans/n71-msi-caller.md).
+
+Mac/Ubuntu ARM64:55 cenários/29 mutações compiladas de alocação; host Mac seis métodos/183 cenários/147 mutações. Novo probe124.504 bytes/SHA39b1a7efbef592615bd26088945a03881c7952215b4bb88e19340db0997ade84,127 imports/ELF/vermagic/hash/bytes conferidos;52 inputs/fonte/config/Image/exports preservados. AST/lint fatal passaram. Host ARM64 e diagnóstico com ação serão qualificados após a integração do caller. [Prova limitada](evidence/n71-msi-lease-storage-qualified.json).
+
+Três crashes da rodada inicial Ubuntu tiveram timeout5s, sem contar como kills; o core_pattern tinha pipe Apport. A fixture usa agora PR_SET_DUMPABLE0 somente em Linux, como o teste de caller existente, e29 executáveis comprovaram SIGABRT/asserção. O crash handler global não mudou. Um timeout transitório do SSH da VM interrompeu o staging; conferimos que não havia runner/log/resultados iniciados, concluímos as transferências e então executamos o gate. SSH voltou sem reiniciar a VM. Nenhum novo DFU/reboot do telefone ou instalação/configuração global no Mac.
+
+CIb7436e9 terminou com sucesso nos dois eventos, seis jobs Mac/Ubuntu/Windows: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38025617857), [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38025615082). A próxima etapa conserva os getters antigos e libera MSI antes dos consumidores/DART. Rádio/IRQ entregue/DMA/energia continuam sem prova física; não solicitar confirmação de tela ou desbloqueio sem ação dependente.

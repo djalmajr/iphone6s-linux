@@ -71,3 +71,12 @@
 - **Reverter:** baixo; adaptador ainda não exposto no aparelho. Os defaults, kernel e perfil físico anteriores continuam preservados.
 - **Onde:** [plano](n71-wlan-msi-config.md), [reprodução](../../docs/N71_IRQ_IOMMU.md#adaptador-de-alocação-msi--qualificação-sem-ação-no-aparelho), [evidência](../../docs/evidence/n71-msi-allocation-qualified.json), issues40/9.
 - **Status:** adaptador e probe ARM64 qualificados; ação/getter/cleanup e integração driver/energia seguem em curso, sem DFU isolado.
+
+## D9. Armazenar a lease no host e isolar crashes da fixture
+
+- **Decisão:** tipo compartilhado e lease junto dos owners PCI, com layout da lease/política preservados. A fixture Linux usa PR_SET_DUMPABLE0 no próprio executável; não alterar core_pattern/global para resolver o teste.
+- **Por quê:** a alocação precisa acompanhar o lifetime da bridge e a futura limpeza da sessão. O pipe Apport estava habilitado durante três timeouts de executáveis de mutações; tais timeouts não comprovam asserção. Após a supressão,29 mutações compiladas passaram por SIGABRT/asserção.
+- **Alternativas:** estado global separado exige associação manual à sessão; configuração global do crash handler altera outros processos. Aumentar timeout não isola a coleta nem melhora a prova do kill.
+- **Reverter:** baixo; estrutura simples, sem nova ação/perfil físico; a supressão pertence somente ao teste.
+- **Onde:** [plano](n71-msi-caller.md), [evidência](../../docs/evidence/n71-msi-lease-storage-qualified.json), issue40.
+- **Status:** armazenamento e probe qualificados; action/getter/cleanup e host ARM64 seguinte pendentes. SSH da VM voltou sem reinicialização; telefone não foi reiniciado.

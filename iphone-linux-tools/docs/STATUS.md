@@ -2,6 +2,10 @@
 
 ## Checkpoint atual — adaptador MSI qualificado; integração ao módulo e rádio pendentes
 
+A lease foi extraída para header compartilhado e armazenada no host PCI em6982995, mantendo sua política. Mac/Ubuntu ARM64:55 cenários/29 mutações; host Mac183/147 em seis métodos. Probe124.504 bytes/SHA39b1a7ef,127 imports/ELF/vermagic/hash/bytes;52 inputs/kernel/config/Image/exports intactos. AST/lint fatal passaram. A fixture Linux agora suprime dumpability para evitar coleta de crashes, sem modificar configuração global; três timeouts anteriores não foram contados. [Plano de integração](../.agents/plans/n71-msi-caller.md), [prova limitada](evidence/n71-msi-lease-storage-qualified.json). Gate host ARM64 e ação/getter/cleanup ainda pendentes; nenhum perfil/boot alterado.
+
+CIb7436e9 concluiu os seis jobs com sucesso: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38025617857) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38025615082). A próxima publicação terá CI própria. Nenhuma dependência instalada, configuração global do Mac ou banco alterado; desempenho físico não medido.
+
 O adaptador de alocação/release acrescenta retenção do endpoint, API D0 com readback, recusa de ASPM existente no pai, vetor único e validação da hierarquia IRQ/AIC. Mac/Ubuntu ARM64:55 cenários/29 mutações compiladas por asserção, AST/lint fatal. Probe real124.504 bytes/SHA9d6f7664,127 imports resolvidos, ELF/vermagic/bytes/hash conferidos. Fonte/config/Image/exports preservados. Ainda não há ação pública de alocação nem prova física de IRQ/DMA/rádio. [Reprodução](N71_IRQ_IOMMU.md#adaptador-de-alocação-msi--qualificação-sem-ação-no-aparelho), [evidência](evidence/n71-msi-allocation-qualified.json).
 
 Nenhum DFU, reboot ou carga solicitado nesta rodada. Próximo: ação/getter/cleanup, collector/journal/seleção/perfil e ciclo de vida driver/DMA/firmware, reunidos à preparação de energia antes de um teste físico. Wi-Fi e carregamento/gauge Linux permanecem abertos nas issues40/9/2; nenhuma ação do operador necessária agora.
