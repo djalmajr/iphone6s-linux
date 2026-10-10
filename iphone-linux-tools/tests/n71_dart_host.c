@@ -21,8 +21,8 @@ static void setup(struct n71_dart_host *owner, struct n71_dart_host_request *req
 	dt_fixture.disabled=(struct property){"status",9,"disabled"};
 	dt_fixture.foreign_status=(struct property){"status",5,"okay"};
 	dt_fixture.foreign_map=(struct property){"iommu-map",4,"data"};
-	dt_fixture.master=(struct device_node){.full_name="/soc/pcie@610000000",.refs=1};
-	dt_fixture.provider=(struct device_node){.full_name="/soc/iommu@602008000",.refs=1,
+	dt_fixture.master=(struct device_node){.full_name="pcie@610000000",.refs=1};
+	dt_fixture.provider=(struct device_node){.full_name="iommu@602008000",.refs=1,
 		.phandle=41,.cells=1,.compatible=true,.status=&dt_fixture.disabled};
 	dt_fixture.foreign_node.refs=1;
 	dt_fixture.master_device=(struct device){.of_node=&dt_fixture.master,.refs=1};
@@ -95,15 +95,15 @@ int main(void)
 	finish(&owner,0,true);
 
 	/* Mutations: accept invalid scope/provider/OF state, or take refs before validation. */
-	for (unsigned int invalid=0;invalid<21;invalid++) {
+	for (unsigned int invalid=0;invalid<23;invalid++) {
 		setup(&owner,&request); int expected=-ENODEV;
 		switch(invalid) {
 		case 0: request.bridge=NULL; expected=-EINVAL; break;
 		case 1: request.provider=NULL; expected=-EINVAL; break;
 		case 2: dt_fixture.bridge.bus=&dt_fixture; expected=-EBUSY; break;
 		case 3: dt_fixture.machine=false; break;
-		case 4: dt_fixture.master.full_name="/soc/other"; break;
-		case 5: dt_fixture.provider.full_name="/soc/iommu@603008000"; break;
+		case 4: dt_fixture.master_path_result=2; break;
+		case 5: dt_fixture.provider_path_result=2; break;
 		case 6: dt_fixture.provider.compatible=false; break;
 		case 7: dt_fixture.provider_device.name="foreign"; break;
 		case 8: dt_fixture.driver.name="foreign"; break;
@@ -118,7 +118,9 @@ int main(void)
 		case 17: dt_fixture.master.iommus=&dt_fixture.foreign_map; expected=-EBUSY; break;
 		case 18: dt_fixture.lookup_foreign=true; expected=-EINVAL; break;
 		case 19: dt_fixture.provider_foreign=true; dt_fixture.foreign_device.registered=true; expected=-EBUSY; break;
-		default: dt_fixture.provider_device.dev.parent=NULL; break;
+		case 20: dt_fixture.provider_device.dev.parent=NULL; break;
+		case 21: dt_fixture.master_path_result=1; break;
+		default: dt_fixture.provider_path_result=1; break;
 		}
 		assert(n71_dart_host_prepare(&owner,&request)==expected && !owner.bridge && !dt_fixture.queue_calls);
 		assert(dt_fixture.master.refs==1 && dt_fixture.provider.refs==1 && dt_fixture.foreign_node.refs==1);

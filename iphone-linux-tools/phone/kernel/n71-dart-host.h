@@ -22,6 +22,15 @@ struct n71_dart_host_request {
 	struct platform_device *provider;
 };
 
+static bool n71_dart_host_node_at(struct device_node *node, const char *path)
+{
+	struct device_node *found = of_find_node_by_path(path);
+	bool matches = found && found == node;
+
+	of_node_put(found);
+	return matches;
+}
+
 static bool n71_dart_host_refs_valid(const struct n71_dart_host *owner)
 {
 	return owner->bridge->dev.parent == owner->master &&
@@ -51,8 +60,8 @@ static int n71_dart_host_prepare(struct n71_dart_host *owner,
 	master_node = master ? master->of_node : NULL;
 	provider_node = provider->dev.of_node;
 	if (!of_machine_is_compatible("apple,n71") || !master_node || !provider_node ||
-	    strcmp(of_node_full_name(master_node), "/soc/pcie@610000000") ||
-	    strcmp(of_node_full_name(provider_node), "/soc/iommu@602008000") ||
+	    !n71_dart_host_node_at(master_node, "/soc/pcie@610000000") ||
+	    !n71_dart_host_node_at(provider_node, "/soc/iommu@602008000") ||
 	    !of_device_is_compatible(provider_node, "apple,s8000-dart") ||
 	    provider->dev.parent != master || strcmp(provider->name, "n71-dart-cycle") ||
 	    !provider->dev.driver || strcmp(provider->dev.driver->name, "apple-dart") ||

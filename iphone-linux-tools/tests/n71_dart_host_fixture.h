@@ -42,6 +42,7 @@ static struct {
 	int queue_failure, status_apply_failure, map_apply_failure;
 	int status_revert_failure, map_revert_failure;
 	bool machine, lookup_foreign, provider_foreign, flag_race;
+	unsigned int master_path_result, provider_path_result;
 	void (*last_device_put)(struct device *);
 } dt_fixture;
 
@@ -50,7 +51,19 @@ static void of_node_put(struct device_node *node) { if (node) { assert(node->ref
 static struct device *get_device(struct device *dev) { assert(dev && dev->refs); dev->refs++; return dev; }
 static void put_device(struct device *dev) { assert(dev && dev->refs); if (!--dev->refs && dt_fixture.last_device_put) dt_fixture.last_device_put(dev); }
 static bool of_machine_is_compatible(const char *name) { assert(!strcmp(name,"apple,n71")); return dt_fixture.machine; }
-static const char *of_node_full_name(struct device_node *node) { return node->full_name; }
+static struct device_node *of_find_node_by_path(const char *path)
+{
+	bool master=!strcmp(path,"/soc/pcie@610000000");
+	assert(master || !strcmp(path,"/soc/iommu@602008000"));
+	unsigned int result=master ? dt_fixture.master_path_result : dt_fixture.provider_path_result;
+	if (result==1) return NULL;
+	struct device_node *expected=master ? &dt_fixture.master : &dt_fixture.provider;
+	if (result==2) {
+		dt_fixture.foreign_node.full_name=expected->full_name;
+		return of_node_get(&dt_fixture.foreign_node);
+	}
+	return of_node_get(expected);
+}
 static bool of_device_is_compatible(struct device_node *node, const char *name) { assert(!strcmp(name,"apple,s8000-dart")); return node->compatible; }
 static void *platform_get_drvdata(struct platform_device *dev) { return dev->data; }
 static struct device_node *of_find_node_by_phandle(u32 phandle)

@@ -11,8 +11,10 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
     ('board-scope', 'prepare', '!of_machine_is_compatible("apple,n71")', '(false && !of_machine_is_compatible("apple,n71"))'),
-    ('master-scope', 'prepare', 'strcmp(of_node_full_name(master_node), "/soc/pcie@610000000")', '(false && strcmp(of_node_full_name(master_node), "/soc/pcie@610000000"))'),
-    ('provider-scope', 'prepare', 'strcmp(of_node_full_name(provider_node), "/soc/iommu@602008000")', '(false && strcmp(of_node_full_name(provider_node), "/soc/iommu@602008000"))'),
+    ('master-scope', 'prepare', '!n71_dart_host_node_at(master_node, "/soc/pcie@610000000")', '(false && !n71_dart_host_node_at(master_node, "/soc/pcie@610000000"))'),
+    ('provider-scope', 'prepare', '!n71_dart_host_node_at(provider_node, "/soc/iommu@602008000")', '(false && !n71_dart_host_node_at(provider_node, "/soc/iommu@602008000"))'),
+    ('path-identity', 'node_at', 'found && found == node', '((void)node, found != NULL)'),
+    ('path-reference', 'node_at', 'of_node_put(found);', '(void)found;'),
     ('provider-driver', 'prepare', 'strcmp(provider->dev.driver->name, "apple-dart")', '(false && strcmp(provider->dev.driver->name, "apple-dart"))'),
     ('provider-data', 'prepare', '!platform_get_drvdata(provider)', '(false && !platform_get_drvdata(provider))'),
     ('iommu-cells', 'prepare', 'cells != 1', 'false'),
@@ -52,7 +54,7 @@ MUTATIONS = (
 
 
 def function_span(source, suffix):
-    match = re.search(r'static int n71_dart_host_' + suffix + r'\([^)]*\)\n\{', source)
+    match = re.search(r'static (?:int|bool) n71_dart_host_' + suffix + r'\([^)]*\)\n\{', source)
     if match is None:
         raise ValueError('Host lease function missing: ' + suffix)
     end, depth = match.end(), 1
@@ -92,7 +94,7 @@ class DartHostTests(unittest.TestCase):
                     p = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5, cwd=folder)
                     if before is None:
                         self.assertEqual(p.returncode, 0, p.stderr)
-                        self.assertIn('N71_DART_HOST_OK cases=49', p.stdout)
+                        self.assertIn('N71_DART_HOST_OK cases=51', p.stdout)
                         print(p.stdout.strip(), flush=True)
                     else:
                         self.assertEqual(p.returncode, -signal.SIGABRT, name + p.stderr)
