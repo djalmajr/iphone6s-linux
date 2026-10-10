@@ -281,5 +281,17 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** testes de contrato CLI/arquivos/seleção e Session reais, dependências SSH/kernel/identidade sintéticas onde necessário e handlers qualificados reutilizados. Provar local check sem output/SSH/USB, recusas antes de identidade/efeito, manifest/ABI/flags/paths/hashes, origem distinta/protegida, dispatch e erro/causa/env restaurados. Mutations reais com baseline verde e AssertionError; AST/lint Mac/ARM64, gates diretamente afetados. Rodar --check real sobre a candidata C4 no Mac com todos os gates de kernel/identidade, sem boot. Firmware/calibração/regdb/energia e prova física seguem depois; nenhum pedido ao operador nesta fase.
 
-- [ ] Integrar e qualificar os comandos explícitos e --check real.
+- [x] Integrar e qualificar os comandos explícitos e --check real.
 - [ ] Preparar firmware/calibração/regdb e energia antes da sessão física agrupada.
+
+**C5 qualificada em 637ba88:** 7 testes/20 mutações AssertionError por plataforma Mac/Ubuntu ARM64,381 inputs íntegros, AST/lint fatal. CLI/seletores/Session/load_source reais; identidade/kernel e respostas dos handlers sintéticos nos contratos. --check real no perfil C4 passou sem output/SSH/USB.377 inputs anteriores e69 C preservados. Firmware/energia e prova física pendentes.
+
+### C5a. Bundle isolado do CI — contrato fechado
+
+**Contexto:** push38072762066 de a1c4e40 falhou por ModuleNotFoundError n71_driver_runtime_build na cópia isolada. PR38072766411 e jobs Mac/Ubuntu excederam15 minutos. Erro de import não conta como kill.
+
+**Arquivo único:** tests/run_n71_diagnostic_payload_mutations.py. Acrescentar a DEPENDENCIES sete imports públicos transitivos existentes sob scripts/host: n71_driver_modules, n71_driver_runtime_build, n71_driver_runtime_compose, n71_driver_runtime_result, n71_driver_runtime_stage, n71_msi_allocation_result e n71_session_history. Preservar subject/mutações/timeouts/política AssertionError. Nenhum workflow, gate, runtime privado, firmware ou identidade muda.
+
+**Verificação:** gate diagnóstico completo Mac/VM ARM64 sobre mesmos inputs públicos, baseline verde e kills AssertionError; AST/lint fatal. Reutilizar C5 e C/builds intactos. Publicar uma vez na branch; não reiniciar CI durante observação.
+
+- [ ] Corrigir e qualificar bundle sem falha de import.

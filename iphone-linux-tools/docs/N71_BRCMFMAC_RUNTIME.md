@@ -6,6 +6,21 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## CLI explícita — fase C5
+
+`637ba88` acrescenta entrypoint/helper próprios. Profile fica selecionado somente durante a operação; ambiente/umask retornam ao estado anterior inclusive em erro. Profile/source/output ficam em pastas privadas diretamente sob runtime; efeitos exigem output novo.
+
+```bash
+python3 -B scripts/host/n71-runtime-session.py \
+  --profile runtime/n71-runtime-composed-profile-20261010/deployment.json \
+  --action acquire --check
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_cli.py -v
+```
+
+Acquire não recebe source; assign/start/observe/stop exigem `--source` da operação anterior no mesmo boot e `--output-dir` novo. Assign conserva host; start exige assignment saudável; observe/stop aceitam também origem pré-assignment C3. Nenhuma ação reinicia o telefone automaticamente. A sequência física aguarda firmware/energia; não executá-la agora.
+
+Qualificação:7 testes/20 mutações AssertionError por plataforma,381 inputs, AST/lint fatal. CLI/Session/seletores reais; handlers/identidade/kernel sintéticos nos contratos. Journal/load_source reais preservam origem e recusam hash alterado. Handlers anteriores reutilizados com377 inputs e69 C iguais. --check real no Mac validou kernel/identidades/sete módulos, manteve13 arquivos privados intactos e não criou output/SSH/USB. Logs privados em `runtime/n71-runtime-cli-final-20261010/`; [evidência](evidence/n71-runtime-cli-qualified.json). Não há typechecker Python. Firmware/regdb/calibração, IRQ/DMA, associação e bateria/carga ainda sem prova física.
+
 ## Composição privada runtime/WCC — fase C4
 
 Em `c5de5df`, o compositor aceita `--pcie-driver-runtime` e `--wcc-dir`, exigindo explicitamente ASPM off, held/resource/IOMMU power2 e REG_ON antes de ler identidades. O helper seleciona somente os cinco WCC de C1 e verifica proteção privada, arquivos regulares sem links, bytes/SHA e ELF relocatable64/AArch64/vermagic único. O caller e REG_ON são verificados pelos registros C1; nenhum vendor alternativo é copiado.

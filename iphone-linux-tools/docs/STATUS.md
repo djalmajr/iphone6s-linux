@@ -1,12 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — perfil runtime/WCC completo qualificado; CLI e firmware/energia pendentes
+## Checkpoint atual — CLI runtime qualificada; firmware/energia pendentes
 
-Em `c5de5df`/`64f49ad`, a composição opt-in valida caller/REG_ON/cinco WCC e gera um perfil privado de 13 arquivos, sem autoload. **30 testes/39 mutações por plataforma Mac/Ubuntu ARM64**, 377 inputs íntegros, AST/lint fatal; novo gate 7/15. Composição de produção no Mac passou todas as validações reais; sete módulos/1.371.040 bytes, payload idêntico ao perfil anterior, initramfs/SSH/inputs/ambiente preservados. [Reprodução](N71_BRCMFMAC_RUNTIME.md#composição-privada-runtimewcc--fase-c4), [evidência](evidence/n71-runtime-composition-qualified.json). Os 69 inputs C e os builds/gates 575/455 permanecem preservados.
+Em `637ba88`, a CLI separada controla acquire/assign/start/observe/stop e `--check` local. **7 testes/20 mutações AssertionError por plataforma Mac/Ubuntu ARM64**,381 inputs íntegros, AST/lint fatal. --check real no perfil C4 validou kernel/identidades/sete módulos sem output/SSH/USB.377 inputs anteriores e69 C iguais. [Reprodução](N71_BRCMFMAC_RUNTIME.md#cli-explícita--fase-c5), [evidência](evidence/n71-runtime-cli-qualified.json). Respostas dos handlers são sintéticas neste novo gate; handlers reais anteriores reutilizados.
 
-Sessão/staging e observe/stop pré-assignment continuam qualificados. Próximo: CLI explícita para aquisição→assignment→start/observe/stop; depois firmware/calibração/regdb e energia antes da sessão física agrupada. Wi-Fi/carga, goal e issues40/9/2 permanecem pendentes. Nenhuma ação do operador necessária agora; não perguntar pela tela de bloqueio após retorno ao iOS.
+Próximo: firmware/calibração/regdb e energia antes da sessão física agrupada. Wi-Fi/carga, goal e issues40/9/2 continuam pendentes. Não solicitar confirmações rotineiras de tela, cabo, console ou temperatura.
 
-CI `372c175`: [PR 38070309737](https://github.com/djalmajr/iphone6s-linux/actions/runs/38070309737) aprovou Ubuntu/Windows e cancelou Mac; [push 38070305456](https://github.com/djalmajr/iphone6s-linux/actions/runs/38070305456) aprovou Windows e cancelou Mac/Ubuntu. As três anotações oficiais confirmam prazo máximo de 15 minutos. A publicação seguinte será feita após essa confirmação de runs terminais. #41 permanece aberta, sem rerun, aumento de prazo ou redução de cobertura.
+CI `a1c4e40`: [PR38072766411](https://github.com/djalmajr/iphone6s-linux/actions/runs/38072766411) cancelado por prazo15min em Ubuntu/Mac; Windows aprovado. [Push38072762066](https://github.com/djalmajr/iphone6s-linux/actions/runs/38072762066) aprovou Windows, cancelou Mac pelo prazo e falhou Ubuntu por dependência ausente no bundle diagnóstico. #41 aberta; C5a corrige os imports. Sem rerun, aumento de prazo ou redução de cobertura.
 
 ## Histórico — coordenador no mesmo boot qualificado
 

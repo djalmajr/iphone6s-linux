@@ -267,4 +267,13 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Alternativas:** ampliar implicitamente a CLI antiga mistura lifetimes; um comando que faça acquire/assign/start automaticamente dificulta distinguir o ponto da falha; chamar SSH avulso perde journal/recuperação.
 - **Reverter:** baixo antes da sessão física; entrypoint/helper novos e nenhum default ou kernel modificado.
 - **Onde:** C5 no plano host; novo runtime-session, cli-helper e testes. Firmware/calibração/regdb e energia seguintes.
-- **Status:** contrato fechado, na fila; goal e provas físicas continuam pendentes.
+- **Status:** aplicada em637ba88;7/20 por plataforma e --check real no Mac. Firmware/energia e prova física pendentes.
+
+## D30. Dependências transitivas no bundle do CI
+
+- **Decisão:** incluir sete imports públicos no mutador diagnóstico; repetir somente o gate afetado Mac/ARM64.
+- **Por quê:** a cópia incompleta falhou antes de exercitar a mutação.
+- **Alternativas:** rerun sem código repete o erro; copiar runtime privado amplia escopo e expõe dados.
+- **Reverter:** baixo; somente a lista pública da cópia descartável.
+- **Onde:** C5a no plano host; tests/run_n71_diagnostic_payload_mutations.py; issue41 existente.
+- **Status:** em curso, nenhuma intervenção no aparelho necessária.
