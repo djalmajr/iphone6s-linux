@@ -89,3 +89,21 @@
 - **Reverter:** baixo; ações explícitas e getter separado, sem perfil selecionado ou módulo carregado no telefone. Kernel e candidata física anterior intactos.
 - **Onde:** [plano](n71-msi-caller.md), [reprodução](../../docs/N71_IRQ_IOMMU.md#ações-msi-e-cleanup-no-diagnóstico-completo), [evidência](../../docs/evidence/n71-msi-allocation-caller-qualified.json), issue40.
 - **Status:** caller/cleanup e diagnóstico ARM64 qualificados; collector/journal/seleção/perfil, driver/DMA/firmware e energia seguem em curso. Nenhuma ação física do operador necessária agora.
+
+## D11. Coletar estado MSI sem emitir nova action
+
+- **Decisão:** getter opcional em módulos anteriores, parser canônico e comparação de ownership/presença com caller/checkpoint. O modo IOMMU desligado continua sem coleta. A exigência do getter no novo perfil e o journal de actions entram na integração seguinte.
+- **Por quê:** permite conservar e verificar o estado real na continuidade sem antecipar seleção de artefato, alocação ou prova de IRQ/rádio. O histórico de associação anterior continua separado.
+- **Alternativas:** tornar o getter obrigatório agora quebra módulos anteriores; inferir sucesso a partir de campos parciais gera prova incorreta; emitir hold automaticamente mistura coleta com uma mudança de hardware ainda sem journal.
+- **Reverter:** baixo; helper passivo e chamadas locais, nenhum perfil/boot alterado.
+- **Onde:** [plano](n71-msi-collector.md), [evidência](../../docs/evidence/n71-msi-passive-collector-qualified.json), issue40.
+- **Status:** coleta/snapshot/resume qualificados no Mac/ARM64; intent/proof/seleção/perfil e driver/energia seguem em curso.
+
+## D12. Corrigir a fixture isolada sem retirar sua cobertura específica
+
+- **Decisão:** conservar cleanup DART isolado, com tipos MSI compartilhados e predicado real extraído; release/report são dependências proibidas no caminho que não aloca. Isolar dumpability somente no executável Linux.
+- **Por quê:** CI6c7ef24 mostrou um modelo de host antigo incompatível com o cleanup real. O caso de retorno zero com DART ainda owned agrega cobertura específica e precisa continuar.
+- **Alternativas:** retirar o gate perde esse cenário; devolver sempre false no predicado MSI mascara o estado; modificar o crash handler global afetaria outros processos.
+- **Reverter:** baixo; alteração de fixture/runner, sem produção ou artefatos físicos.
+- **Onde:** [plano](n71-dart-cleanup-msi-fixture.md), [evidência](../../docs/evidence/n71-msi-passive-collector-qualified.json), issue40.
+- **Status:**31 cenários/17 mutações C e AST/lint fatal aprovados em Mac/Ubuntu ARM64. Falha original preservada; CI do head corrigido em acompanhamento.

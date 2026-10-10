@@ -1,12 +1,16 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — ações MSI e cleanup integrados; driver e rádio pendentes
+## Checkpoint atual — coleta MSI integrada; driver e rádio pendentes
+
+Em57e8fa1, o coletor lê o getter de alocação quando disponível e compara seu estado com o caller e o checkpoint antes de continuar. Formato/inteiros/ranges/presença são verificados; módulos anteriores e modo IOMMU desligado preservam seu comportamento. Mac/Ubuntu ARM64:7 testes/16 mutações novos e21 testes/53 mutações do gate de associação existente, todos aprovados. Shell de leitura real, AST/lint fatal passaram; nenhum typechecker Python configurado. Intent/proof de actions, seleção/perfil e driver/energia continuam pendentes. [Plano](../.agents/plans/n71-msi-collector.md), [reprodução](N71_IRQ_IOMMU.md#coleta-passiva-e-compatibilidade-da-fixture-dart), [evidência](evidence/n71-msi-passive-collector-qualified.json).
+
+CI6c7ef24 falhou nos jobs Mac/Ubuntu: quatro subcasos da fixture isolada de cleanup DART não compilaram porque seu modelo ainda não incluía MSI. Windows DNS aprovou no evento PR. Corrigido em21bd91c com tipos reais, predicado extraído e dependências MSI proibidas no caminho sem alocação; nenhum cenário ou mutação removido. Mac/ARM64:dois métodos/31 cenários/17 mutações C aprovados, AST/lint fatal. A CI do novo head será acompanhada; não declarar a falha anterior como verde. [Correção](../.agents/plans/n71-dart-cleanup-msi-fixture.md).
 
 Em f79c19b, o módulo expõe `msi-hold`/`msi-release` e o getter separado `msi_allocation`. Alocação exige sessão e providers próprios; release admite falha anterior. Cleanup libera MSI antes de consumers/DART e conserva bus/reset/power/módulo quando ainda há ownership. Os defaults não alocam IRQ e os getters anteriores permanecem idênticos. Mac/Ubuntu ARM64:216 cenários/177 mutações do caller, incluindo31 cenários/48 mutações novos. Host ARM64:seis métodos/183 cenários/147 mutações; gate Mac do host reutilizado com inputs intactos. [Reprodução](N71_IRQ_IOMMU.md#ações-msi-e-cleanup-no-diagnóstico-completo), [evidência](evidence/n71-msi-allocation-caller-qualified.json).
 
 Diagnóstico completo ARM64, sem probe:127.552 bytes/SHA893c1f80,127 imports disponíveis, ELF/vermagic/hash/bytes conferidos também no Mac.59 inputs e fonte/config/Image/exports preservados. AST/lint fatal passaram nas duas plataformas; nenhum typechecker Python configurado. A primeira compilação da fixture host recusou dois headers ausentes do staging; nenhum teste foi aceito nesse erro. Após completar o staging, somente os gates restantes foram retomados. Nenhum pacote, banco ou configuração global do Mac alterado; desempenho físico não medido.
 
-CI99e5c5f concluiu os dois eventos com sucesso: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38027200635) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38027197175). A publicação atual terá head/CI próprios. Collector/journal/seleção/perfil e contrato de driver/DMA/firmware/energia continuam em curso nas issues40/9/2. Nenhum DFU, reboot ou módulo carregado nesta etapa; nenhuma ação do operador necessária agora.
+CI99e5c5f concluiu os dois eventos com sucesso: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38027200635) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38027197175). A falha de CI6c7ef24 e sua correção estão descritas acima. Journal de actions/seleção/perfil e contrato de driver/DMA/firmware/energia continuam em curso nas issues40/9/2. Nenhum DFU, reboot ou módulo carregado nesta etapa; nenhuma ação do operador necessária agora.
 
 ## Histórico — armazenamento e adaptador anteriores
 

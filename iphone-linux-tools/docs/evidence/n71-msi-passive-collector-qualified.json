@@ -1,0 +1,112 @@
+{
+  "format": 1,
+  "proof_scope": "Passive optional MSI allocation getter, snapshot/continuation checks and compatibility repair of the isolated DART cleanup fixture. No new MSI action, profile selection, phone operation or physical proof.",
+  "public_inputs": {
+    "scripts/host/n71_msi_allocation_result.py": {
+      "sha256": "1a43990d1914d9d1c7876d9fd145720d88dd554fa04e4e52c86622f41af3e102",
+      "bytes": 2737
+    },
+    "scripts/host/n71_iommu_result.py": {
+      "sha256": "d59d581b2d88b8cf095ecffeefe0ff919ff8645bd9ba8dcf072fa21dc547d3be",
+      "bytes": 17350
+    },
+    "tests/test_n71_msi_allocation_result.py": {
+      "sha256": "373c76a0ba5b25284d7566bf181bd4224704f3aa0fc9c2ebfa79ed6442f05ea9",
+      "bytes": 10153
+    },
+    "tests/n71_dart_cleanup.c": {
+      "sha256": "ac51905c156212772abd4b493d5f526b5f29e69bf53f0af3e360da5fc1d74290",
+      "bytes": 4735
+    },
+    "tests/test_n71_dart_provider.py": {
+      "sha256": "b97dd7a787695d23aea5e1301b9ccf28f454c59f89d924cf0d850bdff00cb2fd",
+      "bytes": 7155
+    }
+  },
+  "tests": {
+    "mac": {
+      "getter_tests": 7,
+      "getter_assertion_mutations": 16,
+      "association_tests": 21,
+      "association_assertion_mutations": 53,
+      "dart_methods": 2,
+      "dart_scenarios": 31,
+      "dart_compiled_assertion_mutations": 17,
+      "all_exit": 0
+    },
+    "ubuntu_arm64": {
+      "getter_tests": 7,
+      "getter_assertion_mutations": 16,
+      "association_tests": 21,
+      "association_assertion_mutations": 53,
+      "dart_methods": 2,
+      "dart_scenarios": 31,
+      "dart_compiled_assertion_mutations": 17,
+      "all_exit": 0
+    }
+  },
+  "checks": {
+    "ast_mac_arm64": true,
+    "fatal_lint_mac_arm64": true,
+    "python_type_checker": "Not configured",
+    "new_getter_and_coordinator_mutants": "Python source parsed/compiled; all produced unittest assertion failures without import/runtime errors.",
+    "dart_mutants": "C compiled exit0, execution SIGABRT and assertion text."
+  },
+  "contract": {
+    "getter_optional_for_legacy_modules": true,
+    "getter_reads_only": true,
+    "selection_or_actions_added": false,
+    "snapshot_links_host_held_and_errors_to_caller": true,
+    "resume_requires_unchanged_state_and_presence": true,
+    "association_getter_shape_unchanged": true,
+    "removed_host_ownership_zero": true,
+    "error_history_preserved": true
+  },
+  "ci_failure_repaired": {
+    "head": "6c7ef24fc0b0597521ce1ce541e9c56a04003a72",
+    "pull_request_run": 38029522581,
+    "push_run": 38029519927,
+    "conclusion": "failure",
+    "observed_pr_jobs": {
+      "source (macos-15)": "failure",
+      "source (ubuntu-24.04)": "failure",
+      "windows-dns": "success"
+    },
+    "cause": "Four DART cleanup fixture variants could not compile because the extracted real cleanup referenced MSI dependencies/fields absent from the isolated host fixture.",
+    "fix_commit": "21bd91c",
+    "scenarios_or_mutations_removed": false,
+    "production_changed_by_fixture_fix": false
+  },
+  "reused_gates": [
+    "Association 21 tests/53 mutations remained valid after only the new getter test was expanded from12 to16 mutations.",
+    "Full caller216/177, host183/147, configuration91/27 and allocation55/29 retained with relevant inputs unchanged."
+  ],
+  "preserved_module": {
+    "sha256": "893c1f80d56bee20cd41b39bcb1641d6fa31c6690706981d20bcd9fdd3772348",
+    "bytes": 127552,
+    "imports": 127,
+    "loaded_on_phone": false
+  },
+  "environment": {
+    "dedicated_ubuntu_arm64_vm": true,
+    "public_source_snapshot_inputs": 563,
+    "staging_manifest_sha256": "6602bf774b15893de704d3e0ad85302a13018f1c0bf5cd88c91a7aea0a9d5b6e",
+    "new_packages_installed": false,
+    "global_mac_configuration_changed": false,
+    "database_changed": false,
+    "physical_performance_measured": false
+  },
+  "physical": {
+    "dfu_or_reboot_requested": false,
+    "irq_delivery_verified": false,
+    "dma_translation_verified": false,
+    "wifi_verified": false,
+    "battery_or_charging_verified": false
+  },
+  "pending": [
+    "Causal intent/proof journal and result records for active MSI allocation/release",
+    "Required getter and artifact selection/profile for the new module",
+    "Driver permissions, DMA, firmware completion/quiesce and energy",
+    "New head CI and grouped physical proof"
+  ]
+}

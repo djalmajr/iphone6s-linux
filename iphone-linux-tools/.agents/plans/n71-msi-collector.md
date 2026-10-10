@@ -20,4 +20,6 @@ Parser opcional do marcador `N71_PCIE_MSI_ALLOCATION `:12 campos exatos/ordenado
 
 ## Verificação e limites
 
+Implementação em57e8fa1:Mac/Ubuntu ARM64,7 testes/16 mutações de getter/coordenador,21/53 da associação, shell real/AST/lint fatal aprovados. Ampliamos somente o novo teste de12 para16 mutações e retomamos esse gate/lint; associação permaneceu válida. CI6c7ef24 falhou por fixture DART desatualizada, corrigida em21bd91c sem remover cobertura:31 cenários/17 mutações C, dois métodos, nas duas plataformas. [Reprodução e evidência](../../docs/evidence/n71-msi-passive-collector-qualified.json). Publicação/CI atuais continuam em acompanhamento; intent/proof/actions e seleção/perfil não foram acrescentados nesta fatia.
+
 `python3 -B -m unittest discover -s iphone-linux-tools/tests -p test_n71_msi_allocation_result.py -v` e gate `test_n71_iommu_result.py` no Mac/Ubuntu ARM64; mutações reais de fonte precisam de compilação Python válida e falha por asserção. AST/lint fatal, nenhum typechecker Python configurado. Não repetir gates C/build com inputs intactos. Publicar somente fontes/evidência sanitizados, sem raw logs/artefatos privados. Esta coleta não exige novo boot; seleção e execução física seguem pendentes.
