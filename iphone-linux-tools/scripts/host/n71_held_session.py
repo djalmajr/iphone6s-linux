@@ -67,9 +67,9 @@ def snapshot_command(session):
         command += 'printf "N71_HELD_PARAM ' + name + '="; cat ' + PCIE + name + '; '
     command += n71_resource_stage.getter(session)
     command += n71_iommu_result.getter(session)
+    command += 'else echo N71_HELD_PCIE_PRESENT=0; fi; '
     command += n71_driver_module_stage.getter(session)
-    command += ('else echo N71_HELD_PCIE_PRESENT=0; fi; '
-                'if [ -d /sys/module/n71_wlan_power_diagnostic ]; then echo N71_HELD_REG_PRESENT=1; '
+    command += ('if [ -d /sys/module/n71_wlan_power_diagnostic ]; then echo N71_HELD_REG_PRESENT=1; '
                 'cat ' + REG + 'state; cat ' + REG + 'control; '
                 'else echo N71_HELD_REG_PRESENT=0; fi; '
                 'test -d /sys/bus/pci/devices; '
@@ -222,12 +222,19 @@ def load_source(session, root, directory, selected_identity):
         require(hashlib.sha256(path.read_bytes()).hexdigest() == expected, 'Held cleanup proof integrity differs')
         expected_history = (n71_session_history.kernel_lines(text) if stage in driver_proofs + module_proofs else
                             [line for line in n71_session_history.kernel_lines(text) if line not in baseline.known])
+        if n71_driver_module_stage.selected(session) is not None and stage in PROOFS:
+            require(one(proof, 'N71_BOOT_ID ', r'^N71_BOOT_ID ([0-9a-f-]{36})$') == result['boot_id'],
+                    'Runtime held proof belongs to another boot')
+            expected_history = n71_session_history.kernel_lines(text)
         require(n71_session_history.kernel_lines(proof) == expected_history[:len(n71_session_history.kernel_lines(proof))],
                 'Held cleanup history differs')
         verified[stage] = proof
     n71_resource_stage.load_source(session, data, verified)
     n71_driver_runtime_stage.load_source(session, data, verified)
     n71_driver_module_stage.load_source(session, data, verified)
+    if n71_driver_module_stage.selected(session) is not None:
+        session.module_directory = data['module_directory']
+        session.result = dict(result)
     if 'pcie-cleanup' in verified:
         iommu_proof = n71_iommu_result.cleanup(session, verified['pcie-cleanup'])
         if iommu_proof is not None:
@@ -254,7 +261,35 @@ def load_source(session, root, directory, selected_identity):
     session.history = baseline
     for name in ('reg_attempted', 'activation_attempted', 'pcie_attempted'):
         setattr(session, name, data[name])
+    if n71_driver_module_stage.selected(session) is not None and 'pcie-cleanup' in verified:
+        import n71_driver_runtime_lifetime
+        n71_driver_runtime_lifetime.removed(session, text, {
+            'baseline': data['baseline'], 'checkpoint': text, 'proofs': verified})
     return data, text, verified
+
+
+def effect_boot(session):
+    if n71_driver_module_stage.selected(session) is None:
+        return ''
+    expected = session.result.get('boot_id')
+    require(isinstance(expected, str) and re.fullmatch(n71_driver_runtime_stage.BOOT, expected),
+            'Runtime effect requires its canonical boot')
+    return ('printf "N71_BOOT_ID "; cat /proc/sys/kernel/random/boot_id; '
+            'test "$(cat /proc/sys/kernel/random/boot_id)" = "' + expected + '"; ')
+
+
+def proof_output(session, stage, process):
+    if n71_driver_module_stage.selected(session) is None:
+        return process.stdout
+    require(process.returncode == 0, 'Runtime held effect did not complete')
+    require(isinstance(stage, str) and re.fullmatch(r'[a-z][a-z0-9-]*', stage), 'Runtime capture stage differs')
+    path = session.output / (stage + '-private.log')
+    device_profile.protected(path)
+    require(path.stat().st_size <= 2 * 1024 * 1024, 'Runtime held capture exceeds budget')
+    raw = path.read_text()
+    require(one(raw, 'N71_BOOT_ID ', r'^N71_BOOT_ID ([0-9a-f-]{36})$') == session.result.get('boot_id'),
+            'Runtime held capture belongs to another boot')
+    return raw
 
 
 def release(session, journal, presence, live_text):
@@ -263,9 +298,9 @@ def release(session, journal, presence, live_text):
         require(pcie == 1, 'PCI module absent without verified cleanup/unload')
         fresh = session.history.fresh(live_text)
         if n71_scan_target_result.is_clean(n71_scan_target_result.live_status(fresh)):
-            proof = fresh
+            proof = live_text if n71_driver_module_stage.selected(session) is not None else fresh
         else:
-            process = session.capture('held-cleanup', 'set -e; '
+            process = session.capture('held-cleanup', 'set -e; ' + effect_boot(session) +
                                       'test "$(cat /proc/sys/kernel/random/boot_id)" = "' + session.result['boot_id'] + '"; '
                                       'if printf "cleanup\n" > ' + PCIE + 'action; then cleanup_exit=0; else cleanup_exit=$?; fi; '
                                       'printf "N71_PCIE_HELD "; cat ' + PCIE + 'held; '
@@ -273,7 +308,7 @@ def release(session, journal, presence, live_text):
                                       + n71_resource_stage.getter(session) + n71_iommu_result.getter(session)
                                       + 'dmesg; exit "$cleanup_exit"')
             require(process.returncode == 0, 'Held cleanup pending; retain REG_ON and module')
-            proof = process.stdout
+            proof = proof_output(session, 'held-cleanup', process)
         pre_scan = n71_iommu_result.pre_scan_cleanup(session, proof)
         if pre_scan is not None:
             cleanup = pre_scan
@@ -290,29 +325,32 @@ def release(session, journal, presence, live_text):
         process = session.capture('held-pci-empty', 'set -e; test -d /sys/bus/pci/devices; '
                                   'test -z "$(ls /sys/bus/pci/devices)"; echo N71_PCI_CLEANUP_EMPTY')
         require(process.returncode == 0, 'PCI devices remain; retain owners')
-        process = session.capture('held-pcie-unload', 'set -e; rmmod n71_pcie_diagnostic; '
+        process = session.capture('held-pcie-unload', 'set -e; ' + effect_boot(session) + 'rmmod n71_pcie_diagnostic; '
                                   'test ! -d /sys/module/n71_pcie_diagnostic; echo N71_PCIE_UNLOADED; dmesg')
-        require(process.returncode == 0 and process.stdout.splitlines().count('N71_PCIE_UNLOADED') == 1,
+        proof = proof_output(session, 'held-pcie-unload', process)
+        require(process.returncode == 0 and proof.splitlines().count('N71_PCIE_UNLOADED') == 1,
                 'Held PCI unload not proved')
-        journal.proof('pcie-unload', process.stdout)
+        journal.proof('pcie-unload', proof)
         pcie, empty = 0, 1
     require(pcie == 0 and empty == 1, 'PCI owners remain; retain REG_ON')
     if session.reg_attempted and 'reg-unload' not in journal.proofs:
         require(reg == 1, 'REG_ON module absent without verified restoration/unload')
-        process = session.capture('held-restore', 'set -e; '
+        process = session.capture('held-restore', 'set -e; ' + effect_boot(session) +
                                   'test "$(cat /proc/sys/kernel/random/boot_id)" = "' + session.result['boot_id'] + '"; '
                                   + ('printf "0\n" > ' + REG + 'power; '
                                      if session.activation_attempted and 'restore' not in journal.proofs else '')
                                   + 'cat ' + REG + 'state; cat ' + REG + 'control; dmesg')
-        require(process.returncode == 0 and 'bound=1 active=0 restore_pending=0' in process.stdout
-                and 'N71_REG_ON_CONTROL_READBACK value=80' in process.stdout, 'Held REG_ON restore pending')
+        proof = proof_output(session, 'held-restore', process)
+        require(process.returncode == 0 and 'bound=1 active=0 restore_pending=0' in proof
+                and 'N71_REG_ON_CONTROL_READBACK value=80' in proof, 'Held REG_ON restore pending')
         if 'restore' not in journal.proofs:
-            journal.proof('restore', process.stdout)
-        process = session.capture('held-reg-unload', 'set -e; rmmod n71_wlan_power_diagnostic; '
+            journal.proof('restore', proof)
+        process = session.capture('held-reg-unload', 'set -e; ' + effect_boot(session) + 'rmmod n71_wlan_power_diagnostic; '
                                   'test ! -d /sys/module/n71_wlan_power_diagnostic; echo N71_REG_UNLOADED; dmesg')
-        require(process.returncode == 0 and process.stdout.splitlines().count('N71_REG_UNLOADED') == 1
-                and 'N71_REG_ON_REMOVE error=0 restore_pending=0' in process.stdout, 'Held REG_ON unload not proved')
-        journal.proof('reg-unload', process.stdout)
+        proof = proof_output(session, 'held-reg-unload', process)
+        require(process.returncode == 0 and proof.splitlines().count('N71_REG_UNLOADED') == 1
+                and 'N71_REG_ON_REMOVE error=0 restore_pending=0' in proof, 'Held REG_ON unload not proved')
+        journal.proof('reg-unload', proof)
         reg = 0
     require(reg == 0, 'REG_ON owner remains')
     session.result.update(held_verified=False, cleanup_verified=True, cleanup_errors=[])
