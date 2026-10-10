@@ -638,3 +638,22 @@ print(len(pairs), sum(len(data) for _, data in pairs))
 A seleção real produziu3 arquivos/633.573 bytes. O gate passou5 testes e10 mutações reais por plataforma Mac/Ubuntu ARM64, com cinco inputs SHA idênticos e AST/lint fatal. A fixture muda apenas trust anchors para dados sintéticos isolados; parsing, seleção, hashes e filesystem permanecem reais. Falha inicial de import e KeyError de harness foram corrigidos e descartados como kills. Não há typechecker Python configurado. [Prova](evidence/n71-firmware-selection-qualified.json).
 
 Staging por SSH, vínculo ao mesmo boot, recuperação de transferência e uso pelo loader continuam pendentes. Kernel, módulos, imagem, initramfs, defaults e configuração global do Mac ficaram intactos. Os gates anteriores com inputs inalterados foram reutilizados. Nenhum banco/dependência novo e nenhum desempenho físico medido. O objetivo continua ativo até Wi-Fi e alimentação/telemetria serem comprovados fisicamente.
+
+
+### Staging e caminho temporário do firmware — C6c2 A
+
+Em daad6ba, `n71_driver_firmware_session.py` oferece configure/stage/verify/bind/restore para uma sessão power2 opt-in. Os três arquivos ficam em `module_directory/firmware` no rootfs RAM. O journal existente salva boot, diretório, manifesto e intenção antes de cada write. Transfers usam diretórios exclusivos700, arquivos600/noclobber, leitura de SHA/tamanho/modo/UID/links e conteúdo exato; uma transferência interrompida não é reemitida. Os dados ficam em RAM junto aos módulos para inspeção.
+
+O [loader upstream](https://docs.kernel.org/driver-api/firmware/fw_search_path.html) permite selecionar um caminho após o boot. A fonte fixada7.2 define array256 e parâmetro0644 em firmware_loader/main.c (SHAfef0d9e7dc4b650beab1a70211a229f8fc1be528643919e92b267da702460f48). A fonte params.c (SHA51c0eb1dc55d1fcb6b32f6cd66a2ff93d2b516864e6b28a4e4bb583169b8771f) copia a string até NUL e adiciona newline na leitura. Bind escreve o diretório sem newline; restore escreve um byte NUL e confere leitura exatamente0a. Um write de zero bytes não serve para limpar a string.
+
+Antes de bind/restore, a identidade de boot/release e o estado da stack são conferidos. Path vazio inicial é obrigatório; path estrangeiro ou módulo vivo bloqueiam restore. Replies perdidas após bind/restore podem ser reconciliadas por leitura do valor próprio ou vazio, sem repetir write concluído. Source, arquivos e imagem mantêm suas identidades. O modo legado não realiza efeito de firmware.
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_firmware_session.py -v
+```
+
+**9 testes/10 mutações AssertionError por plataforma Mac/ARM64**,58 inputs idênticos,55 AST/lint fatal. Journal e captura integral reservada são reais; comandos executam Bash contra filesystem privado. SSH, UID0 e getter de sysfs são fronteiras modeladas. Além disso, o sysfs real do kernel6.8 da VM foi testado com valor original vazio e restaurado em finally: bind sem newline e NUL confirmados. Isso sustenta a semântica da API e não comprova o loader no iPhone7.2. [Evidência](evidence/n71-firmware-session-qualified.json).
+
+O primeiro harness confundia /proc/sys na tradução e, no ARM64, lia stdin mesmo para comandos sem dados. As falhas foram corrigidas; FileExistsError de mutant e timeouts não contaram como kills. Logs permanecem privados. Não há typechecker Python, dependência nova, banco ou configuração global do Mac. Kernel/payload/initramfs/módulos intactos; gates inalterados reutilizados.
+
+A biblioteca ainda precisa ser ligada ao CLI/Session/coordenador (B/C). Prova de requests/regdb/rádio, associação OF/calibração e energia continua pendente. O goal e as issues9/2/40 permanecem abertos; nenhum DFU ou outra intervenção foi solicitado nesta fase.

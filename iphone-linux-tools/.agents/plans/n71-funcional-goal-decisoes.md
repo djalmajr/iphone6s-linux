@@ -321,3 +321,8 @@ Seleção implementada em `b14a04b` e qualificada em Mac/ARM64 com5 testes/10 mu
 - **Reverter:** baixo antes do hardware; modo opt-in separado, kernel e defaults intactos.
 - **Onde:** C6c2 no plano host; novo módulo/tests, depois integração em fases de no máximo5 arquivos; issue9.
 - **Status:** em curso; só pesquisa/qualificação local nesta rodada, nenhum pedido ao operador.
+
+
+### D34 — resultado A e escopo B
+
+Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA idênticos; Session.capture/journal/shell/filesystem reais e SSH/sysfs/UID0 modelados. Parâmetro real da VM6.8 aceitou bind sem newline e restauração NUL com original vazio restaurado. B terá quatro arquivos exatos, incluindo gate de integração. O bundle do composer não depende destes imports; lista preservada após inspeção. Nenhuma integração/rádio/iPhone executados ainda. [Evidência](../../docs/evidence/n71-firmware-session-qualified.json).

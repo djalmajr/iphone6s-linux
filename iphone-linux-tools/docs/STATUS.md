@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — firmware e regdb selecionados de fontes fixadas
+## Checkpoint atual — staging e caminho do firmware qualificados isoladamente
+
+Em daad6ba, biblioteca prepara dados por sessão, conserva intent no journal, confere hashes e restaura o caminho do loader somente com stack vazia. **9 testes/10 mutações por plataforma Mac/ARM64**,58 inputs iguais, AST/lint fatal; sysfs real da VM6.8 confirmou bind sem newline e restauração NUL com original vazio restaurado. [Reprodução](N71_BRCMFMAC_RUNTIME.md#staging-e-caminho-temporário-do-firmware--c6c2-a), [evidência](evidence/n71-firmware-session-qualified.json).
+
+Integração em CLI/Session/coordenador e prova física continuam pendentes. Kernel/payload/initramfs/módulos/defaults intactos. Nenhuma ação necessária do operador; não solicitar confirmações rotineiras. Goal e issues9/2/40 continuam abertos. CI d9d2089 terminal: PR38081978533 aprovou Mac/Windows e cancelou Ubuntu; push38081975245 aprovou Windows e cancelou Mac/Ubuntu. #41 aberta; nenhum rerun ou mudança de prazo.
+
+## Histórico — firmware e regdb selecionados de fontes fixadas
 
 Em `b14a04b`, o seletor valida três arquivos privados contra a origem oficial e os hashes fixados, incluindo regdb com assinatura previamente conferida contra o certificado explícito do kernel. **5 testes/10 mutações AssertionError em cada plataforma Mac/Ubuntu ARM64**, cinco inputs idênticos, AST e lint fatal aprovados. O pacote real de633.573 bytes foi selecionado localmente sem executar firmware. [Reprodução](N71_BRCMFMAC_RUNTIME.md#seleção-privada-de-firmware-e-regdb--c6c1), [evidência](evidence/n71-firmware-selection-qualified.json).
 
