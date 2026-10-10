@@ -20,7 +20,15 @@ O parser agora admite somente a sequência negativa completa antes de publicaç�
 
 Mac/Ubuntu ARM64: OF51 cenários/40 mutações compiladas por asserção por plataforma; parser/journal19 testes/45 mutações por AssertionError por plataforma, incluindo modos positivos anteriores. Um mutant C inicialmente não compilou por parâmetro não usado, outro parser mutant era redundante, e um teste novo gerou KeyError sob mutação; nenhum foi contado como kill. Corrigidos os testes, os gates finais passaram com asserções e sem ERROR. AST/Flake8 fatal passaram; não há typechecker Python configurado.
 
-O módulo PCIe recompilado tem114.120 bytes/SHA256 `48df330a6ddf6da524ad47979df9b056a6ffa8b793002a03814e1885c6739dc9`, ELF64/AArch64/vermagic power2. Build W=1/Werror e modpost passaram com os123 imports no vmlinux.symvers explícito. O aviso genérico de Module.symvers agregado ausente permanece; não foi usado KBUILD_MODPOST_WARN. Fonte/patch/config/Image/exports preservados. O módulo é privado, ainda não foi selecionado pelo perfil/composer nem carregado no telefone. Próximo: qualificar a seleção da nova ABI e compor candidata separada, antes de um único teste físico agrupado. Nenhum novo DFU foi usado para essas correções.
+O módulo PCIe recompilado tem114.120 bytes/SHA256 `48df330a6ddf6da524ad47979df9b056a6ffa8b793002a03814e1885c6739dc9`, ELF64/AArch64/vermagic power2. Build W=1/Werror e modpost passaram com os123 imports no vmlinux.symvers explícito. O aviso genérico de Module.symvers agregado ausente permanece; não foi usado KBUILD_MODPOST_WARN. Fonte/patch/config/Image/exports preservados. O módulo é privado e não foi carregado no telefone. Nenhum novo DFU foi usado para essas correções.
+
+### Candidata OF corrigida — seleção e composição verificadas
+
+O registro do build qualificado agora seleciona SHA48df330a, conservando o record anterior para análise. Dos84 inputs anteriores, somente o header OF mudou; os gates PCI independentes mantêm seus inputs efetivos e o helper teve seu gate específico51/40. Os50 arquivos copiados na VM foram conferidos por SHA; o módulo importa group get/put/id e não importa os helpers de alias não exportados.
+
+Seleção/Image8 testes/24 mutações e perfil/composer8/21 passaram no Mac/Ubuntu ARM64. Composer real e collector `--check` passaram: oito arquivos700/600, deployment/payload/DTB/kernel/loader/bootargs iguais ao D20 anterior, assim como initramfs/chaves/identidades e REG_ON. Somente módulo PCIe e seu SHA na provenance mudaram. Candidata antiga e defaults preservados. [Prova da candidata](evidence/n71-of-scope-profile-qualified.json).
+
+A tentativa agrupada privada está preparada com o último snapshot manual validado,44 entradas. Reúne restore, associação, assign e inventário se a aquisição passar, cleanup, serviços e snapshot/sync/retorno; não repete GPIO115/114 já aprovado. Em cleanup incompleto conserva owners e bloqueia reboot. A CI completa nova e o boot físico desta candidata continuam pendentes. O telefone permanece no iOS para recarga; não há nova prova de rádio/IRQ/DMA ou alimentação Linux.
 
 ## Fontes fixadas e fatos observados offline
 
