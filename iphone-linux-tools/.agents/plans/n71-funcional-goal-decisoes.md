@@ -367,4 +367,13 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 - **Alternativas:** repetir o mesmo job não corrige o limite; remover testes enfraquece o gate; sharding pode reduzir duração futura, mas demanda uma mudança maior e qualificação do particionamento. Prazo45min permanece limitado e permite obter a primeira medição completa.
 - **Reverter:** baixo; uma linha no workflow.
 - **Onde:** `.github/workflows/ci.yml`, issue41.
-- **Status:** aplicada; aceite remoto do próximo head ainda pendente. Windows passou no run anterior; ambos os jobs source foram cancelados por timeout.
+- **Status:** aplicada e verificada: headbe960f1, PR38090497215/push38090494013, seis jobs terminaram success. A prova de timeout anterior permanece válida; não foi relançado/cancelado aquele run. Novos heads exigem seu próprio aceite remoto.
+
+## D39. Reter descriptors e default pinctrl para o ciclo do controlador
+
+- **Decisão:** integrar um owner específico de115/114 com referências, lookup, descriptors ASIS e handle default pinctrl. Exigir provider GPIO com bind attrs suprimidos e obter o regmap fresco sob device_lock por operação. Separar implementação do owner e integração do caller em fases verificadas.
+- **Por quê:** o módulo ASIS histórico libera tudo ao retornar; seu sucesso não sustenta o callback do controlador. A fonte fixada já bloqueia bind/unbind GPIO manual. O setter default preserva as words qualificadas, permitindo adquirir e conferir sem inventar restore bruto.
+- **Alternativas:** reusar sucesso histórico aceita pinos já liberados; guardar regmap emprestado deixa ponteiro inválido após remoção; manter device_lock entre SSHs viola lifetime de mutex; só gpiolib não representa seleção periférica. Pinctrl/GPIO podem compartilhar estados GPIO no core, portanto a prova não será apresentada como exclusão elétrica universal.
+- **Reverter:** baixo; módulo externo opt-in e headers, sem novo Image/DT/config ou mudança nos drivers preservados.
+- **Onde:** fase2 do plano I2C1; novo n71-i2c-pin-owner.h e action configure do caller; issue2.
+- **Status:** aplicada emd226603 (owner) e45a3aa5 (caller). Mac/ARM64:67cenários/13mutações do owner e66cenários/19mutações do caller. Build operacional48.240bytes/79imports, Image/config/exports preservados. Sem reset físico, sensor ou carga Linux comprovados; transporte/ABI e coleta agrupada continuam pendentes.

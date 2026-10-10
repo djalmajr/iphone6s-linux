@@ -2,7 +2,7 @@
 
 ## Estado
 
-Fase1 implementada em609dd39: aquisição de MMIO/clkref, baseline, reset de revisão2 e restauração verificada. O backend operacional de descriptors retidos ainda não está integrado. Não carregar o probe de compilação no telefone: ele retorna ENODEV no init. SN2400, gauge e carga Linux continuam sem prova física. [Plano](../.agents/plans/n71-i2c-controller.md), [D37/D38](../.agents/plans/n71-funcional-goal-decisoes.md#d37-inicializar-i2c1-por-polling-com-restauração-própria), [evidência](evidence/n71-i2c-controller-reset.json).
+Fase1 em609dd39 e fase2 emd226603/45a3aa5: MMIO/clkref, baseline, reset/restauração de revisão2 e owner operacional de GPIO/pinctrl integrados ao novo action configure. Ainda não foram executados no aparelho. Os probes de compilação retornam ENODEV no init; o módulo operacional é um artefato distinto, cujo init run1 apenas qualifica. SN2400, gauge e carga Linux continuam sem prova física. [Plano](../.agents/plans/n71-i2c-controller.md), [D37/D38/D39](../.agents/plans/n71-funcional-goal-decisoes.md#d37-inicializar-i2c1-por-polling-com-restauração-própria), [fase1](evidence/n71-i2c-controller-reset.json), [fase2](evidence/n71-i2c-configure-qualified.json).
 
 O código só poderá ser chamado com consumidor N71/I2C1 já qualificado pelo backend genpd e descriptors realmente retidos. O chamador serializa comandos e mantém módulo, consumidor, OF, pinos e domínio ativo até `n71_i2c_controller_clean` comprovar ausência de recursos/obrigação. O callback `verify_pins` deve validar a reserva e o readback atual; a fixture de testes não é uma implementação física desse callback.
 
@@ -107,4 +107,52 @@ Logs/inputs/artefatos privados estão em `runtime/n71-i2c-controller-20261010`, 
 
 ## Próximo resultado necessário
 
-Integrar descriptors retidos e sua verificação por provider válido, com retenção do caller em cleanup pendente. Depois preparar transporte SN2400/HDQ e ABI do gauge. Usar SSH para atualizar módulos/userspace no mesmo boot; juntar teste do controlador, telemetria, Wi-Fi, snapshots e cleanup numa sessão física preparada. A CI foi ajustada de15 para45min após timeout comprovado; aceite remoto e as issues2/9 continuam pendentes.
+Preparar transporte SN2400/HDQ e ABI do gauge sobre os backends integrados. Usar SSH para atualizar módulos/userspace no mesmo boot; juntar teste do controlador, telemetria, Wi-Fi, snapshots e cleanup numa sessão física preparada. A CI foi ajustada de15 para45min após timeout comprovado e be960f1 passou nos seis jobs; aceite do próximo head e as issues2/9 continuam pendentes.
+
+## Owner e configure operacionais — fase2
+
+O owner mantém lookup próprio, referências de GPIO node/provider/gpio_device, dois descriptors ASIS e handle pinctrl. Valida o default com um único phandle para i2c1-pins, células00010073/00010072, sem segundo estado nem overrides pins-gpios/gpio. Exige208pinos, provider Apple com suppress_bind_attrs true e regmap fresco sob device_lock em cada função. Nenhum regmap emprestado ou mutex é guardado entre comandos. A fonte preservada já tem essa proteção de binding; não houve novo Image.
+
+A reserva usa as [APIs de descriptors](https://docs.kernel.org/driver-api/gpio/consumer.html) e depois seleciona o [estado pinctrl](https://docs.kernel.org/driver-api/pin-control.html) default. O setter Apple altera somente260 para220; a baseline fresca exige270 igual220 e coerência integral cache/hardware/hardware/cache. GPIO e pinmux têm regras distintas; a fonte do core admite compartilhamento de estados GPIO, portanto a prova não é apresentada como exclusão elétrica universal. Remoção forçada de provider, alteração concorrente de DT e force unload não são operações suportadas.
+
+Release confere words antes de soltar handles, libera pinctrl/descriptors/lookup e confere novamente. Erro pré-release mantém ownership; erro pós-release mantém referências/obrigação até retry confirmar baseline. O caller sempre limpa na ordem controlador→pinos→genpd, retendo referência de módulo em qualquer pendência. `cycle`/`inspect` e o texto de `status` permanecem compatíveis; `configuration_status` é um parâmetro novo somente leitura.
+
+Depois de qualificar/transferir o artefato com SHA e ABI exatos numa sessão preparada, os comandos no iPhone serão:
+
+```sh
+insmod /caminho-privado/n71-i2c-power-diagnostic.ko run=1
+cat /sys/module/n71_i2c_power_diagnostic/parameters/status
+cat /sys/module/n71_i2c_power_diagnostic/parameters/configuration_status
+printf 'configure\n' > /sys/module/n71_i2c_power_diagnostic/parameters/action
+cat /sys/module/n71_i2c_power_diagnostic/parameters/status
+cat /sys/module/n71_i2c_power_diagnostic/parameters/configuration_status
+```
+
+Isso executa um ciclo limitado de inicialização/reset/restauração; não registra adapter, transmite I2C ou habilita carga. O insmod não deve receber action=configure: setters são processados antes do init e a função recusa operação quando não está ready. Correlacionar linhas novas N71_I2C_CONFIGURE do mesmo boot com status de todos os componentes. Os campos last_saved_ctl/last_saved_smsta podem conter a última amostra anterior se acquire for recusado antes de capturar outra; não são prova de baseline nova em erro.
+
+Em falha, ler os dois status e solicitar cleanup explicitamente:
+
+```sh
+printf 'cleanup\n' > /sys/module/n71_i2c_power_diagnostic/parameters/action
+```
+
+Não suspender o domínio, remover staging/consumidor ou executar rmmod enquanto module_retained/pending indicar recursos retidos. Só desmontar o módulo após todos os status limpos e ausência de consumers/owners próprios. Não forçar readback escrevendo registros de GPIO, SMSTA ou carregador.
+
+### Prova e reprodução da fase2
+
+| Gate | Resultado | Escopo |
+| --- | --- | --- |
+| Owner, Mac/ARM64 | 67cenários/13mutações por plataforma | Headers reais; providers/GPIO/pinctrl sintéticos |
+| Caller, Mac/ARM64 | 66cenários/19mutações por plataforma | Caller/genpd reais; pinos/controlador como dependências sintéticas |
+| Build conjunto | 48.240bytes/79imports, Werror/modpost/ELF64-AArch64/vermagic power2 | Backends reais compilados; sem load físico |
+| Checkpatch | 0erros/0avisos/0checks nos dois headers e caller | Estilo |
+| AST/lint fatal | Verdes nas duas plataformas | Sem type checker Python configurado |
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_i2c_pin_owner.py -v
+python3 -B -m unittest discover -s tests -p test_n71_i2c_power_diagnostic.py -v
+```
+
+O build real conjunto usou `M=/home/ubuntu/n71-i2c-configure-20261010/module`, copiando os oito arquivos de phone/kernel presentes no manifesto da evidência e Makefile com `obj-m += n71-i2c-power-diagnostic.o`, `ccflags-y += -Werror`. Executar o mesmo make/ARCH/W/KCFLAGS/KBUILD_EXTRA_SYMBOLS da receita acima, com uma pasta nova para M; recalcular SHA/ELF/vermagic/imports e conferir config/Image/exports antes/depois. O aviso genérico de Module.symvers agregado ausente é o mesmo, com vmlinux.symvers fornecido e todos os imports verificados, sem KBUILD_MODPOST_WARN. O módulo anterior e todos os perfis permanecem intactos para rollback.
+
+Artefatos privados: runtime/n71-i2c-pin-owner-20261010 e runtime/n71-i2c-configure-20261010,700/600. Não houve instalação/configuração global no Mac, novo DFU/USB/SSH ou firmware executado. As falhas iniciais de compilação (macro current e errno EUCLEAN no Darwin) foram corrigidas e os gates afetados repetidos; nenhuma falha de compilação contou como mutation kill. O transporte, sensores, carga real e Wi-Fi permanecem pendentes.
