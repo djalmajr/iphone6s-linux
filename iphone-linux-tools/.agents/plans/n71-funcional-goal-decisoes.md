@@ -297,3 +297,12 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Reverter:** baixo; candidato privado separado, source/default/kernel preservados.
 - **Onde:** C6b no plano host; novo compositor/teste, issue9 existente.
 - **Status:** aplicada em0d67359;8/14 Mac/ARM64 e candidata real14 arquivos com dois gates locais completos. Associação OF/firmware/carga ainda sem prova física.
+
+## D33. Firmware como dados separados antes da carga dos drivers
+
+- **Decisão:** manter o initramfs atual e validar pacote de três arquivos oficiais para estágio SSH no mesmo boot.
+- **Por quê:** conserva invariantes do perfil e permite ajustar/observar arquivos por SSH sem outra imagem ou DFU.
+- **Alternativas:** embutir dados muda initramfs/gates de identidade; usar firmware/calibração de outro modelo não atende N71; carregar WCC antes dos arquivos cria falhas assíncronas evitáveis.
+- **Reverter:** baixo antes de hardware; pacote local opt-in, perfil e kernel atuais intactos.
+- **Onde:** C6c1 no plano host, novo selector/teste e evidência de origem; issue9.
+- **Status:** contrato em curso; nenhum arquivo no telefone nem novo pedido ao operador.

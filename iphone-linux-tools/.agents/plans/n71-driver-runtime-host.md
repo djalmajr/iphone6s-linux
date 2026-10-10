@@ -333,3 +333,18 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 - [ ] Preparar staging firmware/regdb e contrato de energia antes da sessão física agrupada.
 
 **C6b qualificada em0d67359:**8/14 Mac/ARM64,383 inputs e69 C íntegros, AST/lint fatal. Perfil real14 arquivos, source/candidate local gates completos, dez arquivos e prefixo/kernel/initramfs preservados. Fonte PCI OF sustenta a rota, sem prova física ainda. Staging/energia seguem antes de boot agrupado. Ajustado texto aritmético: os dois JSON mudam por contrato; dez demais arquivos permanecem idênticos.
+
+### C6c1. Pacote privado de firmware/regdb — contrato fechado
+
+**Decisão:** manter payload/initramfs de C6b idênticos; preparar três arquivos de dados confiáveis para transferência por SSH antes da carga WCC, no mesmo boot. Esta fatia só seleciona/valida dados locais; staging remoto e prova física seguem após o aceite.
+
+**Arquivos executáveis (dois):** novo scripts/host/n71_driver_firmware.py e novo tests/test_n71_driver_firmware.py. Nenhuma mudança de Session/CLI/journal/kernel/loader/profile nesta fatia.
+
+**API:** select(root, request), request exatamente directory (Path absoluta privada diretamente sob runtime) e release (7.2.0-iphone6s-dart-serdev-power2). Exigir root absoluta, pasta/arquivos próprios privados regulares sem symlinks/hardlinks. Pasta contém somente brcm/ (com um arquivo) e regulatory.db/regulatory.db.p7s. Três registros próprios/bytes imutáveis: brcm/brcmfmac4350-pcie.bin626140 SHA5691d1e0ceb70baf18efb7a0ec6cb84feb9edd2d0700c525b42930c4e7e4b845; regulatory.db6348 SHA7e236caecd939c8ec98be4870bf30422f28ffef2565a38aaaa2d9ddabd0c2641; regulatory.db.p7s1085 SHA50332f0db09b8bcc719235ec4985c27377f2cc2f42abb7b5dcf951866c5a888a. Nenhum NVRAM/CLM/TxCap/MAC inventado ou vendor estrangeiro.
+
+**Origem:** validar evidência pública bounded de origem oficial linux-firmware commit31ec35bf14df835e2f9f7c8b1a8516a34f836df5, blob3031251977875a54acd80e607a718ec9a67a529a, declaração WHENCE/licença inspecionadas e ausência de execução/compatibilidade física. Validar evidência regdb C6: versão2026.09.03, SHA/bytes, CMS contra certificado explícito da fonte do mesmo kernel, nointern e negativa de conteúdo alterado. Não afirmar assinatura PGP externa ou carregamento kernel/radio.
+
+**Verificação:** filesystem/hashes/selectors reais; catálogo de trust anchors sintético e isolado na fixture, nunca fornecido pelo caller da API. Provar ordem/nome/bytes/SHA, retorno independente/imutável, origem/certificado/release recusados, arquivo extra/alterado/omitido/budget/links/permissões/traversal recusados sem efeitos. Baseline/mutações reais AssertionError, AST/lint Mac/ARM64 e preservação de inputs. Selecionar os três arquivos reais já verificados localmente sem downloads/execução/telefone. Reusar gates C6b/C/artefatos intactos.
+
+- [ ] Implementar e qualificar seleção do pacote local.
+- [ ] Fechar staging no Session e identidade/recuperação antes de um único boot agrupado com energia.
