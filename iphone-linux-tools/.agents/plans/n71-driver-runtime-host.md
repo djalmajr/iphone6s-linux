@@ -310,5 +310,7 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** fixture Pongo sintética e filesystem reais; tunables antigos idênticos, calibração exata/imutável, captura truncada/duplicada/nó incorreto/tamanho errado/byte inválido/paths/links/output existente recusados antes de arquivo novo, origem intacta, modos/env/umask. Mutações reais somente AssertionError após baseline verde; gates afetados Mac/ARM64, AST/lint fatal e hashes preservados. Executar extrator sobre captura real existente, sem imprimir valores. Reutilizar C5/builds inalterados; nenhum telefone/DFU.
 
-- [ ] Implementar e qualificar extrator compartilhado e CLI privada.
+- [x] Implementar e qualificar extrator compartilhado e CLI privada.
 - [ ] Fechar rota de DT do endpoint/antenna e staging firmware/regdb após esse aceite, antes da sessão física única.
+
+**C6a qualificada em e482f86:**14 testes/14 mutações AssertionError por plataforma, quatro inputs íntegros, AST/lint fatal. CLI real extraiu1024 bytes privadamente da captura já existente; source/modes/tunables JSON exato preservados.69 inputs C iguais. Rota DT/antenna, staging/energia e aceitação física ainda pendentes. Nenhum novo DFU ou pedido ao operador.

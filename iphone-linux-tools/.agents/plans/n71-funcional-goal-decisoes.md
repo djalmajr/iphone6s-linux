@@ -285,6 +285,6 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Alternativas:** dados D111/A10 não pertencem ao aparelho; inventar NVRAM/antenna oculta incompatibilidade; nova coleta repete dados que já temos.
 - **Reverter:** baixo antes de perfil/loader; somente artefatos privados extraídos e parser compatível.
 - **Onde:** C6a no plano host; nova evidência regdb/calibração; issue9 existente.
-- **Status:** pesquisa/crypto concluídas; extração pública em curso, rota DT e hardware pendentes. Nenhum pedido ao operador.
+- **Status:** aplicada em e482f86;14/14 Mac/ARM64 e extração real privada. Regdb CMS aprovada; rota DT/firmware/energia e hardware pendentes. Nenhum pedido ao operador.
 
 **Ajuste factual D31:** não existe tests/run_n71_runtime_tunables_mutations.py; o contrato C6a usa três arquivos e conserva os cinco testes existentes, com mutações no teste novo. Corrigido antes de implementação.

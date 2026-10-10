@@ -22,6 +22,21 @@ openssl cms -verify -binary -inform DER -in regulatory.db.p7s \
 
 A captura Pongo já existente foi examinada localmente, sem telefone: quatro propriedades binárias WLAN foram conservadas privadamente, incluindo `wifi-calibration-msf` de1024 bytes. `rx-calibration-temp` é escalar renderizado e não foi reconstruído. O [kboot fixado](https://github.com/HoolockLinux/m1n1/blob/d5a10ac52a6468484854419a6c5130f1d62073eb/src/kboot.c#L1028) transfere msf para `brcm,cal-blob`; of.c lê essa propriedade e common.c a envia por calload. O loader espera `/arm-io/wlan`/wifi0, mas o N71 capturado tem `/arm-io/uart4/wlan`, sem a propriedade de antena esperada. Essas diferenças permanecem abertas antes de compor/publicar DT e carregar o rádio. Isso é contrato estático, sem aceitação física da calibração ou associação.
 
+### Extrator reproduzível — C6a
+
+Em `e482f86`, properties_capture centraliza a leitura bounded/hierarquia/framing/duplicatas dos dados Pongo. O parser antigo de tunables mantém os mesmos registros e JSON. A CLI nova usa private_path e aceita somente a propriedade WLAN N71 e1024 bytes; output precisa ser novo sob runtime. Blob e provenance com hashes ficam privados700/600. A umask é restaurada inclusive após falha real de escrita. Stdout contém somente marcador genérico; nenhum firmware, DT, loader ou rádio é alterado.
+
+```bash
+python3 -B scripts/research/n71_wifi_calibration.py \
+  --input "$TASK_PRIVATE_PONGO_CAPTURE" --output-dir "$TASK_NEW_CALIBRATION_DIR"
+python3 -B -m unittest discover -s tests -p test_n71_wifi_calibration.py -v
+python3 -B -m unittest discover -s tests -p test_n71_runtime_tunables.py -v
+```
+
+A fonte deve ser a captura completa já existente do próprio aparelho, privada e regular; não está no GitHub. O output novo contém calibration-private.bin e provenance-private.json. Não o reutilizar numa segunda execução. Regdb/firmware continuam separados.
+
+14 testes/14 mutações AssertionError por plataforma; quatro inputs públicos íntegros, AST/lint fatal. Nove testes novos incluem baseline funcional seguido das mutações; cinco testes existentes preservados. CLI real no Mac extraiu o candidato da captura, verificou modos/bytes e conservou source e JSON de tunables anterior idêntico. O primeiro contraexemplo do prompt ainda era recusado pelo framing de outra linha; foi reduzido a corpo completo sem prompt antes de aceitar o kill. Os ensaios que sobreviveram não contaram como prova. Logs privados em runtime/n71-calibration-final-20261010 e runtime/n71-regdb-candidate-20261010; [evidência sanitizada](evidence/n71-calibration-extraction-qualified.json). Rota DT/antena/aceitação firmware e energia permanecem pendentes; nenhum typechecker Python ou prova de Wi-Fi/carga física.
+
 ## CLI explícita — fase C5
 
 `637ba88` acrescenta entrypoint/helper próprios. Profile fica selecionado somente durante a operação; ambiente/umask retornam ao estado anterior inclusive em erro. Profile/source/output ficam em pastas privadas diretamente sob runtime; efeitos exigem output novo.
