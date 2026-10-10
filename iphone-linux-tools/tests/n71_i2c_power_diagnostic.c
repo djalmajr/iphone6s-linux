@@ -29,6 +29,7 @@ static int module_refs, root_error, root_validation_error, missing_node, unregis
 static bool module_live;
 static char last_log[1024];
 static char controller_log[1024];
+static char hdq_log[1024];
 static void mutex_lock(int *lock) { assert(!*lock); *lock=1; }
 static void mutex_unlock(int *lock) { assert(*lock); *lock=0; }
 static bool try_module_get(void *module) { assert(module==THIS_MODULE); if (!module_live) return false; module_refs++; return true; }
@@ -40,6 +41,7 @@ static void pr_info(const char *format, ...)
 {
 	va_list args; va_start(args,format); vsnprintf(last_log,sizeof(last_log),format,args); va_end(args);
 	if (!strncmp(last_log,"N71_I2C_CONTROLLER ",19)) strcpy(controller_log,last_log);
+	if (!strncmp(last_log,"N71_I2C_HDQ_CONTROL ",20)) strcpy(hdq_log,last_log);
 }
 static struct device *root_device_register(const char *name)
 {
@@ -68,9 +70,10 @@ static struct device_node *diagnostic_find_node(const char *path)
 /* Pin/controller dependencies have separate real-header gates and kernel builds. */
 #define N71_I2C_CONTROLLER_H
 #define N71_I2C_PIN_OWNER_H
+#define N71_I2C_HDQ_READ_H
 enum { N71_I2C_SMSTA=1, N71_I2C_CTL=4 };
 struct n71_i2c_pin_owner { int cleanup_error; bool cleanup_pending,selected,held; };
-struct n71_i2c_controller { int cleanup_error; bool claimed,restore_pending,clock_enabled; u32 saved[5]; };
+struct n71_i2c_controller { int cleanup_error; bool claimed,restore_pending,clock_enabled,transfer_pending; u32 saved[5]; };
 struct n71_i2c_controller_request {
 	struct device *consumer;
 	void *pin_context;
@@ -81,10 +84,15 @@ static int config_pin_acquire_error, config_pin_release_error, config_controller
 static int config_controller_release_error;
 static unsigned int config_pin_acquires, config_pin_releases, config_controller_acquires;
 static bool config_pins_live, config_controller_live;
+struct n71_i2c_hdq_read_request { struct n71_i2c_controller *controller; const struct n71_i2c_controller_request *ownership; };
+struct n71_i2c_hdq_read_state { int cleanup_error; bool cleanup_pending; struct n71_i2c_controller *controller; u32 last_status; };
+static int config_read_error, config_read_cleanup_error;
+static unsigned int config_read_calls;
+static bool config_transfer_live;
 static bool n71_i2c_pin_owner_clean(const struct n71_i2c_pin_owner *owner)
 { return !owner->held && !owner->cleanup_pending && !owner->selected; }
 static bool n71_i2c_controller_clean(const struct n71_i2c_controller *state)
-{ return !state->claimed && !state->restore_pending && !state->clock_enabled; }
+{ return !state->claimed && !state->restore_pending && !state->clock_enabled && !state->transfer_pending; }
 static int n71_i2c_pin_owner_acquire(struct device *device, struct n71_i2c_pin_owner *owner)
 {
 	assert(device==&consumer && device->registered && n71_i2c_pin_owner_clean(owner));
@@ -119,11 +127,36 @@ static int n71_i2c_controller_release(const struct n71_i2c_controller_request *r
 		struct n71_i2c_controller *state)
 {
 	if (n71_i2c_controller_clean(state)) return 0;
+	assert(!config_transfer_live && !state->transfer_pending);
 	assert(config_controller_live && config_pins_live && request->power->active && request->power->usage_held);
 	assert(request->verify_pins(request->pin_context)==0);
 	if (config_controller_release_error) { state->cleanup_error=config_controller_release_error; return config_controller_release_error; }
 	state->claimed=state->restore_pending=state->clock_enabled=config_controller_live=false;
 	state->cleanup_error=0; return 0;
+}
+static int n71_i2c_hdq_read_cleanup(const struct n71_i2c_hdq_read_request *request,
+		struct n71_i2c_hdq_read_state *state)
+{
+	if (!state->cleanup_pending) return 0;
+	assert(config_transfer_live && config_controller_live && config_pins_live);
+	assert(request->ownership->power->active && request->controller==state->controller);
+	if (config_read_cleanup_error) { state->cleanup_error=config_read_cleanup_error; return config_read_cleanup_error; }
+	request->controller->transfer_pending=config_transfer_live=false;
+	*state=(struct n71_i2c_hdq_read_state){0}; return 0;
+}
+static int n71_i2c_read_hdq_control(const struct n71_i2c_hdq_read_request *request,
+		struct n71_i2c_hdq_read_state *state, u32 *output)
+{
+	assert(config_controller_live && config_pins_live && !config_transfer_live);
+	assert(request->ownership->power->active && request->ownership->power->usage_held);
+	config_read_calls++;
+	if (config_read_cleanup_error) {
+		state->cleanup_pending=config_transfer_live=request->controller->transfer_pending=true;
+		state->controller=request->controller; state->cleanup_error=config_read_cleanup_error;
+		return config_read_error ? config_read_error : config_read_cleanup_error;
+	}
+	if (config_read_error) return config_read_error;
+	*output=0x20; return 0;
 }
 #include "n71-i2c-power-diagnostic.c"
 #undef of_find_node_by_path
@@ -135,11 +168,13 @@ static void caller_reset(void)
 	memset(&diagnostic_state,0,sizeof(diagnostic_state)); memset(&diagnostic_io,0,sizeof(diagnostic_io));
 	diagnostic_pmgr=diagnostic_node=NULL; diagnostic_ready=diagnostic_retained=false;
 	run=true; root_error=root_validation_error=unregisters=0; missing_node=-1; module_live=true; last_log[0]=0;
-	observe_reset(); controller_log[0]=0;
-	assert(!config_pins_live && !config_controller_live);
+	observe_reset(); controller_log[0]=hdq_log[0]=0;
+	assert(!config_pins_live && !config_controller_live && !config_transfer_live);
 	diagnostic_pins=(struct n71_i2c_pin_owner){0}; diagnostic_controller=(struct n71_i2c_controller){0};
+	diagnostic_read=(struct n71_i2c_hdq_read_state){0};
 	config_pin_acquire_error=config_pin_release_error=config_controller_acquire_error=config_controller_release_error=0;
 	config_pin_acquires=config_pin_releases=config_controller_acquires=0;
+	config_read_error=config_read_cleanup_error=0; config_read_calls=0;
 }
 static void caller_clean(void)
 {
@@ -158,6 +193,7 @@ static void caller_init(void)
 	assert(n71_i2c_power_diagnostic_init()==0);
 	assert(diagnostic_ready && !attaches && !put_calls && !detaches && !module_refs && reads==2);
 	assert(!observe_claims && !observe_reads);
+	assert(!config_read_calls);
 	assert(nodes[ROOT_NODE].refs==2 && nodes[CONSUMER_NODE].refs==2);
 	for (unsigned int i=0;i<3;i++) assert(nodes[LEAF_NODE+i].refs==2);
 }
@@ -273,6 +309,33 @@ int main(void)
 	caller_reset(); caller_init(); suspend_error=-EIO;
 	assert(n71_diagnostic_action("configure",NULL)==-EIO && !config_controller_live && !config_pins_live && put_calls==1 && module_refs==1); cases++;
 	suspend_error=0; assert(n71_diagnostic_action("cleanup",NULL)==0 && put_calls==1); caller_idle(); caller_exit(); cases++;
+	/* Mutations captured: read without qualification, skipped read, fake validity or premature resource release. */
+	caller_reset(); assert(n71_diagnostic_action("read-hdq-control",NULL)==-ENODEV && !config_read_calls); caller_clean(); cases++;
+	caller_reset(); caller_init(); assert(n71_diagnostic_action("read-hdq-control\n",NULL)==0 && config_read_calls==1);
+	assert(strstr(hdq_log,"valid=1 value=20") && strstr(hdq_log,"charger_value_writes=0 gauge_verified=0"));
+	caller_idle(); cases++;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==0 && config_read_calls==2 && put_calls==2);
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_pin_acquire_error=-ENXIO;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-ENXIO && !config_read_calls && strstr(hdq_log,"valid=0"));
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_read_error=-ENXIO;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-ENXIO && config_read_calls==1 && strstr(hdq_log,"valid=0"));
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_read_error=-ETIMEDOUT; config_read_cleanup_error=-EIO;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-ETIMEDOUT && config_transfer_live && config_controller_live && config_pins_live);
+	assert(module_refs==1 && !put_calls && strstr(hdq_log,"valid=0") && strstr(hdq_log,"cleanup_error=-5"));
+	assert(n71_diagnostic_configuration_status(status,NULL)>0 && strstr(status,"transfer_pending=1 transfer_error=-5")); cases++;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EBUSY && config_read_calls==1); cases++;
+	assert(n71_diagnostic_action("cleanup",NULL)==-EIO && !put_calls && module_refs==1); cases++;
+	config_read_cleanup_error=0;
+	assert(n71_diagnostic_action("cleanup",NULL)==0 && put_calls==1 && !config_transfer_live);
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_controller_release_error=-EIO;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EIO && config_read_calls==1 && strstr(hdq_log,"valid=1 value=20"));
+	assert(module_refs==1 && !put_calls && config_pins_live); cases++;
+	config_controller_release_error=0; assert(n71_diagnostic_action("cleanup",NULL)==0);
+	caller_idle(); caller_exit(); cases++;
 	printf("N71_I2C_CALLER_OK cases=%u\n",cases);
 	return 0;
 }

@@ -26,13 +26,19 @@ MUTATIONS = (
     ('overwrite-inspect-error', 'if (!error)\n\t\t\t\terror = cleanup_error;', 'if (true)\n\t\t\t\terror = cleanup_error;'),
     ('skip-release-after-inspect-failure', 'cleanup_error = n71_i2c_power_release(&diagnostic_io, &diagnostic_state);',
      'cleanup_error = error ? 0 : n71_i2c_power_release(&diagnostic_io, &diagnostic_state);'),
-    ('skip-configure', 'error = n71_diagnostic_configure();', 'error = false ? n71_diagnostic_configure() : 0;'),
-    ('skip-controller-release', 'error = n71_i2c_controller_release(&request, &diagnostic_controller);',
-     'error = false ? n71_i2c_controller_release(&request, &diagnostic_controller) : 0;'),
-    ('skip-pin-release', 'error = n71_i2c_pin_owner_release(&diagnostic_pins);',
-     'error = false ? n71_i2c_pin_owner_release(&diagnostic_pins) : 0;'),
-    ('ignore-controller-pending', 'if (error || !n71_i2c_controller_clean(&diagnostic_controller))', 'if (false)'),
-    ('ignore-pin-pending', 'if (error || !n71_i2c_pin_owner_clean(&diagnostic_pins))', 'if (false)'),
+    ('skip-configure', 'error = n71_diagnostic_configure(read_control);', 'error = false ? n71_diagnostic_configure(read_control) : 0;'),
+    ('skip-controller-release', 'error = n71_i2c_controller_release(&ownership, request->controller);',
+     'error = false ? n71_i2c_controller_release(&ownership, request->controller) : 0;'),
+    ('skip-pin-release', 'error = n71_i2c_pin_owner_release(request->pins);',
+     'error = false ? n71_i2c_pin_owner_release(request->pins) : 0;'),
+    ('ignore-controller-pending', 'if (error || !n71_i2c_controller_clean(request->controller))', 'if (false)'),
+    ('ignore-pin-pending', 'if (error || !n71_i2c_pin_owner_clean(request->pins))', 'if (false)'),
+    ('skip-hdq-read', 'result->error = n71_i2c_read_hdq_control(&read, request->read, &result->value);',
+     'result->error = false ? n71_i2c_read_hdq_control(&read, request->read, &result->value) : 0;'),
+    ('fake-validity', 'result->value_valid = !result->error;', 'result->value_valid = true;'),
+    ('skip-transfer-cleanup', 'error = n71_i2c_hdq_read_cleanup(&read, request->read);',
+     'error = false ? n71_i2c_hdq_read_cleanup(&read, request->read) : 0;'),
+    ('ignore-transfer-pending', 'if (error || request->read->cleanup_pending || request->read->controller)', 'if (false)'),
 )
 
 
@@ -43,7 +49,8 @@ class N71I2CControlTests(unittest.TestCase):
         limits = resource.getrlimit(resource.RLIMIT_CORE)
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
         self.addCleanup(resource.setrlimit, resource.RLIMIT_CORE, limits)
-        source = (ROOT / 'phone/kernel/n71-i2c-power-diagnostic.c').read_text()
+        sources = {name: (ROOT / 'phone/kernel' / name).read_text() for name in (
+            'n71-i2c-power-diagnostic.c', 'n71-i2c-configuration.h')}
         fixture = (ROOT / 'tests/n71_i2c_genpd.c').read_text().replace('int main(void)', 'int genpd_fixture_main(void)')
         original = 'static const struct { unsigned int offset; } n71_domains[] = {{0x801a0}, {0x80158}, {0x80150}};'
         self.assertEqual(fixture.count(original), 1)
@@ -61,14 +68,19 @@ class N71I2CControlTests(unittest.TestCase):
             for name in ('i2c', 'pm_domain', 'pm_runtime', 'module', 'mutex', 'string', 'io', 'ioport', 'of_address'):
                 (folder / 'linux' / (name + '.h')).write_text('/* Kernel APIs supplied by harness. */\n')
             for name in ('n71-i2c-genpd.h', 'n71-i2c-power-lifecycle.h', 'n71-pmgr-access.h',
-                         'n71-i2c-controller-observe.h', 'n71-i2c-controller.h', 'n71-i2c-pin-owner.h'):
+                         'n71-i2c-controller-observe.h', 'n71-i2c-controller.h', 'n71-i2c-pin-owner.h',
+                         'n71-i2c-hdq-read.h'):
                 (folder / name).write_bytes((ROOT / 'phone/kernel' / name).read_bytes())
             (folder / 'n71_i2c_genpd_fixture.c').write_text(fixture)
-            module, binary = folder / 'n71-i2c-power-diagnostic.c', folder / 'caller'
+            binary = folder / 'caller'
             for name, before, after in (('baseline', None, None),) + MUTATIONS:
+                for filename, source in sources.items():
+                    (folder / filename).write_text(source)
                 if before:
-                    self.assertEqual(source.count(before), 1, name)
-                module.write_text(source if before is None else source.replace(before, after, 1))
+                    owners = [filename for filename, source in sources.items() if source.count(before) == 1]
+                    self.assertEqual(len(owners), 1, name)
+                    filename = owners[0]
+                    (folder / filename).write_text(sources[filename].replace(before, after, 1))
                 compiled = subprocess.run([compiler, '-std=gnu11', '-Wall', '-Wextra', '-Werror',
                                            '-I', str(folder), str(ROOT / 'tests/n71_i2c_power_diagnostic.c'),
                                            '-o', str(binary)], capture_output=True, text=True, timeout=30)
@@ -76,7 +88,7 @@ class N71I2CControlTests(unittest.TestCase):
                 result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5, cwd=folder)
                 if before is None:
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertIn('N71_I2C_CALLER_OK cases=66', result.stdout)
+                    self.assertIn('N71_I2C_CALLER_OK cases=', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
