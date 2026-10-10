@@ -232,3 +232,12 @@ A validação de encerramento pré-prepare será B2b3d1 (lifetime e teste própr
 ### Interação física
 
 Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicialização física, sem pedir confirmação da tela de bloqueio. Isso não equivale a prova observada por USB. Somente uma ação indispensável a teste preparado pode motivar nova solicitação; nenhuma pergunta sobre conexão, console ou temperatura por rotina.
+
+## D26. Unir seleção runtime e WCC pela base qualificada
+
+- **Decisão:** adicionar um seletor explícito para o caller runtime e os cinco módulos WCC, validando source/patch/config/Image/exports/gzip comuns; preservar os dois diagnósticos e os controles de assignment/IOMMU anteriores.
+- **Por quê:** o seletor atual aponta para a imagem antiga do diagnóstico e não verifica a ligação entre o build do caller e o build WCC. A integração deve recusar um conjunto misturado antes de qualquer efeito.
+- **Alternativas:** sobrescrever a seleção antiga altera o fluxo legacy; selecionar apenas pelo vermagic aceita módulos construídos contra outra base; recompilar o kernel não resolve esse contrato e adiciona reinicializações.
+- **Reverter:** baixo antes da ativação física; helper/teste novos e seleção opt-in.
+- **Onde:** C1 no plano host; novo runtime_build/teste; Session/staging/composição/CLI depois.
+- **Status:** em curso com contrato fechado; nenhuma ação do operador necessária.

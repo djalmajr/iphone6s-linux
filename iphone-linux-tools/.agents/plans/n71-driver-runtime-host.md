@@ -196,3 +196,20 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 - [ ] Ligar seleção/composição C após a qualificação, antes do teste físico agrupado.
 
 **B2b3d2 qualificada em 80538d2:**9/11 no Mac e Ubuntu ARM64,288 inputs íntegros, AST/lint fatal.285 inputs anteriores iguais,53/70 e builds C reutilizados. Start/observe/stop e recuperação conservam origem/provas no mesmo boot simulado. CLI/perfil/seleção C, firmware/energia e prova física ainda pendentes; nenhuma intervenção do operador necessária nesta fatia.
+
+### C1. Seleção do caller e WCC com a mesma base — contrato fechado
+
+**Contexto:** o coordenador está qualificado. `n71_resource_build.py:81` ainda seleciona o módulo IOMMU de114.120 bytes; o caller runtime qualificado tem142.232 bytes/SHA b4888de1. Não substituir o diagnóstico implicitamente nem alterar os caminhos legacy. Kernel/Image/exports e políticas de assignment permanecem iguais; WCC foi compilado numa cópia com somente PCIe/MSGBUF habilitados.
+
+**Arquivos executáveis (dois):** novo `scripts/host/n71_driver_runtime_build.py` e novo `tests/test_n71_driver_runtime_build.py`. CLI/perfis, Session, kernel, firmware, iPhone e pacotes globais não mudam nesta fatia. Depois C2 liga Session/staging/coordenador; composição/CLI em fatias seguintes.
+
+**Interfaces:** `qualified(root, request)` e `select(root, request)`, com request exatamente `{release, pcie_sha256}`. O hash explícito deve corresponder ao caller qualificado, jamais fazer fallback para o antigo. qualified devolve `{diagnostic, drivers, kernel_outputs}`: diagnóstico com bytes/SHA/vermagic, manifest WCC de cinco módulos na ordem existente e outputs da Image já validada. select devolve `{diagnostics, drivers, kernel_outputs}`; diagnostics conserva os dois registros existentes e flags de assignment/IOMMU, mudando somente identidade do caller e acrescentando driver_runtime=true.
+
+**Premissas:** usar as evidências públicas caller/WCC e os seletores existentes de IOMMU/kernel/resources. Exigir formato/tipos, qualificação Mac/ARM64, escopo opt-in, nenhuma preparação/carga automática, actions/getter/owners/primeira causa compatíveis com o protocolo existente, módulo ELF/AArch64/ABI/bytes/SHA e origem do build preservada. Revalidar os69 inputs públicos do caller com paths canônicos permitidos sob phone/kernel ou tests, arquivo regular sem link, bytes/SHA e orçamento. Nunca resolver traversal nem ler arquivo fora desse escopo. Não remover recusas de políticas/kernel anteriores.
+
+**Base:** caller source/patch/config/Image/exports devem coincidir com a base IOMMU qualificada e com a Image vinculada. WCC source/patch/config/Image/exports e gzip também devem coincidir, além da configuração variante exatamente PCIe/MSGBUF já validada por driver_modules. WCC não contém rfkill-gpio/BCA/CYW na seleção. Não elevar evidência offline a IRQ/DMA, associação ou carga.
+
+**Verificação:** roots temporárias com cópias das evidências/69 inputs e seletores reais, sem mock das funções sob teste. Provar composição caller+REG_ON+WCC ordenado, flags antigas preservadas, origem imutável, hash explícito/ABI/Base incompatíveis recusados, escopo e causa/defaults divergem recusados, input alterado/omitido/link/traversal/budget inválidos recusados. Executar mutações reais após baseline verde e aceitar somente AssertionError; AST/lint Mac/ARM64, novo gate e reuso dos anteriores com inputs relevantes iguais. Conferir privadamente bytes/SHA dos artefatos aceitos, sem rebuild, SSH, load, perfil ou DFU.
+
+- [ ] Implementar e qualificar a seleção explícita do caller/WCC.
+- [ ] Integrar Session/staging e depois composição/CLI, mantendo o teste físico agrupado.
