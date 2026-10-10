@@ -729,3 +729,27 @@ python3 -B -m unittest discover -s tests -p test_n71_driver_reacquire.py -v
 Mac/ARM64 aprovaram9 testes de contrato e13 mutações por AssertionError (10 casos unittest, incluindo o runner de mutações);604 inputs iguais,273 arquivos Python com AST e lint fatal. Loader/coordenador/journals e Bash/filesystem são reais; PCI/WCC e kernel/sysfs são simulados. Não há typechecker Python configurado. Nenhuma instalação, alteração de banco/configuração global ou ação no iPhone; desempenho físico não medido. [Evidência](evidence/n71-reacquire-qualified.json).
 
 A ação de terminal e a prova de dois ciclos completos ainda pertencem à faseB; esta etapa não as declara prontas. [Issue42](https://github.com/djalmajr/iphone6s-linux/issues/42) e o goal continuam abertos, com Wi-Fi/telemetria/carga exigindo prova física. O retorno ao iOS será assumido operacionalmente para recarga sem solicitar confirmações rotineiras; não será descrito como prova física observada.
+
+### Ação de reaquisição e dois ciclos — C6d B
+
+8d0b47a expõe `--action reacquire`, com source obrigatório do último stop comprovado no mesmo boot/perfil. O gate local usa prepare(check=True), sem transporte/output. Em execução prepare confere o estado e held.run começa aquisição nova, com diretório/output/journals próprios. A primeira causa anterior permanece na lineage e na origem; os owners não migram. Defaults e os cinco handlers anteriores são preservados.
+
+```bash
+N71_STOPPED="$PWD/runtime/ultimo-stop-comprovado"
+python3 -B scripts/host/n71-runtime-session.py \
+  --profile "$PWD/runtime/n71-pci-calibration-profile-20261010/deployment.json" \
+  --firmware-dir "$PWD/runtime/n71-trusted-firmware-20261010" \
+  --source "$N71_STOPPED" --action reacquire --check
+```
+
+`ultimo-stop-comprovado` é um placeholder: escolher o output real do último stop. Na sessão Linux autorizada, substituir --check por --output-dir de uma pasta nova diretamente em runtime; a ação não dá boot no telefone. Depois usar o output novo como source para assign/start/observe/stop. Se o transporte deixar uma intenção incompleta, preservar output/source e usar observação/recuperação comprovada; não repetir efeitos para fabricar um resultado. O gate físico continua agrupado com Wi-Fi/energia.
+
+O teste encontrou um defeito real no segundo stop: os parsers de resources/IOMMU recebiam eventos dos dois ciclos e recusavam Assignment must not repeat. A correção cleanup_view confere a baseline ordenada e cria uma cópia temporária de validação com texto/históricos native do ciclo atual. O loader e release usam essa vista, conservando proofs/logs brutos e journals autoritativos. Unicidade, boot, prefixo, erro anterior e cleanup continuam exigidos; não houve alteração de schema ou relaxamento de parser.
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_runtime_reacquire_cli.py -v
+```
+
+Mac/ARM64:6 testes de contrato e8 novas mutações AssertionError; a matriz afetada de sete módulos aprovou81 casos unittest em cada plataforma, com605 inputs SHA iguais,274 AST e lint fatal. Ela inclui CLI antiga, preparação, coordinator, held capture, resources e IOMMU. Acquire→assign→start→observe→stop rodou duas vezes pelo CLI/Session/journals reais com firmware e transporte Bash/filesystem isolados; PCI/REG/native/WCC/sysfs foram modelados. O loader/check aprovou o segundo stop; fontes e logs integrais, boot, diretórios distintos e path restaurado foram conferidos. [Evidência sanitizada](evidence/n71-reacquire-cli-qualified.json).
+
+O entry atual também passou acquire --check com o perfil calibrado e os arquivos reais de firmware, sem SSH/USB. Gates C/kernel/build inalterados foram reutilizados; não há typechecker Python configurado. Nenhum pacote, banco, config global Mac, firmware executado ou ação no iPhone; desempenho físico não medido. Próximos: alimentação/HDQ e reprodução dos insumos antes da sessão física agrupada. Goal e issues2/9/42 seguem abertos: estes testes não comprovam reaquisição física, rádio, DMA ou carga Linux.

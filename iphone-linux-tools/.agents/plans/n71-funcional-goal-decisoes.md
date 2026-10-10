@@ -340,4 +340,13 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 - **Alternativas:** apagar dmesg elimina evidência; relaxar o preflight aceita owners desconhecidos; novo boot custa ação física e autenticação. Repetir intents pendentes não é aceitável.
 - **Reverter:** baixo antes da prova física; novo modo explícito, defaults intactos.
 - **Onde:** C6d no plano host e issue42; primeiro helper/tests, depois CLI e dois ciclos.
-- **Status:** A implementada em1e9697e e qualificada em Mac/ARM64:9 testes de contrato e13 mutações,604 inputs iguais. B segue pendente: CLI/action e dois ciclos completos; nenhum DFU necessário para desenvolver esses gates.
+- **Status:** A em1e9697e e B em8d0b47a implementadas. Reaquisição exposta no entry e dois ciclos completos comprovados em fixtures Mac/ARM64; matriz81 casos,6 testes de contrato/8 novas mutações. Nenhum acesso ao telefone; reaquisição física permanece pendente na issue42.
+
+## D36. Validar cleanup por ciclo mantendo a evidência integral
+
+- **Decisão:** usar uma vista temporária de validação que remove somente a baseline comprovada e alinha os históricos native copiados ao mesmo texto; conservar sessões, journals, proofs e logs brutos originais.
+- **Por quê:** o teste integrado alcançou o segundo stop e reproduziu Assignment must not repeat: parsers de resources/IOMMU recebem eventos dos dois ciclos. A causa native exige um prefixo que também precisa acompanhar o recorte.
+- **Alternativas:** relaxar unicidade aceitaria duplicações no ciclo atual; remover evidência elimina reprodução; reiniciar exige novo DFU. Alterar cada parser ampliaria a superfície e duplicaria regra.
+- **Reverter:** baixo, helper puro aplicado nos pontos de cleanup/loader, sem schema ou efeito remoto.
+- **Onde:** resource_stage, held_session e regressão CLI de dois ciclos; cinco executáveis na faseB.
+- **Status:** aplicada em8d0b47a; regressão reproduzida e dois ciclos aprovados em Mac/ARM64, incluindo o loader/check sobre o segundo stop. Parsers mantêm unicidade e proofs/journals originais ficam completos. Nenhuma ação no iPhone.
