@@ -33,8 +33,8 @@ class DartProviderTests(unittest.TestCase):
     def test_production_cleanup_preserves_bus_power_and_module_until_dart_recovers(self):
         source = (ROOT / 'phone/kernel/n71-pcie-diagnostic.c').read_text()
         functions = []
-        for name in ('n71_session_cleanup', 'n71_finish_cleanup'):
-            match = re.search(r'static int ' + name + r'\([^)]*\)\n\{', source)
+        for name in ('n71_msi_allocation_pending', 'n71_session_cleanup', 'n71_finish_cleanup'):
+            match = re.search(r'static (?:int|bool) ' + name + r'\([^)]*\)\n\{', source)
             self.assertIsNotNone(match, name)
             position, depth = match.end(), 1
             while depth:
@@ -57,6 +57,9 @@ class DartProviderTests(unittest.TestCase):
         self.addCleanup(resource.setrlimit, resource.RLIMIT_CORE, limits)
         with tempfile.TemporaryDirectory(prefix='n71-dart-cleanup-') as directory:
             folder = Path(directory)
+            for name in ('n71-msi-allocation-lease.h', 'n71-wlan-msi-config.h',
+                         'n71-pcie-scan-config.h', 'n71-pcie-ecam.h', 'n71-pcie-contract.h'):
+                shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
             header, binary = folder / 'n71-dart-cleanup-under-test.h', folder / 'cleanup'
             for name, before, after in (('baseline', None, None),) + mutations:
                 with self.subTest(name=name):

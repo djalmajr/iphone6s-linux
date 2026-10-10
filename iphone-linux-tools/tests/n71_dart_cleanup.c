@@ -5,10 +5,19 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
+#include "n71-msi-allocation-lease.h"
+#include "n71-wlan-msi-config.h"
 
 struct device { int unused; };
 struct pci_host_bridge;
-struct n71_scan_host { struct { struct pci_host_bridge *bridge; } dart; };
+struct n71_scan_host {
+	struct { struct pci_host_bridge *bridge; } dart;
+	struct n71_msi_allocation msi_allocation;
+	struct n71_msi_config msi_config;
+};
 struct pci_host_bridge { struct n71_scan_host private; };
 struct n71_diagnostic {
 	void *dart;
@@ -31,6 +40,18 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 	(void)state;
 	assert(false);
 	return -EBUSY;
+}
+static int n71_pcie_msi_release(struct n71_scan_host *host, struct n71_msi_allocation *lease)
+{
+	/* This route owns no MSI allocation; the complete caller covers active leases. */
+	(void)host; (void)lease;
+	assert(false);
+	return -EBUSY;
+}
+static void n71_msi_allocation_report(struct n71_scan_host *host, const char *action, int error)
+{
+	(void)host; (void)action; (void)error;
+	assert(false);
 }
 
 static void dev_info(struct device *dev, const char *format, ...)
@@ -82,6 +103,10 @@ int main(void)
 	struct n71_diagnostic state;
 	struct pci_host_bridge bridge = {0};
 	unsigned int stage;
+#ifdef __linux__
+	/* Isolate assertion mutants from piped crash handlers without global changes. */
+	assert(prctl(PR_SET_DUMPABLE, 0UL, 0UL, 0UL, 0UL)==0);
+#endif
 	for (stage = 0; stage <= 2; stage++) {
 		state = (struct n71_diagnostic){.dart = &state, .scan_bridge = &bridge,
 			.powered = 4, .attached = 4, .reset_pending = true, .module_retained = true,
