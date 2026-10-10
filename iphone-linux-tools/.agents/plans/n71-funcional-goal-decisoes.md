@@ -26,3 +26,21 @@
 - **Reverter:** baixo para a fase opt-in; módulos/perfis anteriores permanecem disponíveis. A limpeza deve remover o bus antes da restauração e não liberar owners em erro.
 - **Onde:** incremento 183 e integração seguinte do plano; política de configuração, adaptador PCI, caller e journal; issue39.
 - **Status:** política aplicada em `8c16d0a`, adaptador em `3f09eec` e caller em `3ff8769`. Adaptador64 cenários/51 mutações e caller121/59 passaram Mac/Ubuntu ARM64, com inputs/logs/exit por SHA; árvores/PCI APIs sintéticas. Seis módulos passaram build real Werror/modpost/ELF/vermagic, PCIe84.696 bytes e REG_ON intacto, fonte/config/Image/exports preservados; action/resources e referências ao alocador/reserva/release verificadas. A ação conserva o primeiro erro e EALREADY não invalida a sessão; getter exige ownership vivo. Seleção/provenance/journal e prova física da atribuição/restauração continuam pendentes; depois integrar IRQ/IOMMU/driver/radio e HDQ/carga na sessão agrupada. [Reprodução e limites](../../docs/N71_PME_ASPM_CANDIDATE.md#atribuição-no-bus-retido--adaptador-caller-e-build-real), [prova](../../docs/evidence/n71-pci-resource-assignment.json).
+
+## D4. Separar erro operacional DART de ownership liberado
+
+- **Decisão:** conservar EIO/command change como resultado negativo do provider, aceitar cleanup somente com restore/owners/caller completos e causais, e preservar a precedência do erro da atribuição. Revalidar logs sem reescrever campos e testar resume sem novo setter.
+- **Por quê:** o hardware passou associação e atribuição; o kernel já tinha liberado os recursos quando o parser declarou ownership pendente. Prova de liberação não comprova um ciclo DART inalterado, IRQ entregue ou tradução DMA.
+- **Alternativas:** continuar exigindo o erro anterior zero força recuperação manual e não corresponde ao protocolo; aceitar qualquer negativo ocultaria erro divergente ou owner ativo. Alterar command/restore agora exige outra qualificação física e não é necessário para corrigir o parser.
+- **Reverter:** baixo; mudança somente host, com defaults/artefatos/módulos preservados e regressões dos modos anteriores.
+- **Onde:** [plano](n71-dart-cleanup-operation-error.md), [prova física](../../docs/evidence/n71-of-scope-association-physical.json), issue40/Wi-Fi9.
+- **Status:** implementada e gates Mac/Ubuntu ARM64 aprovados; publicação/CI da correção seguem gates próprios.
+
+## D5. Solicitar somente intervenção física indispensável
+
+- **Decisão:** pedir DFU diretamente quando a candidata e o monitor estiverem prontos. Não pedir disponibilidade/conexão/confirmação de tela ou desbloqueio quando não houver ação dependente. Após encerrar Linux e salvar snapshot, continuar offline conforme instrução do operador; confirmação não observada fica ausente da prova.
+- **Por quê:** o touch defeituoso torna desbloqueios caros e o operador pediu redução de intervenções, reboots e perguntas de estado. Leitura USB pode ser feita pelo Mac.
+- **Alternativas:** confirmar cada transição amplia trabalho do operador; declarar sucesso físico sem observação produziria evidência incorreta. Agrupar teste/coleta/cleanup reduz DFUs.
+- **Reverter:** baixo; solicitar novamente apenas uma ação concreta quando um bloqueio físico impedir o trabalho autorizado.
+- **Onde:** wrapper/execução supervisionada, documentação atual e próximos testes agrupados; preferência explícita do operador nesta sessão.
+- **Status:** aplicada; nenhuma ação do operador é necessária durante as correções offline.
