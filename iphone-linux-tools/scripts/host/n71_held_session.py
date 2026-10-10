@@ -13,6 +13,7 @@ import n71_resource_stage
 import n71_held_history
 import n71_iommu_result
 import n71_driver_runtime_stage
+import n71_driver_runtime_recovery
 
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
@@ -318,7 +319,13 @@ def run(session, selected_identity, *, root, source=None, assign=False):
         require(type(assign) is bool and (not assign or (source is not None and n71_resource_stage.capable(session))),
                 'Assignment requires an explicit saved resource-capable held session')
         if source:
-            data, prior, verified = load_source(session, root, source, selected_identity)
+            if n71_driver_runtime_stage.result.capable(session):
+                data, prior, verified = n71_driver_runtime_recovery.load(session, {
+                    'root': root, 'source': source, 'identity': selected_identity,
+                    'allowed_proofs': PROOFS,
+                    'loader': load_source, 'snapshot': snapshot})
+            else:
+                data, prior, verified = load_source(session, root, source, selected_identity)
             live, presence = snapshot(session, 'held-resume-live')
             n71_held_history.verify(live, prior, reg_present=presence[1])
             expected = (int(session.pcie_attempted and 'pcie-unload' not in verified),
