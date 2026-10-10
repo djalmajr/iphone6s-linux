@@ -11,6 +11,8 @@
 #endif
 #include "n71-pcie-contract.h"
 #include "n71-dart-lease.h"
+#include "n71-msi-allocation-lease.h"
+#include "n71-wlan-msi-config.h"
 #define __iomem
 #define __init
 #define __exit
@@ -59,14 +61,21 @@ struct platform_driver {
 struct gpio_desc { int logical; };
 /* MSI dependencies are modeled here; native callbacks have separate gates. */
 struct irq_domain { unsigned int mapcount; };
+struct pci_dev { bool msi_enabled; };
 struct pci_host_bridge;
+struct n71_wlan_msi {
+	struct irq_domain *domain, *child;
+	unsigned int slots;
+};
 struct n71_wlan_msi_host {
 	struct pci_host_bridge *bridge;
-	struct { struct irq_domain *domain, *child; } native;
+	struct n71_wlan_msi native;
 	bool associated;
 };
 struct n71_scan_host {
 	struct n71_wlan_msi_host msi;
+	struct n71_msi_allocation msi_allocation;
+	struct n71_msi_config msi_config;
 	struct { struct pci_host_bridge *bridge; bool available, mapped; } dart;
 	void *iommu_domain;
 	unsigned int iommu_devices;
@@ -85,7 +94,7 @@ struct n71_dart_provider {
 	struct platform_device *device;
 	void *claimed;
 };
-static void *pci_host_bridge_priv(struct pci_host_bridge *bridge) { return &bridge->private; }
+static void *pci_host_bridge_priv(struct pci_host_bridge *bridge) { assert(bridge); return &bridge->private; }
 enum n71_pcie_region { N71_PCIE_COMMON, N71_PCIE_PHY };
 #define N71_PCIE_MAX_TUNABLES 512U
 struct n71_pcie_tunable { u32 offset, mask, value; };
@@ -123,6 +132,11 @@ static struct {
 	unsigned int pme_scans, held_scans;
 	unsigned int msi_scans, msi_releases, bus_removals;
 	int msi_acquire_error, msi_cleanup_error;
+	unsigned int msi_allocations, msi_vector_releases, msi_release_calls;
+	int allocation_early_error, allocation_error, vector_release_error;
+	bool vector_release_stopped, vector_release_pending, allocation_child_owned;
+	struct pci_dev msi_endpoint;
+	char allocation_log[512];
 	struct irq_domain msi_domain, msi_child;
 	unsigned int assignments;
 	unsigned int dart_acquires, dart_releases;
@@ -151,7 +165,15 @@ static int scnprintf(char *buffer, size_t size, const char *format, ...)
 {
 	va_list args; int length; va_start(args,format); length=vsnprintf(buffer,size,format,args); va_end(args); return length;
 }
-static void dev_info(struct device *dev, const char *format, ...) { (void)dev; (void)format; }
+static void dev_info(struct device *dev, const char *format, ...)
+{
+	va_list arguments;
+	(void)dev;
+	if (strstr(format,"N71_PCIE_MSI_ALLOCATION_RESULT ")!=format) return;
+	va_start(arguments,format);
+	vsnprintf(mock.allocation_log,sizeof(mock.allocation_log),format,arguments);
+	va_end(arguments);
+}
 static void dev_err(struct device *dev, const char *format, ...) { (void)dev; (void)format; }
 static int dev_err_probe(struct device *dev, int error, const char *format, ...) { (void)dev; (void)format; return error; }
 static void *devm_kcalloc(struct device *dev, size_t count, size_t bytes, int flags)
@@ -334,12 +356,64 @@ static int n71_pcie_scan_hold_iommu(struct device *dev, struct n71_diagnostic *s
 	host->iommu_domain=&mock.dart; host->iommu_devices=2;
 	return mock.iommu_scan_error;
 }
+/* Native allocation/config tests and the real ABI probe qualify this dependency. */
+static int n71_msi_allocation_error(struct n71_scan_host *host)
+{
+	return host->msi_config.error ? host->msi_config.error :
+		host->config.error ? host->config.error : host->io_error;
+}
+static int n71_pcie_msi_allocate(struct pci_host_bridge *bridge, struct n71_scan_host *host,
+				struct n71_msi_allocation *lease)
+{
+	assert(active_lock && *active_lock && mock.refs==2);
+	assert(bridge==&mock.bridge && host==&bridge->private && lease==&host->msi_allocation);
+	assert(mock.bridge.alive && mock.bridge.bus && !mock.puts && !mock.resets);
+	if (mock.allocation_early_error) return mock.allocation_early_error;
+	if (!host->resources_assigned || !host->window_claimed || host->resources.active ||
+	    !host->msi.associated || !host->dart.available || !host->dart.mapped)
+		return -EACCES;
+	if (host->msi_config.attempts) return -EALREADY;
+	mock.msi_allocations++;
+	host->msi_config.attempts=1; host->msi_config.phase=N71_MSI_CONFIG_ACTIVE;
+	*lease=(struct n71_msi_allocation){.endpoint=&mock.msi_endpoint,.vector=320,.default_irq=19};
+	mock.msi_endpoint.msi_enabled=true;
+	host->msi.native.slots=1; mock.msi_domain.mapcount=mock.msi_child.mapcount=1;
+	host->msi.native.child=&mock.msi_child; mock.allocation_child_owned=true;
+	host->msi_config.error=mock.allocation_error;
+	return mock.allocation_error;
+}
+static int n71_pcie_msi_release(struct n71_scan_host *host, struct n71_msi_allocation *lease)
+{
+	assert(active_lock && *active_lock && mock.refs==2 && mock.bridge.alive && mock.bridge.bus);
+	assert(host==&mock.bridge.private && lease==&host->msi_allocation);
+	if (!lease->endpoint && !lease->vector && !lease->default_irq && host->msi_config.phase==N71_MSI_CONFIG_EMPTY)
+		return 0;
+	mock.msi_release_calls++;
+	if (mock.vector_release_pending) return 0; /* Caller must independently conserve ownership. */
+	if (!lease->endpoint) return -EBUSY;
+	if (mock.vector_release_stopped) {
+		host->msi_config.phase=N71_MSI_CONFIG_STOPPED;
+		mock.msi_endpoint.msi_enabled=false; host->msi.native.slots=0;
+		mock.msi_domain.mapcount=mock.msi_child.mapcount=0;
+	}
+	if (mock.vector_release_error) {
+		if (!host->msi_config.error) host->msi_config.error=mock.vector_release_error;
+		return mock.vector_release_error;
+	}
+	memset(lease,0,sizeof(*lease)); host->msi_config.phase=N71_MSI_CONFIG_EMPTY;
+	mock.msi_endpoint.msi_enabled=false; host->msi.native.slots=0;
+	mock.msi_domain.mapcount=mock.msi_child.mapcount=0; mock.msi_vector_releases++;
+	return 0;
+}
+
 static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 {
 	struct n71_wlan_msi_host *owner=&mock.bridge.private.msi;
 	struct n71_scan_host *host=&mock.bridge.private;
 	if (!state->scan_bridge) return 0;
 	assert(mock.bridge.alive && mock.refs && state->powered==4 && state->attached==4);
+	assert(!host->msi_allocation.endpoint && !host->msi_allocation.vector && !host->msi_allocation.default_irq &&
+	       host->msi_config.phase==N71_MSI_CONFIG_EMPTY);
 	mock.consumer_calls++;
 	if (mock.consumer_error) return mock.consumer_error;
 	if (mock.bridge.bus) {
@@ -355,6 +429,9 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 	if (owner->bridge) {
 		owner->associated=false;
 		if (mock.msi_cleanup_error) return mock.msi_cleanup_error;
+		if (mock.allocation_child_owned && !owner->native.slots && !mock.msi_domain.mapcount) {
+			owner->native.child=NULL; mock.allocation_child_owned=false;
+		}
 		if (owner->native.child || owner->native.domain->mapcount) return -EBUSY;
 		*owner=(struct n71_wlan_msi_host){0}; mock.msi_releases++;
 	}
@@ -1012,6 +1089,8 @@ static unsigned int exercise_iommu_caller(void)
 	return cases;
 }
 
+#include "n71_pcie_diagnostic_allocation.h"
+
 int main(void)
 {
 	struct platform_device p; char status[PAGE_SIZE]; unsigned int index, cases=0;
@@ -1102,5 +1181,6 @@ int main(void)
 	puts("N71_MSI_CALLER_OK cases=13");
 	assert(exercise_iommu_caller()==29);
 	puts("N71_IOMMU_CALLER_OK cases=29");
+	printf("N71_MSI_ALLOCATION_CALLER_OK cases=%u\n",exercise_allocation_caller());
 	return 0;
 }

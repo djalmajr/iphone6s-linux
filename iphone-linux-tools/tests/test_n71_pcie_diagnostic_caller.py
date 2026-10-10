@@ -197,8 +197,9 @@ IOMMU_MUTATIONS = (
     ('iommu-missing-device', 'n71_probe_locked', '!state->dart->device', '(false && !state->dart->device)'),
     ('iommu-skip-consumers', 'n71_session_cleanup', 'error = n71_pcie_scan_remove_consumers(state);',
      'error = false ? n71_pcie_scan_remove_consumers(state) : 0;'),
-    ('iommu-ignore-consumer-error', 'n71_session_cleanup', 'if (error)\n\t\t\t\treturn error;',
-     'if (false)\n\t\t\t\treturn error;'),
+    ('iommu-ignore-consumer-error', 'n71_session_cleanup',
+     'error = n71_pcie_scan_remove_consumers(state);\n\t\t\tif (error)',
+     'error = n71_pcie_scan_remove_consumers(state);\n\t\t\tif (false)'),
     ('iommu-release-live-provider', 'n71_dart_action', 'if (host && host->dart.bridge)',
      'if (false && host && host->dart.bridge)'),
     ('iommu-getter-without-lock', 'n71_iommu_status', 'mutex_lock(&session_lock);',
@@ -224,9 +225,86 @@ IOMMU_MUTATIONS += tuple(
      f'(true || {guard}) &&' if index < 7 else f'(true || {guard});')
     for index, guard in enumerate(IOMMU_CHECKS))
 
+ALLOCATION_MUTATIONS = (
+    ('allocation-ignore-hold-dispatch', 'n71_cleanup_action', 'if (sysfs_streq(text, "msi-hold"))',
+     'if (false && sysfs_streq(text, "msi-hold"))'),
+    ('allocation-ignore-release-dispatch', 'n71_cleanup_action', 'if (sysfs_streq(text, "msi-release"))',
+     'if (false && sysfs_streq(text, "msi-release"))'),
+    ('allocation-missing-pin', 'n71_msi_action', 'if (!try_module_get(THIS_MODULE))',
+     'if (false && !try_module_get(THIS_MODULE))'),
+    ('allocation-without-lock', 'n71_msi_action', 'mutex_lock(&session_lock);',
+     'if (false) mutex_lock(&session_lock);'),
+    ('allocation-without-held-bus', 'n71_msi_action', '!session || !n71_session_has_held_bus(session)', '!session'),
+    ('allocation-without-provider', 'n71_msi_action',
+     '!session->dart || !session->dart->lease.running || !session->dart->device', 'false'),
+    ('allocation-ignore-owned-lease', 'n71_msi_action', 'else if (n71_msi_allocation_pending(host))',
+     'else if (false && n71_msi_allocation_pending(host))'),
+    ('allocation-skip-effects', 'n71_msi_action',
+     'error = n71_pcie_msi_allocate(session->scan_bridge, host, &host->msi_allocation);',
+     'error = false ? n71_pcie_msi_allocate(session->scan_bridge, host, &host->msi_allocation) : 0;'),
+    ('allocation-skip-release', 'n71_msi_action', 'error = n71_pcie_msi_release(host, &host->msi_allocation);',
+     'error = false ? n71_pcie_msi_release(host, &host->msi_allocation) : 0;'),
+    ('allocation-ignore-release-pending', 'n71_msi_action', 'if (!error && n71_msi_allocation_pending(host))',
+     'if (false && !error && n71_msi_allocation_pending(host))'),
+    ('allocation-lose-primary-error', 'n71_msi_action', 'session->primary_error = error;',
+     'session->primary_error = 0;'),
+    ('allocation-ealready-poisons-session', 'n71_msi_action', 'error != -EALREADY', 'true'),
+    ('allocation-leak-action-pin', 'n71_msi_action', 'module_put(THIS_MODULE);',
+     'if (false) module_put(THIS_MODULE);'),
+    ('allocation-duplicate-unpin', 'n71_msi_action', 'module_put(THIS_MODULE);',
+     'module_put(THIS_MODULE); module_put(THIS_MODULE);'),
+    ('allocation-skip-cleanup', 'n71_session_cleanup', 'error = n71_pcie_msi_release(host, &host->msi_allocation);',
+     'error = false ? n71_pcie_msi_release(host, &host->msi_allocation) : 0;'),
+    ('allocation-cleanup-ignore-pending', 'n71_session_cleanup', 'if (!error && n71_msi_allocation_pending(host))',
+     'if (false && !error && n71_msi_allocation_pending(host))'),
+    ('allocation-cleanup-ignore-error', 'n71_session_cleanup',
+     'n71_msi_allocation_report(host, "cleanup", error);\n\t\t\tif (error)',
+     'n71_msi_allocation_report(host, "cleanup", error);\n\t\t\tif (false)'),
+    ('allocation-skip-cleanup-report', 'n71_session_cleanup', 'n71_msi_allocation_report(host, "cleanup", error);',
+     'if (false) n71_msi_allocation_report(host, "cleanup", error);'),
+    ('allocation-report-wrong-action', 'n71_msi_action', 'release ? "release" : "hold"', 'release ? "hold" : "release"'),
+    ('allocation-report-hides-error', 'n71_msi_allocation_report', 'action, error, !!lease->endpoint',
+     'action, 0 * error, !!lease->endpoint'),
+    ('allocation-report-hides-operation-error', 'n71_msi_allocation_report', 'n71_msi_allocation_error(host)',
+     '0 * n71_msi_allocation_error(host)'),
+    ('allocation-getter-without-lock', 'n71_msi_allocation_status', 'mutex_lock(&session_lock);',
+     'if (false) mutex_lock(&session_lock);'),
+    ('allocation-getter-hides-primary-error', 'n71_msi_allocation_status',
+     'session && session->primary_error ? session->primary_error',
+     'false && session && session->primary_error ? session->primary_error'),
+    ('allocation-getter-hides-host-error', 'n71_msi_allocation_status', 'host ? n71_msi_allocation_error(host) : 0',
+     'false && host ? n71_msi_allocation_error(host) : 0'),
+    ('allocation-getter-hides-session-error', 'n71_msi_allocation_status', 'session ? session->cleanup_error : 0',
+     'false && session ? session->cleanup_error : 0'),
+)
+ALLOCATION_GUARDS = (
+    '!scan_hold', '!msi_parent', '!iommu_parent', 'session->attached != 4', 'session->powered != 4',
+    'session->power_put_pending', '!session->reset_pending', '!session->module_retained',
+    'session->primary_error || session->cleanup_error',
+)
+ALLOCATION_MUTATIONS += tuple(
+    (f'allocation-missing-guard-{index}', 'n71_msi_action', guard, f'(false && ({guard}))')
+    for index, guard in enumerate(ALLOCATION_GUARDS))
+ALLOCATION_PENDING = (
+    'host->msi_allocation.endpoint', 'host->msi_allocation.vector',
+    'host->msi_allocation.default_irq', 'host->msi_config.phase != N71_MSI_CONFIG_EMPTY',
+)
+ALLOCATION_MUTATIONS += tuple(
+    (f'allocation-missing-pending-{index}', 'n71_msi_allocation_pending', guard, f'(false && ({guard}))')
+    for index, guard in enumerate(ALLOCATION_PENDING))
+ALLOCATION_GETTER_FIELDS = (
+    '!!host', 'n71_session_has_held_bus(session)', 'lease ? !!lease->endpoint : 0',
+    'host ? host->msi_config.phase : 0', 'lease ? lease->vector : 0', 'lease ? lease->default_irq : 0',
+    'lease && lease->endpoint ? lease->endpoint->msi_enabled : 0', 'native ? native->slots : 0',
+    'native && native->domain ? native->domain->mapcount : 0', 'native ? !!native->child : 0',
+)
+ALLOCATION_MUTATIONS += tuple(
+    (f'allocation-getter-loses-field-{index}', 'n71_msi_allocation_status', field, f'(0 * ({field}))')
+    for index, field in enumerate(ALLOCATION_GETTER_FIELDS))
+
 
 def function_span(source, name):
-    match = re.search(r'static int (?:__init )?' + re.escape(name) + r'\([^)]*\)\n\{', source)
+    match = re.search(r'static (?:int|bool|void) (?:__init )?' + re.escape(name) + r'\([^)]*\)\n\{', source)
     if match is None:
         raise ValueError('Caller function not found: ' + name)
     position, depth = match.end(), 1
@@ -253,9 +331,11 @@ class N71PcieCaller(unittest.TestCase):
             for name in ('delay', 'gpio/consumer', 'io', 'module', 'mutex', 'string', 'of_address',
                          'platform_device', 'pm_domain', 'pm_runtime'):
                 (folder / 'linux' / (name + '.h')).write_text('/* Kernel fixture APIs. */\n')
-            for name in ('n71-pcie-contract.h', 'n71-pcie-mmio.h', 'n71-dart-lease.h', 'n71-dart-cycle.h', 'n71-dart-observe.h'):
+            for name in ('n71-pcie-contract.h', 'n71-pcie-mmio.h', 'n71-dart-lease.h',
+                         'n71-dart-cycle.h', 'n71-dart-observe.h', 'n71-msi-allocation-lease.h',
+                         'n71-wlan-msi-config.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
-            for name in ('port', 'link', 'inventory', 'scan', 'resource-assign', 'chip-mmio'):
+            for name in ('port', 'link', 'inventory', 'scan', 'resource-assign', 'msi-allocate', 'chip-mmio'):
                 (folder / f'n71-pcie-{name}.h').write_text('/* Dependency supplied by fixture. */\n')
             for name in ('mmio', 'provider'):
                 (folder / f'n71-dart-{name}.h').write_text('/* Dependency supplied by fixture. */\n')
@@ -266,7 +346,9 @@ class N71PcieCaller(unittest.TestCase):
             variants += tuple((name, before, after, False) for name, _, before, after in DART_MUTATIONS)
             variants += tuple((name, before, after, False) for name, _, before, after in MSI_MUTATIONS)
             variants += tuple((name, before, after, False) for name, _, before, after in IOMMU_MUTATIONS)
-            scoped_functions = {name: function for name, function, _, _ in DART_MUTATIONS + MSI_MUTATIONS + IOMMU_MUTATIONS}
+            variants += tuple((name, before, after, False) for name, _, before, after in ALLOCATION_MUTATIONS)
+            scoped_functions = {name: function for name, function, _, _ in
+                                DART_MUTATIONS + MSI_MUTATIONS + IOMMU_MUTATIONS + ALLOCATION_MUTATIONS}
             for name, before, after, mmio in variants:
                 subject = mmio_source if mmio else source
                 start, end = 0, len(subject)
@@ -298,6 +380,7 @@ class N71PcieCaller(unittest.TestCase):
                     self.assertIn('N71_DART_CALLER_OK cases=22', result.stdout)
                     self.assertIn('N71_MSI_CALLER_OK cases=13', result.stdout)
                     self.assertIn('N71_IOMMU_CALLER_OK cases=29', result.stdout)
+                    self.assertIn('N71_MSI_ALLOCATION_CALLER_OK cases=31', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)

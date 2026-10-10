@@ -16,6 +16,7 @@
 #include "n71-pcie-mmio.h"
 #include "n71-pcie-scan.h"
 #include "n71-pcie-resource-assign.h"
+#include "n71-pcie-msi-allocate.h"
 #include "n71-pcie-chip-mmio.h"
 #include "n71-dart-mmio.h"
 #include "n71-dart-provider.h"
@@ -40,7 +41,7 @@ module_param(scan_hold, bool, 0400);
 MODULE_PARM_DESC(scan_hold, "Keep the PME host scan and its owners until action=cleanup; no bind or DMA");
 static bool msi_parent;
 module_param(msi_parent, bool, 0400);
-MODULE_PARM_DESC(msi_parent, "Associate the private MSI parent before the held scan; no IRQ allocation or DMA");
+MODULE_PARM_DESC(msi_parent, "Associate the private MSI parent before the held scan; allocation requires a separate action");
 static bool iommu_parent;
 module_param(iommu_parent, bool, 0400);
 MODULE_PARM_DESC(iommu_parent, "Associate the retained DART provider before the held MSI scan; no driver or DMA");
@@ -184,6 +185,23 @@ static int n71_release_power(struct n71_diagnostic *state)
 	return 0;
 }
 
+static bool n71_msi_allocation_pending(const struct n71_scan_host *host)
+{
+	return host->msi_allocation.endpoint || host->msi_allocation.vector ||
+		host->msi_allocation.default_irq || host->msi_config.phase != N71_MSI_CONFIG_EMPTY;
+}
+
+static void n71_msi_allocation_report(struct n71_scan_host *host, const char *action, int error)
+{
+	const struct n71_msi_allocation *lease = &host->msi_allocation;
+	const struct n71_wlan_msi *native = &host->msi.native;
+
+	dev_info(session_device, "N71_PCIE_MSI_ALLOCATION_RESULT action=%s error=%d owner=%u phase=%u vector=%u default_irq=%u software_enabled=%u slots=%u mappings=%u child=%u operation_error=%d; no IRQ delivery or DMA\n",
+		 action, error, !!lease->endpoint, host->msi_config.phase, lease->vector, lease->default_irq,
+		 lease->endpoint ? lease->endpoint->msi_enabled : 0, native->slots,
+		 native->domain ? native->domain->mapcount : 0, !!native->child, n71_msi_allocation_error(host));
+}
+
 static int n71_session_cleanup(struct n71_diagnostic *state)
 {
 	struct n71_scan_host *host;
@@ -191,6 +209,14 @@ static int n71_session_cleanup(struct n71_diagnostic *state)
 
 	if (state->scan_bridge) {
 		host = pci_host_bridge_priv(state->scan_bridge);
+		if (n71_msi_allocation_pending(host)) {
+			error = n71_pcie_msi_release(host, &host->msi_allocation);
+			if (!error && n71_msi_allocation_pending(host))
+				error = -EBUSY;
+			n71_msi_allocation_report(host, "cleanup", error);
+			if (error)
+				return error;
+		}
 		if (host->dart.bridge) {
 			error = n71_pcie_scan_remove_consumers(state);
 			if (error)
@@ -237,6 +263,7 @@ static int n71_finish_cleanup(struct n71_diagnostic *state)
 
 static int n71_assign_action(void);
 static int n71_dart_action(bool release);
+static int n71_msi_action(bool release);
 
 static int n71_cleanup_action(const char *text, const struct kernel_param *parameter)
 {
@@ -245,6 +272,10 @@ static int n71_cleanup_action(const char *text, const struct kernel_param *param
 	(void)parameter;
 	if (sysfs_streq(text, "assign"))
 		return n71_assign_action();
+	if (sysfs_streq(text, "msi-hold"))
+		return n71_msi_action(false);
+	if (sysfs_streq(text, "msi-release"))
+		return n71_msi_action(true);
 	if (sysfs_streq(text, "dart-hold"))
 		return n71_dart_action(false);
 	if (sysfs_streq(text, "dart-release"))
@@ -309,6 +340,45 @@ static int n71_assign_action(void)
 		error = n71_pcie_assign_resources(session);
 		if (error && error != -EALREADY && !session->primary_error)
 			session->primary_error = error;
+	}
+	mutex_unlock(&session_lock);
+	module_put(THIS_MODULE);
+	return error;
+}
+
+static int n71_msi_action(bool release)
+{
+	struct n71_scan_host *host = NULL;
+	int error;
+
+	if (!scan_hold || !msi_parent || !iommu_parent)
+		return -EINVAL;
+	if (!try_module_get(THIS_MODULE))
+		return -ENODEV;
+	mutex_lock(&session_lock);
+	if (!session || !n71_session_has_held_bus(session)) {
+		error = -ENODEV;
+	} else if (session->attached != 4 || session->powered != 4 || session->power_put_pending ||
+		   !session->reset_pending || !session->module_retained) {
+		error = -EBUSY;
+	} else {
+		host = pci_host_bridge_priv(session->scan_bridge);
+		if (release) {
+			error = n71_pcie_msi_release(host, &host->msi_allocation);
+			if (!error && n71_msi_allocation_pending(host))
+				error = -EBUSY;
+		} else if (session->primary_error || session->cleanup_error) {
+			error = -EBUSY;
+		} else if (!session->dart || !session->dart->lease.running || !session->dart->device) {
+			error = -EACCES;
+		} else if (n71_msi_allocation_pending(host)) {
+			error = -EBUSY;
+		} else {
+			error = n71_pcie_msi_allocate(session->scan_bridge, host, &host->msi_allocation);
+			if (error && error != -EALREADY && !session->primary_error)
+				session->primary_error = error;
+		}
+		n71_msi_allocation_report(host, release ? "release" : "hold", error);
 	}
 	mutex_unlock(&session_lock);
 	module_put(THIS_MODULE);
@@ -440,6 +510,32 @@ static int n71_msi_status(char *buffer, const struct kernel_param *parameter)
 	return length;
 }
 
+static int n71_msi_allocation_status(char *buffer, const struct kernel_param *parameter)
+{
+	struct n71_scan_host *host = NULL;
+	const struct n71_msi_allocation *lease;
+	const struct n71_wlan_msi *native;
+	int error, length;
+
+	(void)parameter;
+	mutex_lock(&session_lock);
+	if (session && session->scan_bridge)
+		host = pci_host_bridge_priv(session->scan_bridge);
+	lease = host ? &host->msi_allocation : NULL;
+	native = host ? &host->msi.native : NULL;
+	error = session && session->primary_error ? session->primary_error :
+		host ? n71_msi_allocation_error(host) : 0;
+	length = scnprintf(buffer, PAGE_SIZE,
+		"ready=%u held=%u owner=%u phase=%u vector=%u default_irq=%u software_enabled=%u slots=%u mappings=%u child=%u error=%d session_error=%d\n",
+		!!host, n71_session_has_held_bus(session), lease ? !!lease->endpoint : 0,
+		host ? host->msi_config.phase : 0, lease ? lease->vector : 0, lease ? lease->default_irq : 0,
+		lease && lease->endpoint ? lease->endpoint->msi_enabled : 0, native ? native->slots : 0,
+		native && native->domain ? native->domain->mapcount : 0, native ? !!native->child : 0,
+		error, session ? session->cleanup_error : 0);
+	mutex_unlock(&session_lock);
+	return length;
+}
+
 static int n71_iommu_status(char *buffer, const struct kernel_param *parameter)
 {
 	struct n71_scan_host *host = NULL;
@@ -469,9 +565,10 @@ static const struct kernel_param_ops held_ops = {.get = n71_held_status};
 static const struct kernel_param_ops resource_ops = {.get = n71_resource_status};
 static const struct kernel_param_ops dart_ops = {.get = n71_dart_status};
 static const struct kernel_param_ops msi_ops = {.get = n71_msi_status};
+static const struct kernel_param_ops msi_allocation_ops = {.get = n71_msi_allocation_status};
 static const struct kernel_param_ops iommu_ops = {.get = n71_iommu_status};
 module_param_cb(action, &cleanup_ops, NULL, 0200);
-MODULE_PARM_DESC(action, "assign, dart-hold, dart-release, cleanup operate on the retained session; no rescan");
+MODULE_PARM_DESC(action, "assign, dart-hold, dart-release, msi-hold, msi-release, cleanup operate on the retained session; no rescan");
 module_param_cb(status, &status_ops, NULL, 0400);
 MODULE_PARM_DESC(status, "Inspect retained ownership and cleanup errors before normal unload");
 module_param_cb(held, &held_ops, NULL, 0400);
@@ -482,6 +579,8 @@ module_param_cb(dart, &dart_ops, NULL, 0400);
 MODULE_PARM_DESC(dart, "Read DART ownership and recovery progress independently of PCI resources");
 module_param_cb(msi, &msi_ops, NULL, 0400);
 MODULE_PARM_DESC(msi, "Read MSI association ownership and pending session cleanup; not IRQ delivery proof");
+module_param_cb(msi_allocation, &msi_allocation_ops, NULL, 0400);
+MODULE_PARM_DESC(msi_allocation, "Read allocation ownership and last validation; no new IO or IRQ delivery proof");
 module_param_cb(iommu, &iommu_ops, NULL, 0400);
 MODULE_PARM_DESC(iommu, "Read OF/core DART association and pending cleanup; not DMA translation proof");
 

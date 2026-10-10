@@ -16,9 +16,11 @@ Guardar a lease no host PCI, junto do owner de configuração. Evita estado glob
 
 ### Fase B — actions/getter/cleanup (até cinco arquivos)
 
-`phone/kernel/n71-pcie-diagnostic.c`, `tests/n71_pcie_diagnostic_caller.c`, `tests/test_n71_pcie_diagnostic_caller.py`, `tests/n71_pcie_scan_host.c` e este plano. Incluir o adaptador e actions explícitas `msi-hold`/`msi-release`. `msi-hold` requer scan_hold/msi_parent/iommu_parent, sessão com module/reset/power/domains completos, bus vivo/recursos/providers próprios e ausência de erros. `msi-release` admite erro anterior para cleanup verificado e conserva a primeira causa. A action de cleanup sempre libera MSI antes de remover consumidores/DART; falha ou lease pendente retém bus/reset/power/módulo. Getters antigos permanecem idênticos.
+`phone/kernel/n71-pcie-diagnostic.c`, `tests/n71_pcie_diagnostic_caller.c`, `tests/n71_pcie_diagnostic_allocation.h`, `tests/test_n71_pcie_diagnostic_caller.py` e este plano. Manter os cenários novos em uma fixture focada, incluída pelo caller, sem ampliar o arquivo já extenso. Incluir o adaptador e actions explícitas `msi-hold`/`msi-release`. `msi-hold` requer scan_hold/msi_parent/iommu_parent, sessão com module/reset/power/domains completos, bus vivo/recursos/providers próprios e ausência de erros. `msi-release` admite erro anterior para cleanup verificado e conserva a primeira causa. A action de cleanup sempre libera MSI antes de remover consumidores/DART; falha ou lease pendente retém bus/reset/power/módulo. Getters antigos permanecem idênticos.
 
 Getter novo `msi_allocation`: ready/held/owner/phase/vector/default_irq/software_enabled/slots/mappings/child/error/session_error. Representa ownership e última validação; não executar novo MMIO nem alegar entrega IRQ. Fase0/1/2 corresponde a EMPTY/ACTIVE/STOPPED. Fields sem host são zero; vector/default_irq dependem da lease, slots/mapcounts do owner nativo. Definir o registro de resultado e cleanup antes de adaptar o collector.
+
+`ready` significa host presente. `error` conserva primary_error da sessão quando existe, depois MSI/config/io nessa ordem se o host ainda está presente; `session_error` conserva cleanup_error mesmo sem host. Os outros campos são zero sem host. Hold exige provider da sessão com lease running/device e recusa uma lease/phase já owned sem efeito ou envenenar o erro primário. Release tolera erros anteriores e não exige provider running; clocks/reset/pin e bus continuam obrigatórios. Em cleanup, chamar release apenas se lease ou phase ainda owned; nenhum novo efeito nos caminhos anteriores quando ambos estão vazios. Campos vector/default_irq residuais também exigem release/refusal, mesmo sem endpoint. Emitir `N71_PCIE_MSI_ALLOCATION_RESULT` com action/error/owner/phase/vector/default_irq/software_enabled/slots/mappings/child/operation_error; cleanup usa action=cleanup, mesmo contrato. Capturar o primeiro erro do hold após a chamada do adaptador, exceto EALREADY; recusa anterior não cria erro operacional.
 
 As dependências PCI/IRQ da fixture de caller são modelos; exercitar o código de action/getter/cleanup real. Mutantes devem selecionar funções explicitamente, preservando seletores dos gates anteriores. Cenários: defaults sem ação, opt-in incompleto, pin/lock/lifetime, acquire sucesso/erro antes e depois do capture, getter coerente, release com primeira causa conservada, stop/restore recusados, retry sem nova alocação, cleanup antes de consumers e ausência de put/power/reset prematuros. Guarda de remoção por config phase já existe; testar que o campo de lease fica zerado antes de consumer removal.
 
@@ -29,7 +31,7 @@ Build completa do diagnóstico contra source/config/Image/exports power2 exatos 
 ## Tarefas
 
 - [x] Mover tipo da lease e armazenar no host sem alterar a política.
-- [ ] Integrar action/getter/cleanup e regressões/mutações compiladas.
+- [x] Integrar action/getter/cleanup e regressões/mutações compiladas.
 - [ ] Qualificar diagnóstico completo ARM64 e preservar os artefatos anteriores.
 - [ ] Integrar collector/journal/seleção/perfil com defaults e histórico preservados.
 - [ ] Preparar driver/DMA/firmware/energia antes do teste físico agrupado.
