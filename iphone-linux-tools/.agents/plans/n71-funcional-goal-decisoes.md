@@ -377,3 +377,21 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 - **Reverter:** baixo; módulo externo opt-in e headers, sem novo Image/DT/config ou mudança nos drivers preservados.
 - **Onde:** fase2 do plano I2C1; novo n71-i2c-pin-owner.h e action configure do caller; issue2.
 - **Status:** aplicada emd226603 (owner) e45a3aa5 (caller). Mac/ARM64:67cenários/13mutações do owner e66cenários/19mutações do caller. Build operacional48.240bytes/79imports, Image/config/exports preservados. Sem reset físico, sensor ou carga Linux comprovados; transporte/ABI e coleta agrupada continuam pendentes.
+
+## D40. Consumir a indicação de conclusão sem inventar sua restauração
+
+- **Decisão:** implementar primeiro uma leitura fixa75:1d por polling, com recuperação própria e retenção dos recursos. Preservar a baseline original e registrar explicitamente o acknowledge de SMSTA/XEN; após isso, comparar o estado final com a baseline sem esse evento histórico. Bloquear release do controlador enquanto houver transporte pendente.
+- **Por quê:** a fonte PASemi limpa XEN por escrita e a baseline física anterior contém esse bit. A igualdade integral exigida pelo ciclo sem transferência não pode ser prometida depois de consumir a indicação. A leitura1d já aparece na referência HDQ N71, enquanto status7 tem efeitos ainda não qualificados.
+- **Alternativas:** usar o adapter/probe genérico amplia alvos/efeitos e não preserva o lifecycle; regravar um evento histórico não é uma restauração qualificada; ignorar todo SMSTA esconderia falhas. Não interpretar a resposta como prova de chip, gauge ou corrente.
+- **Reverter:** baixo; headers/caller opt-in, sem Image novo, scanner ou configuração de carga. O contrato antigo sem transferências mantém comparação integral.
+- **Onde:** [plano de leitura HDQ](n71-i2c-hdq-read.md), header de transporte e action operacional; issue2.
+- **Status:** aplicada em3e0a597 (transporte) e93da4be (caller). Transporte38cenários/12mutações e regressão controlador50/15 por plataforma; caller77/23 Mac/ARM64. Módulo operacional51.120bytes/79imports com Werror, fonte/config/Image/exports preservados. Sem acesso físico I2C/gauge/carga nesta preparação.
+
+## D41. Separar a prova sintética de teste do snapshot histórico de produção
+
+- **Decisão:** a fixture RuntimeBuildTests registra bytes/hash dos69 inputs que ela mesma copia para seu diretório descartável. Conservar guards e evidência de produção; usar somente o snapshot original ou requalificação explícita na seleção física do caller Wi-Fi.
+- **Por quê:** CIe09bc845 falhou antes dos testes funcionais: a fixture misturava fonte I2C atual com o hash histórico do manifesto. Só n71-i2c-power-diagnostic.c mudou entre os69 inputs. Atualizar o registro de produção fingiria que o binário antigo foi compilado da fonte nova.
+- **Alternativas:** omitir o guard aceita mistura de bytes; congelar o desenvolvimento I2C não atende a demanda; preservar o snapshot de fonte real é a solução de proveniência para o uso físico, não um motivo para os testes sintéticos dependerem de um arquivo de trabalho antigo.
+- **Reverter:** baixo; uma fixture de teste, nenhum selector ou registro de produção alterado.
+- **Onde:** tests/test_n71_driver_runtime_build.py e oito módulos Python afetados; plano da leitura HDQ.
+- **Status:** aplicada em1777a93; oito módulos Python,56testes e65mutações únicas por AssertionError passaram em Mac/ARM64. Guards/evidências de produção intactos. [#43](https://github.com/djalmajr/iphone6s-linux/issues/43) mantém snapshot/requalificação do caller Wi-Fi real pendente antes do agrupamento físico.

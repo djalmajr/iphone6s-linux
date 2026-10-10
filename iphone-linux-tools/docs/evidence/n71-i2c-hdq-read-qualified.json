@@ -1,0 +1,280 @@
+{
+  "format": 1,
+  "status": "fixed_hdq_control_transport_and_operational_caller_qualified_not_loaded",
+  "commits": {
+    "transport": "3e0a597f04a334123e5deed932b997002e687064",
+    "caller": "93da4bee66ae1210ed668213b6fe581414b1285e",
+    "runtime_fixture": "1777a93161ea5dc34cc4da9636c4d990f10d8da5"
+  },
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "primary_pasemi_core_sha256": "79fba3545729becc1c42f9706f01e5fd782dc06b152a219739d07ca5eeb98181",
+  "transport_inputs": {
+    "phone/kernel/n71-i2c-controller.h": {
+      "bytes": 7989,
+      "sha256": "5c01cfc671deee1fe4c30ab16b3f4bb782d767464ec3dde0ea94443169f7cdcf"
+    },
+    "phone/kernel/n71-i2c-hdq-read.h": {
+      "bytes": 6563,
+      "sha256": "a3c2cb89e19a59695b6eec479973bbd56eb0024e1d721a1f405d68e8c2b0bfb1"
+    },
+    "phone/kernel/n71-i2c-controller-observe.h": {
+      "bytes": 2842,
+      "sha256": "8b86f579023ca4270c7eb04a387ce9990f18f825fd4ee395b240e1a1b1ade78a"
+    },
+    "phone/kernel/n71-i2c-power-lifecycle.h": {
+      "bytes": 3013,
+      "sha256": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2"
+    },
+    "tests/n71_i2c_controller.c": {
+      "bytes": 13062,
+      "sha256": "23a2772aa6dac4a73e1bae16f9ddcce3ea18d8eddb7c83b07e38428e2d9d0c20"
+    },
+    "tests/test_n71_i2c_controller.py": {
+      "bytes": 4451,
+      "sha256": "ad721a5ccebf34abe77c6d1723274645cff939f7002e9e8cad19690e51ddfd36"
+    },
+    "tests/n71_i2c_hdq_read.c": {
+      "bytes": 8501,
+      "sha256": "0845621dd208bcfee914944af597132e168352e8b95fac2bf290b2063069507e"
+    },
+    "tests/test_n71_i2c_hdq_read.py": {
+      "bytes": 4378,
+      "sha256": "f1cedc1594d54ce6804874b5837f6a28b7dac2e51a864cf82017ab960f8f9e39"
+    }
+  },
+  "caller_inputs": {
+    "phone/kernel/n71-i2c-power-diagnostic.c": {
+      "bytes": 10411,
+      "sha256": "ec3ce909340fee07fbf07187677ae73341e704b7c67da0b5b1905fb0079f22f6"
+    },
+    "phone/kernel/n71-i2c-configuration.h": {
+      "bytes": 2855,
+      "sha256": "0f36cd4ddd938bdbb1bab3ee9ac9ea4391f0eb285b32e8dd8b9cddd27b6b0e2c"
+    },
+    "phone/kernel/n71-i2c-hdq-read.h": {
+      "bytes": 6563,
+      "sha256": "a3c2cb89e19a59695b6eec479973bbd56eb0024e1d721a1f405d68e8c2b0bfb1"
+    },
+    "phone/kernel/n71-i2c-controller.h": {
+      "bytes": 7989,
+      "sha256": "5c01cfc671deee1fe4c30ab16b3f4bb782d767464ec3dde0ea94443169f7cdcf"
+    },
+    "phone/kernel/n71-i2c-controller-observe.h": {
+      "bytes": 2842,
+      "sha256": "8b86f579023ca4270c7eb04a387ce9990f18f825fd4ee395b240e1a1b1ade78a"
+    },
+    "phone/kernel/n71-i2c-power-lifecycle.h": {
+      "bytes": 3013,
+      "sha256": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2"
+    },
+    "phone/kernel/n71-i2c-genpd.h": {
+      "bytes": 8259,
+      "sha256": "6d772609640235a03b381ca0c7bcd49eb2d2cbbe5ef053ca1844bcf3b2488fea"
+    },
+    "phone/kernel/n71-pmgr-access.h": {
+      "bytes": 5487,
+      "sha256": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae"
+    },
+    "phone/kernel/n71-i2c-pin-owner.h": {
+      "bytes": 7908,
+      "sha256": "fa2b9d65fbf0a6d900023e3f35dea87c59784491bad0b4841db9644fa57d2426"
+    },
+    "phone/kernel/n71-i2c-pin-owner-of.h": {
+      "bytes": 2664,
+      "sha256": "353bdb76b326697f08a1188fda70d1381aab5ae0647ba5a0fe4ffce527cb1854"
+    },
+    "tests/n71_i2c_power_diagnostic.c": {
+      "bytes": 23435,
+      "sha256": "a0b024509485d43d1a9ba770ebd206888d917ea28336c08930eaa51a7f5088be"
+    },
+    "tests/test_n71_i2c_power_diagnostic.py": {
+      "bytes": 7242,
+      "sha256": "94c3ec6f2969ecebed4f0b0234e9c805fc8afcddfad6e6b087ab6db8ea566596"
+    },
+    "tests/n71_i2c_genpd.c": {
+      "bytes": 17208,
+      "sha256": "99fcf7964a8387487c5cae757ccf52c641ad6a5a61db53dc7e9a5a0d98f9c935"
+    },
+    "tests/n71_i2c_controller_observe.c": {
+      "bytes": 7365,
+      "sha256": "b95d56a27ffd297b92d673fe619c104fd229fa1e3db375dfdb010125bfd97d36"
+    }
+  },
+  "input_hashes_match_mac_arm_and_current": true,
+  "contract": {
+    "target_7bit_address": "75",
+    "register": "1d",
+    "bytes": 1,
+    "mtxfifo_commands": [
+      "1ea",
+      "1d",
+      "1eb",
+      "601"
+    ],
+    "register_selection_is_bus_write": true,
+    "charger_value_writes": false,
+    "address_scanner": false,
+    "adapter_or_irq_registration": false,
+    "owns_held_pins_power_clock_and_mmio_by_caller": true,
+    "pending_before_first_write": true,
+    "controller_release_refuses_pending_transfer": true,
+    "baseline_original_preserved": true,
+    "completion_event_consumed_explicitly": true,
+    "expected_smsta_after_ack": "original SMSTA with only XEN bit27 removed",
+    "cleanup_ack_flags": [
+      "XEN",
+      "JMD",
+      "MTO",
+      "MTA",
+      "MTN",
+      "TOM"
+    ],
+    "cleanup_requires_bus_idle_before_fifo_reset": true,
+    "output_commits_after_transport_cleanup": true,
+    "primary_and_cleanup_errors_separate": true,
+    "pending_retains_module_resources_and_power": true,
+    "same_boot_retry_and_repeated_reads_tested": true,
+    "poll_waits_per_phase_max": 100,
+    "nominal_delay_us": 1000,
+    "absolute_wall_clock_guarantee": false
+  },
+  "native": {
+    "mac": {
+      "test_n71_i2c_controller.py": {
+        "cases": 50,
+        "mutations": 15,
+        "seconds": 4.768
+      },
+      "test_n71_i2c_hdq_read.py": {
+        "cases": 38,
+        "mutations": 12,
+        "seconds": 4.428
+      }
+    },
+    "arm": {
+      "test_n71_i2c_controller.py": {
+        "cases": 50,
+        "mutations": 15,
+        "seconds": 18.789
+      },
+      "test_n71_i2c_hdq_read.py": {
+        "cases": 38,
+        "mutations": 12,
+        "seconds": 15.703
+      }
+    },
+    "caller_mac": {
+      "cases": 77,
+      "mutations": 23,
+      "seconds": 13.113
+    },
+    "caller_arm": {
+      "test_n71_i2c_power_diagnostic.py": {
+        "cases": 77,
+        "mutations": 23,
+        "seconds": 29.603
+      }
+    },
+    "all_mutations_compiled": true,
+    "kills_require_sigabrt_and_assertion": true,
+    "headers_are_real_mmio_and_kernel_apis_are_fixtures": true,
+    "caller_configuration_and_genpd_are_real": true,
+    "caller_pins_controller_and_read_dependencies_are_fixtures": true,
+    "unchanged_owner_and_genpd_header_gates_reused": true
+  },
+  "build": {
+    "probe": {
+      "probe_bytes": 8776,
+      "probe_sha256": "b5dadae92fc15154bb5f08ef84d57a04c407eaa91a8ec571ec0af08b02684ba6",
+      "imports": 3,
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "refuses_load_enodev": true,
+      "operational": false
+    },
+    "operational_caller": {
+      "module_bytes": 51120,
+      "module_sha256": "bda7b76fc13290c0f75985505b2f44929f2ede11c7336121b0dee02d151e9247",
+      "imports": 79,
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "init_requires_run": true,
+      "operational": true
+    },
+    "all_imports_in_preserved_exports": true,
+    "elf": "ELF64 REL AArch64",
+    "W": 1,
+    "KCFLAGS": "-Werror",
+    "modpost": true,
+    "aggregate_module_symvers_warning": true,
+    "vmlinux_symvers_supplied": true,
+    "kbuild_modpost_warn_used": false,
+    "protected_before_and_after": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    }
+  },
+  "style": {
+    "production_files_checkpatch": 4,
+    "errors": 0,
+    "warnings": 0,
+    "checks": 0,
+    "ast_and_fatal_lint_mac_arm": true,
+    "python_type_checker_configured": false
+  },
+  "ci": {
+    "timeout_fix_head": "be960f14268da56aa928873375200cb10a4e2e88",
+    "timeout_fix_runs": [
+      38090497215,
+      38090494013
+    ],
+    "timeout_fix_all_six_jobs_success": true,
+    "issue41_closed": true,
+    "later_head": "e09bc845e09a321a5cd61a1194e63dcb22c99b4c",
+    "later_runs": [
+      38093506572,
+      38093501267
+    ],
+    "later_conclusion": "failure",
+    "later_failure_step": "Synthetic tests without device or real identities",
+    "later_failure": "historical RuntimeBuildTests input manifest mixed with current copied n71-i2c-power-diagnostic.c",
+    "runtime_fixture_regression_status": "passed_mac_and_arm",
+    "runtime_fixture_regression": {
+      "mac": {
+        "modules": 8,
+        "tests": 56,
+        "seconds": 282.041,
+        "assertion_mutation_lines": 65,
+        "unique_assertion_mutations": 65
+      },
+      "arm": {
+        "modules": 8,
+        "tests": 56,
+        "seconds": 248.618,
+        "assertion_mutation_lines": 65,
+        "unique_assertion_mutations": 65
+      }
+    },
+    "production_guards_and_historical_evidence_unchanged": true,
+    "runtime_fixture_input_sha256": "6befb7588cb0c8d5b9b13dd5e3e0d3a0f0cdebf68a95fdbc9183b8633ce44a3c",
+    "new_head_remote_ci": "pending_after_publication"
+  },
+  "physical": {
+    "phone_accessed": false,
+    "usb_ssh_dfu_reboot": false,
+    "i2c_transfer_verified": false,
+    "sn2400_identity_verified": false,
+    "gauge_abi_verified": false,
+    "charging_or_net_current_verified": false,
+    "native_wifi_verified": false,
+    "goal_complete": false
+  },
+  "remaining": [
+    "preserve qualified 69-input Wi-Fi source snapshot or requalify it explicitly",
+    "HDQ shared-line release and UART5 backend",
+    "physical gauge revision/register map/units",
+    "grouped native Wi-Fi plus battery/energy session",
+    "sustained charging and continuous operation"
+  ],
+  "remaining_issue43": "https://github.com/djalmajr/iphone6s-linux/issues/43"
+}

@@ -4,6 +4,8 @@
 
 Fase1 em609dd39 e fase2 emd226603/45a3aa5: MMIO/clkref, baseline, reset/restauração de revisão2 e owner operacional de GPIO/pinctrl integrados ao novo action configure. Ainda não foram executados no aparelho. Os probes de compilação retornam ENODEV no init; o módulo operacional é um artefato distinto, cujo init run1 apenas qualifica. SN2400, gauge e carga Linux continuam sem prova física. [Plano](../.agents/plans/n71-i2c-controller.md), [D37/D38/D39](../.agents/plans/n71-funcional-goal-decisoes.md#d37-inicializar-i2c1-por-polling-com-restauração-própria), [fase1](evidence/n71-i2c-controller-reset.json), [fase2](evidence/n71-i2c-configure-qualified.json).
 
+A [leitura HDQ limitada](N71_I2C_HDQ_READ.md), em3e0a597/93da4be, acrescenta um transporte opt-in e recovery retido. A igualdade integral descrita abaixo continua sendo o contrato de configure sem transferência; depois de consumir SMSTA/XEN, somente esse evento histórico é removido da comparação, mantendo a baseline original. Provas e artefatos abaixo pertencem às fases históricas identificadas; a nova candidata tem manifesto/build próprios.
+
 O código só poderá ser chamado com consumidor N71/I2C1 já qualificado pelo backend genpd e descriptors realmente retidos. O chamador serializa comandos e mantém módulo, consumidor, OF, pinos e domínio ativo até `n71_i2c_controller_clean` comprovar ausência de recursos/obrigação. O callback `verify_pins` deve validar a reserva e o readback atual; a fixture de testes não é uma implementação física desse callback.
 
 ## Sequência e falhas
