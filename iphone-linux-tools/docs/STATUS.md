@@ -1,6 +1,12 @@
-# iPhone 6s Linux — atualizado em 2026-10-09
+# iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — brcmfmac corrigido e recompilado; integração do rádio pendente
+## Checkpoint atual — configuração MSI qualificada; caller e rádio pendentes
+
+O owner de configuração MSI e o callback PCI passaram no Mac/Ubuntu ARM64:91 cenários/27 mutações do owner e183 cenários/147 mutações do host. O módulo completo passou W=1/Werror/modpost,116.192 bytes/SHA59dc95da,123 imports/ELF/vermagic conferidos. Kernel/config/Image/exports e a candidata física anterior foram preservados. AST/lint fatal passaram; não há typechecker Python. Na VM, o runner atingiu180s; três métodos completos foram reutilizados com inputs intactos, e os três restantes passaram na retomada. [Reprodução](N71_IRQ_IOMMU.md#configuração-msi--owner-e-callback-qualificados), [evidência](evidence/n71-msi-config-qualified.json).
+
+O controle exige grant único, mensagem/readback exatos e MSI off comprovado antes de free/restore. Replays idênticos do core não escrevem; mensagens zeradas são aceitas somente depois de stop. Enable/decode/MASTER continuam negados. Caller nativo, collector/journal/perfil, driver/DMA/firmware e prova física Wi-Fi/energia permanecem pendentes. Nenhum módulo foi carregado, nem DFU/reboot solicitado; não há ação necessária do operador nesta fase.
+
+## Etapa anterior — brcmfmac corrigido e recompilado
 
 A correção do retorno MSI passou gates offline no Mac/Ubuntu ARM64 e build dos oito módulos com ABI power2. Uma falha MSI agora retorna antes do request IRQ. Fonte/kernel/Image/config/exports e os oito módulos de rollback foram preservados; somente o novo brcmfmac mudou,499.496 bytes/SHA1c54194c.16 cenários C,13 mutações compiladas mais regressão original,15 testes/24 mutações do builder por plataforma; AST/lint fatal e verificação independente dos artefatos passaram. [Reprodução e limites](N71_WIFI_MODULES.md#correção-de-falha-msi--2026-10-09), [evidência](evidence/n71-brcmfmac-msi-error-qualified.json).
 

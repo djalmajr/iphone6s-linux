@@ -53,3 +53,12 @@
 - **Reverter:** baixo; os oito módulos anteriores continuam intactos e não houve carga no aparelho.
 - **Onde:** [plano](n71-brcmfmac-msi-error.md), [reprodução](../../docs/N71_WIFI_MODULES.md#correção-de-falha-msi--2026-10-09), [evidência](../../docs/evidence/n71-brcmfmac-msi-error-qualified.json), issues9/40.
 - **Status:** patch, regressão C e gates/build Mac/Ubuntu ARM64 aprovados; integração e prova física de IRQ/DMA/rádio permanecem na fila.
+
+## D7. Configuração MSI com readback e cleanup separado
+
+- **Decisão:** integrar um owner de configuração específico ao callback PCI, sem habilitar decode/MASTER. Capture exato, grant único e mensagem comprovada precedem enable; stop com readback precede free, e restore espera grants/mappings zerados. Replays idênticos são noops; zeros do core só após stop.
+- **Por quê:** a fonte PCI fixada ignora retornos dos writes MSI; sucesso da API não garante programação do hardware. O core pode reescrever a mensagem ao ativar/alterar afinidade e zerá-la ao desativar.
+- **Alternativas:** liberar writes gerais perde o limite da concessão; confiar somente no retorno PCI pode liberar vetores enquanto MSI permanece habilitado. Alterar o kernel inteiro aumenta o custo sem resolver ownership.
+- **Reverter:** baixo para o opt-in; owner vazio mantém o caminho anterior. Driver/DMA precisam de contrato próprio antes de liberar decode/MASTER.
+- **Onde:** [plano](n71-wlan-msi-config.md), [reprodução](../../docs/N71_IRQ_IOMMU.md#configuração-msi--owner-e-callback-qualificados), [evidência](../../docs/evidence/n71-msi-config-qualified.json), issues40/9.
+- **Status:** helper/callback e build ARM64 qualificados; caller/getter/collector/journal e driver/energia em curso. Sem teste físico isolado de alocação.

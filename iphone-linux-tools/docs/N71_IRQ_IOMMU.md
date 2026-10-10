@@ -668,3 +668,24 @@ O contrato separa erro da atribuição, erro da operação DART e ownership. Som
 Mac e Ubuntu ARM64: IOMMU21 testes/53 mutações, recursos10/32, estágio16/26, held21/30 e compatibilidade Session45 testes por plataforma. Total113 testes/141 mutações Python por asserção; counts incluem os parents e não são somados aos históricos sobrepostos. O gate IOMMU foi reexecutado após ampliar a cobertura do primeiro erro de atribuição; demais gates aprovados foram reutilizados com produção/inputs relevantes intactos. Uma mutação inicial não alcançava o estágio do coordinator; corrigida a ligação e comprovado o kill. Um mutant inicial gerou TypeError, excluído da contagem; o novo caso boolFalse prova a recusa por asserção. AST passou; não há typechecker Python. Flake8 fatal E9/F63/F7/F82 passou no Mac e Ubuntu ARM64 usando quatro wheels puros fixados por hash e carregados diretamente da pasta privada, sem instalação. A CI completa deste incremento terá execução própria. [Qualificação reproduzível](evidence/n71-dart-cleanup-operation-qualified.json).
 
 Módulo, fonte/config/Image/exports, candidata, defaults e permissões de escrita permanecem intactos; o `--check` real passou novamente. Sem dependência/pacote/configuração global do Mac, banco ou ação adicional no telefone para testar os parsers. A CI completa anterior3a61c76 terminou com sucesso nos dois eventos, seis jobs Mac/Ubuntu/Windows. A nova correção host ainda terá sua própria CI. Próximo desenvolvimento reúne entrega MSI/IRQ, domínio/DMA e driver/firmware antes de outro teste físico; Wi-Fi#9, energia#2 e issue40 permanecem abertos.
+
+## Configuração MSI — owner e callback qualificados
+
+Em2026-10-10, `n71-wlan-msi-config.h` acrescenta capture/write/stop/restore e ownership separado do primeiro erro. Identidades root1004106b/endpoint43a314e4, MSI64/cap0x58/header00886805 e COMMAND sem decode/MASTER são revalidados. O callback `n71-pcie-scan.h` encaminha ao owner quando ativo, usando slots reais do parent; owner vazio mantém a política anterior. A remoção dos consumidores espera restore. O enable do device continua recusado.
+
+Uma concessão em slots0..7 permite somente endereço bffff000/0 e data8+slot. Enable exige readback completo e INTx-disable. Ativação/afinidade podem repetir a mensagem idêntica habilitada, com validação sem escrita. A desativação do core pode zerar mensagem somente após stop e MSI off comprovado. Restore exige software disabled, slots/mapcount zero e readback do baseline antes de soltar o owner. A falha conserva estado para cleanup; não há fallback INTx.
+
+Reprodução local dos gates:
+
+```sh
+python3 -B -m unittest discover -s iphone-linux-tools/tests -p test_n71_wlan_msi_config.py -v
+python3 -B -m unittest discover -s iphone-linux-tools/tests -p test_n71_pcie_scan_host.py -v
+```
+
+Mac e Ubuntu ARM64:91 cenários/27 mutações compiladas do owner;183 cenários/147 mutações compiladas do host, em seis métodos. Mutações exigem compilação exit0, SIGABRT e asserção. O runner Ubuntu atingiu180s após dart/dma/lifecycle completos;54 inputs continuaram iguais e só MSI/baseline/recursos foram retomados. Timeouts/falhas de compilação/runner não contam como kills. AST e lint fatal passaram; nenhum typechecker Python configurado.
+
+Build externa real: módulo116.192 bytes/SHA59dc95da412ddef3adc710b7e7160f68093a8a9ab323504bacaa796945946b85, W=1/KCFLAGS=-Werror/modpost,123 imports disponíveis, ELF64/AArch64 e vermagic power2. Fonte/config/Image/exports preservados; hash/bytes/ELF/vermagic conferidos no Mac. [Inputs, logs por SHA e limites](evidence/n71-msi-config-qualified.json).
+
+Auditoria primária da fonte fixada: [PCI MSI](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/msi/msi.c) exige cache PCI_D0, mas ignora retornos dos writes; [IRQ MSI](https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/kernel/irq/msi.c) faz replay/zero da mensagem e conserva o child device-domain entre alocações. `pci_set_power_state` está exportado; `pci_update_current_state` não está. O caller futuro deve validar PMCSR D0 real, chamar a API exportada e conferir cache/readback/erro do host; não atribuir estado manualmente.
+
+Esta etapa não expõe caller de alocação nem comprova IRQ entregue, DMA, firmware, rádio ou energia. Nenhuma carga ou reinicialização ocorreu. O helper sem decode/MASTER precisa de contrato de driver/DART antes de servir ao brcmfmac; callback de firmware assíncrono também precisa terminar antes de teardown. Caller/getter/collector/journal/perfil e essa integração continuam nas issues40/9/2. A próxima sessão física reunirá esses testes; não pedir DFU somente para esta alocação.
