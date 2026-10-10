@@ -72,6 +72,11 @@ def validate_source(session, request):
 
 
 def continuation(text, request):
+    if n71_driver_module_stage.selected(request['session']) is not None:
+        import n71_driver_runtime_lifetime
+        n71_driver_runtime_lifetime.verify_history(request['session'], text, {
+            'baseline': request['data']['baseline'], 'checkpoint': request['checkpoint'], 'proofs': request['proofs']})
+        return
     current = history.kernel_lines(text)
     module_entries = n71_driver_module_stage.ledger(request['session'], request['data'])
     anchors = [request['data']['baseline']] + [entry['history'] for entry in request['entries'] + module_entries]
@@ -122,15 +127,23 @@ def load(session, request):
                for name, proof in proofs.items() if name in stage.extra_proofs(session, data)
                + n71_driver_module_stage.extra_proofs(session, data)):
             session.module_directory = data['module_directory']; session.result = dict(data['result'])
-            n71_driver_module_stage.resume(session, prior)
+            n71_driver_module_stage.resume(session, prior, context={'baseline': data['baseline'], 'checkpoint': prior, 'proofs': proofs})
+            if n71_driver_module_stage.selected(session) is not None and 'pcie-cleanup' not in proofs:
+                continuation(prior, {'session': session, 'data': data, 'entries': entries, 'proofs': proofs, 'checkpoint': prior})
             return request['loader'](session, request['root'], directory, request['identity'])
     session.module_directory = data['module_directory']
     session.result = dict(data['result'])
     live, presence = request['snapshot'](session, 'held-runtime-recovery-live')
-    require(presence == (1, 1, 0), 'Runtime recovery requires its retained modules and bus')
+    removed = n71_driver_module_stage.selected(session) is not None and 'pcie-cleanup' in proofs and presence[2] == 1
+    require(presence == (1, 1, 0) or removed, 'Runtime recovery requires its retained modules and bus')
     require(re.findall(r'^N71_BOOT_ID (' + stage.BOOT + ')$', live, re.M) == [session.result['boot_id']],
             'Runtime recovery belongs to another boot')
-    continuation(live, {'session': session, 'data': data, 'entries': entries, 'proofs': proofs, 'checkpoint': prior})
+    context = {'baseline': data['baseline'], 'checkpoint': prior, 'proofs': proofs}
+    if removed:
+        import n71_driver_runtime_lifetime
+        n71_driver_runtime_lifetime.removed(session, live, context)
+    else:
+        continuation(live, {'session': session, 'data': data, 'entries': entries, 'proofs': proofs, 'checkpoint': prior})
     pending = entries[-1]['completion'] is None; observed = set()
     if pending:
         entries[-1]['completion'] = stage.completion(session, entries[-1], {
@@ -139,7 +152,7 @@ def load(session, request):
         proofs[name] = live
         data['proofs'][name] = hashlib.sha256(live.encode()).hexdigest()
         observed.add(name)
-    else:
+    elif not removed:
         stage.result.resume(session, live, stage.state_text(entries[-1]['completion']['state']))
     module_pending = bool(module_entries and module_entries[-1]['completion'] is None)
     if module_pending:
@@ -148,7 +161,7 @@ def load(session, request):
             'text': live, 'index': index, 'mode': 'observed', 'shell_exit': None})
         name = n71_driver_module_stage.modules.tag(n71_driver_module_stage.operation(session, index, entry))
         proofs[name] = live; data['proofs'][name] = hashlib.sha256(live.encode()).hexdigest(); observed.add(name)
-    n71_driver_module_stage.resume(session, live)
+    n71_driver_module_stage.resume(session, live, context=context)
     fork = request['root'] / 'runtime' / ('n71-driver-recovered-' + secrets.token_hex(12))
     fork.mkdir(mode=0o700)
     for name, proof in proofs.items():

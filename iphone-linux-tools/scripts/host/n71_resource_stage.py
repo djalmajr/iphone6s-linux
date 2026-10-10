@@ -153,6 +153,11 @@ def command(session):
             'printf "N71_PCIE_STATUS "; cat ' + PCIE + 'status; dmesg; exit "$action_exit"')
 
 
+def retained_runtime(session, text, context):
+    import n71_driver_runtime_lifetime
+    return n71_driver_runtime_lifetime.retained(session, text, context)
+
+
 def assign(session, journal, live):
     require(capable(session), 'Assignment requires the resource-capable held profile')
     retained(session, session.history.fresh(live))

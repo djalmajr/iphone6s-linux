@@ -157,7 +157,7 @@ def getter(session):
     return modules.getter(records, session.module_directory, receipt)
 
 
-def resume(session, text):
+def resume(session, text, *, context=None):
     records = selected(session)
     if records is None:
         return
@@ -168,7 +168,19 @@ def resume(session, text):
     require(all(value['present'] == (before['states'][name]['present'] if before else 0)
                 and (not value['present'] or value['state'] == 'live')
                 for name, value in current['states'].items()), 'WCC live ownership changed without an intent')
-    if entries:
+    native = driver.fields(session)['driver_runtime_journal']
+    state = driver.result.live(text, required=False)
+    if state is None or not state['ready']:
+        import n71_driver_runtime_lifetime
+        require(context is not None, 'Removed WCC lifetime requires its proof context')
+        n71_driver_runtime_lifetime.removed(session, text, context)
+    elif native and native[-1]['action'] == 'release':
+        import n71_driver_runtime_lifetime
+        require(context is not None and not any(value['present'] for value in current['states'].values()),
+                'WCC release bridge still owns modules or lacks context')
+        n71_driver_runtime_lifetime.release_bridge(session, text, {
+            'before': entries[-1]['completion']['driver_after'] if entries else native[-1]['before'], 'proofs': context['proofs']})
+    elif entries:
         driver_continuation(session, {'after': driver.live(session, text, session.result['boot_id']),
                             'before': entries[-1]['completion']['driver_after'], 'history': history.kernel_lines(text)})
 
