@@ -84,6 +84,8 @@ static inline int n71_pcie_msi_allocate(struct pci_host_bridge *bridge,
 
 	if (!bridge || !host || !lease || !bridge->bus || bridge->bus->sysdata != host)
 		return -ENODEV;
+	if (n71_scan_driver_pending(host))
+		return -EBUSY;
 	if (lease->endpoint || lease->vector || host->msi_config.phase != N71_MSI_CONFIG_EMPTY)
 		return -EBUSY;
 	error = n71_msi_allocation_error(host);
@@ -168,6 +170,8 @@ static inline int n71_pcie_msi_release(struct n71_scan_host *host, struct n71_ms
 
 	if (!host || !lease)
 		return -EINVAL;
+	if (n71_scan_driver_pending(host))
+		return -EBUSY;
 	if (!lease->endpoint)
 		return host->msi_config.phase == N71_MSI_CONFIG_EMPTY && !lease->vector &&
 			!lease->default_irq ? 0 : -EBUSY;

@@ -1,5 +1,6 @@
 """Compile the native allocation adapter; API failures are not mutation kills."""
 from pathlib import Path
+import re
 import resource
 import shutil
 import subprocess
@@ -8,6 +9,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
+    ('allocate-during-runtime', 'return -ENODEV;\n\tif (n71_scan_driver_pending(host))\n\t\treturn -EBUSY;', 'return -ENODEV;'),
+    ('release-during-runtime', 'return -EINVAL;\n\tif (n71_scan_driver_pending(host))\n\t\treturn -EBUSY;', 'return -EINVAL;'),
     ('skip-power-api', 'error = pci_set_power_state(dev, PCI_D0);', 'error = 0;'),
     ('ignore-power-error', 'if (error)\n\t\treturn error > 0 ? -EIO : error;', 'if (false)\n\t\treturn error > 0 ? -EIO : error;'),
     ('skip-power-readback', 'actual != 0x4008 || dev->current_state != PCI_D0', 'false'),
@@ -48,12 +51,15 @@ class MsiAllocationTests(unittest.TestCase):
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
         self.addCleanup(resource.setrlimit, resource.RLIMIT_CORE, limits)
         source = (ROOT / 'phone/kernel/n71-pcie-msi-allocate.h').read_text()
+        scan = (ROOT / 'phone/kernel/n71-pcie-scan.h').read_text()
+        pending = re.search(r'static inline bool n71_scan_driver_pending\([^;]*?\n\{\n.*?\n\}', scan, re.S)
+        self.assertIsNotNone(pending, 'Real runtime ownership predicate required')
         with tempfile.TemporaryDirectory(prefix='n71-msi-allocation-') as directory:
             folder = Path(directory)
             for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h', 'n71-wlan-msi-config.h',
                          'n71-msi-allocation-lease.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
-            (folder / 'n71-pcie-resource-assign.h').write_text('/* Dependency API supplied by harness. */\n')
+            (folder / 'n71-pcie-resource-assign.h').write_text(pending.group(0) + '\n')
             for name, before, after in (('baseline', None, None),) + MUTATIONS:
                 with self.subTest(name=name):
                     if before:

@@ -47,6 +47,9 @@ struct n71_scan_host {
 	struct { struct pci_host_bridge *bridge; bool associated; struct n71_wlan_msi native; } msi;
 	struct { struct pci_host_bridge *bridge; bool available, mapped; } dart;
 	struct n71_msi_config msi_config;
+	struct { bool active; } brcmfmac;
+	struct pci_dev *driver_root, *driver_endpoint;
+	bool driver_pm, driver_root_override, driver_endpoint_override;
 	void *iommu_domain;
 	unsigned int iommu_devices;
 	bool bus_held, config_pending, resources_assigned, window_claimed;
@@ -232,6 +235,20 @@ int main(void)
 #endif
 	struct n71_msi_allocation lease;
 	unsigned int i;
+	/* Mutation: manual MSI touches hardware or IRQ ownership during runtime. */
+	for (i=0;i<6;i++) {
+		reset(&lease);
+		if (i==0) mock.host.brcmfmac.active=true;
+		if (i==1) mock.host.driver_root=&mock.root;
+		if (i==2) mock.host.driver_endpoint=&mock.endpoint;
+		if (i==3) mock.host.driver_pm=true;
+		if (i==4) mock.host.driver_root_override=true;
+		if (i==5) mock.host.driver_endpoint_override=true;
+		assert(allocate(&lease)==-EBUSY);
+		assert(n71_pcie_msi_release(&mock.host,&lease)==-EBUSY);
+		assert(!mock.reads && !mock.writes && !mock.powers && !mock.allocs && !mock.frees);
+		assert(!mock.references && !mock.host.msi_config.error); cases++;
+	}
 	const int errors[] = {0,-ETIMEDOUT,-EIO,-EIO,-EIO,-ENOSPC,-EIO,-EIO,-EIO,
 		-EACCES,-EACCES,-EACCES,-EACCES,-EACCES,-EACCES,-EINVAL,
 		-EACCES,-EACCES,-EACCES,-EACCES,-EACCES};
