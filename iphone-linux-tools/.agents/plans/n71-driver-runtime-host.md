@@ -262,5 +262,24 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** seletores/evidência/filesystem reais com ELF sintéticos na fixture, testes do helper e despacho real do compositor; recusar arquivos ausentes, hash/ABI/tipos, link/permissão, base misturada e flags sem escopo antes de output/identidades. Preservar as provas dos perfis anteriores; mutações reais com baseline verde e AssertionError, AST/lint Mac/ARM64. Compor uma candidata privada com artefatos reais no Mac e verificar sete arquivos/provenance/kernel/payload/identidades preservados, sem boot, SSH ou mudança do perfil ativo. A prova física e a CLI de execução seguem depois.
 
-- [ ] Integrar e qualificar a composição privada runtime/WCC.
+- [x] Integrar e qualificar a composição privada runtime/WCC.
 - [ ] Fechar a CLI de sessão, depois firmware/calibração/regdb e energia antes da candidata física.
+
+**C4 qualificada em c5de5df/64f49ad:** 7/15 novos e 30/39 nos seis gates afetados por plataforma Mac/Ubuntu ARM64, 377 inputs íntegros, AST/lint fatal. Composição real no Mac com 13 arquivos/sete módulos/1.371.040 bytes, payload anterior idêntico e initramfs/SSH/inputs preservados. Ajustes de fixture/harness descartados; somente o gate novo/lint foi retomado após o diagnóstico seguro de ambiente. 373 dos 374 inputs anteriores e 69 C iguais; nenhum kernel/firmware/telefone/configuração global alterado.
+
+### C5. CLI explícita de sessão runtime — contrato fechado
+
+**Contexto:** perfil C4 está completo e os handlers C2/C3/coordenador estão qualificados. A CLI legacy seleciona o caller antigo; não ampliar seu modo implicitamente nem encaminhar um start/observe/stop para o resume legacy que libera providers.
+
+**Arquivos executáveis (três):** novo `scripts/host/n71-runtime-session.py`, novo `scripts/host/n71_driver_runtime_cli.py` e novo `tests/test_n71_driver_runtime_cli.py`. Nenhum kernel/firmware/hardware ou mudança na CLI legacy nesta fatia.
+
+**Interface:** entrypoint requer `--profile` e `--action` em acquire/assign/start/observe/stop, admite `--source`, `--output-dir` e `--check`. Helper `run(root, request)` recebe exatamente action, profile (Path), source (Path/None), output (Path/None) e check (bool exato). Root é Path absoluta. Profile é deployment.json de uma pasta privada diretamente sob runtime. Acquire não admite source; demais ações exigem uma origem privada diretamente sob runtime. Efeitos exigem output novo/distinto diretamente sob runtime; --check não cria output nem executa SSH/USB/recovery/setter.
+
+**Gate local:** ler provenance protegida/bounded e exigir flags exatas runtime/held/resource/IOMMU/target/PME/ASPM/power2, opt-in e ausência de autoload antes de acessar identidades. Usar C1/C4 para selecionar/verificar os sete arquivos e manifest correspondente na provenance. Com identidade validada, aplicar selected_release/aspm_payload/payload_image reais e verificar hashes de caller/REG_ON. Criar uma instância própria do módulo link com ROOT da requisição; Session real recebe diagnostics e runtime/WCC separados. Identidade held usa a API existente; Journal continua registrando manifest/ledgers separados. Manter IPHONE_LINUX_PROFILE só durante a operação e restaurá-lo em finally, inclusive em falhas. Não imprimir chaves ou ambiente.
+
+**Dispatch:** acquire usa held.run sem source; assign usa held.run com source e assign=True. Start/observe/stop usam somente runtime_session.run, preservando source/receipts/recovery no mesmo boot. Start requer assignment saudável; observe/stop pré-assignment conservam C3. Traduzir resultado/causa em exit0/1, sem cleanup/reboot compensatório além dos contratos dos handlers. --check valida origem via load_source somente de leitura; pode recusar pending que exija observação física, sem promover arquivo/fabricar completion. CLI sempre emite erro claro para scope/source/output inválidos e não altera perfil ativo ou rede global do Mac.
+
+**Verificação:** testes de contrato CLI/arquivos/seleção e Session reais, dependências SSH/kernel/identidade sintéticas onde necessário e handlers qualificados reutilizados. Provar local check sem output/SSH/USB, recusas antes de identidade/efeito, manifest/ABI/flags/paths/hashes, origem distinta/protegida, dispatch e erro/causa/env restaurados. Mutations reais com baseline verde e AssertionError; AST/lint Mac/ARM64, gates diretamente afetados. Rodar --check real sobre a candidata C4 no Mac com todos os gates de kernel/identidade, sem boot. Firmware/calibração/regdb/energia e prova física seguem depois; nenhum pedido ao operador nesta fase.
+
+- [ ] Integrar e qualificar os comandos explícitos e --check real.
+- [ ] Preparar firmware/calibração/regdb e energia antes da sessão física agrupada.

@@ -258,4 +258,13 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Alternativas:** embutir/cargar WCC no initramfs ativa antes do journal; substituir o diagnóstico implicitamente modifica perfis antigos; copiar manualmente sem provenance permite misturar builds.
 - **Reverter:** baixo; opt-in e helper de composição, kernel/identidades/defaults preservados.
 - **Onde:** C4 no plano host; compositor/helper/teste, CLI e firmware/energia seguintes.
-- **Status:** contrato fechado, em fila. Goal e provas físicas permanecem pendentes.
+- **Status:** aplicada em c5de5df/64f49ad; 30/39 Mac/ARM64 e composição real privada no Mac, payload anterior idêntico. CLI/firmware/energia e provas físicas permanecem pendentes.
+
+## D29. CLI separada para o lifetime runtime, com check somente local
+
+- **Decisão:** criar entrypoint/helper específicos para acquire/assign/start/observe/stop e --check, usando os handlers já qualificados e o perfil C4. Preservar a CLI anterior e restaurar a seleção de perfil ao terminar cada operação.
+- **Por quê:** a seleção legacy usa o caller antigo e seu resume libera providers; o runtime precisa de ações explícitas e prova de origem para continuar por SSH no mesmo boot.
+- **Alternativas:** ampliar implicitamente a CLI antiga mistura lifetimes; um comando que faça acquire/assign/start automaticamente dificulta distinguir o ponto da falha; chamar SSH avulso perde journal/recuperação.
+- **Reverter:** baixo antes da sessão física; entrypoint/helper novos e nenhum default ou kernel modificado.
+- **Onde:** C5 no plano host; novo runtime-session, cli-helper e testes. Firmware/calibração/regdb e energia seguintes.
+- **Status:** contrato fechado, na fila; goal e provas físicas continuam pendentes.

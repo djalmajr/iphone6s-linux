@@ -6,6 +6,44 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## Composição privada runtime/WCC — fase C4
+
+Em `c5de5df`, o compositor aceita `--pcie-driver-runtime` e `--wcc-dir`, exigindo explicitamente ASPM off, held/resource/IOMMU power2 e REG_ON antes de ler identidades. O helper seleciona somente os cinco WCC de C1 e verifica proteção privada, arquivos regulares sem links, bytes/SHA e ELF relocatable64/AArch64/vermagic único. O caller e REG_ON são verificados pelos registros C1; nenhum vendor alternativo é copiado.
+
+O perfil contém os dois diagnósticos e cinco WCC em arquivos privados, com pcie_driver_runtime=true e manifest completo na provenance. Initramfs não ganha autoload e nenhum módulo é executado. Defaults conservam campos/arquivos anteriores. `64f49ad` evita imprimir o ambiente em uma asserção que falhe.
+
+### Reprodução e limites
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_compose.py -v
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile "$TASK_SOURCE_PROFILE" \
+  --kernel-dir "$TASK_KERNEL_DIR" --kernel-patchset n71-dart-serdev-power-v2 \
+  --diagnostic-dir "$TASK_DIAGNOSTIC_DIR" \
+  --module "$TASK_CALLER" --module-sha256 "$TASK_CALLER_SHA256" \
+  --reg-on-module "$TASK_REG_ON" --wcc-dir "$TASK_WCC_DIR" \
+  --pcie-aspm-off --pcie-scan-hold --pcie-resource-capable \
+  --pcie-iommu-parent --pcie-driver-runtime --output-dir "$TASK_NEW_PROFILE"
+```
+
+WCC_DIR contém os cinco nomes planos: rfkill.ko, cfg80211.ko, brcmutil.ko, brcmfmac.ko e brcmfmac-wcc.ko. NEW_PROFILE deve ser novo, diretamente sob runtime. Usar a fonte baseline com layout preservado e o DTB de diagnóstico antes de acrescentar a referência DART, conforme o compositor anterior. Arquivos, payloads e identidades ficam privados; não enviá-los ao repositório.
+
+#### Preparação dos inputs reais
+
+1. Validar o perfil anterior com `device_profile.verify()` sob uma seleção temporária de IPHONE_LINUX_PROFILE e restaurar a variável em finally. Validar o diretório de kernel com `KERNEL.kernel_inputs(..., BINDING_BUNDLE)` e `n71_iommu_build.kernel_image(...)`. Não usar um Image ou release diferente.
+2. Criar uma pasta source nova com modo 0700. Copiar somente initramfs.gz, client_ed25519 e known_hosts do perfil validado, em arquivos 0600. Construir payload.bin exatamente como `loader + KERNEL.BOOTARGS + kernel['s8000-n71.dtb'] + kernel['Image.gz'] + initramfs`. A deployment.json usa os mesmos oito campos da API device_profile: format=1, nomes relativos de payload/initramfs/client_key/known_hosts, SHA de payload e initramfs e host_key_alias preservado. Validar esse perfil pela mesma API; nunca imprimir/publicar as identidades.
+3. No payload anterior com ASPM off, localizar o FDT após `len(loader + composer.bootargs(True))`; conferir magic 0xd00dfeed e totalsize big-endian limitado a 4 MiB. Parsear somente esse FDT. Retirar a propriedade phandle do nó DART somente se ela igualar as células do dart_phandle registrado na provenance anterior. Serializar com `DIAGNOSTIC.serialize_dtb` e validar contra o DTB baseline por `composer.validate_dtb`. Salvar diagnostic-private.dtb e provenance-private.json com seu SHA, em uma pasta nova privada. O compositor volta a acrescentar a referência DART validada.
+4. Obter os cinco registros WCC pela seleção C1 e copiar somente seus nomes planos do build aceito para WCC_DIR. Manter caller e REG_ON nos arquivos cujo bytes/SHA/ABI correspondem à seleção. A origem aceita com oito módulos não autoriza copiar rfkill-gpio/BCA/CYW.
+5. Executar a composição acima para uma saída nova e validá-la novamente com device_profile e o seletor C4. Conferir os 13 arquivos, sete módulos, modos 0700/0600, provenance e ausência de autoload. Comparar os bytes de initramfs/identidades e payload com a origem anterior; no teste real desta fase todos foram iguais.
+
+Esses passos foram executados pelos scripts privados `runtime/n71-runtime-compose-20261010/prepare-production-private.py` e `compose-production-private.py`. Somente fontes e evidência sanitizada são versionadas; inputs, DTB, payload, chaves e logs reais permanecem privados. Reproduzir a fonte baseline é uma preparação de arquivos locais, sem boot ou alteração do perfil ativo.
+
+Novo gate **7 testes/15 mutações por AssertionError**. Seis gates afetados **30 testes/39 mutações por plataforma Mac/Ubuntu ARM64**, 377 inputs íntegros, AST/lint fatal; sem typechecker Python. Seletores, metadata, arquivos e compositor reais; kernel/identidades são dependências sintéticas na fixture de perfil completo. A composição de produção no Mac usou todas as validações reais e criou **13 arquivos privados, sete módulos/1.371.040 bytes**. O payload resultante é **idêntico byte a byte ao perfil anterior qualificado**; initramfs, identidades SSH, inputs e ambiente foram preservados. [Evidência sanitizada](evidence/n71-runtime-composition-qualified.json).
+
+Scripts/manifests/logs em `runtime/n71-runtime-compose-final-20261010/` e VM equivalente; preparação/candidata real em `runtime/n71-runtime-compose-production-20261010/` e `runtime/n71-runtime-composed-profile-20261010/`. Preparação reconstituiu a fonte baseline com o kernel qualificado, preservando initramfs/identidades, e retirou somente a referência DART do DTB de diagnóstico para o compositor acrescentá-la novamente. Nenhum input original foi alterado.
+
+Falhas iniciais eram de fixture: diretório lido como arquivo, alias /var não resolvido e campo baseline no nível errado. Uma mutação da provenance foi inicialmente detectada como KeyError; passou a falhar por asserção de contrato e somente a rodada válida foi aceita. Após a mudança do diagnóstico da asserção, só o gate novo/lint foi revalidado, preservando os cinco gates inalterados. 373 dos 374 inputs anteriores e 69 C são iguais; kernel/Image/exports/binários e C 575/455 foram reutilizados. Sem acesso ao telefone, SSH, DFU, reboot, firmware, instalação ou alteração global. CLI de sessão, firmware/calibração/regdb, energia e prova física continuam pendentes.
+
 ## Encerramento antes de assignment — fase C3
 
 Em `a21afce`, uma origem adquirida pode ser observada e encerrada sem inventar assignment. Exige resource_attempted=false exato, summary None, nenhuma prova de assignment, ledgers vazios, stack fresco ausente e mesmo boot. O checkpoint adquirido ancora o histórico; somente REG_ON_READ canônicos posteriores são admitidos. Owners nativos ou lease MSI manual continuam recusados.
