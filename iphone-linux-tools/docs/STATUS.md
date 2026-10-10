@@ -6,7 +6,7 @@ Em `a21afce`, a aquisição runtime pode ser observada e encerrada por SSH sem f
 
 Session/staging C2 continuam qualificados em `3a6afb8`. Próximo: composição privada do caller/REG_ON/cinco WCC e CLI para aquisição→assignment→start/observe/stop; depois firmware/calibração/regdb e energia antes do teste físico agrupado. Wi-Fi/carga, goal e issues40/9/2 continuam pendentes. Nenhuma ação do operador necessária agora; assumir retorno ao iOS para recarga sem pedir confirmação de tela.
 
-CI `ef053bd`: [PR 38069072304](https://github.com/djalmajr/iphone6s-linux/actions/runs/38069072304) e [push 38069069158](https://github.com/djalmajr/iphone6s-linux/actions/runs/38069069158) ainda em andamento na última observação; Windows passou nos dois e Mac passou no push. CI `7f1f7bf`: PR aprovou os três jobs; push aprovou Ubuntu/Windows e cancelou Mac. #41 continua aberta; nenhum rerun, prazo ou cobertura foi alterado.
+CI `ef053bd`: [PR 38069072304](https://github.com/djalmajr/iphone6s-linux/actions/runs/38069072304) cancelou Mac/Ubuntu; [push 38069069158](https://github.com/djalmajr/iphone6s-linux/actions/runs/38069069158) aprovou Mac/Windows e cancelou Ubuntu. Windows passou no PR. As três anotações oficiais confirmam prazo máximo de 15 minutos; a nova publicação foi aguardada até os runs ficarem terminais, sem cancelá-los por outro push. CI `7f1f7bf`: PR aprovou os três jobs; push aprovou Ubuntu/Windows e cancelou Mac. #41 continua aberta; nenhum rerun, prazo ou cobertura foi alterado.
 
 ## Histórico — coordenador no mesmo boot qualificado
 
