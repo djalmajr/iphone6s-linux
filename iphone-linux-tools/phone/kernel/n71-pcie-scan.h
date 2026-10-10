@@ -15,6 +15,7 @@
 #include "n71-pcie-pme-control.h"
 #include "n71-pcie-resource-write.h"
 #include "n71-wlan-msi-host.h"
+#include "n71-wlan-msi-config.h"
 #include "n71-dart-host.h"
 
 struct n71_scan_host {
@@ -26,6 +27,7 @@ struct n71_scan_host {
 	struct n71_pme_state pme;
 	struct n71_resource_write_state resources;
 	struct n71_wlan_msi_host msi;
+	struct n71_msi_config msi_config;
 	struct n71_dart_host dart;
 	/* Borrowed while PCI consumers are alive; cleared after bus removal. */
 	struct iommu_domain *iommu_domain;
@@ -145,10 +147,23 @@ static int n71_scan_config_write(struct pci_bus *bus, unsigned int devfn,
 	error = n71_pcie_ecam_locate(0x1000000, bus->number, devfn, where, size, &location);
 	spin_lock_irqsave(&host->lock, flags);
 	if (error) {
-		n71_scan_refuse(&host->config, error);
+		if (host->msi_config.phase != N71_MSI_CONFIG_EMPTY)
+			n71_msi_config_error(&host->msi_config, error);
+		else
+			n71_scan_refuse(&host->config, error);
 	} else {
 		request = (struct n71_scan_request){location.root, where, value, size};
-		if (host->resources.active) {
+		if (host->msi_config.phase != N71_MSI_CONFIG_EMPTY) {
+			const struct n71_msi_config_request msi_request = {
+				.config = request, .slots = host->msi.native.slots,
+			};
+
+			error = host->config.error ? host->config.error : host->io_error;
+			if (error && host->msi_config.phase != N71_MSI_CONFIG_STOPPED)
+				n71_msi_config_error(&host->msi_config, error);
+			else
+				error = n71_msi_config_write(&io, &host->msi_config, &msi_request);
+		} else if (host->resources.active) {
 			error = host->config.error ? host->config.error : n71_resource_write(&io, &host->resources, &request);
 			if (error)
 				n71_scan_refuse(&host->config, error);
@@ -349,7 +364,7 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 	if (!bridge)
 		return 0;
 	host = pci_host_bridge_priv(bridge);
-	if (host->resources.active)
+	if (host->resources.active || host->msi_config.phase != N71_MSI_CONFIG_EMPTY)
 		return -EBUSY;
 	if (bridge->bus) {
 		if (!host->bus_held)
@@ -360,7 +375,8 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 		if (bridge->bus)
 			return -EBUSY;
 		host->bus_held = false;
-		host->held_stop_error = host->config.error ? host->config.error : host->io_error;
+		host->held_stop_error = host->msi_config.error ? host->msi_config.error :
+			(host->config.error ? host->config.error : host->io_error);
 		dev_info(host->dev, "N71_PCIE_SCAN_BUS_REMOVED bus-null=1 stop-error=%d\n", host->held_stop_error);
 	}
 	host->iommu_domain = NULL;

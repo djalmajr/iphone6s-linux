@@ -49,6 +49,7 @@ class N71PcieScanHost(unittest.TestCase):
         self.assertIn('N71_PCIE_HELD_BUS_OK cases=16', result.stdout)
         self.assertIn('N71_PCIE_RESOURCE_ASSIGN_OK cases=20', result.stdout)
         self.assertIn('N71_PCIE_MSI_SCAN_OK cases=14', result.stdout)
+        self.assertIn('N71_PCIE_MSI_CONFIG_CALLBACK_OK cases=3', result.stdout)
         self.assertIn('N71_PCIE_CONSUMER_REMOVAL_OK cases=7', result.stdout)
         self.assertIn('N71_PCIE_DART_SCAN_OK cases=39', result.stdout)
         self.assertIn('N71_PCIE_DMA_TOPOLOGY_OK cases=55', result.stdout)
@@ -102,8 +103,13 @@ class N71PcieScanHost(unittest.TestCase):
              'stop_error = 0;'),
             ('skip-consumer-phase', 'error = n71_pcie_scan_remove_consumers(state);',
              'error = false ? n71_pcie_scan_remove_consumers(state) : 0;'),
-            ('forget-consumer-stop-error', 'host->held_stop_error = host->config.error ? host->config.error : host->io_error;',
+            ('forget-consumer-stop-error', 'host->held_stop_error = host->msi_config.error ? host->msi_config.error :\n\t\t\t(host->config.error ? host->config.error : host->io_error);',
              'host->held_stop_error = 0;'),
+            ('skip-msi-config-route', 'if (host->msi_config.phase != N71_MSI_CONFIG_EMPTY) {', 'if (false) {'),
+            ('wrong-msi-grant-route', '.config = request, .slots = host->msi.native.slots,', '.config = request, .slots = 1,'),
+            ('remove-owned-msi-config', 'host->resources.active || host->msi_config.phase != N71_MSI_CONFIG_EMPTY', 'host->resources.active'),
+            ('legacy-refusal-for-msi', 'n71_msi_config_error(&host->msi_config, error);\n\t\telse', 'n71_scan_refuse(&host->config, error);\n\t\telse'),
+            ('forget-msi-component-error', 'host->msi_config.error ? host->msi_config.error :', 'false ? 0 :'),
             ('restore-in-consumer-phase', 'return n71_dart_host_unmap(&host->dart);',
              'struct n71_scan_io early = {host, n71_scan_raw_read, n71_scan_raw_write};\n'
              '\tn71_scan_restore(&early, &host->config);\n\treturn n71_dart_host_unmap(&host->dart);'),
@@ -316,8 +322,8 @@ class N71PcieScanHost(unittest.TestCase):
             ('allocation-uses-probe-policy', 'scan',
              'n71_resource_write(&io, &host->resources, &request)',
              'n71_pme_scan_write(&io, &host->config, &host->pme, &request)'),
-            ('remove-active-allocation', 'scan', 'if (host->resources.active)\n\t\treturn -EBUSY;',
-             'if (false)\n\t\treturn -EBUSY;'),
+            ('remove-active-allocation', 'scan', 'if (host->resources.active || host->msi_config.phase != N71_MSI_CONFIG_EMPTY)\n\t\treturn -EBUSY;',
+             'if (host->msi_config.phase != N71_MSI_CONFIG_EMPTY)\n\t\treturn -EBUSY;'),
             ('extra-restore-skipped', 'scan', 'if (host->resources.pending) {', 'if (false) {'),
             ('extra-restore-starved', 'scan', 'host->config.active = false; /* Removed bus:',
              'host->config.active = true; /* Removed bus:'),

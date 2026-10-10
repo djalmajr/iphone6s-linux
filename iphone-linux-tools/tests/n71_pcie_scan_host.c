@@ -125,7 +125,7 @@ static struct {
 	unsigned int allocations, scans, stops, removes, writes, bars_after_scan;
 	unsigned int target_prepares, target_restores;
 	unsigned int pme_prepares, pme_restores, pme_reads;
-	bool locked, returned, pme;
+	bool locked, returned, pme, msi_configuring;
 	bool resource_mode, allocating, io_readonly, pref_readonly;
 	bool pref_types_readonly, pref_drop_address, pref_clear_types;
 	unsigned int pref_final_drift;
@@ -166,7 +166,7 @@ static void writel(u32 value, void *address)
 	if (mock.allocating && mock.resource_fault == READBACK_DROP &&
 	    address == &mock.ecam[0x8030 / 4] && value == 0xffff)
 		return;
-	if (mock.returned && !mock.allocating) {
+	if (mock.returned && !mock.allocating && !mock.msi_configuring) {
 		assert(!mock.scans || mock.removes == 1);
 		mock.bars_after_scan++;
 		if (mock.resource_fault == RESTORE_EXTRA_DROP && address == &mock.ecam[0x8020 / 4])
@@ -182,7 +182,7 @@ static void writew(u16 value, void *address)
 		if (mock.io_readonly)
 			return;
 	}
-	if (mock.returned && !mock.allocating) {
+	if (mock.returned && !mock.allocating && !mock.msi_configuring) {
 		assert(!mock.scans || mock.removes == 1);
 		if ((mock.fault == RESTORE_DROP || mock.fault == STOP_AND_RESTORE) &&
 		    address == (void *)&mock.ecam[0x100004 / 4] && value == 0x100)
@@ -738,6 +738,71 @@ static unsigned int exercise_msi_scan(void)
 	return cases;
 }
 
+static unsigned int exercise_msi_config_callback(void)
+{
+	for (unsigned int kind = 0; kind < 3; kind++) {
+		initialize_case(PME_NONE, true); msi_mock.requested = true;
+		struct device dev = {.of_node = &msi_mock.node};
+		struct n71_diagnostic state = {.ecam = mock.ecam, .port = mock.port};
+		assert(n71_pcie_scan_hold_msi(&dev, &state) == 0);
+		struct pci_host_bridge *bridge = state.scan_bridge;
+		struct n71_scan_host *host = pci_host_bridge_priv(bridge);
+		struct n71_scan_io io = {host, n71_scan_raw_read, n71_scan_raw_write};
+		const struct n71_msi_config_core core = {0};
+		mock.ecam[0x100058 / 4] = 0x00886805;
+		mock.ecam[0x10005c / 4] = 0x12345000;
+		mock.ecam[0x100060 / 4] = 0x42;
+		mock.ecam[0x100064 / 4] = 0xbeef0013;
+		mock.msi_configuring = true;
+		/* Prepare the real scan callback's decode-off COMMAND, as assignment requires. */
+		assert(n71_scan_config_write(&mock.endpoint_bus, 0, 4, 2, 0x100) == 0);
+		int capture = n71_msi_config_capture(&io, &host->msi_config);
+		if (capture)
+			fprintf(stderr, "MSI config capture=%d root-command=%x endpoint-command=%x header=%x\n",
+				capture, mock.ecam[0x8004 / 4], mock.ecam[0x100004 / 4], mock.ecam[0x100058 / 4]);
+		assert(capture == 0);
+		host->msi.native.slots = 2;
+		unsigned int writes = mock.writes;
+		assert(n71_pcie_scan_remove_consumers(&state) == -EBUSY);
+		assert(n71_pcie_scan_cleanup(&state) == -EBUSY);
+		assert(bridge->bus && !mock.removes && mock.writes == writes);
+		assert(host->msi.associated && host->pme.pending && host->target.pending);
+		if (kind == 0) {
+			host->resources.active = true;
+			assert(n71_scan_config_write(&mock.endpoint_bus, 0, 0x5c, 4, 0xbffff000) == 0);
+			assert(!host->resources.attempts && !host->resources.error);
+			host->resources.active = false;
+			assert(n71_scan_config_write(&mock.endpoint_bus, 0, 0x60, 4, 0) == 0);
+			assert(n71_scan_config_write(&mock.endpoint_bus, 0, 0x64, 2, 9) == 0);
+			assert(n71_scan_config_write(&mock.endpoint_bus, 0, 4, 2, 0x500) == 0);
+			assert(n71_scan_config_write(&mock.endpoint_bus, 0, 0x5a, 2, 0x89) == 0);
+			assert(host->msi_config.writes == 5 && !host->config.error);
+			assert((mock.ecam[0x100064 / 4] & 0xffff) == 9);
+		} else if (kind == 1) {
+			assert(n71_scan_config_write(&mock.endpoint_bus, 1, 0x5c, 4, 0xbffff000) == PCIBIOS_SET_FAILED);
+			assert(host->msi_config.error == -ENODEV && !host->config.error);
+			assert(mock.writes == writes);
+		} else {
+			host->io_error = -EIO;
+			assert(n71_scan_config_write(&mock.endpoint_bus, 0, 0x5c, 4, 0xbffff000) == PCIBIOS_SET_FAILED);
+			assert(host->msi_config.error == -EIO && !host->config.error && mock.writes == writes);
+		}
+		assert(bridge->enable_device(bridge, &mock.endpoint) == -EPERM);
+		assert(n71_msi_config_stop(&io, &host->msi_config) == 0);
+		assert(n71_pcie_scan_remove_consumers(&state) == -EBUSY && !mock.removes);
+		assert(n71_scan_config_write(&mock.endpoint_bus, 0, 0x5a, 2, 0x88) == 0);
+		host->msi.native.slots = 0;
+		assert(n71_msi_config_restore(&io, &host->msi_config, &core) == 0);
+		assert(mock.ecam[0x10005c / 4] == 0x12345000 && mock.ecam[0x100060 / 4] == 0x42);
+		assert(mock.ecam[0x100064 / 4] == 0xbeef0013);
+		mock.msi_configuring = false;
+		assert(n71_pcie_scan_cleanup(&state) == (!kind ? 0 : kind == 1 ? -ENODEV : -EIO));
+		assert(!state.scan_bridge && !mock.allocations && mock.removes == 1);
+		free(mock.ecam);
+	}
+	return 3;
+}
+
 static unsigned int exercise_consumer_removal(void)
 {
 	struct n71_diagnostic state = {0};
@@ -1046,6 +1111,8 @@ int main(void)
 	puts("N71_PCIE_RESOURCE_ASSIGN_OK cases=20; PCI allocator synthetic");
 	assert(exercise_msi_scan() == 14);
 	puts("N71_PCIE_MSI_SCAN_OK cases=14; inherited domains synthetic");
+	assert(exercise_msi_config_callback() == 3);
+	puts("N71_PCIE_MSI_CONFIG_CALLBACK_OK cases=3; config owner and PCI callbacks real, allocator modeled");
 	assert(exercise_consumer_removal() == 7);
 	puts("N71_PCIE_CONSUMER_REMOVAL_OK cases=7; host retained between phases");
 	assert(exercise_dart_scan()==39);

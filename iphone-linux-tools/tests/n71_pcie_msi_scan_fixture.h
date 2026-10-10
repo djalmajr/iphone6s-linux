@@ -14,6 +14,7 @@ struct n71_wlan_msi {
 	struct device_node *node;
 	struct fwnode_handle *fwnode;
 	struct irq_domain *domain, *child;
+	unsigned int slots;
 };
 static struct {
 	struct device_node node;
