@@ -2,7 +2,7 @@
 
 ## Contexto
 
-Goal autorizado: Wi-Fi nativo e energia, solo e com o mínimo de DFU/reboots. Fase kernel2b em6e1cc9c qualificada com575 cenários/455 mutações por plataforma, caller/actions/getter/cleanup reais e módulo ARM64 completo; nenhum perfil/módulo/firmware ativado. Issue40 permanece aberta. A CI específica desse head está em acompanhamento; não repetir jobs por demora na observação.
+Goal autorizado: Wi-Fi nativo e energia, solo e com o mínimo de DFU/reboots. Fase kernel2b em6e1cc9c qualificada com575 cenários/455 mutações por plataforma, caller/actions/getter/cleanup reais e módulo ARM64 completo; nenhum perfil/módulo/firmware ativado. Issue40 permanece aberta. A CI específica desse head terminou com seis jobs verdes; não repetir jobs terminados.
 
 `scripts/host/n71_held_session.py:44` captura o snapshot, `:129` salva o journal e `:306` coordena aquisição/assign/release. `n71_iommu_result.py:39` produz getters, `:72` liga estado ao caller e `:150` valida continuidade. O formato legacy MSI é passivo/opcional e exige igualdade ao retomar. O novo getter runtime tem15 campos ordenados e pode registrar primeira causa assíncrona e contador de reads crescente. Não tratar publicação, probe0 ou insmod0 como firmware/radio pronto.
 
@@ -46,3 +46,5 @@ Gates novos e de compatibilidade afetados, mutations executadas, AST/lint fatal 
 FaseA:80 testes/154 mutações por AssertionError, Mac/Ubuntu ARM64; novo protocolo8/22, IOMMU21/53, MSI7/16, held21/30, resources16/26, histórico7/7.260 inputs finais verificados na VM e no Mac, AST/lint fatal aprovados; schema/frame usam objetos nas chamadas novas. O primeiro mutante de unicidade permitia um registro ausente e causava IndexError; a mutação foi restringida à duplicidade, sem aceitar erro de harness como kill. As rodadas finais comprovam80/154. Os69 inputs C anteriores estão iguais, portanto build/gates kernel575/455 permanecem válidos sem outro build ou boot. CI6e1cc9c concluiu os seis jobs verdes nos dois eventos. Nenhum setter, módulo/perfil/firmware ou DFU ativado.
 
 Próximo requisito: fechar a faseB com intenção/prova/recuperação por action e unload normal antes de release, incluindo o tratamento de erro runtime no cleanup. A coleta A não relaxa a igualdade/histórico MSI/IOMMU legacy nem resolve por si a retomada com driver ativo. Só selecionar/cargar a candidata depois das fasesB/C e preparação firmware/energia.
+
+Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-driver-runtime-observation-qualified.json) e [receita](../../docs/N71_BRCMFMAC_RUNTIME.md#observação-host--fase-a). Código3dfa1cb,80/154 por plataforma; fases B/C/D permanecem em execução.

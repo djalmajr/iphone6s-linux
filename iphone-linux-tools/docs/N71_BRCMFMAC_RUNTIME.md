@@ -66,7 +66,7 @@ requested ready held pending active published root endpoint pm root_override end
 | `error` | Erro efetivo, conservando precedência da sessão. |
 | `session_error` | Resultado da última tentativa de cleanup da sessão. |
 
-A leitura usa mutex da sessão e spinlock do host; não faz IO, não emite action, não muda owners nem grava a causa na sessão. Os getters legados mantêm seus formatos. `N71_PCIE_DRIVER_RESULT` registra action, resultado e owners; também declara que não é prova de firmware ou rádio. O parser/journal host desse formato é a próxima integração.
+A leitura usa mutex da sessão e spinlock do host; não faz IO, não emite action, não muda owners nem grava a causa na sessão. Os getters legados mantêm seus formatos. `N71_PCIE_DRIVER_RESULT` registra action, resultado e owners; também declara que não é prova de firmware ou rádio. O parser e a observação host desse formato foram qualificados; o journal de efeitos é a próxima integração.
 
 ## Reprodução offline
 
@@ -121,6 +121,25 @@ As issues40,9 e2 permanecem abertas. A ausência de carga Linux segue sendo um l
 - **Banco/dependências:** nenhum banco, pacote ou configuração global alterado. Testes usam dependências de kernel modeladas; build usa a VM/fonte/toolchain existentes.
 - **Desempenho e riscos:** counters e lifetime foram qualificados offline; consumo, alimentação, rádio e throughput físicos ainda não medidos. Nenhuma validação de UI ou novo teste físico nesta fase.
 - **Próximo passo:** journal e acompanhamento do firmware, seguida da preparação de energia e candidata física agrupada. Nenhuma ação necessária do operador agora.
+
+## Observação host — fase A
+
+Em `3dfa1cb`, o coletor inclui o getter runtime opcional e compara seleção imutável, caller, owners e primeira causa. A retomada permite reads crescentes e surgimento da causa assíncrona; conserva owners/publicação e erros existentes. O parser de resultado nativo exige a action esperada, registro completo e único no delta. Isso prepara o journal de efeitos; não autoriza alterações no histórico MSI/IOMMU legado nem comprova firmware/radio. [Plano host](../.agents/plans/n71-driver-runtime-host.md), [evidência](evidence/n71-driver-runtime-observation-qualified.json).
+
+Reproduzir no checkout, sem hardware:
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_result.py -v
+python3 -B -m unittest discover -s tests -p test_n71_iommu_result.py -v
+python3 -B -m unittest discover -s tests -p test_n71_msi_allocation_result.py -v
+python3 -B -m unittest discover -s tests -p test_n71_held_session.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_stage.py -v
+python3 -B -m unittest discover -s tests -p test_n71_held_history.py -v
+```
+
+Mac e Ubuntu ARM64:80 testes/154 mutações por AssertionError, sendo novo protocolo8/22, IOMMU21/53, MSI7/16, held21/30, resources16/26 e histórico7/7. Shell real com sysfs temporário somente de leitura, integração com coordinator real, AST e lint fatal passaram; não há typechecker Python configurado.260 inputs finais conservados. Erro de harness por IndexError na primeira mutação de unicidade não contou; corrigido o mutante para duplicidade, a rodada final completa passou. Os69 inputs C anteriores permanecem iguais: reutilizados575/455 e o build qualificado, sem rebuild.
+
+A CI anterior `6e1cc9c` concluiu os seis jobs verdes nos eventos [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38039049902) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38039046638). Ela não cobre `3dfa1cb`; o novo head terá CI própria. Nenhum módulo/perfil/firmware selecionado, setter, reboot/DFU ou pacote/configuração global alterado. O goal amplo e as issues40/9/2 permanecem abertos; próxima fase registra intent/proof de actions e unload/release antes da seleção e da candidata física agrupada.
 
 ## Histórico das fases anteriores
 

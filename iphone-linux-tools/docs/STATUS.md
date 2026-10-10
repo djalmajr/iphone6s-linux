@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — host brcmfmac retido qualificado; caller e rádio pendentes
+## Checkpoint atual — caller e observação host qualificados; journal e rádio pendentes
+
+Em `3dfa1cb`, a observação host valida o getter runtime, seleção imutável, owners e primeira causa assíncrona; prepara resultados nativos de actions. Mac/Ubuntu ARM64:80 testes/154 mutações por AssertionError, AST/lint fatal e260 inputs íntegros. Não há typechecker Python configurado. O caller kernel anterior conserva575 cenários/455 mutações e módulo completo142.232 bytes/SHA b4888de1, sem rebuild:69 inputs C iguais. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#observação-host--fase-a), [evidência](evidence/n71-driver-runtime-observation-qualified.json), [plano](../.agents/plans/n71-driver-runtime-host.md).
+
+CI `6e1cc9c` anterior concluiu seis jobs verdes em [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38039049902) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38039046638); o novo código terá CI própria. Não houve efeito no iPhone, firmware, DFU/reboot, pacote/configuração global. Próxima implementação: journal de actions, unload normal e recuperação no mesmo boot; depois seleção explícita, firmware/calibração privados e energia. Wi-Fi, carga Linux e goal/issues40/9/2 continuam pendentes. Nenhuma ação do operador necessária agora; solicitar somente DFU indispensável após preparar a candidata agrupada.
+
+## Histórico — host brcmfmac retido qualificado
 
 Em662e162, o adapter prepara configuração/referências PCI/runtime PM, restringe root=`none` e endpoint=`brcmfmac`, emite publicação explícita e exige unload/IRQ/MSI quiescentes antes de restore/put. O scan usa a política runtime, libera enable apenas para as referências próprias e recusa consumer/DART removal enquanto o modo ou as referências estiverem pendentes. Reads de runtime não consomem o orçamento de scan/rollback. Ainda não há opt-in/actions/getter de caller ou exclusão no MSI manual; não selecionar/carregar essa etapa isoladamente no telefone. [Relatório e reprodução](N71_BRCMFMAC_RUNTIME.md#host-retido-e-adapter--fase2a), [evidência](evidence/n71-brcmfmac-host-adapter-qualified.json).
 
