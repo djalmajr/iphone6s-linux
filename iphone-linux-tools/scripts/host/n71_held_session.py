@@ -14,6 +14,7 @@ import n71_held_history
 import n71_iommu_result
 import n71_driver_runtime_stage
 import n71_driver_runtime_recovery
+import n71_driver_module_stage
 
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
@@ -66,6 +67,7 @@ def snapshot_command(session):
         command += 'printf "N71_HELD_PARAM ' + name + '="; cat ' + PCIE + name + '; '
     command += n71_resource_stage.getter(session)
     command += n71_iommu_result.getter(session)
+    command += n71_driver_module_stage.getter(session)
     command += ('else echo N71_HELD_PCIE_PRESENT=0; fi; '
                 'if [ -d /sys/module/n71_wlan_power_diagnostic ]; then echo N71_HELD_REG_PRESENT=1; '
                 'cat ' + REG + 'state; cat ' + REG + 'control; '
@@ -137,6 +139,7 @@ class Journal:
                  'proofs': self.proofs, 'checkpoint': self.checkpoint,
                  'iommu_parent': n71_iommu_result.capable(session),
                  **n71_driver_runtime_stage.fields(session),
+                 **n71_driver_module_stage.fields(session),
                  **n71_resource_stage.fields(session)}
         temporary = self.path.with_name('.held-state-' + secrets.token_hex(12))
         try:
@@ -209,20 +212,22 @@ def load_source(session, root, directory, selected_identity):
     require(n71_session_history.kernel_lines(text)[:len(data['baseline'])] == data['baseline'], 'Held baseline differs')
     proofs = data.get('proofs')
     driver_proofs = n71_driver_runtime_stage.extra_proofs(session, data)
+    module_proofs = n71_driver_module_stage.extra_proofs(session, data)
     require(isinstance(proofs, dict) and set(proofs).issubset(PROOFS + n71_resource_stage.extra_proofs(session)
-            + driver_proofs), 'Held cleanup proof set differs')
+            + driver_proofs + module_proofs), 'Held cleanup proof set differs')
     verified = {}
     for stage, expected in proofs.items():
         path = directory / (stage + '-proof-private.log')
         proof = n71_session_history.read_private(directory, path.name)
         require(hashlib.sha256(path.read_bytes()).hexdigest() == expected, 'Held cleanup proof integrity differs')
-        expected_history = (n71_session_history.kernel_lines(text) if stage in driver_proofs else
+        expected_history = (n71_session_history.kernel_lines(text) if stage in driver_proofs + module_proofs else
                             [line for line in n71_session_history.kernel_lines(text) if line not in baseline.known])
         require(n71_session_history.kernel_lines(proof) == expected_history[:len(n71_session_history.kernel_lines(proof))],
                 'Held cleanup history differs')
         verified[stage] = proof
     n71_resource_stage.load_source(session, data, verified)
     n71_driver_runtime_stage.load_source(session, data, verified)
+    n71_driver_module_stage.load_source(session, data, verified)
     if 'pcie-cleanup' in verified:
         iommu_proof = n71_iommu_result.cleanup(session, verified['pcie-cleanup'])
         if iommu_proof is not None:
