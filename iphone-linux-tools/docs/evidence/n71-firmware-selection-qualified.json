@@ -1,0 +1,78 @@
+{
+  "format": 1,
+  "status": "private_firmware_selection_qualified_offline_not_radio_or_charging_proof",
+  "code_commit": "b14a04b",
+  "platforms": [
+    "macOS",
+    "Ubuntu 24.04 ARM64 dedicated Multipass VM"
+  ],
+  "tests_per_platform": 5,
+  "assertion_mutations_per_platform": 10,
+  "public_inputs": [
+    {
+      "path": "scripts/host/n71_driver_firmware.py",
+      "bytes": 4648,
+      "sha256": "58801b7425388726a2ab27d7979e18cc01e43a7a65a52c938bf8dd554e814226"
+    },
+    {
+      "path": "scripts/host/device_profile.py",
+      "bytes": 6526,
+      "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+    },
+    {
+      "path": "tests/test_n71_driver_firmware.py",
+      "bytes": 9176,
+      "sha256": "0c9e07a22e9ecbb78205cb69bf6fd16c5271d9f28910622622b01631f9427a35"
+    },
+    {
+      "path": "docs/evidence/n71-wlan-firmware-origin.json",
+      "bytes": 1158,
+      "sha256": "23c5aebfc05bca172978e5fb7999f23fb96bbc0506d6448eb62e9171a524e7cf"
+    },
+    {
+      "path": "docs/evidence/n71-regdb-calibration-source-audit.json",
+      "bytes": 3043,
+      "sha256": "cd6d133b50bba7c167a0ae8e6af2402c7e44d12ca238c4494499353f7240a410"
+    }
+  ],
+  "same_input_hashes_on_both_platforms": true,
+  "ast_python_files": 3,
+  "fatal_lint_passed_both_platforms": true,
+  "python_typechecker_configured": false,
+  "actual_pinned_package_selected": true,
+  "files": [
+    {
+      "path": "brcm/brcmfmac4350-pcie.bin",
+      "bytes": 626140,
+      "sha256": "5691d1e0ceb70baf18efb7a0ec6cb84feb9edd2d0700c525b42930c4e7e4b845"
+    },
+    {
+      "path": "regulatory.db",
+      "bytes": 6348,
+      "sha256": "7e236caecd939c8ec98be4870bf30422f28ffef2565a38aaaa2d9ddabd0c2641"
+    },
+    {
+      "path": "regulatory.db.p7s",
+      "bytes": 1085,
+      "sha256": "50332f0db09b8bcc719235ec4985c27377f2cc2f42abb7b5dcf951866c5a888a"
+    }
+  ],
+  "total_bytes": 633573,
+  "firmware_executed": false,
+  "iphone_accessed": false,
+  "kernel_modules_initramfs_payload_and_defaults_unchanged": true,
+  "mac_global_dependencies_or_configuration_changed": false,
+  "reused_proof": [
+    "C6b calibration profile and actual identity gates",
+    "unchanged native C/build artifacts"
+  ],
+  "discarded_failures": [
+    "Fixture import failure was corrected, not counted as a kill",
+    "Mutation schema KeyError was corrected to an isolated assertion; not counted as a kill"
+  ],
+  "next": [
+    "Owned same-boot data staging before WCC loads",
+    "Kernel firmware/regdb requests and actual radio acceptance in one grouped physical session",
+    "Energy and battery telemetry proof"
+  ]
+}

@@ -606,3 +606,35 @@ O primeiro baseline falhou por device estrangeiro sem bus na fixture; a guarda a
 - **Testes/tipos/lint:**207/170 por plataforma, build real de dois módulos com Werror/modpost/ELF/vermagic/imports; AST/lint fatal, sem typechecker Python. Nenhuma dependência/banco/configuração global alterada, desempenho físico não medido.
 - **CI anterior c7240a1:** [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38034484984) com três jobs verdes; [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38034481962) com Windows/Ubuntu verdes e Mac cancelado. Não transformar cancelamento em sucesso nem repetir gates só por haver um segundo evento. CI desta publicação continua separada.
 - **Próxima tarefa:** integrar o caller e bloquear lease MSI manual durante runtime antes de preparar journal/seleção. Wi-Fi/IRQ/DMA/firmware, gauge/carga, goal e issues9/2/40 permanecem abertos. Nenhuma ação necessária do operador nesta fase.
+
+
+### Seleção privada de firmware e regdb — C6c1
+
+`b14a04b` adiciona `scripts/host/n71_driver_firmware.py` e seu gate. A API `select(root, request)` recebe somente a raiz absoluta do projeto e `{directory: Path, release: string}`. A pasta deve ficar diretamente em `runtime/`, pertencer ao usuário e ter modo700; arquivos regulares próprios com modo600, sem symlinks/hardlinks. Conteúdo exato: `brcm/brcmfmac4350-pcie.bin`, `regulatory.db`, `regulatory.db.p7s`. O catálogo fixo confere tamanhos/hashes e devolve registros independentes com bytes imutáveis. Nenhum download, processo, escrita ou efeito remoto é realizado pela seleção.
+
+A origem Broadcom é o commit31ec35bf14df835e2f9f7c8b1a8516a34f836df5 do linux-firmware oficial, com WHENCE e licença inspecionados. O regdb2026.09.03 conserva a verificação CMS explícita de C6a. [Origem](evidence/n71-wlan-firmware-origin.json), [auditoria criptográfica](evidence/n71-regdb-calibration-source-audit.json). Os arquivos binários permanecem privados; licença/origem não comprovam compatibilidade de rádio com o iPhone. Nenhum NVRAM, CLM, TxCap, endereço MAC ou identificação de placa foi inventado.
+
+Reproduzir o gate, a partir de `iphone-linux-tools/`:
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_firmware.py -v
+```
+
+Após preparar localmente a pasta privada com os três dados fixados, validar sem tocar no telefone:
+
+```python
+from pathlib import Path
+import sys
+root = Path.cwd().resolve()
+sys.path.insert(0, str(root / "scripts/host"))
+import n71_driver_firmware as firmware
+pairs = firmware.select(root, {
+    "directory": root / "runtime/n71-trusted-firmware-20261010",
+    "release": firmware.RELEASE,
+})
+print(len(pairs), sum(len(data) for _, data in pairs))
+```
+
+A seleção real produziu3 arquivos/633.573 bytes. O gate passou5 testes e10 mutações reais por plataforma Mac/Ubuntu ARM64, com cinco inputs SHA idênticos e AST/lint fatal. A fixture muda apenas trust anchors para dados sintéticos isolados; parsing, seleção, hashes e filesystem permanecem reais. Falha inicial de import e KeyError de harness foram corrigidos e descartados como kills. Não há typechecker Python configurado. [Prova](evidence/n71-firmware-selection-qualified.json).
+
+Staging por SSH, vínculo ao mesmo boot, recuperação de transferência e uso pelo loader continuam pendentes. Kernel, módulos, imagem, initramfs, defaults e configuração global do Mac ficaram intactos. Os gates anteriores com inputs inalterados foram reutilizados. Nenhum banco/dependência novo e nenhum desempenho físico medido. O objetivo continua ativo até Wi-Fi e alimentação/telemetria serem comprovados fisicamente.

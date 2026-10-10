@@ -1,12 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — candidata PCI OF com calibração qualificada localmente
+## Checkpoint atual — firmware e regdb selecionados de fontes fixadas
 
-Em `0d67359`, compositor opt-in cria perfil privado de14 arquivos com rootport devfn8, endpoint0 e cal-blob N71 no Device Tree. **8 testes/14 mutações AssertionError por plataforma Mac/Ubuntu ARM64**,383 inputs íntegros, AST/lint fatal. Composição real e dois --check passaram no Mac; kernel/initramfs/prefixo/identidades/sete módulos e dez arquivos de source idênticos. Source/default preservados,69 inputs C/builds iguais. [Reprodução](N71_BRCMFMAC_RUNTIME.md#perfil-pci-of-de-calibração--c6b), [evidência](evidence/n71-calibration-profile-qualified.json).
+Em `b14a04b`, o seletor valida três arquivos privados contra a origem oficial e os hashes fixados, incluindo regdb com assinatura previamente conferida contra o certificado explícito do kernel. **5 testes/10 mutações AssertionError em cada plataforma Mac/Ubuntu ARM64**, cinco inputs idênticos, AST e lint fatal aprovados. O pacote real de633.573 bytes foi selecionado localmente sem executar firmware. [Reprodução](N71_BRCMFMAC_RUNTIME.md#seleção-privada-de-firmware-e-regdb--c6c1), [evidência](evidence/n71-firmware-selection-qualified.json).
 
-Nenhuma ação no telefone. Associação OF é previsão baseada na fonte, ainda sem prova física. Próximo: staging firmware/regdb e contrato de energia antes da sessão agrupada. Wi-Fi/carga, goal e issues40/9/2 continuam abertos. Não solicitar confirmações rotineiras de tela/cabo/console/temperatura.
+A candidata PCI OF de C6b permanece intacta: composição real, kernel/initramfs/prefixo/identidades/sete módulos e dez arquivos de source preservados;69 inputs C/builds iguais. [Perfil com calibração](N71_BRCMFMAC_RUNTIME.md#perfil-pci-of-de-calibração--c6b). Próximo: staging no mesmo boot e contrato de energia antes da sessão física agrupada. Wi-Fi/carga, goal e issues40/9/2 continuam abertos.
 
-CI `9bc0588`: [PR38077415666](https://github.com/djalmajr/iphone6s-linux/actions/runs/38077415666) aprovou Windows, cancelou Ubuntu/Mac; [push38077412284](https://github.com/djalmajr/iphone6s-linux/actions/runs/38077412284) aprovou Ubuntu/Windows, cancelou Mac. Três anotações oficiais confirmam15min. #41 continua aberta; nenhum rerun, aumento de prazo ou remoção de gate. Próxima publicação após estes estados terminais.
+Nenhuma ação no telefone nesta rodada. Assumir o retorno ao iOS para recarga sem solicitar confirmação de tela; não registrar essa suposição como prova USB/física. Pedir somente ação indispensável com candidata e monitor prontos, diretamente. Sem perguntas rotineiras de cabo, tela, console ou temperatura.
+
+CI `bd9f986`: [PR38080153059](https://github.com/djalmajr/iphone6s-linux/actions/runs/38080153059) aprovou Windows/Mac e cancelou Ubuntu; [push38080149183](https://github.com/djalmajr/iphone6s-linux/actions/runs/38080149183) aprovou Windows e cancelou Mac/Ubuntu. A anotação oficial do job114295216151 confirma limite15min. #41 permanece aberta; nenhum rerun, aumento de prazo ou remoção de gate. Essas execuções são terminais e não qualificam a nova seleção.
 
 ## Histórico — coordenador no mesmo boot qualificado
 

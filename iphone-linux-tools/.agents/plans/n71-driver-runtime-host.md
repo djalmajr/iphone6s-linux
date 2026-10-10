@@ -346,5 +346,5 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** filesystem/hashes/selectors reais; catálogo de trust anchors sintético e isolado na fixture, nunca fornecido pelo caller da API. Provar ordem/nome/bytes/SHA, retorno independente/imutável, origem/certificado/release recusados, arquivo extra/alterado/omitido/budget/links/permissões/traversal recusados sem efeitos. Baseline/mutações reais AssertionError, AST/lint Mac/ARM64 e preservação de inputs. Selecionar os três arquivos reais já verificados localmente sem downloads/execução/telefone. Reusar gates C6b/C/artefatos intactos.
 
-- [ ] Implementar e qualificar seleção do pacote local.
+- [x] Implementar e qualificar seleção do pacote local. `b14a04b`:5 testes/10 mutações Mac/ARM64, cinco inputs iguais; pacote real633.573 bytes aceito sem efeitos.
 - [ ] Fechar staging no Session e identidade/recuperação antes de um único boot agrupado com energia.

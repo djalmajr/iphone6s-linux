@@ -306,3 +306,8 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Reverter:** baixo antes de hardware; pacote local opt-in, perfil e kernel atuais intactos.
 - **Onde:** C6c1 no plano host, novo selector/teste e evidência de origem; issue9.
 - **Status:** contrato em curso; nenhum arquivo no telefone nem novo pedido ao operador.
+
+
+### D33 — resultado C6c1
+
+Seleção implementada em `b14a04b` e qualificada em Mac/ARM64 com5 testes/10 mutações AssertionError por plataforma, cinco inputs idênticos, AST/lint fatal. O pacote real foi selecionado; nada foi executado ou transferido ao telefone. C6b/kernel/C/defaults preservados. Staging e prova física continuam em curso. [Evidência](../../docs/evidence/n71-firmware-selection-qualified.json).
