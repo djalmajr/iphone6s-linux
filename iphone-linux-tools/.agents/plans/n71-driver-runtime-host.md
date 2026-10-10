@@ -228,5 +228,22 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** constructor/Session/preflight/experiment/selected reais, dados/SSH/kernel sintéticos onde necessário; filesystem e bytes/SHA reais. Provar default inalterado, diagnóstico/manifest/ABI/flags recusados antes de efeito, transferência dos sete arquivos sem WCC insmod, erro de hash sem REG_ON/PCI insmod, getter somente depois dos arquivos e parâmetro runtime somente no opt-in. Mutações reais com baseline verde e AssertionError; AST/lint Mac/ARM64, gates afetados e reuso C/builds inalterados. Não declarar associação/carga/IRQ/DMA a partir desse aceite.
 
-- [ ] Implementar e qualificar Session/staging runtime sem alterar a CLI.
+- [x] Implementar e qualificar Session/staging runtime sem alterar a CLI.
 - [ ] Fechar aquisição/assignment/saída e composição/CLI antes da candidata física.
+
+**C2 qualificada em 3a6afb8:** 9/16 novos e 135/149 nos dez gates afetados por plataforma Mac/Ubuntu ARM64, 372 inputs íntegros, AST/lint fatal. Construtor real com sete binários/1.371.040 bytes passou sem execução/SSH; 358 dos 360 inputs anteriores e 69 C iguais, builds preservados. Saída pré-assignment/composição/CLI e firmware/energia permanecem pendentes, sem ação no telefone.
+
+### C3. Observe/stop antes de assignment — contrato fechado
+
+**Contexto:** aquisição held e assignment são etapas distintas. O coordenador exige assignment para toda origem retida, e lifetime.removed exige sua prova mesmo quando a etapa nunca foi tentada. Não fabricar assignment para encerrar um host adquirido. Conservar as recusas quando a intenção existe ou a prova está ausente.
+
+**Arquivos executáveis (três):** `scripts/host/n71_driver_runtime_lifetime.py`, `scripts/host/n71_driver_runtime_session.py` e novo `tests/test_n71_runtime_unassigned_stop.py`. Nenhuma CLI/composição, kernel, firmware ou hardware nesta fatia. Retained/start com assignment saudável conservam o contrato anterior.
+
+**Resultado:** reconhecer a origem explicitamente runtime/WCC com resource_attempted=false, assignment=None e nenhuma prova resource-assignment, ambos os ledgers vazios, mesmo boot e stack fresco totalmente ausente. Observe não faz efeitos. Start continua recusado antes de assignment. Stop permite somente o cleanup held já existente e prova seus providers/REG_ON/unloads; o resultado removido exige cleanup rederivado sem evento/causa de assignment, prefixes/checkpoints e nenhum efeito nativo não registrado. Resource intent/prova/summary divergentes, stack vivo, boot/history drift, native owners/MSI manual e falta de cleanup/unload permanecem recusados antes do próximo efeito.
+
+**Histórico:** antes de assignment, usar o checkpoint adquirido validado como âncora do histórico; admitir somente os REG_ON_READ canônicos posteriores e exigir ausência de actions nativas após o baseline. Não tratar a ausência de assignment como autorização de prepare/publish ou remover providers quando existe intento pendente. Origem continua imutável; cópias e recuperação usam os contratos existentes.
+
+**Verificação:** journal/source/coordenador/lifetime/held/resource/IOMMU reais com dependências kernel/SSH sintéticas. Ciclo observe→stop no mesmo boot sem assign/prepare/WCC load; stop removido idempotente, start recusado, origem intacta e source loader aceita cleanup genuíno. Negativas de intenção/prova/resumo, boot/prefixos, native/module owners, MSI, cleanup e unload; mutações reais após baseline verde, somente AssertionError. AST/lint Mac/ARM64, gates diretamente afetados; preservar C/builds e não pedir ação ao operador.
+
+- [ ] Implementar e qualificar observe/stop pré-assignment.
+- [ ] Integrar composição/CLI e a sequência inicial após esse aceite, antes da candidata física.

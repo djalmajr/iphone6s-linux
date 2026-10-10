@@ -1,12 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — seleção caller/WCC qualificada; Session/staging e composição pendentes
+## Checkpoint atual — Session/staging runtime qualificados; composição e saída pré-assignment pendentes
 
-Em `317c89c`, a seleção explícita liga caller e cinco WCC à mesma base de kernel, revalida os 69 inputs compilados e conserva os controles de assignment/IOMMU e REG_ON. **9 testes/14 mutações por plataforma Mac/Ubuntu ARM64**, 360 inputs íntegros, AST/lint fatal; sete binários/1.371.040 bytes revalidados por bytes/SHA/ELF/ABI, sem carga ou rebuild. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#seleção-vinculada-do-caller-e-wcc--fase-c1), [evidência](evidence/n71-runtime-selection-qualified.json). 288 inputs host e 69 C anteriores iguais permitem reutilizar os gates/builds anteriores.
+Em `3a6afb8`, Session recebe caller/REG_ON e cinco WCC separados, revalida bytes/SHA antes do primeiro SSH e transfere/verifica os sete arquivos antes de ativar diagnósticos ou coletar WCC. Probe só acrescenta driver_runtime=1 no modo explícito. **135 testes/149 mutações por plataforma Mac/Ubuntu ARM64**, 372 inputs íntegros, AST/lint fatal; novo gate 9/16. Construtor com sete binários reais/1.371.040 bytes passou sem executar módulos. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#session-e-staging-explícitos--fase-c2), [evidência](evidence/n71-runtime-session-staging-qualified.json). Os 69 inputs C/builds permanecem iguais e foram reutilizados.
 
-Session ainda não recebe a seleção runtime, e a CLI/perfil não foi alterada. Próximo: staging WCC antes do getter, flag runtime explícita e integração de aquisição/assignment/start/observe/stop; preservar a saída pré-assignment antes de expor o fluxo. Depois firmware/calibração/regdb e energia, antes de um teste físico agrupado. Wi-Fi/carga, goal e issues40/9/2 continuam pendentes. Nenhuma ação do operador necessária agora.
+Próximo: provar observe/stop antes de assignment, depois composição/CLI e aquisição→assignment→start/observe/stop; firmware/calibração/regdb e energia precedem um teste físico agrupado. Wi-Fi/carga, goal e issues40/9/2 continuam pendentes. Nenhuma ação do operador necessária agora; assumir retorno ao iOS para recarga sem pedir confirmação de tela.
 
-CIad6eefd anterior: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38064786088) aprovou os três jobs; [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38064783023) aprovou Mac/Windows e cancelou Ubuntu por prazo oficial de 15 minutos. #41 permanece aberta; nenhuma repetição de run ou alteração de prazo/cobertura.
+CI 7f1f7bf: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38066904096) aprovou os três jobs; [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38066900245) aprovou Ubuntu/Windows e cancelou Mac. Cancelamento não é sucesso. #41 permanece aberta pelos timeouts anteriores; nenhuma repetição de run ou alteração de prazo/cobertura.
 
 ## Histórico — coordenador no mesmo boot qualificado
 

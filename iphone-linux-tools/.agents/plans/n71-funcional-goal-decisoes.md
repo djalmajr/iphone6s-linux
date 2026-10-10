@@ -241,3 +241,12 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Reverter:** baixo antes da ativação física; helper/teste novos e seleção opt-in.
 - **Onde:** C1 no plano host; novo runtime_build/teste; Session/staging/composição/CLI depois.
 - **Status:** aplicada em 317c89c;9/14 Mac/ARM64,360 inputs íntegros e sete artefatos revalidados. Session/staging/composição/CLI e firmware/energia permanecem pendentes; nenhuma ação do operador necessária.
+
+## D27. Preparar arquivos antes do primeiro getter e fechar a saída pré-assignment
+
+- **Decisão:** Session mantém os dois diagnósticos separados dos cinco WCC, revalida seleção/bytes e só ativa após todos os arquivos verificarem SHA. Fechar observe/stop da aquisição sem assignment antes de expor CLI/composição.
+- **Por quê:** o getter WCC depende dos arquivos staged; uma aquisição válida precisa de saída sem inventar assignment ou reiniciar o telefone. Isso permite manter o desenvolvimento por SSH no mesmo boot.
+- **Alternativas:** carregar WCC no preflight mistura staging e efeito; executar assignment só para liberar owners fabrica uma operação; reboot descarta evidência e exige novo DFU.
+- **Reverter:** baixo antes da exposição física; helper opt-in e validação específica, defaults/kernel preservados.
+- **Onde:** C2 em 3a6afb8, C3 no plano host; depois composição/CLI, firmware e energia.
+- **Status:** C2 aplicada/qualificada 135/149 Mac/ARM64. C3 na fila com contrato fechado; Wi-Fi/carga/prova física continuam pendentes. Nenhuma intervenção do operador necessária agora.

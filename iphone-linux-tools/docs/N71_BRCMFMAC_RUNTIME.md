@@ -6,6 +6,22 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## Session e staging explícitos — fase C2
+
+Em `3a6afb8`, Session aceita `runtime=None` ou cinco pares de registro/bytes WCC. O modo explícito exige held/resource/IOMMU power2, os registros exatos de C1 e bytes imutáveis com tamanho/SHA corretos. A instância conserva cópias próprias dos dois diagnósticos e dos cinco drivers, com manifest e journals separados. None conserva o fluxo anterior; a CLI ainda não oferece esse modo.
+
+Preflight revalida a seleção antes do primeiro SSH. Recusa os oito módulos conhecidos ou registro brcmfmac já presentes, exigindo exit0 e um marker completo. Transfere e verifica os sete arquivos no diretório exclusivo antes de REG_ON/PCI insmod ou getter WCC. O probe recebe `driver_runtime=1` somente no modo explícito; nenhum WCC insmod, prepare ou publish ocorre nessa etapa. Hash remoto falho impede qualquer ativação.
+
+### Reprodução e limites
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_profile.py -v
+```
+
+Novo gate: **9 testes/16 mutações por AssertionError**. Matriz dos dez gates afetados: **135 testes/149 mutações por plataforma Mac/Ubuntu ARM64**, 372 inputs íntegros, AST/lint fatal; sem typechecker Python configurado. Seletores, Session, filesystem, POSIX shell e SHA reais; kernel/SSH sintéticos. Também foi validado o construtor real com os sete binários aceitos, **1.371.040 bytes**, sem execução de módulos ou SSH. [Evidência sanitizada](evidence/n71-runtime-session-staging-qualified.json). Scripts/manifests/logs privados em `runtime/n71-runtime-profile-final-20261010/` e pasta correspondente na VM.
+
+358 dos 360 inputs anteriores permanecem iguais; os dois consumidores alterados foram cobertos pela matriz. Os 69 inputs C, kernel/Image/exports e binários permanecem iguais; C 575/455 e builds foram reutilizados, sem recompilação. Nenhum acesso ao iPhone, DFU, reboot, instalação ou configuração global no Mac. Ainda faltam saída anterior a assignment, composição/CLI, firmware/calibração/regdb e energia antes da sessão física agrupada. Wi-Fi e carga Linux não estão comprovados.
+
 ## Seleção vinculada do caller e WCC — fase C1
 
 Em `317c89c`, `n71_driver_runtime_build.qualified(root, request)` e `select(root, request)` recebem release e pcie_sha256 explícitos. Recusam o módulo IOMMU antigo, ABI incompatível e mistura de source/patch/config/Image/exports/gzip entre caller, WCC e kernel. Select devolve diagnostics (caller e REG_ON), drivers (cinco WCC ordenados) e kernel_outputs. Mantém os controles anteriores de assignment/IOMMU e o registro REG_ON; a identidade do caller muda para 142.232 bytes/SHA b4888de1 e recebe driver_runtime=true.
