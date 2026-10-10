@@ -179,3 +179,12 @@
 - **Reverter:** baixo antes da ativação; caminho limitado ao runtime com ledger, loader legacy preservado.
 - **Onde:** plano hostB2b1 e helper runtime de recuperação, chamada localizada no coordinator held.
 - **Status:** aplicada em4e4177f;110/196 por plataforma Mac/ARM64,270 inputs íntegros, AST/lint e69 C preservados. Origem/órfão intactos e observação sem exit inventado; unload/coordenador/resources/cleanup e seleção física continuam pendentes.
+
+## D21. Preparar o host, carregar WCC e só então publicar
+
+- **Decisão:** carregar rfkill/cfg80211/brcmutil/brcmfmac/WCC depois de prepare e antes de publish; unload normal em ordem inversa, com receipt exclusivo e ledger antes de cada efeito. Não depender de modprobe automático nem carregar vendors não usados.
+- **Por quê:** a tabela PCI BCM4350 seleciona WCC; o PCI core bloqueia binding até a publicação. Prepare exige core ausente, e pre-load após prepare permite registrar WCC antes de callbacks. Pins/refcounts e holders ocupados impedem unload, conservando a sessão para nova observação.
+- **Alternativas:** publicar antes de carregar WCC exige autoload ainda não preparado no rootfs; carregar core antes de prepare viola a guarda nativa; remover core antes do vendor conflita com sua dependência; force/unbind perde a barreira de lifetime e foi descartado.
+- **Reverter:** baixo antes da ativação; módulos/perfil antigos e defaults legacy conservados, sem mudança no kernel.
+- **Onde:** plano hostB2b2, protocolo e journal de módulos, depois coordenador e seleção C.
+- **Status:** em curso; qualificação offline antes de qualquer boot/carga no aparelho.
