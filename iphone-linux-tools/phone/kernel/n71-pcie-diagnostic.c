@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Opt-in clock/reset and temporary PCI sizing diagnostic; no DMA or radio. */
+/* Opt-in PCI diagnostic; driver runtime requires separate explicit actions. */
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
 #include <linux/io.h>
@@ -17,6 +17,7 @@
 #include "n71-pcie-scan.h"
 #include "n71-pcie-resource-assign.h"
 #include "n71-pcie-msi-allocate.h"
+#include "n71-pcie-brcmfmac.h"
 #include "n71-pcie-chip-mmio.h"
 #include "n71-dart-mmio.h"
 #include "n71-dart-provider.h"
@@ -45,6 +46,9 @@ MODULE_PARM_DESC(msi_parent, "Associate the private MSI parent before the held s
 static bool iommu_parent;
 module_param(iommu_parent, bool, 0400);
 MODULE_PARM_DESC(iommu_parent, "Associate the retained DART provider before the held MSI scan; no driver or DMA");
+static bool driver_runtime;
+module_param(driver_runtime, bool, 0400);
+MODULE_PARM_DESC(driver_runtime, "Permit explicit brcmfmac prepare/publish/release actions; probe never loads firmware");
 static bool bar_sizing;
 module_param(bar_sizing, bool, 0400);
 MODULE_PARM_DESC(bar_sizing, "Size/restore endpoint BARs directly; no PCI devices, MMIO or DMA");
@@ -202,6 +206,9 @@ static void n71_msi_allocation_report(struct n71_scan_host *host, const char *ac
 		 native->domain ? native->domain->mapcount : 0, !!native->child, n71_msi_allocation_error(host));
 }
 
+static bool n71_session_has_held_bus(const struct n71_diagnostic *state);
+#include "n71-pcie-brcmfmac-caller.h"
+
 static int n71_session_cleanup(struct n71_diagnostic *state)
 {
 	struct n71_scan_host *host;
@@ -209,6 +216,9 @@ static int n71_session_cleanup(struct n71_diagnostic *state)
 
 	if (state->scan_bridge) {
 		host = pci_host_bridge_priv(state->scan_bridge);
+		error = n71_driver_cleanup(state, host);
+		if (error)
+			return error;
 		if (n71_msi_allocation_pending(host)) {
 			error = n71_pcie_msi_release(host, &host->msi_allocation);
 			if (!error && n71_msi_allocation_pending(host))
@@ -270,6 +280,12 @@ static int n71_cleanup_action(const char *text, const struct kernel_param *param
 	int error;
 
 	(void)parameter;
+	if (sysfs_streq(text, "driver-prepare"))
+		return n71_driver_action(N71_DRIVER_PREPARE);
+	if (sysfs_streq(text, "driver-publish"))
+		return n71_driver_action(N71_DRIVER_PUBLISH);
+	if (sysfs_streq(text, "driver-release"))
+		return n71_driver_action(N71_DRIVER_RELEASE);
 	if (sysfs_streq(text, "assign"))
 		return n71_assign_action();
 	if (sysfs_streq(text, "msi-hold"))
@@ -363,6 +379,10 @@ static int n71_msi_action(bool release)
 		error = -EBUSY;
 	} else {
 		host = pci_host_bridge_priv(session->scan_bridge);
+		if (n71_scan_driver_pending(host)) {
+			error = -EBUSY;
+			goto unlock;
+		}
 		if (release) {
 			error = n71_pcie_msi_release(host, &host->msi_allocation);
 			if (!error && n71_msi_allocation_pending(host))
@@ -380,6 +400,7 @@ static int n71_msi_action(bool release)
 		}
 		n71_msi_allocation_report(host, release ? "release" : "hold", error);
 	}
+unlock:
 	mutex_unlock(&session_lock);
 	module_put(THIS_MODULE);
 	return error;
@@ -567,8 +588,9 @@ static const struct kernel_param_ops dart_ops = {.get = n71_dart_status};
 static const struct kernel_param_ops msi_ops = {.get = n71_msi_status};
 static const struct kernel_param_ops msi_allocation_ops = {.get = n71_msi_allocation_status};
 static const struct kernel_param_ops iommu_ops = {.get = n71_iommu_status};
+static const struct kernel_param_ops driver_ops = {.get = n71_driver_status};
 module_param_cb(action, &cleanup_ops, NULL, 0200);
-MODULE_PARM_DESC(action, "assign, dart-hold, dart-release, msi-hold, msi-release, cleanup operate on the retained session; no rescan");
+MODULE_PARM_DESC(action, "assign, dart-hold/release, msi-hold/release, driver-prepare/publish/release, cleanup operate on the retained session; no rescan");
 module_param_cb(status, &status_ops, NULL, 0400);
 MODULE_PARM_DESC(status, "Inspect retained ownership and cleanup errors before normal unload");
 module_param_cb(held, &held_ops, NULL, 0400);
@@ -583,6 +605,8 @@ module_param_cb(msi_allocation, &msi_allocation_ops, NULL, 0400);
 MODULE_PARM_DESC(msi_allocation, "Read allocation ownership and last validation; no new IO or IRQ delivery proof");
 module_param_cb(iommu, &iommu_ops, NULL, 0400);
 MODULE_PARM_DESC(iommu, "Read OF/core DART association and pending cleanup; not DMA translation proof");
+module_param_cb(driver_runtime_status, &driver_ops, NULL, 0400);
+MODULE_PARM_DESC(driver_runtime_status, "Read driver runtime ownership and errors; publication is not firmware or radio readiness");
 
 static int n71_power(struct device *dev, struct n71_diagnostic *state)
 {
@@ -787,7 +811,7 @@ static int __init n71_init(void)
 {
 	if (!run || !of_machine_is_compatible("apple,n71"))
 		return -ENODEV;
-	if ((iommu_parent && (!msi_parent || !scan_hold)) ||
+	if ((driver_runtime && !iommu_parent) || (iommu_parent && (!msi_parent || !scan_hold)) ||
 	    (msi_parent && !scan_hold) || (scan_hold && (!host_scan || !scan_pme_disable)) ||
 	    (scan_pme_disable && !host_scan) || (config_inventory && !enumerate) ||
 	    ((host_scan || bar_sizing || chip_id || dart_observe || dart_cycle) && !config_inventory) ||
@@ -799,4 +823,4 @@ module_init(n71_init);
 static void __exit n71_exit(void) { platform_driver_unregister(&n71_driver); }
 module_exit(n71_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Opt-in N71 PCIe clocks and identification diagnostic; no DMA");
+MODULE_DESCRIPTION("Opt-in N71 PCIe diagnostic with explicit brcmfmac runtime actions");

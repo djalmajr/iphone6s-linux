@@ -40,6 +40,10 @@
 static int *active_lock;
 static void mutex_lock(int *lock) { assert(!*lock && !active_lock); *lock = 1; active_lock = lock; }
 static void mutex_unlock(int *lock) { assert(*lock && active_lock == lock); *lock = 0; active_lock = NULL; }
+static void host_lock(int *lock) { assert(active_lock && *active_lock && !*lock); *lock=1; }
+static void host_unlock(int *lock) { assert(active_lock && *active_lock && *lock); *lock=0; }
+#define spin_lock_irqsave(lock, flags) do { (flags)=0; host_lock(lock); } while (0)
+#define spin_unlock_irqrestore(lock, flags) do { (void)(flags); host_unlock(lock); } while (0)
 struct kernel_param { int unused; };
 struct kernel_param_ops {
 	int (*set)(const char *, const struct kernel_param *);
@@ -76,6 +80,11 @@ struct n71_scan_host {
 	struct n71_wlan_msi_host msi;
 	struct n71_msi_allocation msi_allocation;
 	struct n71_msi_config msi_config;
+	struct { bool active; int error; } brcmfmac;
+	struct pci_dev *driver_root, *driver_endpoint;
+	bool driver_pm, driver_root_override, driver_endpoint_override, driver_published;
+	unsigned int driver_reads;
+	int lock;
 	struct { struct pci_host_bridge *bridge; bool available, mapped; } dart;
 	void *iommu_domain;
 	unsigned int iommu_devices;
@@ -137,6 +146,12 @@ static struct {
 	bool vector_release_stopped, vector_release_pending, allocation_child_owned;
 	struct pci_dev msi_endpoint;
 	char allocation_log[512];
+	struct {
+		unsigned int prepares, publishes, releases;
+		int prepare_error, publish_error, release_error;
+		bool prepare_pending, release_pending;
+		char log[512];
+	} runtime;
 	struct irq_domain msi_domain, msi_child;
 	unsigned int assignments;
 	unsigned int dart_acquires, dart_releases;
@@ -169,9 +184,13 @@ static void dev_info(struct device *dev, const char *format, ...)
 {
 	va_list arguments;
 	(void)dev;
-	if (strstr(format,"N71_PCIE_MSI_ALLOCATION_RESULT ")!=format) return;
 	va_start(arguments,format);
-	vsnprintf(mock.allocation_log,sizeof(mock.allocation_log),format,arguments);
+	if (strstr(format,"N71_PCIE_MSI_ALLOCATION_RESULT ")==format)
+		vsnprintf(mock.allocation_log,sizeof(mock.allocation_log),format,arguments);
+	else if (strstr(format,"N71_PCIE_DRIVER_RESULT ")==format) {
+		assert(mock.bridge.private.lock);
+		vsnprintf(mock.runtime.log,sizeof(mock.runtime.log),format,arguments);
+	}
 	va_end(arguments);
 }
 static void dev_err(struct device *dev, const char *format, ...) { (void)dev; (void)format; }
@@ -411,6 +430,8 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 	struct n71_wlan_msi_host *owner=&mock.bridge.private.msi;
 	struct n71_scan_host *host=&mock.bridge.private;
 	if (!state->scan_bridge) return 0;
+	assert(!host->brcmfmac.active && !host->driver_root && !host->driver_endpoint && !host->driver_pm &&
+	       !host->driver_root_override && !host->driver_endpoint_override);
 	assert(mock.bridge.alive && mock.refs && state->powered==4 && state->attached==4);
 	assert(!host->msi_allocation.endpoint && !host->msi_allocation.vector && !host->msi_allocation.default_irq &&
 	       host->msi_config.phase==N71_MSI_CONFIG_EMPTY);
@@ -526,6 +547,56 @@ static int n71_pcie_dart_cleanup(struct device *dev, struct n71_diagnostic *stat
 }
 static int platform_driver_register(struct platform_driver *driver) { assert(driver->driver.suppress_bind_attrs); mock.registered++; return 0; }
 static void platform_driver_unregister(struct platform_driver *driver) { (void)driver; assert(!mock.refs && mock.registered); mock.registered--; }
+/* The adapter/config have separate real-source gates; only their effects are modeled here. */
+static void runtime_owned(struct n71_scan_host *host)
+{
+	host->brcmfmac.active=true; host->driver_root=host->driver_endpoint=&mock.msi_endpoint;
+	host->driver_pm=host->driver_root_override=host->driver_endpoint_override=true;
+}
+static void runtime_error(struct n71_scan_host *host, int error)
+{
+	if (error && error!=-EBUSY && error!=-EALREADY && !host->brcmfmac.error)
+		host->brcmfmac.error=error;
+}
+static void runtime_dependency(struct pci_host_bridge *bridge, struct n71_scan_host *host)
+{
+	assert(active_lock && *active_lock && mock.refs==2 && bridge==&mock.bridge && host==&bridge->private);
+	assert(mock.bridge.alive && mock.bridge.bus && !mock.puts && !mock.resets && !host->lock);
+}
+static int n71_pcie_brcmfmac_prepare(struct pci_host_bridge *bridge, struct n71_scan_host *host)
+{
+	runtime_dependency(bridge,host);
+	if (host->brcmfmac.active || host->driver_root || host->driver_endpoint || host->driver_pm ||
+	    host->driver_root_override || host->driver_endpoint_override || host->driver_published)
+		return -EBUSY;
+	mock.runtime.prepares++;
+	if (!mock.runtime.prepare_error || mock.runtime.prepare_pending) runtime_owned(host);
+	runtime_error(host,mock.runtime.prepare_error);
+	return mock.runtime.prepare_error;
+}
+static int n71_pcie_brcmfmac_publish(struct pci_host_bridge *bridge, struct n71_scan_host *host)
+{
+	runtime_dependency(bridge,host);
+	if (host->driver_published) return -EALREADY;
+	if (!host->brcmfmac.active) return -EACCES;
+	mock.runtime.publishes++; host->driver_published=true;
+	runtime_error(host,mock.runtime.publish_error);
+	return mock.runtime.publish_error;
+}
+static int n71_pcie_brcmfmac_release(struct pci_host_bridge *bridge, struct n71_scan_host *host)
+{
+	runtime_dependency(bridge,host);
+	if (!host->brcmfmac.active && !host->driver_root && !host->driver_endpoint && !host->driver_pm &&
+	    !host->driver_root_override && !host->driver_endpoint_override) return 0;
+	mock.runtime.releases++;
+	if (mock.runtime.release_error || mock.runtime.release_pending) {
+		runtime_error(host,mock.runtime.release_error);
+		return mock.runtime.release_error;
+	}
+	host->brcmfmac.active=false; host->driver_root=host->driver_endpoint=NULL;
+	host->driver_pm=host->driver_root_override=host->driver_endpoint_override=false;
+	return 0;
+}
 #include "n71-pcie-diagnostic.c"
 
 static struct platform_device setup(void)
@@ -540,7 +611,7 @@ static struct platform_device setup(void)
 	for (index=0;index<11;index++) p.resources[index]=(struct resource){.start=addresses[index],.end=addresses[index]+(index==0 ? 0x1000000 : index==9 ? 0x8000 : 0x4000)-1};
 	p.dev.of_node=&mock.node;
 	run=enumerate=config_inventory=host_scan=true; bar_sizing=chip_id=dart_observe=dart_cycle=false;
-	scan_pme_disable=scan_hold=msi_parent=iommu_parent=false;
+	scan_pme_disable=scan_hold=msi_parent=iommu_parent=driver_runtime=false;
 	return p;
 }
 static void finish(struct platform_device *p)
@@ -1090,10 +1161,13 @@ static unsigned int exercise_iommu_caller(void)
 }
 
 #include "n71_pcie_diagnostic_allocation.h"
+#include "n71_pcie_diagnostic_runtime.h"
 
 int main(void)
 {
 	struct platform_device p; char status[PAGE_SIZE]; unsigned int index, cases=0;
+	/* Mutation: static runtime flag enables activation by default. */
+	assert(!driver_runtime);
 #ifdef __linux__
 	/* RLIMIT_CORE does not suppress piped crash handlers; isolate each mutant. */
 	assert(prctl(PR_SET_DUMPABLE, 0UL, 0UL, 0UL, 0UL)==0);
@@ -1182,5 +1256,6 @@ int main(void)
 	assert(exercise_iommu_caller()==29);
 	puts("N71_IOMMU_CALLER_OK cases=29");
 	printf("N71_MSI_ALLOCATION_CALLER_OK cases=%u\n",exercise_allocation_caller());
+	printf("N71_DRIVER_CALLER_OK cases=%u\n",exercise_runtime_caller());
 	return 0;
 }

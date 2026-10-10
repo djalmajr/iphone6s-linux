@@ -302,6 +302,80 @@ ALLOCATION_MUTATIONS += tuple(
     (f'allocation-getter-loses-field-{index}', 'n71_msi_allocation_status', field, f'(0 * ({field}))')
     for index, field in enumerate(ALLOCATION_GETTER_FIELDS))
 
+DRIVER_CALLER_MUTATIONS = (
+    ('driver-by-default', None, 'static bool driver_runtime;', 'static bool driver_runtime = true;'),
+    ('driver-without-iommu', 'n71_init', '(driver_runtime && !iommu_parent)', '(false && driver_runtime && !iommu_parent)'),
+    ('driver-cleanup-skipped', 'n71_session_cleanup', 'error = n71_driver_cleanup(state, host);',
+     'error = false ? n71_driver_cleanup(state, host) : 0;'),
+    ('driver-cleanup-error-ignored', 'n71_session_cleanup',
+     'error = n71_driver_cleanup(state, host);\n\t\tif (error)',
+     'error = n71_driver_cleanup(state, host);\n\t\tif (false)'),
+    ('manual-msi-during-driver', 'n71_msi_action', 'if (n71_scan_driver_pending(host))',
+     'if (false && n71_scan_driver_pending(host))'),
+)
+DRIVER_CALLER_MUTATIONS += tuple(
+    (f'driver-dispatch-{action}', 'n71_cleanup_action', f'if (sysfs_streq(text, "driver-{action}"))',
+     f'if (false && sysfs_streq(text, "driver-{action}"))') for action in ('prepare', 'publish', 'release'))
+
+DRIVER_MUTATIONS = (
+    ('driver-missing-pin', 'n71_driver_action', 'if (!try_module_get(THIS_MODULE))', 'if (false && !try_module_get(THIS_MODULE))'),
+    ('driver-action-unlocked', 'n71_driver_action', 'mutex_lock(&session_lock);', 'if (false) mutex_lock(&session_lock);'),
+    ('driver-pin-leaked', 'n71_driver_action', 'module_put(THIS_MODULE);', 'if (false) module_put(THIS_MODULE);'),
+    ('driver-release-needs-opt-in', 'n71_driver_action', 'action != N71_DRIVER_RELEASE && (!driver_runtime', 'true && (!driver_runtime'),
+    ('driver-release-after-error-refused', 'n71_driver_action',
+     'action != N71_DRIVER_RELEASE && (session->primary_error || session->cleanup_error)',
+     'true && (session->primary_error || session->cleanup_error)'),
+    ('driver-skip-prepare', 'n71_driver_action', 'error = n71_pcie_brcmfmac_prepare(session->scan_bridge, host);',
+     'error = false ? n71_pcie_brcmfmac_prepare(session->scan_bridge, host) : 0;'),
+    ('driver-skip-publish', 'n71_driver_action', 'error = n71_pcie_brcmfmac_publish(session->scan_bridge, host);',
+     'error = false ? n71_pcie_brcmfmac_publish(session->scan_bridge, host) : 0;'),
+    ('driver-skip-release', 'n71_driver_action', 'error = n71_pcie_brcmfmac_release(session->scan_bridge, host);',
+     'error = false ? n71_pcie_brcmfmac_release(session->scan_bridge, host) : 0;'),
+    ('driver-release-false-zero', 'n71_driver_action', '&& !error && n71_scan_driver_pending(host)', '&& !error && false'),
+    ('driver-busy-poisons-session', 'n71_driver_action', 'error != -EALREADY && error != -EBUSY', 'true'),
+    ('driver-cleanup-false-zero', 'n71_driver_cleanup', 'if (!error && n71_scan_driver_pending(host))',
+     'if (false && !error && n71_scan_driver_pending(host))'),
+    ('driver-cleanup-release-skipped', 'n71_driver_cleanup', 'error = n71_pcie_brcmfmac_release(state->scan_bridge, host);',
+     'error = false ? n71_pcie_brcmfmac_release(state->scan_bridge, host) : 0;'),
+    ('driver-first-cause-overwritten', 'n71_driver_latch_error', 'if (!state->primary_error && error)', 'if (error)'),
+    ('driver-async-cause-discarded', 'n71_driver_latch_error', 'state->primary_error = error;', 'state->primary_error = 0;'),
+    ('driver-error-lock-skipped', 'n71_driver_latch_error', 'spin_lock_irqsave(&host->lock, flags);',
+     'if (false) spin_lock_irqsave(&host->lock, flags);'),
+    ('driver-getter-unlocked', 'n71_driver_status', 'mutex_lock(&session_lock);', 'if (false) mutex_lock(&session_lock);'),
+    ('driver-getter-host-unlocked', 'n71_driver_status', 'spin_lock_irqsave(&host->lock, flags);',
+     'if (false) spin_lock_irqsave(&host->lock, flags);'),
+    ('driver-getter-mutates', 'n71_driver_status', 'host = pci_host_bridge_priv(session->scan_bridge);',
+     'host = pci_host_bridge_priv(session->scan_bridge); n71_driver_latch_error(session, host);'),
+    ('driver-getter-hides-primary', 'n71_driver_status', 'session && session->primary_error ? session->primary_error',
+     'false && session && session->primary_error ? session->primary_error'),
+    ('driver-getter-always-ready', 'n71_driver_status', 'driver_runtime, !!host', 'driver_runtime, true'),
+    ('driver-getter-hides-runtime-cause', 'n71_driver_status',
+     'host ? host->brcmfmac.error ? host->brcmfmac.error : n71_msi_allocation_error(host) : 0',
+     'host ? n71_msi_allocation_error(host) : 0'),
+    ('driver-report-wrong-error', 'n71_driver_report', 'action, error, n71_scan_driver_pending(host)',
+     'action, 0 * error, n71_scan_driver_pending(host)'),
+    ('driver-report-wrong-action', 'n71_driver_action', 'action == N71_DRIVER_PREPARE ? "prepare"',
+     'action == N71_DRIVER_PREPARE ? "publish"'),
+)
+DRIVER_GUARDS = ('!driver_runtime', '!scan_hold', '!msi_parent', '!iommu_parent',
+                 '!n71_session_has_held_bus(session)', 'session->attached != 4', 'session->powered != 4',
+                 'session->power_put_pending', '!session->reset_pending', '!session->module_retained',
+                 'session->primary_error || session->cleanup_error',
+                 '!session->dart || !session->dart->lease.running || !session->dart->device',
+                 'n71_msi_allocation_pending(host)')
+DRIVER_MUTATIONS += tuple((f'driver-missing-guard-{i}', 'n71_driver_action', guard, f'(false && ({guard}))')
+                          for i, guard in enumerate(DRIVER_GUARDS))
+DRIVER_STATUS_FIELDS = ('driver_runtime, !!host', '!!host, n71_session_has_held_bus(session)',
+                       'host ? n71_scan_driver_pending(host) : 0', 'host ? host->brcmfmac.active : 0',
+                       'host ? host->driver_published : 0', 'host ? !!host->driver_root : 0',
+                       'host ? !!host->driver_endpoint : 0', 'host ? host->driver_pm : 0',
+                       'host ? host->driver_root_override : 0', 'host ? host->driver_endpoint_override : 0',
+                       'host ? host->driver_reads : 0', 'host ? host->brcmfmac.error : 0',
+                       'session ? session->cleanup_error : 0')
+DRIVER_MUTATIONS += tuple((f'driver-getter-field-{i}', 'n71_driver_status', field,
+                          ('false, !!host' if i == 0 else '!!host, false' if i == 1 else f'(0 * ({field}))'))
+                         for i, field in enumerate(DRIVER_STATUS_FIELDS))
+
 
 def function_span(source, name):
     match = re.search(r'static (?:int|bool|void) (?:__init )?' + re.escape(name) + r'\([^)]*\)\n\{', source)
@@ -325,6 +399,10 @@ class N71PcieCaller(unittest.TestCase):
         self.addCleanup(resource.setrlimit, resource.RLIMIT_CORE, limits)
         source = (ROOT / 'phone/kernel/n71-pcie-diagnostic.c').read_text()
         mmio_source = (ROOT / 'phone/kernel/n71-pcie-mmio.h').read_text()
+        runtime_source = (ROOT / 'phone/kernel/n71-pcie-brcmfmac-caller.h').read_text()
+        scan_source = (ROOT / 'phone/kernel/n71-pcie-scan.h').read_text()
+        pending = re.search(r'static inline bool n71_scan_driver_pending\([^;]*?\n\{\n.*?\n\}', scan_source, re.S)
+        self.assertIsNotNone(pending, 'Real shared runtime predicate required')
         with tempfile.TemporaryDirectory(prefix='n71-pcie-caller-') as directory:
             folder = Path(directory)
             (folder / 'linux/gpio').mkdir(parents=True)
@@ -335,8 +413,9 @@ class N71PcieCaller(unittest.TestCase):
                          'n71-dart-cycle.h', 'n71-dart-observe.h', 'n71-msi-allocation-lease.h',
                          'n71-wlan-msi-config.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
-            for name in ('port', 'link', 'inventory', 'scan', 'resource-assign', 'msi-allocate', 'chip-mmio'):
+            for name in ('port', 'link', 'inventory', 'scan', 'resource-assign', 'msi-allocate', 'brcmfmac', 'chip-mmio'):
                 (folder / f'n71-pcie-{name}.h').write_text('/* Dependency supplied by fixture. */\n')
+            (folder / 'n71-pcie-scan.h').write_text(pending.group(0) + '\n')
             for name in ('mmio', 'provider'):
                 (folder / f'n71-dart-{name}.h').write_text('/* Dependency supplied by fixture. */\n')
             caller, binary = folder / 'n71-pcie-diagnostic.c', folder / 'caller'
@@ -347,10 +426,14 @@ class N71PcieCaller(unittest.TestCase):
             variants += tuple((name, before, after, False) for name, _, before, after in MSI_MUTATIONS)
             variants += tuple((name, before, after, False) for name, _, before, after in IOMMU_MUTATIONS)
             variants += tuple((name, before, after, False) for name, _, before, after in ALLOCATION_MUTATIONS)
+            variants += tuple((name, before, after, False) for name, _, before, after in DRIVER_CALLER_MUTATIONS)
+            variants += tuple((name, before, after, 'runtime') for name, _, before, after in DRIVER_MUTATIONS)
             scoped_functions = {name: function for name, function, _, _ in
-                                DART_MUTATIONS + MSI_MUTATIONS + IOMMU_MUTATIONS + ALLOCATION_MUTATIONS}
+                                DART_MUTATIONS + MSI_MUTATIONS + IOMMU_MUTATIONS + ALLOCATION_MUTATIONS +
+                                DRIVER_CALLER_MUTATIONS + DRIVER_MUTATIONS}
             for name, before, after, mmio in variants:
-                subject = mmio_source if mmio else source
+                runtime = mmio == 'runtime'
+                subject = runtime_source if runtime else mmio_source if mmio else source
                 start, end = 0, len(subject)
                 if name == 'missing-action-pin':
                     start, end = function_span(subject, 'n71_cleanup_action')
@@ -359,14 +442,15 @@ class N71PcieCaller(unittest.TestCase):
                                 'n71_resource_status' if name.startswith(('resources-', 'assigned-')) else
                                 'n71_assign_action')
                     start, end = function_span(subject, function)
-                if name in scoped_functions:
+                if name in scoped_functions and scoped_functions[name] is not None:
                     start, end = function_span(subject, scoped_functions[name])
                 scoped = subject[start:end]
                 if before:
                     self.assertEqual(scoped.count(before), 1, name)
                 changed = subject if before is None else subject[:start] + scoped.replace(before, after, 1) + subject[end:]
                 caller.write_text(source if before is None or mmio else changed)
-                (folder / 'n71-pcie-mmio.h').write_text(mmio_source.replace(before, after, 1) if mmio else mmio_source)
+                (folder / 'n71-pcie-mmio.h').write_text(mmio_source.replace(before, after, 1) if mmio and not runtime else mmio_source)
+                (folder / 'n71-pcie-brcmfmac-caller.h').write_text(changed if runtime else runtime_source)
                 compiled = subprocess.run([compiler, '-std=gnu11', '-Wall', '-Wextra', '-Werror',
                                            '-I', str(folder), str(ROOT / 'tests/n71_pcie_diagnostic_caller.c'),
                                            '-o', str(binary)], capture_output=True, text=True, timeout=30)
@@ -381,6 +465,7 @@ class N71PcieCaller(unittest.TestCase):
                     self.assertIn('N71_MSI_CALLER_OK cases=13', result.stdout)
                     self.assertIn('N71_IOMMU_CALLER_OK cases=29', result.stdout)
                     self.assertIn('N71_MSI_ALLOCATION_CALLER_OK cases=31', result.stdout)
+                    self.assertIn('N71_DRIVER_CALLER_OK cases=54', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
