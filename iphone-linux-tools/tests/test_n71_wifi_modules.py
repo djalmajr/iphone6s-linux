@@ -20,6 +20,48 @@ SPEC.loader.exec_module(MODULE)
 
 
 class WifiModuleTests(unittest.TestCase):
+    def test_irq_patch_requires_exact_bytes_framing_and_method(self):
+        before, after = MODULE.irq_patch_method()
+        self.assertIn(b'\tpci_enable_msi(pdev);\n', before)
+        self.assertIn(b'\tret = pci_enable_msi(pdev);\n\tif (ret) {', after)
+        raw = MODULE.IRQ_PATCH.read_bytes()
+        with patch.object(MODULE.kernel_bundle.kernel_patchset, 'plain_file', return_value=raw + b'!\n'):
+            with self.assertRaisesRegex(ValueError, 'Pinned IRQ patch differs'):
+                MODULE.irq_patch_method()
+        for changed, message in (
+                (raw.replace(b'@@ -968,20 +968,25 @@', b'@@ -1,20 +1,25 @@'), 'hunk differs'),
+                (raw + b'!\n', 'framing')):
+            with patch.object(MODULE.kernel_bundle.kernel_patchset, 'plain_file', return_value=changed), \
+                    patch.object(MODULE, 'IRQ_PATCH_SHA', hashlib.sha256(changed).hexdigest()):
+                with self.assertRaisesRegex(ValueError, message):
+                    MODULE.irq_patch_method()
+        with patch.object(MODULE, 'IRQ_METHOD_SHA', '0' * 64):
+            with self.assertRaisesRegex(ValueError, 'Pinned IRQ method differs'):
+                MODULE.irq_patch_method()
+
+    def test_irq_patch_validates_complete_input_and_output_without_mutating_input(self):
+        before, after = MODULE.irq_patch_method()
+        raw = b'/* synthetic surrounding source */\n' + before + b'/* tail */\n'
+        expected = raw.replace(before, after, 1)
+        with patch.object(MODULE, 'IRQ_SOURCE_SHA', hashlib.sha256(raw).hexdigest()), \
+                patch.object(MODULE, 'IRQ_RESULT_SHA', hashlib.sha256(expected).hexdigest()):
+            self.assertEqual(MODULE.irq_patch_source(raw), expected)
+            for altered in (raw + b'changed\n', raw.replace(b'tail', b'outside')):
+                with self.assertRaisesRegex(ValueError, 'Pinned PCIe source differs'):
+                    MODULE.irq_patch_source(altered)
+            with patch.object(MODULE, 'IRQ_RESULT_SHA', '0' * 64):
+                with self.assertRaisesRegex(ValueError, 'Patched PCIe source differs'):
+                    MODULE.irq_patch_source(raw)
+        self.assertIn(before, raw)
+        self.assertNotIn(after, raw)
+
+    def test_irq_patch_requires_one_complete_method(self):
+        before, _ = MODULE.irq_patch_method()
+        for raw in (before + before, b'/* no method */\n'):
+            with patch.object(MODULE, 'IRQ_SOURCE_SHA', hashlib.sha256(raw).hexdigest()):
+                with self.assertRaisesRegex(ValueError, 'IRQ method is not unique'):
+                    MODULE.irq_patch_source(raw)
+
     def config(self):
         return '\n'.join(name + '=' + value if value != 'n' else '# ' + name + ' is not set'
                          for name, value in MODULE.REQUIRED.items())

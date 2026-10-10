@@ -8,6 +8,13 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'scripts/build/build-n71-wifi-modules.py'
 MUTATIONS = {
+    'irq-patch-hash': ('hashlib.sha256(raw).hexdigest() == IRQ_PATCH_SHA', 'True'),
+    'irq-patch-hunk': ("lines[:3] == ['--- a/' + IRQ_TARGET, '+++ b/' + IRQ_TARGET, '@@ -968,20 +968,25 @@']", 'True'),
+    'irq-patch-framing': ("line[:1] in (' ', '-', '+')", 'True'),
+    'irq-method-hash': ('hashlib.sha256(old).hexdigest() == IRQ_METHOD_SHA', 'True'),
+    'irq-source-hash': ('hashlib.sha256(raw).hexdigest() == IRQ_SOURCE_SHA', 'True'),
+    'irq-method-unique': ('raw.count(before) == 1', 'True'),
+    'irq-output-hash': ('hashlib.sha256(changed).hexdigest() == IRQ_RESULT_SHA', 'True'),
     'core-config': ("values.get(name, 'n') == value", 'True'),
     'macro-scope': ('set(paths) == MACRO_FILES', 'MACRO_FILES <= set(paths)'),
     'warning-errors': ("'KCFLAGS=-Werror'", "'KCFLAGS='"),
