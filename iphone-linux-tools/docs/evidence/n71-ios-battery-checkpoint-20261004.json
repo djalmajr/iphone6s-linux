@@ -1,0 +1,67 @@
+{
+  "format": 1,
+  "mode": "ios",
+  "gas_gauge": {
+    "format": 1,
+    "timestamp_utc": "2026-10-04T23:45:51.664057+00:00",
+    "command": "idevicediagnostics diagnostics GasGauge",
+    "phone_write": false,
+    "pin_requested": false,
+    "linux_telemetry": false,
+    "exit_code": 0,
+    "selected": {
+      "GasGauge/CycleCount": 1465,
+      "GasGauge/DesignCapacity": 1690,
+      "GasGauge/FullChargeCapacity": 100,
+      "GasGauge/Status": "Success"
+    },
+    "private_raw_sha256": "fb7c5ef2e2b49c686a29e8a9d4046ee99da1351dd6b99b3729b2de423aaa7f3e",
+    "private_raw_bytes": 435
+  },
+  "pmu_charger": {
+    "format": 1,
+    "timestamp_utc": "2026-10-04T23:47:00.660349+00:00",
+    "command": "idevicediagnostics ioregentry AppleARMPMUCharger",
+    "phone_write": false,
+    "pin_requested": false,
+    "linux_telemetry": false,
+    "exit_code": 0,
+    "selected": {
+      "IORegistry/AdapterDetails/Voltage": 5000,
+      "IORegistry/Amperage": 0,
+      "IORegistry/AppleRawCurrentCapacity": 970,
+      "IORegistry/AppleRawMaxCapacity": 985,
+      "IORegistry/BatteryData/BatteryHealthMetric": 793,
+      "IORegistry/BatteryData/CycleCount": 1465,
+      "IORegistry/BatteryData/DesignCapacity": 1690,
+      "IORegistry/BatteryData/MaxCapacity": 985,
+      "IORegistry/BatteryData/Voltage": 4196,
+      "IORegistry/BatteryInstalled": true,
+      "IORegistry/CurrentCapacity": 100,
+      "IORegistry/CycleCount": 1465,
+      "IORegistry/DesignCapacity": 1690,
+      "IORegistry/ExternalChargeCapable": true,
+      "IORegistry/ExternalConnected": true,
+      "IORegistry/InstantAmperage": 0,
+      "IORegistry/IsCharging": false,
+      "IORegistry/MaxCapacity": 100,
+      "IORegistry/NominalChargeCapacity": 1130,
+      "IORegistry/Temperature": 3030,
+      "IORegistry/Voltage": 4195
+    },
+    "private_raw_sha256": "c2750e431cac3c815472f7a374dc8ddef53ca995cd72b1405e946d08af78aa12",
+    "private_raw_bytes": 19545
+  },
+  "nominal_over_design": {
+    "numerator": 1130,
+    "denominator": 1690,
+    "percent": 66.9,
+    "official_battery_health": false,
+    "charge_percent": false,
+    "unit_contract_for_all_fields_verified": false
+  },
+  "linux_charging_validated": false,
+  "linux_current_measured": false,
+  "physical_charger_access_performed": false,
+  "limits": "iOS diagnostic scalars only, raw values without inferred units. FullChargeCapacity=100 and MaxCapacity=100 are not proof of battery health. Amperage=0 at full charge is not Linux input current. No attribution of cycle/capacity changes to a particular boot or Linux. No PIN, reboot or write."
+}

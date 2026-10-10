@@ -1,0 +1,523 @@
+{
+  "format": 1,
+  "code_commit": "d94a14e863ddcc5290d7f44b6f65db807ef0197f",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "scope": "Explicit composer and collector selection; no assignment action or phone boot",
+  "contract": {
+    "composer_flag": "--pcie-resource-capable",
+    "collector_flag": "--resource-capable",
+    "provenance_key": "pcie_resource_capable",
+    "boolean_type_and_selection_exact": true,
+    "explicit_held_power2_aspm_reg_on_required": true,
+    "old_held_selector_preserved_when_unflagged": true,
+    "missing_old_provenance_key_means_false_only": true,
+    "check_performs_no_ssh_or_usb_action": true,
+    "assignment_automatic": false,
+    "cli_capability_forwarded_to_acquire_and_resume_check": true
+  },
+  "qualification": {
+    "public_input_count": 53,
+    "inputs": {
+      "docs/evidence/kernel-n71-bundle-build.json": {
+        "bytes": 4558,
+        "sha256": "01c2db2d9b6319555161e2438de22cecf4bb20adb0a3d34524d90023e099879c"
+      },
+      "docs/evidence/m1n1-rebuild.json": {
+        "bytes": 5173,
+        "sha256": "47c05448a71661082a756e8d0bc05dd700fe3aff64e7382c55c920dee013c569"
+      },
+      "docs/evidence/n71-binding-profile.json": {
+        "bytes": 13857,
+        "sha256": "7099326bbe809d3b658be58a2ac723475fffe20ccb8cb6419ee9ff44809484cc"
+      },
+      "docs/evidence/n71-dart-cycle-build.json": {
+        "bytes": 3528,
+        "sha256": "b9fafc4237833f8a61bad5b30066ef0fc3ebd04b51a8fc31d23346edc21ec46a"
+      },
+      "docs/evidence/n71-dart-state-build.json": {
+        "bytes": 2563,
+        "sha256": "dc5f3c8c40fc8a120f5f4e8375339a11a20e96cd284a1ad3db61c0ee15859705"
+      },
+      "docs/evidence/n71-pci-held-caller.json": {
+        "bytes": 15698,
+        "sha256": "5ff425784fa9d4ae919de3a26cf3c29f9faac63ac5d2980ff54ce6c1b28460c8"
+      },
+      "docs/evidence/n71-pci-resource-assignment.json": {
+        "bytes": 27768,
+        "sha256": "5d764660436d5ec7ad494a07913eba3e899c9c978d87357bffd49cc1b558bc49"
+      },
+      "docs/evidence/n71-pcie-bar-sizing.json": {
+        "bytes": 2027,
+        "sha256": "29ffe4338960489f7a7ac6bd4d55492fadef3b51fda4b56d25b475d99c4eff9b"
+      },
+      "docs/evidence/n71-pcie-bridge-scan-build.json": {
+        "bytes": 3113,
+        "sha256": "7e222f43bebf0f4e7167e248b4594b114755d4c5b7f9cf03896c09f7ea5d0a26"
+      },
+      "docs/evidence/n71-pcie-chip-id-build.json": {
+        "bytes": 2003,
+        "sha256": "bf0e7614097314ab640a28f5623266eb5a547b9ddcf51ad814b3874a709ac9ef"
+      },
+      "docs/evidence/n71-pcie-config-inventory.json": {
+        "bytes": 3277,
+        "sha256": "11a4f6b373ce35dc003f9bd9cabe9383fde45584a6efa9e3a8f9a9099c62235d"
+      },
+      "docs/evidence/n71-pcie-controls-scan-build.json": {
+        "bytes": 3994,
+        "sha256": "4b31fb6005b85f113e4afc375a5f0376c3bef2a34409e716cfb596bb804126d1"
+      },
+      "docs/evidence/n71-pcie-pme-aspm-build.json": {
+        "bytes": 23753,
+        "sha256": "3d347360c9937a396030f5d62ee5cba723ca0d9d6494e6bc705694143d8c7bc1"
+      },
+      "docs/evidence/n71-pcie-pme-noop-build.json": {
+        "bytes": 15776,
+        "sha256": "e697928495e358d908fedc0d2cd1efdbd2763e3d4db034f094686ed437e85efb"
+      },
+      "docs/evidence/n71-pcie-scan-target-build.json": {
+        "bytes": 10691,
+        "sha256": "b98cda2136fb37883a2f2dc83e86350fe02fb43af4e5809dd8bdd81cc223cbad"
+      },
+      "scripts/build/compose-n71-diagnostic.py": {
+        "bytes": 11704,
+        "sha256": "0e502befad50616892cbda7649c1ca9eadb00fceb163e3d98b48b18aba242375"
+      },
+      "scripts/build/integrate-source-kernel.py": {
+        "bytes": 12044,
+        "sha256": "c775173d3f0782387ac4374c675efc08a6833556662e1912fbd926e56ecd9f8b"
+      },
+      "scripts/build/kernel_bundle.py": {
+        "bytes": 7424,
+        "sha256": "807bfc3a59801a2703b1135fc3887a2873b25cc2e05b10de9c9cd0bd89d8ed64"
+      },
+      "scripts/build/kernel_patchset.py": {
+        "bytes": 5466,
+        "sha256": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817"
+      },
+      "scripts/build/prepare-n71-pcie-diagnostic.py": {
+        "bytes": 6840,
+        "sha256": "0d95c6d234a6b864efc1bddec509c246a17dd0ce53146014d52cb52c9c13c7e7"
+      },
+      "scripts/build/prepare-n71-topology.py": {
+        "bytes": 12359,
+        "sha256": "9aa9ecae3a25a340e76a2aab270288e13741012671b0bd9b435c6f7d7adf01b7"
+      },
+      "scripts/host/device_profile.py": {
+        "bytes": 6526,
+        "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+      },
+      "scripts/host/n71-link-session.py": {
+        "bytes": 33594,
+        "sha256": "d1fec40ea900c0cedfe89e329946d8b15cf79845068c2a57dea22ff0fa7e34e1"
+      },
+      "scripts/host/n71_bar_result.py": {
+        "bytes": 3096,
+        "sha256": "77f0046bf9589c4f530813724a1b65678ee1afef7bb44680ac0de56cd76b0e80"
+      },
+      "scripts/host/n71_chip_result.py": {
+        "bytes": 2166,
+        "sha256": "5635ff77403a8b9211be1909fac6228bf25c75b548a6962ec4b7fc42ecf0a511"
+      },
+      "scripts/host/n71_dart_cycle_result.py": {
+        "bytes": 4562,
+        "sha256": "571fa7e2318a916da1c24eb0830cac86445e9e05e9d101534e1a4056acab0c9f"
+      },
+      "scripts/host/n71_dart_result.py": {
+        "bytes": 3171,
+        "sha256": "98d707949851b9e7a2bee6d01300d2c46a442edc6d815a91272bb85b45a87ade"
+      },
+      "scripts/host/n71_held_session.py": {
+        "bytes": 20262,
+        "sha256": "f0e6c709b10917f6039cff50d2ec9cba5aa828e8f7d82c3d4f3ca625116a3791"
+      },
+      "scripts/host/n71_resource_result.py": {
+        "bytes": 10097,
+        "sha256": "41b8502787eb58d935e4a678fa78351bf9cebcf4bd8ddd1728d8720821094e5d"
+      },
+      "scripts/host/n71_scan_held_result.py": {
+        "bytes": 10863,
+        "sha256": "70612133fb02d26a4cceaddde01c4777f22c070c20fc69b61e439e13573f2e3d"
+      },
+      "scripts/host/n71_scan_pme_result.py": {
+        "bytes": 2959,
+        "sha256": "ea08620386e7c65de46b4b2a753ce0365bfce81e4c204c797ba7fb8c84e72590"
+      },
+      "scripts/host/n71_scan_result.py": {
+        "bytes": 3702,
+        "sha256": "051615003afa1eb7091d5f2a73d931958e3463a407a1efc7cc5390c61a53a58f"
+      },
+      "scripts/host/n71_scan_target_result.py": {
+        "bytes": 4066,
+        "sha256": "37f2e7ce6fab4c26231097c7591d5bc7e9909c848e377b6a87c3c427d38afe7e"
+      },
+      "scripts/host/n71_session_history.py": {
+        "bytes": 2725,
+        "sha256": "4f6760e9b125cbcb7434631a91d2d88e59be53e29b6d889aad865855a70797bc"
+      },
+      "scripts/host/profile_image.py": {
+        "bytes": 4463,
+        "sha256": "19d4610eeb44ba50d9c29267e1b3bba250a03bb30e8f9a0e0d99abc4533fd427"
+      },
+      "scripts/research/n71_runtime_tunables.py": {
+        "bytes": 6395,
+        "sha256": "6be603cbcdacc6974f4d472a4bef751a9b707de9038366cb66127136778ec3e7"
+      },
+      "tests/run_n71_diagnostic_payload_mutations.py": {
+        "bytes": 6144,
+        "sha256": "6a2f2a2bd36f64dd0f6a861b8787bee843d54cdc41b74985941c3462dbf9ee3d"
+      },
+      "tests/run_n71_link_session_mutations.py": {
+        "bytes": 10933,
+        "sha256": "64d6f842cd863bca796ff2b4e0bb21f16fd29b20f58511ee40a6c7c5ec86b566"
+      },
+      "tests/run_n71_scan_result_mutations.py": {
+        "bytes": 2119,
+        "sha256": "d081a049a72375951646c7e8a3a029fa0e646d4e35a130d7e865b755c43f895b"
+      },
+      "tests/test_n71_bar_result.py": {
+        "bytes": 3647,
+        "sha256": "f509d2e1d90befab0557d6c1b9bc307a35b3e7a330d10b9a7f35e7ac864fb60c"
+      },
+      "tests/test_n71_chip_result.py": {
+        "bytes": 3104,
+        "sha256": "5a3983443cafca968d85f9bd920ebc2ba8a06a7697dc6094595c44d1e37a5c62"
+      },
+      "tests/test_n71_dart_cycle_result.py": {
+        "bytes": 5529,
+        "sha256": "0d6828f3bad0896da06f5fdacd2e15c224804a56aa279013867bc04ee15099be"
+      },
+      "tests/test_n71_dart_result.py": {
+        "bytes": 4910,
+        "sha256": "f52ca466fa8bcf8b2dc7aac6f3b109ea40a4bf6b50c2e8bbe289a0f346bb3038"
+      },
+      "tests/test_n71_diagnostic_held_profile.py": {
+        "bytes": 17824,
+        "sha256": "ab47f962efeceb878b14e7a4503b7b3c86d7e673d2bd1f59af9db4e134805ae6"
+      },
+      "tests/test_n71_diagnostic_payload.py": {
+        "bytes": 7043,
+        "sha256": "3c9d5a4474172581e6996c1abc7bf7b609474bac9b53330c04f61e7d70d81673"
+      },
+      "tests/test_n71_held_session.py": {
+        "bytes": 43934,
+        "sha256": "8953152dd485da98201243f044ff12016f9d551427d51183a449e1c9e1ba69e0"
+      },
+      "tests/test_n71_link_session.py": {
+        "bytes": 72368,
+        "sha256": "93732109d4e8c33ecbabbbb9d7c65b0c45c07a362ab0a78271c0b09229537d90"
+      },
+      "tests/test_n71_pcie_diagnostic.py": {
+        "bytes": 4390,
+        "sha256": "45fc388ad895ef1658dcb50db388f33f10e0814ae9452c37d4cabc896da37779"
+      },
+      "tests/test_n71_resource_result.py": {
+        "bytes": 21000,
+        "sha256": "74add5e05440ffe19e7562eab4535d405d7a90f03c40f473f6786742af22a8f1"
+      },
+      "tests/test_n71_runtime_tunables.py": {
+        "bytes": 4415,
+        "sha256": "6dbcb406aaf27b68d7a6c116d1377da49932a8a30d6b34bb60d897fc2a2c0744"
+      },
+      "tests/test_n71_scan_held_result.py": {
+        "bytes": 19857,
+        "sha256": "9a2df80fe4374074efe2c8e5b9332cc6a102f85b1a44189e9118884225b9ab57"
+      },
+      "tests/test_n71_scan_result.py": {
+        "bytes": 3810,
+        "sha256": "fd3cfdea2e5231d2efe934a6714bc1c4747f61785be34abd7fc1741cd2719c06"
+      },
+      "tests/test_n71_topology.py": {
+        "bytes": 13753,
+        "sha256": "e034af6f8152af0f0ecc281624d344130d3d5ae97a7c08237ed5cad2db6f7060"
+      }
+    },
+    "platforms": {
+      "macos": {
+        "architecture": "arm64",
+        "tests": 82,
+        "assertion_mutations": 144,
+        "test_exits": [
+          {
+            "suite": "held",
+            "exit_code": 0,
+            "reused_unchanged_inputs": true
+          },
+          {
+            "suite": "legacy",
+            "exit_code": 0,
+            "reused_unchanged_inputs": true
+          },
+          {
+            "suite": "composer",
+            "exit_code": 0
+          },
+          {
+            "suite": "composer-mutations",
+            "exit_code": 0
+          },
+          {
+            "suite": "legacy-mutations",
+            "exit_code": 0
+          }
+        ],
+        "logs": {
+          "held": {
+            "sha256": "130da71b0fc3ec7691e8ad50f64a724171ec4823f8910703cd945c3a2e00ce7b",
+            "bytes": 5372
+          },
+          "legacy": {
+            "sha256": "aff71758117babf57b32fe71fb88201135074af823aa2ee3d923d73733987ce2",
+            "bytes": 102529
+          },
+          "composer": {
+            "sha256": "712c86886dbf9e3901b2e9b7e4c26ab26b61ff64dda671890e1089f7a430f60a",
+            "bytes": 2990
+          },
+          "composer-mutations": {
+            "sha256": "760b56b38fc717e702ef78bddbf344132e7d0759af810c02086a5805ba2ef488",
+            "bytes": 836
+          },
+          "legacy-mutations": {
+            "sha256": "63bdb9f1227cd7c04a133da2af1313db807baa759f5eb7e4424b90f708a3196c",
+            "bytes": 4129
+          }
+        },
+        "ast_passed": true,
+        "inputs_preserved": true,
+        "reused_held_and_legacy_tests": 66,
+        "reused_held_mutations": 30,
+        "reused_suite_input_count": 52,
+        "reused_suite_inputs": [
+          "docs/evidence/kernel-n71-bundle-build.json",
+          "docs/evidence/m1n1-rebuild.json",
+          "docs/evidence/n71-binding-profile.json",
+          "docs/evidence/n71-dart-cycle-build.json",
+          "docs/evidence/n71-dart-state-build.json",
+          "docs/evidence/n71-pci-held-caller.json",
+          "docs/evidence/n71-pci-resource-assignment.json",
+          "docs/evidence/n71-pcie-bar-sizing.json",
+          "docs/evidence/n71-pcie-bridge-scan-build.json",
+          "docs/evidence/n71-pcie-chip-id-build.json",
+          "docs/evidence/n71-pcie-config-inventory.json",
+          "docs/evidence/n71-pcie-controls-scan-build.json",
+          "docs/evidence/n71-pcie-pme-aspm-build.json",
+          "docs/evidence/n71-pcie-pme-noop-build.json",
+          "docs/evidence/n71-pcie-scan-target-build.json",
+          "scripts/build/compose-n71-diagnostic.py",
+          "scripts/build/integrate-source-kernel.py",
+          "scripts/build/kernel_bundle.py",
+          "scripts/build/kernel_patchset.py",
+          "scripts/build/prepare-n71-pcie-diagnostic.py",
+          "scripts/build/prepare-n71-topology.py",
+          "scripts/host/device_profile.py",
+          "scripts/host/n71-link-session.py",
+          "scripts/host/n71_bar_result.py",
+          "scripts/host/n71_chip_result.py",
+          "scripts/host/n71_dart_cycle_result.py",
+          "scripts/host/n71_dart_result.py",
+          "scripts/host/n71_held_session.py",
+          "scripts/host/n71_resource_result.py",
+          "scripts/host/n71_scan_held_result.py",
+          "scripts/host/n71_scan_pme_result.py",
+          "scripts/host/n71_scan_result.py",
+          "scripts/host/n71_scan_target_result.py",
+          "scripts/host/n71_session_history.py",
+          "scripts/host/profile_image.py",
+          "scripts/research/n71_runtime_tunables.py",
+          "tests/run_n71_diagnostic_payload_mutations.py",
+          "tests/run_n71_link_session_mutations.py",
+          "tests/run_n71_scan_result_mutations.py",
+          "tests/test_n71_bar_result.py",
+          "tests/test_n71_chip_result.py",
+          "tests/test_n71_dart_cycle_result.py",
+          "tests/test_n71_dart_result.py",
+          "tests/test_n71_diagnostic_payload.py",
+          "tests/test_n71_held_session.py",
+          "tests/test_n71_link_session.py",
+          "tests/test_n71_pcie_diagnostic.py",
+          "tests/test_n71_resource_result.py",
+          "tests/test_n71_runtime_tunables.py",
+          "tests/test_n71_scan_held_result.py",
+          "tests/test_n71_scan_result.py",
+          "tests/test_n71_topology.py"
+        ]
+      },
+      "ubuntu_arm64": {
+        "architecture": "aarch64",
+        "tests": 82,
+        "assertion_mutations": 144,
+        "test_exits": [
+          {
+            "suite": "held",
+            "exit_code": 0,
+            "reused_unchanged_inputs": true
+          },
+          {
+            "suite": "legacy",
+            "exit_code": 0,
+            "reused_unchanged_inputs": true
+          },
+          {
+            "suite": "composer",
+            "exit_code": 0
+          },
+          {
+            "suite": "composer-mutations",
+            "exit_code": 0
+          },
+          {
+            "suite": "legacy-mutations",
+            "exit_code": 0
+          }
+        ],
+        "logs": {
+          "held": {
+            "sha256": "cf52fcf2f880e689eb4417167d32628e0e3fb33c719caba6d9b2a4498372c2fe",
+            "bytes": 5372
+          },
+          "legacy": {
+            "sha256": "577f8ee9b82f37021caeab390b90d032ce7014bd8f853e4154123021d710efc6",
+            "bytes": 102529
+          },
+          "composer": {
+            "sha256": "5eeb64edf0e12b443ae031eb01df3c2c5fe08a4500ee06aef09be7df6cfbab5e",
+            "bytes": 2990
+          },
+          "composer-mutations": {
+            "sha256": "760b56b38fc717e702ef78bddbf344132e7d0759af810c02086a5805ba2ef488",
+            "bytes": 836
+          },
+          "legacy-mutations": {
+            "sha256": "63bdb9f1227cd7c04a133da2af1313db807baa759f5eb7e4424b90f708a3196c",
+            "bytes": 4129
+          }
+        },
+        "ast_passed": true,
+        "inputs_preserved": true,
+        "reused_held_and_legacy_tests": 66,
+        "reused_held_mutations": 30,
+        "reused_suite_input_count": 52,
+        "reused_suite_inputs": [
+          "docs/evidence/kernel-n71-bundle-build.json",
+          "docs/evidence/m1n1-rebuild.json",
+          "docs/evidence/n71-binding-profile.json",
+          "docs/evidence/n71-dart-cycle-build.json",
+          "docs/evidence/n71-dart-state-build.json",
+          "docs/evidence/n71-pci-held-caller.json",
+          "docs/evidence/n71-pci-resource-assignment.json",
+          "docs/evidence/n71-pcie-bar-sizing.json",
+          "docs/evidence/n71-pcie-bridge-scan-build.json",
+          "docs/evidence/n71-pcie-chip-id-build.json",
+          "docs/evidence/n71-pcie-config-inventory.json",
+          "docs/evidence/n71-pcie-controls-scan-build.json",
+          "docs/evidence/n71-pcie-pme-aspm-build.json",
+          "docs/evidence/n71-pcie-pme-noop-build.json",
+          "docs/evidence/n71-pcie-scan-target-build.json",
+          "scripts/build/compose-n71-diagnostic.py",
+          "scripts/build/integrate-source-kernel.py",
+          "scripts/build/kernel_bundle.py",
+          "scripts/build/kernel_patchset.py",
+          "scripts/build/prepare-n71-pcie-diagnostic.py",
+          "scripts/build/prepare-n71-topology.py",
+          "scripts/host/device_profile.py",
+          "scripts/host/n71-link-session.py",
+          "scripts/host/n71_bar_result.py",
+          "scripts/host/n71_chip_result.py",
+          "scripts/host/n71_dart_cycle_result.py",
+          "scripts/host/n71_dart_result.py",
+          "scripts/host/n71_held_session.py",
+          "scripts/host/n71_resource_result.py",
+          "scripts/host/n71_scan_held_result.py",
+          "scripts/host/n71_scan_pme_result.py",
+          "scripts/host/n71_scan_result.py",
+          "scripts/host/n71_scan_target_result.py",
+          "scripts/host/n71_session_history.py",
+          "scripts/host/profile_image.py",
+          "scripts/research/n71_runtime_tunables.py",
+          "tests/run_n71_diagnostic_payload_mutations.py",
+          "tests/run_n71_link_session_mutations.py",
+          "tests/run_n71_scan_result_mutations.py",
+          "tests/test_n71_bar_result.py",
+          "tests/test_n71_chip_result.py",
+          "tests/test_n71_dart_cycle_result.py",
+          "tests/test_n71_dart_result.py",
+          "tests/test_n71_diagnostic_payload.py",
+          "tests/test_n71_held_session.py",
+          "tests/test_n71_link_session.py",
+          "tests/test_n71_pcie_diagnostic.py",
+          "tests/test_n71_resource_result.py",
+          "tests/test_n71_runtime_tunables.py",
+          "tests/test_n71_scan_held_result.py",
+          "tests/test_n71_scan_result.py",
+          "tests/test_n71_topology.py"
+        ]
+      }
+    },
+    "new_behavioral_tests": 6,
+    "new_assertion_mutations": 12,
+    "compiler_import_or_timeout_used_as_mutation_kill": false,
+    "fatal_flake8_passed": true
+  },
+  "real_private_profile": {
+    "format": 1,
+    "complete_private_pair": true,
+    "provenance_boolean_types_exact": true,
+    "payload_dtb_kernel_loader_userspace_and_identities_preserved": true,
+    "reg_on_module_unchanged": true,
+    "old_profiles_not_replaced": true,
+    "selected_modules": [
+      {
+        "bytes": 84696,
+        "sha256": "2dcdebc2251b272246c4b6ae7ee58449ef2973ffe01d66fa5398392730a2f31d",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+        "module": "n71-pcie-diagnostic.ko"
+      },
+      {
+        "bytes": 17688,
+        "sha256": "fdf887e7572b70d09e76f770272bee5dc9ffcde799277e894ee8965007c5a8f1",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+        "module": "n71-wlan-power-diagnostic.ko"
+      }
+    ],
+    "new_image_built": false,
+    "physical_boot_attempted": false,
+    "no_ssh_or_usb_action": true,
+    "assignment_journal_integration_still_required": true
+  },
+  "unchanged_real_module_build": {
+    "reference": "n71-pci-resource-assignment.json",
+    "all_48_inputs_verified_unchanged": true,
+    "recompiled": false
+  },
+  "previous_ci": {
+    "head_sha": "5df8a73aa640722298dcbea1911ad654114b471f",
+    "runs": [
+      {
+        "id": 37401468009,
+        "conclusion": "cancelled",
+        "macos": "success",
+        "windows": "success",
+        "ubuntu": "cancelled"
+      },
+      {
+        "id": 37401463964,
+        "conclusion": "cancelled",
+        "macos": "success",
+        "windows": "success",
+        "ubuntu": "cancelled"
+      }
+    ],
+    "cancellation_cause_confirmed": false,
+    "covers_this_code": false
+  },
+  "limits": {
+    "assignment_journal_integrated": false,
+    "new_module_loaded_on_phone": false,
+    "physical_boot_attempted": false,
+    "assignment_or_restore_on_phone_verified": false,
+    "irq_dma_iommu_verified": false,
+    "wifi_verified": false,
+    "battery_or_charging_verified": false,
+    "private_payload_dt_identity_keys_snapshot_ids_or_logs_published": false
+  }
+}

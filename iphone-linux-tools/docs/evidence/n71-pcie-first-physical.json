@@ -1,0 +1,42 @@
+{
+  "format": 1,
+  "date": "2026-10-02",
+  "board": "N71 / iPhone8,1 / S8000",
+  "kernel": "7.2.0-iphone6s-source",
+  "dfu_count": 1,
+  "original_module_sha256": "8d62aebade3e122d350a6510b88270be0e0291cb40a3b5e74b7244f16c2883ec",
+  "status_module_sha256": "e304d121008819a6f32320fab1847bef0157fc8c0775f617f6049e22f0a5e131",
+  "software_gates": {
+    "status_module_arm64_werror_build": "passed; same vmlinux symbols and ABI",
+    "link_assertion_mutations": "6 SIGABRT/assertion kills after successful compilation on Mac",
+    "unchanged_link_native_arm64_and_kernel_tests": "reused from previous passing build"
+  },
+  "physical": {
+    "ssh_http": "passed",
+    "dns_herdr_snapshot_restore": "passed; 44 entries; Herdr started",
+    "clocks_prefix": "passed; explicit CLOCKS_READY and driver bound",
+    "root_identity_raw": "1004106b",
+    "root_vendor": "106b",
+    "root_device": "1004",
+    "port88_before_training": "0000000c",
+    "link_attempts": 2,
+    "last_link_status": "0000000c",
+    "last_link_status_reads": 10000,
+    "enumeration_error": "-110 / ETIMEDOUT",
+    "endpoint_identity": "not read; link predicate did not pass",
+    "dma_radio": "not enabled by this diagnostic",
+    "module_update_same_boot": "passed; private transfer, hash/ABI validation, unload/load",
+    "diagnostic_final_unload": "passed",
+    "postdiagnostic_ssh": "passed; uptime 6 min; net names lo/usb0",
+    "backup_sync": "verified",
+    "software_return_ios": "verified; iPhone8,1 USB; Linux gadget absent",
+    "battery_pre_ios_percent": 100,
+    "battery_post_ios_percent": 92,
+    "external_connected_pre_post": true,
+    "battery_comparison_scope": "Includes DFU, Linux, reboot and iOS; not net-current measurement",
+    "charging_validation": "unverified",
+    "wifi_validation": "unverified"
+  },
+  "raw_evidence": "Private runtime logs only; no serial, MAC, keys or raw tunables published",
+  "next_gate": "Confirm N71 endpoint activation and clock-request sequencing before new hardware writes"
+}

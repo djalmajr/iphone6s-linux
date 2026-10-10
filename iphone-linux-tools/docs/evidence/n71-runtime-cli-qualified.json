@@ -1,0 +1,81 @@
+{
+  "format": 1,
+  "code_commit": "637ba88b97aa6d17de19dd5a135b03e5f88a05c2",
+  "status": "explicit_runtime_cli_qualified_offline_firmware_energy_and_physical_proof_pending",
+  "input_count": 381,
+  "input_manifest_sha256": "ffcaa975471dcedd53dfcc009ea468114f49d330f63fb5a0996f31369f247102",
+  "changed_inputs": {
+    "scripts/host/n71-runtime-session.py": {
+      "sha256": "3cfdf7cabc77ea89d42578c02e7a96bba0d682013084bf5bc7c74a1133619faf",
+      "bytes": 1180
+    },
+    "scripts/host/n71_driver_runtime_cli.py": {
+      "sha256": "0dd89d0677b1f28859bc2c24b2d6aa9fb7fd73a1b51eafd2c4612d02ab333b85",
+      "bytes": 5918
+    },
+    "tests/test_n71_driver_runtime_cli.py": {
+      "sha256": "4f6f5e4a805612a418d983f0d2ca2922b77f0e64b5db3f14c09318ed5f91b9ae",
+      "bytes": 16033
+    }
+  },
+  "tests_per_platform": 7,
+  "assertion_mutations_per_platform": 20,
+  "platforms": {
+    "mac": {
+      "input_count": 381,
+      "ast": true,
+      "stages": {
+        "runtime-cli": {
+          "exit": 0,
+          "seconds": 33.95,
+          "tests": 7,
+          "assertion_mutations": 20,
+          "log_sha256": "83756e81b8a97819608eb063474e730302a4fa77f852997e54b9eaef3a114760"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true
+    },
+    "ubuntu_arm64": {
+      "input_count": 381,
+      "ast": true,
+      "stages": {
+        "runtime-cli": {
+          "exit": 0,
+          "seconds": 36.81,
+          "tests": 7,
+          "assertion_mutations": 20,
+          "log_sha256": "693d663d2e8f140ca3e85f8b0ec42b7aefab057674ed7ac125dad723b9013999"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true
+    }
+  },
+  "production_local_check_mac": {
+    "real_entry_exit": 0,
+    "real_kernel_identity_and_seven_module_gates": true,
+    "profile_inputs_preserved": true,
+    "source_action": "acquire_local_check",
+    "output_created": false,
+    "ssh_or_usb_actions": false,
+    "iphone_accessed": false,
+    "physical_runtime_actions_verified": false
+  },
+  "reused": {
+    "prior_inputs_unchanged": 377,
+    "compiled_c_inputs_unchanged": 69,
+    "kernel_and_private_module_binaries_unchanged": true
+  },
+  "limits": [
+    "CLI, selectors, Session and source loader are real; device identity/kernel I/O and handler dispatch responses are synthetic in tests.",
+    "Actual saved journal/source is read passively; malformed identity is refused without effects.",
+    "Qualified held/runtime coordinator handlers reused unchanged; this new gate proves dispatch contract, not physical execution.",
+    "Mac --check uses actual kernel/Image/private identity and seven module gates, without output, SSH or USB.",
+    "No Python type checker configured; AST and fatal lint passed on Mac and Ubuntu ARM64.",
+    "No iPhone/DFU/reboot, firmware loading, association, IRQ/DMA, battery or charging proof.",
+    "Private keys, firmware, device identifiers and environment values are not published."
+  ]
+}

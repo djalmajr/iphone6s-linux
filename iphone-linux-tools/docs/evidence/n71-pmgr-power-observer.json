@@ -1,0 +1,115 @@
+{
+  "format": 1,
+  "status": "passive_external_module_prepared_no_physical_load",
+  "code_commit": "80b3fe0",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "input_hashes": {
+    "phone/kernel/n71-pmgr-power-observe.c": "6710da93ae0daa0e4241416edcdbe3fe896f2c834fdd5ca09184be5aac4f7e5d",
+    "tests/n71_pmgr_power_observe.c": "a8a2c2f6d4b47294ad8a1d4fee2918207ba07481c3c7214e87bb31a60378da59",
+    "tests/test_n71_pmgr_power_observe.py": "6d43fdab0d110da168826e3f4f0322cab1ad35efc87e8a59a8d55441795d1234"
+  },
+  "sources": {
+    "drivers/mfd/syscon.c": "2d93e488b42bd7ed6ee2f6d0ec3fabbe201f8f98caae2d226564b64870164aec",
+    "drivers/pmdomain/apple/pmgr-pwrstate.c": "4b0adc3013e2fabe9ca1cb8228f8f6b7934af4b667f7f0f893b675102d8710df",
+    "arch/arm64/boot/dts/apple/s800-0-3.dtsi": "7dea8e989e58b12b56a33f127b40b332814fa78d46ae4c11ac57bcc0e2f30525",
+    "arch/arm64/boot/dts/apple/s800-0-3-pmgr.dtsi": "dbce98106ed4007d7040e2d415cf31bf29f9be8d2fde9f2f8284e38be50569bf"
+  },
+  "source_files_clean_against_head": true,
+  "scope": {
+    "board": "apple,n71",
+    "parent_path": "/soc/power-management@20e000000",
+    "parent_resource": [
+      "0x20e000000",
+      "0x8c000"
+    ],
+    "parent_clocks_resets_refused": true,
+    "domains": [
+      {
+        "label": "i2c1",
+        "offset": "0x801a0",
+        "parent_domain": "sio_p"
+      },
+      {
+        "label": "sio_p",
+        "offset": "0x80158",
+        "parent_domain": "sio_busif"
+      },
+      {
+        "label": "sio_busif",
+        "offset": "0x80150",
+        "parent_domain": null
+      }
+    ],
+    "domain_device_driver": "apple-pmgr-pwrstate",
+    "domain_binding_checked_under_device_lock": true,
+    "syscon_guard_depends_on_pinned_probe": true,
+    "syscon_generic_api_may_create_map": true,
+    "syscon_api_is_not_generic_read_only_lookup": true,
+    "samples_per_domain": 2,
+    "reads_total": 6,
+    "read_api": "regmap_read_bypassed",
+    "map_value_bytes": 4,
+    "map_stride": 4,
+    "success_lines_only_after_all_reads": true,
+    "stable_comparison": "whole word equality",
+    "atomic_chain_snapshot": false,
+    "domain_ownership_acquired": false
+  },
+  "native_gate": {
+    "test": "tests/test_n71_pmgr_power_observe.py",
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "cases_per_baseline": 88,
+    "compiled_mutations_per_platform": 16,
+    "mutations_only_accepted_by_assertion_sigabrt": true,
+    "mac_gate_sha256": "c0d9eaf11013e4566450a805cbb6f3d6ac452276ea76ed6f29b4108ca92a8640",
+    "arm64_gate_sha256": "82da5b673de6c13fed3a31454a0302ae60051d632f0eea800774c0fa52a3f5e9"
+  },
+  "build": {
+    "module": "n71-pmgr-power-observe.ko",
+    "sha256": "bdf1afa5d631192716443c9c9595bab018706e2c657563b016a27e3d4bdcf257",
+    "size_bytes": 11672,
+    "elf": "ELF64 LE REL AArch64",
+    "vermagic": "7.2.0-iphone6s-dart-serdev1 SMP preempt mod_unload aarch64",
+    "werror": true,
+    "modpost_errors_suppressed": false,
+    "global_module_symvers_missing_warning": true,
+    "extra_symbols": "preserved bundle vmlinux.symvers",
+    "preserved": {
+      ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+      "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "logs": {
+      "arm64-gate-private.log": "82da5b673de6c13fed3a31454a0302ae60051d632f0eea800774c0fa52a3f5e9",
+      "kernel-build-private.log": "5a3650189e616a9e1ffe2a8b4f37c6809eb7e7dd420a3baef3b43cf343d63b52",
+      "undefined-symbols-private.log": "e3018ffd464ea5798001533c7829aa7af96f5799dc2dd2db2b66db942f913b78"
+    },
+    "transfer_hashes_match": true
+  },
+  "external_api_audit": {
+    "undefined_symbols_inspected": true,
+    "direct_regmap_write_import": false,
+    "clock_or_reset_enable_import": false,
+    "irq_or_dma_import": false,
+    "direct_ioremap_import": false,
+    "syscon_indirect_effect_excluded_by_bound_provider_and_no_resources_guard": true
+  },
+  "ios_checkpoint": {
+    "BatteryCurrentCapacity": 93,
+    "BatteryIsCharging": true,
+    "ExternalConnected": true,
+    "ExternalChargeCapable": true,
+    "utc": "2026-10-04T20:48:17.594033+00:00",
+    "source": "com.apple.mobile.battery",
+    "raw_log_sha256": "de97020a705410bd0ff1410d12723e0ad8f4b37ad6af427d14917c445eb0ddfa"
+  },
+  "physical_module_loaded": false,
+  "controller_activated": false,
+  "charger_io_performed": false,
+  "linux_charging_validated": false,
+  "new_dfu_or_reboot": false,
+  "limits": "PMGR DT declarations and sequential register samples are not I2C controller electrical idle/ownership or measured battery current. The syscon guard is qualified against this pinned probe and binding only. No activation, charger, HDQ or sustained-charge proof."
+}

@@ -1,0 +1,46 @@
+{
+  "format": 1,
+  "status": "compiled_verified_not_phone_loaded",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "module": {
+    "bytes": 37824,
+    "sha256": "11be3fc8ca8d74d80c9116f9c0133a25a2bfd39365aa3ae8aa6bf0246c73ae38",
+    "module": "n71-pcie-diagnostic.ko"
+  },
+  "preserved_kernel_sha256": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "sources_sha256": {
+    "phone/kernel/n71-pcie-diagnostic.c": "b8994e261bd5ba71ca8daa1f4e641fb8cf1dfda2410cff72814bc18b9a1c902d",
+    "phone/kernel/n71-pcie-scan-config.h": "8ecd9ec942409c3d15eca75355311aa30bc5f7ffcad4618eb297728a7d43a93d",
+    "phone/kernel/n71-pcie-scan.h": "caee0f3013576ce25f5a82def75f2eb4c6c22b3df4a59f9e2a2d5ce5469b697c",
+    "phone/kernel/n71-pcie-bar-sizing.h": "9242d467d90feca8a286d8d7d7931a314e083f7eecbb6459f6867e5a119336cb",
+    "tests/n71_pcie_bar_sizing.c": "e756f54a007899d39c0974d6b0026774d12dede0e33c4a0cfb5dd415b0f185ef",
+    "tests/test_n71_pcie_bar_sizing.py": "1678666c29fa6c7426501961bac3369a3ad53ac2d077e2d3d0812a9354e0f02a"
+  },
+  "native_checks": {
+    "macos": true,
+    "linux_arm64": true,
+    "c_fault_test": true,
+    "assertion_mutations": 6,
+    "werror": true,
+    "modpost_fatal": true,
+    "elf_aarch64": true,
+    "exact_vermagic": true
+  },
+  "private_log_sha256": {
+    "contract-private.log": "4947af9999cdcfc29eed2e86dd691c0b978e6d1c8e6d80db1a83f69727a3a9c5",
+    "module-private.log": "3f788c5c5740c980da87246e8d159e8282a6ac2ce71d9eefc896cb10a75c11d1"
+  },
+  "bar_sizing_default": false,
+  "pci_devices_registered": false,
+  "resource_assignment_performed": false,
+  "bar_mmio_performed": false,
+  "dma_enabled": false,
+  "physical_sizing_verified": false,
+  "wifi_verified": false,
+  "firmware_loaded": false
+}

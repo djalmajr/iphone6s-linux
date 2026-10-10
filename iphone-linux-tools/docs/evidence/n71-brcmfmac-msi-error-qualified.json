@@ -1,0 +1,202 @@
+{
+  "format": 1,
+  "proof_scope": "Offline module-copy correction, compiled C error-path regression and ARM64 build; no physical MSI allocation, IRQ delivery, DMA transfer or native Wi-Fi proof",
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "source_url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c",
+  "kernel_profile": "n71-dart-serdev-power-v2",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "preserved_kernel_sha256": {
+    ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+    "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "irq_correction": {
+    "target": "drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c",
+    "patch_sha256": "6f5702cd509bf076c1e69a2acfef49ab4938bc7edcd9d940bceff0f29439d29a",
+    "source_sha256": "2bc4ff2f06eb515b404e08973a39c029ec975155a17a7baaf6f62e76ca181b4c",
+    "result_sha256": "a7cfdcdd40c317704b8e7799cc2aa6f776dfc856e7a6983e65fdb6a3c9a39ff1",
+    "applied_to_package_copy_only": true
+  },
+  "modules": {
+    "brcm80211/brcmfmac/bca/brcmfmac-bca.ko": {
+      "bytes": 6480,
+      "sha256": "239a133856970c299cddd7a89cdccc626140349a2cd9dd1c8a38ca7535870c2f",
+      "depends": [
+        "brcmfmac"
+      ]
+    },
+    "brcm80211/brcmfmac/brcmfmac.ko": {
+      "bytes": 499496,
+      "sha256": "1c54194cca3edd2bbe98fcfdce6e79fbc34de5dea6e37a1aa7e7d654bb560b00",
+      "depends": [
+        "brcmutil",
+        "cfg80211"
+      ]
+    },
+    "brcm80211/brcmfmac/cyw/brcmfmac-cyw.ko": {
+      "bytes": 16056,
+      "sha256": "5394d4c4a563192ad7662c34ce2ffef1e5cf679f3e376f233df091f82ec5718d",
+      "depends": [
+        "brcmfmac",
+        "cfg80211"
+      ]
+    },
+    "brcm80211/brcmfmac/wcc/brcmfmac-wcc.ko": {
+      "bytes": 6544,
+      "sha256": "d5c7fa258c37d4d4e22103adb1a31761f4842f984594b63824731dfb1940008f",
+      "depends": [
+        "brcmfmac"
+      ]
+    },
+    "brcm80211/brcmutil/brcmutil.ko": {
+      "bytes": 18096,
+      "sha256": "14a584cd508ac9c1f84f8f248eab10ef4606b03ae85af82237ba6cda2940b682",
+      "depends": []
+    },
+    "cfg80211/cfg80211.ko": {
+      "bytes": 640776,
+      "sha256": "970977f33124d1c3c9d658b6dc71cab03a75a504a54d55a6de861aaf56709895",
+      "depends": [
+        "rfkill"
+      ]
+    },
+    "rfkill/rfkill-gpio.ko": {
+      "bytes": 11832,
+      "sha256": "585bc3929f72b9ae3e0cdd6f0a2f87a13fa135fe2770e261168ce6a3078f9064",
+      "depends": [
+        "rfkill"
+      ]
+    },
+    "rfkill/rfkill.ko": {
+      "bytes": 46992,
+      "sha256": "3500e7852e11188efa912241d45805b669586ad5a90fe01dd4bcb1f3754e38f3",
+      "depends": []
+    }
+  },
+  "changed_modules": [
+    "brcm80211/brcmfmac/brcmfmac.ko"
+  ],
+  "rollback_modules_preserved": true,
+  "other_seven_modules_match_prior_build": true,
+  "kernel_source_config_image_exports_preserved": true,
+  "public_input_sha256": {
+    "scripts/build/build-n71-wifi-modules.py": {
+      "sha256": "8563465479a2e156b081d99b97f437d56023733c2038b54df9c550c15eaf703f",
+      "bytes": 12223
+    },
+    "scripts/build/kernel_bundle.py": {
+      "sha256": "807bfc3a59801a2703b1135fc3887a2873b25cc2e05b10de9c9cd0bd89d8ed64",
+      "bytes": 7424
+    },
+    "scripts/build/kernel_patchset.py": {
+      "sha256": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817",
+      "bytes": 5466
+    },
+    "tests/test_n71_wifi_modules.py": {
+      "sha256": "643a7cedae2b732906e3acda3826c157072ac535c1247b02ee98f3eddb78ca14",
+      "bytes": 13325
+    },
+    "tests/run_n71_wifi_modules_mutations.py": {
+      "sha256": "32d965364ab8c00ced0aca2de4032289a494a1adbd9822e71c8045014bb66c7c",
+      "bytes": 3580
+    },
+    "tests/test_n71_wifi_irq.py": {
+      "sha256": "5853b05c524807034e578c586f10ad8f265295750f196226255caa991b789f09",
+      "bytes": 4352
+    },
+    "tests/n71_wifi_irq.c": {
+      "sha256": "e3bbaec8d7042b5eb11f0f7e7595961a29bb2844428d70cb29024d697b4c9d04",
+      "bytes": 3533
+    },
+    "phone/kernel/patches/0001-s5l8960x-dart-stream-tcr.patch": {
+      "sha256": "da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74",
+      "bytes": 593
+    },
+    "phone/kernel/patches/0002-serdev-stop-bits.patch": {
+      "sha256": "f987f64912a410d588ac0d1d9a47c7cc275a0dc234fbe27549011255e98e0d11",
+      "bytes": 2952
+    },
+    "phone/kernel/patches/0003-apple-gpio-write-errors.patch": {
+      "sha256": "739b9fc44bec4bad00bea367af70decef5fb56248a636d822d51396343088094",
+      "bytes": 11634
+    },
+    "phone/kernel/patches/0004-apple-pmgr-errors.patch": {
+      "sha256": "d8202c48516faec2bf4506af486ca2fd1b256360a41aad2d4df584c140d7e135",
+      "bytes": 8677
+    },
+    "phone/kernel/patches/0005-apple-pmgr-probe-errors.patch": {
+      "sha256": "b005ddf799b9cdea7149b38d850936c30c16342af47d11a61595157d14e24b2f",
+      "bytes": 10967
+    },
+    "phone/kernel/patches/0006-apple-pmgr-provider-cleanup.patch": {
+      "sha256": "e0159ec77cec26beafb1332526f9ba7f287f53c05f70a6dcd2376abca6dc445b",
+      "bytes": 1428
+    },
+    "phone/kernel/patches/0007-apple-pmgr-no-manual-bind.patch": {
+      "sha256": "3f5a3e4c97a6cf898eaf90d53fcdc45a9796707c4123a14b1d0e043b58934aaa",
+      "bytes": 334
+    },
+    "phone/kernel/patches/0008-brcmfmac-msi-error.patch": {
+      "sha256": "6f5702cd509bf076c1e69a2acfef49ab4938bc7edcd9d940bceff0f29439d29a",
+      "bytes": 837
+    }
+  },
+  "gates": {
+    "mac": {
+      "native_cases": 16,
+      "compiled_assertion_mutants": 13,
+      "original_compiled_regression_killed": true,
+      "builder_tests": 15,
+      "builder_assertion_mutants": 24,
+      "ast_passed": true,
+      "fatal_lint_passed": true,
+      "type_checker_configured": false,
+      "logs_sha256": {
+        "mac-irq-tests-private.log": "a53c32f726d05411d9e02b51d2caec9bdf17203a72c0edf05b9d91f1c14fc243",
+        "mac-lint-private.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "ubuntu_arm64": {
+      "native_cases": 16,
+      "compiled_assertion_mutants": 13,
+      "original_compiled_regression_killed": true,
+      "builder_tests": 15,
+      "builder_assertion_mutants": 24,
+      "ast_passed": true,
+      "fatal_lint_passed": true,
+      "native_module_build_exit": 0,
+      "type_checker_configured": false,
+      "logs_sha256": {
+        "irq-tests": "2323655f474ee8aa4fa79b11ab2c239ded4c4aff38b1450a4d4989994f3280d7",
+        "builder-tests": "73f682123920580197e0c1d85dc44d51aa7c7b75c9f5ea24fd324b328b48e100",
+        "builder-mutations": "53c4654331ec2f3388bebbe5c494540aa9f00ff94bc46e93806b5f69d527e95e",
+        "fatal-lint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "native-build": "9f179ff831110dba3ffba6f9fe01abe9345ae0298298094cc1e3d1eeb6b8d6e9"
+      }
+    },
+    "mac_artifacts_hash_bytes_elf_vermagic_verified": true,
+    "vm_alias_and_pcie_msgbuf_symbols_verified": true,
+    "werror_modpost_passed": true
+  },
+  "build_recipe": {
+    "source": "/home/ubuntu/kernel-n71-binding-source-20261005",
+    "kernel_output": "/home/ubuntu/kernel-n71-binding-build-20261005",
+    "new_module_output": "/home/ubuntu/n71-brcmfmac-msi-module-build-20261009-v1",
+    "new_inputs": "/home/ubuntu/n71-brcmfmac-msi-inputs-20261009-v1",
+    "profile": "n71-dart-serdev-power-v2",
+    "install_targets_used": false
+  },
+  "raw_provenance_sha256": "8c2f55537f24eb5f78e8b29ed49faefdc90174d2036cb34ca178f2043c662e9c",
+  "private_artifacts_mode_700_600_verified": true,
+  "installed": false,
+  "loaded_on_phone": false,
+  "firmware_selected": false,
+  "wifi_verified": false,
+  "new_dfu_required": false,
+  "physical_followups": [
+    "Bound PCI enable/config/MSI writes with exact baselines and rollback",
+    "Controlled asynchronous brcmfmac firmware/IRQ/DMA attach and quiesce",
+    "Physical IRQ/DMA/interface/scan/association proof",
+    "Battery gauge and charging proof remain separate"
+  ]
+}

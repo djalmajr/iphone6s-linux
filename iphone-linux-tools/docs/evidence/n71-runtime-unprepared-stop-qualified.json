@@ -1,0 +1,133 @@
+{
+  "format": 1,
+  "code_commit": "a5c38c227e3cc8d45719b73c22aae32d09d54b2a",
+  "status": "unprepared_stop_qualified_coordinator_selection_firmware_energy_and_physical_proof_pending",
+  "input_count": 285,
+  "input_manifest_sha256": "b4da1e84bcb6f275e75029876ffa337649558741f3b30b7370f5527efb9c8a00",
+  "changed_inputs": {
+    "scripts/host/n71_driver_runtime_lifetime.py": {
+      "sha256": "cfa666232cdf0c960384642c4211504115445fa1aa6ba6f060a7e7dcf51a01f6",
+      "bytes": 18740
+    },
+    "tests/test_n71_runtime_unprepared_stop.py": {
+      "sha256": "603212c53e29ef1edcf40455e10619e28644150a0207d857ef6435881ec17351",
+      "bytes": 10833
+    }
+  },
+  "tests_per_platform": 53,
+  "assertion_mutations_per_platform": 70,
+  "new_tests_per_platform": 5,
+  "new_assertion_mutations_per_platform": 4,
+  "platforms": {
+    "mac": {
+      "input_count": 285,
+      "ast": true,
+      "stages": {
+        "unprepared-stop": {
+          "exit": 0,
+          "seconds": 2.37,
+          "tests": 5,
+          "assertion_mutations": 4,
+          "log_sha256": "f6a9fe12a482cd2568e80af46ac42276980040583183414041a902d0c8393fb4"
+        },
+        "runtime-lifetime": {
+          "exit": 0,
+          "seconds": 8.71,
+          "tests": 13,
+          "assertion_mutations": 21,
+          "log_sha256": "bf8cf22816b557ecdc92c395c409397f9518ab33c8418c7184eb86dc14460094"
+        },
+        "held-capture": {
+          "exit": 0,
+          "seconds": 8.89,
+          "tests": 11,
+          "assertion_mutations": 19,
+          "log_sha256": "4ab6e6547813c4405053faa13941467b750ad32392b0704b7357750e4d1677ba"
+        },
+        "driver-recovery": {
+          "exit": 0,
+          "seconds": 0.82,
+          "tests": 12,
+          "assertion_mutations": 10,
+          "log_sha256": "f10afa31dc7abfaf2276269ca803fb5e4b56cba8bfe4d6c3f4ba0807a79ea6e7"
+        },
+        "wcc-module-journal": {
+          "exit": 0,
+          "seconds": 1.15,
+          "tests": 12,
+          "assertion_mutations": 16,
+          "log_sha256": "e7cbcf7e2585dc8553d89f9baf01fad74604d90bbf26634b8e006e1e93a1f027"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true
+    },
+    "ubuntu_arm64": {
+      "input_count": 285,
+      "ast": true,
+      "stages": {
+        "unprepared-stop": {
+          "exit": 0,
+          "seconds": 3.96,
+          "tests": 5,
+          "assertion_mutations": 4,
+          "log_sha256": "6edb17fdcf3ea9f1dc0d51f9cf47859976e483ed367ca82391385d4dc20b69bb"
+        },
+        "runtime-lifetime": {
+          "exit": 0,
+          "seconds": 57.36,
+          "tests": 13,
+          "assertion_mutations": 21,
+          "log_sha256": "5fb376baeb529e75520ffe1363081684a394c4056c6eea5be557963310e809f1"
+        },
+        "held-capture": {
+          "exit": 0,
+          "seconds": 8.42,
+          "tests": 11,
+          "assertion_mutations": 19,
+          "log_sha256": "1bcad135db49f5b4e3439c020b4ceb0cc0a9d06c63e30469bf947a0a7144eca9"
+        },
+        "driver-recovery": {
+          "exit": 0,
+          "seconds": 1.67,
+          "tests": 12,
+          "assertion_mutations": 10,
+          "log_sha256": "1563d96f7b92442e343c8a7c1179474583f92d2e498cd86716d218d5d64f9b76"
+        },
+        "wcc-module-journal": {
+          "exit": 0,
+          "seconds": 2.15,
+          "tests": 12,
+          "assertion_mutations": 16,
+          "log_sha256": "aed06015a50c4c8b50727f70789e8ba32ad682f996d6bd12daafb767b85cf51a"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true
+    }
+  },
+  "reused_kernel": {
+    "input_count": 69,
+    "inputs_preserved": true,
+    "scenarios_per_platform": 575,
+    "assertion_mutations_per_platform": 455,
+    "rebuild_required": false
+  },
+  "official_artifacts": {
+    "count": 8,
+    "bytes_and_sha256_preserved": true,
+    "reference": "docs/evidence/n71-brcmfmac-pcie-modules-qualified.json"
+  },
+  "unchanged_gate_reference": "docs/evidence/n71-runtime-held-capture-qualified.json",
+  "limits": {
+    "real_filesystem_parsers_journal_loader_and_recovery": true,
+    "synthetic_kernel_and_ssh": true,
+    "typechecker_configured": false,
+    "iphone_accessed": false,
+    "wifi_or_charging_physically_proved": false,
+    "kernel_or_artifacts_rebuilt": false
+  },
+  "reproduction": "docs/N71_BRCMFMAC_RUNTIME.md#encerrar-antes-de-prepare--fase-b2b3d1"
+}

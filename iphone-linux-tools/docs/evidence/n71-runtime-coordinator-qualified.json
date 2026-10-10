@@ -1,0 +1,83 @@
+{
+  "format": 1,
+  "code_commit": "80538d2c580afc1e6f6b3143a94fbcbd20d4e9db",
+  "status": "start_observe_stop_qualified_offline_selection_firmware_energy_and_physical_proof_pending",
+  "input_count": 288,
+  "input_manifest_sha256": "a3578dee733908c8d85fa4f8fa66e38e36519401eb3b10d97d3909cc38552c28",
+  "changed_inputs": {
+    "scripts/host/n71_driver_runtime_session.py": {
+      "sha256": "65243d142bd1f48b88e429ab83c5ccf7939dc2f540cf9bd111cc51abd206495f",
+      "bytes": 10292
+    },
+    "tests/test_n71_driver_runtime_session.py": {
+      "sha256": "55f4484d1328fe3b6ddab0a3ea7b5da4651a9db76edac7e50ca0ace61fccd31e",
+      "bytes": 18133
+    }
+  },
+  "tests_per_platform": 9,
+  "assertion_mutations_per_platform": 11,
+  "platforms": {
+    "mac": {
+      "input_count": 288,
+      "ast": true,
+      "stages": {
+        "runtime-coordinator": {
+          "exit": 0,
+          "seconds": 15.29,
+          "tests": 9,
+          "assertion_mutations": 11,
+          "log_sha256": "6928e5fa2c44a6122fd9c6b419e8bbdb37c6a759567a31faaa1cb6a187436530"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true,
+      "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ubuntu_arm64": {
+      "input_count": 288,
+      "ast": true,
+      "stages": {
+        "runtime-coordinator": {
+          "exit": 0,
+          "seconds": 26.47,
+          "tests": 9,
+          "assertion_mutations": 11,
+          "log_sha256": "e70a73e0618975bd22998a94013e43b9e85068239f63f2bfdc5696268d3c6f51"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true,
+      "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "reused_host": {
+    "reference": "docs/evidence/n71-runtime-unprepared-stop-qualified.json",
+    "tests_per_platform": 53,
+    "assertion_mutations_per_platform": 70,
+    "all_285_inputs_identical": true
+  },
+  "reused_kernel_and_artifacts_reference": "docs/evidence/n71-runtime-held-capture-qualified.json",
+  "contracts": [
+    "start prepare ordered WCC load publication; repeat proved start without effects",
+    "observe and checkpoint without setters; same-boot stopped source accepted",
+    "reverse normal unload native release provider cleanup REG_ON restore; repeated stop without effects",
+    "complete failed load can resume only missing owned prefix; busy unload retains providers",
+    "interrupted receipt reconciles by observation; recovery fork origin copied; no replay or orphan promotion",
+    "private origin and complete registered bytes preserved; SHA rechecked at copy boundary",
+    "negative assignment refuses start and retains first cause through complete cleanup",
+    "exception preserves private error and read-only checkpoint; no automatic compensating effects"
+  ],
+  "limits": {
+    "real_filesystem_parsers_native_and_module_stages_journal_loader_recovery": true,
+    "synthetic_kernel_and_ssh": true,
+    "typechecker_configured": false,
+    "iphone_accessed": false,
+    "profile_or_cli_enabled": false,
+    "wifi_or_charging_physically_proved": false,
+    "kernel_or_artifacts_rebuilt": false,
+    "mac_global_config_or_packages_changed": false
+  },
+  "reproduction": "docs/N71_BRCMFMAC_RUNTIME.md#coordenador-no-mesmo-boot--fase-b2b3d2"
+}

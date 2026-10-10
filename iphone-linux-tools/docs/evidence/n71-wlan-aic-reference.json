@@ -1,0 +1,78 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07",
+  "code_commit": "8ce3941",
+  "proof_scope": "Pure N71 AIC parent request arithmetic on macOS and Ubuntu ARM64 plus a kernel ABI probe; no IRQ mapping or hardware proof",
+  "reference": "n71-irq-iommu-reference.json",
+  "inputs_sha256": {
+    "phone/kernel/n71-wlan-irq-reference.h": "92a4766835a0d4884c4da168542ee94ab3512a5200279405d932c0d9ddf71b3f",
+    "tests/n71_wlan_irq_reference.c": "1173ab1f51a1d9dd602af05a23ded82b2dd89daf1876642675e854e31258cd91",
+    "tests/test_n71_wlan_irq_reference.py": "a086b980932d6a2c4d430b0fd2a1d94b7577ae9f01e255bd414b6989d700517d"
+  },
+  "qualification": {
+    "macos": {
+      "native_exit": 0,
+      "cases": 61,
+      "assertion_mutations": 14,
+      "native_suite_seconds": 5.631,
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0
+    },
+    "ubuntu_arm64": {
+      "native_exit": 0,
+      "cases": 61,
+      "assertion_mutations": 14
+    },
+    "mutation_kill_policy": "Every mutated header compiled successfully and its executable exited -6 with an assertion; compiler/import/timeout failures are not kills",
+    "cases": {
+      "valid_vectors": 8,
+      "unqualified_topology": 48,
+      "invalid_index": 3,
+      "null_contract": 2,
+      "refused_output_preserved": true
+    }
+  },
+  "kernel_abi_probe": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "baseline_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true,
+    "werror": true,
+    "modpost_exit": 0,
+    "modpost_warn_enabled": false,
+    "explicit_extra_symbols": "vmlinux.symvers",
+    "module_sha256": "427533596e0e6f5709d888578d2f5dda393e81638296106bf8e5f330a34ac23e",
+    "module_bytes": 4480,
+    "elf": "ELF64 little-endian AArch64",
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "loaded": false,
+    "module_description_warning_fixed": true,
+    "expected_warning": "Build root lacks Module.symvers; the pinned vmlinux.symvers exports are supplied explicitly. No unresolved-symbol errors were allowed."
+  },
+  "incremental_verification": {
+    "initial_vm_runner_refusal": "Module.symvers path absent; before native or build execution",
+    "corrected_exports_path": "vmlinux.symvers",
+    "native_after_probe_metadata_change": "Reused with the three inputs unchanged; only the kernel module build was repeated",
+    "existing_physical_and_transport_gates": "Unaffected: helper has no caller, autoload, profile or Image change"
+  },
+  "private_log_sha256": {
+    "arm64-native-private.log": "48527f6c10e179781d463b91fdcac8171954b9907c22f95cbe77b81d85844fc4",
+    "arm64-kernel-private.log": "84b2c142d587a669562e2a5e9ec48add2bacb0e02831f0514bb30e10612ef2bf",
+    "arm64-kernel-metadata-private.log": "8343ff07540c0654db0f11338266ef7fb0c21391a6149e1c7925b94ed7728bbb"
+  },
+  "limits": {
+    "caller_or_profile_integrated": false,
+    "linux_irq_allocated": false,
+    "msi_message_data_composed": false,
+    "irq_delivery_verified": false,
+    "iommu_attachment_or_dma_verified": false,
+    "native_wifi_verified": false,
+    "linux_charge_or_gauge_verified": false,
+    "new_dfu_or_boot": false,
+    "global_mac_installs": false,
+    "private_modules_or_raw_logs_published": false
+  }
+}

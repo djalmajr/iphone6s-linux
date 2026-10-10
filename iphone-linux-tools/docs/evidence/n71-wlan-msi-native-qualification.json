@@ -1,0 +1,141 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T03:43:03.562403+00:00",
+  "code_commit": "295c7c247e222de608d7b717d29868998c2d7709",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "proof_scope": "Isolated production MSI callbacks with tracked IRQ/OF/MSI dependencies on macOS and Ubuntu ARM64; pinned kernel source/exports and ABI-only module build. No PCI association or device execution.",
+  "inputs_sha256": {
+    "phone/kernel/n71-wlan-msi-native.h": "6f8eec77d769783cbcfaaf7001294823698b254fc0f179968f9545050dc4c0f3",
+    "phone/kernel/n71-wlan-msi-message.h": "57279c73f6af1396a744586971f294c135f22b05661fa0452c90e3bdc0832e2b",
+    "phone/kernel/n71-wlan-irq-reference.h": "92a4766835a0d4884c4da168542ee94ab3512a5200279405d932c0d9ddf71b3f",
+    "tests/n71_wlan_msi_native_fixture.h": "6cb79aedf6c622276ea7ce6723b12afcb82d1103b93359fa6e8a4452a514ad44",
+    "tests/n71_wlan_msi_native.c": "49a10a0159db89e53c9cfe1f3facb9a3cfeee93c0adda0e7e3328c86be2f4be7",
+    "tests/test_n71_wlan_msi_native.py": "19dce359788c26b65d6aeb37c4c7056e13a37bf30916be70cf530b13cbdcf9d1"
+  },
+  "all_qualified_inputs": {
+    "files": 6,
+    "manifest_sha256": "1ed8149752d868fddef8f163f366c384f523c9cdc1939fe21c404414aa6e6c1e",
+    "same_on_macos_and_ubuntu_arm64": true
+  },
+  "qualification": {
+    "macos": {
+      "tests": 1,
+      "cases": 1132,
+      "compiled_assertion_mutations": 45,
+      "exit": 0,
+      "elapsed_s": 20.184,
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0
+    },
+    "ubuntu_arm64": {
+      "tests": 1,
+      "cases": 1132,
+      "compiled_assertion_mutations": 45,
+      "exit": 0,
+      "elapsed_s": 3.613,
+      "ast_exit": 0
+    },
+    "allocator_property": {
+      "occupied_masks": 256,
+      "sizes": [
+        1,
+        2,
+        4,
+        8
+      ],
+      "combinations": 1024
+    },
+    "mutation_policy": "Every mutant must compile with Werror and exit SIGABRT (-6) with assertion text; compilation/import/timeout failures are not kills.",
+    "reused_evidence": "Message and AIC reference helpers are unchanged; prior gates remain valid. No complete older suite rerun for unchanged helpers.",
+    "fixture_boundary": "Core lock, descriptor publication/removal, OF refs and MSI library are tracked models. Production ownership/allocator/compose/prepare/teardown callbacks execute directly. No physical IRQ delivery or concurrency proof."
+  },
+  "native_module": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "baseline_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true,
+    "w1": true,
+    "werror": true,
+    "modpost_exit": 0,
+    "modpost_warn_enabled": false,
+    "explicit_extra_symbols": "vmlinux.symvers",
+    "sha256": "d6ce0910ccafe7375ef8bbaab842134f7a64319311b9b717a315bb1921a0ce44",
+    "bytes": 13136,
+    "elf": "ELF64 little-endian AArch64",
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "loaded": false,
+    "init_refuses_loading": "-EOPNOTSUPP",
+    "generated_probe_inputs_sha256": {
+      "Makefile": "6ae2a9204dae097ce603ac589fb924b17b0d65e1aa914af3f35f62706e67b47f",
+      "n71-wlan-msi-native-abi-probe.c": "2d2d62c1c359850f8d2835c6eb15c0874a754c4f176634c2a18d45a51b2c2b00"
+    },
+    "scope": "External GPL functions reference complete acquire/release API, forcing real exported MSI-parent and callbacks into the probe. Never used as a device module."
+  },
+  "kernel_source_sha256": {
+    "kernel/irq/msi.c": "93bcc0f1dd9dd689f58f4772d3bc46d999e2c037945e80feb195ddc97ce1cf39",
+    "kernel/irq/irqdomain.c": "c10ac68517ccb1dd7001031636ec337b0d2c61c69176b3cdfddb42d9e18e88be",
+    "drivers/irqchip/irq-apple-aic.c": "d52ff497371f81b94af730792c9ea9fb2bf24d99cf7df6e8985351dd331c2287",
+    "drivers/irqchip/irq-msi-lib.c": "ca32c4a17cfd05d4da1461712f5ed4beea8deedeef09ac661f225fb3e23d9084",
+    "include/linux/irqchip/irq-msi-lib.h": "ae13039ed8db0f19ff9450a4daed27112c6550a5ea633d6f95237507516056c6",
+    "include/linux/msi.h": "93b85e1e508914ef1c41e880bf399356b719ed383bf81eff58b1451c682829aa",
+    "drivers/pci/msi/irqdomain.c": "7bf4ed4d19e62f64b555324a160f4dfd9290be4fddc5e9ec8348e7a29f1bf408",
+    "drivers/pci/probe.c": "c14188e7d25a8a33d09bd415c50f70c62be91ebb3a240627fee6c6c5298765d6"
+  },
+  "verified_contracts": {
+    "private_domain_fwnode_and_of_ref": true,
+    "eight_aligned_slots_preserve_other_grants": true,
+    "conflict_lookup_and_parent_alloc_under_same_root_mutex": true,
+    "partial_parent_and_leaf_failure_rollback_and_retry": true,
+    "free_is_per_vector_as_pinned_core": true,
+    "release_refuses_live_child_even_without_vectors": true,
+    "single_child_device_descriptor_identity": true,
+    "msix_refused": true,
+    "compose_message_separate_from_aic_number": true,
+    "shared_irq_trigger_flags_set_edge": true
+  },
+  "lifetime_precondition": "Consumer must serialize owner creation/release with device domain creation/teardown. Core calls child teardown before removing its domain. Counter/pointer checks alone do not prove exclusion against arbitrary external users. Future PCI integration must retain module/owner and remove/quiesce consumers first.",
+  "reference_limit": "Doorbell0xbffff000 and message data8..15 use the source-derived reference. VectorBase0 remains an inference; actual delivery and controller mask/restore still require physical gates.",
+  "limits": {
+    "pci_caller_profile_autoload_integrated": false,
+    "physical_msi_irq_delivery_or_aic_mask_readback_verified": false,
+    "pci_iommu_attachment_or_dma_verified": false,
+    "native_wifi_verified": false,
+    "linux_charge_or_gauge_verified": false,
+    "new_dfu_boot_or_phone_write": false,
+    "global_mac_installs_or_configuration": false,
+    "private_module_firmware_or_raw_logs_published": false
+  },
+  "previous_remote_ci": {
+    "head": "19ffb039263695956c40aba71a8e4ebb92422f21",
+    "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37566057928",
+    "all_three_jobs": "success",
+    "covers_this_new_native_code": false
+  },
+  "new_remote_ci": {
+    "head": "fcb1326483e2f607fabe6d5d762eeb491223a107",
+    "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37568094109",
+    "conclusion": "success",
+    "completed_at_utc": "2026-10-07T03:54:41Z",
+    "jobs": {
+      "source (ubuntu-24.04)": "success",
+      "source (macos-15)": "success",
+      "windows-dns": "success"
+    },
+    "complete_ci_passed": true
+  },
+  "private_evidence_sha256": {
+    "local-final-result-private.json": "5c6065cedb3fc11572e80233faa01c611603e6ac273af7b0571a97c7e5b4c9f4",
+    "arm64-result-private.json": "7285f2a6d57b595eea1fe2f1ec90058e8b1ee8a2ba778a24b486fa3fafeeeba9",
+    "arm64-kernel-private.log": "96f00e55ebceb5f8ee79f3f914457fcf7db54d9fe81d43ff90e1fa960b6267e8",
+    "arm64-native-private.log": "a2738f194bffb8c2e517f8f69bcfbb90d85d2bdd9ea28a87e18b36909aea7e32",
+    "source-inputs-private.json": "cb9a73dacfbe71a69de777e8440517774dec78c1a96ec8f67dddbc814569a570"
+  },
+  "next_gates": [
+    "PCI/MSI association lifecycle and provider/host/module ownership",
+    "PCI IOMMU association before enable or MASTER",
+    "Hash-bound grouped collector/profile, then minimal physical sessions"
+  ]
+}

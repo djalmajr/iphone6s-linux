@@ -1,0 +1,131 @@
+{
+  "format": 1,
+  "code_commit": "317c89ce73cba6cb65ade751e7b524cf14928994",
+  "status": "runtime_caller_wcc_selection_qualified_session_staging_profile_cli_firmware_energy_and_physical_proof_pending",
+  "input_count": 360,
+  "input_manifest_sha256": "c124919af480b5bb12e0287d4510a7411fde8443f51a39f757dea66b9149be7d",
+  "changed_inputs": {
+    "scripts/host/n71_driver_runtime_build.py": {
+      "sha256": "d5280c57fc353f66702558099a6d08b3a63fe3df35661fabc39e364633188145",
+      "bytes": 6495
+    },
+    "tests/test_n71_driver_runtime_build.py": {
+      "sha256": "36715ac1c7d25ae9a93c5d1a4388a81ef2445ec4f4c1f1f554ad8feed1b8e689",
+      "bytes": 12800
+    }
+  },
+  "tests_per_platform": 9,
+  "assertion_mutations_per_platform": 14,
+  "platforms": {
+    "mac": {
+      "input_count": 360,
+      "ast": true,
+      "stages": {
+        "runtime-build": {
+          "exit": 0,
+          "seconds": 7.1,
+          "tests": 9,
+          "assertion_mutations": 14,
+          "log_sha256": "7d7d2b2bda5fd016480901a9aa3cfbf6969f6de644d85c1729a20dcae158058f"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true,
+      "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ubuntu_arm64": {
+      "input_count": 360,
+      "ast": true,
+      "stages": {
+        "runtime-build": {
+          "exit": 0,
+          "seconds": 5.26,
+          "tests": 9,
+          "assertion_mutations": 14,
+          "log_sha256": "275b0adb907350b54e05f41f3351c2146e5c8253dee18dab629f8e92e7486e56"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true,
+      "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "accepted_artifacts": [
+    {
+      "module": "n71-pcie-diagnostic.ko",
+      "bytes": 142232,
+      "sha256": "b4888de18e8e93f9320300350cdd646a6c583fe127e7c2adee99549a7216b136",
+      "elf64_aarch64_and_vermagic": true
+    },
+    {
+      "module": "n71-wlan-power-diagnostic.ko",
+      "bytes": 17688,
+      "sha256": "fdf887e7572b70d09e76f770272bee5dc9ffcde799277e894ee8965007c5a8f1",
+      "elf64_aarch64_and_vermagic": true
+    },
+    {
+      "module": "rfkill.ko",
+      "bytes": 46992,
+      "sha256": "3500e7852e11188efa912241d45805b669586ad5a90fe01dd4bcb1f3754e38f3",
+      "elf64_aarch64_and_vermagic": true
+    },
+    {
+      "module": "cfg80211.ko",
+      "bytes": 640776,
+      "sha256": "970977f33124d1c3c9d658b6dc71cab03a75a504a54d55a6de861aaf56709895",
+      "elf64_aarch64_and_vermagic": true
+    },
+    {
+      "module": "brcmutil.ko",
+      "bytes": 18008,
+      "sha256": "866e7e66747c86a48a965c0fc54ba02a9f2a2b30a4ff9038a1af4200792dc393",
+      "elf64_aarch64_and_vermagic": true
+    },
+    {
+      "module": "brcmfmac.ko",
+      "bytes": 498800,
+      "sha256": "ffc713a0ecf94d30dff765fd33f1fb4eb7be572fbeac954507b9229013f84660",
+      "elf64_aarch64_and_vermagic": true
+    },
+    {
+      "module": "brcmfmac-wcc.ko",
+      "bytes": 6544,
+      "sha256": "d5c7fa258c37d4d4e22103adb1a31761f4842f984594b63824731dfb1940008f",
+      "elf64_aarch64_and_vermagic": true
+    }
+  ],
+  "accepted_artifact_bytes": 1371040,
+  "reused_host": {
+    "reference": "docs/evidence/n71-runtime-coordinator-qualified.json",
+    "all_288_inputs_identical": true,
+    "runtime_coordinator_tests_per_platform": 9,
+    "runtime_coordinator_mutations_per_platform": 11,
+    "earlier_host_matrix_reference": "docs/evidence/n71-runtime-unprepared-stop-qualified.json"
+  },
+  "reused_caller": {
+    "reference": "docs/evidence/n71-brcmfmac-caller-qualified.json",
+    "all_69_inputs_rehashed_by_selector": true,
+    "cases_per_platform": 575,
+    "assertion_mutations_per_platform": 455,
+    "kernel_rebuilt": false
+  },
+  "contracts": [
+    "explicit runtime SHA and power2 ABI; no fallback to old IOMMU diagnostic",
+    "caller source patch config Image exports match qualified kernel; WCC also matches gzip",
+    "compiled input paths bound by immutable name-set SHA, safe canonical paths, regular files, bytes and content hashes",
+    "runtime defaults actions owners getter first async cause and Mac/ARM qualification preserved",
+    "reuse existing assignment and IOMMU policies and REG_ON record; select only five ordered WCC modules"
+  ],
+  "limits": {
+    "real_filesystem_evidence_and_shared_selectors": true,
+    "temporary_roots_for_negative_cases": true,
+    "typechecker_configured": false,
+    "session_or_profile_cli_integrated": false,
+    "iphone_accessed": false,
+    "wifi_charging_or_irq_dma_physically_proved": false,
+    "global_packages_or_mac_config_changed": false
+  },
+  "reproduction": "docs/N71_BRCMFMAC_RUNTIME.md#sele\u00e7\u00e3o-vinculada-do-caller-e-wcc--fase-c1"
+}

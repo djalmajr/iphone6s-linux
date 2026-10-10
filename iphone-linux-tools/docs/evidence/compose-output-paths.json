@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 25,
+  "code_commit": "8a5d2adfae8a01190b5430f2194d633b7d0279b3",
+  "status": "verified",
+  "before": {
+    "scope": "synthetic owned temporary tree only; no real user file",
+    "existing_symlink": {
+      "exit": 0,
+      "target_mode_before": "755",
+      "target_mode_after": "0o600",
+      "target_bytes_unchanged": true
+    },
+    "dangling_symlink": {
+      "exit": 0,
+      "outside_created": true
+    }
+  },
+  "local": {
+    "tests_total": 143,
+    "passed": 135,
+    "skipped": 8,
+    "regressions": 10,
+    "mutations_detected": 12,
+    "mutations_total": 12,
+    "flake8_fatal": "passed",
+    "diff_check": "passed",
+    "typechecker": "not_configured"
+  },
+  "ci": {
+    "pr_run": 36838539001,
+    "push_run": 36838531797,
+    "status": "success",
+    "jobs": 4,
+    "tests_per_job": 143,
+    "passed_per_job": 134,
+    "skipped_per_job": 9,
+    "composer_mutations_per_job": 12,
+    "logs_inspected": true
+  },
+  "contract": [
+    "Refuse output symlinks, hardlinks, special types/modes and incompatible ownership before publication.",
+    "Refuse literal parent symlinks and unsafe final output directory.",
+    "Normal concatenation bytes and CLI hash/length unchanged. New output is a private temporary plus rename.",
+    "Identical existing output keeps inode/mtime; mode becomes 600. Different content remains unchanged.",
+    "Failed rename removes only its own temporary."
+  ],
+  "limits": [
+    "Synthetic filesystem and CLI proof only; no new phone boot.",
+    "Not a defense against concurrent edits by another process of the same user.",
+    "Does not authenticate all input artifacts or implement bounded artifact parsing.",
+    "Output may be outside the repository in an owned canonical directory."
+  ],
+  "host_packages_installed": false,
+  "real_artifacts_modified": false,
+  "native_proof": false
+}

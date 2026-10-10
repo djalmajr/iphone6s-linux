@@ -1,0 +1,318 @@
+{
+  "date": "2026-09-30",
+  "scope": "fresh isolated Ubuntu ARM64 VM, full server payload assembly and userspace execution; no physical iPhone boot",
+  "vm": {
+    "name": "iphone6s-repro-20260930",
+    "release": "Ubuntu 24.04.5 LTS",
+    "image_hash": "1d6bffe64b848468ac97f821d369a4846d983de1800ccf6b5ec8853e85cefc55",
+    "cpus": 2,
+    "memory": "4G",
+    "disk": "10G",
+    "host_mounts": false,
+    "bridged_network": false,
+    "cloud_init": "done",
+    "build_directories_absent_before": true,
+    "previous_vms_untouched": true
+  },
+  "sources": {
+    "project_commit": "e8bd87913c06bddeed2485c0365e4d743ee46e8f",
+    "m1n1_commit": "d5a10ac52a6468484854419a6c5130f1d62073eb",
+    "m1n1_shallow": true,
+    "m1n1_tags": 0,
+    "artwork_commit": "80d14f8b6f485b310e305a84b4b806361518ddd1",
+    "tracked_clean_after": true
+  },
+  "apt": {
+    "sources": "Ubuntu noble/noble-updates/noble-backports/noble-security at ports.ubuntu.com",
+    "transport": "HTTP archive sources; signed metadata and package hashes verified by APT",
+    "authenticated_update_exit": 0,
+    "install_exit": 0,
+    "unauthenticated_packages_allowed": false,
+    "keyring_sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+    "valid_signature_fingerprint": "F6ECB3762474EDA9D21B7022871920D1991BC93C",
+    "signed_inrelease_count": 4,
+    "package_versions": {
+      "apt": "2.8.3",
+      "bash": "5.2.21-2ubuntu4",
+      "busybox-static": "1:1.36.1-6ubuntu3.1",
+      "ca-certificates": "20260601~24.04.1",
+      "cpio": "2.15+dfsg-1ubuntu2.1",
+      "curl": "8.5.0-2ubuntu10.15",
+      "dropbear-bin": "2022.83-4",
+      "file": "1:5.45-3build1",
+      "gcc": "4:13.2.0-7ubuntu1",
+      "git": "1:2.43.0-1ubuntu7.3",
+      "libc6-dev:arm64": "2.39-0ubuntu8.9",
+      "make": "4.3-4.1build2",
+      "ncurses-base": "6.4+20240113-1ubuntu2.2",
+      "openssh-client": "1:9.6p1-3ubuntu13.19",
+      "ubuntu-keyring": "2023.11.28.1",
+      "util-linux": "2.39.3-9ubuntu6.6",
+      "xz-utils": "5.6.1+really5.4.5-1ubuntu0.3",
+      "zstd": "1.5.5+dfsg2-2build1.1"
+    }
+  },
+  "rust": {
+    "manifest_url": "https://static.rust-lang.org/dist/channel-rust-1.98.1.toml",
+    "manifest_sha256": "a7c8774a5fd8441c997d94c029776cbc5eb111e9d72ab5d256fa69866644347e",
+    "date": "2026-09-03",
+    "components": [
+      {
+        "package": "rustc",
+        "target": "aarch64-unknown-linux-gnu",
+        "url": "https://static.rust-lang.org/dist/2026-09-03/rustc-1.98.1-aarch64-unknown-linux-gnu.tar.xz",
+        "sha256": "89fb83041993b48816514815606f53a5264729b8b449671a6b291e6f0ae74f40"
+      },
+      {
+        "package": "cargo",
+        "target": "aarch64-unknown-linux-gnu",
+        "url": "https://static.rust-lang.org/dist/2026-09-03/cargo-1.98.1-aarch64-unknown-linux-gnu.tar.xz",
+        "sha256": "c09425a7f300af148c0bdfded0e7d5f1fe7c075b2b9674e8935afa769297b2f6"
+      },
+      {
+        "package": "rust-std",
+        "target": "aarch64-unknown-linux-gnu",
+        "url": "https://static.rust-lang.org/dist/2026-09-03/rust-std-1.98.1-aarch64-unknown-linux-gnu.tar.xz",
+        "sha256": "9bf796a6ec5b004813ebd0b650775a7c6a4f3aae97ad362ae294798dca4f3b23"
+      },
+      {
+        "package": "rust-std",
+        "target": "aarch64-unknown-none-softfloat",
+        "url": "https://static.rust-lang.org/dist/2026-09-03/rust-std-1.98.1-aarch64-unknown-none-softfloat.tar.xz",
+        "sha256": "2f6528649eb55e87e69add1dc16a64d2fff3a06245e5e1fb9efed40ad6777600"
+      }
+    ]
+  },
+  "compiler": {
+    "gcc": "13.3.0",
+    "rustc": "1.98.1 (48a229cea 2026-09-01)",
+    "cargo": "1.98.1 (797e8a9bc 2026-08-05)",
+    "standalone_prefix": "/home/ubuntu/toolchains/rust-1.98.1",
+    "installed_as_root": false,
+    "ldconfig_disabled": true
+  },
+  "cargo": {
+    "new_cache": true,
+    "lockfile_sha256": "5ae145509cda84c067426690fee2083d5a51374fb9264c3c59d67f3f8d1321fb",
+    "registry": [
+      {
+        "name": "bitflags",
+        "version": "2.13.0",
+        "sha256": "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8",
+        "source_files_matching_archive": 64
+      },
+      {
+        "name": "log",
+        "version": "0.4.33",
+        "sha256": "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad",
+        "source_files_matching_archive": 23
+      },
+      {
+        "name": "sha1_smol",
+        "version": "1.0.1",
+        "sha256": "bbfa15b3dddfee50a0fff136974b3e1bde555604ba463834a7eb7deb6417705d",
+        "source_files_matching_archive": 14
+      },
+      {
+        "name": "uuid",
+        "version": "1.23.4",
+        "sha256": "bf80a72845275afea99e7f2b434723d3bc7e38470fcd1c7ed39a599c73319a53",
+        "source_files_matching_archive": 30
+      }
+    ],
+    "fatfs_commit": "4eccb50d011146fbed20e133d33b22f3c27292e7",
+    "fatfs_tracked_clean": true
+  },
+  "m1n1": {
+    "offline_build_exit": 0,
+    "command": [
+      "make",
+      "-j2",
+      "ARCH=",
+      "CHAINLOADING=1",
+      "CARGO_FLAGS=--locked --offline --features chainload",
+      "build/m1n1.bin"
+    ],
+    "first_cache_path": "/home/ubuntu/cargo-fresh",
+    "first_sha256": "876fa0bee296969b20b86ced864974050d8b4f6d610d0db9f6349eaea0ccf6df",
+    "standard_cache_path": "/home/ubuntu/.cargo",
+    "standard_cache_copied_only_from_new_vm_cache": true,
+    "matches_known_component_byte_for_byte": true,
+    "bytes": 1196032,
+    "sha256": "13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b",
+    "version_override_removed": true,
+    "build_tag": "d5a10ac",
+    "warnings": [
+      "Cargo jobserver descriptors unavailable",
+      "upstream unused import crate::println",
+      "upstream unused feature stmt_expr_attributes"
+    ]
+  },
+  "kernel": {
+    "apk_sha256": "5cedfa79ad8bdaff8fa05327624071e7b17c24f24370b11ef3b58bde2c7220b2",
+    "signed_index_chain_replayed": true,
+    "negative_controls_rejected": 3,
+    "apk_own_signature_verified": false,
+    "source_commit": "-dirty",
+    "verifier": "OpenSSL 3.0.13",
+    "kernel_sha256": "56d6b7be85939198d2d6b6ec3553212f8a6a44d67c55d0b1b23afab3c8a14bdf",
+    "dtb_sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58",
+    "ncm_module_sha256": "33f953c77fb532cf1dc0b29e34de3aa584739be193640ff167ef68b59eb9ff0c",
+    "ncm_vermagic": "7.0.12 SMP preempt aarch64",
+    "kernel_compiled_from_source": false
+  },
+  "herdr": {
+    "version": "0.9.1",
+    "url": "https://github.com/herdrdev/herdr/releases/download/v0.9.1/herdr-linux-aarch64",
+    "api": "https://api.github.com/repos/herdrdev/herdr/releases/tags/v0.9.1",
+    "digest": "sha256:f4ccf4de745f2cb9a39a983e9ba3703dad50ec2a58dea83026ceab721bbd8d9e",
+    "sha256": "f4ccf4de745f2cb9a39a983e9ba3703dad50ec2a58dea83026ceab721bbd8d9e",
+    "bytes": 24101456,
+    "release_asset_digest_matched": true
+  },
+  "image": {
+    "cpio_entries": 2970,
+    "required_files": 11,
+    "all_uid_gid_zero": true,
+    "permissions_verified": true,
+    "client_public_key_matches": true,
+    "client_private_key_named_files_absent": true,
+    "server_private_key_present_and_restricted": true,
+    "integrated_init_ssh_only": true,
+    "loopback_startup_present": true,
+    "root_password_locked": true,
+    "elf_files_checked": 15,
+    "elf_load_alignments_at_least_16k": true,
+    "outputs": {
+      "m1n1.bin": {
+        "sha256": "13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b",
+        "bytes": 1196032
+      },
+      "iphone6s-server-initramfs.gz": {
+        "sha256": "eeb90a6eb6720d04de68e6ee578f638a2f85f6fc63884e475fe1b9bf0ec1c5b8",
+        "bytes": 13086798
+      },
+      "iphone6s-runtime.tar.gz": {
+        "sha256": "ef0189a5340322a3ebf530a4e6366cc9139de0369a1d197480315a5985d1d0a8",
+        "bytes": 12024692
+      },
+      "iphone6s-repro-server.bin": {
+        "sha256": "274e632b599ba94efc3b6512402ee15762232a9a34e679d034afd0c04eebf496",
+        "bytes": 23767750
+      }
+    },
+    "runtime_elf_inputs": [
+      {
+        "path": "bin/bash",
+        "bytes": 1543048,
+        "sha256": "af955ef55333c8fc9c5aa50df91ad1a629d9a79a9afa125cd5e9629585f78015"
+      },
+      {
+        "path": "lib/aarch64-linux-gnu/libc.so.6",
+        "bytes": 1722920,
+        "sha256": "0f1905dc27dbc6715875c70527bc8da846a10084c9c483e9d8ff76dce8d69d0e"
+      },
+      {
+        "path": "lib/aarch64-linux-gnu/libcrypt.so.1",
+        "bytes": 198584,
+        "sha256": "b41cebf0be70f869bf60228cb5761f875ced865b0f4016f544d82f7a9ded28b0"
+      },
+      {
+        "path": "lib/aarch64-linux-gnu/libgmp.so.10",
+        "bytes": 526632,
+        "sha256": "39b6701812ed7135f28df49352b3f6664c7a9f56880a3fe50c1b87cd7681db9b"
+      },
+      {
+        "path": "lib/aarch64-linux-gnu/libtinfo.so.6",
+        "bytes": 265416,
+        "sha256": "2d2f2bb5a2dd09a3f54dfe7847a7f601203a0e3fed210cb58df740d07989f554"
+      },
+      {
+        "path": "lib/aarch64-linux-gnu/libtomcrypt.so.1",
+        "bytes": 919416,
+        "sha256": "bddfd9d7aae1bd10b77295893f6bc4217d94f3346f34154589d00e43d7886bcc"
+      },
+      {
+        "path": "lib/aarch64-linux-gnu/libtommath.so.1",
+        "bytes": 133000,
+        "sha256": "a050353784ece2758073a726b3cabf9356e6abd22c10e5ccdd44040092625726"
+      },
+      {
+        "path": "lib/aarch64-linux-gnu/libz.so.1",
+        "bytes": 133272,
+        "sha256": "e3bc90ee8cce46778c2f46c2a3e580d3b930f7b455910f25ea400a0b797fb9dc"
+      },
+      {
+        "path": "lib/ld-linux-aarch64.so.1",
+        "bytes": 203968,
+        "sha256": "390027e5f45f236bd1838bc54bf464c5ff01d260ab9f8b415ea8276641bce505"
+      },
+      {
+        "path": "usr/bin/dropbearkey",
+        "bytes": 67928,
+        "sha256": "66eddfb70c0c0773c45b018a736d3da975b5874f2a1dae8402c2c97e546d127c"
+      },
+      {
+        "path": "usr/bin/script",
+        "bytes": 67744,
+        "sha256": "9a74d114b03a4ad103c3e8f88325573f116b421a2b95c832604d63b789fb01ff"
+      },
+      {
+        "path": "usr/local/bin/herdr",
+        "bytes": 24101456,
+        "sha256": "f4ccf4de745f2cb9a39a983e9ba3703dad50ec2a58dea83026ceab721bbd8d9e"
+      },
+      {
+        "path": "usr/sbin/dropbear",
+        "bytes": 200584,
+        "sha256": "eb5eb8ad019f59a518d75222ab7bc91675386a4435d160f6e36068f4481e9c35"
+      }
+    ]
+  },
+  "userspace": {
+    "bash_and_ssh": true,
+    "strict_host_key_pin": true,
+    "client_private_key_stayed_on_mac": true,
+    "herdr_version": "0.9.1",
+    "herdr_headless_session": true,
+    "herdr_pane_marker": true,
+    "herdr_survived_separate_ssh_connections": true,
+    "unauthorized_client_key_rejected": true,
+    "wrong_host_key_pin_rejected": true,
+    "scope": "userspace on fresh Ubuntu VM, not iPhone boot",
+    "http_cgi": true
+  },
+  "http": {
+    "status": 200,
+    "cgi_title_matched": true,
+    "model_missing_in_vm_expected": true
+  },
+  "privacy": {
+    "new_client_identity": true,
+    "new_server_identity_differs_from_existing_phone": true,
+    "client_private_keys_absent_from_image_bytes": true,
+    "server_key_in_private_runtime": true,
+    "images_and_keys_excluded_from_public_git": true
+  },
+  "cleanup": {
+    "owned_namespace_and_veth_removed": true,
+    "owned_herdr_stopped": true,
+    "guest_hostname_unchanged": true,
+    "build_and_service_process_counts_zero": true,
+    "temporary_guest_dns_reverted_to_dhcp": true,
+    "new_vm_stopped": true
+  },
+  "known_payload_preserved": {
+    "sha256": "8b1a46dd67613c63aa6608dd3a0e73a73b358aaddc1818b423ff6009b55e3f66",
+    "still_selected": true
+  },
+  "limits": [
+    "not physically booted on iPhone",
+    "no sustained charging or long-running stability proof",
+    "APK own signature key unavailable and kernel source commit is -dirty",
+    "Pongo/checkm8 chain still uses preserved known tools, not independently rebuilt here",
+    "APT suites are mutable; package versions are recorded, exact replay needs an archive snapshot",
+    "upstream code was not comprehensively audited",
+    "full payload hash differs with SSH identities and filesystem metadata"
+  ]
+}

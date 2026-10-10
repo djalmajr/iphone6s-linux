@@ -1,0 +1,80 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T10:38:08.776314+00:00",
+  "verified_head": "ab118aa7b31f0f1e6f234e67f53608911028a747",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "scope": "Completed GitHub source checks, two workflows and six jobs. No hardware proof.",
+  "runs": [
+    {
+      "conclusion": "success",
+      "headSha": "ab118aa7b31f0f1e6f234e67f53608911028a747",
+      "jobs": [
+        {
+          "completedAt": "2026-10-07T10:21:06Z",
+          "conclusion": "success",
+          "name": "source (ubuntu-24.04)",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-07T10:09:37Z",
+          "conclusion": "success",
+          "name": "windows-dns",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-07T10:22:10Z",
+          "conclusion": "success",
+          "name": "source (macos-15)",
+          "status": "completed"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37605440000"
+    },
+    {
+      "conclusion": "success",
+      "headSha": "ab118aa7b31f0f1e6f234e67f53608911028a747",
+      "jobs": [
+        {
+          "completedAt": "2026-10-07T10:09:36Z",
+          "conclusion": "success",
+          "name": "windows-dns",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-07T10:21:39Z",
+          "conclusion": "success",
+          "name": "source (ubuntu-24.04)",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-07T10:22:42Z",
+          "conclusion": "success",
+          "name": "source (macos-15)",
+          "status": "completed"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37605434042"
+    }
+  ],
+  "inputs_sha256": {
+    ".github/workflows/ci.yml": "f4514e8056f350caf7c84f0a8846afee35ab9f4bab8f69b9e05616cac5d100e2",
+    "iphone-linux-tools/tests/run_n71_diagnostic_payload_mutations.py": "8fff88e0df4001dabf17bac63e3253f3dc1a33261ba2060c5037d3cdb9acfda9",
+    "iphone-linux-tools/tests/test_n71_held_session.py": "4b4881055dc4d9d294f5460b7a7b976a258d084c414c10e2f727b890400c84a5",
+    "iphone-linux-tools/scripts/host/n71_iommu_build.py": "eebe9b931124d0d164c83e8d4b580791aca6314ed2df3e96428f0b9d75a28b32",
+    "iphone-linux-tools/scripts/host/n71_iommu_result.py": "7c3c907e06bcc0560078121a0ce38a7ed3901a95e7a15451cd1d3efcea2c4e18",
+    "iphone-linux-tools/scripts/host/n71_resource_build.py": "6066fad1b2679c39a480d527f713635ab7834b241febccdf5b5ed4202bade3f5",
+    "iphone-linux-tools/scripts/host/n71_resource_result.py": "a398821e555b5186620a5862c57030737ba7be8019e2dee5c0859e55f0dbf921",
+    "iphone-linux-tools/scripts/host/n71-link-session.py": "6ef7b5da6a5953660a44fb53a31e5333f269c3469102501388b5f2a5d2288dc9",
+    "iphone-linux-tools/scripts/build/compose-n71-diagnostic.py": "c797d15a64348456803095050586c59c94e54ec70c13fa57531843b0c2599576"
+  },
+  "prior_head": "33fca56e35b411a139dbd45d5e21871e573a8fc4",
+  "prior_ci_failure_resolved": true,
+  "limits": {
+    "physical_boot_irq_dma_wifi_gauge_or_charging_proved": false,
+    "mac_global_package_or_configuration": false,
+    "private_artifacts_published": false,
+    "main_merge_tag_or_release": false
+  }
+}

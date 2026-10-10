@@ -1,0 +1,717 @@
+{
+  "format": 1,
+  "date": "2026-10-06",
+  "host_profile_integration_qualified": true,
+  "macos_arm64": {
+    "architecture": "arm64",
+    "inputs_preserved": true,
+    "ast_passed": true,
+    "suites": [
+      {
+        "suite": "profile",
+        "tests": 20,
+        "assertion_mutations": 37,
+        "mutations": [
+          "selector-hash-lost",
+          "new-route-lost",
+          "cli-hash-lost",
+          "known-abi",
+          "selected-power-abi",
+          "selected-binding-abi",
+          "binding-cli",
+          "cross-abi",
+          "elf-machine",
+          "payload-binding",
+          "dt-mask",
+          "omit-aspm-opt-in",
+          "enable-aspm-off-by-default",
+          "wrong-aspm-token",
+          "ignore-aspm-flag-type",
+          "omit-aspm-cli",
+          "held-aspm-scope",
+          "held-binding-scope",
+          "held-reg-required",
+          "held-reg-explicit",
+          "held-pcie-size",
+          "held-pcie-hash",
+          "held-reg-size",
+          "held-reg-hash",
+          "held-reg-abi",
+          "held-reg-private-path",
+          "held-reg-copy",
+          "held-profile-flag",
+          "held-profile-target",
+          "held-profile-noop",
+          "held-profile-pme",
+          "held-build-contract",
+          "held-resource-scope",
+          "held-resource-build",
+          "held-resource-provenance",
+          "held-resource-default",
+          "held-readback-hash-forwarding"
+        ],
+        "exit_code": 0,
+        "log_sha256": "1e547daebb7864bdc777ff5e81605d224cdcc804ee06d2a83d08d2da15d64b06"
+      },
+      {
+        "suite": "stage",
+        "tests": 16,
+        "assertion_mutations": 26,
+        "mutations": [
+          "stage-intent",
+          "stage-intent-save",
+          "stage-reuse",
+          "stage-proof-save",
+          "stage-getter",
+          "stage-mode",
+          "stage-intent-type",
+          "stage-summary",
+          "stage-live-getter",
+          "stage-unknown-operation",
+          "stage-action-exit",
+          "stage-error-exit",
+          "stage-boot-recheck",
+          "stage-held-recheck",
+          "stage-reg-state-recheck",
+          "stage-reg-control-recheck",
+          "stage-resource-recheck",
+          "stage-action-record",
+          "stage-source-load",
+          "stage-resource-proofs",
+          "stage-resume",
+          "stage-snapshot-getter",
+          "stage-cleanup-parser",
+          "stage-final-check",
+          "stage-cli-source-check",
+          "stage-cli-live-dispatch"
+        ],
+        "exit_code": 0,
+        "log_sha256": "30ea30baf1228a8116e6e72537adbf9b6f4369df6d2e3c0edde41e5918c7c1fd"
+      },
+      {
+        "suite": "readback",
+        "tests": 9,
+        "assertion_mutations": 15,
+        "mutations": [
+          "required-record-lost",
+          "unknown-record-accepted",
+          "absent-fields-invented",
+          "record-after-result",
+          "width-check-lost",
+          "noop-accepted",
+          "callback-validity-invented",
+          "read-after-failed-write",
+          "equal-readback-accepted",
+          "assignment-error-lost",
+          "verified-write-budget",
+          "first-refusal-scope",
+          "selected-contract-lost",
+          "assignment-verification-lost",
+          "saved-readback-lost"
+        ],
+        "exit_code": 0,
+        "log_sha256": "134e78ac7845e1f3c1a48af2cd42e6ed9470bc36857c16e4d5da5b550144a86b"
+      },
+      {
+        "suite": "optional",
+        "tests": 8,
+        "assertion_mutations": 12,
+        "mutations": [
+          "required-lost",
+          "unknown-accepted",
+          "order-lost",
+          "capture-lost",
+          "uncaptured-invented",
+          "io-support-lost",
+          "pref-support-lost",
+          "budget-lost",
+          "io-disable-lost",
+          "pref-disable-lost",
+          "selected-lost",
+          "saved-lost"
+        ],
+        "exit_code": 0,
+        "log_sha256": "0e87b96abceb9641b4e9118f8d5c54beeb86b5cd144997863317f65c16fd823b"
+      },
+      {
+        "suite": "io16",
+        "tests": 8,
+        "assertion_mutations": 12,
+        "mutations": [
+          "required-lost",
+          "unknown-accepted",
+          "optional-order-lost",
+          "readback-order-lost",
+          "capture-lost",
+          "uncaptured-invented",
+          "disabled-noops",
+          "absent-support",
+          "combined-budget-lost",
+          "positive-noop-lost",
+          "selected-lost",
+          "saved-lost"
+        ],
+        "exit_code": 0,
+        "log_sha256": "77a4bf02eb8e8eb8feda505a4e2528d6a8661aac2275fc91d1495be1a80a48de"
+      },
+      {
+        "suite": "held",
+        "tests": 21,
+        "assertion_mutations": 30,
+        "mutations": [
+          "held-profile-identity",
+          "held-boot",
+          "held-checkpoint-hash",
+          "held-proof-hash",
+          "held-history",
+          "held-private-mode",
+          "held-sysfs-parameters",
+          "held-staged-hash",
+          "held-live-owner",
+          "held-cleanup-parser",
+          "held-stop-error",
+          "held-stop-exit",
+          "held-bind-suppression",
+          "held-pci-directory",
+          "held-reg-repeat-write",
+          "held-checkpoint-name",
+          "held-journal-before-effect",
+          "held-caller-parameter",
+          "held-caller-parser",
+          "held-build-selection",
+          "held-provenance",
+          "held-release-scope",
+          "resource-build-selection",
+          "resource-selection-scope",
+          "resource-session-scope",
+          "resource-session-selection",
+          "resource-provenance",
+          "resource-cli-selection",
+          "resource-cli-check-session",
+          "resource-cli-live-session"
+        ],
+        "exit_code": 0,
+        "log_sha256": "3ae384b15bee7ddd0baa114ded8a4a534135d098b617298625484da972e6cd0d"
+      }
+    ]
+  },
+  "ubuntu_arm64": {
+    "architecture": "aarch64",
+    "inputs_preserved": true,
+    "ast_passed": true,
+    "suites": [
+      {
+        "suite": "profile",
+        "tests": 20,
+        "assertion_mutations": 37,
+        "mutations": [
+          "selector-hash-lost",
+          "new-route-lost",
+          "cli-hash-lost",
+          "known-abi",
+          "selected-power-abi",
+          "selected-binding-abi",
+          "binding-cli",
+          "cross-abi",
+          "elf-machine",
+          "payload-binding",
+          "dt-mask",
+          "omit-aspm-opt-in",
+          "enable-aspm-off-by-default",
+          "wrong-aspm-token",
+          "ignore-aspm-flag-type",
+          "omit-aspm-cli",
+          "held-aspm-scope",
+          "held-binding-scope",
+          "held-reg-required",
+          "held-reg-explicit",
+          "held-pcie-size",
+          "held-pcie-hash",
+          "held-reg-size",
+          "held-reg-hash",
+          "held-reg-abi",
+          "held-reg-private-path",
+          "held-reg-copy",
+          "held-profile-flag",
+          "held-profile-target",
+          "held-profile-noop",
+          "held-profile-pme",
+          "held-build-contract",
+          "held-resource-scope",
+          "held-resource-build",
+          "held-resource-provenance",
+          "held-resource-default",
+          "held-readback-hash-forwarding"
+        ],
+        "exit_code": 0,
+        "log_sha256": "1e547daebb7864bdc777ff5e81605d224cdcc804ee06d2a83d08d2da15d64b06"
+      },
+      {
+        "suite": "stage",
+        "tests": 16,
+        "assertion_mutations": 26,
+        "mutations": [
+          "stage-intent",
+          "stage-intent-save",
+          "stage-reuse",
+          "stage-proof-save",
+          "stage-getter",
+          "stage-mode",
+          "stage-intent-type",
+          "stage-summary",
+          "stage-live-getter",
+          "stage-unknown-operation",
+          "stage-action-exit",
+          "stage-error-exit",
+          "stage-boot-recheck",
+          "stage-held-recheck",
+          "stage-reg-state-recheck",
+          "stage-reg-control-recheck",
+          "stage-resource-recheck",
+          "stage-action-record",
+          "stage-source-load",
+          "stage-resource-proofs",
+          "stage-resume",
+          "stage-snapshot-getter",
+          "stage-cleanup-parser",
+          "stage-final-check",
+          "stage-cli-source-check",
+          "stage-cli-live-dispatch"
+        ],
+        "exit_code": 0,
+        "log_sha256": "377fc429cb5dc20526a7eed050fcf77a924eb029b8a39404c398dc7dbf691312"
+      },
+      {
+        "suite": "readback",
+        "tests": 9,
+        "assertion_mutations": 15,
+        "mutations": [
+          "required-record-lost",
+          "unknown-record-accepted",
+          "absent-fields-invented",
+          "record-after-result",
+          "width-check-lost",
+          "noop-accepted",
+          "callback-validity-invented",
+          "read-after-failed-write",
+          "equal-readback-accepted",
+          "assignment-error-lost",
+          "verified-write-budget",
+          "first-refusal-scope",
+          "selected-contract-lost",
+          "assignment-verification-lost",
+          "saved-readback-lost"
+        ],
+        "exit_code": 0,
+        "log_sha256": "3b586ed8a8b8ffdf205fdcbbcfe89e6bfdb0d556890ce335e79b1a450c174d2d"
+      },
+      {
+        "suite": "optional",
+        "tests": 8,
+        "assertion_mutations": 12,
+        "mutations": [
+          "required-lost",
+          "unknown-accepted",
+          "order-lost",
+          "capture-lost",
+          "uncaptured-invented",
+          "io-support-lost",
+          "pref-support-lost",
+          "budget-lost",
+          "io-disable-lost",
+          "pref-disable-lost",
+          "selected-lost",
+          "saved-lost"
+        ],
+        "exit_code": 0,
+        "log_sha256": "bd5a8b429d49f125cfeda39ede47845d8ef86136d2168eef8ef52946f9d025e3"
+      },
+      {
+        "suite": "io16",
+        "tests": 8,
+        "assertion_mutations": 12,
+        "mutations": [
+          "required-lost",
+          "unknown-accepted",
+          "optional-order-lost",
+          "readback-order-lost",
+          "capture-lost",
+          "uncaptured-invented",
+          "disabled-noops",
+          "absent-support",
+          "combined-budget-lost",
+          "positive-noop-lost",
+          "selected-lost",
+          "saved-lost"
+        ],
+        "exit_code": 0,
+        "log_sha256": "b9420524e813c52ce1504dd39853aa7b52782755a187bf4223cf33bc31340230"
+      },
+      {
+        "suite": "held",
+        "tests": 21,
+        "assertion_mutations": 30,
+        "mutations": [
+          "held-profile-identity",
+          "held-boot",
+          "held-checkpoint-hash",
+          "held-proof-hash",
+          "held-history",
+          "held-private-mode",
+          "held-sysfs-parameters",
+          "held-staged-hash",
+          "held-live-owner",
+          "held-cleanup-parser",
+          "held-stop-error",
+          "held-stop-exit",
+          "held-bind-suppression",
+          "held-pci-directory",
+          "held-reg-repeat-write",
+          "held-checkpoint-name",
+          "held-journal-before-effect",
+          "held-caller-parameter",
+          "held-caller-parser",
+          "held-build-selection",
+          "held-provenance",
+          "held-release-scope",
+          "resource-build-selection",
+          "resource-selection-scope",
+          "resource-session-scope",
+          "resource-session-selection",
+          "resource-provenance",
+          "resource-cli-selection",
+          "resource-cli-check-session",
+          "resource-cli-live-session"
+        ],
+        "exit_code": 0,
+        "log_sha256": "a4bafc55ec6ff7c1fab5c640a39995297621ff47d7fa2e2114d0c1e0af559325"
+      }
+    ]
+  },
+  "inputs": {
+    "docs/evidence/kernel-n71-bundle-build.json": {
+      "bytes": 4558,
+      "sha256": "01c2db2d9b6319555161e2438de22cecf4bb20adb0a3d34524d90023e099879c"
+    },
+    "docs/evidence/m1n1-rebuild.json": {
+      "bytes": 5173,
+      "sha256": "47c05448a71661082a756e8d0bc05dd700fe3aff64e7382c55c920dee013c569"
+    },
+    "docs/evidence/n71-binding-profile.json": {
+      "bytes": 13857,
+      "sha256": "7099326bbe809d3b658be58a2ac723475fffe20ccb8cb6419ee9ff44809484cc"
+    },
+    "docs/evidence/n71-dart-cycle-build.json": {
+      "bytes": 3528,
+      "sha256": "b9fafc4237833f8a61bad5b30066ef0fc3ebd04b51a8fc31d23346edc21ec46a"
+    },
+    "docs/evidence/n71-dart-state-build.json": {
+      "bytes": 2563,
+      "sha256": "dc5f3c8c40fc8a120f5f4e8375339a11a20e96cd284a1ad3db61c0ee15859705"
+    },
+    "docs/evidence/n71-pci-held-caller.json": {
+      "bytes": 15698,
+      "sha256": "5ff425784fa9d4ae919de3a26cf3c29f9faac63ac5d2980ff54ce6c1b28460c8"
+    },
+    "docs/evidence/n71-pci-io16-build.json": {
+      "bytes": 58368,
+      "sha256": "12f773765c7338941f7ba41e2dc8ad9d7fbc709efb81e439cd68931991b2b840"
+    },
+    "docs/evidence/n71-pci-optional-build.json": {
+      "bytes": 51492,
+      "sha256": "f69e47e90d7589214a65a45b5bf18a6bf39fd6ad7b3d6f89a0109866c2d389c4"
+    },
+    "docs/evidence/n71-pci-resource-assignment.json": {
+      "bytes": 27768,
+      "sha256": "5d764660436d5ec7ad494a07913eba3e899c9c978d87357bffd49cc1b558bc49"
+    },
+    "docs/evidence/n71-pci-resource-readback.json": {
+      "bytes": 45343,
+      "sha256": "74e4eeccb16e9867b27baa67f5e413cf406898d95e92ccd66c2cb0dae2de14c0"
+    },
+    "docs/evidence/n71-pcie-bar-sizing.json": {
+      "bytes": 2027,
+      "sha256": "29ffe4338960489f7a7ac6bd4d55492fadef3b51fda4b56d25b475d99c4eff9b"
+    },
+    "docs/evidence/n71-pcie-bridge-scan-build.json": {
+      "bytes": 3113,
+      "sha256": "7e222f43bebf0f4e7167e248b4594b114755d4c5b7f9cf03896c09f7ea5d0a26"
+    },
+    "docs/evidence/n71-pcie-chip-id-build.json": {
+      "bytes": 2003,
+      "sha256": "bf0e7614097314ab640a28f5623266eb5a547b9ddcf51ad814b3874a709ac9ef"
+    },
+    "docs/evidence/n71-pcie-config-inventory.json": {
+      "bytes": 3277,
+      "sha256": "11a4f6b373ce35dc003f9bd9cabe9383fde45584a6efa9e3a8f9a9099c62235d"
+    },
+    "docs/evidence/n71-pcie-controls-scan-build.json": {
+      "bytes": 3994,
+      "sha256": "4b31fb6005b85f113e4afc375a5f0376c3bef2a34409e716cfb596bb804126d1"
+    },
+    "docs/evidence/n71-pcie-pme-aspm-build.json": {
+      "bytes": 23753,
+      "sha256": "3d347360c9937a396030f5d62ee5cba723ca0d9d6494e6bc705694143d8c7bc1"
+    },
+    "docs/evidence/n71-pcie-pme-noop-build.json": {
+      "bytes": 15776,
+      "sha256": "e697928495e358d908fedc0d2cd1efdbd2763e3d4db034f094686ed437e85efb"
+    },
+    "docs/evidence/n71-pcie-scan-target-build.json": {
+      "bytes": 10691,
+      "sha256": "b98cda2136fb37883a2f2dc83e86350fe02fb43af4e5809dd8bdd81cc223cbad"
+    },
+    "scripts/build/compose-n71-diagnostic.py": {
+      "bytes": 11822,
+      "sha256": "fe6040959cfcaad334285a77a057cb7432ae64228347f2ff62d0107a8c32388b"
+    },
+    "scripts/build/integrate-source-kernel.py": {
+      "bytes": 12044,
+      "sha256": "c775173d3f0782387ac4374c675efc08a6833556662e1912fbd926e56ecd9f8b"
+    },
+    "scripts/build/kernel_bundle.py": {
+      "bytes": 7424,
+      "sha256": "807bfc3a59801a2703b1135fc3887a2873b25cc2e05b10de9c9cd0bd89d8ed64"
+    },
+    "scripts/build/kernel_patchset.py": {
+      "bytes": 5466,
+      "sha256": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817"
+    },
+    "scripts/build/prepare-n71-pcie-diagnostic.py": {
+      "bytes": 6840,
+      "sha256": "0d95c6d234a6b864efc1bddec509c246a17dd0ce53146014d52cb52c9c13c7e7"
+    },
+    "scripts/build/prepare-n71-topology.py": {
+      "bytes": 12359,
+      "sha256": "9aa9ecae3a25a340e76a2aab270288e13741012671b0bd9b435c6f7d7adf01b7"
+    },
+    "scripts/host/device_profile.py": {
+      "bytes": 6526,
+      "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+    },
+    "scripts/host/n71-link-session.py": {
+      "bytes": 34554,
+      "sha256": "f947928f8d4d718f6f573cb7969e59513b19d691233ddb96ce6a37a32b0058d9"
+    },
+    "scripts/host/n71_bar_result.py": {
+      "bytes": 3096,
+      "sha256": "77f0046bf9589c4f530813724a1b65678ee1afef7bb44680ac0de56cd76b0e80"
+    },
+    "scripts/host/n71_chip_result.py": {
+      "bytes": 2166,
+      "sha256": "5635ff77403a8b9211be1909fac6228bf25c75b548a6962ec4b7fc42ecf0a511"
+    },
+    "scripts/host/n71_dart_cycle_result.py": {
+      "bytes": 4562,
+      "sha256": "571fa7e2318a916da1c24eb0830cac86445e9e05e9d101534e1a4056acab0c9f"
+    },
+    "scripts/host/n71_dart_result.py": {
+      "bytes": 3171,
+      "sha256": "98d707949851b9e7a2bee6d01300d2c46a442edc6d815a91272bb85b45a87ade"
+    },
+    "scripts/host/n71_held_history.py": {
+      "bytes": 1042,
+      "sha256": "88d4426778ff328e81b8b6a00bf7035d1c2aa165ee9f03234640c635db3a431d"
+    },
+    "scripts/host/n71_held_session.py": {
+      "bytes": 21380,
+      "sha256": "36b8b9b7f718a9976f6a8c2b15d1865fb04a80875b3727984eee9d17c19f0ae6"
+    },
+    "scripts/host/n71_resource_build.py": {
+      "bytes": 6960,
+      "sha256": "8c18532c4e77483d86ee77c334708c8e8c4e17738406679a4615ffbfcd5202c1"
+    },
+    "scripts/host/n71_resource_io16.py": {
+      "bytes": 2184,
+      "sha256": "c27f560ea0128bb7e02c2a8266edccdf4ffe0b1650bc5833508415f273be0222"
+    },
+    "scripts/host/n71_resource_optional.py": {
+      "bytes": 2192,
+      "sha256": "7f91963a533aa5c1175b0d3867244e0b994e42a5afd69860314dd5aa59ab6250"
+    },
+    "scripts/host/n71_resource_readback.py": {
+      "bytes": 3608,
+      "sha256": "70457f468e1cc0392da184f59e6fe27ce9134422dd34727ca8d00fd53a0d3c76"
+    },
+    "scripts/host/n71_resource_result.py": {
+      "bytes": 11155,
+      "sha256": "7c06acfcb9e380b8adcab58cbb99ed70a7c0fe71dc98eb7193baf036ed2f3d0d"
+    },
+    "scripts/host/n71_resource_stage.py": {
+      "bytes": 9672,
+      "sha256": "eb03a0d755faefe87d53a3560a8d39e50abecc416643230f131016cb8defb341"
+    },
+    "scripts/host/n71_scan_held_result.py": {
+      "bytes": 10863,
+      "sha256": "70612133fb02d26a4cceaddde01c4777f22c070c20fc69b61e439e13573f2e3d"
+    },
+    "scripts/host/n71_scan_pme_result.py": {
+      "bytes": 2959,
+      "sha256": "ea08620386e7c65de46b4b2a753ce0365bfce81e4c204c797ba7fb8c84e72590"
+    },
+    "scripts/host/n71_scan_result.py": {
+      "bytes": 3702,
+      "sha256": "051615003afa1eb7091d5f2a73d931958e3463a407a1efc7cc5390c61a53a58f"
+    },
+    "scripts/host/n71_scan_target_result.py": {
+      "bytes": 4066,
+      "sha256": "37f2e7ce6fab4c26231097c7591d5bc7e9909c848e377b6a87c3c427d38afe7e"
+    },
+    "scripts/host/n71_session_history.py": {
+      "bytes": 2725,
+      "sha256": "4f6760e9b125cbcb7434631a91d2d88e59be53e29b6d889aad865855a70797bc"
+    },
+    "scripts/host/profile_image.py": {
+      "bytes": 4463,
+      "sha256": "19d4610eeb44ba50d9c29267e1b3bba250a03bb30e8f9a0e0d99abc4533fd427"
+    },
+    "scripts/research/n71_runtime_tunables.py": {
+      "bytes": 6395,
+      "sha256": "6be603cbcdacc6974f4d472a4bef751a9b707de9038366cb66127136778ec3e7"
+    },
+    "tests/run_n71_diagnostic_payload_mutations.py": {
+      "bytes": 6864,
+      "sha256": "714cf6aeba3bbd26c4399e9957993184051726dfd2b47c9b6044d79574f9bfa2"
+    },
+    "tests/run_n71_link_session_mutations.py": {
+      "bytes": 10933,
+      "sha256": "64d6f842cd863bca796ff2b4e0bb21f16fd29b20f58511ee40a6c7c5ec86b566"
+    },
+    "tests/run_n71_scan_result_mutations.py": {
+      "bytes": 2119,
+      "sha256": "d081a049a72375951646c7e8a3a029fa0e646d4e35a130d7e865b755c43f895b"
+    },
+    "tests/test_n71_bar_result.py": {
+      "bytes": 3647,
+      "sha256": "f509d2e1d90befab0557d6c1b9bc307a35b3e7a330d10b9a7f35e7ac864fb60c"
+    },
+    "tests/test_n71_chip_result.py": {
+      "bytes": 3104,
+      "sha256": "5a3983443cafca968d85f9bd920ebc2ba8a06a7697dc6094595c44d1e37a5c62"
+    },
+    "tests/test_n71_dart_cycle_result.py": {
+      "bytes": 5529,
+      "sha256": "0d6828f3bad0896da06f5fdacd2e15c224804a56aa279013867bc04ee15099be"
+    },
+    "tests/test_n71_dart_result.py": {
+      "bytes": 4910,
+      "sha256": "f52ca466fa8bcf8b2dc7aac6f3b109ea40a4bf6b50c2e8bbe289a0f346bb3038"
+    },
+    "tests/test_n71_diagnostic_held_profile.py": {
+      "bytes": 22907,
+      "sha256": "1d3be03ca1d135d4ce178ba826132e2f4d0de9d27dc5e6f02ffb43c7f83b5e22"
+    },
+    "tests/test_n71_diagnostic_io16_profile.py": {
+      "bytes": 4428,
+      "sha256": "fd5a635a54e7e4336b5c37df26f82750c8127233e24c06d925435c0598fcb332"
+    },
+    "tests/test_n71_diagnostic_optional_profile.py": {
+      "bytes": 4588,
+      "sha256": "c482f208eb75e2c0827e970bfbf0ec4b41299d369ac4d73a1bf7e7aa7d17d442"
+    },
+    "tests/test_n71_diagnostic_payload.py": {
+      "bytes": 7043,
+      "sha256": "3c9d5a4474172581e6996c1abc7bf7b609474bac9b53330c04f61e7d70d81673"
+    },
+    "tests/test_n71_held_history.py": {
+      "bytes": 6830,
+      "sha256": "79bc45b1aab11ff12b93a119151adb60d051e5bc7c0d82ed88b1533abd8ad230"
+    },
+    "tests/test_n71_held_session.py": {
+      "bytes": 44303,
+      "sha256": "ebd47f6dd294b8d0e3d3454c0daa9b0883a05b1fa7c4c08a934343d7d7a80ce7"
+    },
+    "tests/test_n71_io16_build.py": {
+      "bytes": 7885,
+      "sha256": "cc8e5135c5b4a61eb2cc316dcae65bfada849c0bd48277d5fc73564183f2c31a"
+    },
+    "tests/test_n71_link_session.py": {
+      "bytes": 72368,
+      "sha256": "93732109d4e8c33ecbabbbb9d7c65b0c45c07a362ab0a78271c0b09229537d90"
+    },
+    "tests/test_n71_optional_build.py": {
+      "bytes": 7064,
+      "sha256": "a65731ff67d5682050f6f0fd2669d1a39653acd1487b2ad66c47fc16b77d1873"
+    },
+    "tests/test_n71_pcie_diagnostic.py": {
+      "bytes": 4390,
+      "sha256": "45fc388ad895ef1658dcb50db388f33f10e0814ae9452c37d4cabc896da37779"
+    },
+    "tests/test_n71_resource_build.py": {
+      "bytes": 7948,
+      "sha256": "3258c88f2ab261a690c2541c61d4e3f3620eca8bf6f961b719e02f38e4849d7b"
+    },
+    "tests/test_n71_resource_io16.py": {
+      "bytes": 11366,
+      "sha256": "dee1f21ede9c86ec09da6efd2fcc1e246098e8d22399a33b991deb3106de981c"
+    },
+    "tests/test_n71_resource_optional.py": {
+      "bytes": 11171,
+      "sha256": "6d071dbc79090f417d7ed7b8de40f222f2be0296e0d265a134361326a84ddfc3"
+    },
+    "tests/test_n71_resource_readback.py": {
+      "bytes": 15122,
+      "sha256": "9ca3a6fccffe567cd67d8938d1d2c87f7f6d29bee41dcf3d642d515de7be2647"
+    },
+    "tests/test_n71_resource_result.py": {
+      "bytes": 21000,
+      "sha256": "74add5e05440ffe19e7562eab4535d405d7a90f03c40f473f6786742af22a8f1"
+    },
+    "tests/test_n71_resource_stage.py": {
+      "bytes": 35675,
+      "sha256": "a1880293791c3bfcbd85c58aacc2edf3b52c3751fdc873ee41fb34972a106b87"
+    },
+    "tests/test_n71_runtime_tunables.py": {
+      "bytes": 4415,
+      "sha256": "6dbcb406aaf27b68d7a6c116d1377da49932a8a30d6b34bb60d897fc2a2c0744"
+    },
+    "tests/test_n71_scan_held_result.py": {
+      "bytes": 19857,
+      "sha256": "9a2df80fe4374074efe2c8e5b9332cc6a102f85b1a44189e9118884225b9ab57"
+    },
+    "tests/test_n71_scan_result.py": {
+      "bytes": 3810,
+      "sha256": "fd3cfdea2e5231d2efe934a6714bc1c4747f61785be34abd7fc1741cd2719c06"
+    },
+    "tests/test_n71_topology.py": {
+      "bytes": 13753,
+      "sha256": "e034af6f8152af0f0ecc281624d344130d3d5ae97a7c08237ed5cad2db6f7060"
+    }
+  },
+  "candidate": {
+    "composer_exit": 0,
+    "collector_check_exit": 0,
+    "files": 8,
+    "directory_mode": "0700",
+    "file_mode": "0600",
+    "same_files": [
+      "deployment.json",
+      "payload.bin",
+      "initramfs.gz",
+      "client_ed25519",
+      "known_hosts",
+      "n71-wlan-power-diagnostic.ko"
+    ],
+    "payload_dt_kernel_loader_preserved": true,
+    "changed_provenance_fields": [
+      "module_sha256"
+    ],
+    "required_reports": [
+      "assignment_readback",
+      "assignment_optional_windows",
+      "assignment_io16_upper"
+    ],
+    "pcie_module_sha256": "d6188a13d8871b00af637b68cf1c322e616fd9891c14c72fb926571965f90245",
+    "physical_loaded": false
+  },
+  "limits": {
+    "new_image_built": false,
+    "physical_boot_attempted": false,
+    "assignment_positive": false,
+    "irq_dma_iommu_enabled": false,
+    "wifi_functional": false,
+    "linux_gauge_or_charge_proven": false,
+    "raw_logs_or_private_files_published": false
+  },
+  "initial_fixture_error_excluded": "Missing fixture helper was corrected to the existing explicit CLI argv; only the final passing gate is counted."
+}

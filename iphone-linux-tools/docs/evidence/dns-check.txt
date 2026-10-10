@@ -1,0 +1,111 @@
+Date: 2026-09-30
+Scope: issue #7 authenticated bundle, server, installer and LAN proxy isolated proof.
+Status: all isolated DNS phases passed; physical phone/Windows/new boot proof pending.
+
+Ubuntu noble-security signed release date Wed, 30 Sep 2026 16:40:42 UTC.
+Signer F6ECB3762474EDA9D21B7022871920D1991BC93C, existing Ubuntu archive keyring.
+Packages.xz bytes=1130160
+sha256=5e832f1fb276324d6218a01b5d398af8cada4ee0643133dad126b5df7dc3a53c
+dnsmasq-base arm64 version=2.90-2ubuntu0.4, package bytes=366814
+sha256=269f450f1ba1e879adfd07f5787a614f494218b8a58856cb2fd59b1c9f679992
+DNS binary sha256=9e21d7f9356f8630b615393edf1c87f08d672c66a940137132faa7f8a2337072
+Bundle bytes=4614005
+sha256=8ccb8f30a1a179b02825bda6040bb51a807b4abbcda24f925028481d5c48e72e
+22 existing VM libraries and copyright notice included; hashes in provenance JSON.
+Private bundle received on Mac and size/hash matched VM output.
+No package or daemon installed on Mac/Windows/VM; data extraction only.
+No package uploaded to phone yet; NAND/image/SSH identity unchanged in this phase.
+
+APT update failed twice resolving Ubuntu; old indexes not accepted as new proof.
+HTTPS download used DNS-observed public address with --resolve and intact TLS
+hostname verification. Offline gpgv -> release hash -> index -> package hash
+authenticated all new inputs. No DNS/source-list/keyring changes or insecure TLS.
+Tampered signed release and changed package byte rejected before output/extraction.
+
+Real VM chroot, isolated network/mount namespace, synthetic address/upstream.
+UDP/TCP known name answers A 172.16.42.1; missing/local/external names NXDOMAIN.
+No packet reached synthetic upstream. Kernel TCP/UDP listeners only 172.16.42.1;
+no IPv6 listener, queries on loopback rejected. Runtime UID observed 65534.
+Repeated start idempotent. Stale PID ticks and foreign executable refused signals.
+Stop closes listeners; occupied TCP port causes nonzero startup/no partial UDP
+listener, pre-existing TCP listener stays reachable. Owned fixtures removed.
+Final baseline passed through mutation runner. Five mutations rejected:
+kernel-bind, root-user, external-upstream, stale-pid, foreign-executable.
+VM dnsmasq process count=0 and own fixture-directory count=0 after completion.
+
+Mac test: one explicit VM/root skip. Pyflakes/Flake8 fatal, sh syntax/ShellCheck,
+diff-check passed during implementation. No typechecker configured.
+Initial failed fixture lacked urandom; added matching actual phone devtmpfs.
+Next failure found unavailable BusyBox nohup; production launcher changed to
+dnsmasq native daemonization. Failed intermediate results not accepted as proof.
+
+Not proved: actual phone DNS UDP/TCP, Windows DNS, host proxy allowlist/cleanup,
+snapshot/boot service restoration, internet recursion, continuous charging.
+Issue #7 remains open; #2/#8 remain open, goal active, no PR merge.
+
+SSH installer phase (same authenticated runtime/server, no physical phone access):
+Final VM baseline: 2 tests passed; real Dropbear/OpenSSH and dedicated test keys.
+Bundle modified only in gzip header rejected before transfer/destination creation.
+Existing files preserved and installation refused; parent symlink refused.
+Successful installation leaves no owned lock/archive/staging.
+Saved local record served via TCP. Stop -> snapshot -> fixture files/account deleted
+-> restore -> explicit start -> same record served. SSH authorization unchanged,
+no live PID state restored. Runtime/configuration remain inside /srv/data/dns.
+Five source mutations rejected after passing baseline: existing-data,
+symlink-parent, bundle-identity, name-scope, address-scope.
+Input mutations run without external networking; real SSH scenario has its own
+isolated network/mount namespace, chroot and ephemeral keys.
+Fixture lacked gzip then Bash; dependencies aligned to actual phone image.
+An extra outer namespace runner timed out; failed run not accepted as proof.
+Final runner avoids redundant nested namespace and captures timeout diagnostics.
+Python fatal lint, Bash syntax/ShellCheck and diff passed. No typechecker configured.
+No new server tests rerun: server source/runtime unchanged and prior proof valid.
+Still pending: actual phone install/DNS, LAN proxy allowlist/cleanup, Windows DNS,
+snapshot restoration in a new physical boot, continuous charging/stability.
+
+LAN proxy phase:
+Final VM baseline 3 tests passed with real dnsmasq/Dropbear/OpenSSH, synthetic keys,
+isolated network/mount namespace and chroot. Allowed client UDP/TCP A answers;
+external name NXDOMAIN; denied client UDP/TCP no answer. Kernel bind explicit IPv4.
+Eight incomplete TCP clients occupy slots; extra UDP query discarded, not queued.
+Owned SSH child loss closes public TCP and loopback tunnel listeners with failure.
+Occupied public/tunnel TCP port: startup fails, existing listener preserved,
+no serving public proxy or owned tunnel left. Empty trust file/wrong host key refused.
+Wire real sockets: mismatched ID, query instead of reply, oversized complete reply
+and incomplete frame refused; valid framed reply preserved.
+Baseline -> eight source mutations rejected: udp-allowlist, tcp-allowlist,
+proxy-bind, capacity, forward-failure, host-trust, response-identity, response-size.
+Mac final 3 tests: 2 passed, 1 explicit dedicated VM/root skip.
+Pyflakes/Flake8 fatal and diff passed. No typechecker configured.
+Zero dnsmasq processes after gates. One old timeout fixture found, synthetic
+identity/no mount verified, exact owned directory removed; final count rechecked.
+Windows preflight only: native nslookup available and one LAN IPv4; no DNS queried.
+Public PowerShell client parser accepted; public target refused before tool/query;
+native System32 nslookup Authenticode signature Valid and Microsoft signer verified.
+Helper checks A answers after Name/Nome section, not server address; actual query
+flow still pending. Wrapper final Bash syntax/ShellCheck and diff passed.
+No real SSH keys in fixtures; no DNS/network config changed on Mac/Windows/router.
+Physical phone install, UDP/TCP USB/LAN/Windows and a new boot restore still pending.
+
+Private manifest reproduction correction (issue #12, no physical phone access):
+Rebuilt from the same authenticated Ubuntu inputs, fresh output in existing VM.
+New bundle bytes=4613949
+sha256=9dc590eff5cc2001117021115b0e82d0127982b18a4aa33671a91a6dd70d04fe
+All authenticated origin/index/package data and binary/22 library hashes unchanged.
+Archive identity differs, demonstrating why the historical public pin cannot be
+the fixed installer selection. External build manifest mode 0600; default private
+runtime/dns-provenance.json, explicit --manifest supported, no embedded/public fallback.
+Final VM baseline 2 passed using the NEW bundle/manifest and real SSH/DNS/snapshots.
+Seven mutations rejected: existing-data, symlink-parent, bundle-identity, name-scope,
+address-scope, historical-fallback, manifest-selection.
+Missing local manifest refused even with public evidence available. Explicit valid
+manifest accepted despite different private default. New pair installed, served,
+backed up, fixture removed, restored, explicitly started and same record served.
+Original selected pair verified by updated helper on Mac with no SSH invocation.
+Mac input test 1 passed/1 explicit VM skip. Fatal Python lint/diff passed; no typechecker.
+First Multipass exec failed connecting before gate; direct SSH banner reconfirmed,
+transfer completed and only failed gate retried. Failed attempt not counted as proof.
+Zero dnsmasq processes and own transient fixture directories after completion.
+Both bundles/manifests retained privately. Historical public evidence unchanged.
+Still not proved: fresh VM/clean clone full-image build, all library package origin,
+phone/Windows DNS and reboot restoration, continuous charging/stability.

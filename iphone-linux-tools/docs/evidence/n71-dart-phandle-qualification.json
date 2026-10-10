@@ -1,0 +1,150 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T05:15:21.694040+00:00",
+  "code_commit": "41c2cf644914cf1581b21ca8e5d598c8fa8255c0",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "proof_scope": "Offline preparation and real GCC/dtc compilation of disabled N71 resource DTBs with a stable opt-in DART phandle. No provider availability, IOMMU mapping, profile selection or phone execution.",
+  "inputs_sha256": {
+    "scripts/build/prepare-n71-topology.py": "a9eba794589d8d135ea9a3734da9b6a91b75113192625b4e6009e0b82779afb9",
+    "tests/test_n71_topology.py": "41f74ff03ccc2dab6981af4880b5a04f79923441d6c98091fcf5cd7389148abe",
+    "tests/run_n71_topology_mutations.py": "5f5b61ef71bec3328c09fa5511d09fc80a7ab33099349868025731576ab4a552",
+    "phone/kernel/n71-peripherals.dtsi": "8afde1b8111a781c29f20bfb00a303b0996daacd1db2a582e66fec9281655f9a"
+  },
+  "qualification": {
+    "macos": {
+      "tests_total": 21,
+      "tests_passed": 16,
+      "native_tests_skipped": 5,
+      "assertion_mutations": 13,
+      "exit": 0,
+      "elapsed_s": 1.59,
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0
+    },
+    "ubuntu_arm64": {
+      "tests_total": 21,
+      "tests_passed": 21,
+      "native_tests_skipped": 0,
+      "assertion_mutations": 15,
+      "exit": 0,
+      "elapsed_s": 23.528,
+      "ast_exit": 0,
+      "real_gcc_dtc_compilation": true
+    },
+    "policy": "Python mutants must produce unittest FAIL and no ERROR; import/compile/runtime errors are not kills. Two additional ARM64 mutations verify real baseline pins and the opt-in option."
+  },
+  "dtb_reports": {
+    "default": {
+      "format": 1,
+      "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "reference_adt_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+      "baseline_sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58",
+      "candidate_sha256": "8c48f6e32b4d46aef8252530785c9a254802846cf80a979af22ef2f6843ab4b6",
+      "fragment_sha256": "8afde1b8111a781c29f20bfb00a303b0996daacd1db2a582e66fec9281655f9a",
+      "added_nodes": [
+        "/soc/serial@20a0d4000",
+        "/soc/iommu@602008000",
+        "/soc/pcie@610000000"
+      ],
+      "all_added_nodes_disabled": true,
+      "existing_properties_preserved": true,
+      "kernel_checkout_unchanged": true,
+      "hardware_probe_tested": false,
+      "boot_qualified": false,
+      "wifi_enabled": false,
+      "charging_validation": "unverified"
+    },
+    "dart-phandle": {
+      "format": 1,
+      "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "reference_adt_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+      "baseline_sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58",
+      "candidate_sha256": "797275305a2bc5fdf49b8639075a8ac46768f8ea1de80fa682ebe460288341bd",
+      "fragment_sha256": "8afde1b8111a781c29f20bfb00a303b0996daacd1db2a582e66fec9281655f9a",
+      "added_nodes": [
+        "/soc/serial@20a0d4000",
+        "/soc/iommu@602008000",
+        "/soc/pcie@610000000"
+      ],
+      "all_added_nodes_disabled": true,
+      "existing_properties_preserved": true,
+      "kernel_checkout_unchanged": true,
+      "hardware_probe_tested": false,
+      "boot_qualified": false,
+      "wifi_enabled": false,
+      "charging_validation": "unverified",
+      "dart_phandle": 41
+    }
+  },
+  "kernel_preservation": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "isolated_sparse_checkout": true,
+    "original_tracked_changes_count": 6,
+    "original_tracked_changes_preserved": true,
+    "original_tracked_patch_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+    "baseline_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true
+  },
+  "verified_contracts": {
+    "default_has_no_dart_phandle_or_new_provenance_field": true,
+    "opt_in_handle_is_valid_unique_deterministic": true,
+    "baseline_references_preserved": true,
+    "overflow_invalid_baseline_drift_or_collision_refused": true,
+    "only_expected_dart_property_added": true,
+    "uart_dart_pcie_remain_disabled": true,
+    "no_host_iommu_map_added": true,
+    "output_source_boundary_preserved": true
+  },
+  "limits": {
+    "provider_availability_or_host_mapping_implemented": false,
+    "new_profile_composition_or_load": false,
+    "new_boot_dfu_or_phone_write": false,
+    "native_irq_dma_or_wifi_verified": false,
+    "linux_charge_or_gauge_verified": false,
+    "mac_global_configuration_or_installs": false,
+    "raw_dtbs_modules_firmware_or_logs_published": false
+  },
+  "new_remote_ci": "Pending publication and completion; successful 2192cbe CI covers the prior MSI caller.",
+  "private_evidence_sha256": {
+    "local-result-private.json": "d25d8ad4561d4900e09cb32c8762ee20ab70d2ff49ea03d6fe8cc4933cbd71ec",
+    "local-private.log": "cee04d85c521e9f7c1e0355f610d3c1b9be665fb0a2df54bdc590269ce2d3bd6",
+    "arm64-result-private.json": "f8587cc48675d787eb094936babb1aa5cc72335dd7560c0d643a13dade5fce58",
+    "arm64-tests-private.log": "9212fedac831a66ab6d274d947cf46d5d9e4dad922b71afd16791217125eb412",
+    "arm64-checkout-private.log": "3f0b8a412fedbbe3bdcb3ede8cdae4b59fba3514e33400be86ebd95a0a950cd2",
+    "lint-result-private.json": "41908f5dd344a0ad4acea8ff0f53a46040e53532efef4c8c32191bb55cee61de"
+  },
+  "next_gates": [
+    "D11 OF/DART availability and host map lease with explicit refs and same-session rollback",
+    "Caller consumer-before-provider lifecycle/getter, then collector/profile",
+    "Grouped physical association/IRQ/energy tests before radio functionality"
+  ],
+  "ci": {
+    "headSha": "22031b8b4cadb08373de3b674ded2b58514c1611",
+    "conclusion": "success",
+    "status": "completed",
+    "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37575497590",
+    "completed_at": "2026-10-07T05:28:11Z",
+    "jobs": [
+      {
+        "name": "source (ubuntu-24.04)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T05:27:14Z"
+      },
+      {
+        "name": "source (macos-15)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T05:28:11Z"
+      },
+      {
+        "name": "windows-dns",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T05:17:20Z"
+      }
+    ],
+    "physical_proof": false
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "format": 1,
+  "proof_scope": "Synthetic native/ARM64 ECAM read-contract gates and pinned host-reference correlation; no PCI host registration or new physical ECAM experiment",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "coordinates": {
+    "aperture_bytes": 16777216,
+    "root_bus": 0,
+    "root_devfn": 8,
+    "root_config_offset": "0x8000",
+    "endpoint_bus": 1,
+    "endpoint_devfn": 0,
+    "endpoint_config_offset": "0x100000",
+    "physical_reference": "n71-bundle-first-physical.json",
+    "other_functions_allowed": false
+  },
+  "read_contract": {
+    "widths_bytes": [
+      1,
+      2,
+      4
+    ],
+    "natural_alignment_required": true,
+    "function_config_bytes": 4096,
+    "callback_dword_aligned": true,
+    "callback_calls_per_valid_read": 1,
+    "invalid_input_callback_calls": 0,
+    "failed_output_unchanged": true,
+    "positive_callback_error_refused": true,
+    "config_writes": false,
+    "host_registration": false,
+    "dma_or_irq_enabled": false
+  },
+  "gates": {
+    "mac_harness": true,
+    "arm64_harness": true,
+    "bus_devfn_matrix_coordinates": 512,
+    "all_config_offsets_and_crossing_bounds_tested": true,
+    "mac_ubsan": true,
+    "mac_assertion_mutation_kills": 9,
+    "arm64_assertion_mutation_kills": 9,
+    "kernel_werror_modpost": true,
+    "kernel_probe_vermagic": "7.2.0-iphone6s-dart-serdev1 SMP preempt mod_unload aarch64",
+    "header_checkpatch": {
+      "errors": 0,
+      "warnings": 0,
+      "checks": 0
+    }
+  },
+  "public_source_sha256": {
+    "phone/kernel/n71-pcie-ecam.h": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3",
+    "tests/n71_pcie_ecam.c": "2f3db47c4315287b09cd3507cb9ef892dfaded083fc0b4409a78b55cd5f746fe"
+  },
+  "host_reference": {
+    "official_decoded_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+    "runtime_capture_sha256": "9a4baf1b5f18d380d843e78bd39fb466abec313e078b5d6efe2825a5de5589c4",
+    "ranges_bytes_identical": true,
+    "range_record_format": "packed little-endian flags32/pci64/cpu64/size64; not direct FDT cells",
+    "ranges": [
+      {
+        "flags": "0x43000000",
+        "pci_base": "0x620000000",
+        "cpu_base": "0x620000000",
+        "bytes": "0x1a0000000"
+      },
+      {
+        "flags": "0x2000000",
+        "pci_base": "0xc0000000",
+        "cpu_base": "0x7c0000000",
+        "bytes": "0x40000000"
+      }
+    ],
+    "apple_mapper_reg": 0,
+    "dart_irq": 248,
+    "hardware_writes_performed": false,
+    "linux_iommu_rid_sid_binding_qualified": false,
+    "bars_or_irq_routing_qualified": false,
+    "official_verification_window": {
+      "offset": 99784,
+      "bytes": 56,
+      "sha256": "a13067ee78ed5284776db8fb6d563bb1ce177d1545b723cc7c204d9db93ec338"
+    }
+  },
+  "reboots_for_this_work": 0,
+  "limits": "Measured root/endpoint offsets constrain a software contract, not a complete PCI host. Native tests do not prove PCI scanning, BAR sizing/routing, interrupts, DART domain/stream binding or Wi-Fi. ADT windows and Apple mapper reg0 are reference data; not authorization for raw MMIO, Linux RID/SID mapping or DMA."
+}

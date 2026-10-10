@@ -1,0 +1,83 @@
+{
+  "format": 1,
+  "date": "2026-10-02",
+  "implementation_commit": "11c6f30",
+  "proof_tier": "offline-native-dtc; no hardware activation",
+  "build": {
+    "format": 1,
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "reference_adt_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+    "baseline_sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58",
+    "candidate_sha256": "8c48f6e32b4d46aef8252530785c9a254802846cf80a979af22ef2f6843ab4b6",
+    "fragment_sha256": "8afde1b8111a781c29f20bfb00a303b0996daacd1db2a582e66fec9281655f9a",
+    "added_nodes": [
+      "/soc/serial@20a0d4000",
+      "/soc/iommu@602008000",
+      "/soc/pcie@610000000"
+    ],
+    "all_added_nodes_disabled": true,
+    "existing_properties_preserved": true,
+    "kernel_checkout_unchanged": true,
+    "hardware_probe_tested": false,
+    "boot_qualified": false,
+    "wifi_enabled": false,
+    "charging_validation": "unverified"
+  },
+  "tools": {
+    "vm": "project-dedicated ARM64 Ubuntu 24.04",
+    "gcc": "13.3.0",
+    "dtc": "1.7.0",
+    "packages_installed": false
+  },
+  "tests": {
+    "mac": {
+      "discovered": 17,
+      "passed": 13,
+      "skipped_linux_compile": 4,
+      "assertion_mutations_killed": 7
+    },
+    "vm": {
+      "discovered": 17,
+      "passed": 17,
+      "skipped": 0,
+      "assertion_mutations_killed": 8
+    },
+    "python_fatal_lint": "passed E9,F63,F7,F82",
+    "typechecker": "not configured"
+  },
+  "source_sha256": {
+    "scripts/build/prepare-n71-topology.py": "9aa9ecae3a25a340e76a2aab270288e13741012671b0bd9b435c6f7d7adf01b7",
+    "phone/kernel/n71-peripherals.dtsi": "8afde1b8111a781c29f20bfb00a303b0996daacd1db2a582e66fec9281655f9a",
+    "tests/test_n71_topology.py": "e034af6f8152af0f0ecc281624d344130d3d5ae97a7c08237ed5cad2db6f7060",
+    "tests/run_n71_topology_mutations.py": "ff12135bfdbe26df15a4674b9358921f7b072e33529cb676898d0e6cc937daae"
+  },
+  "regressions": {
+    "automatic_phandle_renumbering": "first build refused; baseline IDs pinned; native compile mutation killed by assertion",
+    "a9_pcie_aux_ref": "existing providers expose power-domain cells, not A10 clock cells"
+  },
+  "resource_limits": {
+    "new_nodes_disabled": 3,
+    "added_pci_operational_binding": false,
+    "guessed_phy_ip_resource_added": false,
+    "raw_adt_uploaded": false,
+    "firmware_uploaded": false,
+    "phone_reboots": 0,
+    "active_profile_changed": false
+  },
+  "next_gates": [
+    "Validate S8000 PCIe register roles, PHY/reset/link sequence, port1 streams and DMA before enabling nodes.",
+    "Validate N71 UART5 pin routing, HDQ ownership mux and actual gauge register ABI before read-only telemetry.",
+    "Aggregate first enumeration, USB/SSH preservation and USB-budget #33 host descriptor checks in one necessary boot."
+  ],
+  "references": {
+    "kernel": "https://github.com/HoolockLinux/linux/tree/958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "a10_pcie": "https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/pci/controller/pcie-apple-h9p.c",
+    "a10_hdq": "https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/w1/masters/w1-uart.c",
+    "a10_mux": "https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/mux/sn2400.c"
+  },
+  "cleanup": {
+    "kernel_vm_state": "Stopped",
+    "kernel_vm_builds_preserved": true,
+    "private_dtbs_preserved": true
+  }
+}

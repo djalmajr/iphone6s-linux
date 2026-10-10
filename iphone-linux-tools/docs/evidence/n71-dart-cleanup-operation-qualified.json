@@ -1,0 +1,205 @@
+{
+  "format": 1,
+  "date_local": "2026-10-09",
+  "physical_evidence": "n71-of-scope-association-physical.json",
+  "contract": {
+    "assignment_error_kept_separate_from_cleanup_primary_error": true,
+    "first_assignment_error_precedes_provider_error": true,
+    "provider_error_requires_selected_iommu_and_complete_restored_causal_proof": true,
+    "owners_and_cleanup_order_remain_strict": true,
+    "original_logs_not_rewritten": true,
+    "same_boot_journal_resumption_does_not_repeat_actions": true
+  },
+  "verification": {
+    "mac": {
+      "gates": {
+        "test_n71_iommu_result": {
+          "exit": 0,
+          "tests": 21,
+          "mutations": 53,
+          "seconds": 23.6
+        },
+        "test_n71_resource_result": {
+          "exit": 0,
+          "tests": 10,
+          "mutations": 32,
+          "seconds": 7.13
+        },
+        "test_n71_resource_stage": {
+          "exit": 0,
+          "tests": 16,
+          "mutations": 26,
+          "seconds": 38.69
+        },
+        "test_n71_held_session": {
+          "exit": 0,
+          "tests": 21,
+          "mutations": 30,
+          "seconds": 41.39
+        },
+        "test_n71_link_session": {
+          "exit": 0,
+          "tests": 45,
+          "mutations": 0,
+          "seconds": 0.29
+        }
+      },
+      "tests": 113,
+      "assertion_mutations": 141,
+      "ast_passed": true,
+      "fatal_lint": {
+        "exit": 0,
+        "tools_hash_verified": true,
+        "tools_installed": false,
+        "selection": "E9,F63,F7,F82",
+        "scope": "scripts and tests",
+        "workers": 1
+      },
+      "public_inputs_copied_and_checked": 541,
+      "iommu_gate_rerun_for_assignment_error_precedence_case": true,
+      "other_passing_gates_reused_with_production_inputs_intact": true
+    },
+    "ubuntu-arm64": {
+      "gates": {
+        "test_n71_iommu_result": {
+          "exit": 0,
+          "tests": 21,
+          "mutations": 53,
+          "seconds": 24.73
+        },
+        "test_n71_resource_result": {
+          "exit": 0,
+          "tests": 10,
+          "mutations": 32,
+          "seconds": 4.21
+        },
+        "test_n71_resource_stage": {
+          "exit": 0,
+          "tests": 16,
+          "mutations": 26,
+          "seconds": 16.25
+        },
+        "test_n71_held_session": {
+          "exit": 0,
+          "tests": 21,
+          "mutations": 30,
+          "seconds": 14.06
+        },
+        "test_n71_link_session": {
+          "exit": 0,
+          "tests": 45,
+          "mutations": 0,
+          "seconds": 0.18
+        }
+      },
+      "tests": 113,
+      "assertion_mutations": 141,
+      "ast_passed": true,
+      "fatal_lint": {
+        "exit": 0,
+        "tools_hash_verified": true,
+        "tools_installed": false,
+        "selection": "E9,F63,F7,F82",
+        "scope": "scripts and tests",
+        "workers": 1
+      },
+      "public_inputs_copied_and_checked": 541,
+      "iommu_gate_rerun_for_assignment_error_precedence_case": true,
+      "other_passing_gates_reused_with_production_inputs_intact": true
+    }
+  },
+  "source_audit": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "source_file": "drivers/iommu/apple-dart.c",
+    "patched_file_sha256": "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc",
+    "primary_source": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/iommu/apple-dart.c",
+    "offset": 0,
+    "invalidate_bit": 1,
+    "busy_bit": 3,
+    "stream_mask_shift": 8,
+    "command_before_decoded": {
+      "invalidate": true,
+      "busy": false,
+      "selected_stream_mask": 15
+    },
+    "command_after_decoded": {
+      "invalidate": true,
+      "busy": false,
+      "selected_stream_mask": 1
+    },
+    "same_tcr_and_fault_observed": true,
+    "matching_source_path": "sidmap << 8 | invalidate; domain flush uses its stream bitmap",
+    "interpretation": "Observed delta is consistent with stream0 invalidation; exact triggering callback not traced. No command/control restore policy changed."
+  },
+  "limits": {
+    "wifi_verified": false,
+    "irq_delivery_verified": false,
+    "dma_translation_verified": false,
+    "battery_or_charging_verified": false,
+    "hardware_restore_policy_changed": false,
+    "new_module_kernel_profile_or_phone_action_for_parser_tests": false,
+    "global_mac_installation_or_configuration_changed": false,
+    "python_type_checker_configured": false
+  },
+  "input_manifest_sha256": "7a9edeb203c6139022bf642a6af01f1d02ccab0f0ce56359318b955fa27fae8e",
+  "changed_code_inputs_sha256": {
+    "scripts/host/n71_iommu_result.py": "c8697990420bd509e28364e6ad492b67f291a5006872e433f8ab87eb6d3adab1",
+    "scripts/host/n71_resource_result.py": "c7d55854ecf98a9af23dd9febe69471e983ee400c892accb2bbe3361c891773d",
+    "scripts/host/n71_resource_stage.py": "6af546aa1a83344e25adba50878dd5b40568c3b74fea76e481f4ba107b4e514c",
+    "tests/test_n71_iommu_result.py": "4f93934d75122554db8aaf0211c9e0d0413c059b365d6d7ae913164be810b423",
+    "tests/test_n71_resource_result.py": "7d51e8235acddfae764268a0ff41803bf5a31ed57a702be5bcd23242fc866e85"
+  },
+  "lint_wheels": [
+    {
+      "name": "flake8",
+      "version": "7.3.0",
+      "file": "flake8-7.3.0-py2.py3-none-any.whl",
+      "sha256": "b9696257b9ce8beb888cdbe31cf885c90d31928fe202be0889a7cdafad32f01e",
+      "bytes": 57922,
+      "source_host": "files.pythonhosted.org",
+      "pure_python": true,
+      "installed": false
+    },
+    {
+      "name": "pyflakes",
+      "version": "3.4.0",
+      "file": "pyflakes-3.4.0-py2.py3-none-any.whl",
+      "sha256": "f742a7dbd0d9cb9ea41e9a24a918996e8170c799fa528688d40dd582c8265f4f",
+      "bytes": 63551,
+      "source_host": "files.pythonhosted.org",
+      "pure_python": true,
+      "installed": false
+    },
+    {
+      "name": "pycodestyle",
+      "version": "2.14.0",
+      "file": "pycodestyle-2.14.0-py2.py3-none-any.whl",
+      "sha256": "dd6bf7cb4ee77f8e016f9c8e74a35ddd9f67e1d5fd4184d86c3b98e07099f42d",
+      "bytes": 31594,
+      "source_host": "files.pythonhosted.org",
+      "pure_python": true,
+      "installed": false
+    },
+    {
+      "name": "mccabe",
+      "version": "0.7.0",
+      "file": "mccabe-0.7.0-py2.py3-none-any.whl",
+      "sha256": "6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e",
+      "bytes": 7350,
+      "source_host": "files.pythonhosted.org",
+      "pure_python": true,
+      "installed": false
+    }
+  ],
+  "candidate_check_passed": true,
+  "previous_published_full_ci": {
+    "commit": "3a61c76492d894fbb479812b7a414a28db6ebe82",
+    "runs": [
+      38013630927,
+      38013625147
+    ],
+    "jobs_passed": 6,
+    "conclusion": "success",
+    "covers_new_host_fix": false
+  }
+}

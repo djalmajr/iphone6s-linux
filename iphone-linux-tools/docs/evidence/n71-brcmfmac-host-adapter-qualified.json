@@ -1,0 +1,647 @@
+{
+  "format": 1,
+  "status": "runtime_host_adapter_qualified_caller_and_physical_activation_pending",
+  "code_commit": "662e16250d803f69a3b55b6478fedc163f3494d7",
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "input_count": 63,
+  "inputs": {
+    "phone/kernel/n71-brcmfmac-config.h": {
+      "sha256": "f9ea69084ae534cb81b916e89b19d8ef13948c00cc99bc4937aacc9234f22a46",
+      "bytes": 7445
+    },
+    "phone/kernel/n71-dart-cycle.h": {
+      "sha256": "08b39c05a41b87936962b341525d7188a28909c91613ea902c5b899e9d431a4a",
+      "bytes": 3359
+    },
+    "phone/kernel/n71-dart-host.h": {
+      "sha256": "f676c5e3270c504df30eaa5df238e358a6155ef62212510ad0826f310279940e",
+      "bytes": 7421
+    },
+    "phone/kernel/n71-dart-irq.h": {
+      "sha256": "f2a744ce3545d902933dae07e9935917c94ee26edf596b4a75af180c53026a10",
+      "bytes": 4915
+    },
+    "phone/kernel/n71-dart-lease.h": {
+      "sha256": "00614a4ccc6e9dd7c22bfd3df4bb3dbed2acf4ebd9a909c4e10909840bbab368",
+      "bytes": 3723
+    },
+    "phone/kernel/n71-dart-mmio.h": {
+      "sha256": "b76e50b078bd8b8c764093c6fb6b101ca19b9c11b27cd77e76a05a3a47187d97",
+      "bytes": 4252
+    },
+    "phone/kernel/n71-dart-observe.h": {
+      "sha256": "fa65e2c487b80b52d16edbacd9a7450892f14acf2d6bbed1362f7cc94120b4af",
+      "bytes": 1971
+    },
+    "phone/kernel/n71-dart-provider.h": {
+      "sha256": "b621933a29e29a53b43f6a0d79785d47971a2932ef62ce39ce40905f4808fcd4",
+      "bytes": 8953
+    },
+    "phone/kernel/n71-hdq-codec.h": {
+      "sha256": "f71ceb810d5f9ee654b8b26598f5ebac213a7f56e2cec9c2d852d5e73e449176",
+      "bytes": 1909
+    },
+    "phone/kernel/n71-hdq-gpio-observe.c": {
+      "sha256": "37c6a6d2e9b3ccf220ed041d1785a65cad91d6fa7ae77248309296ec949c371f",
+      "bytes": 3139
+    },
+    "phone/kernel/n71-hdq-handshake.h": {
+      "sha256": "07740deeeee260326684898fc463dcfbdd3741c27c9ba608c3fb9fd6b2962032",
+      "bytes": 2011
+    },
+    "phone/kernel/n71-hdq-pinmux.h": {
+      "sha256": "8c84a6fad766ce8347afc4d93144d212b4e91437900113bd478db06aef6049a4",
+      "bytes": 1023
+    },
+    "phone/kernel/n71-hdq-release-plan.h": {
+      "sha256": "d77ef3d965e52311ca58f15c3b523e79791fa2e4bfeee0439948a1c2159416ee",
+      "bytes": 1685
+    },
+    "phone/kernel/n71-i2c-controller-observe.h": {
+      "sha256": "8b86f579023ca4270c7eb04a387ce9990f18f825fd4ee395b240e1a1b1ade78a",
+      "bytes": 2842
+    },
+    "phone/kernel/n71-i2c-genpd.h": {
+      "sha256": "6d772609640235a03b381ca0c7bcd49eb2d2cbbe5ef053ca1844bcf3b2488fea",
+      "bytes": 8259
+    },
+    "phone/kernel/n71-i2c-power-diagnostic.c": {
+      "sha256": "5dc4d053efd9df7e9a977712a48bc395e23e5e25782567f465b839b6afbfab4b",
+      "bytes": 6910
+    },
+    "phone/kernel/n71-i2c-power-lifecycle.h": {
+      "sha256": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2",
+      "bytes": 3013
+    },
+    "phone/kernel/n71-i2c-topology-observe.c": {
+      "sha256": "5dc56e1dcbcc8e91b671ae4e6eeae53289550a6e7a7bdf42dfbdfc99ccf2223d",
+      "bytes": 7733
+    },
+    "phone/kernel/n71-msi-allocation-lease.h": {
+      "sha256": "4e1627136fbd8e4e7de3e807697a9634818fe2807cec447817c9023ee9088d4f",
+      "bytes": 263
+    },
+    "phone/kernel/n71-pcie-bar-sizing.h": {
+      "sha256": "9242d467d90feca8a286d8d7d7931a314e083f7eecbb6459f6867e5a119336cb",
+      "bytes": 2645
+    },
+    "phone/kernel/n71-pcie-brcmfmac.h": {
+      "sha256": "7c3736753b2ede0243323efa47688cb52ce2a16bda66927fa17f60a580f1a463",
+      "bytes": 7722
+    },
+    "phone/kernel/n71-pcie-chip-id.h": {
+      "sha256": "a71b62b785def3344b2539db660167f3adf2dd86ca1aa48d7743b5338a567405",
+      "bytes": 3975
+    },
+    "phone/kernel/n71-pcie-chip-mmio.h": {
+      "sha256": "e37a65f3e7b846937d84654180657c5a3981200ea470a5f571f867a719e7fe6c",
+      "bytes": 2258
+    },
+    "phone/kernel/n71-pcie-contract.h": {
+      "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8",
+      "bytes": 2529
+    },
+    "phone/kernel/n71-pcie-control-reference.h": {
+      "sha256": "6ac0fd634272206f70ec8ad12ba5bdf9aa4517a4e8ce0807f62e2661533ef764",
+      "bytes": 4190
+    },
+    "phone/kernel/n71-pcie-diagnostic.c": {
+      "sha256": "68327fb747824bd28fad4a63b341ca4ea03b5377c6ee5d4a06b2174edb555aa8",
+      "bytes": 30362
+    },
+    "phone/kernel/n71-pcie-ecam.h": {
+      "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3",
+      "bytes": 1977
+    },
+    "phone/kernel/n71-pcie-init.h": {
+      "sha256": "bcb0b842d7a46e47b061a69b481750b50c6f4e412f0dbdd605803ac3e6ed1158",
+      "bytes": 3707
+    },
+    "phone/kernel/n71-pcie-inventory.h": {
+      "sha256": "507d9a7a7d5a848377453f66d8366f77f99cf3c8466a6cc433f940d4bc8a052e",
+      "bytes": 3903
+    },
+    "phone/kernel/n71-pcie-io16-upper.h": {
+      "sha256": "69182167556a90a46a5a6ef9c250c1cafb260fef1070df5befcfd5c14007100c",
+      "bytes": 1152
+    },
+    "phone/kernel/n71-pcie-link.h": {
+      "sha256": "a4ddb3ab756450388d4734f555295e2b801930eaaa746767fbc20adbdef0f237",
+      "bytes": 5444
+    },
+    "phone/kernel/n71-pcie-mmio.h": {
+      "sha256": "63f8c22a5ab0bd2b5c962dcd56dea3acd97deb2cdc35ebd5833d1769371cf8c5",
+      "bytes": 3151
+    },
+    "phone/kernel/n71-pcie-msi-allocate.h": {
+      "sha256": "09dfdab3a429e58fd67625e9c6859749f837ffaa7bf7abb75b714f54c0115cd3",
+      "bytes": 8271
+    },
+    "phone/kernel/n71-pcie-pme-control.h": {
+      "sha256": "4e555a50eda36e15d8170c40eaaf4202be4a36bcd0d7e1f0f556bdabdcfcd418",
+      "bytes": 4513
+    },
+    "phone/kernel/n71-pcie-port.h": {
+      "sha256": "ac155857e994d6e8d60c05527a3fb9e9169925219585696349a8b7ed3ba828bb",
+      "bytes": 3328
+    },
+    "phone/kernel/n71-pcie-pref64-disable.h": {
+      "sha256": "be4ebe34c7fa1ba8e110d52ffdabbe902103058e1f968221d0ac369afb55fa33",
+      "bytes": 1241
+    },
+    "phone/kernel/n71-pcie-resource-assign.h": {
+      "sha256": "a68ed2952d978988c7d3a976ffb1c6c5d053a35e2406c3018357e0c6d8d71aa8",
+      "bytes": 13003
+    },
+    "phone/kernel/n71-pcie-resource-write.h": {
+      "sha256": "015ea311c511ce43b1bfe9b307c3d2b8f8e3b1b6b06fee663d0b3b69d0db5250",
+      "bytes": 9828
+    },
+    "phone/kernel/n71-pcie-scan-config.h": {
+      "sha256": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8",
+      "bytes": 10201
+    },
+    "phone/kernel/n71-pcie-scan-link-target.h": {
+      "sha256": "1af47829908937d28de30b5a05c10ca406a08db22c7657c642e94f3e71534dea",
+      "bytes": 5822
+    },
+    "phone/kernel/n71-pcie-scan.h": {
+      "sha256": "7c796d40a8822ee848ee4c20dbaa18239fc27cb1eef894f456eee1ba2f356455",
+      "bytes": 25985
+    },
+    "phone/kernel/n71-pmgr-access.h": {
+      "sha256": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae",
+      "bytes": 5487
+    },
+    "phone/kernel/n71-pmgr-power-observe.c": {
+      "sha256": "fec9d8d28ae34deef0c0da1528f0b341a1dd043e4917b3677c789a182070fc99",
+      "bytes": 1673
+    },
+    "phone/kernel/n71-sn2400-input-reference.h": {
+      "sha256": "f67d5fcb3ffa5e9fdfec80f6091f52b6ae965e0a6eac5aef5187f43d61c8a161",
+      "bytes": 1371
+    },
+    "phone/kernel/n71-wlan-irq-reference.h": {
+      "sha256": "92a4766835a0d4884c4da168542ee94ab3512a5200279405d932c0d9ddf71b3f",
+      "bytes": 1714
+    },
+    "phone/kernel/n71-wlan-msi-config.h": {
+      "sha256": "f388a3f89183c57e652334c8eaba8f1bf60ec9041ffa35c9263e072f03edd9df",
+      "bytes": 9501
+    },
+    "phone/kernel/n71-wlan-msi-host.h": {
+      "sha256": "dc7ec1d6fc37f1cb5056a25b273b3a89418c18bc9867e48a45805b6478423ae3",
+      "bytes": 2002
+    },
+    "phone/kernel/n71-wlan-msi-message.h": {
+      "sha256": "57279c73f6af1396a744586971f294c135f22b05661fa0452c90e3bdc0832e2b",
+      "bytes": 1394
+    },
+    "phone/kernel/n71-wlan-msi-native.h": {
+      "sha256": "6f8eec77d769783cbcfaaf7001294823698b254fc0f179968f9545050dc4c0f3",
+      "bytes": 9462
+    },
+    "phone/kernel/n71-wlan-power-contract.h": {
+      "sha256": "2034977747e830da0464bc8b9df29a98c176e7dcf6e4e8dbe1137ed10f1a8013",
+      "bytes": 2550
+    },
+    "phone/kernel/n71-wlan-power-diagnostic.c": {
+      "sha256": "1dc9ef28bafaa49cb15c3faa0d1e6caf9c728ec2fcb7ee8aaa074587aaf8c34e",
+      "bytes": 8544
+    },
+    "phone/kernel/n71-wlan-power.h": {
+      "sha256": "bcdf5f0bf675d9a113cb2d7e7d4910fd4ea6b1c7444f9eac02cf9d807a982bd9",
+      "bytes": 2595
+    },
+    "tests/n71_pcie_brcmfmac.c": {
+      "sha256": "41216bb9ddca812e585f548cc42562363f8792137d9e9445fc5f664da40a72d8",
+      "bytes": 14203
+    },
+    "tests/n71_pcie_dart_scan_fixture.h": {
+      "sha256": "33066c74fd52cdac705c2103200e1dbfeec2fcd75423d06186afdb0bf0cc6ebe",
+      "bytes": 14485
+    },
+    "tests/n71_pcie_diagnostic_allocation.h": {
+      "sha256": "bc2c7c25b92ed5b2985ac3d6a0b108fe21604267de18e81c05833e58906195df",
+      "bytes": 11210
+    },
+    "tests/n71_pcie_diagnostic_caller.c": {
+      "sha256": "53701c3ba44817507bfb0c629d0cc57d9d9ee8e51655f65b4ac5b5d02ee9ea50",
+      "bytes": 61096
+    },
+    "tests/n71_pcie_msi_allocate.c": {
+      "sha256": "bd13db325e31385f31ea1ab4db607727072c95d654d0323ab71ea98e46b7ba65",
+      "bytes": 14734
+    },
+    "tests/n71_pcie_msi_scan_fixture.h": {
+      "sha256": "1538f2a3ca44c6937635b693ae50a64dc1aefc9b1821700de1d4a66c8919d717",
+      "bytes": 3919
+    },
+    "tests/n71_pcie_scan_host.c": {
+      "sha256": "be7fe9ccb0988422d19702989632dfa49271faf4fd15fa6123cc2ba149d96f0e",
+      "bytes": 54141
+    },
+    "tests/test_n71_pcie_brcmfmac.py": {
+      "sha256": "4310d44c8ad64e0bb18bae1a354f577f1a3b84ace211591a3d8b87bb7c4b8793",
+      "bytes": 6490
+    },
+    "tests/test_n71_pcie_diagnostic_caller.py": {
+      "sha256": "551cb01a82d9d3163d1f9dc88549c66ad119dd4dc3c6b5cb258aa11ebfab2374",
+      "bytes": 27334
+    },
+    "tests/test_n71_pcie_msi_allocate.py": {
+      "sha256": "26b93cb0375020e13f4cd923e32dc3149ec1c1b017ef253b347ecd2a3f674305",
+      "bytes": 5925
+    },
+    "tests/test_n71_pcie_scan_host.py": {
+      "sha256": "984640ea02060b564df7233f435d1ee137316eb60d2a78c2ff7d78c7e724a274",
+      "bytes": 26427
+    }
+  },
+  "scope": {
+    "adapter": "real",
+    "ecam_callbacks": "real extracted functions",
+    "pci_pm_driver_dependencies": "modeled",
+    "scan_legacy": "real complete scan and resource adapter in dependency fixture",
+    "kernel_context": "full diagnostic and derived adapter probe",
+    "caller_actions_integrated": false,
+    "manual_msi_exclusion_pending": true,
+    "physical_profile_changed": false,
+    "loaded_on_phone": false,
+    "dfu_requests": 0
+  },
+  "gates": {
+    "macos": {
+      "runtime_cases": 24,
+      "runtime_assertion_mutations": 23,
+      "scan_cases": 183,
+      "scan_assertion_mutations": 147,
+      "scan_scope": "four unchanged methods reused, two failing anchor methods requalified; source conditions preserved with separate driver guard",
+      "ast_passed": true,
+      "fatal_lint_passed": true
+    },
+    "ubuntu_arm64": {
+      "runtime_cases": 24,
+      "runtime_assertion_mutations": 23,
+      "scan_cases": 183,
+      "scan_assertion_mutations": 147,
+      "ast_passed": true,
+      "inputs_preserved": true,
+      "baseline_preserved": true,
+      "stages": {
+        "runtime-arm64": {
+          "exit": 0,
+          "seconds": 2.4
+        },
+        "scan-arm64": {
+          "exit": 0,
+          "seconds": 51.14
+        },
+        "kernel-context": {
+          "exit": 0,
+          "seconds": 2.09
+        },
+        "fatal-lint": {
+          "exit": 1,
+          "seconds": 0.21
+        },
+        "fatal-lint-resume": {
+          "exit": 0
+        }
+      }
+    }
+  },
+  "modules": {
+    "n71-pcie-diagnostic.ko": {
+      "bytes": 129416,
+      "sha256": "2c743b7d8372f61d30c71e8df556a26e67573986eeabe4e1494c74d8e898ecf1",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "elf64_aarch64": true,
+      "imports": [
+        "__ioremap_prot",
+        "__irq_domain_alloc_fwnode",
+        "__irq_domain_alloc_irqs",
+        "__irq_resolve_mapping",
+        "__kmalloc_cache_noprof",
+        "__module_get",
+        "__of_parse_phandle_with_args",
+        "__platform_driver_register",
+        "__pm_runtime_resume",
+        "__pm_runtime_suspend",
+        "__release_region",
+        "__request_region",
+        "__stack_chk_fail",
+        "__udelay",
+        "_dev_err",
+        "_dev_info",
+        "_find_first_bit",
+        "_raw_spin_lock_irqsave",
+        "_raw_spin_unlock_irqrestore",
+        "alt_cb_patch_nops",
+        "arm64_use_ng_mappings",
+        "dev_err_probe",
+        "dev_pm_domain_attach_by_name",
+        "dev_pm_domain_detach",
+        "device_set_node",
+        "devm_gpiod_get",
+        "devm_kmalloc",
+        "devm_platform_ioremap_resource",
+        "get_device",
+        "gpiod_direction_output",
+        "gpiod_get_value_cansleep",
+        "handle_fasteoi_irq",
+        "iomem_resource",
+        "iommu_get_domain_for_dev",
+        "iommu_group_get",
+        "iommu_group_id",
+        "iommu_group_put",
+        "iounmap",
+        "irq_chip_eoi_parent",
+        "irq_chip_mask_parent",
+        "irq_chip_set_affinity_parent",
+        "irq_chip_set_type_parent",
+        "irq_chip_unmask_parent",
+        "irq_domain_alloc_irqs_parent",
+        "irq_domain_free_fwnode",
+        "irq_domain_free_irqs",
+        "irq_domain_free_irqs_common",
+        "irq_domain_free_irqs_parent",
+        "irq_domain_get_irq_data",
+        "irq_domain_instantiate",
+        "irq_domain_remove",
+        "irq_domain_reset_irq_data",
+        "irq_domain_set_hwirq_and_chip",
+        "irq_domain_set_info",
+        "irq_find_matching_fwspec",
+        "irq_get_irq_data",
+        "irq_has_action",
+        "irq_set_irq_type",
+        "kfree",
+        "kmalloc_caches",
+        "memcpy",
+        "memset",
+        "module_put",
+        "msi_create_parent_irq_domain",
+        "msi_lib_init_dev_msi_info",
+        "mutex_lock",
+        "mutex_unlock",
+        "of_address_to_resource",
+        "of_changeset_add_prop_u32_array",
+        "of_changeset_apply",
+        "of_changeset_destroy",
+        "of_changeset_init",
+        "of_changeset_revert",
+        "of_changeset_update_prop_string",
+        "of_device_is_available",
+        "of_device_is_compatible",
+        "of_find_device_by_node",
+        "of_find_node_by_phandle",
+        "of_find_node_opts_by_path",
+        "of_find_property",
+        "of_fwnode_ops",
+        "of_irq_find_parent",
+        "of_irq_parse_one",
+        "of_machine_compatible_match",
+        "of_node_get",
+        "of_node_put",
+        "of_property_count_elems_of_size",
+        "of_property_read_string",
+        "of_property_read_u32_index",
+        "of_property_read_variable_u32_array",
+        "param_ops_bool",
+        "pci_add_resource",
+        "pci_add_resource_offset",
+        "pci_alloc_host_bridge",
+        "pci_alloc_irq_vectors",
+        "pci_bus_assign_resources",
+        "pci_bus_size_bridges",
+        "pci_dev_put",
+        "pci_free_host_bridge",
+        "pci_free_irq_vectors",
+        "pci_get_slot",
+        "pci_irq_vector",
+        "pci_lock_rescan_remove",
+        "pci_read_config_word",
+        "pci_remove_root_bus",
+        "pci_scan_root_bus_bridge",
+        "pci_set_power_state",
+        "pci_stop_root_bus",
+        "pci_unlock_rescan_remove",
+        "pci_walk_bus",
+        "pcibios_resource_to_bus",
+        "platform_device_add",
+        "platform_device_add_resources",
+        "platform_device_alloc",
+        "platform_device_put",
+        "platform_device_unregister",
+        "platform_driver_unregister",
+        "platform_get_resource",
+        "pm_runtime_barrier",
+        "put_device",
+        "release_resource",
+        "request_resource",
+        "scnprintf",
+        "strcmp",
+        "sysfs_streq",
+        "try_module_get",
+        "usleep_range_state"
+      ],
+      "derived_probe_only": false
+    },
+    "n71-brcmfmac-host-probe.ko": {
+      "bytes": 137368,
+      "sha256": "b7340c49621a6b61128a26339776a7f0ef4bb23be85180cad01a76b25ed975a9",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "elf64_aarch64": true,
+      "imports": [
+        "__device_set_driver_override",
+        "__ioremap_prot",
+        "__irq_domain_alloc_fwnode",
+        "__irq_domain_alloc_irqs",
+        "__irq_resolve_mapping",
+        "__kmalloc_cache_noprof",
+        "__module_get",
+        "__of_parse_phandle_with_args",
+        "__platform_driver_register",
+        "__pm_runtime_resume",
+        "__pm_runtime_suspend",
+        "__release_region",
+        "__request_region",
+        "__stack_chk_fail",
+        "__udelay",
+        "_dev_err",
+        "_dev_info",
+        "_find_first_bit",
+        "_raw_spin_lock",
+        "_raw_spin_lock_irqsave",
+        "_raw_spin_unlock",
+        "_raw_spin_unlock_irqrestore",
+        "alt_cb_patch_nops",
+        "arm64_use_ng_mappings",
+        "dev_err_probe",
+        "dev_pm_domain_attach_by_name",
+        "dev_pm_domain_detach",
+        "device_set_node",
+        "devm_gpiod_get",
+        "devm_kmalloc",
+        "devm_platform_ioremap_resource",
+        "driver_find",
+        "get_device",
+        "gpiod_direction_output",
+        "gpiod_get_value_cansleep",
+        "handle_fasteoi_irq",
+        "iomem_resource",
+        "iommu_get_domain_for_dev",
+        "iommu_group_get",
+        "iommu_group_id",
+        "iommu_group_put",
+        "iounmap",
+        "irq_chip_eoi_parent",
+        "irq_chip_mask_parent",
+        "irq_chip_set_affinity_parent",
+        "irq_chip_set_type_parent",
+        "irq_chip_unmask_parent",
+        "irq_domain_alloc_irqs_parent",
+        "irq_domain_free_fwnode",
+        "irq_domain_free_irqs",
+        "irq_domain_free_irqs_common",
+        "irq_domain_free_irqs_parent",
+        "irq_domain_get_irq_data",
+        "irq_domain_instantiate",
+        "irq_domain_remove",
+        "irq_domain_reset_irq_data",
+        "irq_domain_set_hwirq_and_chip",
+        "irq_domain_set_info",
+        "irq_find_matching_fwspec",
+        "irq_get_irq_data",
+        "irq_has_action",
+        "irq_set_irq_type",
+        "kfree",
+        "kmalloc_caches",
+        "memcpy",
+        "memset",
+        "module_put",
+        "msi_create_parent_irq_domain",
+        "msi_lib_init_dev_msi_info",
+        "mutex_lock",
+        "mutex_unlock",
+        "of_address_to_resource",
+        "of_changeset_add_prop_u32_array",
+        "of_changeset_apply",
+        "of_changeset_destroy",
+        "of_changeset_init",
+        "of_changeset_revert",
+        "of_changeset_update_prop_string",
+        "of_device_is_available",
+        "of_device_is_compatible",
+        "of_find_device_by_node",
+        "of_find_node_by_phandle",
+        "of_find_node_opts_by_path",
+        "of_find_property",
+        "of_fwnode_ops",
+        "of_irq_find_parent",
+        "of_irq_parse_one",
+        "of_machine_compatible_match",
+        "of_node_get",
+        "of_node_put",
+        "of_property_count_elems_of_size",
+        "of_property_read_string",
+        "of_property_read_u32_index",
+        "of_property_read_variable_u32_array",
+        "param_ops_bool",
+        "pci_add_resource",
+        "pci_add_resource_offset",
+        "pci_alloc_host_bridge",
+        "pci_alloc_irq_vectors",
+        "pci_bus_add_devices",
+        "pci_bus_assign_resources",
+        "pci_bus_size_bridges",
+        "pci_bus_type",
+        "pci_dev_put",
+        "pci_device_is_present",
+        "pci_disable_device",
+        "pci_free_host_bridge",
+        "pci_free_irq_vectors",
+        "pci_get_slot",
+        "pci_irq_vector",
+        "pci_lock_rescan_remove",
+        "pci_read_config_word",
+        "pci_remove_root_bus",
+        "pci_scan_root_bus_bridge",
+        "pci_set_power_state",
+        "pci_stop_root_bus",
+        "pci_unlock_rescan_remove",
+        "pci_walk_bus",
+        "pcibios_resource_to_bus",
+        "platform_device_add",
+        "platform_device_add_resources",
+        "platform_device_alloc",
+        "platform_device_put",
+        "platform_device_unregister",
+        "platform_driver_unregister",
+        "platform_get_resource",
+        "pm_runtime_barrier",
+        "put_device",
+        "release_resource",
+        "request_resource",
+        "scnprintf",
+        "strcmp",
+        "sysfs_streq",
+        "try_module_get",
+        "usleep_range_state"
+      ],
+      "derived_probe_only": true
+    }
+  },
+  "preserved_kernel": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "tracked_patch_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+    "config_sha256": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+    "image_sha256": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+    "exports_sha256": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "private_log_sha256": {
+    "runtime-mac-v4-private.log": "6bfb01a83e3bc9f7cc396a34f6f7e65ceb118d01470e2ac1abdfc7aff1ddd0e5",
+    "scan-mac-private.log": "1415e69975f2fa79ad925bdb94477798e4ea2bd0587cad84957947bf2a265744",
+    "scan-mac-resume-private.log": "c7160baa5bcaa08a321de562b78a7254a2dd8041ad9b3dbfa752923619051369",
+    "runtime-arm64-private.log": "1620cb2224854d6e5a3877a3754f541df7b65d5c1b1cd6c941d8debdb53e4f1b",
+    "scan-arm64-private.log": "52d683f129f8d772a4233dcc94da984829ddf3f54d35438ee2119c42399574ce",
+    "kernel-context-private.log": "daf56d9fad9e8d39dc04b852acd002abe29dc98c8bd710d79c82cea0f9510f0a",
+    "fatal-lint-private.log": "0b960f776ac73965f6d106e86680d3184382cc756265e77d46c67504d5e8caba",
+    "fatal-lint-resume-private.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "corrections": [
+    "Initial fixture foreign device lacked a bus; pointer scope now checked before dereference. SIGSEGV is not assertion proof.",
+    "Model pci_disable_device ignores write result like the public void API; restore readback governs retained ownership.",
+    "pci_dev_is_added is PCI-core private and is not used. driver_published records issued intent; public pci_device_is_present is config responsiveness, not completed binding/firmware.",
+    "Two legacy mutation anchors were made unique without dropping tests. Only affected methods repeated on Mac; ARM64 complete scan suite passed.",
+    "VM lint staging lacked scripts directory. Created that directory and repeated only lint/final audit, retaining completed native/build gates."
+  ],
+  "previous_ci": {
+    "head": "c7240a1a09c1dda02666cf626d6e00ca5e75114e",
+    "pr": {
+      "run": 38034484984,
+      "conclusion": "success",
+      "jobs_success": 3
+    },
+    "push": {
+      "run": 38034481962,
+      "conclusion": "cancelled",
+      "jobs_success": 2,
+      "macos": "cancelled"
+    }
+  },
+  "physical_proof": {
+    "irq_delivery": false,
+    "dma_translation": false,
+    "firmware_compatible": false,
+    "wifi_scan_association": false,
+    "charging": false,
+    "gauge": false
+  },
+  "next": [
+    "caller opt-in/actions/getter/cleanup and exclusion against manual MSI lease",
+    "journal/selection/firmware/energy prepared",
+    "one grouped physical Wi-Fi and energy session"
+  ]
+}

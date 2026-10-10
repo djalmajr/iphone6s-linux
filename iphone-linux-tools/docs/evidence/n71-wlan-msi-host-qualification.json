@@ -1,0 +1,114 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T03:58:04.448375+00:00",
+  "code_commit": "0abc339788b96a220832ac55218de66c02f3acb6",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "proof_scope": "Production host lease with tracked PCI/native-MSI dependencies on macOS and Ubuntu ARM64; complete host/native headers in pinned ABI probe. No scan/caller/profile integration or device execution.",
+  "inputs_sha256": {
+    "phone/kernel/n71-wlan-msi-host.h": "dc7ec1d6fc37f1cb5056a25b273b3a89418c18bc9867e48a45805b6478423ae3",
+    "phone/kernel/n71-wlan-msi-native.h": "6f8eec77d769783cbcfaaf7001294823698b254fc0f179968f9545050dc4c0f3",
+    "phone/kernel/n71-wlan-msi-message.h": "57279c73f6af1396a744586971f294c135f22b05661fa0452c90e3bdc0832e2b",
+    "phone/kernel/n71-wlan-irq-reference.h": "92a4766835a0d4884c4da168542ee94ab3512a5200279405d932c0d9ddf71b3f",
+    "tests/n71_wlan_msi_host_fixture.h": "0a47382059f9b819a98ed5d162df8e7e88ad6cd782b612834c2ba34ff862eab2",
+    "tests/n71_wlan_msi_host.c": "bfc3f4f5e98b671c5e51f18960b630a3c7ff7b4c528a2f67953f1b5d6cc940a7",
+    "tests/test_n71_wlan_msi_host.py": "c960f7c41132af325c438908c531985533e97922cd011a254d36802bab543e85"
+  },
+  "all_qualified_inputs": {
+    "files": 7,
+    "manifest_sha256": "ef24a670a40ba0b3540ea6f017416900caf247f9ac41bc4ac883a16bcbba9259",
+    "same_on_macos_and_ubuntu_arm64": true
+  },
+  "qualification": {
+    "macos": {
+      "tests": 1,
+      "cases": 21,
+      "compiled_assertion_mutations": 22,
+      "exit": 0,
+      "elapsed_s": 7.959,
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0
+    },
+    "ubuntu_arm64": {
+      "tests": 1,
+      "cases": 21,
+      "compiled_assertion_mutations": 22,
+      "exit": 0,
+      "elapsed_s": 0.88,
+      "ast_exit": 0
+    },
+    "mutation_policy": "Mutants must compile with Werror then exit SIGABRT (-6) with assertion text; compilation/import/timeout are not kills.",
+    "fixture_boundary": "Host association/owner callbacks execute directly; PCI device accessors and native MSI lease are tracked dependency models. Real native IRQ/MSI callbacks have the separate unchanged 1132-case/45-mutant gate.",
+    "reuse": "Native MSI/message/AIC inputs unchanged; those gates reused rather than repeated."
+  },
+  "native_module": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "baseline_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true,
+    "w1": true,
+    "werror": true,
+    "modpost_exit": 0,
+    "modpost_warn_enabled": false,
+    "explicit_extra_symbols": "vmlinux.symvers",
+    "sha256": "6980b4d0501478cfbff7899574c35d6b1fedb2127dc824f98ce734f4a8d508b2",
+    "bytes": 13400,
+    "elf": "ELF64 little-endian AArch64",
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "loaded": false,
+    "init_refuses_loading": "-EOPNOTSUPP",
+    "generated_probe_inputs_sha256": {
+      "Makefile": "5fe8cd89384250549ce78828e8a1234f078e36081310ea04d124bfc1ffa0d3c8",
+      "n71-wlan-msi-host-abi-probe.c": "c60a75fe160fd3db8357c0435a6e3f91e88d954314346587f57cdef62011f401"
+    },
+    "scope": "Global acquire/release wrappers retain real host and native callbacks in the ABI probe, never used as device module."
+  },
+  "verified_contracts": {
+    "association_only_before_bus_scan": true,
+    "foreign_domain_not_overwritten": true,
+    "exclusive_owner_preserved_after_partial_acquire": true,
+    "native_acquire_precedes_association": true,
+    "live_bus_release_refused": true,
+    "association_cleared_before_native_parent_free": true,
+    "previous_msi_domain_flag_restored_false_and_true": true,
+    "foreign_or_changed_association_release_refused": true,
+    "native_teardown_error_retains_bridge_lease_for_retry": true,
+    "release_idempotent_without_duplicate_native_cleanup": true
+  },
+  "lifetime_precondition": "Future caller retains bridge/module and serializes scan, PCI child teardown and owner release. Lease itself does not increment a bridge or module reference; it refuses cleanup before bus removal and delegates live child protection to native owner.",
+  "limits": {
+    "scan_caller_profile_autoload_integrated": false,
+    "physical_msi_delivery_or_mask_readback_verified": false,
+    "pci_iommu_attachment_or_dma_verified": false,
+    "native_wifi_verified": false,
+    "linux_charge_or_gauge_verified": false,
+    "new_boot_dfu_or_phone_write": false,
+    "mac_global_configuration_or_installs": false,
+    "private_modules_firmware_or_logs_published": false
+  },
+  "new_remote_ci": {
+    "head": "cdb03958111cf00a92069fe387e111421c02e845",
+    "run_url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37569239640",
+    "conclusion": "success",
+    "completed_at_utc": "2026-10-07T04:08:24Z",
+    "jobs": {
+      "windows-dns": "success",
+      "source (ubuntu-24.04)": "success",
+      "source (macos-15)": "success"
+    },
+    "complete_ci_passed": true
+  },
+  "private_evidence_sha256": {
+    "local-result-private.json": "1684f26b7b2be5e3d6a91a8060dc65f3daeef8c7e850a43c3be1df3698e793d5",
+    "arm64-result-private.json": "be2f1caac957582e6f06571ae611fa2ecc9e42f33188e8cf719a0632b4307541",
+    "arm64-kernel-private.log": "dba966054c159476bd85babed84b8a4b267e59fbc955336564b4a033f4e9a2af",
+    "arm64-native-private.log": "451078fe0dfb0d98eafbb97c6e29362ce8fcba5bd500b76375f2635d1f97bfbf"
+  },
+  "next_gates": [
+    "Integrate host lease before first scan with opt-in and cleanup guards",
+    "Verify real binding guard and IOMMU publication ordering before enable/MASTER",
+    "Hash-bound grouped collector/profile and physical proof"
+  ]
+}

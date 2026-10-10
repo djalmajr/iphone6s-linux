@@ -1,0 +1,103 @@
+{
+  "format": 1,
+  "status": "callback_lifecycle_native_and_kernel_object_verified_backend_pending",
+  "code_commit": "29e61ecb6d38703b617bb9e9d46311acd04a45a2",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power1",
+  "source_sha256": {
+    "drivers/pmdomain/core.c": "32e2f6b0988eba52a2f662fdc2d7132022fbe980f281b2a82babcf3d7f46e18a",
+    "drivers/base/power/common.c": "5f902397c11504c95036463353a6a9513ab0f9ba3378579a956274389f2c1158",
+    "include/linux/pm_runtime.h": "1c1383101d72ce3028df6d9ad3640c2020a041f5c1820b1698d1657b648b04f6"
+  },
+  "input_sha256": {
+    "phone/kernel/n71-i2c-power-lifecycle.h": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2",
+    "tests/n71_i2c_power_lifecycle.c": "7435ede2684e816da761ce0381b26cbabf67b9c194914607dd085c3f723a1683",
+    "tests/run_n71_i2c_power_lifecycle_mutations.py": "af400338ca4cdf36f6f441cd06fed9f4e7f57638a157893d65a01cf7ee8ea484"
+  },
+  "contract": {
+    "attach_without_power_on": true,
+    "resume_cleanup_marked_before_call": true,
+    "usage_reference_consumed_once_even_on_suspend_error": true,
+    "retry_without_second_put": true,
+    "active_verification_required": true,
+    "quiescent_verification_before_detach": true,
+    "detach_zero_only_after_removal_verified": true,
+    "primary_acquisition_error_preserved": true,
+    "cleanup_error_separate": true,
+    "pending_ownership_refuses_reacquisition": true,
+    "caller_serialization_and_object_retention_required": true,
+    "kernel_runtime_error_recovery_guaranteed": false
+  },
+  "native": {
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "scenarios_per_platform": 12,
+    "compiled_assertion_mutations_per_platform": 13,
+    "kill_requires_sigabrt_and_assertion": true,
+    "mac_log_sha256": "f0308a48f489d13abd0d127534e524f15a09f508510a9b703f97b892f91d4d28",
+    "arm64_log_sha256": "f0308a48f489d13abd0d127534e524f15a09f508510a9b703f97b892f91d4d28"
+  },
+  "kernel_object": {
+    "werror": true,
+    "compiled": true,
+    "sha256": "22f184c1fbe5773fe32a83afd0590f666b56b2d1a89924e038c5f16d31a8aa5e",
+    "log_sha256": "2fdc6a10aba406cb713b607ec25b1929d83eb1161bc2b7b8a1b5fcb966eff6ca",
+    "image_config_exports_preserved": true,
+    "selected_sources_inputs_preserved": true,
+    "object_only_not_a_deployable_driver": true
+  },
+  "transport_failure": "Local result-copy path concatenation failed after both VM gates passed. Only the three transfers were retried; hashes matched, no gate was rerun.",
+  "lint": {
+    "python_fatal_flake8": "passed with already installed Python 3.12.6 selected only for the process",
+    "ast": "passed",
+    "python_typechecker_configured": false,
+    "global_configuration_changed": false
+  },
+  "ci": {
+    "code_head": "29e61ecb6d38703b617bb9e9d46311acd04a45a2",
+    "pull_request_run": 37250588909,
+    "push_run": 37250584486,
+    "status": "pull_request_success_push_failed_in_pid_publication_fixture",
+    "new_step": "N71 I2C runtime PM usage, pending cleanup and verified detach",
+    "new_step_execution_verified": true,
+    "new_step_successful_executions": 4,
+    "pull_request_conclusion": "success",
+    "push_conclusion": "failure",
+    "failed_step": "Reboot verification mutations",
+    "failure_reason": "Cancellation fixture observed owned.pid between creation and completed write; ValueError from empty content. The lifecycle step passed on both platforms in both runs."
+  },
+  "physical_genpd_backend_implemented": false,
+  "physical_domain_cycle_executed": false,
+  "i2c_controller_activated": false,
+  "charger_io_performed": false,
+  "linux_charging_validated": false,
+  "new_dfu_or_phone_reboot": false,
+  "limits": "This header exercises callbacks in a resource/usage model and compiles against the selected kernel. It does not call physical genpd/pinctrl/I2C/SN2400. A backend must qualify board/resources/ownership, preserve object lifetime, check quiescence and actual detach, and retain pending state on unproved cleanup. Tests do not establish electrical idle, charger read effects, HDQ telemetry, Linux charge or Wi-Fi.",
+  "pid_publication_fix": {
+    "scope": "synthetic test producer only; no production reboot source change",
+    "test_source_sha256": "5110293e0ee8091159c22e9652185282b0b609efc3d46f0d8f4b8cb9f8ac6ab5",
+    "publish_after_closed_write_via_replace": true,
+    "deterministic_empty_file_barrier_regression": true,
+    "baseline_tests": 20,
+    "compiled_reboot_source_mutations_assertion_killed_per_platform": 11,
+    "direct_final_path_fixture_mutation_assertion_killed_per_platform": 1,
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "mac_full_gate_log_sha256": "d755a597b100411bc247f72a65dc2178bed00fe6f06962f04f1136da16d4e7ce",
+    "arm64_full_gate_log_sha256": "d755a597b100411bc247f72a65dc2178bed00fe6f06962f04f1136da16d4e7ce",
+    "arm64_pid_mutation_log_sha256": "59738f06f78a8ec47c1e1d8cff9b5178d44cdc0bef57a0601ea0fa2c95ba15bf",
+    "corrected_remote_ci_pending": false,
+    "phone_commands_executed": false,
+    "corrected_code_commit": "8974389559dd5a7b76a2946e8e4f3fea8e3e46f0",
+    "corrected_pr_run": 37251729490,
+    "corrected_push_run": 37251726729,
+    "corrected_ci_conclusion": "success",
+    "corrected_successful_jobs": 6,
+    "tracking_issue": 37,
+    "tracking_issue_status": "closed"
+  }
+}

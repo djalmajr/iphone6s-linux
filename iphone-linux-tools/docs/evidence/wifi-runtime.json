@@ -1,0 +1,39 @@
+{
+  "kernel": "7.2.0-iphone6s-source",
+  "uptime_s": 208.12,
+  "interfaces": [
+    "lo",
+    "usb0"
+  ],
+  "ieee80211": [
+    "ABSENT"
+  ],
+  "bus_devices": {
+    "pci": [],
+    "sdio": [],
+    "mmc": []
+  },
+  "dt_compatible_properties_count": 118,
+  "matching_dt_compatibles": [],
+  "loaded_modules": [],
+  "matching_driver_log_lines": [
+    "[    0.029255] PCI: CLS 0 bytes, default 64"
+  ],
+  "read_only": true,
+  "reboot_performed": false,
+  "power_supply_names": [],
+  "original_adt_property_present": false,
+  "format": 1,
+  "date": "2026-10-02",
+  "issue": 9,
+  "proof": "physical-read-only-current-boot",
+  "native_wifi_enabled": false,
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "original_adt_property_scope": "names under /sys/firmware/devicetree/base/chosen only",
+  "raw_device_data_published": false,
+  "limits": [
+    "No association, scan, DHCP or radio revision was tested.",
+    "Missing nodes/devices do not establish impossibility of a future A9 implementation.",
+    "No sustained charging or prolonged stability claim."
+  ]
+}

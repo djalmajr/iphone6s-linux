@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "code_commit": "9300cf478833718bb13a88759be2d39508aef62f",
+  "status": "isolated_public_diagnostic_bundle_repaired_qualified",
+  "input_count": 382,
+  "input_manifest_sha256": "1ab95f95c6c7e586a8e0c2225ac857ad5e0b4924169fa680e610efe639ff5430",
+  "changed_inputs": {
+    "tests/run_n71_diagnostic_payload_mutations.py": {
+      "sha256": "5cb0ebf007c568de982eedd415671a4d1c8998057ed3cc2f36430bef30753273",
+      "bytes": 7271
+    }
+  },
+  "tests_per_platform": 22,
+  "assertion_mutations_per_platform": 34,
+  "platforms": {
+    "mac": {
+      "exit": 0,
+      "tests": 22,
+      "assertion_mutations": 34,
+      "log_sha256": "6c2eda0505aafff02437a5deea6285628c3c54980624b32c0d40df2fb44ce0ff"
+    },
+    "arm": {
+      "exit": 0,
+      "tests": 22,
+      "assertion_mutations": 34,
+      "log_sha256": "6c2eda0505aafff02437a5deea6285628c3c54980624b32c0d40df2fb44ce0ff"
+    }
+  },
+  "inputs_preserved": true,
+  "ast": true,
+  "fatal_lint": true,
+  "workflow_timeout_and_mutations_unchanged": true,
+  "iphone_accessed": false,
+  "limits": [
+    "Actual public-only disposable copies and unchanged diagnostic mutations ran on Mac and Ubuntu ARM64.",
+    "No ImportError, infrastructure error or timeout counted as AssertionError kill.",
+    "Prior CLI/C/kernel/module evidence reused unchanged; no new physical proof.",
+    "Hosted full CI still has the documented 15 minute timeout; no gates removed or rerun triggered."
+  ]
+}

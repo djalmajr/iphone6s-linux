@@ -1,0 +1,49 @@
+{
+  "format": 1,
+  "status": "synthetic_integration_contract_verified_real_composition_pending",
+  "selected_profile": "n71-dart-serdev-power-v1",
+  "required_record": "kernel-n71-power-bundle-build.json",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power1",
+  "input_hashes": {
+    "scripts/build/integrate-source-kernel.py": "9b38c82c5665d6b955fefeda3d1360b636af640115157d1fb4d96525047e13ae",
+    "scripts/build/kernel_bundle.py": "9aa13bc126ff7776261e542185ba9db2d17be3a1e7516ebf4e4e1f55e6b4143a",
+    "scripts/build/kernel_patchset.py": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817",
+    "scripts/host/device_profile.py": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb",
+    "scripts/host/profile_image.py": "19d4610eeb44ba50d9c29267e1b3bba250a03bb30e8f9a0e0d99abc4533fd427",
+    "tests/test_kernel_integration.py": "e4ef334efb1d4d8124245c18da17d07ffce7ec107fbe08440eedf586b00750aa",
+    "tests/test_device_profile.py": "6e719e097ae0d229e6475b7887f965a63bf0b385014a6a009efdb4665d790fcd",
+    "tests/run_kernel_integration_mutations.py": "f694043bd0538a7222377b3e69f8a4ee326875a422f0c0ec74efc110e99bb775",
+    "docs/evidence/kernel-n71-bundle.json": "eba6cb72eb9955742a0ad0d96425615052ea285ce9538329985ddd9f0bf225a0",
+    "docs/evidence/kernel-n71-power-bundle.json": "1dd8b154880a8968e196668593a90e61784107b38008d16da96562914f4e2cbb"
+  },
+  "tests": 17,
+  "source_mutations": 22,
+  "native_platforms": [
+    "macOS ARM64",
+    "Ubuntu ARM64"
+  ],
+  "logs": {
+    "mac-integration-gate-private.log": "6a91db51c5fd8b97a9ff69dd01cae8417cd18c1a89a1d1f6410eb0ccf0b70cb7",
+    "arm64-integration-gate-v1-private.log": "6a91db51c5fd8b97a9ff69dd01cae8417cd18c1a89a1d1f6410eb0ccf0b70cb7"
+  },
+  "python_ast_and_lint_passed": true,
+  "pinned_sources_config_and_artifacts_required": true,
+  "extra_old_abi_modules_refused": true,
+  "legacy_defaults_preserved": true,
+  "source_and_identities_preserved_in_fixtures": true,
+  "fixture_image_bootable": false,
+  "real_profile_composed": false,
+  "physical_boot_tested": false,
+  "phone_driver_modified": false,
+  "linux_charging_validated": false,
+  "limits": "Synthetic filesystem/process/SSH identity contract only. Real full Image link, rebuilt module ABI, private profile composition and physical behavior need independent gates. No USB, charger or GPIO operations.",
+  "code_commit": "f80e27e71a255c1131c06e8eba8a47dadb565fab",
+  "ci": {
+    "code_head": "f80e27e71a255c1131c06e8eba8a47dadb565fab",
+    "pull_request_run": 37242336144,
+    "push_run": 37242333300,
+    "conclusion": "success",
+    "jobs_total": 6
+  },
+  "real_composition_record": "n71-power-profile.json"
+}

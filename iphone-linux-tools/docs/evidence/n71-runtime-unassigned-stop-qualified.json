@@ -1,0 +1,119 @@
+{
+  "format": 1,
+  "code_commit": "a21afce4fa4525b8cf825821e58fd59df53a7aca",
+  "status": "unassigned_observe_stop_qualified_composition_cli_firmware_energy_and_physical_proof_pending",
+  "input_count": 374,
+  "input_manifest_sha256": "2e6c77a9ea67f850556b37a7655f0a0a674a9bb139210f924fa8d3feca9dbec3",
+  "changed_inputs": {
+    "scripts/host/n71_driver_runtime_lifetime.py": {
+      "sha256": "f1e324f1feefb649c29e7469f5e398a27ca3bf0f70ca43926e3259076213575f",
+      "bytes": 19087
+    },
+    "scripts/host/n71_driver_runtime_session.py": {
+      "sha256": "61d5d00a65346a040229dd5bc913a37fb2f5f2719237558b12a536f6e5cd19e6",
+      "bytes": 11936
+    },
+    "tests/test_n71_runtime_unassigned_stop.py": {
+      "sha256": "0c33756d573c863cdc9f1eda47b64e2c3bb5e6d0610636bd8193487c729a56c9",
+      "bytes": 11822
+    }
+  },
+  "new_tests_per_platform": 6,
+  "new_assertion_mutations_per_platform": 9,
+  "affected_tests_per_platform": 33,
+  "affected_assertion_mutations_per_platform": 45,
+  "platforms": {
+    "mac": {
+      "input_count": 374,
+      "ast": true,
+      "stages": {
+        "unassigned-stop": {
+          "exit": 0,
+          "seconds": 4.66,
+          "tests": 6,
+          "assertion_mutations": 9,
+          "log_sha256": "1b36d9b9dc511fc481c32feebd8727915a865121effbe0d09707d6105c0d61cc"
+        },
+        "unprepared-stop": {
+          "exit": 0,
+          "seconds": 3.03,
+          "tests": 5,
+          "assertion_mutations": 4,
+          "log_sha256": "996b50bc5aa07407618f378900a9c22645350b78a27cde47b018ff297ac9a3cd"
+        },
+        "runtime-session": {
+          "exit": 0,
+          "seconds": 26.46,
+          "tests": 9,
+          "assertion_mutations": 11,
+          "log_sha256": "314e2cecbbab2e40c45beee0ce7d63e20ec1e369fd4c53f0b56e92d9175e7bc0"
+        },
+        "runtime-lifetime": {
+          "exit": 0,
+          "seconds": 16.46,
+          "tests": 13,
+          "assertion_mutations": 21,
+          "log_sha256": "0d999a481e450e25240b32ea315af8d11351153e065b9c30108dc36168116bb3"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true,
+      "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ubuntu_arm64": {
+      "input_count": 374,
+      "ast": true,
+      "stages": {
+        "unassigned-stop": {
+          "exit": 0,
+          "seconds": 35.37,
+          "tests": 6,
+          "assertion_mutations": 9,
+          "log_sha256": "c9f097b7b593bc36b312fab337d6eb8be73f338f9a49a07d5efd9d845ea1d499"
+        },
+        "unprepared-stop": {
+          "exit": 0,
+          "seconds": 10.25,
+          "tests": 5,
+          "assertion_mutations": 4,
+          "log_sha256": "0af5594d62aa55163fa2fd0fed8e873c56ccf3951b5300b1551cb41110e919e9"
+        },
+        "runtime-session": {
+          "exit": 0,
+          "seconds": 22.52,
+          "tests": 9,
+          "assertion_mutations": 11,
+          "log_sha256": "2b8575ba7bc8b46074d4a3aef73e14d0dce8b0a33b7e6d663de5a2ad3b476f92"
+        },
+        "runtime-lifetime": {
+          "exit": 0,
+          "seconds": 32.99,
+          "tests": 13,
+          "assertion_mutations": 21,
+          "log_sha256": "8ec8ddb032953a9879694eb9aa7309c3fe2b48eb51c17839d5c2b533d770b2e8"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true,
+      "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "reused": {
+    "prior_inputs_unchanged": 370,
+    "prior_input_count": 372,
+    "compiled_c_inputs_unchanged": 69,
+    "compiled_c_cases_per_platform": 575,
+    "compiled_c_assertion_mutations_per_platform": 455,
+    "kernel_image_exports_and_module_binaries_unchanged": true
+  },
+  "limits": [
+    "Real journals, source loaders, coordinator, lifetime, held/resource/IOMMU parsers and filesystem; phone and kernel replies are synthetic.",
+    "Proves same-boot observe and complete normal teardown before assignment, idempotent stop and unchanged source; start remains refused.",
+    "Pending assignment, saved summary, proof, native/module ownership, manual MSI, boot/history drift and incomplete teardown remain refused.",
+    "No Python type checker is configured; AST and fatal lint passed.",
+    "CLI/composition, firmware/calibration/regdb, energy and physical Wi-Fi/IRQ/DMA/battery/charging proof remain pending.",
+    "No phone, DFU, reboot, firmware, Mac packages, global configuration or unrelated remote state changed."
+  ]
+}

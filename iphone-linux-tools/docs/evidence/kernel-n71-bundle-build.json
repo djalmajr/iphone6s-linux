@@ -1,0 +1,109 @@
+{
+  "format": 1,
+  "status": "compiled_verified",
+  "source": {
+    "commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "bundle": "n71-dart-serdev-v1",
+    "required_localversion": "-iphone6s-dart-serdev1",
+    "patches": {
+      "0001-s5l8960x-dart-stream-tcr.patch": "da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74",
+      "0002-serdev-stop-bits.patch": "f987f64912a410d588ac0d1d9a47c7cc275a0dc234fbe27549011255e98e0d11"
+    },
+    "files": {
+      "drivers/iommu/apple-dart.c": [
+        "f19d3c2a7ada7451956f2a87fea09c174584bfd68ba7a1f6e8793db653047f85",
+        "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc"
+      ],
+      "drivers/tty/serdev/core.c": [
+        "b3130abc6078d5353c38a0ef029c7afee4989cbccbb784e785dc7ebefa882e6c",
+        "fefe1fdbc17a0c7239df964ba0eee7fd8ec95f2e7ee157be451630c167e9d340"
+      ],
+      "drivers/tty/serdev/serdev-ttyport.c": [
+        "e4c9d73545e27fe8c995ef7a0d8ae23381fede11909f4b250c34a8004b1a437d",
+        "4643ddeac9973176346c04dd7054027153d49291960f1d89cd8e7280e45e7068"
+      ],
+      "include/linux/serdev.h": [
+        "54a3e78e8ca0e29311070c87b6811e486a15453b1b938f221655a1ed3278e2c3",
+        "fbf86a763c535f07646beb49c14ac3582e7ba2f4d9a7bd0b680aecf32d11dd0c"
+      ]
+    }
+  },
+  "build": {
+    "exit_code": 0,
+    "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+    "full_image_linked": true,
+    "vmlinux_modpost_verified": true,
+    "serdev_stop_bits_export_verified": true,
+    "page_size_kib": 16,
+    "dtb_compatible": "apple,n71 apple,s8000 apple,arm-platform",
+    "config_only_localversion_changed": true,
+    "embedded_config_exact_match": true,
+    "source_before_equals_after": true,
+    "preflight_free_kib": 6989680,
+    "baseline_output_kib": 1082716,
+    "start_utc": "2026-10-03T03:10:44Z",
+    "outputs": {
+      "Image": {
+        "bytes": 52070912,
+        "sha256": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d"
+      },
+      "Image.gz": {
+        "bytes": 15661095,
+        "sha256": "275c08df64e4266f7ca41ff964b72dcaf7cd17b5118af5f9bd642c06b9c82707"
+      },
+      "s8000-n71.dtb": {
+        "bytes": 22884,
+        "sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58"
+      },
+      "config": {
+        "bytes": 321753,
+        "sha256": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8"
+      },
+      "config-embedded": {
+        "bytes": 321753,
+        "sha256": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8"
+      }
+    },
+    "elapsed_seconds": 2352,
+    "elapsed_scope": "From configured object output through full Image/DTB build, source/config checks, copies and gzip. Excludes earlier object preparation and Mac transfers.",
+    "compiler_version": "13.3.0",
+    "baseline_source_diff_empty": true,
+    "mac_artifact_hashes_recalculated": true,
+    "started_from_configured_object_output": true
+  },
+  "physical_boot_tested": false,
+  "installed": false,
+  "default_profile_changed": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "limits": "Linked source kernel and selected ABI only. No physical boot, GPIO/link/DART DMA, native Wi-Fi, HDQ telemetry or charging proof. Profiles/diagnostic modules require independent gates.",
+  "diagnostic_modules": {
+    "format": 1,
+    "modules": [
+      {
+        "module": "n71-pcie-diagnostic.ko",
+        "sha256": "0eba4038ace98b52ed3b935ca9942f8aec2047922b4d3405a155b0ee8daa468f",
+        "bytes": 21640,
+        "vermagic": "7.2.0-iphone6s-dart-serdev1 SMP preempt mod_unload aarch64"
+      },
+      {
+        "module": "n71-wlan-power-diagnostic.ko",
+        "sha256": "839c206ab1fd456dc265e7cf75977155156bfb5436e6c6acfcf3c39576831e37",
+        "bytes": 17680,
+        "vermagic": "7.2.0-iphone6s-dart-serdev1 SMP preempt mod_unload aarch64"
+      }
+    ],
+    "werror_modpost_verified": true,
+    "symbols": "same bundle vmlinux.symvers; KBUILD_EXTRA_SYMBOLS",
+    "modules_prepare_executed": true,
+    "physical_loaded": false,
+    "mac_hashes_and_elf_abi_verified": true,
+    "first_attempt": "Final .ko link refused because scripts/module.lds was absent in Image-only output. modules_prepare generated the prerequisite; only external module link retried, with unresolved symbols still fatal."
+  },
+  "build_recipe": {
+    "source_directory": "/home/ubuntu/kernel-n71-bundle-source-20261002",
+    "output_directory": "/home/ubuntu/kernel-n71-bundle-build-20261002",
+    "flags": "ARCH=arm64 -j2 KCFLAGS=-Werror; LOCALVERSION empty explicitly",
+    "installed": false
+  }
+}

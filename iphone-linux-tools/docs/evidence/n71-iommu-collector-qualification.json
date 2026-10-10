@@ -1,0 +1,146 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T07:30:56.516828+00:00",
+  "code_commit": "9c3c177492220a8aef228566c13a996ae579ddde",
+  "scope": "Opt-in internal Session API; no CLI/profile selection or physical phone operation.",
+  "source_sha256": {
+    "scripts/host/n71_iommu_result.py": "3fc375d345ab226ca7f73ecf5e2737684d2928014291ec3b75834c6f89fc1ccf",
+    "scripts/host/n71-link-session.py": "ab3dee01984732dc2f0e2e452b2ae92f16a33f7d9306255d4e98189413f451d7",
+    "scripts/host/n71_held_session.py": "f79dac46c0edbb1b8d1b8ee819848ed80ed55aa881f422d021ee2028c8f182ac",
+    "tests/test_n71_iommu_result.py": "b03727dfce8456a07ffed2039ce9d5ab331943affba9b1b3a9f6d724eac57b76"
+  },
+  "qualification": {
+    "tests_per_platform": 95,
+    "compiled_assertion_mutations_per_platform": 83,
+    "new_functional_test_methods": 12,
+    "new_mutations": 27,
+    "macos": {
+      "native_exit": 0,
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0,
+      "reports": [
+        {
+          "pattern": "test_n71_iommu_result.py",
+          "exit": 0,
+          "tests": 13,
+          "mutation_kills": 27,
+          "repeated_after_selector_refinement": true
+        },
+        {
+          "pattern": "test_n71_held_session.py",
+          "exit": 0,
+          "tests": 21,
+          "mutation_kills": 30
+        },
+        {
+          "pattern": "test_n71_resource_stage.py",
+          "exit": 0,
+          "tests": 16,
+          "mutation_kills": 26
+        },
+        {
+          "pattern": "test_n71_link_session.py",
+          "exit": 0,
+          "tests": 45,
+          "mutation_kills": 0
+        }
+      ]
+    },
+    "ubuntu_arm64": {
+      "native_exit": 0,
+      "ast_exit": 0,
+      "reports": [
+        {
+          "pattern": "test_n71_iommu_result.py",
+          "exit": 0,
+          "tests": 13,
+          "mutation_kills": 27,
+          "elapsed_s": 8.338,
+          "repeated_after_selector_refinement": true
+        },
+        {
+          "pattern": "test_n71_held_session.py",
+          "exit": 0,
+          "tests": 21,
+          "mutation_kills": 30,
+          "elapsed_s": 17.629
+        },
+        {
+          "pattern": "test_n71_resource_stage.py",
+          "exit": 0,
+          "tests": 16,
+          "mutation_kills": 26,
+          "elapsed_s": 16.878
+        },
+        {
+          "pattern": "test_n71_link_session.py",
+          "exit": 0,
+          "tests": 45,
+          "mutation_kills": 0,
+          "elapsed_s": 0.182
+        }
+      ],
+      "initial_snapshot_inputs_unchanged_at_execution": true
+    },
+    "private_snapshot_input_count": 582,
+    "reused_D16_inputs_unchanged": 53,
+    "reused_kernel_abi": "Exact production D16 module, no wrapper: 112832 bytes, SHA6250c41b4f5427586e69764f12b0fae01b234cda8839082b74a3197a0996547b; no C/kernel inputs changed.",
+    "failure_history": [
+      "Integrated acquisition exposed legacy bound= substring counting: DART provider was counted as another REG_ON field. Fixed field parser to match line prefixes/anchored regex while preserving raw logs.",
+      "Initial cleanup-gate mutant also raised KeyError in a test; not counted as a valid kill. Shape assertions corrected and getter wire fixtures made independent of parser constants. Complete new gate rerun.",
+      "Final collector/coordinator/resource/link gates executed completely on both platforms after relevant integration changes."
+    ],
+    "mutation_policy": "Python source compiled and executed in isolated children; require nonzero status through AssertionError and no import/runtime ERROR or timeout. No exception-only failures counted.",
+    "selector_refinement": {
+      "new_selectors": [
+        "unattempted-restore-index",
+        "proof-tier"
+      ],
+      "production_and_old_selector_bodies_unchanged": true,
+      "new_gate_repeated_completely_both_platforms": true,
+      "other_three_gates_reused_relevant_inputs_unchanged": true
+    }
+  },
+  "contracts": [
+    "iommu_parent exact boolean default false; internal API only, qualified exact module bytes/hash/vermagic and held-resource/power2 scope before SSH.",
+    "Read-only MSI/IOMMU getters, requested immutable flags and caller/bus state must agree.",
+    "Exact ordered root/endpoint MSI and OF/core IOMMU observations; provider bound/acquired before publication.",
+    "Durable journal records mode and reconstructible association/cleanup summaries. Resume refuses selection/state drift before effects.",
+    "Cleanup requires final empty ownership, observed consumer removal before provider release before host restore. No independent hardware OF unmap/status readback claimed.",
+    "Pre-scan provider failure distinguishes unattempted start/index0 from attempted table restore/index16; bound negative caller retains first error and requires empty resources/reset/power/caller final order.",
+    "Old modes preserved; REG_ON field validation now line anchored so DART bound= log cannot collide."
+  ],
+  "limits": [
+    "No new CLI/profile/payload selection, phone module load, DFU or reboot in this slice.",
+    "Core/provider observations are not proof of physical IRQ delivery, DMA translation, native Wi-Fi, gauge or charging.",
+    "Negative pre-scan helper tested by contract; complete coordinator acquire/release, invalid capture, drift, pending cleanup and forged saved summary exercised with synthetic phone dependencies.",
+    "PCI alias/mask contract and candidate composition remain prerequisites for the next grouped physical session."
+  ],
+  "parent_ci": {
+    "head_sha": "4898914051567432ab1a464ab9251c0c2f88f632",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37584482214",
+    "jobs": [
+      {
+        "name": "windows-dns",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T06:58:54Z"
+      },
+      {
+        "name": "source (macos-15)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T07:08:54Z"
+      },
+      {
+        "name": "source (ubuntu-24.04)",
+        "conclusion": "success",
+        "completedAt": "2026-10-07T07:08:57Z"
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending_publication",
+    "physical_proof": false
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T02:48:55.285034+00:00",
+  "code_commit": "0c1fbe568a6dadc2df6a22d0c8d9326efbcee30d",
+  "proof_scope": "Pure N71 MSI message reference helper on macOS and Ubuntu ARM64 plus native kernel ABI probe; no IRQ/domain allocation, MMIO or caller integration. Static reference remains an inference, not measured hardware message.",
+  "inputs_sha256": {
+    "phone/kernel/n71-wlan-irq-reference.h": "92a4766835a0d4884c4da168542ee94ab3512a5200279405d932c0d9ddf71b3f",
+    "phone/kernel/n71-wlan-msi-message.h": "57279c73f6af1396a744586971f294c135f22b05661fa0452c90e3bdc0832e2b",
+    "tests/n71_wlan_msi_message.c": "85cfb1eca76f8c0dc59f4effd0224b92b539023b8abb6fb9d4ee5884f463e369",
+    "tests/test_n71_wlan_msi_message.py": "9fd84091f05c0c6cd0a240782df7368ea278c641de05898c94584cebfcaa7e6d"
+  },
+  "all_qualified_inputs": {
+    "files": 4,
+    "manifest_sha256": "5796965de896142ae69b1de4b7c5a628d09bf3d57bbdf4d17380d6ab3463d2e5",
+    "same_on_macos_and_ubuntu_arm64": true
+  },
+  "qualification": {
+    "macos": {
+      "cases": 30,
+      "compiled_assertion_mutations": 13,
+      "native_exit": 0,
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0
+    },
+    "ubuntu_arm64": {
+      "cases": 30,
+      "compiled_assertion_mutations": 13,
+      "native_exit": 0
+    },
+    "mutant_kill_policy": "Compiler/import/timeout failures are not kills; mutant must compile, exit SIGABRT (-6), and emit assertion text",
+    "initial_fixture_missing_stdbool_failure_counted_as_kill": false,
+    "previous_aic_helper_reused_unchanged": true
+  },
+  "reference": "n71-msi-message-reference.json",
+  "native_abi_probe": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "baseline_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true,
+    "w1": true,
+    "werror": true,
+    "modpost_exit": 0,
+    "explicit_extra_symbols": "vmlinux.symvers",
+    "modpost_warn_enabled": false,
+    "sha256": "e0abf356ebe8b42f2050c320f8caa310e940e876b84ce6f90c0f09cb064dca06",
+    "bytes": 5736,
+    "elf": "ELF64 little-endian AArch64",
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "generated_probe_inputs_sha256": {
+      "Makefile": "c019cf8f8e2024fb1baab930179a78b54299902c2c810271b65d82b8f90c6ab8",
+      "n71-wlan-msi-abi-probe.c": "9a25448dedd45e3904f3348a44b4f9075ab6abd26edcbac1524b3594174579a1"
+    },
+    "loaded": false,
+    "expected_warning": "Build root lacks Module.symvers; pinned vmlinux.symvers supplied explicitly, no unresolved symbols permitted."
+  },
+  "private_evidence_sha256": {
+    "local-private.log": "70fdec7a51ff9901239ab74268f0dc763c06975ade0898a595613a5230a85344",
+    "local-result-private.json": "062dfe598ce83e759fd820ce33f6461d2bef050cfb2fea307a4d353ff9b8ae6a",
+    "arm64-result-private.json": "95b78b3b279977938d95d99e4a1549bc5cbb26cba4371b76472f8807d9c5adbc",
+    "arm64-kernel-private.log": "ac501f93ead632535b713f69b7089bc42547bbdf21cb7e7373cb45f88843c435"
+  },
+  "limits": {
+    "caller_profile_or_autoload_integrated": false,
+    "native_msi_domain_lifecycle_implemented": false,
+    "physical_message_or_delivery_verified": false,
+    "native_wifi_verified": false,
+    "linux_charge_or_gauge_verified": false,
+    "new_boot_or_dfu": false,
+    "global_mac_configuration_or_packages_changed": false
+  },
+  "next_gates": [
+    "Native MSI bitmap/parent allocation rollback and mask/teardown lifecycle",
+    "PCI IOMMU attachment and safe device enable",
+    "One grouped physical session with hash-bound collector and profile"
+  ]
+}

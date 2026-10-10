@@ -1,0 +1,84 @@
+Date: 2026-09-30
+Scope: issue #5, private Mac snapshots, opt-in foreground scheduler.
+No package installation, image rebuild, Mac service installation or PR merge.
+
+Implementation:
+Single store flock for manual/automatic/restore/list/verify operations.
+Archive and manifest validated before snapshot-directory rename publication.
+Configurable keep >= 1; only eligible intact automatic snapshots pruned.
+Newest publication, manual/pre-restore snapshots and pending journal references
+protected. Corrupt/extra/symlink snapshots retained; invalid journals block prune.
+Foreground once/watch/status; interval/timeout/keep/cycles positive.
+Timeout, SIGTERM/SIGHUP/Ctrl+C terminate the owned job process group.
+Finite watch returns 1 if any job failed; successful finite watch returns 0.
+No implicit restore: boot --restore ID validates before DFU and refuses active
+Linux. Default boot and watcher never restore. Restore remains file overlay.
+
+Local gates, executed sequence (passing evidence reused after scoped edits):
+python3 -m unittest discover -s iphone-linux-tools/tests -v
+Initial suite: 33 tests, 30 passed, 3 explicit VM skips on macOS.
+Final retention rerun: 8 passed, including FIFO mode preservation and mixed
+historical/current timestamp ordering.
+Final scheduler rerun: 6 passed, including added finite-failure exit regression.
+No claim that a single final invocation ran the now-34-test suite.
+Pyflakes and Flake8 --isolated --select=E9,F63,F7,F82 passed on all 8 changed
+Python source/test files using existing Python 3.12.6 per-command selection.
+AST syntax, Bash -n, ShellCheck and git diff --check passed.
+No typechecker configured; AST is not a typecheck.
+
+Disposable source mutations: 15 rejected in executed batches 8 + 6 + 1.
+Pending references; invalid journal; newest protection; current/historical time
+ordering; archive integrity; flock acquisition; hardlinks; nonregular lock;
+retention count; offline transfer outcome; timeout outcome; SIGTERM handling;
+active-Linux restore guard; finite-watch exit status.
+An initial nonregular-lock mutation survived because flock itself rejected the
+FIFO. Added assertion that refusal preserves mode 640; mutation then rejected.
+Original sources untouched by mutation runs; disposable copies removed.
+
+VM: dedicated existing Ubuntu 24.04 ARM64, BusyBox 1.36.1 and Bash chroot.
+Only public source/tests copied; no real snapshots, keys, runtime or phone data.
+Final scheduler/BusyBox suite: 7 passed. Real archive, keep=1, disconnected
+transport preserves bytes/last_success, explicit restore recovers contents/mode
+and preserves synthetic identity. Transport replaced; backup/restore not mocked.
+Earlier same-stage rerun of two actual restore failures under the new lock:
+64 KiB tmpfs ENOSPC; SIGKILL of real tar with cleanup error 77 preserving 255.
+Both passed; see restore-failure-check.txt for failure mechanics and boundaries.
+Final owned fixtures=0; owned mounts=0. Owned transfer directory removed.
+Dedicated VM returned to prior Stopped state.
+
+Physical proof: rear USB-A -> Lightning, no cable change during the test.
+Preboot iOS: capacity 100%, external power present (charging false at ceiling).
+boot --restore selected manual snapshot exited 0 after new DFU/PongoOS/upload,
+strict SSH, pre-restore snapshot and actual archive hash check. Transition output
+contained a PongoOS USB transaction timeout; later Linux/SSH/HTTP gates passed.
+Known integrated payload SHA256:
+c49e03822e164767424d1ac786c3b00eec731de66acec497915c2cc83a39ee4a
+Payload bytes: 23767809. No payload/binary change.
+Operator confirmed console. Kernel 7.0.12.
+Restored synthetic proof file mode 640, SHA256:
+b236202ff49d61b978537415137da685cbf63164a42494dff6e7f004b28e7260
+autosnap watch --cycles 2 --interval 5 --keep 12 --timeout 60 exited 0:
+two automatic snapshots published, validated archives/manifests, 9 entries,
+private files 600, status 600, SSH identity excluded, proof file included.
+No previous real automatic snapshots deleted; destructive pruning proved only
+in synthetic fixtures. SSH worked and diagnostic HTTP returned 200.
+boot --restore while Linux active exited 1; proof file digest unchanged.
+Manual snapshot saved before final reboot; private snapshot IDs/data omitted.
+
+Regular sync/reboot command returned 0 but Linux USB remained present.
+Forced sync/reboot -f at Linux uptime 1019.88 seconds changed USB back to iPhone.
+SSH disconnected; fresh probe timed out, iOS battery query then succeeded:
+capacity 100%, BatteryIsCharging=true, ExternalConnected=true.
+The 100% ceiling, preparation/reboot and lack of Linux battery telemetry prevent
+claiming sustained net charging. This is a short supervised functional test,
+not a 24-hour stability result. Issues #2 and #8 remain open.
+
+Limits:
+No scheduler survives terminal logout as an installed service.
+Status is last completed attempt, not a live process manager.
+Cancellation can leave ignored partial directories; published snapshots remain.
+Keep is not a total space quota. Restore is nontransactional and preserves extras.
+Stop writers/export active databases consistently before snapshot/restore.
+Integrated init already starts diagnostic HTTP on USB; wrapper verifies/reports
+it after restore, rather than preventing all HTTP access during restoration.
+No personal identifiers, key material, histories or backup contents published.

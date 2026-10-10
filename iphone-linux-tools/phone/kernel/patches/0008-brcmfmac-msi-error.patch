@@ -1,0 +1,29 @@
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -968,20 +968,25 @@
+ static int brcmf_pcie_request_irq(struct brcmf_pciedev_info *devinfo)
+ {
+ 	struct pci_dev *pdev = devinfo->pdev;
+ 	struct brcmf_bus *bus = dev_get_drvdata(&pdev->dev);
++	int ret;
+ 
+ 	brcmf_pcie_intr_disable(devinfo);
+ 
+ 	brcmf_dbg(PCIE, "Enter\n");
+ 
+-	pci_enable_msi(pdev);
++	ret = pci_enable_msi(pdev);
++	if (ret) {
++		brcmf_err(bus, "Failed to enable MSI: %d\n", ret);
++		return ret;
++	}
+ 	if (request_threaded_irq(pdev->irq, brcmf_pcie_quick_check_isr,
+ 				 brcmf_pcie_isr_thread, IRQF_SHARED,
+ 				 "brcmf_pcie_intr", devinfo)) {
+ 		pci_disable_msi(pdev);
+ 		brcmf_err(bus, "Failed to request IRQ %d\n", pdev->irq);
+ 		return -EIO;
+ 	}
+ 	devinfo->irq_allocated = true;
+ 	return 0;
+ }

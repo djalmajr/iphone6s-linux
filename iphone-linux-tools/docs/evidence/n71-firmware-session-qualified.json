@@ -1,0 +1,346 @@
+{
+  "format": 1,
+  "status": "same_boot_firmware_library_qualified_in_isolation_not_integrated_or_radio_proof",
+  "code_commit": "daad6ba74abd94da1bc5944f02947f329c852be3",
+  "tests_per_platform": 9,
+  "assertion_mutations_per_platform": 10,
+  "platforms": [
+    "macOS",
+    "Ubuntu 24.04 ARM64 dedicated VM"
+  ],
+  "public_inputs": [
+    {
+      "path": "docs/evidence/n71-brcmfmac-pcie-modules-qualified.json",
+      "bytes": 7360,
+      "sha256": "4de6b1008bad8e3be12dd2c86d3d3304babfe044aa72f55b4873b8e06ed2e60c"
+    },
+    {
+      "path": "docs/evidence/n71-regdb-calibration-source-audit.json",
+      "bytes": 3043,
+      "sha256": "cd6d133b50bba7c167a0ae8e6af2402c7e44d12ca238c4494499353f7240a410"
+    },
+    {
+      "path": "docs/evidence/n71-wlan-firmware-origin.json",
+      "bytes": 1158,
+      "sha256": "23c5aebfc05bca172978e5fb7999f23fb96bbc0506d6448eb62e9171a524e7cf"
+    },
+    {
+      "path": "scripts/host/autosnap.py",
+      "bytes": 5060,
+      "sha256": "46082e1d99b0e53b30b110fccdaf2759959766ab77b308990ccc399f12ed5ac9"
+    },
+    {
+      "path": "scripts/host/dev.py",
+      "bytes": 10860,
+      "sha256": "3393ebcedb693c08156fe9ebfaba943cfe7a0d9197cf967ffdfc18dd3ee16436"
+    },
+    {
+      "path": "scripts/host/device_profile.py",
+      "bytes": 6526,
+      "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+    },
+    {
+      "path": "scripts/host/dns.py",
+      "bytes": 6981,
+      "sha256": "35548ad3a268826cdce0aa89180714ba550e4957dad2efc5261fd0ec8a5214c5"
+    },
+    {
+      "path": "scripts/host/dns_activation.py",
+      "bytes": 8755,
+      "sha256": "513b3b79b6b560c083b17ee5f1b958cfcc58cd0eba1358ec5900a068bf7562c3"
+    },
+    {
+      "path": "scripts/host/dns_lan.py",
+      "bytes": 6170,
+      "sha256": "cb0744bf8847fb957677a4cbdd6359866eeaaf8e2b86858840c24ad7dbafee48"
+    },
+    {
+      "path": "scripts/host/dns_privileged.py",
+      "bytes": 5766,
+      "sha256": "150be73f7ca85c320eaa068a184c18e5c237b7ee91b706f6e9c6e0994aff0f13"
+    },
+    {
+      "path": "scripts/host/dns_transport.py",
+      "bytes": 1851,
+      "sha256": "435560b6498f31f600d5ca51d292e5e86bf223f7dc45686fb8be0e3420d9190b"
+    },
+    {
+      "path": "scripts/host/herdr.py",
+      "bytes": 5754,
+      "sha256": "13b1e6326b43988f40d47e7ab2d3567ed0571f81cb5e25509d8f158993663fe1"
+    },
+    {
+      "path": "scripts/host/lan.py",
+      "bytes": 2897,
+      "sha256": "962d0b4f251c43cae9b6d105edaf529be02f929664f491c3599c7a29bdb7e7d7"
+    },
+    {
+      "path": "scripts/host/n71-link-session.py",
+      "bytes": 37008,
+      "sha256": "58a006693358ab21e8c874ec08dc86b8b39ac2d3e38b2073ce98ca9e8c4f1a07"
+    },
+    {
+      "path": "scripts/host/n71-runtime-session.py",
+      "bytes": 1180,
+      "sha256": "3cfdf7cabc77ea89d42578c02e7a96bba0d682013084bf5bc7c74a1133619faf"
+    },
+    {
+      "path": "scripts/host/n71_bar_result.py",
+      "bytes": 3096,
+      "sha256": "77f0046bf9589c4f530813724a1b65678ee1afef7bb44680ac0de56cd76b0e80"
+    },
+    {
+      "path": "scripts/host/n71_chip_result.py",
+      "bytes": 2166,
+      "sha256": "5635ff77403a8b9211be1909fac6228bf25c75b548a6962ec4b7fc42ecf0a511"
+    },
+    {
+      "path": "scripts/host/n71_dart_cycle_result.py",
+      "bytes": 4562,
+      "sha256": "571fa7e2318a916da1c24eb0830cac86445e9e05e9d101534e1a4056acab0c9f"
+    },
+    {
+      "path": "scripts/host/n71_dart_result.py",
+      "bytes": 3171,
+      "sha256": "98d707949851b9e7a2bee6d01300d2c46a442edc6d815a91272bb85b45a87ade"
+    },
+    {
+      "path": "scripts/host/n71_driver_firmware.py",
+      "bytes": 4648,
+      "sha256": "58801b7425388726a2ab27d7979e18cc01e43a7a65a52c938bf8dd554e814226"
+    },
+    {
+      "path": "scripts/host/n71_driver_firmware_session.py",
+      "bytes": 10387,
+      "sha256": "113981bf2b756d992573d4c27af923253054868c0e5d0437990863a5cffb1186"
+    },
+    {
+      "path": "scripts/host/n71_driver_module_stage.py",
+      "bytes": 17342,
+      "sha256": "c9359897de23816a0688a2e31917932a389a2467656fa0f7d014b5c73d3e2650"
+    },
+    {
+      "path": "scripts/host/n71_driver_modules.py",
+      "bytes": 12978,
+      "sha256": "9589030ed9044c54570daecf2bc254a884257d37d90f9d71c700467289253808"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_build.py",
+      "bytes": 6495,
+      "sha256": "d5280c57fc353f66702558099a6d08b3a63fe3df35661fabc39e364633188145"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_cli.py",
+      "bytes": 5918,
+      "sha256": "0dd89d0677b1f28859bc2c24b2d6aa9fb7fd73a1b51eafd2c4612d02ab333b85"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_compose.py",
+      "bytes": 1528,
+      "sha256": "49efc6ef253bcec1d434f9b1ce0e0273d7f4ffc32164eedfa8555ec14bd62156"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_lifetime.py",
+      "bytes": 19087,
+      "sha256": "f1e324f1feefb649c29e7469f5e398a27ca3bf0f70ca43926e3259076213575f"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_profile.py",
+      "bytes": 2962,
+      "sha256": "4cd96571d7687fe2740fd17e11699ba3522741dab3f237faefb4adc980907958"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_recovery.py",
+      "bytes": 10754,
+      "sha256": "a2b028a2e1cc784ea167d8668b2f8986cd55b45d72fa6d624686422f66f64e02"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_result.py",
+      "bytes": 11529,
+      "sha256": "73b6c20f3e158fc9f8b606b93a5f65ecad6868fc0fda6e4b7c4a357f12ca4c4f"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_session.py",
+      "bytes": 11936,
+      "sha256": "61d5d00a65346a040229dd5bc913a37fb2f5f2719237558b12a536f6e5cd19e6"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_stage.py",
+      "bytes": 11644,
+      "sha256": "971094eda9557790a2aa79cdf9c3499c574304a7ddc040248756e18786aa101a"
+    },
+    {
+      "path": "scripts/host/n71_held_history.py",
+      "bytes": 1042,
+      "sha256": "88d4426778ff328e81b8b6a00bf7035d1c2aa165ee9f03234640c635db3a431d"
+    },
+    {
+      "path": "scripts/host/n71_held_session.py",
+      "bytes": 26423,
+      "sha256": "a6c7f9f10970875b14246b1b04cd39b9c8f638fb1fd87c6c20668fd56c43a6fa"
+    },
+    {
+      "path": "scripts/host/n71_iommu_build.py",
+      "bytes": 6203,
+      "sha256": "eebe9b931124d0d164c83e8d4b580791aca6314ed2df3e96428f0b9d75a28b32"
+    },
+    {
+      "path": "scripts/host/n71_iommu_result.py",
+      "bytes": 19367,
+      "sha256": "b4017691257d28afa3cbd8c4899f38639f2d163d8ba3ea6bc028aff871309b1f"
+    },
+    {
+      "path": "scripts/host/n71_msi_allocation_result.py",
+      "bytes": 2737,
+      "sha256": "1a43990d1914d9d1c7876d9fd145720d88dd554fa04e4e52c86622f41af3e102"
+    },
+    {
+      "path": "scripts/host/n71_resource_build.py",
+      "bytes": 12165,
+      "sha256": "6066fad1b2679c39a480d527f713635ab7834b241febccdf5b5ed4202bade3f5"
+    },
+    {
+      "path": "scripts/host/n71_resource_io16.py",
+      "bytes": 2184,
+      "sha256": "c27f560ea0128bb7e02c2a8266edccdf4ffe0b1650bc5833508415f273be0222"
+    },
+    {
+      "path": "scripts/host/n71_resource_optional.py",
+      "bytes": 2192,
+      "sha256": "7f91963a533aa5c1175b0d3867244e0b994e42a5afd69860314dd5aa59ab6250"
+    },
+    {
+      "path": "scripts/host/n71_resource_pref64.py",
+      "bytes": 2288,
+      "sha256": "4353075dd2786ee09804273aa8cff1921a793dbbd429b33d1604d389237d3d61"
+    },
+    {
+      "path": "scripts/host/n71_resource_readback.py",
+      "bytes": 4517,
+      "sha256": "24b2106e05d9832de66ae6b6bf291358ac385a6ff79108871b9b08d5b1b261f9"
+    },
+    {
+      "path": "scripts/host/n71_resource_result.py",
+      "bytes": 12994,
+      "sha256": "42659ef60adfadaa8cc0fdf80b2deacf7e88dfb9693b282ace2bfe8abdfa27f8"
+    },
+    {
+      "path": "scripts/host/n71_resource_stage.py",
+      "bytes": 10536,
+      "sha256": "6c7c2148e2b4a4308af2fcd7a5956fc118ad7ab96b2d638c6759df50e07071c1"
+    },
+    {
+      "path": "scripts/host/n71_scan_held_result.py",
+      "bytes": 10863,
+      "sha256": "70612133fb02d26a4cceaddde01c4777f22c070c20fc69b61e439e13573f2e3d"
+    },
+    {
+      "path": "scripts/host/n71_scan_pme_result.py",
+      "bytes": 2959,
+      "sha256": "ea08620386e7c65de46b4b2a753ce0365bfce81e4c204c797ba7fb8c84e72590"
+    },
+    {
+      "path": "scripts/host/n71_scan_result.py",
+      "bytes": 3702,
+      "sha256": "051615003afa1eb7091d5f2a73d931958e3463a407a1efc7cc5390c61a53a58f"
+    },
+    {
+      "path": "scripts/host/n71_scan_target_result.py",
+      "bytes": 4066,
+      "sha256": "37f2e7ce6fab4c26231097c7591d5bc7e9909c848e377b6a87c3c427d38afe7e"
+    },
+    {
+      "path": "scripts/host/n71_session_history.py",
+      "bytes": 2725,
+      "sha256": "4f6760e9b125cbcb7434631a91d2d88e59be53e29b6d889aad865855a70797bc"
+    },
+    {
+      "path": "scripts/host/persist.py",
+      "bytes": 12562,
+      "sha256": "fbdea22d81619ac3ad874089a7dc3f07a1e7c5f30eb6de5f16f42153ac5b4747"
+    },
+    {
+      "path": "scripts/host/profile_image.py",
+      "bytes": 4463,
+      "sha256": "19d4610eeb44ba50d9c29267e1b3bba250a03bb30e8f9a0e0d99abc4533fd427"
+    },
+    {
+      "path": "scripts/host/restore_journal.py",
+      "bytes": 3265,
+      "sha256": "8b475eab521ad7fb5c41a3c881f2de3d6ab580b5fff17e624f1c0166248fedb4"
+    },
+    {
+      "path": "scripts/host/return_ios.py",
+      "bytes": 5247,
+      "sha256": "1270d88375250eba01c169650e04555f18a1454a7f7cdae6b80ffdaf8609f2b5"
+    },
+    {
+      "path": "scripts/host/snapshot_lock.py",
+      "bytes": 1914,
+      "sha256": "c0196820353642da9fc56b5ee1e133d99764a36c3c76707c59b5805a97d4be72"
+    },
+    {
+      "path": "scripts/host/snapshot_retention.py",
+      "bytes": 5390,
+      "sha256": "f81d3770665ac9542022ab4f5f4f7d948cb01f112d812ebcad65ada30da470a3"
+    },
+    {
+      "path": "scripts/host/usb-shell.py",
+      "bytes": 4794,
+      "sha256": "c3faa3dc2bdbc0f4d6bb7dacaf8c6e073b820978cf0d5e04370f15a19fcb5c45"
+    },
+    {
+      "path": "tests/test_n71_driver_firmware.py",
+      "bytes": 9176,
+      "sha256": "0c9e07a22e9ecbb78205cb69bf6fd16c5271d9f28910622622b01631f9427a35"
+    },
+    {
+      "path": "tests/test_n71_driver_firmware_session.py",
+      "bytes": 17735,
+      "sha256": "93abe408a2b214358f0936842f385eed90bb840f15985853ef47316b2feff6ab"
+    }
+  ],
+  "public_input_count": 58,
+  "canonical_manifest_sha256": "891606a1b5b3315c756117ae13912edecbc9488ba0bce12dea43682c4095d6cf",
+  "same_inputs_verified_both_platforms": true,
+  "ast_files": 55,
+  "fatal_lint_passed_both_platforms": true,
+  "python_typechecker_configured": false,
+  "real_components": [
+    "Session.capture with log reservation",
+    "Held Journal atomic private persistence",
+    "generated shell with real temporary files, modes, hashes and noclobber"
+  ],
+  "modeled_boundaries": [
+    "SSH transport",
+    "kernel ABI and boot source",
+    "root UID in isolated fixture",
+    "sysfs string getter"
+  ],
+  "vm_sysfs_test": {
+    "vm_kernel": "6.8.0-142-generic",
+    "no_newline_bind_verified": true,
+    "one_nul_restore_verified": true,
+    "original_empty_parameter_restored": true,
+    "firmware_executed": false,
+    "iphone_accessed": false,
+    "source_loader_sha256": "fef0d9e7dc4b650beab1a70211a229f8fc1be528643919e92b267da702460f48",
+    "source_params_sha256": "51c0eb1dc55d1fcb6b32f6cd66a2ff93d2b516864e6b28a4e4bb583169b8771f"
+  },
+  "firmware_executed": false,
+  "iphone_accessed": false,
+  "kernel_payload_initramfs_and_modules_changed": false,
+  "legacy_mode_no_firmware_effect_proved": true,
+  "integration_into_cli_session_coordinator_complete": false,
+  "discarded_failures": [
+    "Initial fixture path rewriting duplicated /sys inside /proc/sys; corrected",
+    "Replay mutant first hit reserved logfile; corrected to a fresh output; FileExistsError not counted as kill",
+    "ARM64 harness consumed inherited stdin for commands without data; corrected after terminal timeout; timeouts not counted as kills"
+  ],
+  "next": [
+    "Wire opt-in staging before module transfer/REG_ON",
+    "Bind before first WCC load and restore after unload before provider release",
+    "Expose CLI without changing old call contracts",
+    "Prove firmware/regdb, Wi-Fi and energy on the phone in one grouped session"
+  ]
+}

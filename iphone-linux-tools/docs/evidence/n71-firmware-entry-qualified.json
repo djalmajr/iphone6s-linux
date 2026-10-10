@@ -1,0 +1,51 @@
+{
+  "format": 1,
+  "status": "firmware_cli_entry_qualified_offline_not_physical_radio_or_energy_proof",
+  "code_commit": "ab25cefb96d09815fffa5354dbb847623d13cf6f",
+  "new_tests_per_platform": 4,
+  "new_assertion_mutations_per_platform": 3,
+  "affected_tests_per_platform": 11,
+  "affected_assertion_mutations_per_platform": 23,
+  "platforms": [
+    "macOS",
+    "Ubuntu24.04 ARM64 dedicated VM"
+  ],
+  "public_input_count": 602,
+  "canonical_manifest_sha256": "9105825b9972d5500e85f57cd5453da1fed8f76471bb3403654769e5853321b7",
+  "same_inputs_both_platforms": true,
+  "changed_inputs": [
+    {
+      "path": "scripts/host/n71-runtime-session.py",
+      "bytes": 1431,
+      "sha256": "6ae307102d6db5fe26fc916f52219313201403c026ad0652d62c689db63850c2"
+    },
+    {
+      "path": "tests/test_n71_firmware_cli_entry.py",
+      "bytes": 6599,
+      "sha256": "b960632aebb046aa59531260bd5877973960e0c9aa49e28141ad4b151b720727"
+    }
+  ],
+  "ast_python_files": 271,
+  "fatal_lint_passed_both_platforms": true,
+  "python_typechecker_configured": false,
+  "real_argparse_and_cli_selector": true,
+  "relative_firmware_path_made_absolute": true,
+  "exact_legacy_five_field_request_preserved": true,
+  "local_check_no_output_or_ssh_usb_proved": true,
+  "actual_calibrated_profile_and_real_firmware_package_entry_check_passed": true,
+  "fixture_identity_and_trust_anchors_synthetic": true,
+  "firmware_executed": false,
+  "iphone_accessed": false,
+  "kernel_payload_initramfs_modules_defaults_or_mac_global_config_changed": false,
+  "discarded_harness_failure": "Omission mutant first raised KeyError; assertion on key presence was added; error was not counted as kill",
+  "reused_proofs": [
+    "C6c2B coordinator integration21/35 with unchanged helpers",
+    "C6c2A firmware library9/10 and VM sysfs restoration",
+    "unchanged native C/build artifacts"
+  ],
+  "next": [
+    "Issue42 same-boot reacquisition using proved stopped source",
+    "Complete firmware/regdb reproduction and energy preconditions",
+    "Grouped physical radio/telemetry proof"
+  ]
+}

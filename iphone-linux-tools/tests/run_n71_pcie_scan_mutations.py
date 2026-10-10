@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+"""Reject config-scan safety regressions by compiled assertion failure."""
+import os
+from pathlib import Path
+import resource
+import shutil
+import subprocess
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[1]
+MUTATIONS = (
+    ('pme-equality-bypass', '/* Handle PME_STATUS before generic equality:',
+     'if (observed == request->value) return 0;\n\t/* Handle PME_STATUS before generic equality:'),
+    ('pme-active-hidden', 'if (observed != 8)', 'if ((observed & ~0x8000U) != 8)'),
+    ('pme-root-scope', 'if (request->root && request->where == 0x44',
+     'if (request->where == 0x44'),
+    ('pme-width-scope', 'request->where == 0x44 && request->size == 2',
+     'request->where == 0x44'),
+    ('pme-request-widened', 'request->value == 0x8008 ?',
+     '(request->value & ~0x100U) == 0x8008 ?'),
+    ('pme-identity-lost', 'identity != 0x1004106b ||', 'identity == 0 ||'),
+    ('pme-master-lost', '(command & 4) || !(status & 0x10)', '(command & 8) || !(status & 0x10)'),
+    ('pme-caps-status-lost', '!(status & 0x10) ||', 'status == 0 ||'),
+    ('pme-pointer-lost', 'pointer != 0x40 ||', 'pointer == 0 ||'),
+    ('pme-cap-id-lost', '(header & 0xff) != 1 ||', '(header & 0xff) == 0xff ||'),
+    ('pme-version-zero', '|| !version || version > 3', '|| version > 3'),
+    ('pme-version-widened', '|| !version || version > 3', '|| !version || version > 7'),
+    ('pme-event-race-hidden', 'pmcsr_now == observed ? 0 : -EAGAIN',
+     '(pmcsr_now & ~0x8000U) == observed ? 0 : -EAGAIN'),
+    ('pme-raw-w1c', 'pmcsr_now == observed ? 0 : -EAGAIN',
+     'pmcsr_now == observed ? io->write(io->context, true, 0x44, 2, 0x8008) : -EAGAIN'),
+    ('wrong-serr-bit', 'request->value == (saved->control | 2U)',
+     'request->value == (saved->control | 1U)'),
+    ('serr-reset-widened', 'request->value == ((saved->control & ~0x20U) | 2U)',
+     'request->value == ((saved->control & ~0x20U) | 2U) || request->value == (saved->control | 0x40U)'),
+    ('window-status-width', 'n71_scan_bridge_sizes[] = {2, 4, 4}',
+     'n71_scan_bridge_sizes[] = {4, 4, 4}'),
+    ('window-snapshot-lost', '&saved->bridge_windows[bar]);', '&buses);'),
+    ('window-probe-widened', 'request->value == n71_scan_bridge_probes[index]',
+     'request->value != original'),
+    ('window-restore-skipped', 'if (root) {\n\t\t\tfor (bar = 0; bar < 3; bar++)',
+     'if (root) {\n\t\t\tfor (bar = 3; bar < 3; bar++)'),
+    ('wrong-intx-bit', 'command = request->value & ~0x400U;', 'command = request->value & ~0x800U;'),
+    ('widen-intx-mask', 'command = request->value & ~0x400U;', 'command = request->value & ~0xc00U;'),
+    ('wrong-endpoint', '0x1004106b : 0x43a314e4', '0x1004106b : 0x43a414e4'),
+    ('master-at-capture', 'saved->command & 4)', 'saved->command & 8)'),
+    ('class-scope', '0x060400 : 0x028000', '0x060400 : 0x020000'),
+    ('bus-scope', '(buses & 0xffffff) != 0x010100', '(buses & 0xffffff) != 0x000100'),
+    ('rom-enabled', 'saved->rom & 1)', 'saved->rom & 2)'),
+    ('master-write', 'request->value & 4)', 'request->value & 8)'),
+    ('write-limit', '> N71_SCAN_MAX_WRITES', '>= N71_SCAN_MAX_WRITES'),
+    ('lost-latch', 'if (config->error)\n\t\treturn config->error;',
+     'if (config->error == -E2BIG)\n\t\treturn config->error;'),
+    ('decode-on-sizing', '(command & 7)', '(command & 4)'),
+    ('secondary-status-clear', '!(observed & mask)', '!(observed & (mask & ~0x800U))'),
+    ('arbitrary-change', 'if (!allowed)', 'if (!allowed && request->where == 0x1000)'),
+    ('reenable-failed-bar', 'if (!function_error)\n\t\t\tfunction_error =',
+     'if (function_error)\n\t\t\tfunction_error ='),
+    ('lost-readback', 'actual == value ? 0 : -EIO', '(actual & ~1U) == (value & ~1U) ? 0 : -EIO'),
+    ('premature-snapshot', 'if (!io || !io->read || !io->write || !out)',
+     'if (out) *out = result;\n\tif (!io || !io->read || !io->write || !out)'),
+)
+
+
+def main():
+    compiler = shutil.which('cc')
+    if compiler is None:
+        raise RuntimeError('Native compiler required; gate not passed.')
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+    source = (ROOT / 'phone/kernel/n71-pcie-scan-config.h').read_text()
+    with tempfile.TemporaryDirectory(prefix='n71-scan-mutations-') as directory:
+        folder = Path(directory)
+        for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h'):
+            shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
+        header, binary = folder / 'n71-pcie-scan-config.h', folder / 'scan'
+        for name, before, after in (('baseline', None, None),) + MUTATIONS:
+            if before is not None and source.count(before) != 1:
+                raise ValueError('Mutation anchor is not unique: ' + name)
+            header.write_text(source if before is None else source.replace(before, after, 1))
+            compiled = subprocess.run(
+                [compiler, '-std=c11', '-Wall', '-Wextra', '-Werror', '-pedantic',
+                 '-I', str(folder), str(ROOT / 'tests/n71_pcie_scan_config.c'),
+                 '-o', str(binary)], capture_output=True, text=True, timeout=30)
+            if compiled.returncode:
+                raise RuntimeError('Compilation error is not a kill: ' + name + compiled.stderr)
+            result = subprocess.run([str(binary)], capture_output=True, text=True,
+                                    timeout=5, cwd=folder, env=dict(os.environ, LC_ALL='C'))
+            if before is None:
+                if result.returncode or 'N71_PCIE_SCAN_CONFIG_OK' not in result.stdout:
+                    raise RuntimeError('Baseline failed: ' + result.stderr)
+            elif result.returncode != -6 or 'assert' not in result.stderr.lower():
+                raise RuntimeError('Missing SIGABRT/assertion proof: ' + name + result.stderr)
+            else:
+                print('N71_SCAN_ASSERTION_KILL ' + name, flush=True)
+    print('N71_SCAN_MUTATION_GATE_OK ' + str(len(MUTATIONS)))
+
+
+if __name__ == '__main__':
+    main()
