@@ -249,4 +249,13 @@ Assumir o fluxo de retorno ao iOS para recarga após instruir a reinicializaçã
 - **Alternativas:** carregar WCC no preflight mistura staging e efeito; executar assignment só para liberar owners fabrica uma operação; reboot descarta evidência e exige novo DFU.
 - **Reverter:** baixo antes da exposição física; helper opt-in e validação específica, defaults/kernel preservados.
 - **Onde:** C2 em 3a6afb8, C3 no plano host; depois composição/CLI, firmware e energia.
-- **Status:** C2 aplicada/qualificada 135/149 Mac/ARM64. C3 na fila com contrato fechado; Wi-Fi/carga/prova física continuam pendentes. Nenhuma intervenção do operador necessária agora.
+- **Status:** C2 aplicada/qualificada 135/149 Mac/ARM64. C3 aplicada em a21afce; 33/45 Mac/ARM64. Wi-Fi/carga/prova física continuam pendentes. Nenhuma intervenção do operador necessária agora.
+
+## D28. Compor WCC como arquivos privados, mantendo a ativação explícita
+
+- **Decisão:** adicionar opt-in de composição runtime e diretório WCC, selecionar os sete arquivos pela base C1 e registrá-los na provenance. O compositor não carrega módulos ou altera o perfil ativo.
+- **Por quê:** Session já precisa dos cinco WCC antes do getter; um perfil completo deve fornecer esses arquivos verificáveis sem introduzir autoload ou reboots intermediários.
+- **Alternativas:** embutir/cargar WCC no initramfs ativa antes do journal; substituir o diagnóstico implicitamente modifica perfis antigos; copiar manualmente sem provenance permite misturar builds.
+- **Reverter:** baixo; opt-in e helper de composição, kernel/identidades/defaults preservados.
+- **Onde:** C4 no plano host; compositor/helper/teste, CLI e firmware/energia seguintes.
+- **Status:** contrato fechado, em fila. Goal e provas físicas permanecem pendentes.

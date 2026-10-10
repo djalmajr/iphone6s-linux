@@ -6,6 +6,22 @@ A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O n
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.
 
+## Encerramento antes de assignment — fase C3
+
+Em `a21afce`, uma origem adquirida pode ser observada e encerrada sem inventar assignment. Exige resource_attempted=false exato, summary None, nenhuma prova de assignment, ledgers vazios, stack fresco ausente e mesmo boot. O checkpoint adquirido ancora o histórico; somente REG_ON_READ canônicos posteriores são admitidos. Owners nativos ou lease MSI manual continuam recusados.
+
+Observe salva evidência sem efeitos. Stop usa cleanup/unload normais dos providers e restore/unload de REG_ON, com proofs e prefixes completos; stop já removido não repete efeitos. Start continua recusado antes de assignment com erro explícito, preservando os providers. Intenção pendente, summary/prova ausentes ou divergentes não são tratados como aquisição simples. O caso assigned anterior conserva suas verificações e a primeira causa.
+
+### Reprodução e limites
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_runtime_unassigned_stop.py -v
+```
+
+Novo gate **6 testes/9 mutações por AssertionError**; quatro gates diretamente afetados **33 testes/45 mutações por plataforma Mac/Ubuntu ARM64**, 374 inputs íntegros, AST/lint fatal; sem typechecker Python configurado. Journal/source/coordenador/lifetime/held/resource/IOMMU/filesystem reais; telefone/kernel sintéticos. A origem permanece byte a byte intacta após observe→stop→stop no mesmo boot. A primeira rodada coletou uma classe auxiliar com testes herdados; a classe ficou local ao setup e somente o gate corrigido foi retomado antes da matriz final. Falhas de coleta não foram contadas como prova. [Evidência sanitizada](evidence/n71-runtime-unassigned-stop-qualified.json), scripts/logs privados em `runtime/n71-runtime-unassigned-final-20261010/` e pasta correspondente na VM.
+
+370 dos 372 inputs anteriores e os 69 inputs C permanecem iguais; kernel/Image/exports e binários não mudaram. Gates/builds C 575/455 e evidência anterior com dependências relevantes inalteradas foram reutilizados. Nenhum acesso ao iPhone, DFU, reboot, instalação ou configuração global. Próximo: compor os sete módulos no perfil privado e expor os comandos explícitos, depois firmware/calibração/regdb e energia antes do teste físico agrupado. Wi-Fi e carga Linux continuam sem prova física.
+
 ## Session e staging explícitos — fase C2
 
 Em `3a6afb8`, Session aceita `runtime=None` ou cinco pares de registro/bytes WCC. O modo explícito exige held/resource/IOMMU power2, os registros exatos de C1 e bytes imutáveis com tamanho/SHA corretos. A instância conserva cópias próprias dos dois diagnósticos e dos cinco drivers, com manifest e journals separados. None conserva o fluxo anterior; a CLI ainda não oferece esse modo.

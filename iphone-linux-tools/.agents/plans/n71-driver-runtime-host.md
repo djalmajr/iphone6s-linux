@@ -245,5 +245,22 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **Verificação:** journal/source/coordenador/lifetime/held/resource/IOMMU reais com dependências kernel/SSH sintéticas. Ciclo observe→stop no mesmo boot sem assign/prepare/WCC load; stop removido idempotente, start recusado, origem intacta e source loader aceita cleanup genuíno. Negativas de intenção/prova/resumo, boot/prefixos, native/module owners, MSI, cleanup e unload; mutações reais após baseline verde, somente AssertionError. AST/lint Mac/ARM64, gates diretamente afetados; preservar C/builds e não pedir ação ao operador.
 
-- [ ] Implementar e qualificar observe/stop pré-assignment.
+- [x] Implementar e qualificar observe/stop pré-assignment.
 - [ ] Integrar composição/CLI e a sequência inicial após esse aceite, antes da candidata física.
+
+**C3 qualificada em a21afce:** 6/9 novos e 33/45 nos quatro gates afetados por plataforma Mac/Ubuntu ARM64, 374 inputs íntegros, AST/lint fatal. Observe→stop→stop pré-assignment preserva origem e boot, start é recusado; coleta herdada inicial corrigida antes do aceite. 370 dos 372 inputs anteriores e 69 C iguais; kernel/builds/binários preservados. Composição/CLI, firmware/energia e prova física seguem pendentes; nenhuma ação no aparelho.
+
+### C4. Composição privada dos sete módulos — contrato fechado
+
+**Contexto:** C1 seleciona os registros, C2 liga Session/staging e C3 fecha a saída sem assignment. `compose-n71-diagnostic.py:108–125` ainda aceita somente os diagnósticos antigos; o perfil precisa conter os sete arquivos sem autoload. Manter kernel/Image, initramfs, SSH e payload/DTB/ASPM qualificados.
+
+**Arquivos executáveis (três):** novo `scripts/host/n71_driver_runtime_compose.py`, novo `tests/test_n71_driver_runtime_compose.py` e hooks localizados em `scripts/build/compose-n71-diagnostic.py`. CLI de sessão/coordenador, kernel, firmware e iPhone ficam para depois. Conferir imports/helpers mortos antes de modificar o compositor.
+
+**Interface:** helper `select(root, request)` com request exatamente release, pcie_sha256 e directory (Path privada contendo os cinco WCC em nomes planos). Retorna diagnostics (dois registros C1) e drivers (cinco pares próprios de registro/bytes). Seletores C1 reais; ler apenas os cinco arquivos selecionados, exigindo proteção privada, arquivo regular sem link, bytes/SHA e ELF64/AArch64/vermagic exatos. Não copiar rfkill-gpio/BCA/CYW ou outros arquivos.
+
+**Compositor:** adicionar `--pcie-driver-runtime` e `--wcc-dir`. O runtime exige explicitamente ASPM off, held, resource-capable, iommu-parent, power2 e REG_ON; diretório WCC sem runtime é recusado. Validar flags antes de ler identidades. Somente no modo explícito, `held_reg_module` usa os diagnostics C1 e main obtém os cinco pares do helper antes de criar output. Copiar os cinco `.ko` com private_write junto aos dois diagnósticos. Provenance explícita inclui pcie_driver_runtime=true e driver_modules com os cinco registros; defaults conservam os campos/arquivos antigos. Nenhum módulo ou firmware é carregado, initramfs/payload não ganha autoload e o perfil ativo não muda.
+
+**Verificação:** seletores/evidência/filesystem reais com ELF sintéticos na fixture, testes do helper e despacho real do compositor; recusar arquivos ausentes, hash/ABI/tipos, link/permissão, base misturada e flags sem escopo antes de output/identidades. Preservar as provas dos perfis anteriores; mutações reais com baseline verde e AssertionError, AST/lint Mac/ARM64. Compor uma candidata privada com artefatos reais no Mac e verificar sete arquivos/provenance/kernel/payload/identidades preservados, sem boot, SSH ou mudança do perfil ativo. A prova física e a CLI de execução seguem depois.
+
+- [ ] Integrar e qualificar a composição privada runtime/WCC.
+- [ ] Fechar a CLI de sessão, depois firmware/calibração/regdb e energia antes da candidata física.
