@@ -397,5 +397,5 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 **FaseB depois de A:** expor ação reacquire com source obrigatório pelo CLI/entry. prepare antes de held.run fresco/source=None; respeitar --check. Gate de dois ciclos completos, logs/dirs/journals distintos e mesmo boot, com firmware. Validar a ação integrada fisicamente na mesma sessão de Wi-Fi/energia, sem outro DFU. Nenhuma inferência de rádio/carga por este gate.
 
-- [ ] A: preparar histórico e lineage após source/probe comprovados.
+- [x] A: preparar histórico e lineage após source/probe comprovados. Commit1e9697e;9 testes de contrato e13 mutações AssertionError por Mac/ARM64,604 inputs idênticos,273 AST/lint fatal. Provas anteriores de dependências reutilizadas; nenhum acesso ao telefone.
 - [ ] B: ligar ação e provar dois ciclos no mesmo boot.

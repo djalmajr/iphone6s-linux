@@ -340,4 +340,4 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 - **Alternativas:** apagar dmesg elimina evidência; relaxar o preflight aceita owners desconhecidos; novo boot custa ação física e autenticação. Repetir intents pendentes não é aceitável.
 - **Reverter:** baixo antes da prova física; novo modo explícito, defaults intactos.
 - **Onde:** C6d no plano host e issue42; primeiro helper/tests, depois CLI e dois ciclos.
-- **Status:** contrato fechado para A, implementação pendente. C6c2C concluída em ab25cef com11/23 por plataforma e entry real --check aprovado.
+- **Status:** A implementada em1e9697e e qualificada em Mac/ARM64:9 testes de contrato e13 mutações,604 inputs iguais. B segue pendente: CLI/action e dois ciclos completos; nenhum DFU necessário para desenvolver esses gates.

@@ -715,3 +715,17 @@ python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_cli.py -v
 Novo gate4 testes/3 mutações e matriz11 testes/23 mutações AssertionError por plataforma Mac/ARM64;602 inputs SHA iguais,271 AST/lint fatal. Argparse, paths, selectors e filesystem reais; identidades/trust anchors da fixture sintéticos. KeyError inicial de um mutant foi corrigido para asserção explícita e descartado como kill. O gate real é separado da fixture. Nenhum typechecker Python, banco, dependência, config global Mac ou ação no telefone. [Evidência](evidence/n71-firmware-entry-qualified.json).
 
 Helper/coordenador/biblioteca/native C e builds inalterados permitem reuso dos gates21/35 e9/10. A CLI está exposta; firmware/regdb/radio/calibração no kernel, gauge/carga e operação contínua continuam sem comprovação física. Próximo: [issue42](https://github.com/djalmajr/iphone6s-linux/issues/42) e precondições de energia antes da sessão agrupada. Nenhuma confirmação rotineira será solicitada.
+
+### Preparação de outro ciclo no mesmo boot — C6d A
+
+1e9697e acrescenta `n71_driver_reacquire.prepare(session, request)`. O request exige root/source/identity/check. A origem precisa estar stopped, com cleanup integral comprovado, checkpoint e receipts registrados, ausência de owners e causa coerente. Um erro anterior negativo é preservado; não vira sucesso por ter liberado os recursos.
+
+O gate local não usa capture nem cria output. Fora de check, o helper usa o snapshot existente e um comando somente de leitura para conferir boot, histórico, módulos/driver ausentes e path de firmware vazio. Todos os atributos da sessão nova são restaurados em finally. Só após aprovação entram o histórico conhecido e a lineage privada; assignment/journals/owners antigos não migram. O preflight seguinte revalida permissões/hashes da origem e igualdade exata de UUID/histórico. Logs brutos e a origem permanecem completos.
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_reacquire.py -v
+```
+
+Mac/ARM64 aprovaram9 testes de contrato e13 mutações por AssertionError (10 casos unittest, incluindo o runner de mutações);604 inputs iguais,273 arquivos Python com AST e lint fatal. Loader/coordenador/journals e Bash/filesystem são reais; PCI/WCC e kernel/sysfs são simulados. Não há typechecker Python configurado. Nenhuma instalação, alteração de banco/configuração global ou ação no iPhone; desempenho físico não medido. [Evidência](evidence/n71-reacquire-qualified.json).
+
+A ação de terminal e a prova de dois ciclos completos ainda pertencem à faseB; esta etapa não as declara prontas. [Issue42](https://github.com/djalmajr/iphone6s-linux/issues/42) e o goal continuam abertos, com Wi-Fi/telemetria/carga exigindo prova física. O retorno ao iOS será assumido operacionalmente para recarga sem solicitar confirmações rotineiras; não será descrito como prova física observada.
