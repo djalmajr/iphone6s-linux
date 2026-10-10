@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — caller e observação host qualificados; journal e rádio pendentes
+## Checkpoint atual — ledger runtime qualificado e firmware privado; rádio/energia pendentes
+
+Em `71b8c37`, o journal grava intent antes das actions nativas e conserva proof/owners/primeira causa; recupera intent por leitura e completion por proof registrado. Mac/Ubuntu ARM64:90 testes/169 mutações por AssertionError,263 inputs preservados, AST/lint fatal; nenhum typechecker Python configurado. Kernel575/455/build reutilizados com69 inputs iguais, sem rebuild. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#journal-das-actions-nativas--fase-b1), [evidência](evidence/n71-driver-runtime-journal-qualified.json).
+
+Candidato BCM4350 privado baixado da revisão oficial fixada,626.140 bytes, blobs/hashes/licença conferidos; compatibilidade/calibração N71 ainda pendentes. [Origem e limites](N71_BRCMFMAC_RUNTIME.md#candidato-privado-de-firmware--origem-verificada). Nenhum firmware publicado/executado, action automática, módulo/perfil, DFU/reboot, pacote/configuração global ou rede da VM alterados. Próximo trecho: coordenador/unload/cleanup/MSI-DMA e recuperação de crash antes do hash/checkpoint; depois seleção C, calibração e energia para a sessão física agrupada. Wi-Fi/carga Linux/goal/issues40/9/2 continuam abertos. Nenhuma ação do operador necessária agora.
+
+CI anterior1286199 concluiu seis jobs verdes nos dois eventos: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38042445474), [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38042442060). Essa CI não cobre71b8c37; o novo head terá execução própria.
+
+## Histórico — observação host qualificada
 
 Em `3dfa1cb`, a observação host valida o getter runtime, seleção imutável, owners e primeira causa assíncrona; prepara resultados nativos de actions. Mac/Ubuntu ARM64:80 testes/154 mutações por AssertionError, AST/lint fatal e260 inputs íntegros. Não há typechecker Python configurado. O caller kernel anterior conserva575 cenários/455 mutações e módulo completo142.232 bytes/SHA b4888de1, sem rebuild:69 inputs C iguais. [Reprodução e limites](N71_BRCMFMAC_RUNTIME.md#observação-host--fase-a), [evidência](evidence/n71-driver-runtime-observation-qualified.json), [plano](../.agents/plans/n71-driver-runtime-host.md).
 

@@ -141,6 +141,24 @@ Mac e Ubuntu ARM64:80 testes/154 mutações por AssertionError, sendo novo proto
 
 A CI anterior `6e1cc9c` concluiu os seis jobs verdes nos eventos [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38039049902) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38039046638). Ela não cobre `3dfa1cb`; o novo head terá CI própria. Nenhum módulo/perfil/firmware selecionado, setter, reboot/DFU ou pacote/configuração global alterado. O goal amplo e as issues40/9/2 permanecem abertos; próxima fase registra intent/proof de actions e unload/release antes da seleção e da candidata física agrupada.
 
+## Journal das actions nativas — fase B1
+
+Em `71b8c37`, o journal held conserva a seleção runtime e um ledger de prepare/publish/release. O intent é sincronizado no arquivo e diretório antes do setter; cada tentativa usa um proof exclusivo. A completion deriva do resultado nativo e getter, com concordância action/shell/SSH exit e conservação de owners parciais/primeira causa. A recuperação de intent pendente apenas observa o mesmo boot; não reenviará o setter nem inventará SSH exit. Proof cujo hash já foi salvo reconstrói a atualização de completion interrompida. O coletor filtra stdout, portanto a action lê o log privado completo. [Evidência](evidence/n71-driver-runtime-journal-qualified.json), [plano](../.agents/plans/n71-driver-runtime-host.md#b1-journal-das-actions-nativas--contrato-fechado).
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_stage.py -v
+```
+
+O gate novo tem10 testes/15 mutações por AssertionError; com os seis gates da observação acima,90/169 por plataforma no Mac/Ubuntu ARM64.263 inputs íntegros, AST/lint fatal, journal/source loader reais e shell POSIX em filesystem temporário aprovados; não há typechecker Python. As primeiras fixtures/harness falharam e não contaram como kills; somente a matriz final passou.69 inputs C preservados permitem reutilizar575/455 e o módulo qualificado sem build/DFU.
+
+Essa fase não chama actions automaticamente nem habilita perfil/CLI. B2 ainda deve integrar unload normal, cleanup e estado MSI/DMA/histórico com driver ativo; também deve recuperar a janela anterior ao hash de proof e checkpoint antigo/ausente. Não declarar todos os pontos de crash recuperáveis. A seleção C aguarda essas condições e a candidata firmware/energia; nenhum efeito físico novo ocorreu.
+
+## Candidato privado de firmware — origem verificada
+
+A revisão oficial `31ec35bf14df835e2f9f7c8b1a8516a34f836df5` de [linux-firmware](https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/31ec35bf14df835e2f9f7c8b1a8516a34f836df5/brcm/) contém `brcmfmac4350-pcie.bin`. O candidato privado tem626.140 bytes, SHA256 `5691d1e0ceb70baf18efb7a0ec6cb84feb9edd2d0700c525b42930c4e7e4b845`; o blob Git foi conferido contra o índice fixado. WHENCE vincula o arquivo à licença Broadcom, também baixada e conferida pelo blob/hash da mesma revisão. [Metadados sanitizados](evidence/n71-firmware-candidate-origin.json).
+
+Nenhum firmware foi publicado no repositório, executado ou instalado no Mac/iPhone. A falha de DNS da VM foi conservada; a leitura no Mac não alterou a rede da VM. O nome da família corresponde ao chip/revisão observados, mas isso não comprova compatibilidade N71, calibração/NVRAM ou rádio. Esses requisitos continuam pendentes antes do carregamento físico.
+
 ## Histórico das fases anteriores
 
 As seções abaixo registram o estado nos commits de cada fase. As pendências de caller/MSI nelas descritas foram resolvidas pela fase2b acima; as receitas e evidências originais permanecem para reprodução e análise. Elas não descrevem o estado atual de ativação física.
