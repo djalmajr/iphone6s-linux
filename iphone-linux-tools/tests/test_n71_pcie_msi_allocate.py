@@ -50,7 +50,8 @@ class MsiAllocationTests(unittest.TestCase):
         source = (ROOT / 'phone/kernel/n71-pcie-msi-allocate.h').read_text()
         with tempfile.TemporaryDirectory(prefix='n71-msi-allocation-') as directory:
             folder = Path(directory)
-            for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h', 'n71-wlan-msi-config.h'):
+            for name in ('n71-pcie-contract.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h', 'n71-wlan-msi-config.h',
+                         'n71-msi-allocation-lease.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
             (folder / 'n71-pcie-resource-assign.h').write_text('/* Dependency API supplied by harness. */\n')
             for name, before, after in (('baseline', None, None),) + MUTATIONS:

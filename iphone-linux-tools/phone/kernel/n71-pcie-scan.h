@@ -16,6 +16,7 @@
 #include "n71-pcie-resource-write.h"
 #include "n71-wlan-msi-host.h"
 #include "n71-wlan-msi-config.h"
+#include "n71-msi-allocation-lease.h"
 #include "n71-dart-host.h"
 
 struct n71_scan_host {
@@ -28,6 +29,7 @@ struct n71_scan_host {
 	struct n71_resource_write_state resources;
 	struct n71_wlan_msi_host msi;
 	struct n71_msi_config msi_config;
+	struct n71_msi_allocation msi_allocation;
 	struct n71_dart_host dart;
 	/* Borrowed while PCI consumers are alive; cleared after bus removal. */
 	struct iommu_domain *iommu_domain;

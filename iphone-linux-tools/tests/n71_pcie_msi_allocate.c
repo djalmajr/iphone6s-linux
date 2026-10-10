@@ -2,6 +2,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
 #include "n71-wlan-msi-config.h"
 #define N71_PCIE_RESOURCE_ASSIGN_H
 #define PCI_UNKNOWN 5
@@ -224,6 +227,9 @@ static void released(struct n71_msi_allocation *lease)
 }
 int main(void)
 {
+#ifdef __linux__
+	assert(prctl(PR_SET_DUMPABLE, 0UL, 0UL, 0UL, 0UL)==0);
+#endif
 	struct n71_msi_allocation lease;
 	unsigned int i;
 	const int errors[] = {0,-ETIMEDOUT,-EIO,-EIO,-EIO,-ENOSPC,-EIO,-EIO,-EIO,

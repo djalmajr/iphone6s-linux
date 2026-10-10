@@ -2,12 +2,8 @@
 /* Caller serializes the lease with bus/provider teardown. No IRQ handler. */
 #ifndef N71_PCIE_MSI_ALLOCATE_H
 #define N71_PCIE_MSI_ALLOCATE_H
+#include "n71-msi-allocation-lease.h"
 #include "n71-pcie-resource-assign.h"
-
-struct n71_msi_allocation {
-	struct pci_dev *endpoint;
-	unsigned int default_irq, vector;
-};
 
 static inline int n71_msi_allocation_error(struct n71_scan_host *host)
 {
