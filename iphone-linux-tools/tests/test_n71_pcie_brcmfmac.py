@@ -42,7 +42,10 @@ MUTATIONS = (
     ('starve-scan-after-runtime', 'scan', 'host->driver_reads++;', 'host->reads++;'),
     ('deny-prepared-enable', 'scan', '(dev == host->driver_root || dev == host->driver_endpoint)', '(false)'),
     ('enable-other-device', 'scan', '(dev == host->driver_root || dev == host->driver_endpoint)', '(true)'),
-    ('remove-active-driver', 'scan', 'host->brcmfmac.active || host->driver_root || host->driver_endpoint', 'false'),
+    ('remove-active-driver', 'scan', 'if (n71_scan_driver_pending(host))', 'if (false)'),
+    ('ignore-pm-owner', 'scan', 'host->driver_pm || host->driver_root_override', 'host->driver_root_override'),
+    ('ignore-root-override', 'scan', 'host->driver_root_override || host->driver_endpoint_override', 'host->driver_endpoint_override'),
+    ('ignore-endpoint-override', 'scan', '|| host->driver_endpoint_override;', ';'),
 )
 
 
@@ -54,7 +57,7 @@ class PcieBrcmfmacTests(unittest.TestCase):
         resource.setrlimit(resource.RLIMIT_CORE, (0, limits[1]))
         self.addCleanup(resource.setrlimit, resource.RLIMIT_CORE, limits)
         scan = functions((ROOT / 'phone/kernel/n71-pcie-scan.h').read_text(), (
-            'n71_scan_raw_read', 'n71_scan_raw_write', 'n71_scan_config_read',
+            'n71_scan_driver_pending', 'n71_scan_raw_read', 'n71_scan_raw_write', 'n71_scan_config_read',
             'n71_scan_config_write', 'n71_scan_deny_enable', 'n71_pcie_scan_remove_consumers'))
         power = functions((ROOT / 'phone/kernel/n71-pcie-msi-allocate.h').read_text(), (
             'n71_msi_allocation_error', 'n71_msi_allocation_power'))

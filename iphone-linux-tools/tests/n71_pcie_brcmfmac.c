@@ -226,6 +226,18 @@ int main(void)
 	assert(n71_pcie_scan_remove_consumers(&state) == -EBUSY && !mock.removes && !mock.unmaps);
 	release(); assert(mock.disables == 2);
 	assert(n71_pcie_scan_remove_consumers(&state) == 0 && mock.removes == 1 && mock.unmaps == 1);
+	/* Mutation: ignore a PM/override-only owner during consumer removal. */
+	for (unsigned int fault=0;fault<6;fault++) {
+		fresh();
+		if (fault==0) mock.host.brcmfmac.active=true;
+		if (fault==1) mock.host.driver_root=&mock.root;
+		if (fault==2) mock.host.driver_endpoint=&mock.endpoint;
+		if (fault==3) mock.host.driver_pm=true;
+		if (fault==4) mock.host.driver_root_override=true;
+		if (fault==5) mock.host.driver_endpoint_override=true;
+		assert(n71_pcie_scan_remove_consumers(&state) == -EBUSY);
+		assert(!mock.removes && !mock.releases && !mock.unmaps);
+	}
 	/* Mutations: omit dependencies/scope or steal a preexisting override. */
 	for (unsigned int fault=0;fault<10;fault++) {
 		fresh();

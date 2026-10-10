@@ -8,8 +8,7 @@
 
 static inline bool n71_brcmfmac_pending(const struct n71_scan_host *host)
 {
-	return host->brcmfmac.active || host->driver_root || host->driver_endpoint ||
-		host->driver_pm || host->driver_root_override || host->driver_endpoint_override;
+	return n71_scan_driver_pending(host);
 }
 
 static inline int n71_pcie_brcmfmac_prepare(struct pci_host_bridge *bridge,
@@ -106,6 +105,10 @@ put:
 static inline int n71_pcie_brcmfmac_publish(struct pci_host_bridge *bridge,
 					  struct n71_scan_host *host)
 {
+	unsigned long flags;
+	bool present;
+	int error;
+
 	if (!bridge || !host || !bridge->bus || bridge->bus->sysdata != host)
 		return -ENODEV;
 	if (host->driver_published)
@@ -118,9 +121,13 @@ static inline int n71_pcie_brcmfmac_publish(struct pci_host_bridge *bridge,
 	host->driver_published = true;
 	pci_bus_add_devices(bridge->bus);
 	pci_unlock_rescan_remove();
-	if (!pci_device_is_present(host->driver_root) || !pci_device_is_present(host->driver_endpoint))
-		return n71_brcmfmac_error(&host->brcmfmac, -EIO);
-	return host->brcmfmac.error ? host->brcmfmac.error : host->io_error;
+	present = pci_device_is_present(host->driver_root) && pci_device_is_present(host->driver_endpoint);
+	spin_lock_irqsave(&host->lock, flags);
+	if (!present)
+		n71_brcmfmac_error(&host->brcmfmac, -EIO);
+	error = host->brcmfmac.error ? host->brcmfmac.error : host->io_error;
+	spin_unlock_irqrestore(&host->lock, flags);
+	return error;
 }
 
 static inline int n71_brcmfmac_clear_override(struct pci_dev *device, const char *name)

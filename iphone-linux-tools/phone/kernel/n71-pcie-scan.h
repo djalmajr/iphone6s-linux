@@ -47,6 +47,12 @@ struct n71_scan_host {
 	int io_error, held_stop_error;
 };
 
+static inline bool n71_scan_driver_pending(const struct n71_scan_host *host)
+{
+	return host->brcmfmac.active || host->driver_root || host->driver_endpoint ||
+		host->driver_pm || host->driver_root_override || host->driver_endpoint_override;
+}
+
 static int n71_scan_raw_read(void *context, bool root, u32 where,
 			     unsigned int size, u32 *value)
 {
@@ -389,7 +395,7 @@ static int n71_pcie_scan_remove_consumers(struct n71_diagnostic *state)
 	if (!bridge)
 		return 0;
 	host = pci_host_bridge_priv(bridge);
-	if (host->brcmfmac.active || host->driver_root || host->driver_endpoint)
+	if (n71_scan_driver_pending(host))
 		return -EBUSY;
 	if (host->resources.active || host->msi_config.phase != N71_MSI_CONFIG_EMPTY)
 		return -EBUSY;

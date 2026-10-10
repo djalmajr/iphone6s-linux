@@ -27,6 +27,14 @@ Fase2a (cinco arquivos): este plano, `phone/kernel/n71-pcie-scan.h`, novo `phone
 
 Fase2b, antes de selecionar/carregar: guarda de exclusão mútua no adaptador MSI manual e fixture; caller com opt-in, prepare/publish/release/getter e cleanup serializados; fixtures específicas e build completo em fatias subsequentes de até cinco arquivos. Não publicar/selecionar a candidata física só com o adapter: o caller e journal ainda precisam provar uso ordenado e causalidade dos erros. Gate de host legado deve continuar passando; `.enable_device` continua recusando o default.
 
+Fatia2b1 (cinco arquivos: este plano, scan, adapter e duas fixtures runtime): reunir active/refs/PM/overrides em `n71_scan_driver_pending`, usado por consumer removal e adapter. Conservar owners parciais mesmo com active/refs zerados; capturar erro assíncrono de publish sob o lock do host depois da API de presença. Qualificar somente o gate runtime afetado, preservando a política e os gates legados cujos contratos não mudarem.
+
+Fatia2b2 (três arquivos: adaptador MSI manual e fixtures C/Python correspondentes): recusar acquire e release manual quando o predicado runtime estiver pendente, antes de power/config/core IRQ. Fixture compila o predicado real extraído; testar os seis owners parciais sem efeitos, com mutations de remoção das guardas. Não criar outro predicado.
+
+Fatia2b3 (cinco arquivos: diagnóstico, novo caller runtime, fixture de caller, fixture focada runtime e wrapper Python): `driver_runtime=false` por default e dependência de scan_hold/MSI/IOMMU; actions `driver-prepare`, `driver-publish`, `driver-release`. Sem prepare no probe ou autoload de firmware. Actions retêm pin/lock/power/DART; publish registra intenção e não readiness. Release/cleanup admitem erros anteriores, conservam primeira causa e só removem consumidores depois de pending=false. Getter `driver_runtime_status` separado, só observação sob locks, preservando formatos anteriores. O caller novo não deve elevar sucesso de insmod/publicação a Wi-Fi pronto. Corrigir a fixture DART isolada numa fatia própria se a extração precisar das dependências novas; manter sua cobertura específica.
+
+Depois de todos os gates nativos, compilar diagnóstico completo contra power2 preservado e auditar exports/ELF/vermagic/hashes; nenhuma seleção/carga/DFU antes de journal/seleção e preparação de firmware/energia. Defaults/módulos/perfis anteriores ficam disponíveis.
+
 ## Tarefas
 
 - [x] Implementar política runtime e regressões/mutações compiladas.
