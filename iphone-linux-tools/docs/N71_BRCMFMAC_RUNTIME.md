@@ -692,3 +692,26 @@ python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_session.py -
 A fixture mínima recebeu scan_hold e a execução de processos de preflight passou a permitir somente o transporte privado. Âncora/sintaxe de duas mutações antigas foram preservadas no código; todos os20+11 kills legados continuam válidos. Essas falhas de infraestrutura não contaram como kills. Sem typechecker Python, banco/dependência/configuração global nova ou efeito no telefone; desempenho físico não medido.
 
 Reaquisição depois de stop ainda precisa de um modo explícito com source stopped: acquire atual recusa histórico N71_PCIE anterior e não aceita source. A [issue42](https://github.com/djalmajr/iphone6s-linux/issues/42) registra o incremento que permitirá novos ciclos sem outro DFU. Não contornar com apagamento de dmesg ou relaxamento de ownership. C, reaquisição, energia e reprodução completa de regdb precedem a prova física agrupada. Wi-Fi/associação/IRQ/DMA/gauge/carga e o goal continuam pendentes.
+
+
+### Opção de firmware no terminal — C6c2 C
+
+ab25cef acrescenta `--firmware-dir` ao entry existente. Quando informada, a pasta é passada como Path absoluta ao helper; quando ausente, o request legado continua exatamente com seus cinco campos. O --check lê somente arquivos locais, sem output, SSH/USB ou autoload.
+
+```bash
+python3 -B scripts/host/n71-runtime-session.py \
+  --profile "$PWD/runtime/n71-pci-calibration-profile-20261010/deployment.json" \
+  --firmware-dir "$PWD/runtime/n71-trusted-firmware-20261010" \
+  --action acquire --check
+```
+
+Este comando passou com a candidata e os três arquivos reais atuais. Para uma aquisição autorizada no Linux já iniciado, trocar --check por --output-dir apontando uma pasta nova diretamente em runtime; nenhum boot é iniciado pelo entry. Start/observe/stop usam --source de seu último output. Não executar ciclo físico antes de reunir energia/rádio e reaquisição42.
+
+```bash
+python3 -B -m unittest discover -s tests -p test_n71_firmware_cli_entry.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_runtime_cli.py -v
+```
+
+Novo gate4 testes/3 mutações e matriz11 testes/23 mutações AssertionError por plataforma Mac/ARM64;602 inputs SHA iguais,271 AST/lint fatal. Argparse, paths, selectors e filesystem reais; identidades/trust anchors da fixture sintéticos. KeyError inicial de um mutant foi corrigido para asserção explícita e descartado como kill. O gate real é separado da fixture. Nenhum typechecker Python, banco, dependência, config global Mac ou ação no telefone. [Evidência](evidence/n71-firmware-entry-qualified.json).
+
+Helper/coordenador/biblioteca/native C e builds inalterados permitem reuso dos gates21/35 e9/10. A CLI está exposta; firmware/regdb/radio/calibração no kernel, gauge/carga e operação contínua continuam sem comprovação física. Próximo: [issue42](https://github.com/djalmajr/iphone6s-linux/issues/42) e precondições de energia antes da sessão agrupada. Nenhuma confirmação rotineira será solicitada.

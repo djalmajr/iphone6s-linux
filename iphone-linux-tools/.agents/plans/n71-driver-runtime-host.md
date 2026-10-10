@@ -368,7 +368,7 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 
 - [x] A: staging/bind/restore e testes próprios. daad6ba:9 testes/10 mutações por plataforma,58 inputs iguais; escrita/limpeza sysfs real na VM6.8 restaurada.
 - [x] B: ligar ao Session/coordenador preservando source/recuperação/CI bundle.9293239:5/4 novos e21/35 afetados por plataforma,601 inputs iguais; gate real do perfil/pacote passou sem SSH.
-- [ ] C: expor CLI e reprodução completa; preparar energia antes de sessão física agrupada.
+- [x] C: expor CLI. ab25cef:novo4/3 e conjunto11/23 Mac/ARM64,602 inputs iguais; entry com imagem/pacote reais passou sem SSH. Reprodução download/regdb e energia ainda pendentes.
 
 
 **B — arquivos exatos e prova:** scripts/host/n71-link-session.py (stage antes da transferência dos módulos), scripts/host/n71_driver_runtime_cli.py (request firmware opcional e configure/check locais), scripts/host/n71_driver_runtime_session.py (bind antes de WCC, verify em observe, restore depois do unload/nativa e antes de held.release), novo tests/test_n71_firmware_runtime_integration.py. Preservar request legado de cinco campos e aceitar os seis com firmware Path/None; pasta protegida diretamente em runtime. No --check não criar output nem emitir SSH/USB, e conferir metadata de firmware salva quando source existir. Gate novo junta journal/coordenador reais, transporte de firmware/shell real da fixtureA e PCI/WCC modelados existentes; provar ordenação, fonte imutável, mesmo boot, falha e cleanup. Configurar pasta CLI e conferir bytes sem efeitos. Mutações reais de omissão de bind/verify/restore devem falhar por asserção. Revalidar somente gates afetados CLI/coordenador/Session e imports efetivos.
@@ -379,3 +379,23 @@ Prova pública da fase A e reprodução: [evidência](../../docs/evidence/n71-dr
 **C — contrato de entrada fechado:** dois arquivos executáveis: scripts/host/n71-runtime-session.py e novo tests/test_n71_firmware_cli_entry.py. Acrescentar --firmware-dir opcional Path; incluir firmware absoluto no request apenas quando informado, preservando request legado exato de cinco campos quando ausente. Usar o helperB sem transferências/autoload adicionais. Teste deverá executar argparse/entry reais, transportar a pasta absoluta ao configure/select real e comprovar --check sem criar output/SSH/USB, com flags/paths inválidos recusados. Fixtures de C5/C6c2 para identidades/dados, trust anchors sintéticos declarados; mutações reais de omissão/absolutização e legado. Uma qualificação Mac/ARM64 e gate real de imagem/pacote depois de expor a opção.
 
 **Próximo ciclo sem DFU:** issue42 registra limite concreto: preflight sem history recusa traces N71_PCIE de ciclo anterior e acquire não aceita source. Fechar reaquisição usando checkpoint stopped do mesmo boot, owners/stack/devices vazios e origem/histórico íntegros antes de solicitar a sessão física agrupada. Não apagar dmesg nem afrouxar a prova para contornar o limite.
+
+
+### C6d / issue42 — contrato de preparação de reaquisição
+
+**Objetivo:** usar um source stopped comprovado para outro ciclo no mesmo boot, mantendo a origem e a causa anterior. Fonte autoritativa já lida: held.load_source, coordinator.validate/lifetime.removed, Session.preflight e History.verify_live. Não apagar dmesg, forjar cleanup ou repetir intent ambíguo.
+
+**FaseA (dois executáveis):** novo scripts/host/n71_driver_reacquire.py e novo tests/test_n71_driver_reacquire.py. API prepare(session,request), request exatamente root/source/identity/check(bool). Exigir sessão runtime/held/resource/IOMMU power2 nova, sem attempts, assignment, journals ou history; source próprio/protegido diretamente em runtime e distinto do novo output/diretório. Para verificação, usar held.load_source sobre a própria sessão com snapshot integral dos atributos, restaurando o estado novo em finally inclusive nas recusas.
+
+**Source/local:** exigir cleanup_verified=True/cleanup_errors=[], quatro proofs pcie-cleanup/pcie-unload/restore/reg-unload, checkpoint e todas as completions. Validar checkpoint com coordinator.validate e presence=(0,0,1); o resumo driver_coordinator deve ter phase=stopped, primary_error igual à causa computada e successful equivalente a erro0. Erro anterior negativo pode ser conservado se cleanup integral estiver provado. FW metadata anterior, se houver, deve ter path=restored e exige seleção explícita de dados para o próximo ciclo. Ler/guardar SHA de state/checkpoint/proofs, rechecando após a validação. Nunca modificar origem.
+
+**Probe remoto (check=False):** held.snapshot readonly com módulo/diretório/boot anteriores; repetir coordinator.validate, exigir absence0/0/empty1, boot igual e kernel_lines exatamente iguais ao checkpoint. Confirmar os oito módulos/driver registry ausentes e path firmware exatamente vazio0a com header ABI/boot/UID/modo conhecido. Nada de write/reboot/DFU/network config. check=True faz apenas o gate local, sem capture/output.
+
+**Preparação nova:** restaurar todos os atributos originais da sessão após probe, então instalar StoppedHistory com known/lines/boot/source hashes. verify_live revalida hashes da origem, UUID e igualdade exata de kernel_lines no preflight; fresh remove só o prefixo conhecido do texto retornado, conservando raw logs completos. Guardar lineage privada com source/stateSHA/previous boot/directory/primary_error; nenhum journal/assignment/native owner anterior migra ao novo ciclo. Diretório e output exclusivos novos, causa antiga permanece na origem e na lineage.
+
+**Verificação A:** fixtures de coordenador/loader/cleanup reais existentes; PCI/WCC/probe modelados. Provar origem byte a byte imutável, restauração da sessão em erro, gate --check sem efeito, recusas de source/prefixo/UUID/proofs/stack/path/cleanup incompletos e conservação de causa negativa. Baseline e mutações reais AssertionError Mac/ARM64, AST/lint fatal. Não contar parse/compile/KeyError/timeout como kill.
+
+**FaseB depois de A:** expor ação reacquire com source obrigatório pelo CLI/entry. prepare antes de held.run fresco/source=None; respeitar --check. Gate de dois ciclos completos, logs/dirs/journals distintos e mesmo boot, com firmware. Validar a ação integrada fisicamente na mesma sessão de Wi-Fi/energia, sem outro DFU. Nenhuma inferência de rádio/carga por este gate.
+
+- [ ] A: preparar histórico e lineage após source/probe comprovados.
+- [ ] B: ligar ação e provar dois ciclos no mesmo boot.

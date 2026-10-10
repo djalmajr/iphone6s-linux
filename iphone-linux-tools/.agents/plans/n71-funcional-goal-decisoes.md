@@ -331,3 +331,13 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 ### D34 — integração B qualificada
 
 9293239 liga staging antes dos módulos/REG_ON, bind antes de WCC, verify em observe e restore depois de unload/nativa antes de held.release. Requests legados preservados. Novo gate5/4 e matriz21/35 em Mac/ARM64,601 inputs idênticos, AST/lint fatal; --check do perfil real/pacote real passou. C ainda precisa expor --firmware-dir. Reaquisição same-boot após stop foi registrada na issue42, para evitar DFU entre ajustes. [Evidência](../../docs/evidence/n71-firmware-integration-qualified.json). Fonte, kernel, imagem, defaults e Mac global preservados; nenhuma ação no iPhone.
+
+
+## D35. Reaquisição com source stopped no mesmo boot
+
+- **Decisão:** reutilizar loader/validador de cleanup e criar histórico/lineage somente depois de source e probe readonly comprovados; preservar sessão inicial em finally.
+- **Por quê:** o preflight atual bloqueia qualquer histórico anterior sem source, e outro DFU interrompe o desenvolvimento. O source stopped fornece prova de owners vazios e causa anterior.
+- **Alternativas:** apagar dmesg elimina evidência; relaxar o preflight aceita owners desconhecidos; novo boot custa ação física e autenticação. Repetir intents pendentes não é aceitável.
+- **Reverter:** baixo antes da prova física; novo modo explícito, defaults intactos.
+- **Onde:** C6d no plano host e issue42; primeiro helper/tests, depois CLI e dois ciclos.
+- **Status:** contrato fechado para A, implementação pendente. C6c2C concluída em ab25cef com11/23 por plataforma e entry real --check aprovado.

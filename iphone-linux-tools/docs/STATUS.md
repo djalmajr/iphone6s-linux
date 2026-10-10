@@ -1,6 +1,12 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — firmware integrado ao fluxo de sessão
+## Checkpoint atual — opção de firmware exposta no terminal
+
+ab25cef entrega --firmware-dir opcional com caminho absoluto e request legado preservado. **Novo4/3; matriz11 testes/23 mutações por plataforma Mac/ARM64**,602 inputs iguais, AST/lint fatal. O entry --check passou com a imagem e pacote reais sem SSH/USB/output. [Reprodução](N71_BRCMFMAC_RUNTIME.md#opção-de-firmware-no-terminal--c6c2-c), [evidência](evidence/n71-firmware-entry-qualified.json).
+
+Próximo: implementar o contrato de reaquisição no mesmo boot ([issue42](https://github.com/djalmajr/iphone6s-linux/issues/42)), completar reprodução firmware/regdb e energia, então reunir a prova física. Nenhuma ação no telefone ou pedido ao operador nesta rodada. Wi-Fi/telemetria/carga, goal e issues9/2/40 permanecem pendentes. CI10dd10b foi observada em andamento nos handles38085336190/38085333491; não reiniciar por timeout de observação.
+
+## Histórico — firmware integrado ao fluxo de sessão
 
 9293239 liga os dados antes dos módulos e o caminho antes de WCC; verifica em observe e restaura após unload antes de cleanup do provider. **Novo5/4; matriz21 testes/35 mutações por plataforma Mac/ARM64**,601 inputs iguais, AST/lint fatal. O gate local do perfil calibrado e pacote reais passou. [Reprodução](N71_BRCMFMAC_RUNTIME.md#integração-de-firmware-ao-coordenador--c6c2-b), [evidência](evidence/n71-firmware-integration-qualified.json).
 
