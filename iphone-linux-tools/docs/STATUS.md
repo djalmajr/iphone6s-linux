@@ -1,6 +1,14 @@
 # iPhone 6s Linux — atualizado em 2026-10-10
 
-## Checkpoint atual — adaptador MSI qualificado; integração ao módulo e rádio pendentes
+## Checkpoint atual — ações MSI e cleanup integrados; driver e rádio pendentes
+
+Em f79c19b, o módulo expõe `msi-hold`/`msi-release` e o getter separado `msi_allocation`. Alocação exige sessão e providers próprios; release admite falha anterior. Cleanup libera MSI antes de consumers/DART e conserva bus/reset/power/módulo quando ainda há ownership. Os defaults não alocam IRQ e os getters anteriores permanecem idênticos. Mac/Ubuntu ARM64:216 cenários/177 mutações do caller, incluindo31 cenários/48 mutações novos. Host ARM64:seis métodos/183 cenários/147 mutações; gate Mac do host reutilizado com inputs intactos. [Reprodução](N71_IRQ_IOMMU.md#ações-msi-e-cleanup-no-diagnóstico-completo), [evidência](evidence/n71-msi-allocation-caller-qualified.json).
+
+Diagnóstico completo ARM64, sem probe:127.552 bytes/SHA893c1f80,127 imports disponíveis, ELF/vermagic/hash/bytes conferidos também no Mac.59 inputs e fonte/config/Image/exports preservados. AST/lint fatal passaram nas duas plataformas; nenhum typechecker Python configurado. A primeira compilação da fixture host recusou dois headers ausentes do staging; nenhum teste foi aceito nesse erro. Após completar o staging, somente os gates restantes foram retomados. Nenhum pacote, banco ou configuração global do Mac alterado; desempenho físico não medido.
+
+CI99e5c5f concluiu os dois eventos com sucesso: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38027200635) e [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38027197175). A publicação atual terá head/CI próprios. Collector/journal/seleção/perfil e contrato de driver/DMA/firmware/energia continuam em curso nas issues40/9/2. Nenhum DFU, reboot ou módulo carregado nesta etapa; nenhuma ação do operador necessária agora.
+
+## Histórico — armazenamento e adaptador anteriores
 
 A lease foi extraída para header compartilhado e armazenada no host PCI em6982995, mantendo sua política. Mac/Ubuntu ARM64:55 cenários/29 mutações; host Mac183/147 em seis métodos. Probe124.504 bytes/SHA39b1a7ef,127 imports/ELF/vermagic/hash/bytes;52 inputs/kernel/config/Image/exports intactos. AST/lint fatal passaram. A fixture Linux agora suprime dumpability para evitar coleta de crashes, sem modificar configuração global; três timeouts anteriores não foram contados. [Plano de integração](../.agents/plans/n71-msi-caller.md), [prova limitada](evidence/n71-msi-lease-storage-qualified.json). Gate host ARM64 e ação/getter/cleanup ainda pendentes; nenhum perfil/boot alterado.
 
@@ -8,7 +16,7 @@ CIb7436e9 concluiu os seis jobs com sucesso: [PR](https://github.com/djalmajr/ip
 
 O adaptador de alocação/release acrescenta retenção do endpoint, API D0 com readback, recusa de ASPM existente no pai, vetor único e validação da hierarquia IRQ/AIC. Mac/Ubuntu ARM64:55 cenários/29 mutações compiladas por asserção, AST/lint fatal. Probe real124.504 bytes/SHA9d6f7664,127 imports resolvidos, ELF/vermagic/bytes/hash conferidos. Fonte/config/Image/exports preservados. Ainda não há ação pública de alocação nem prova física de IRQ/DMA/rádio. [Reprodução](N71_IRQ_IOMMU.md#adaptador-de-alocação-msi--qualificação-sem-ação-no-aparelho), [evidência](evidence/n71-msi-allocation-qualified.json).
 
-Nenhum DFU, reboot ou carga solicitado nesta rodada. Próximo: ação/getter/cleanup, collector/journal/seleção/perfil e ciclo de vida driver/DMA/firmware, reunidos à preparação de energia antes de um teste físico. Wi-Fi e carregamento/gauge Linux permanecem abertos nas issues40/9/2; nenhuma ação do operador necessária agora.
+Nenhum DFU, reboot ou carga foi solicitado naquela rodada. Ação/getter/cleanup foram integrados na etapa acima; collector/journal/seleção/perfil, driver/DMA/firmware e energia continuam pendentes antes do teste físico agrupado.
 
 ## Configuração MSI — gates e CI aprovados
 

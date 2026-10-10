@@ -729,3 +729,36 @@ Mac/Ubuntu ARM64:55 cenários/29 mutações compiladas de alocação; host Mac s
 Três crashes da rodada inicial Ubuntu tiveram timeout5s, sem contar como kills; o core_pattern tinha pipe Apport. A fixture usa agora PR_SET_DUMPABLE0 somente em Linux, como o teste de caller existente, e29 executáveis comprovaram SIGABRT/asserção. O crash handler global não mudou. Um timeout transitório do SSH da VM interrompeu o staging; conferimos que não havia runner/log/resultados iniciados, concluímos as transferências e então executamos o gate. SSH voltou sem reiniciar a VM. Nenhum novo DFU/reboot do telefone ou instalação/configuração global no Mac.
 
 CIb7436e9 terminou com sucesso nos dois eventos, seis jobs Mac/Ubuntu/Windows: [PR](https://github.com/djalmajr/iphone6s-linux/actions/runs/38025617857), [push](https://github.com/djalmajr/iphone6s-linux/actions/runs/38025615082). A próxima etapa conserva os getters antigos e libera MSI antes dos consumidores/DART. Rádio/IRQ entregue/DMA/energia continuam sem prova física; não solicitar confirmação de tela ou desbloqueio sem ação dependente.
+
+## Ações MSI e cleanup no diagnóstico completo
+
+Em f79c19b, o diagnóstico inclui o adaptador real e expõe `action=msi-hold`, `action=msi-release` e o getter separado `msi_allocation`. O probe não aloca IRQ. Hold exige scan_hold/msi_parent/iommu_parent, bus retido, quatro domínios alimentados/associados, reset/pin completos, ausência de erros e provider DART running/device. O adaptador verifica recursos/PCI/IRQ. Uma lease ou phase existente recusa nova alocação sem efeito. Release admite erro anterior ou provider já parado, conservando as exigências de bus/power/reset/pin.
+
+O getter tem12 campos ordenados: ready/held/owner/phase/vector/default_irq/software_enabled/slots/mappings/child/error/session_error. Ready significa host presente; phase0/1/2 significa EMPTY/ACTIVE/STOPPED. Sem host, os campos de ownership são zero; primary_error e cleanup_error da sessão sobrevivem. Error usa primary_error, depois MSI/config/io. O getter lê estado salvo, sem novo MMIO. Os getters de associação anteriores permanecem idênticos; não confundir alocação/programação com IRQ entregue.
+
+Cleanup libera MSI antes de consumers/DART. Uma falha ou lease/phase residual conserva o bus, reset, power e referência do módulo. Mesmo retorno zero do helper resulta em EBUSY se restar ownership. `N71_PCIE_MSI_ALLOCATION_RESULT` registra action/error/owner/phase/vector/default_irq/software_enabled/slots/mappings/child/operation_error; o erro de cleanup é o resultado efetivo do caller. Child de MSI pode permanecer após free e termina na remoção PCI. Release/cleanup podem ser repetidos no mesmo boot, sem rescan/novo DFU.
+
+Gates de fonte, executados no Mac e Ubuntu ARM64:
+
+```sh
+python3 -B -m unittest discover -s iphone-linux-tools/tests -p test_n71_pcie_diagnostic_caller.py -v
+python3 -B -m unittest discover -s iphone-linux-tools/tests -p test_n71_pcie_scan_host.py -v
+```
+
+Caller:216 cenários/177 mutações compiladas, incluindo31 cenários/48 mutações de alocação. As APIs kernel/PCI de alocação e consumers são modelos; action/getter/cleanup são o código público real. Host Ubuntu:seis métodos/183 cenários/147 mutações; gate Mac do host reutilizado com inputs intactos desde6982995. Config91/27 e adaptador55/29 anteriores continuam válidos. Mutações aceitas compilaram exit0 e terminaram por SIGABRT/asserção. AST/lint fatal E9,F63,F7,F82 passaram; nenhum typechecker Python configurado.
+
+O staging inicial da VM omitiu os dois headers transitivos `n71_pcie_msi_scan_fixture.h`/`n71_pcie_dart_scan_fixture.h`; a primeira compilação host recusou antes de executar. Os57 inputs originais, o módulo e o caller já aprovados permaneceram iguais. Após completar59 inputs, só os seis métodos host/lint restantes foram retomados. Falha de compilação, import, segfault ou timeout não contou como kill. Uma mutação durante desenvolvimento acessou bridge nula; a fixture passou a afirmar a precondição PCI não nula antes de devolver seu priv, e todos os executáveis aceitos comprovaram asserção.
+
+Build completa, sem função probe: em uma pasta privada com os fontes/headers públicos, usar `obj-m += n71-pcie-diagnostic.o` no Makefile. Contra a fonte958481f87fee0949ff6a9a4af77f7eb6dac8a149 e build/config/exports power2 preservados, executar:
+
+```sh
+make -C "$N71_SOURCE" O="$N71_BUILD" M="$N71_MODULE_DIR" W=1 KCFLAGS=-Werror \
+  KBUILD_EXTRA_SYMBOLS="$N71_BUILD/vmlinux.symvers" -j2 modules
+modinfo -F vermagic "$N71_MODULE_DIR/n71-pcie-diagnostic.ko"
+readelf -h "$N71_MODULE_DIR/n71-pcie-diagnostic.ko"
+nm -u "$N71_MODULE_DIR/n71-pcie-diagnostic.ko"
+```
+
+Definir N71_SOURCE/N71_BUILD para as cópias preservadas e N71_MODULE_DIR para a pasta privada desta compilação; não modificar o kernel para exportar símbolos nem usar MODPOST_WARN. Artefato desta rodada:127.552 bytes/SHA893c1f80d56bee20cd41b39bcb1641d6fa31c6690706981d20bcd9fdd3772348, ELF64/AArch64, vermagic `7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64`,127 imports disponíveis incluindo as oito APIs PCI/IRQ do adaptador. Hash/bytes/ELF/vermagic/imports também foram conferidos no Mac.59 inputs, kernel/config/Image/exports intactos; [evidência sanitizada](evidence/n71-msi-allocation-caller-qualified.json). Paths/compiler/debug podem alterar o hash de uma reprodução; verificar seus inputs e ABI antes de selecionar o artefato.
+
+Mudanças: diagnóstico, fixture focada de alocação, caller e wrapper de gate; plano/reprodução/evidência atualizados. Contratos antigos/defaults preservados, sem quebra intencional. Nenhum pacote instalado, banco/configuração global do Mac alterado ou desempenho físico medido. CI99e5c5f concluiu ambos os eventos com sucesso; a publicação nova precisa da própria CI. Nenhum módulo ou perfil foi selecionado/carregado no telefone nesta fase. Próximos: collector/journal/seleção/perfil, permissões de driver/DMA, callback de firmware assíncrono/quiesce e energia, reunidos antes do teste físico. Issues40/9/2 e goal permanecem abertos; nenhum DFU isolado para MSI.

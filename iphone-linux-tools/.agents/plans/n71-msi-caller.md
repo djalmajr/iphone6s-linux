@@ -32,12 +32,14 @@ Build completa do diagnóstico contra source/config/Image/exports power2 exatos 
 
 - [x] Mover tipo da lease e armazenar no host sem alterar a política.
 - [x] Integrar action/getter/cleanup e regressões/mutações compiladas.
-- [ ] Qualificar diagnóstico completo ARM64 e preservar os artefatos anteriores.
+- [x] Qualificar diagnóstico completo ARM64 e preservar os artefatos anteriores.
 - [ ] Integrar collector/journal/seleção/perfil com defaults e histórico preservados.
 - [ ] Preparar driver/DMA/firmware/energia antes do teste físico agrupado.
 - [ ] Publicar reprodução/evidência sanitizada e CI na branch existente, sem main.
 
 ## Verificação e limites
+
+FaseB em f79c19b:31 cenários/48 mutações novos e216/177 no caller completo, Mac/Ubuntu ARM64. FaseC:diagnóstico real127.552 bytes/SHA893c1f80,127 imports/ELF/vermagic/hash/bytes conferidos no Mac;59 inputs e kernel/config/Image/exports preservados. Host ARM64 seis métodos/183 cenários/147 mutações; Mac reutilizado com os mesmos inputs. AST/lint fatal passaram. Dois headers transitivos da fixture host faltaram no primeiro staging; a compilação recusou antes de executar, sem contar como kill. Gates module/caller concluídos foram conservados e somente host/lint restantes foram retomados. [Evidência](../../docs/evidence/n71-msi-allocation-caller-qualified.json). O erro publicado pelo cleanup já é EBUSY se o helper retornar zero com lease pendente. Nenhum módulo/candidata carregado; collector/journal/seleção/perfil e driver/energia permanecem na fila antes do DFU agrupado.
 
 FaseA em6982995: Mac/Ubuntu ARM64,55 cenários/29 mutações compiladas do adaptador; host Mac seis métodos/183 cenários/147 mutações. Probe real124.504 bytes/SHA39b1a7ef,127 imports/ELF/vermagic/hash/bytes;52 inputs e fonte/config/Image/exports preservados. AST/lint fatal passaram. Na VM, três crashes tiveram timeout5s e não foram contados; PR_SET_DUMPABLE0 ficou somente na fixture. SSH da VM sofreu timeout transitório e voltou sem restart; a execução anterior não havia iniciado e foi retomada após conferir staging e transferências completas. [Evidência e limites](../../docs/evidence/n71-msi-lease-storage-qualified.json). Gate host ARM64 e build do diagnóstico com ação ficam para a integração seguinte. CIb7436e9 aprovou os seis jobs dos dois eventos; fonte/CI nova ainda terá head próprio.
 

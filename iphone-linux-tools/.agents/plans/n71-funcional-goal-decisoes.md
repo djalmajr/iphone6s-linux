@@ -80,3 +80,12 @@
 - **Reverter:** baixo; estrutura simples, sem nova ação/perfil físico; a supressão pertence somente ao teste.
 - **Onde:** [plano](n71-msi-caller.md), [evidência](../../docs/evidence/n71-msi-lease-storage-qualified.json), issue40.
 - **Status:** armazenamento e probe qualificados; action/getter/cleanup e host ARM64 seguinte pendentes. SSH da VM voltou sem reinicialização; telefone não foi reiniciado.
+
+## D10. Integrar alocação explícita sem reiniciar para testá-la isoladamente
+
+- **Decisão:** actions serializadas `msi-hold`/`msi-release`, getter separado e release antes de consumer/DART no cleanup. Lease ou phase ainda pendente conserva bus/reset/power/módulo, inclusive quando o helper retorna zero. Publicar o erro efetivo do caller no resultado de cleanup. Os novos cenários ficam em fixture focada, incluída pelo caller.
+- **Por quê:** a referência PCI e o estado MSI precisam sobreviver até stop/free/restore completos. O getter de associação existente tem parsers e histórico próprios. Testar somente alocação com outro DFU consumiria bateria e trabalho do operador sem habilitar rádio.
+- **Alternativas:** alocar no probe muda defaults; reutilizar o getter anterior quebra o contrato de associação; teardown após retorno zero sem conferir a lease permite remover consumidores prematuramente. Um novo boot somente para MSI adia o teste agrupado de driver/energia.
+- **Reverter:** baixo; ações explícitas e getter separado, sem perfil selecionado ou módulo carregado no telefone. Kernel e candidata física anterior intactos.
+- **Onde:** [plano](n71-msi-caller.md), [reprodução](../../docs/N71_IRQ_IOMMU.md#ações-msi-e-cleanup-no-diagnóstico-completo), [evidência](../../docs/evidence/n71-msi-allocation-caller-qualified.json), issue40.
+- **Status:** caller/cleanup e diagnóstico ARM64 qualificados; collector/journal/seleção/perfil, driver/DMA/firmware e energia seguem em curso. Nenhuma ação física do operador necessária agora.
