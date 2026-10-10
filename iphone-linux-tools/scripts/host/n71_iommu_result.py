@@ -1,6 +1,7 @@
 """Collect software MSI/OF/core association without claiming IRQ or DMA delivery."""
 import re
 import n71_dart_cycle_result
+import n71_driver_runtime_result
 import n71_iommu_build
 import n71_msi_allocation_result
 import n71_resource_result
@@ -45,7 +46,7 @@ def getter(session):
             'printf "N71_PCIE_IOMMU "; cat ' + PCIE + 'iommu; '
             'printf "N71_HELD_PARAM msi_parent="; cat ' + PCIE + 'msi_parent; '
             'printf "N71_HELD_PARAM iommu_parent="; cat ' + PCIE + 'iommu_parent; '
-            + n71_msi_allocation_result.getter())
+            + n71_msi_allocation_result.getter() + n71_driver_runtime_result.getter())
 
 
 def live(text):
@@ -83,6 +84,7 @@ def snapshot(session, text, present):
     require(state['iommu']['ready'] == caller['ready']
             and state['iommu']['session_error'] == caller.get('cleanup_error', 0), 'IOMMU and caller state disagree')
     n71_msi_allocation_result.snapshot(text, caller, state['iommu']['held'])
+    n71_driver_runtime_result.snapshot(session, text, {'caller': caller, 'held': state['iommu']['held']})
 
 
 def dma_topology(text):
@@ -153,11 +155,13 @@ def resume(session, live_text, prior):
     if 'N71_PCIE_IOMMU ' in live_text or 'N71_PCIE_IOMMU ' in prior:
         require(live(live_text) == live(prior), 'Live IOMMU ownership changed; no cleanup attempted')
     n71_msi_allocation_result.resume(live_text, prior)
+    n71_driver_runtime_result.resume(session, live_text, prior)
 
 
 def saved(session, data, text):
     require(data.get('iommu_parent', False) is capable(session), 'Saved IOMMU mode changed')
     if capable(session):
+        snapshot(session, text, 'N71_PCIE_IOMMU ' in text)
         expected = acquisition(text) if 'N71_PCIE_SESSION_HELD ' in text else None
         require(data['result'].get('iommu_association') == expected, 'Saved association differs from checkpoint')
 
