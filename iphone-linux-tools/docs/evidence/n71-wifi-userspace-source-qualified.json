@@ -1,0 +1,53 @@
+{
+  "format": 1,
+  "status": "official_packages_authenticated_not_installed_or_executed",
+  "tool_versions": {
+    "iw": "6.7-1build1",
+    "wpasupplicant": "2:2.10-21ubuntu0.4"
+  },
+  "packages": 38,
+  "total_bytes": 11638132,
+  "keyring_sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+  "inrelease_signatures": [
+    {
+      "file": "ports.ubuntu.com_ubuntu-ports_dists_noble-security_InRelease",
+      "sha256": "e9f1574afc6e08e0f5cdce41515bcede1907fa1c92194d54f79e356905ce2d43",
+      "valid_signers": [
+        "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+      ]
+    },
+    {
+      "file": "ports.ubuntu.com_ubuntu-ports_dists_noble-updates_InRelease",
+      "sha256": "e90154c79048da9dce495b64850efa9a549500fe24caf5278f286b508f4d08fe",
+      "valid_signers": [
+        "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+      ]
+    },
+    {
+      "file": "ports.ubuntu.com_ubuntu-ports_dists_noble_InRelease",
+      "sha256": "cdb2f31d809f589719a53c6ad15f255b27569c4059542ada282aaa21b8e164b0",
+      "valid_signers": [
+        "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+      ]
+    }
+  ],
+  "all_package_bytes_and_sha256_verified": true,
+  "global_dpkg_status_unchanged": true,
+  "global_hosts_unchanged": true,
+  "temporary_mount_namespace_exited": true,
+  "apt_ran_as_unprivileged_user": true,
+  "packages_installed": false,
+  "maintainer_scripts_executed": false,
+  "linux_package_code_executed": false,
+  "mac_packages_or_global_configuration_changed": false,
+  "phone_actions": false,
+  "initial_attempts": [
+    "VM DNS failed; missing indexes refused",
+    "download-only install refused its dpkg lock; exact apt-get download succeeded"
+  ],
+  "pending": [
+    "Offline isolated loader/library closure builder",
+    "Real ARM64 version/help and refusal gates",
+    "Transfer/association in the same physical radio boot"
+  ]
+}

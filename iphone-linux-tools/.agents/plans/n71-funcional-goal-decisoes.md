@@ -404,3 +404,30 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 - **Reverter:** baixo; fonte de inputs opt-in, protocolos/artifacts/defaults atuais preservados.
 - **Onde:** plano n71-runtime-source-snapshot.md, resolver e selector runtime; issue43.
 - **Status:** aplicada em7ba3ddf/2406e1f. Matriz afetada66testes/70mutações por plataforma Mac/ARM64, AST/lint fatal e novo snapshot real69inputs aprovados. CLI real --check com perfil/firmware aceito; inputs alterado/ausente em cópias recusados, perfil original intacto. Sem SSH/USB/DFU. Aceitação física Wi-Fi/energia permanece pendente.
+
+## D43. Preparar userspace Wi-Fi em um pacote isolado
+
+- **Decisão:** preparar iw/wpa_supplicant/wpa_cli ARM64 de dados oficiais Ubuntu autenticados, com loader/bibliotecas próprios; enviar por SSH e operar explicitamente no mesmo boot do rádio. Manter /lib e os serviços/identidades atuais intactos.
+- **Por quê:** a inspeção da imagem real encontrou somente BusyBox entre esses programas; a VM também não tem iw/wpa_supplicant. O driver sozinho não fornece um cliente WPA. Um pacote isolado permite desenvolver via SSH sem outro DFU e sem trocar libc do SSH em execução.
+- **Alternativas:** reconstruir initramfs exige novo boot; substituir bibliotecas globais pode afetar SSH; compilar tudo estaticamente amplia os inputs/builds antes da primeira associação. O pacote dinâmico exige conferir a closure completa e executar seu loader explicitamente.
+- **Reverter:** baixo; remover somente a pasta própria após cleanup, sem alteração global.
+- **Onde:** plano n71-wifi-userspace.md e [issue44](https://github.com/djalmajr/iphone6s-linux/issues/44), vinculada à #9.
+- **Status:** em curso; ausência real verificada e 38 pacotes oficiais autenticados/congelados,11.638.132 bytes. Três InRelease e SHA/bytes reais verificados, sem instalação/execução do conteúdo. Builder, closure e prova ARM64 ainda pendentes; Wi-Fi físico não demonstrado.
+
+## D44. Resolver o download somente dentro de uma namespace da VM
+
+- **Decisão:** usar hosts privado com o IP público de ports.ubuntu.com resolvido no Mac, bind apenas na mount namespace filha da VM com propagação privada; o APT roda como ubuntu e mantém HTTPS/assinaturas obrigatórios. Conferir hosts/status dpkg globais antes e depois.
+- **Por quê:** o update isolado retornou avisos de DNS e nenhum InRelease, que foi recusado. curl --resolve com TLS normal comprovou HTTP200 pela VM; a conectividade funciona, mas seu DNS não. O namespace limita a correção ao processo de aquisição.
+- **Alternativas:** editar resolver/hosts globais afeta outros trabalhos; copiar Packages sem sua cadeia assinada enfraquece a origem; transportar todos os downloads pelo Mac acrescenta etapas de autenticação e cópia. Não aceitar índices faltantes ou allow-unauthenticated.
+- **Reverter:** baixo; a namespace é destruída ao sair e os metadados privados podem ser conservados para análise.
+- **Onde:** aquisição da #44 na VM dedicada; nenhum processo ou configuração do Mac muda.
+- **Status:** aplicada à aquisição assinada da #44. Namespace encerrada, hosts/status dpkg globais idênticos. APT update/consulta/download exato como ubuntu; nenhum pacote instalado. DNS global conservado.
+
+## D45. Incluir a dependência nova na cópia pública do runner
+
+- **Decisão:** acrescentar n71_runtime_source_reference.py à whitelist DEPENDENCIES do runner de mutações do payload; conferir o gate real Mac/ARM64 e a nova CI. Conservar os guards de produção e a evidência histórica.
+- **Por quê:** a CI 0c61631 passou a suíte sintética, mas o runner isolado copiou n71_driver_runtime_build.py sem seu import novo. A falha foi ModuleNotFoundError na primeira mutação, depois de baseline 22; não foi falha ABI nem mutation kill.
+- **Alternativas:** ocultar o import ou executar mutações no checkout completo enfraquece o isolamento. Copiar todos os arquivos indiscriminadamente amplia o runner sem necessidade; a busca encontrou somente esse owner com a dependência explícita.
+- **Reverter:** baixo; uma entrada de fixture/infraestrutura, nenhum efeito no telefone ou binário.
+- **Onde:** tests/run_n71_diagnostic_payload_mutations.py, plano de fonte da #43 e próximo gate local/CI.
+- **Status:** aplicada em 234b6ec. Gate real Mac/ARM64 aprovado:22 testes baseline,34 mutações por AssertionError do runner e três de readback; AST/lint fatal, cópia pública746 inputs conferidos. Gates66/70 e C não afetados reutilizados. Nova CI ainda necessária; #43 aberta. Nenhum efeito no iPhone.
