@@ -155,6 +155,25 @@ class DriverContract(unittest.TestCase):
                                (action_row('release').replace('radio proof', 'radio ready'), 'release')]:
             with self.assertRaises(ValueError): self.subject.action(text, expected)
 
+    def test_real_device_action_prefix(self):
+        # Mutation: omit the real dev_info prefix or accept a different device's action.
+        device = 'n71-pcie-diagnostic 610000000.pcie: '
+        for name in ('prepare', 'publish', 'release', 'cleanup'):
+            plain = action_row(name)
+            actual = plain.replace('] N71_', '] ' + device + 'N71_', 1)
+            try:
+                accepted = self.subject.action(actual, name)
+            except ValueError as error:
+                self.fail('Real N71 dev_info action was refused: ' + str(error))
+            self.assertEqual(accepted, self.subject.action(plain, name))
+            invalid = [actual.replace(device, 'other-device 610000000.pcie: '),
+                       actual.replace(device, 'n71-pcie-diagnostic 610000001.pcie: '),
+                       actual.replace(device, 'prefix ' + device), actual * 2,
+                       actual.replace('[  12.345] ', ''), actual.replace('; not', ' extra=0; not')]
+            for text in invalid:
+                with self.subTest(text=text), self.assertRaises(ValueError):
+                    self.subject.action(text, name)
+
     def test_shell_is_optional_and_read_only(self):
         # Mutation: omit a getter/immutable parameter read or write into the sysfs fixture.
         with tempfile.TemporaryDirectory(prefix='n71-driver-getter-') as directory:
@@ -187,6 +206,8 @@ class DriverContract(unittest.TestCase):
 
     def test_source_mutations_fail_by_assertion(self):
         mutations = (
+            ('real-device-prefix-missing', r'(?:n71-pcie-diagnostic 610000000\.pcie: )?', ''),
+            ('arbitrary-device-prefix', r'n71-pcie-diagnostic 610000000\.pcie: ', r'[^\n]*: '),
             ('nonboolean-selection', 'type(value) is bool', 'True'),
             ('duplicate-row', 'len(rows) == text.count(marker) == 1', 'len(rows) == text.count(marker) and bool(rows)'),
             ('noncanonical', "rows[0].group('fields') ==", "True or rows[0].group('fields') =="),

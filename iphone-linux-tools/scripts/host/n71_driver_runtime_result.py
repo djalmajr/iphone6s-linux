@@ -170,7 +170,8 @@ def association_resume(session, observation):
 def action(text, expected):
     require(expected in ('prepare', 'publish', 'release', 'cleanup'), 'Unknown driver action')
     state = row(text, {'fields': ACTION_FIELDS, 'marker': ACTION_MARKER + 'action=' + expected + ' ',
-                       'prefix': r'(?:\[\s*[0-9]+\.[0-9]+\]\s*)?', 'suffix': SUFFIX})
+                       'prefix': r'(?:\[\s*[0-9]+\.[0-9]+\]\s*(?:n71-pcie-diagnostic 610000000\.pcie: )?)?',
+                       'suffix': SUFFIX})
     require(text.count(ACTION_MARKER) == 1, 'Another driver action in the proof delta')
     owners(state)
     if not state['error']:
