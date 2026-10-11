@@ -2,6 +2,8 @@
 
 ## Estado
 
+Para usar os artefatos já qualificados enquanto a fonte HDQ evolui, selecione explicitamente o [snapshot de inputs qualificados](N71_RUNTIME_SOURCE.md). O manifesto histórico permanece intacto; handlers e credenciais continuam no checkout atual.
+
 A integração do caller está qualificada offline no Mac e no Ubuntu ARM64. O novo módulo ainda não foi selecionado nem carregado no iPhone. Firmware, associação Wi-Fi, IRQ entregue, tradução DMA, bateria e carga Linux continuam sem prova física nesta etapa. A [evidência completa](evidence/n71-brcmfmac-caller-qualified.json) conserva inputs, hashes, imports e gates; o [plano](../.agents/plans/n71-brcmfmac-runtime.md) registra as próximas fases.
 
 Código: `4576d7b` conserva owners parciais e erros de publicação; `c370096` exclui MSI manual; `e088212` integra actions/getter/cleanup; `b2429a4` mantém a fixture DART isolada. Nenhum DFU, reboot, pacote ou configuração global do Mac foi necessário para esses incrementos.

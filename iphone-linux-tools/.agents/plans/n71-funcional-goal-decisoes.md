@@ -395,3 +395,12 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 - **Reverter:** baixo; uma fixture de teste, nenhum selector ou registro de produção alterado.
 - **Onde:** tests/test_n71_driver_runtime_build.py e oito módulos Python afetados; plano da leitura HDQ.
 - **Status:** aplicada em1777a93; oito módulos Python,56testes e65mutações únicas por AssertionError passaram em Mac/ARM64. Guards/evidências de produção intactos. [#43](https://github.com/djalmajr/iphone6s-linux/issues/43) mantém snapshot/requalificação do caller Wi-Fi real pendente antes do agrupamento físico.
+
+## D42. Referenciar os inputs congelados mantendo os handlers atuais
+
+- **Decisão:** criar um snapshot Git privado explícito e selecionar seu receipt por IPHONE_LINUX_RUNTIME_SOURCE_RECEIPT. Resolver apenas os69 inputs para a fonte congelada, conservando todos os handlers/selectors em execução no checkout atual e seu perfil privado original. O gerador também passa a tratar a árvore arquivada somente como dados.
+- **Por quê:** executar o CLI antigo no root congelado exigiria copiar o perfil/credenciais para cumprir a regra de parent/runtime. A referência de inputs preserva essa regra e a identidade existente, mantendo a prova histórica e a recusa sem opt-in. A árvorebe960 fornece todos os bytes originais.
+- **Alternativas:** requalificar o caller Wi-Fi custa builds/gates inalterados; copiar o perfil duplica credenciais e execução antiga; mudar somente hashes falsifica a compilação. O receipt explícito precisa acompanhar cada comando runtime; não há fallback silencioso.
+- **Reverter:** baixo; fonte de inputs opt-in, protocolos/artifacts/defaults atuais preservados.
+- **Onde:** plano n71-runtime-source-snapshot.md, resolver e selector runtime; issue43.
+- **Status:** aplicada em7ba3ddf/2406e1f. Matriz afetada66testes/70mutações por plataforma Mac/ARM64, AST/lint fatal e novo snapshot real69inputs aprovados. CLI real --check com perfil/firmware aceito; inputs alterado/ausente em cópias recusados, perfil original intacto. Sem SSH/USB/DFU. Aceitação física Wi-Fi/energia permanece pendente.

@@ -1,0 +1,70 @@
+{
+  "format": 1,
+  "status": "qualified_historical_input_reference_and_real_local_preparation_no_phone_access",
+  "commits": {
+    "snapshot": "7ba3ddfa000d8a662a850d776aeef2df11f40598",
+    "integration": "2406e1f13118d96bd120820c6c161a99fd912a06"
+  },
+  "historical_source_commit": "be960f14268da56aa928873375200cb10a4e2e88",
+  "input_count": 69,
+  "integration_inputs": {
+    "scripts/host/n71_runtime_source_reference.py": {
+      "bytes": 2673,
+      "sha256": "6b976a234e1fadc78b08a8bc6ba9a38b8486a8aa1bfc95aff96143f1d31c287a"
+    },
+    "scripts/host/n71_runtime_source_snapshot.py": {
+      "bytes": 5339,
+      "sha256": "86fc6860e8d027dd5c9b1446aa09ef95f31e267a06690dfd0b29ac604f4b4f9c"
+    },
+    "scripts/host/n71_driver_runtime_build.py": {
+      "bytes": 6600,
+      "sha256": "d3dea44375b739cd983f32af87b32e70c8b9feef52d076d8b5269b68d16beae3"
+    },
+    "tests/test_n71_runtime_source_reference.py": {
+      "bytes": 7395,
+      "sha256": "1667cc2ce00edf7dd61d25dcc12b0ec74d801457e53ac98ed3d0698b7f3d1864"
+    },
+    "tests/test_n71_runtime_source_snapshot.py": {
+      "bytes": 6995,
+      "sha256": "52fc44064ae06439c5ad93239501f79ff23aeafb50c4d1b6bdb7ff66dad5a0d3"
+    }
+  },
+  "mac": {
+    "modules": 10,
+    "tests": 66,
+    "seconds": 291.258,
+    "assertion_mutations": 70
+  },
+  "arm64": {
+    "modules": 10,
+    "tests": 66,
+    "seconds": 269.87,
+    "assertion_mutations": 70
+  },
+  "ast": "passed_both",
+  "fatal_lint": "passed_both",
+  "python_typechecker": "not_configured",
+  "real_local_cli": {
+    "new_snapshot_created_by_current_generator": true,
+    "all_69_inputs_verified": true,
+    "calibrated_profile_accepted": true,
+    "diagnostics": 2,
+    "wcc_modules": 5,
+    "pinned_firmware_accepted": true,
+    "changed_input_refused_exit": 1,
+    "missing_input_refused_exit": 1,
+    "profile_files_unchanged": 14,
+    "archived_python_executed": false,
+    "ssh_or_usb_actions": false
+  },
+  "unchanged_evidence_reused": [
+    "I2C controller/transport/caller gates and module builds",
+    "historical Wi-Fi artifact provenance"
+  ],
+  "physical_wifi_or_energy_proven": false,
+  "limitations": [
+    "Contract fixtures do not requalify the historical production binary",
+    "No association, battery telemetry or charging proof",
+    "Receipt is opt-in and must accompany runtime commands; invalid inputs never fall back"
+  ]
+}
