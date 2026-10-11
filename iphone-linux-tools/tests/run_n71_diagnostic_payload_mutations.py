@@ -23,6 +23,7 @@ DEPENDENCIES = (
     'scripts/host/n71_resource_pref64.py',
     'scripts/host/n71_driver_modules.py',
     'scripts/host/n71_driver_runtime_build.py',
+    'scripts/host/n71_runtime_source_reference.py',
     'scripts/host/n71_driver_runtime_compose.py',
     'scripts/host/n71_driver_runtime_result.py',
     'scripts/host/n71_driver_runtime_stage.py',
