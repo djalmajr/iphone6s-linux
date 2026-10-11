@@ -35,3 +35,11 @@ Teste de uso real do helper com repositório Git descartável e conteúdo de arq
 ## Resultado da implementação
 
 Helper em7ba3ddf e integração em2406e1f. A matriz afetada de dez módulos passou66testes e70mutações únicas por AssertionError em cada plataforma:291,258s no Mac e269,870s no ARM64. AST e lint fatal passaram; não há typechecker Python. Um snapshot real novo criado pelo gerador corrente verificou69inputs do commitbe960f14268da56aa928873375200cb10a4e2e88. O CLI real --check aceitou perfil/calibração/sete módulos/firmware; cópias descartáveis com input alterado ou ausente foram recusadas com exit1. Os14arquivos do perfil original permaneceram idênticos. Sem SSH/USB/DFU ou execução do Python arquivado. CI do head anteriora080ee0 passou nos três jobs; o novo head terá sua própria execução. Prova física de Wi-Fi/energia continua pendente.
+
+## Correção da closure do runner CI — D45
+
+CI 0c61631 passou a suíte sintética, mas falhou no gate de mutações de payload no Mac/Ubuntu: a cópia pública descartável não incluiu n71_runtime_source_reference.py, nova dependência de n71_driver_runtime_build.py. A baseline 22 passou no checkout completo; a primeira mutação encerrou por ModuleNotFoundError, que não é mutation kill.
+
+Corrigir somente DEPENDENCIES em tests/run_n71_diagnostic_payload_mutations.py; device_profile.py já está incluído. A busca dos demais run_* encontrou esse único copy owner. Executar o mesmo gate completo na cópia Mac/ARM64, com seus22 testes baseline e34 mutações reais; AST/lint fatal. Não reexecutar a matriz66/70 ou os gates C/VM sem mudança em seus inputs relevantes. Publicar o fix e acompanhar nova CI sem esconder a falha anterior. Não fechar #43 até esse gate remoto passar.
+
+Fix 234b6ec: uma entrada na whitelist, nenhum guard/artifact/default de produção alterado. Mac/ARM64 passaram 22 testes baseline, 34 mutações por AssertionError do runner e três de readback; AST/lint fatal passaram. Os746 inputs públicos da cópia ARM foram conferidos; os inputs relevantes da matriz66/70 permanecem iguais. Não há typechecker Python. Evidência sanitizada em docs/evidence/n71-diagnostic-closure-fix-qualified.json; nova CI pendente após publicação. A #43 permanece aberta.

@@ -47,3 +47,9 @@ Logs privados: `runtime/n71-runtime-source-reference-proof-20261010/`, com a mat
 - **Banco/dependências:** não há banco nem pacote novo instalado.
 - **Desempenho:** a opção acrescenta leitura limitada do receipt e manifesto; não há benchmark de rádio ou bateria.
 - **Próximo:** uma sessão física agrupada para runtime Wi-Fi, HDQ e alimentação; nenhuma confirmação de rotina de tela, cabo ou temperatura.
+
+## Correção da cópia isolada na CI
+
+A CI do head 0c61631 passou a suíte sintética, mas o gate separado de payload falhou no Mac/Ubuntu por ModuleNotFoundError: a whitelist do runner copiou n71_driver_runtime_build.py sem o novo n71_runtime_source_reference.py. A baseline no checkout completo passou 22 testes; a primeira mutação na cópia não chegou ao teste funcional. Esse erro não contou como mutation kill.
+
+Em 234b6ec, o runner passou a copiar a dependência. O gate real concluiu 22 testes, 34 mutações por AssertionError e três mutações de readback em cada plataforma Mac/ARM64; AST/lint fatal passaram, sem typechecker Python. [Evidência](evidence/n71-diagnostic-closure-fix-qualified.json). A matriz66/70 e os builds/gates C não afetados foram reutilizados. Produção, manifesto, ABI, artefatos e telefone permaneceram intactos. A nova CI é um gate remoto separado; #43 fica aberta até seu aceite.
