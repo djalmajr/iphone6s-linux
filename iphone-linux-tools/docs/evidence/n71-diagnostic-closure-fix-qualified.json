@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "status": "diagnostic_mutation_copy_dependency_fixed_local_gates_passed_remote_ci_pending",
+  "status": "diagnostic_mutation_copy_dependency_fixed_local_and_remote_ci_accepted",
   "fix_commit": "234b6ec567fc1377bcfd0cb6bcda2a31a83e7911",
   "failed_ci_head": "0c61631c4f4db066af1145ff22c3e8781929938f",
   "failed_ci_runs": [
@@ -42,5 +42,11 @@
   ],
   "production_guards_or_artifacts_changed": false,
   "phone_actions": false,
-  "issue43": "open_until_new_ci_acceptance"
+  "issue43": "closed_after_source_qualification_ci_no_physical_claim",
+  "ci": {
+    "head": "f9747f1004df463a13336a9ccd68802354f4818e",
+    "pr_run": 38099429237,
+    "push_run": 38099425942,
+    "successful_terminal_jobs": 6
+  }
 }
