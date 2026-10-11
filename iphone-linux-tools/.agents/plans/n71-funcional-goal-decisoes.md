@@ -412,7 +412,7 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 - **Alternativas:** reconstruir initramfs exige novo boot; substituir bibliotecas globais pode afetar SSH; compilar tudo estaticamente amplia os inputs/builds antes da primeira associação. O pacote dinâmico exige conferir a closure completa e executar seu loader explicitamente.
 - **Reverter:** baixo; remover somente a pasta própria após cleanup, sem alteração global.
 - **Onde:** plano n71-wifi-userspace.md e [issue44](https://github.com/djalmajr/iphone6s-linux/issues/44), vinculada à #9.
-- **Status:** em curso; ausência real verificada e 38 pacotes oficiais autenticados/congelados,11.638.132 bytes. Três InRelease e SHA/bytes reais verificados, sem instalação/execução do conteúdo. Builder, closure e prova ARM64 ainda pendentes; Wi-Fi físico não demonstrado.
+- **Status:** aplicada na preparação 51abc5b: 38 pacotes autenticados; quatro programas/19 bibliotecas, 77 arquivos e 17.786.880 bytes. Mac/ARM: 11 testes/10 mutações; AST/lint, versões e PSK reais em raiz/rede isoladas, negativos de libs/debs aprovados. Sem instalação no Mac ou envio ao telefone. Associação/carga física pendentes; #44 aguarda CI/integração.
 
 ## D44. Resolver o download somente dentro de uma namespace da VM
 
@@ -430,4 +430,4 @@ Biblioteca em daad6ba qualificada:9/10 por plataforma Mac/ARM64,58 inputs SHA id
 - **Alternativas:** ocultar o import ou executar mutações no checkout completo enfraquece o isolamento. Copiar todos os arquivos indiscriminadamente amplia o runner sem necessidade; a busca encontrou somente esse owner com a dependência explícita.
 - **Reverter:** baixo; uma entrada de fixture/infraestrutura, nenhum efeito no telefone ou binário.
 - **Onde:** tests/run_n71_diagnostic_payload_mutations.py, plano de fonte da #43 e próximo gate local/CI.
-- **Status:** aplicada em 234b6ec. Gate real Mac/ARM64 aprovado:22 testes baseline,34 mutações por AssertionError do runner e três de readback; AST/lint fatal, cópia pública746 inputs conferidos. Gates66/70 e C não afetados reutilizados. Nova CI ainda necessária; #43 aberta. Nenhum efeito no iPhone.
+- **Status:** aplicada em 234b6ec e aceita pela CI do head f9747f1: PR38099429237/push38099425942, seis jobs terminal success. Gate local Mac/ARM64: 22 testes, 34 mutações runner e três readback, AST/lint; matriz66/70 e C não afetados reutilizados. #43 pode ser concluída com esse aceite específico; nenhuma prova física inferida.

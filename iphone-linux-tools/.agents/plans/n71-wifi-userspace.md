@@ -20,8 +20,8 @@ Preparar um pacote ARM64 isolado de iw/wpa_supplicant/wpa_cli e suas bibliotecas
 
 - [x] Confirmar a falta dos programas na imagem e na VM reais.
 - [x] Autenticar e congelar os pacotes oficiais e suas dependências:38 debs,11.638.132 bytes, três InRelease verificados e SHA/bytes reais conferidos; nenhuma instalação ou execução do conteúdo.
-- [ ] Implementar builder offline e recusa de misturas/paths inválidos.
-- [ ] Qualificar pacote ARM64 isolado e execução real sem rede.
+- [x] Implementar builder offline e recusa de misturas/paths inválidos: 51abc5b.
+- [x] Qualificar pacote ARM64 isolado e execução real sem rede: quatro programas, 19 bibliotecas, 23 objetos ELF e 77 arquivos; versões/PSK e negativos reais aprovados.
 - [ ] Publicar reprodução e gates sanitizados.
 - [ ] Integrar/testar no mesmo boot físico do rádio, sem ampliar o aceite offline.
 
@@ -34,3 +34,9 @@ Fontes primárias: [apt-get noble](https://manpages.ubuntu.com/manpages/noble/ma
 ## Resultado da aquisição
 
 iw 6.7-1build1 e wpasupplicant 2:2.10-21ubuntu0.4, arquitetura arm64. O plano de dependências com status dpkg vazio selecionou38 pacotes; todos foram adquiridos por apt-get download com versões explícitas e conferidos contra o índice autenticado. A variante download-only install foi recusada pelo lock frontend fora do cache; não foi elevada nem usada para instalar. Hosts/status dpkg globais ficaram iguais e a namespace encerrou. Receipts/logs/scripts exatos privados em runtime/n71-wifi-userspace-source-20261010 e na pasta equivalente /home/ubuntu da VM. Manifesto/evidência sanitizados em docs/evidence; builder/ELF/closure/execução real e rádio ainda pendentes.
+
+## Resultado do builder e execução
+
+Builder 51abc5b: stdin contém os bytes autenticados do deb, sem race entre hash e leitura por dpkg-deb. Dados selecionados/links virtuais ficam em memória; o pacote final contém somente arquivos regulares, loader próprio e closure DT_NEEDED, sem RPATH/RUNPATH. Copyrights de 37 pacotes e 17 licenças comuns foram conservados como dados. Tar privado: 17.786.880 bytes, SHA 5f1396ae55f41783c360cd28c111ee6d78d9d72a6188f9714e0b6e3b48dfd617.
+
+Mac: 11 testes/10 mutações AssertionError, zero skips; ARM64: 11/10, um skip do gate específico do Mac. AST/lint fatal/F401/F841 aprovados nos três arquivos, sem typechecker Python. Uso real: iw 6.7, wpa_supplicant/wpa_cli 2.10 e PSK de fixture igual ao PBKDF2 independente em chroot/network namespace. O primeiro ambiente não expôs urandom; apenas os gates afetados foram repetidos com urandom/null bindados na namespace filha, sem avisos. Falta de biblioteca retornou 127; deb alterado/ausente retornou 1 antes de criar output. Inputs/pacote aceito intactos. Ainda não houve envio, associação ou operação no iPhone.
