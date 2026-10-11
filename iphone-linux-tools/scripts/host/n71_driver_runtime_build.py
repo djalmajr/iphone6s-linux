@@ -5,6 +5,7 @@ import n71_driver_modules as wlan
 import n71_driver_runtime_stage as native
 import n71_iommu_build as iommu
 import n71_resource_result as resources
+import n71_runtime_source_reference as source_reference
 
 INPUT_PATHS_SHA256 = 'bea3f73047748edea1914cc070d6d04733304fefc8eb358ba09d8e62b298586e'
 SCOPE = {
@@ -26,6 +27,7 @@ def require(condition, message):
 
 
 def inputs(root, proof):
+    root = source_reference.resolve(root, proof)
     records = proof.get('inputs')
     require(type(proof.get('input_count')) is int and proof['input_count'] == 69
         and isinstance(records, dict) and len(records) == 69 and all(isinstance(name, str) for name in records),

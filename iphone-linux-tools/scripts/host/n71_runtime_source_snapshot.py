@@ -4,10 +4,12 @@ import io
 import json
 from pathlib import Path, PurePosixPath
 import re
+import os
 import subprocess
 import tarfile
 import device_profile
 import n71_driver_runtime_build as build
+import n71_runtime_source_reference as reference
 
 PROOF = 'docs/evidence/n71-brcmfmac-caller-qualified.json'
 MAX_FILES = 2048
@@ -76,12 +78,6 @@ def create(root, request):
     files = members(raw, prefix)
     expected = (root / PROOF).read_bytes()
     require(PROOF in files and files[PROOF][0] == expected, 'Historical qualification record differs')
-    # Historical code runs only when its scripts still match this trusted checkout.
-    for name, (data, _) in files.items():
-        if name.startswith('scripts/') and name.endswith('.py'):
-            path = root / name
-            require(path.is_file() and not path.is_symlink() and path.read_bytes() == data,
-                'Historical script differs from current trusted source')
     output.mkdir(mode=0o700)
     snapshot = output / 'source'
     snapshot.mkdir(mode=0o700)
@@ -92,15 +88,15 @@ def create(root, request):
             stream.write(data)
         path.chmod(0o700 if executable else 0o600)
     proof = json.loads(expected)
-    build.inputs(snapshot, proof)
-    selector = """import json,sys
-from pathlib import Path
-root=Path(sys.argv[1]);sys.path.insert(0,str(root/'scripts/host'))
-import n71_driver_runtime_build as build
-proof=json.loads((root/'docs/evidence/n71-brcmfmac-caller-qualified.json').read_text())
-print(json.dumps(build.select(root,{'release':proof['module']['vermagic'].split()[0],'pcie_sha256':proof['module']['sha256']})))
-"""
-    selected = json.loads(subprocess.check_output(['python3', '-B', '-c', selector, str(snapshot)], text=True, timeout=30))
+    # Validate with current code; an inherited receipt cannot redirect this new snapshot.
+    previous = os.environ.pop(reference.ENV, None)
+    try:
+        build.inputs(snapshot, proof)
+        selected = build.select(snapshot, {'release': proof['module']['vermagic'].split()[0],
+            'pcie_sha256': proof['module']['sha256']})
+    finally:
+        if previous is not None:
+            os.environ[reference.ENV] = previous
     receipt = {'format': 1, 'commit': request['commit'], 'archive_sha256': hashlib.sha256(raw).hexdigest(),
         'proof_sha256': hashlib.sha256(expected).hexdigest(), 'source': 'source',
         'input_count': proof['input_count'], 'input_hashes_verified': True,

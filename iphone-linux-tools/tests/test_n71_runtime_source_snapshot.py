@@ -3,6 +3,7 @@ import ast
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import tarfile
 import tempfile
 from types import ModuleType
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts/host'))
@@ -37,7 +39,7 @@ class SourceSnapshotTests(unittest.TestCase):
         (self.root / SNAPSHOT.PROOF).write_text(json.dumps(self.proof))
         script = self.root / 'scripts/host/n71_driver_runtime_build.py'
         script.parent.mkdir(parents=True)
-        script.write_text("def select(root, request):\n return {'diagnostics':['fixture'],'drivers':[], 'kernel_outputs':{}}\n")
+        script.write_text("raise RuntimeError('Archived scripts must remain data')\n")
         self.git('init', '-q')
         self.git('add', 'project/phone', 'project/tests', 'project/docs', 'project/scripts')
         self.commit()
@@ -52,13 +54,16 @@ class SourceSnapshotTests(unittest.TestCase):
         self.sha = self.git('rev-parse', 'HEAD')
 
     def create(self):
-        return self.subject.create(self.root, {'commit': self.sha, 'output': self.output})
+        with patch.object(SNAPSHOT.build, 'select', return_value={'diagnostics': ['fixture'], 'drivers': [], 'kernel_outputs': {}}):
+            return self.subject.create(self.root, {'commit': self.sha, 'output': self.output})
 
     def test_git_snapshot_keeps_historical_inputs_and_private_receipt(self):
         # Mutation captured: copying working bytes instead of the explicit commit loses the original source.
         name = 'phone/kernel/n71-i2c-power-diagnostic.c'
         (self.root / name).write_text('new working version')
-        receipt = self.create()
+        with patch.dict(os.environ, {SNAPSHOT.reference.ENV: 'unrelated-receipt'}):
+            receipt = self.create()
+            self.assertEqual(os.environ[SNAPSHOT.reference.ENV], 'unrelated-receipt')
         self.assertEqual((self.output / 'source' / name).read_bytes(), ('fixture:' + name).encode())
         self.assertEqual(receipt['input_count'], 69)
         self.assertTrue(receipt['input_hashes_verified'])
@@ -82,13 +87,13 @@ class SourceSnapshotTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.create()
         self.assertFalse(self.output.exists())
 
-    def test_script_drift_and_changed_historical_manifest_refuse_before_output(self):
-        # Mutation captured: dropping trusted-script equality runs stale or replaced historical Python.
+    def test_archived_scripts_remain_data_and_manifest_drift_refuses(self):
+        # Mutation captured: importing historical Python executes the deliberately failing archived script.
         script = self.root / 'scripts/host/n71_driver_runtime_build.py'
         raw = script.read_bytes()
         script.write_bytes(raw + b'# changed\n')
-        with self.assertRaises(ValueError): self.create()
-        self.assertFalse(self.output.exists())
+        self.assertEqual(self.create()['selected']['diagnostics'], ['fixture'])
+        self.output = self.root / 'runtime/changed-proof'
         script.write_bytes(raw)
         proof = self.root / SNAPSHOT.PROOF
         proof.write_bytes(proof.read_bytes() + b'\n')
@@ -117,9 +122,7 @@ class SourceSnapshotMutations(unittest.TestCase):
         source = SOURCE.read_text()
         mutations = [
             ('historical-manifest', 'PROOF in files and files[PROOF][0] == expected', 'True',
-                'test_script_drift_and_changed_historical_manifest_refuse_before_output'),
-            ('trusted-script', 'path.is_file() and not path.is_symlink() and path.read_bytes() == data', 'True',
-                'test_script_drift_and_changed_historical_manifest_refuse_before_output'),
+                'test_archived_scripts_remain_data_and_manifest_drift_refuses'),
             ('archive-traversal', "'..' not in path.parts", 'True',
                 'test_archive_paths_and_links_are_rejected'),
         ]
