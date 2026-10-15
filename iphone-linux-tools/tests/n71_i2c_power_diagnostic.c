@@ -30,6 +30,7 @@ static bool module_live;
 static char last_log[1024];
 static char controller_log[1024];
 static char hdq_log[1024];
+static char configuration_log[1024];
 static void mutex_lock(int *lock) { assert(!*lock); *lock=1; }
 static void mutex_unlock(int *lock) { assert(*lock); *lock=0; }
 static bool try_module_get(void *module) { assert(module==THIS_MODULE); if (!module_live) return false; module_refs++; return true; }
@@ -42,6 +43,8 @@ static void pr_info(const char *format, ...)
 	va_list args; va_start(args,format); vsnprintf(last_log,sizeof(last_log),format,args); va_end(args);
 	if (!strncmp(last_log,"N71_I2C_CONTROLLER ",19)) strcpy(controller_log,last_log);
 	if (!strncmp(last_log,"N71_I2C_HDQ_CONTROL ",20)) strcpy(hdq_log,last_log);
+	if (!strncmp(last_log,"N71_I2C_CONFIGURATION_STAGE ",strlen("N71_I2C_CONFIGURATION_STAGE ")))
+		strcpy(configuration_log,last_log);
 }
 static struct device *root_device_register(const char *name)
 {
@@ -168,7 +171,7 @@ static void caller_reset(void)
 	memset(&diagnostic_state,0,sizeof(diagnostic_state)); memset(&diagnostic_io,0,sizeof(diagnostic_io));
 	diagnostic_pmgr=diagnostic_node=NULL; diagnostic_ready=diagnostic_retained=false;
 	run=true; root_error=root_validation_error=unregisters=0; missing_node=-1; module_live=true; last_log[0]=0;
-	observe_reset(); controller_log[0]=hdq_log[0]=0;
+	observe_reset(); controller_log[0]=hdq_log[0]=configuration_log[0]=0;
 	assert(!config_pins_live && !config_controller_live && !config_transfer_live);
 	diagnostic_pins=(struct n71_i2c_pin_owner){0}; diagnostic_controller=(struct n71_i2c_controller){0};
 	diagnostic_read=(struct n71_i2c_hdq_read_state){0};
@@ -281,6 +284,7 @@ int main(void)
 	/* Mutations captured: power/module release before controller or pin cleanup. */
 	caller_reset(); assert(n71_diagnostic_action("configure",NULL)==-ENODEV); caller_clean(); cases++;
 	caller_reset(); caller_init(); assert(n71_diagnostic_action("configure\n",NULL)==0);
+	assert(strstr(configuration_log,"stage=5 read=0 error=0 cleanup_error=0"));
 	assert(config_pin_acquires==1 && config_pin_releases==1 && config_controller_acquires==1 && put_calls==1);
 	caller_idle(); caller_exit(); cases++;
 	caller_reset(); caller_init(); config_pin_acquire_error=-ENXIO;
@@ -333,8 +337,26 @@ int main(void)
 	caller_idle(); caller_exit(); cases++;
 	caller_reset(); caller_init(); config_controller_release_error=-EIO;
 	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EIO && config_read_calls==1 && strstr(hdq_log,"valid=1 value=20"));
+	assert(strstr(configuration_log,"stage=5 read=1 error=0 cleanup_error=-5"));
 	assert(module_refs==1 && !put_calls && config_pins_live); cases++;
 	config_controller_release_error=0; assert(n71_diagnostic_action("cleanup",NULL)==0);
+	caller_idle(); caller_exit(); cases++;
+	/* Mutations: misreport the failed stage or turn cleanup failure into primary success. */
+	caller_reset(); caller_init(); config_pin_acquire_error=-EBUSY;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EBUSY && !attaches && !config_read_calls);
+	assert(strstr(configuration_log,"stage=1 read=1 error=-16 cleanup_error=0"));
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); resume_error=-EBUSY;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EBUSY && !config_controller_acquires && !config_read_calls);
+	assert(strstr(configuration_log,"stage=2 read=1 error=-16 cleanup_error=0"));
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_controller_acquire_error=-EBUSY;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EBUSY && !config_read_calls && put_calls==1);
+	assert(strstr(configuration_log,"stage=3 read=1 error=-16 cleanup_error=0"));
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_read_error=-EBUSY;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EBUSY && config_read_calls==1 && put_calls==1);
+	assert(strstr(configuration_log,"stage=4 read=1 error=-16 cleanup_error=0") && strstr(hdq_log,"valid=0"));
 	caller_idle(); caller_exit(); cases++;
 	printf("N71_I2C_CALLER_OK cases=%u\n",cases);
 	return 0;

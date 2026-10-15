@@ -51,6 +51,8 @@ static int n71_diagnostic_configure(bool read_control)
 	struct n71_i2c_configuration_result result;
 
 	n71_i2c_configuration_run(&request, read_control, &result);
+	pr_info("N71_I2C_CONFIGURATION_STAGE stage=%u read=%u error=%d cleanup_error=%d\n",
+		result.stage, read_control, result.error, result.cleanup_error);
 	if (!read_control)
 		pr_info("N71_I2C_CONFIGURE error=%d cleanup_error=%d pins_pending=%u controller_pending=%u last_saved_ctl=%08x last_saved_smsta=%08x charger_io=0\n",
 			result.error, result.cleanup_error, diagnostic_pins.cleanup_pending,

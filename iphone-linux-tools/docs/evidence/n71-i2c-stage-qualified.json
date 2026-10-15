@@ -1,0 +1,42 @@
+{
+  "format": 1,
+  "status": "phase_a_native_qualified_module_build_and_physical_test_pending",
+  "date": "2026-10-15",
+  "issue": 48,
+  "marker": "N71_I2C_CONFIGURATION_STAGE",
+  "stages": {
+    "1": "pin ownership",
+    "2": "power acquisition",
+    "3": "controller acquisition",
+    "4": "HDQ helper invoked",
+    "5": "primary operation completed; cleanup reported separately"
+  },
+  "contract": {
+    "additional_mmio": false,
+    "bus_commands_changed": false,
+    "ownership_or_cleanup_changed": false,
+    "existing_status_or_log_format_changed": false,
+    "charger_value_writes_added": false,
+    "stage_used_to_authorize_io": false,
+    "stage_4_proves_wire_traffic": false,
+    "stage_5_proves_cleanup": false
+  },
+  "qualification": {
+    "mac_native_cases": 81,
+    "arm64_native_cases": 81,
+    "assertion_mutations_each": 29,
+    "new_assertion_mutations_each": 6,
+    "c_compiler_werror": true,
+    "python_ast_lint": true,
+    "python_typechecker_configured": false,
+    "source_inputs_unchanged": 661,
+    "kernel_module_built": false,
+    "physical_boot_tested": false,
+    "mac_packages_or_global_config_changed": false
+  },
+  "limits": [
+    "Kernel API and hardware boundaries are modelled; caller, genpd backend and configuration helper are compiled real code.",
+    "No physical cause of EBUSY, gauge identity, battery telemetry or Linux charging was proved.",
+    "Transport substage/status, final external-module build and grouped physical test remain pending."
+  ]
+}

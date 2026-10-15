@@ -14,9 +14,18 @@ struct n71_i2c_configuration_request {
 	struct n71_i2c_hdq_read_state *read;
 };
 
+enum n71_i2c_configuration_stage {
+	N71_I2C_STAGE_PINS = 1,
+	N71_I2C_STAGE_POWER,
+	N71_I2C_STAGE_CONTROLLER,
+	N71_I2C_STAGE_HDQ,
+	N71_I2C_STAGE_COMPLETE,
+};
+
 struct n71_i2c_configuration_result {
 	int cleanup_error;
 	int error;
+	unsigned int stage;
 	u32 value;
 	bool value_valid;
 };
@@ -61,15 +70,23 @@ static inline void n71_i2c_configuration_run(const struct n71_i2c_configuration_
 	};
 
 	*result = (struct n71_i2c_configuration_result) {0};
+	result->stage = N71_I2C_STAGE_PINS;
 	result->error = n71_i2c_pin_owner_acquire(request->consumer, request->pins);
-	if (!result->error)
+	if (!result->error) {
+		result->stage = N71_I2C_STAGE_POWER;
 		result->error = n71_i2c_power_acquire(request->power_io, request->power);
-	if (!result->error)
+	}
+	if (!result->error) {
+		result->stage = N71_I2C_STAGE_CONTROLLER;
 		result->error = n71_i2c_controller_acquire(&ownership, request->controller);
+	}
 	if (!result->error && read_control) {
+		result->stage = N71_I2C_STAGE_HDQ;
 		result->error = n71_i2c_read_hdq_control(&read, request->read, &result->value);
 		result->value_valid = !result->error;
 	}
+	if (!result->error)
+		result->stage = N71_I2C_STAGE_COMPLETE;
 	result->cleanup_error = n71_i2c_configuration_release(request);
 }
 #endif /* N71_I2C_CONFIGURATION_H */

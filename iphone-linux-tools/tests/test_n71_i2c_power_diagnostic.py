@@ -9,6 +9,12 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
+    ('stage-pins', 'result->stage = N71_I2C_STAGE_PINS;', 'result->stage = 0;'),
+    ('stage-power', 'result->stage = N71_I2C_STAGE_POWER;', 'result->stage = 0;'),
+    ('stage-controller', 'result->stage = N71_I2C_STAGE_CONTROLLER;', 'result->stage = 0;'),
+    ('stage-hdq', 'result->stage = N71_I2C_STAGE_HDQ;', 'result->stage = 0;'),
+    ('stage-complete', 'result->stage = N71_I2C_STAGE_COMPLETE;', 'result->stage = 0;'),
+    ('stage-marker', 'N71_I2C_CONFIGURATION_STAGE stage=', 'N71_I2C_CONFIGURATION_HIDDEN stage='),
     ('early-action', 'if (!diagnostic_ready) {', 'if (false) {'),
     ('pending-new-cycle', 'if (!n71_diagnostic_clean() || diagnostic_retained) {', 'if (false) {'),
     ('pending-unpin', 'diagnostic_retained && n71_diagnostic_clean()', 'diagnostic_retained'),
