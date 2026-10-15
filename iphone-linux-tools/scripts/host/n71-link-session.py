@@ -31,7 +31,8 @@ import n71_driver_firmware_session
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = '7.2.0-iphone6s-dart-serdev1'
 BINDING_RELEASE = '7.2.0-iphone6s-dart-serdev-power2'
-PROFILE_RELEASES = {'n71-dart-serdev-v1': RELEASE, 'n71-dart-serdev-power-v2': BINDING_RELEASE}
+PROFILE_RELEASES = {'n71-dart-serdev-v1': RELEASE, 'n71-dart-serdev-power-v2': BINDING_RELEASE,
+                    'n71-dart-serdev-pmd-v1': n71_iommu_build.PMD_RELEASE}
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
 STATE_ACTIVE = 'bound=1 active=1 restore_pending=1 original=80'
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
@@ -78,6 +79,7 @@ def aspm_payload(profile, metadata):
 
 
 def selected_records(config_inventory, host_scan=False, bar_sizing=False, chip_id=False, *, dart_observe=False, dart_cycle=False, release=RELEASE, scan_link_target=False, scan_pme_noop=False, scan_pme_disable=False, scan_hold=False, resource_capable=False, resource_module_sha256=None, iommu_parent=False):
+    require(release != n71_iommu_build.PMD_RELEASE, 'PMD requires explicit qualified driver runtime selection')
     require(type(iommu_parent) is bool and (not iommu_parent or (resource_capable and scan_hold)),
             'IOMMU selection requires exact boolean and held resources')
     require(type(resource_capable) is bool and (not resource_capable or scan_hold),
@@ -195,10 +197,15 @@ class Session:
                 'Resource session requires an explicit boolean and held mode')
         require(host_scan + bar_sizing + chip_id + dart_observe + dart_cycle <= 1, 'Diagnostic modes are mutually exclusive')
         require(release in PROFILE_RELEASES.values(), 'Unsupported diagnostic release')
-        require(not scan_link_target or (host_scan and release == BINDING_RELEASE), 'Target session requires host-scan and power2')
+        require(release != n71_iommu_build.PMD_RELEASE or (runtime is not None and all(value is True for value in
+                (host_scan, scan_link_target, scan_pme_disable, scan_hold, resource_capable, iommu_parent))),
+                'PMD Session requires explicit complete driver runtime mode')
+        require(not scan_link_target or (host_scan and release in (BINDING_RELEASE, n71_iommu_build.PMD_RELEASE)),
+                'Target session requires host-scan and a qualified kernel')
         require(not scan_pme_disable or scan_link_target, 'Endpoint PME session requires target mode')
-        require(not scan_hold or (host_scan and scan_link_target and scan_pme_disable and release == BINDING_RELEASE),
-                'Held session requires its explicit power2 host/target/PME candidate')
+        require(not scan_hold or (host_scan and scan_link_target and scan_pme_disable
+                and release in (BINDING_RELEASE, n71_iommu_build.PMD_RELEASE)),
+                'Held session requires its explicit qualified host/target/PME candidate')
         self.scan_hold = scan_hold
         self.iommu_parent = iommu_parent
         self.resource_capable = resource_capable

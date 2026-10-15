@@ -2,6 +2,7 @@
 import re
 import n71_driver_runtime_result as result
 import n71_session_history
+import n71_iommu_build
 
 ACTIONS = ('prepare', 'publish', 'release')
 BOOT = r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}'
@@ -155,7 +156,10 @@ def load_source(session, data, proofs):
 
 def command(session, action):
     require(result.capable(session) and action in ACTIONS and re.fullmatch(BOOT, session.result.get('boot_id', ''))
-            and session.release == '7.2.0-iphone6s-dart-serdev-power2', 'Driver action selection/ABI/boot differs')
+            and session.release in ('7.2.0-iphone6s-dart-serdev-power2', n71_iommu_build.PMD_RELEASE),
+            'Driver action selection/ABI/boot differs')
+    require(session.release != n71_iommu_build.PMD_RELEASE or all(getattr(session, name, None) is True
+            for name in ('scan_hold', 'resource_capable', 'iommu_parent')), 'PMD driver action scope differs')
     return ('set -e; test "$(uname -r)" = "' + session.release + '"; '
             'test "$(cat /proc/sys/kernel/random/boot_id)" = "' + session.result['boot_id'] + '"; '
             'test "$(cat ' + result.PCIE + 'driver_runtime)" = Y; '

@@ -6,6 +6,7 @@ import n71_resource_result
 import n71_scan_held_result
 import n71_driver_runtime_result
 import n71_session_history
+import n71_iommu_build
 
 PCIE = '/sys/module/n71_pcie_diagnostic/parameters/'
 REG = '/sys/module/n71_wlan_power_diagnostic/parameters/'
@@ -141,7 +142,11 @@ def command(session):
     require(capable(session), 'Assignment command requires explicit resource capability')
     require(re.fullmatch(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', session.result.get('boot_id', '')),
             'Canonical assignment boot required')
-    require(session.release == '7.2.0-iphone6s-dart-serdev-power2', 'Assignment requires power2 ABI')
+    require(session.release in ('7.2.0-iphone6s-dart-serdev-power2', n71_iommu_build.PMD_RELEASE),
+            'Assignment requires a qualified ABI')
+    require(session.release != n71_iommu_build.PMD_RELEASE or (n71_driver_runtime_result.capable(session)
+            and all(getattr(session, name, None) is True for name in ('scan_hold', 'iommu_parent'))),
+            'PMD assignment requires explicit held driver runtime scope')
     initial = ' '.join(name + '=' + str(INITIAL[name]) for name in n71_resource_result.FIELDS)
     return ('set -e; test "$(uname -r)" = "' + session.release + '"; '
             'test "$(cat /proc/sys/kernel/random/boot_id)" = "' + session.result['boot_id'] + '"; '

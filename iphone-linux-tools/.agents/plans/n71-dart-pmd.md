@@ -82,6 +82,16 @@ Aplicar somente em worktree novo na VM dedicada, com inputs selados. Manter sour
 - **Reverter:** baixo; padrão e provas power2 preservados.
 - **Status:** aplicada; 6 testes/8 mutações novos e 30 testes/46 mutações de regressão passaram no Mac. Os sete binários reais (1.371.288 bytes) passaram por bytes/SHA/ELF/ABI, configuração local e revalidação fresca. VM parada; construtor/link, ações nativas, firmware e CLI/composição ainda pendentes.
 
+### D8 — construtor e ações PMD explícitas
+
+- **Decisão:** acrescentar PMD aos perfis conhecidos de n71-link-session.py, permitindo o construtor somente com runtime fornecido e host/target/PME/held/recursos/IOMMU explícitos. O seletor diagnóstico antigo continua recusando PMD. Ampliar os comandos de n71_resource_stage.py e n71_driver_runtime_stage.py somente para essa release conhecida e para o runtime PMD completo; preservar uname/boot e as guardas remotas existentes.
+- **Por quê:** D7 vinculou os dados e o journal, mas o construtor e os comandos ainda recusavam PMD. Esses limites precisam ser ampliados juntos para o fluxo preparado ser executável, sem tornar PMD um modo diagnóstico implícito.
+- **Alternativas:** substituir a release padrão quebra a reprodução power2; aceitar release arbitrária ou runtime ausente remove a ligação com os binários qualificados.
+- **Onde:** os três helpers, tests/test_n71_pmd_session_entry.py novo e este plano (cinco arquivos).
+- **Verificação:** construtor real com seleção/bytes sintéticos, recusas de modos antes de SSH/configuração parcial; leitura de ELF e provenance por release; comandos em shell POSIX com sysfs/boot/uname sintéticos, observando o arquivo action antes/depois e recusas de ABI/boot/escopo; mutações novas e regressões focalizadas dos entrypoints afetados; AST/lint. Depois, construtor com sete binários reais e opções SSH locais, sem conectar ao telefone.
+- **Reverter:** baixo; os perfis e a release padrão anteriores permanecem iguais.
+- **Status:** aplicada; 7 testes/7 mutações novos, 10 testes/15 mutações de ações nativas, 16 testes/26 mutações de recursos, 45 testes do linker e três regressões do construtor power2/padrão aprovados no Mac (81 testes/48 mutações). Construtor real com os sete módulos e opções SSH locais aprovado, sem conexão ou output. A primeira mutação do seletor antigo encontrou uma dependência ausente na fixture; o JSON público legado foi incluído e o gate corrigido passou por AssertionError. Firmware/reacquire e CLI/composição completa continuam pendentes.
+
 ## Fase C — um teste físico agrupado
 
 Antes de solicitar DFU, preparar kernel, todos os módulos compatíveis, perfil privado com identidades preservadas, diagnóstico HDQ UJM, restore e coleta/cleanup numa sessão limitada. O aparelho está no iOS bloqueado e recarregando; nenhuma ação necessária agora. Após retorno ao iOS, ausência de USB é tratada como tela bloqueada, sem nova confirmação rotineira.

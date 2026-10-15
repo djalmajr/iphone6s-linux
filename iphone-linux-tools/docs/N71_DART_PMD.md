@@ -247,6 +247,20 @@ python3 -B -m unittest discover -s tests -p test_n71_pmd_runtime_profile.py -v
 
 O [registro da configuração](evidence/n71-pmd-runtime-profile-qualified.json) contém 36 testes/54 mutações por AssertionError no Mac: 6/8 novos e 30/46 anteriores. Seletores, configuração e journal/filesystem são reais; ELF e observações de kernel/transporte são sintéticos nos testes. O ciclo e a recuperação de transporte perdido não repetem a carga. Uma verificação separada configurou e revalidou os sete binários compilados reais, 1.371.288 bytes, após conferir SHA/ELF/ABI. AST/lint aprovados, sem typechecker Python configurado; nenhuma ação SSH/USB ou início de VM. Construtor/link e ações nativas ainda precisam de seleção PMD explícita; firmware, CLI e composição completa continuam pendentes.
 
+## Construtor e ações PMD
+
+`n71-link-session.Session` aceita PMD somente com os sete módulos qualificados e runtime, host/target/PME/held/recursos/IOMMU explícitos. O leitor de provenance/ELF reconhece o bundle PMD separado; o seletor diagnóstico antigo recusa PMD. Os perfis padrão anteriores permanecem iguais.
+
+Os geradores de `assign` e `driver-prepare/publish/release` aceitam a release PMD exata somente no escopo completo de runtime retido. Mantêm as verificações do kernel em execução, boot, held, latch e estado antes do setter. O journal e a ordem de ações continuam exigindo provas e recusando replay.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pmd_session_entry.py -v
+```
+
+O [registro das entradas](evidence/n71-pmd-session-entry-qualified.json) contém 81 testes/48 mutações por AssertionError no Mac: 7/7 novos, 10/15 de ações nativas, 16/26 de recursos, 45 testes do linker e três casos de construtor/configuração legados. O shell POSIX escreve em arquivos regulares simulando `action`; ABI ou boot trocado preservam esses arquivos intactos. Não são writes em sysfs real. A fixture da primeira mutação omitia o JSON público do fallback legado; incluir essa dependência fez a mutação falhar pelo comportamento observado, sem erro de arquivo ausente.
+
+Uma verificação separada construiu a Session com os sete binários compilados reais e as opções SSH locais. Os arquivos de identidade foram preservados; nenhum diretório de saída, conexão ou ação USB foi criado. AST/lint aprovados, sem typechecker Python configurado. A VM permaneceu parada. Firmware/reacquire e CLI/composição privada completa continuam pendentes antes da sessão física agrupada.
+
 ## Aceite no aparelho ainda pendente
 
 O kernel, os sete diagnósticos, o conjunto Wi-Fi e a integração base estão qualificados sem uso do telefone. Faltam ampliar os gates de runtime explicitamente e montar o perfil completo antes de uma sessão física reunindo DART/firmware com HDQ/UJM. Não solicitar outro DFU para repetir o fault conhecido sem a candidata pronta. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
