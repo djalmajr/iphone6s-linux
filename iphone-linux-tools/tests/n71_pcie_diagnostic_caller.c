@@ -50,7 +50,8 @@ struct kernel_param_ops {
 	int (*get)(char *, const struct kernel_param *);
 };
 struct device_node { int refs; };
-struct device { struct device_node *of_node; int index, usage; bool suspended, attached; };
+struct device_driver { const char *name; };
+struct device { struct device_node *of_node; int index, usage; bool suspended, attached; struct device_driver *driver; };
 typedef uint64_t resource_size_t;
 struct resource { resource_size_t start, end; struct resource *parent; };
 static struct resource iomem_resource, foreign_resource;
@@ -65,7 +66,19 @@ struct platform_driver {
 struct gpio_desc { int logical; };
 /* MSI dependencies are modeled here; native callbacks have separate gates. */
 struct irq_domain { unsigned int mapcount; };
-struct pci_dev { bool msi_enabled; };
+struct pci_driver { struct device_driver driver; bool driver_managed_dma; };
+struct pci_bus { unsigned int number; };
+struct pci_dev { bool msi_enabled; struct device dev; struct pci_driver *driver; struct pci_bus *bus; unsigned int vendor,device,class,devfn; };
+struct n71_dart_host { struct pci_host_bridge *bridge; struct platform_device *provider; bool available,mapped; };
+#define IOMMU_DOMAIN_DMA 3
+struct iommu_domain { unsigned int type; struct { uint64_t aperture_start,aperture_end; } geometry; };
+static struct iommu_domain dma_domain;
+static struct pci_driver dma_driver;
+static struct pci_bus dma_bus;
+static u32 dma_words[20];
+static unsigned int dma_locks,dma_unlocks,dma_queries,dma_translations;
+static uint64_t dma_ticks;
+static bool dma_endpoint_locked;
 struct pci_host_bridge;
 struct n71_wlan_msi {
 	struct irq_domain *domain, *child;
@@ -85,8 +98,8 @@ struct n71_scan_host {
 	bool driver_pm, driver_root_override, driver_endpoint_override, driver_published;
 	unsigned int driver_reads;
 	int lock;
-	struct { struct pci_host_bridge *bridge; bool available, mapped; } dart;
-	void *iommu_domain;
+	struct n71_dart_host dart;
+	struct iommu_domain *iommu_domain;
 	unsigned int iommu_devices;
 	bool bus_held, resource_attempted, resources_assigned, window_claimed;
 	int held_stop_error, io_error;
@@ -99,7 +112,7 @@ struct pci_host_bridge { bool alive; void *bus; struct n71_scan_host private; };
 struct n71_dart_provider {
 	struct n71_dart_lease lease;
 	struct { void *domain, *fwnode; unsigned int irq; } interrupt;
-	struct { void *regs; } mmio;
+	struct { void *regs; struct n71_diagnostic *state; } mmio;
 	struct platform_device *device;
 	void *claimed;
 };
@@ -278,6 +291,18 @@ static void dev_pm_domain_detach(struct device *dev, bool poweroff)
 	dev->attached=false; mock.detaches++;
 }
 static u32 readl(const void *address) { u32 value; memcpy(&value,address,4); return value; }
+static void device_lock(struct device *dev)
+{ assert(active_lock && *active_lock && !dma_endpoint_locked && dev==&mock.msi_endpoint.dev); dma_endpoint_locked=true; dma_locks++; }
+static void device_unlock(struct device *dev)
+{ assert(active_lock && *active_lock && dma_endpoint_locked && dev==&mock.msi_endpoint.dev); dma_endpoint_locked=false; dma_unlocks++; }
+static struct iommu_domain *iommu_get_domain_for_dev(struct device *dev)
+{ assert(active_lock && dma_endpoint_locked && dev==&mock.msi_endpoint.dev && dev->driver==&dma_driver.driver); dma_queries++; return &dma_domain; }
+static uint64_t iommu_iova_to_phys(struct iommu_domain *domain, uint64_t iova)
+{ assert(active_lock && dma_endpoint_locked && domain==&dma_domain && iova==0x3ffff028); dma_translations++; return 0x8a1234028ULL; }
+static uint64_t ktime_get_boottime_ns(void)
+{ assert(active_lock && dma_endpoint_locked); return dma_ticks++; }
+static bool n71_dart_host_refs_valid(struct n71_dart_host *host)
+{ assert(active_lock && dma_endpoint_locked && host==&mock.bridge.private.dart); return true; }
 static void writel(u32 value, void *address) { memcpy(address,&value,4); }
 static void udelay(unsigned int delay) { (void)delay; }
 static void usleep_range(unsigned int a, unsigned int b) { assert(a<b); }
@@ -372,7 +397,8 @@ static int n71_pcie_scan_hold_iommu(struct device *dev, struct n71_diagnostic *s
 	if (error || !state->scan_bridge) return error;
 	host->dart.bridge=&mock.bridge;
 	host->dart.available=host->dart.mapped=true;
-	host->iommu_domain=&mock.dart; host->iommu_devices=2;
+	host->iommu_domain=&dma_domain; host->iommu_devices=2;
+	host->dart.provider=provider;
 	return mock.iommu_scan_error;
 }
 /* Native allocation/config tests and the real ABI probe qualify this dependency. */
@@ -523,6 +549,7 @@ static int n71_pcie_dart_acquire(struct device *dev, struct n71_diagnostic *stat
 	mock.dart.lease.operation_error=mock.dart_acquire_error;
 	mock.dart.device=mock.dart_no_device ? NULL : &mock.dart_device;
 	mock.dart.mmio.regs=mock.dart.interrupt.domain=mock.dart.interrupt.fwnode=&mock.dart;
+	mock.dart.mmio.state=state;
 	mock.dart.interrupt.irq=32;
 	state->dart=mock.dart_no_owner ? NULL : &mock.dart;
 	mock.dart_live=!mock.dart_no_owner; mock.dart_acquires++;
@@ -612,6 +639,11 @@ static struct platform_device setup(void)
 	p.dev.of_node=&mock.node;
 	run=enumerate=config_inventory=host_scan=true; bar_sizing=chip_id=dart_observe=dart_cycle=false;
 	scan_pme_disable=scan_hold=msi_parent=iommu_parent=driver_runtime=false;
+	dma_observe=false; dma_iova=0x3ffff028ULL;
+	dma_domain=(struct iommu_domain){.type=IOMMU_DOMAIN_DMA,.geometry={0,0xffffffffULL}};
+	dma_driver=(struct pci_driver){.driver={.name="brcmfmac"}}; dma_bus=(struct pci_bus){.number=1};
+	dma_locks=dma_unlocks=dma_queries=dma_translations=0; dma_ticks=100;
+	assert(!dma_endpoint_locked); memset(dma_words,0,sizeof(dma_words));
 	return p;
 }
 static void finish(struct platform_device *p)
@@ -1163,11 +1195,53 @@ static unsigned int exercise_iommu_caller(void)
 #include "n71_pcie_diagnostic_allocation.h"
 #include "n71_pcie_diagnostic_runtime.h"
 
+static unsigned int exercise_dma_getter(void)
+{
+	struct platform_device p;
+	char buffer[PAGE_SIZE];
+	unsigned int cases=0, before;
+
+	p=setup();
+	assert(dma_ops.get==n71_dma_status && dma_ops.get(buffer,NULL)>0);
+	assert(strstr(buffer,"requested=0 iova=000000003ffff028 complete=0 stable=0 error=-13\n"));
+	assert(!dma_queries && !dma_locks && !session_lock && !active_lock);
+	finish(&p); cases++;
+	p=setup_runtime(); dma_observe=true;
+	assert(n71_probe(&p)==0 && cleanup_ops.set("assign",NULL)==0);
+	assert(cleanup_ops.set("driver-prepare",NULL)==0 && cleanup_ops.set("driver-publish",NULL)==0);
+	mock.msi_endpoint.dev.driver=&dma_driver.driver; mock.msi_endpoint.driver=&dma_driver;
+	mock.msi_endpoint.bus=&dma_bus; mock.msi_endpoint.vendor=0x14e4;
+	mock.msi_endpoint.device=0x43a3; mock.msi_endpoint.class=0x028000;
+	mock.dart.mmio.regs=dma_words;
+	for (unsigned int i=1;i<8;i++) dma_words[n71_dma_offset(i)/4]=0x1000+i;
+	assert(dma_ops.get(buffer,NULL)>0);
+	assert(strstr(buffer,"requested=1 iova=000000003ffff028 complete=2 stable=1 error=0\n"));
+	assert(strstr(buffer,"sample=0 time_ns=100 pa=00000008a1234028 valid=000003ff command=00000000 tcr=00001001 error=00001002 error_addr=00001003 ttbr=00001004,00001005,00001006,00001007\n"));
+	assert(strstr(buffer,"sample=1 time_ns=101 pa=00000008a1234028 valid=000003ff"));
+	assert(dma_locks==1 && dma_unlocks==1 && dma_queries==1 && dma_translations==2);
+	assert(!session_lock && !active_lock && !dma_endpoint_locked && !session->primary_error); cases++;
+	before=dma_queries; driver_runtime=false;
+	assert(dma_ops.get(buffer,NULL)>0 && strstr(buffer,"complete=0 stable=0 error=-13"));
+	assert(dma_queries==before && dma_locks==1); driver_runtime=true; cases++;
+	iommu_parent=false;
+	assert(dma_ops.get(buffer,NULL)>0 && strstr(buffer,"complete=0 stable=0 error=-13"));
+	assert(dma_queries==before && dma_locks==1); iommu_parent=true; cases++;
+	dma_words[n71_dma_offset(3)/4]=~0U;
+	assert(dma_ops.get(buffer,NULL)>0 && strstr(buffer,"complete=0 stable=0 error=-5"));
+	assert(strstr(buffer,"sample=0 time_ns=102 pa=00000008a1234028 valid=0000003f"));
+	assert(strstr(buffer,"error_addr=ffffffff"));
+	assert(strstr(buffer,"sample=1 time_ns=0 pa=0000000000000000 valid=00000000"));
+	assert(!session_lock && !active_lock && !dma_endpoint_locked && !session->primary_error); cases++;
+	runtime_finish(&p);
+	return cases;
+}
+
 int main(void)
 {
 	struct platform_device p; char status[PAGE_SIZE]; unsigned int index, cases=0;
 	/* Mutation: static runtime flag enables activation by default. */
 	assert(!driver_runtime);
+	assert(!dma_observe);
 #ifdef __linux__
 	/* RLIMIT_CORE does not suppress piped crash handlers; isolate each mutant. */
 	assert(prctl(PR_SET_DUMPABLE, 0UL, 0UL, 0UL, 0UL)==0);
@@ -1257,5 +1331,6 @@ int main(void)
 	puts("N71_IOMMU_CALLER_OK cases=29");
 	printf("N71_MSI_ALLOCATION_CALLER_OK cases=%u\n",exercise_allocation_caller());
 	printf("N71_DRIVER_CALLER_OK cases=%u\n",exercise_runtime_caller());
+	printf("N71_DMA_GETTER_OK cases=%u\n",exercise_dma_getter());
 	return 0;
 }

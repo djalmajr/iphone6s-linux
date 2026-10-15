@@ -49,6 +49,12 @@ MODULE_PARM_DESC(iommu_parent, "Associate the retained DART provider before the 
 static bool driver_runtime;
 module_param(driver_runtime, bool, 0400);
 MODULE_PARM_DESC(driver_runtime, "Permit explicit brcmfmac prepare/publish/release actions; probe never loads firmware");
+static bool dma_observe;
+module_param(dma_observe, bool, 0400);
+MODULE_PARM_DESC(dma_observe, "Permit bounded read-only DMA observations while brcmfmac is bound");
+static unsigned long long dma_iova = 0x3ffff028ULL;
+module_param(dma_iova, ullong, 0400);
+MODULE_PARM_DESC(dma_iova, "Explicit 32-bit IOVA to query; reading it does not initiate DMA");
 static bool bar_sizing;
 module_param(bar_sizing, bool, 0400);
 MODULE_PARM_DESC(bar_sizing, "Size/restore endpoint BARs directly; no PCI devices, MMIO or DMA");
@@ -208,6 +214,31 @@ static void n71_msi_allocation_report(struct n71_scan_host *host, const char *ac
 
 static bool n71_session_has_held_bus(const struct n71_diagnostic *state);
 #include "n71-pcie-brcmfmac-caller.h"
+#include "n71-pcie-dma-live.h"
+
+static int n71_dma_status(char *buffer, const struct kernel_param *parameter)
+{
+	struct n71_dma_observation result;
+	unsigned int sample;
+	int length;
+
+	(void)parameter;
+	mutex_lock(&session_lock);
+	n71_dma_capture_locked(session, dma_observe && driver_runtime && iommu_parent, dma_iova, &result);
+	length = scnprintf(buffer, PAGE_SIZE, "requested=%u iova=%016llx complete=%u stable=%u error=%d\n",
+		dma_observe, (unsigned long long)result.iova, result.complete, result.stable, result.error);
+	for (sample = 0; sample < 2; sample++) {
+		const struct n71_dma_sample *row = &result.samples[sample];
+
+		length += scnprintf(buffer + length, PAGE_SIZE - length,
+			"sample=%u time_ns=%llu pa=%016llx valid=%08x command=%08x tcr=%08x error=%08x error_addr=%08x ttbr=%08x,%08x,%08x,%08x\n",
+			sample, (unsigned long long)row->time_ns, (unsigned long long)row->physical, row->valid,
+			row->words[0], row->words[1], row->words[2], row->words[3], row->words[4],
+			row->words[5], row->words[6], row->words[7]);
+	}
+	mutex_unlock(&session_lock);
+	return length;
+}
 
 static int n71_session_cleanup(struct n71_diagnostic *state)
 {
@@ -589,6 +620,9 @@ static const struct kernel_param_ops msi_ops = {.get = n71_msi_status};
 static const struct kernel_param_ops msi_allocation_ops = {.get = n71_msi_allocation_status};
 static const struct kernel_param_ops iommu_ops = {.get = n71_iommu_status};
 static const struct kernel_param_ops driver_ops = {.get = n71_driver_status};
+static const struct kernel_param_ops dma_ops = {.get = n71_dma_status};
+module_param_cb(dma_observation, &dma_ops, NULL, 0400);
+MODULE_PARM_DESC(dma_observation, "Two bounded DMA snapshots with validity and boottime; not hardware translation proof");
 module_param_cb(action, &cleanup_ops, NULL, 0200);
 MODULE_PARM_DESC(action, "assign, dart-hold/release, msi-hold/release, driver-prepare/publish/release, cleanup operate on the retained session; no rescan");
 module_param_cb(status, &status_ops, NULL, 0400);

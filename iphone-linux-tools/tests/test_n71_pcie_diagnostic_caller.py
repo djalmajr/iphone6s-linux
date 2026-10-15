@@ -407,11 +407,12 @@ class N71PcieCaller(unittest.TestCase):
             folder = Path(directory)
             (folder / 'linux/gpio').mkdir(parents=True)
             for name in ('delay', 'gpio/consumer', 'io', 'module', 'mutex', 'string', 'of_address',
-                         'platform_device', 'pm_domain', 'pm_runtime'):
+                         'platform_device', 'pm_domain', 'pm_runtime', 'ktime'):
                 (folder / 'linux' / (name + '.h')).write_text('/* Kernel fixture APIs. */\n')
             for name in ('n71-pcie-contract.h', 'n71-pcie-mmio.h', 'n71-dart-lease.h',
                          'n71-dart-cycle.h', 'n71-dart-observe.h', 'n71-msi-allocation-lease.h',
-                         'n71-wlan-msi-config.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h'):
+                         'n71-wlan-msi-config.h', 'n71-pcie-ecam.h', 'n71-pcie-scan-config.h',
+                         'n71-pcie-dma-live.h', 'n71-dma-observe.h'):
                 shutil.copyfile(ROOT / 'phone/kernel' / name, folder / name)
             for name in ('port', 'link', 'inventory', 'scan', 'resource-assign', 'msi-allocate', 'brcmfmac', 'chip-mmio'):
                 (folder / f'n71-pcie-{name}.h').write_text('/* Dependency supplied by fixture. */\n')
@@ -428,6 +429,17 @@ class N71PcieCaller(unittest.TestCase):
             variants += tuple((name, before, after, False) for name, _, before, after in ALLOCATION_MUTATIONS)
             variants += tuple((name, before, after, False) for name, _, before, after in DRIVER_CALLER_MUTATIONS)
             variants += tuple((name, before, after, 'runtime') for name, _, before, after in DRIVER_MUTATIONS)
+            variants += tuple((name, before, after, False) for name, before, after in (
+                ('dma-enabled-by-default', 'static bool dma_observe;', 'static bool dma_observe = true;'),
+                ('dma-getter-lock', 'mutex_lock(&session_lock);\n\tn71_dma_capture_locked', 'if (false) mutex_lock(&session_lock);\n\tn71_dma_capture_locked'),
+                ('dma-getter-unlock', 'mutex_unlock(&session_lock);\n\treturn length;\n}\n\nstatic int n71_session_cleanup',
+                 'if (false) mutex_unlock(&session_lock);\n\treturn length;\n}\n\nstatic int n71_session_cleanup'),
+                ('dma-runtime-opt-in', 'dma_observe && driver_runtime && iommu_parent', 'dma_observe && iommu_parent'),
+                ('dma-iommu-opt-in', 'dma_observe && driver_runtime && iommu_parent', 'dma_observe && driver_runtime'),
+                ('dma-output-clock', '(unsigned long long)row->time_ns,', '0ULL,'),
+                ('dma-output-validity', 'row->physical, row->valid,', 'row->physical, 0U,'),
+                ('dma-output-error', 'result.complete, result.stable, result.error);', 'result.complete, result.stable, 0);'),
+            ))
             scoped_functions = {name: function for name, function, _, _ in
                                 DART_MUTATIONS + MSI_MUTATIONS + IOMMU_MUTATIONS + ALLOCATION_MUTATIONS +
                                 DRIVER_CALLER_MUTATIONS + DRIVER_MUTATIONS}
@@ -466,6 +478,7 @@ class N71PcieCaller(unittest.TestCase):
                     self.assertIn('N71_IOMMU_CALLER_OK cases=29', result.stdout)
                     self.assertIn('N71_MSI_ALLOCATION_CALLER_OK cases=31', result.stdout)
                     self.assertIn('N71_DRIVER_CALLER_OK cases=54', result.stdout)
+                    self.assertIn('N71_DMA_GETTER_OK cases=5', result.stdout)
                     print(result.stdout.strip(), flush=True)
                 else:
                     self.assertEqual(result.returncode, -signal.SIGABRT, name + result.stderr)
