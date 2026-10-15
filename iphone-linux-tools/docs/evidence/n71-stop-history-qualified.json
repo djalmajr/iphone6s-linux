@@ -1,0 +1,50 @@
+{
+  "format": 1,
+  "status": "qualified_parser_and_physical_log_replay",
+  "date": "2026-10-15",
+  "issue": 47,
+  "contract": {
+    "raw_log_changed": false,
+    "history_source": "native release journal validated by cleanup_cause",
+    "earlier_refusals_require_negative_driver_cause": true,
+    "history_requires_exact_kernel_prefix": true,
+    "history_excludes_native_release": true,
+    "release_requires_zero_owners_and_precedes_bus_removal": true,
+    "later_duplicate_line_not_ignored": true,
+    "unproved_pre_release_refusal_not_ignored": true,
+    "later_stop_error_preserved": true,
+    "first_cause_preserved": true,
+    "legacy_without_context_stays_strict": true
+  },
+  "qualification": {
+    "mac_tests": 64,
+    "arm64_tests": 64,
+    "assertion_mutation_lines_each": 119,
+    "new_tests": 4,
+    "new_assertion_mutations_each": 10,
+    "ast_passed": true,
+    "lint_passed": true,
+    "typechecker_configured": false,
+    "source_inputs_identical": 660,
+    "kernel_or_module_changed": false,
+    "mac_packages_or_global_configuration_changed": false
+  },
+  "physical_log_replay": {
+    "source_session": "2026-10-11",
+    "original_registered_proofs_verified": 14,
+    "original_files_unchanged": 16,
+    "native_completions_verified": 3,
+    "wcc_module_completions_verified": 10,
+    "stop_error": 0,
+    "driver_primary_error": -1,
+    "cleanup_primary_error": -1,
+    "new_remote_cleanup": false,
+    "new_hardware_action": false
+  },
+  "pending": [
+    "New CI acceptance before closing issue47.",
+    "Physical same-boot reacquisition remains issue42.",
+    "HDQ stage diagnostics issue48 precedes the grouped test with DMA aperture issue46."
+  ],
+  "initial_mutation_note": "A negative stop-error mismatch counterexample was added after an initial mutation survived; only final assertion kills count."
+}

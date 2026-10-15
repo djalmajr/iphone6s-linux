@@ -4,6 +4,7 @@ import re
 import n71_scan_pme_result
 import n71_scan_result
 import n71_scan_target_result
+import n71_session_history
 
 RELEASE = '7.2.0-iphone6s-dart-serdev-power2'
 ACTIVE = {'ready': 1, 'retained': 1, 'scan_pending': 1, 'reset_pending': 1,
@@ -82,10 +83,36 @@ def parse(text, *, primary_error=0):
     return result
 
 
-def cleanup(text, *, primary_error=0):
+def stop_refusals(text, request):
+    prior = request['history']; rows = request['rows']
+    if prior is None:
+        return rows
+    require(type(prior) is list and bool(prior) and all(isinstance(line, str) for line in prior)
+            and sum(len(line) + 1 for line in prior) <= 2 * 1024 * 1024
+            and request['primary_error'] < 0, 'Negative runtime cause and bounded history required')
+    marker = 'N71_PCIE_DRIVER_RESULT action=release '
+    require(n71_session_history.kernel_lines('\n'.join(prior)) == prior
+            and n71_session_history.kernel_lines(text)[:len(prior)] == prior
+            and not any(marker in line for line in prior), 'Prior runtime history is not a pre-release prefix')
+    release = unique(text, marker, marker + r'error=0 pending=0 active=0 published=[01] root=0 endpoint=0 '
+        r'pm=0 root_override=0 endpoint_override=0 operation_error=(-?\d+); not firmware or radio proof')
+    require(text.index('N71_PCIE_SESSION_HELD ') < release.start() < request['removed'].start(),
+            'Native release must precede held removal')
+    known = set(prior); current = []
+    for row in rows:
+        start = text.rfind('\n', 0, row.start()) + 1
+        end = text.find('\n', row.end())
+        line = text[start:len(text) if end < 0 else end]
+        if not (row.start() < release.start() and line in known):
+            current.append(row)
+    return current
+
+
+def cleanup(text, *, primary_error=0, prior_history=None):
     require(type(primary_error) is int and -4095 <= primary_error <= 0, 'Invalid cleanup primary error')
     require(live_held(text) == 0, 'Bus still held during cleanup')
     if 'N71_PCIE_SCAN_HELD ' not in text:
+        require(prior_history is None, 'Runtime history requires an acquired held bus')
         require(primary_error == 0, 'Assignment requires a previously acquired held bus')
         n71_scan_pme_result.cleanup(text)
         failed = re.findall(r'N71_PCIE_(?:LINK|INVENTORY|SCAN)_RESULT error=(-?\d+)', text)
@@ -134,10 +161,13 @@ def cleanup(text, *, primary_error=0):
     refusals = list(re.finditer(r'N71_PCIE_SCAN_WRITE_REFUSED bus=\d+ devfn=[0-9a-f]{2} '
                                 r'where=[0-9a-f]{3} size=[124] value=[0-9a-f]{8} error=(-\d+)(?=\n|$)', text))
     require(len(refusals) == text.count('N71_PCIE_SCAN_WRITE_REFUSED '), 'Complete stop refusals required')
-    require((not refusals and stop_error in (0, primary_error))
-            or (refusals and stop_error < 0 and int(refusals[0].group(1)) == stop_error
-                and all(text.index('N71_PCIE_SESSION_HELD ') < row.start() < removed.start()
-                        for row in refusals)), 'Held stop refusal and error differ')
+    require(all(text.index('N71_PCIE_SESSION_HELD ') < row.start() < removed.start() for row in refusals),
+            'Held refusal falls outside its acquired lifetime')
+    current = stop_refusals(text, {'history': prior_history, 'rows': refusals,
+                                  'removed': removed, 'primary_error': primary_error})
+    require((not current and stop_error in (0, primary_error))
+            or (current and stop_error < 0 and int(current[0].group(1)) == stop_error),
+            'Held stop refusal and error differ')
     return {'stop_error': stop_error, 'held_acquired': True}
 
 

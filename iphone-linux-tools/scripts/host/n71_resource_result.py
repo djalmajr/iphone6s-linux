@@ -110,13 +110,17 @@ def cleanup(text, assignment=None, *, provider_error=0):
 
 
 def cleanup_errors(text, assignment, errors):
-    require(isinstance(errors, dict) and set(errors) == {'driver_error', 'provider_error'},
+    require(isinstance(errors, dict) and (set(errors) == {'driver_error', 'provider_error'}
+            or set(errors) == {'driver_error', 'provider_error', 'driver_history'}),
             'Resource cleanup cause schema differs')
     driver_error, provider_error = errors['driver_error'], errors['provider_error']
     error = assignment['error'] if assignment else 0
     require(type(error) is int and -4095 <= error <= 0, 'Invalid assignment primary error')
     require(type(driver_error) is int and -4095 <= driver_error <= 0, 'Invalid driver primary error')
     require(type(provider_error) is int and -4095 <= provider_error <= 0, 'Invalid provider operation error')
+    prior_history = errors.get('driver_history')
+    require('driver_history' not in errors or (driver_error < 0 and error == 0 and prior_history is not None),
+            'Prior runtime history requires a proved negative driver cause after successful assignment')
     primary_error = error or provider_error
     if not error and driver_error:
         primary_error = driver_error
@@ -124,7 +128,7 @@ def cleanup_errors(text, assignment, errors):
     require(result == (assignment['event'] if assignment else None), 'Assignment history changed')
     state = live_status(text)
     require(state == dict.fromkeys(FIELDS, 0) | {'error': primary_error}, 'Resource ownership still pending')
-    base = n71_scan_held_result.cleanup(text, primary_error=primary_error)
+    base = n71_scan_held_result.cleanup(text, primary_error=primary_error, prior_history=prior_history)
     restored = rows(text, 'N71_PCIE_RESOURCE_RESTORED ',
                     r'N71_PCIE_RESOURCE_RESTORED error=(-?\d+) pending=([01])')
     released = rows(text, 'N71_PCIE_RESOURCE_WINDOW_RELEASED ',

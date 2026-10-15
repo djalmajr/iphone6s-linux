@@ -250,7 +250,7 @@ class HeldMutationsTests(unittest.TestCase):
             'caller-final': ('tuple(map(int, sessions[-1].groups())) == (0, 0, 0, 0, 0, 0, 0, primary_error)', 'True'),
             'caller-retry-negative': ("all(int(row.group(1)) < 0 and row.group(2) == '1' and int(row.group(8)) == primary_error\n                    for row in sessions[:-1])", 'True'),
             'release-order': ('targets[-1].start() < reset.start() < power.start() < sessions[-1].start()', 'True'),
-            'stop-refusal-preserved': ("(not refusals and stop_error in (0, primary_error))\n            or (refusals and stop_error < 0 and int(refusals[0].group(1)) == stop_error\n                and all(text.index('N71_PCIE_SESSION_HELD ') < row.start() < removed.start()\n                        for row in refusals))", 'True'),
+            'stop-refusal-preserved': ("(not current and stop_error in (0, primary_error))\n            or (current and stop_error < 0 and int(current[0].group(1)) == stop_error)", 'True'),
             'power2-scope': ('release == RELEASE', 'True'),
             'api-booleans': ('all(api.get(name) is True for name in flags)', 'all(api.get(name) for name in flags)'),
             'default-disabled-boolean': ("api.get('default_enabled') is False", "not api.get('default_enabled')"),
