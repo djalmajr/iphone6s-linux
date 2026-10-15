@@ -152,7 +152,7 @@ class PmdRuntimeProfile(unittest.TestCase):
             def make_session(inner, output):
                 session = super().make_session(output)
                 session.release = RELEASE; session.result['kernel_release'] = RELEASE
-                session.driver_modules = wlan.qualified(ROOT, release=RELEASE)
+                session.driver_modules = copy.deepcopy(self.actual['drivers'])
                 return session
 
         for method in ('test_ordered_load_and_reverse_unload_persist_only_the_proved_owners',

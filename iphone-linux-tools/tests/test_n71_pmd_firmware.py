@@ -36,6 +36,12 @@ class PmdFirmware(unittest.TestCase):
     def setUp(self):
         fixture = pmd_fixture.PmdRuntime('test_current_records_select_pmd_without_changing_legacy_or_sources')
         fixture.setUp(); self.addCleanup(fixture.doCleanups); self.pmd_root = fixture.root
+        proof = json.loads((ROOT / 'docs/evidence/n71-pmd-wifi-modules-qualified.json').read_text())
+        (self.pmd_root / 'docs/evidence/n71-pmd-wifi-modules-qualified.json').write_text(json.dumps(proof))
+        for name in proof['input_qualification']['inputs']:
+            path = self.pmd_root / name; path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(pmd_fixture.compiled_source(name))
+        self.pmd_drivers = wlan.qualified(self.pmd_root, release=RELEASE)
 
     def copy_kernel(self, target):
         for source in self.pmd_root.rglob('*'):
@@ -80,7 +86,7 @@ class PmdFirmware(unittest.TestCase):
                     outer.copy_kernel(inner.root)
                 super().fresh()
                 inner.session.release = RELEASE; inner.session.result['kernel_release'] = RELEASE
-                inner.session.driver_modules = wlan.qualified(ROOT, release=RELEASE)
+                inner.session.driver_modules = copy.deepcopy(outer.pmd_drivers)
                 (inner.root / 'transport-settings-private.json').write_text(json.dumps({'release': RELEASE}))
 
         case = PmdLifetime('test_stage_bind_verify_restore_in_one_boot_and_keep_private_data')
@@ -111,7 +117,7 @@ class PmdFirmware(unittest.TestCase):
         def promote(session):
             session.release = RELEASE; session.result['kernel_release'] = RELEASE
             session.scan_hold = session.resource_capable = session.iommu_parent = True
-            session.driver_modules = wlan.qualified(ROOT, release=RELEASE)
+            session.driver_modules = copy.deepcopy(self.pmd_drivers)
             return session
 
         promote(case.rt.session)
