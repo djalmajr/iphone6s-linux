@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_patchset": "n71-dart-serdev-pmd-v1",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-pmd1",
+  "initramfs_changed_paths": [],
+  "identities_preserved": true,
+  "client_private_key_copied_to_vm": false,
+  "payload_sha256": "be67440367a64915348f8058e9c27b8e1159c8a8d44da17761946ead008657bb",
+  "payload_bytes": 29931394,
+  "initramfs_sha256": "e17091af72ff5b4cb44e0b4890ec92e42f7545312dac1cb08be82b1ce53a2c76",
+  "initramfs_bytes": 13061140,
+  "profile_verified": true,
+  "physical_boot_tested": false,
+  "default_payload_changed": false,
+  "verification": "Real private Image/config/DTB artifacts on macOS, hashes recalculated; no device action",
+  "runtime_modules_integrated": false,
+  "firmware_integrated": false
+}

@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "status": "host_qualified_arm64_build_pending",
+  "status": "mac_and_arm64_qualified_full_kernel_compiled_verified",
   "input_count": 16,
   "inputs": {
     "scripts/build/kernel_bundle.py": {
@@ -132,10 +132,25 @@
   "ast": "pass",
   "lint": "pass",
   "python_typechecker_configured": false,
-  "arm64_gates": "pending",
-  "full_kernel_build": "pending",
+  "arm64_gates": {
+    "test_n71_dart_pmd": {
+      "status": "pass",
+      "tests": 1,
+      "assertion_mutations": 12,
+      "log_sha256": "dcfd5b01c98241d7000f27a8015094be65deebd2709d22f47c664e9fe51d48f7"
+    },
+    "test_kernel_pmd_bundle": {
+      "status": "pass",
+      "tests": 5,
+      "assertion_mutations": 7,
+      "log_sha256": "0bd75521b26321a8ddc20b4a5b0a7afb943d3ed78c5f23e478d9194a939965c6"
+    }
+  },
+  "full_kernel_build": "compiled_verified; kernel-n71-pmd-build.json",
   "physical_boot_tested": false,
   "wifi_verified": false,
   "charging_validated": false,
-  "default_profile_changed": false
+  "default_profile_changed": false,
+  "arm64_full_source_blobs_verified": 8,
+  "arm64_real_dart_objects_w1_werror": "pass"
 }

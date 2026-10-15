@@ -23,6 +23,25 @@ O boot agrupado de 15/10 confirmou execução do firmware, mas o primeiro comand
 
 Aplicar somente em worktree novo na VM dedicada, com inputs selados. Manter source/build power2 intactos. Qualificar os trechos contra a fonte completa real e compilar os objetos reais com Werror. Preparar build completo com configuração herdada alterando somente LOCALVERSION; verificar Image, DTB, configuração embutida, exports, serdev e modpost. Não instalar. As permissões de seleção de kernel/módulos/perfil só serão ampliadas por uma fase separada, depois de um registro de build real; nenhum bypass das provas existentes.
 
+### D2 — reconstrução dos diagnósticos para a ABI PMD
+
+- **Decisão:** preparar scripts/build/build-n71-pmd-diagnostics.py e docs/evidence/n71-pmd-diagnostic-inputs.json para reconstruir os seis diagnósticos e o pin-cycle em pastas novas, somente após um build completo comprovado. O comando --check verifica inputs/estado sem extrair ou compilar; exige Linux ARM64 sem root, arquivo de source fixado, bundle completo e Image/config/exports correspondentes ao resultado real do build. Nenhum seletor de runtime é alterado nesta fatia.
+- **Por quê:** a versão distinta exige módulos recompilados; reunir também o diagnóstico HDQ/UJM evita um DFU exclusivo para cada componente. Entre os 69 inputs da qualificação do caller anterior, somente o diagnóstico I2C separado mudou; os inputs PCIe/runtime permanecem iguais. Os gates HDQ/UJM já concluídos são reutilizados com seus inputs intactos; o build novo prova a ABI e os imports.
+- **Alternativas:** aceitar módulos de power2 com carregamento forçado é recusado; recompilar no source/build anterior destruiria a separação de artefatos. Esperar sem preparar os inputs atrasaria a sessão agrupada.
+- **Reverter:** baixo; os outputs são privados e novos, sem instalação ou carga.
+- **Verificação:** AST/lint, --check real na VM e recusa de um tar corrompido sem criação do destino; build W=1/Werror, ELF/ABI/imports/params e hashes dos inputs/kernel antes/depois. A prova no aparelho permanece pendente.
+- **Status:** aplicada; compilação/integração base verificadas, aceite físico continua pendente.
+
+### D3 — seleção opt-in no integrador de kernel
+
+- **Decisão:** ampliar scripts/build/integrate-source-kernel.py para o bundle PMD explícito e o registro público separado kernel-n71-pmd-build.json. O registro só será produzido de um build real concluído; sua ausência deve recusar a integração antes de criar saída. Preservar todos os caminhos anteriores, validações completas de source/blobs/patches/Image/configuração e identidades. PMD exige GPIO/PMGR incorporados e initramfs sem módulos da ABI antiga.
+- **Por quê:** adianta a composição sem usar hardware ou inventar hashes enquanto a única compilação pesada continua. A nova seleção não altera o payload padrão nem autoriza módulos incompatíveis.
+- **Alternativas:** esperar o build sem preparar a composição adia a sessão agrupada; reutilizar o registro power2 cruza ABI e será recusado.
+- **Reverter:** baixo; a seleção exige opção explícita, não muda perfis existentes.
+- **Onde:** integrador, tests/test_kernel_pmd_integration.py, ajustes mínimos de âncoras em tests/run_kernel_integration_mutations.py e este plano. Nenhum seletor de runtime ou driver é ampliado nesta fatia.
+- **Verificação:** CLI real e filesystem temporário com kernels sintéticos não inicializáveis; seleção/identidades/modos, falta de registro, registro power2 cruzado, todos os oito blobs/patches, link/export/release/configuração e módulos antigos; mutações novas por AssertionError, regressão antiga focalizada, AST/lint. A prova física continua pendente.
+- **Status:** aplicada; compilação/integração base verificadas, aceite físico continua pendente.
+
 ## Fase C — um teste físico agrupado
 
 Antes de solicitar DFU, preparar kernel, todos os módulos compatíveis, perfil privado com identidades preservadas, diagnóstico HDQ UJM, restore e coleta/cleanup numa sessão limitada. O aparelho está no iOS bloqueado e recarregando; nenhuma ação necessária agora. Após retorno ao iOS, ausência de USB é tratada como tela bloqueada, sem nova confirmação rotineira.
@@ -34,8 +53,10 @@ Gates novos no Mac e ARM64; regressão dos bundles impactados sem repetir gates 
 ## Tarefas
 
 - [x] Confirmar e registrar a diferença PMD na fonte primária.
-- [x] Implementar patch, seleção e contratos nativos; Mac aprovado, ARM64 ainda pendente.
-- [ ] Qualificar objetos e build completo isolado.
+- [x] Implementar patch, seleção e contratos nativos; Mac e ARM64 aprovados (387 cenários/12 mutações em cada).
+- [x] Qualificar objetos e build completo isolado (Image PMD e cópias Mac verificados).
+- [x] Reconstruir os sete diagnósticos com W=1/Werror e imports/ABI conferidos.
+- [x] Qualificar o integrador opt-in e criar o perfil base privado, sem alterar o padrão.
 - [ ] Integrar o novo kernel/módulos em perfil opt-in sem alterar o padrão.
 - [ ] Reunir HDQ e Wi-Fi antes de um DFU necessário.
 - [ ] Comprovar o comportamento no aparelho e atualizar as issues.
@@ -45,3 +66,15 @@ Gates novos no Mac e ARM64; regressão dos bundles impactados sem repetir gates 
 Mac: 387 cenários do instalador/configuração com 12 mutações compiladas; bundle novo 5 testes/7 mutações; regressão dos três bundles anteriores 15 testes/14 mutações. AST e lint aprovados, sem typechecker Python. As APIs de memória, barreira e CAS são modeladas; não é prova de coerência ou concorrência do DART físico.
 
 O primeiro preparo ARM64 excedeu 180 s no checkout do worktree, antes da aplicação do patch e antes de compilar. Source/config/Image/exports power2 foram novamente conferidos e preservados. O processo filho terminou; não há checkout concorrente. O builder público permite 600 s para um worktree novo e uma retomada explícita --resume-source somente quando inputs selados e checkout exato passam pelas recusas existentes. Não reiniciar um build por timeout de observação. Nenhum reboot ou pedido ao operador foi feito nesta fase.
+
+## Checkpoint de 15/10 — ABI e recursos
+
+A fonte ARM64 completa e os dois objetos reais do DART passaram com W=1/KCFLAGS=-Werror; o link completo segue no processo existente, sem reinício. As duas execuções de CI do commit 04a1cb08e54a46567446fbeaa8a3eef1d2a87128 (38769221147 e 38769214197) terminaram com success. Os 62 inputs dos sete diagnósticos estão selados. Após recuperar o timeout externo do primeiro gate ARM e corrigir a comparação JSON de tuplas/listas no preflight, Mac e ARM64 passaram seis testes/seis mutações de inputs/registro e seis testes/cinco mutações de integração. O preflight real, a recusa do pacote corrompido e o build completo dos sete diagnósticos passaram; não houve instalação ou carga no aparelho.
+
+A limpeza autorizada removeu 72 binários locais obsoletos (1.667.619.582 bytes lógicos), mantendo perfis atuais/fallback, snapshots, metadados e o build ativo. Não havia workers próprios para fechar; GC conferido e executado, sem itens elegíveis. Não abrir novos painéis nem iniciar outro build pesado enquanto houver pressão de recursos.
+
+## Resultado desta fatia
+
+O build completo terminou com exit 0 em 2489 s; Image c6c020756b970ebb77d1eb8e7975682385efacdbdefaacc78b70b8b8eb177246, configuração/DTB/exports verificados e kernel anterior preservado. A integração base privada real passou, com identidades SSH e padrão intactos. D2 concluiu o build dos sete módulos; D3 concluiu os gates e a integração base. A comparação JSON corrigida não relaxa os pins da fonte. Os fatos públicos estão em kernel-n71-pmd-build.json, n71-pmd-preparation-qualified.json, n71-pmd-diagnostics-build.json e n71-pmd-base-integration.json sob docs/evidence/.
+
+Próxima fatia: selecionar os hashes reais da ABI PMD no builder Wi-Fi e recompilar o conjunto WCC isolado. Depois, ampliar os gates de runtime em fases e compor um perfil completo, preservando power2. Nenhum DFU ou leitura de PIN nesta fatia. Wi-Fi, HDQ e carregamento físico seguem pendentes.

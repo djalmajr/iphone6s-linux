@@ -33,7 +33,7 @@ O ponto novo é o bit 1 da entrada intermediária. O significado exato desse bit
 - Endereço físico, folhas, janela DMA, TTBR, TCR, barreira de publicação e CAS permanecem iguais.
 - O bundle `n71-dart-serdev-pmd-v1` tem identidade `7.2.0-iphone6s-dart-serdev-pmd1`. Os bundles anteriores mantêm seus hashes, patches e versões.
 
-O nome novo impede que um módulo da candidata anterior seja confundido com um módulo recompilado para este kernel. As permissões dos seletores existentes ainda não foram ampliadas para a candidata; não há override de hash, carga forçada de módulo ou alteração do perfil padrão.
+O nome novo impede que um módulo da candidata anterior seja confundido com um módulo recompilado para este kernel. O gerador de perfis tem uma seleção opt-in separada, descrita abaixo; os seletores de runtime/driver ainda não aceitam a candidata. Não há override de hash, carga forçada de módulo ou alteração do perfil padrão.
 
 ## Qualificação e reprodução do build
 
@@ -98,8 +98,71 @@ Nenhum firmware, chave ou conteúdo do telefone entra no pacote de build. A cria
 
 O builder mede source e build anteriores para reservar espaço com margem de 2 GiB, aplica todos os oito patches em worktree novo, verifica os oito blobs completos, executa os gates ARM64, herda a configuração alterando somente LOCALVERSION, compila os dois objetos reais com W=1/Werror e depois Image/DTB. Confere configuração embutida, modpost, export serdev, módulos preparados e hashes do kernel anterior antes/depois. Os artefatos existentes permanecem protegidos.
 
+O [build completo](evidence/kernel-n71-pmd-build.json) terminou com sucesso em 15/10/2026, em 2489 segundos. O Image tem 52070912 bytes e SHA256 `c6c020756b970ebb77d1eb8e7975682385efacdbdefaacc78b70b8b8eb177246`. Os cinco artefatos copiados para o Mac tiveram seus hashes recalculados; Image.gz corresponde ao Image e a configuração só difere de power2 por LOCALVERSION. O DTB mantém o hash anterior. Source/config/Image/exports power2 foram preservados. O registro público usa `commit` para a base identificada por `base_commit` no resultado privado do checker; os oito pares de blobs e os oito patches permanecem iguais.
+
+## Diagnósticos para a ABI nova
+
+[build-n71-pmd-diagnostics.py](../scripts/build/build-n71-pmd-diagnostics.py) reconstrói os seis diagnósticos e o pin-cycle em uma pasta nova da VM. Os [62 inputs selados](evidence/n71-pmd-diagnostic-inputs.json) incluem o diagnóstico I2C com a correção UJM. Nenhum arquivo da ABI power2 é sobrescrito.
+
+Para reproduzir o pacote na raiz de `iphone-linux-tools`:
+
+```python
+from pathlib import Path
+import hashlib, io, json, tarfile
+
+proof = json.loads(Path('docs/evidence/n71-pmd-diagnostic-inputs.json').read_text())
+target = Path('runtime/n71-pmd-diagnostic-inputs.tar')
+with tarfile.open(target, 'x', format=tarfile.USTAR_FORMAT) as archive:
+    for name, expected in proof['inputs'].items():
+        data = Path(name).read_bytes()
+        assert len(data) == expected['bytes']
+        assert hashlib.sha256(data).hexdigest() == expected['sha256']
+        member = tarfile.TarInfo(name)
+        member.mode = 0o644
+        member.size = len(data)
+        archive.addfile(member, io.BytesIO(data))
+assert target.stat().st_size == proof['canonical_tar']['bytes']
+assert hashlib.sha256(target.read_bytes()).hexdigest() == proof['canonical_tar']['sha256']
+```
+
+O resultado deve ter 389120 bytes e SHA256 `ced3f7ea5957a8baf641a3aff7db03b35c40b8eec45edbd9afc5e3832af71820`. Transferir somente o pacote e o builder para a VM dedicada; não transferir chaves ou perfis privados.
+
+O comando seguinte pressupõe que o build completo anterior já terminou com `build-result-private.json` real e verificado. Executar como `ubuntu`, nunca como root, mantendo as pastas da receita anterior:
+
+```sh
+python3 -B /home/ubuntu/build-n71-pmd-diagnostics.py \
+  --inputs /home/ubuntu/n71-pmd-diagnostic-inputs-20261015.tar \
+  --output-dir /home/ubuntu/n71-pmd-diagnostics-build-20261015 --check
+```
+
+`--check` não cria a saída nem compila. Confere pacote, source completo, release, Image/config/exports e fatos do build completo. Após essa verificação, repetir sem `--check` para compilar somente os sete módulos, com `W=1` e `KCFLAGS=-Werror`. O destino precisa continuar inexistente. O resultado privado registra ELF64/AArch64 relocável, ABI, imports resolvidos, parâmetros e hashes; não instala nem carrega os módulos. A fonte e Image/config/exports do kernel são novamente conferidos ao terminar.
+
+Os testes do limite do pacote usam arquivos reais temporários, sem kernel ou telefone:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pmd_diagnostic_inputs.py -v
+```
+
+Seis testes e seis mutações passaram no Mac e no ARM64. A primeira tentativa ARM excedeu o prazo externo depois de três testes básicos e duas mutações; uma repetição completa, apenas Python e com prazo total adequado, terminou aprovada. O preflight real depois encontrou uma comparação de tuplas com listas após serialização JSON e recusou a operação antes de criar a saída. A comparação agora normaliza somente os pares de blobs para listas, mantendo a igualdade exata da fonte. Os testes cobrem o roundtrip válido, alteração dos blobs e falta dos fatos de build. O pacote real de 62 fontes foi aceito pelo parser na VM.
+
+Os [sete módulos](evidence/n71-pmd-diagnostics-build.json) foram compilados com W=1/Werror e modpost. A recusa de um pacote real corrompido não criou saída; o temporário foi removido. Os imports foram resolvidos contra os exports do kernel, e ELF, ABI e hashes dos módulos copiados para o Mac foram conferidos. Não houve instalação ou carga no iPhone. A correção do builder reutilizou o Image concluído; não exigiu outro build de kernel.
+
+## Composição opt-in preparada
+
+[integrate-source-kernel.py](../scripts/build/integrate-source-kernel.py) aceita explicitamente `--kernel-patchset n71-dart-serdev-pmd-v1`. Exige o registro público distinto [kernel-n71-pmd-build.json](evidence/kernel-n71-pmd-build.json), produzido do build completo real. A ausência desse registro, um registro power2 cruzado, qualquer divergência dos oito patches/blobs, Image/configuração/release ou export serdev recusa a operação antes de criar o destino.
+
+A seleção PMD mantém GPIO/PMGR incorporados e recusa módulos antigos ou metadados de módulos no initramfs. A migração do NCM incorporado preserva as demais entradas e as identidades SSH. O perfil padrão continua intacto; selecionar PMD neste gerador não libera o carregamento pelos seletores de runtime/driver.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_kernel_pmd_integration.py -v
+```
+
+O gate usa CLI real e kernels sintéticos não inicializáveis. Seis testes, incluindo cinco mutações, passaram no Mac e no ARM64. No Mac, os cinco testes power2, os 17 testes anteriores de integração e quatro mutações antigas afetadas também passaram. O [registro de preparação](evidence/n71-pmd-preparation-qualified.json) contém os inputs e hashes dos logs. Isso prova os limites do gerador, sem comprovar boot, Wi-Fi, HDQ ou carregamento no aparelho.
+
+A [integração base real](evidence/n71-pmd-base-integration.json) também passou com o Image novo e o initramfs privado validado de power2: identidades SSH preservadas, perfil verificado e padrão intacto. Esse perfil ainda não contém o conjunto de runtime/firmware; não deve ser usado como candidato ao teste agrupado antes das etapas seguintes.
+
 ## Aceite no aparelho ainda pendente
 
-Depois do build completo, faltam módulos compatíveis, integração opt-in qualificada e uma sessão física reunindo este diagnóstico com HDQ/UJM. Não solicitar outro DFU para repetir o fault conhecido sem a candidata pronta. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
+O kernel, os sete diagnósticos e a integração base estão qualificados sem uso do telefone. Faltam reconstruir o conjunto Wi-Fi para a ABI PMD, ampliar os gates de runtime explicitamente e montar o perfil completo antes de uma sessão física reunindo DART/firmware com HDQ/UJM. Não solicitar outro DFU para repetir o fault conhecido sem a candidata pronta. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
 
 Wi-Fi nativo, telemetria e carga no Linux continuam sem comprovação. O patch não escreve registradores do carregador nem modifica o armazenamento interno.

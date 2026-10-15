@@ -1,0 +1,128 @@
+{
+  "format": 1,
+  "inputs": {
+    "scripts/build/integrate-source-kernel.py": {
+      "bytes": 12249,
+      "sha256": "749645d74b2f4f3f9d500905e74d7316d99affc492d4850783c9dad2e423deb8"
+    },
+    "scripts/build/build-n71-pmd-diagnostics.py": {
+      "bytes": 9094,
+      "sha256": "5a8ff690692872f64dca8de1db5a0c5c7bca45dccba3291bc8763cb0431298dc"
+    },
+    "scripts/build/kernel_bundle.py": {
+      "bytes": 8406,
+      "sha256": "0f18ca78f960800214dbb34c3b956e6a6679a455fac830e502fbcd969520e2f6"
+    },
+    "scripts/build/kernel_patchset.py": {
+      "bytes": 5466,
+      "sha256": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817"
+    },
+    "scripts/host/device_profile.py": {
+      "bytes": 6526,
+      "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+    },
+    "scripts/host/profile_image.py": {
+      "bytes": 4463,
+      "sha256": "19d4610eeb44ba50d9c29267e1b3bba250a03bb30e8f9a0e0d99abc4533fd427"
+    },
+    "tests/test_kernel_pmd_integration.py": {
+      "bytes": 10639,
+      "sha256": "611371d528a1350ade649a467a26c8c69b1251ddcf2cfc77ec8cf49326ab47ee"
+    },
+    "tests/test_kernel_binding_integration.py": {
+      "bytes": 6640,
+      "sha256": "02776175628c58a12ba8af30d517a3506adb134d71a37b38c612dd01233c0533"
+    },
+    "tests/test_kernel_integration.py": {
+      "bytes": 26354,
+      "sha256": "e4ef334efb1d4d8124245c18da17d07ffce7ec107fbe08440eedf586b00750aa"
+    },
+    "tests/test_device_profile.py": {
+      "bytes": 8748,
+      "sha256": "6e719e097ae0d229e6475b7887f965a63bf0b385014a6a009efdb4665d790fcd"
+    },
+    "tests/test_n71_pmd_diagnostic_inputs.py": {
+      "bytes": 8493,
+      "sha256": "ba5bda19b604049174455bf06f0309fcf806d9e0af958dcdfbb348ae48a3483c"
+    },
+    "tests/run_kernel_integration_mutations.py": {
+      "bytes": 5969,
+      "sha256": "09de97a3a2f1ec5da74804527834a3613c69df4e89073f966bf69bd44a16acf6"
+    },
+    "docs/evidence/kernel-n71-bundle.json": {
+      "bytes": 3535,
+      "sha256": "eba6cb72eb9955742a0ad0d96425615052ea285ce9538329985ddd9f0bf225a0"
+    },
+    "docs/evidence/kernel-n71-power-bundle.json": {
+      "bytes": 5854,
+      "sha256": "60ff6e777dbd899c1003085ee3b59c071335fd188648e333207be0300524b15a"
+    },
+    "docs/evidence/n71-pmd-diagnostic-inputs.json": {
+      "bytes": 10037,
+      "sha256": "556a8046abe7b2112d12a2d138e52d19a329f64584772ad0c23c3f9f4cfe01ed"
+    }
+  },
+  "tar": {
+    "bytes": 153600,
+    "sha256": "ab75a366ec0b76690ffab946718b7fa4736fd9738e358476d557336e28ef2197"
+  },
+  "canonical_tar": {
+    "format": "ustar",
+    "mtime": 0,
+    "uid": 0,
+    "gid": 0,
+    "mode": "0644"
+  },
+  "mac": {
+    "pmd_tests": 6,
+    "pmd_assertion_mutations": 5,
+    "legacy_tests": 17,
+    "binding_tests": 5,
+    "changed_legacy_assertion_mutations": 4,
+    "ast": "pass",
+    "lint": "pass",
+    "lint_version": "7.3.0",
+    "python_typechecker_configured": false,
+    "logs_sha256": {
+      "pmd_integration": "a1e8fc18dcab312ce8afe3a0a3a7da10edaed125c495ac7dc7cde4be0c59f8d3",
+      "binding_regression": "2afa14fd58fee8838d20802c43048f5e6d37db0620a4c6c5b4ddbeaaba1e9773",
+      "legacy_regression": "d0ae1c827c0f5360d1971b42b5c8b995a8d2e15aadce7bc36e9b05989c53977f",
+      "changed_legacy_mutations": "9ce4eb0babf458fcb6858da1e346f1fe2b1aa0a81a20ff292d4293f9588388ae",
+      "diagnostic_input": "7344ccf27d9bc7a8aa62d2acfbcbaa61c87b7ec99d2be59279a017c9e048b8a2"
+    },
+    "diagnostic_input_tests": 6,
+    "diagnostic_input_assertion_mutations": 6
+  },
+  "arm64": {
+    "diagnostic_input_tests": 6,
+    "diagnostic_input_assertion_mutations": 6,
+    "pmd_integration_tests": 6,
+    "pmd_integration_assertion_mutations": 5,
+    "actual_production_source_archive_parse": "pass",
+    "records": {
+      "test_n71_pmd_diagnostic_inputs.py": {
+        "exit": 0,
+        "elapsed_seconds": 1.16,
+        "log_sha256": "425aeb224028607299dd287d038bb6ef56b719ef8bb88a1a0df45cccfc815e1c"
+      },
+      "test_kernel_pmd_integration.py": {
+        "exit": 0,
+        "elapsed_seconds": 3.91,
+        "log_sha256": "c5c749ac2de593ca87e49d96bc7f71132ac724d4407b0168cf5ad9402a0f524a"
+      }
+    }
+  },
+  "hardware_action": false,
+  "profile_created": true,
+  "default_profile_changed": false,
+  "status": "mac_and_arm64_preparation_qualified_kernel_and_seven_diagnostics_built",
+  "source_base_commit": "04a1cb08e54a46567446fbeaa8a3eef1d2a87128",
+  "recovery": "Initial outer ARM gate timeout was followed by a complete successful Python-only gate. The real builder preflight then refused a JSON tuple/list comparison mismatch before output. Exact array normalization now has positive, changed-source and six mutation checks; real check, corrupted archive refusal and complete seven-module build passed. The kernel was not rebuilt.",
+  "kernel_full_build": "compiled_verified; docs/evidence/kernel-n71-pmd-build.json",
+  "diagnostic_module_build": "seven_compiled_verified; docs/evidence/n71-pmd-diagnostics-build.json",
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "linux_charging_validated": false,
+  "limits": "Real CLI/filesystem/source-archive gates with synthetic nonbootable kernel/profile inputs; no physical boot, Wi-Fi, HDQ, IOMMU coherency, concurrent kernel driver or charging proof.",
+  "complete_runtime_profile_created": false
+}
