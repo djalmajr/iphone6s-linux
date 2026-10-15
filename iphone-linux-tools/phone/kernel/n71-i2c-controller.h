@@ -24,6 +24,13 @@ struct n71_i2c_controller_request {
 	int (*verify_pins)(void *context);
 };
 
+/* Last complete double-sample survives release; counters distinguish no sample. */
+struct n71_i2c_reset_trace {
+	u32 first_ctl, words[N71_I2C_WORDS];
+	unsigned int attempts, samples;
+	int sample_error;
+};
+
 struct n71_i2c_controller {
 	void __iomem *base;
 	bool claimed;
@@ -36,6 +43,7 @@ struct n71_i2c_controller {
 	u32 saved[N71_I2C_WORDS];
 	bool status_acknowledged;
 	bool transfer_pending;
+	struct n71_i2c_reset_trace reset_trace;
 };
 
 static inline bool n71_i2c_controller_clean(const struct n71_i2c_controller *state)
@@ -188,6 +196,7 @@ static inline int n71_i2c_controller_acquire(const struct n71_i2c_controller_req
 		return -EINVAL;
 	if (!n71_i2c_controller_clean(state))
 		return -EBUSY;
+	state->reset_trace = (struct n71_i2c_reset_trace) {0};
 	error = n71_i2c_controller_pins(request);
 	if (error)
 		return error;
@@ -260,9 +269,16 @@ static inline int n71_i2c_controller_acquire(const struct n71_i2c_controller_req
 	iowrite32(0, state->base + 0x18);
 	iowrite32(0x70f, state->base + 0x1c);
 	for (attempt = 0; attempt < 100; attempt++) {
+		state->reset_trace.attempts = attempt + 1;
 		error = n71_i2c_controller_sample(state->base, words);
+		state->reset_trace.sample_error = error;
 		if (error)
 			goto failed;
+		if (!state->reset_trace.samples)
+			state->reset_trace.first_ctl = words[N71_I2C_CTL];
+		for (word = 0; word < N71_I2C_WORDS; word++)
+			state->reset_trace.words[word] = words[word];
+		state->reset_trace.samples++;
 		for (word = 0; word < N71_I2C_CTL; word++)
 			if (words[word] != state->saved[word]) {
 				error = -EUCLEAN;

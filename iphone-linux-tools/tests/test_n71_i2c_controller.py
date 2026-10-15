@@ -9,6 +9,15 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
+    ('stale-reset-trace', 'state->reset_trace = (struct n71_i2c_reset_trace) {0};', '(void)0;'),
+    ('reset-attempts', 'state->reset_trace.attempts = attempt + 1;', 'state->reset_trace.attempts = attempt;'),
+    ('reset-sample-error', 'state->reset_trace.sample_error = error;', 'state->reset_trace.sample_error = 0;'),
+    ('reset-first-sample', 'if (!state->reset_trace.samples)', 'if (true)'),
+    ('reset-first-ctl', 'state->reset_trace.first_ctl = words[N71_I2C_CTL];', 'state->reset_trace.first_ctl = 0;'),
+    ('reset-last-words', 'state->reset_trace.words[word] = words[word];', 'state->reset_trace.words[word] = 0;'),
+    ('reset-valid-samples', 'state->reset_trace.samples++;', 'state->reset_trace.samples += 0;'),
+    ('release-erases-trace', 'state->status_acknowledged = false;',
+     'state->status_acknowledged = false; state->reset_trace = (struct n71_i2c_reset_trace) {0};'),
     ('missing-power-usage', 'power->usage_held &&', 'true &&'),
     ('wrong-mmio-scope', 'resource.start != 0x20a111000ULL', 'false'),
     ('multiple-clock-phandles', '"#clock-cells") != 1)', '"#clock-cells") < 1)'),

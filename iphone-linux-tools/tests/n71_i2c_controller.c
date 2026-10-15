@@ -29,6 +29,8 @@ static struct resource resource_value;
 static unsigned char memory[0x1000];
 static u32 registers[5];
 static u32 baseline_ctl;
+static u32 reset_ctl;
+static bool settle_reset;
 static bool claimed, mapped, region_busy, map_failure, clock_null;
 static bool clock_available, clock_compatible, timeout_reset, restore_corrupt, reset_all_ones, reset_busy;
 static unsigned int pin_calls, pin_fail_from, reads, writes, resets, restores, delays, node_refs;
@@ -117,6 +119,7 @@ static void iowrite32(u32 value, void *address)
 	registers[index]=value;
 	if (index==4 && value==0x70f) {
 		resets++;
+		registers[4]=reset_ctl;
 		if (timeout_reset) registers[4]=0x70e;
 		if (reset_all_ones) registers[0]=~0U;
 		if (reset_busy) registers[1]|=1U<<28;
@@ -129,7 +132,7 @@ static void iounmap(void *address) { assert(address==memory && mapped && claimed
 static void release_mem_region(u64 start, u64 size)
 { assert(start==0x20a111000ULL && size==0x1000 && claimed && !mapped); claimed=false; }
 static void usleep_range(unsigned long low, unsigned long high)
-{ assert(low==1000 && high==1100 && mapped && claimed); delays++; }
+{ assert(low==1000 && high==1100 && mapped && claimed); delays++; if (settle_reset) registers[4]=0x0f; }
 static int verify_pins(void *context)
 { assert(context==&consumer); pin_calls++; return pin_fail_from && pin_calls>=pin_fail_from ? -EACCES : 0; }
 #include "n71-i2c-controller.h"
@@ -144,6 +147,7 @@ static void reset_fixture(void)
 	registers[0]=2; registers[1]=0x08010100; registers[2]=0; registers[3]=0; registers[4]=baseline_ctl=0x2a;
 	region_busy=map_failure=clock_null=false;
 	timeout_reset=restore_corrupt=reset_all_ones=reset_busy=false;
+	reset_ctl=0x70f; settle_reset=false;
 	clock_available=clock_compatible=true;
 	pin_calls=pin_fail_from=reads=writes=resets=restores=delays=node_refs=0;
 	unstable_at=all_ones_at=clock_cells=0; clock_frequency=24000000;
@@ -230,9 +234,36 @@ int main(void)
 	assert(n71_i2c_controller_release(&request,&state)==0 && restores==1 && registers[4]==0x2a && writes==4);
 	assert_clean(&state); cases++;
 	assert(n71_i2c_controller_release(&request,&state)==0 && writes==4); cases++;
+	assert(state.reset_trace.attempts==1 && state.reset_trace.samples==1 && !state.reset_trace.sample_error);
+	assert(state.reset_trace.first_ctl==0x70f && state.reset_trace.words[N71_I2C_CTL]==0x70f);
+	assert(state.reset_trace.words[N71_I2C_REV]==2 && state.reset_trace.words[N71_I2C_SMSTA]==0x08010100);
+	assert(!state.reset_trace.words[N71_I2C_XFSTA] && !state.reset_trace.words[N71_I2C_IMASK]);
+	assert(reads==40 && writes==4 && !delays); cases++;
 	reset_fixture(); timeout_reset=true;
 	assert(n71_i2c_controller_acquire(&request,&state)==-ETIMEDOUT && delays==100 && restores==1);
 	assert_clean(&state); cases++;
+	/* Sticky UJM is recorded, still refused, then the exact original CTL is restored. */
+	reset_fixture(); reset_ctl=0x10f; baseline_ctl=registers[4]=0x104;
+	assert(n71_i2c_controller_acquire(&request,&state)==-ETIMEDOUT);
+	assert(state.reset_trace.attempts==100 && state.reset_trace.samples==100 && !state.reset_trace.sample_error);
+	assert(state.reset_trace.first_ctl==0x10f && state.reset_trace.words[N71_I2C_CTL]==0x10f);
+	assert(reads==1030 && writes==4 && resets==1 && restores==1 && delays==100 && registers[4]==0x104);
+	assert_clean(&state); cases++;
+	reset_fixture(); reset_ctl=0x10f; settle_reset=true;
+	assert(n71_i2c_controller_acquire(&request,&state)==0);
+	assert(state.reset_trace.attempts==2 && state.reset_trace.samples==2 && !state.reset_trace.sample_error);
+	assert(state.reset_trace.first_ctl==0x10f && state.reset_trace.words[N71_I2C_CTL]==0x0f);
+	assert(n71_i2c_controller_release(&request,&state)==0 && reads==50 && writes==4 && delays==1);
+	assert_clean(&state); cases++;
+	reset_fixture(); reset_ctl=0x10f; all_ones_at=21;
+	assert(n71_i2c_controller_acquire(&request,&state)==-ENODEV);
+	assert(state.reset_trace.attempts==2 && state.reset_trace.samples==1 && state.reset_trace.sample_error==-ENODEV);
+	assert(state.reset_trace.first_ctl==0x10f && state.reset_trace.words[N71_I2C_CTL]==0x10f);
+	assert(reads==41 && writes==4 && delays==1); assert_clean(&state); cases++;
+	reset_fixture(); pin_fail_from=1;
+	assert(n71_i2c_controller_acquire(&request,&state)==-EACCES && !reads && !writes);
+	assert(!state.reset_trace.attempts && !state.reset_trace.samples && !state.reset_trace.sample_error);
+	assert(!state.reset_trace.first_ctl && !state.reset_trace.words[N71_I2C_CTL]); assert_clean(&state); cases++;
 	for (unsigned int i=0;i<3;i++) {
 		reset_fixture();
 		if (i==0) reset_all_ones=true;
