@@ -3,8 +3,10 @@ import hashlib
 import json
 from pathlib import Path
 import device_profile
+import n71_iommu_build as iommu
 
 RELEASE = '7.2.0-iphone6s-dart-serdev-power2'
+RELEASES = (RELEASE, iommu.PMD_RELEASE)
 KERNEL = '958481f87fee0949ff6a9a4af77f7eb6dac8a149'
 ORIGIN = 'https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/'
 COMMIT = '31ec35bf14df835e2f9f7c8b1a8516a34f836df5'
@@ -63,7 +65,10 @@ def qualified(root):
 def select(root, request):
     require(isinstance(root, Path) and root == root.absolute(), 'Absolute firmware root required')
     require(isinstance(request, dict) and set(request) == {'directory', 'release'}
-        and request['release'] == RELEASE, 'Exact firmware selection request required')
+        and request['release'] in RELEASES, 'Exact firmware selection request required')
+    if request['release'] == iommu.PMD_RELEASE:
+        build = iommu.qualified(root, release=request['release'])
+        require(build['source_commit'] == KERNEL, 'PMD firmware kernel base differs')
     folder = request['directory']
     require(isinstance(folder, Path) and folder.is_absolute() and folder.parent == root / 'runtime',
             'Firmware directory must be private and directly under runtime')

@@ -54,7 +54,7 @@ def selection(session, request):
     device_profile.protected(source, directory=True)
     require(all(getattr(session, name, None) is True
         for name in ('driver_runtime', 'scan_hold', 'resource_capable', 'iommu_parent'))
-        and session.release == firmware.firmware.RELEASE, 'Reacquisition requires explicit held power2 runtime')
+        and session.release in firmware.firmware.RELEASES, 'Reacquisition requires explicit qualified held runtime')
     require(all(getattr(session, name, None) is False for name in
         ('reg_attempted', 'activation_attempted', 'pcie_attempted', 'resource_attempted'))
         and getattr(session, 'resource_assignment', None) is None

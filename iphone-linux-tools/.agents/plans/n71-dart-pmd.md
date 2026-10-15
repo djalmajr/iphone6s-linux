@@ -92,6 +92,16 @@ Aplicar somente em worktree novo na VM dedicada, com inputs selados. Manter sour
 - **Reverter:** baixo; os perfis e a release padrão anteriores permanecem iguais.
 - **Status:** aplicada; 7 testes/7 mutações novos, 10 testes/15 mutações de ações nativas, 16 testes/26 mutações de recursos, 45 testes do linker e três regressões do construtor power2/padrão aprovados no Mac (81 testes/48 mutações). Construtor real com os sete módulos e opções SSH locais aprovado, sem conexão ou output. A primeira mutação do seletor antigo encontrou uma dependência ausente na fixture; o JSON público legado foi incluído e o gate corrigido passou por AssertionError. Firmware/reacquire e CLI/composição completa continuam pendentes.
 
+### D9 — firmware e novo ciclo na ABI PMD
+
+- **Decisão:** ampliar n71_driver_firmware.py, n71_driver_firmware_session.py e n71_driver_reacquire.py para as duas releases conhecidas, mantendo power2 como padrão. PMD exige a qualificação do kernel e sua base exata antes de selecionar os mesmos três dados privados fixados. Configuração/efeitos vinculam a ABI do manifest WCC à Session; reacquire mantém provas completas do mesmo boot e restauração de atributos.
+- **Por quê:** o firmware e o regdb não mudaram com o patch DART. Precisamos preservar catálogo, certificado, hashes e restauração do loader ao executar a candidata nova, permitindo ciclos no mesmo boot.
+- **Alternativas:** alterar os pins dos dados sem uma mudança real perde a proveniência; aceitar release arbitrária remove a ligação ao kernel; reiniciar a cada teste impede o ciclo já comprovado.
+- **Onde:** os três helpers, tests/test_n71_pmd_firmware.py novo e este plano (cinco arquivos).
+- **Verificação:** seleção de dados sintéticos com kernel/source reais em fixture; recusa de kernel não qualificado, ABI/manifest cruzados e escopo inválido; shell/journal reais com sysfs/UID/SSH sintéticos para stage/bind/restore e recuperação sem replay; reacquire local PMD com teardown gerado pelo modelo e sem capture. Mutações novas, regressões focalizadas e AST/lint. Seleção/configuração separadas do pacote privado real, sem carregar firmware, SSH/USB ou VM.
+- **Reverter:** baixo; os bytes do catálogo e as releases padrão permanecem iguais.
+- **Status:** aplicada; 6 testes/5 mutações novos e 24 testes/33 mutações anteriores aprovados no Mac. O pacote privado real (três arquivos, 633.573 bytes) foi selecionado/configurado com kernel PMD e sete módulos reais, sem transferir, vincular ou carregar. O primeiro reacquire PMD revelou que a fixture restaurava Sessions/checkpoints power2; a fábrica e o checkpoint inicial do modelo foram corrigidos para gerar PMD, sem afrouxar a validação. Gate isolado e matriz corrigida completos aprovados. CLI/composição e prova física seguem pendentes.
+
 ## Fase C — um teste físico agrupado
 
 Antes de solicitar DFU, preparar kernel, todos os módulos compatíveis, perfil privado com identidades preservadas, diagnóstico HDQ UJM, restore e coleta/cleanup numa sessão limitada. O aparelho está no iOS bloqueado e recarregando; nenhuma ação necessária agora. Após retorno ao iOS, ausência de USB é tratada como tela bloqueada, sem nova confirmação rotineira.

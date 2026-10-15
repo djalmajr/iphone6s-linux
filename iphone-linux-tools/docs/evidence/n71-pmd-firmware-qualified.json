@@ -1,0 +1,82 @@
+{
+  "format": 1,
+  "status": "pmd_firmware_selection_lifetime_and_reacquire_qualified_cli_composition_pending",
+  "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+  "inputs": {
+    "scripts/host/n71_driver_firmware.py": {
+      "bytes": 4921,
+      "sha256": "d4609dd8539b123aa91cb1b8c6fa8f467bbeba81a7b9d8417f46a2f7ece3a4d9"
+    },
+    "scripts/host/n71_driver_firmware_session.py": {
+      "bytes": 10619,
+      "sha256": "289151d66f8b2c9633d3ef27ff21bcad8f610856d3086847baa2a1f17794f048"
+    },
+    "scripts/host/n71_driver_reacquire.py": {
+      "bytes": 7148,
+      "sha256": "ba5d88913d55ccda381d3a19310a858d3e06afe9970c17ec9e9283adc7cc03ac"
+    },
+    "tests/test_n71_pmd_firmware.py": {
+      "bytes": 10198,
+      "sha256": "a06da9d88be569d74bdec49290f1ddfea34e5f4166575cd8b8e73cfd419ecc16"
+    }
+  },
+  "gates": {
+    "pmd": {
+      "platform": "macOS",
+      "tests": 6,
+      "assertion_mutations": 5,
+      "passed": true,
+      "log_sha256": "b1cd0810511d928abf78d62f2ca6cdfd926d5632dbe15f03c744d0974583ed1d"
+    },
+    "legacy_package": {
+      "platform": "macOS",
+      "tests": 5,
+      "assertion_mutations": 10,
+      "passed": true,
+      "log_sha256": "ca0d9c802e6ffb889e8a5acf2204714ae870f3073df713c67cb38e18222e8883"
+    },
+    "legacy_lifetime": {
+      "platform": "macOS",
+      "tests": 9,
+      "assertion_mutations": 10,
+      "passed": true,
+      "log_sha256": "0f22999f114f2f4492a3c0431ab238ad0d68a97c8b199dc423a5c0e520243e92"
+    },
+    "legacy_reacquire": {
+      "platform": "macOS",
+      "tests": 10,
+      "assertion_mutations": 13,
+      "passed": true,
+      "log_sha256": "745a1b43ba7842bc2c7e5cbefe27e49fe95e0b74737e860485b172cbd133f6e2"
+    }
+  },
+  "legacy_reacquire_mutation_evidence": "13 AST case-list variants; successful gate requires each child to have assertion failures and no errors. This gate prints no per-variant marker.",
+  "real_private_configuration": {
+    "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+    "trusted_catalog_files": 3,
+    "firmware_data_bytes": 633573,
+    "pinned_hashes_preserved": true,
+    "real_session_configuration_passed": true,
+    "kernel_qualification_passed": true,
+    "firmware_staged_bound_or_loaded": false,
+    "boot_identity_invented": false,
+    "output_not_created": true,
+    "ssh_usb_or_device_action": false,
+    "vm_started": false,
+    "cli_composition_enabled": false,
+    "ast_files": 4
+  },
+  "ast_passed": true,
+  "fatal_lint_passed": true,
+  "typechecker": "not_configured",
+  "catalog_bytes_pins_and_default_release_unchanged": true,
+  "proof_scope": "Real kernel/source qualification, file selection, POSIX shell, capture and journal. Test firmware bytes/catalog, kernel observations, SSH/UID/sysfs are modeled. PMD model generates its initial checkpoint and restored Sessions with the correct ABI; same-boot local reacquire preserves raw source and attributes without capture. Actual private package configuration verified separately without effects.",
+  "initial_gate_failure": "Runtime fixture restored power2 Sessions after initial promotion, so its stopped source was still power2. Corrected its Session factory and regenerated its model initial PMD checkpoint; did not change production ABI validation. Narrow test and corrected full gate passed.",
+  "firmware_staged_bound_or_loaded": false,
+  "phone_accessed": false,
+  "vm_started": false,
+  "cli_complete_composition_enabled": false,
+  "wifi_physically_verified": false,
+  "telemetry_physically_verified": false,
+  "charging_physically_verified": false
+}

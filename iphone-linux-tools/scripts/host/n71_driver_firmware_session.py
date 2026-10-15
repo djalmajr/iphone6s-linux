@@ -23,9 +23,10 @@ def records():
 def configure(session, request):
     require(isinstance(request, dict) and set(request) == {'root', 'directory'}
         and getattr(session, 'firmware_data', None) is None, 'Firmware configuration must be new and explicit')
-    require(session.driver_runtime is True and session.release == firmware.RELEASE
+    require(session.driver_runtime is True and session.release in firmware.RELEASES
         and all(getattr(session, key, None) is True for key in ('scan_hold', 'resource_capable', 'iommu_parent')),
         'Firmware configuration requires its selected runtime')
+    require(wlan.selected_release(session.driver_modules) == session.release, 'Firmware WCC and Session ABI differ')
     session.firmware_data = firmware.select(request['root'], {'directory': request['directory'], 'release': session.release})
 
 
@@ -34,9 +35,10 @@ def applicable(session):
 
 
 def context(session):
-    require(session.driver_runtime is True and session.release == firmware.RELEASE
+    require(session.driver_runtime is True and session.release in firmware.RELEASES
         and all(getattr(session, key, None) is True for key in ('scan_hold', 'resource_capable', 'iommu_parent')),
         'Firmware effect requires its selected runtime')
+    require(wlan.selected_release(session.driver_modules) == session.release, 'Firmware effect WCC ABI differs')
     directory = wlan.directory(session.module_directory) + '/firmware'
     boot = session.result.get('boot_id')
     require(isinstance(boot, str) and re.fullmatch(BOOT, boot), 'Firmware effect requires a proved boot')

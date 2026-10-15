@@ -261,6 +261,20 @@ O [registro das entradas](evidence/n71-pmd-session-entry-qualified.json) contém
 
 Uma verificação separada construiu a Session com os sete binários compilados reais e as opções SSH locais. Os arquivos de identidade foram preservados; nenhum diretório de saída, conexão ou ação USB foi criado. AST/lint aprovados, sem typechecker Python configurado. A VM permaneceu parada. Firmware/reacquire e CLI/composição privada completa continuam pendentes antes da sessão física agrupada.
 
+## Firmware e novo ciclo PMD
+
+O seletor de firmware aceita explicitamente as releases power2 e PMD. PMD exige o kernel qualificado e a mesma base de fonte do certificado/regdb antes da seleção privada. O catálogo dos três arquivos, seus hashes, a origem e o certificado permanecem iguais. Configuração e efeitos também exigem que o manifest WCC e a Session tenham a mesma ABI.
+
+O reacquire admite PMD com as mesmas exigências de teardown completo, boot/identidades, diretório novo e restauração dos atributos. Isso permite preparar outro ciclo no mesmo boot, sem migrar owners ou repetir intenções interrompidas.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pmd_firmware.py -v
+```
+
+O [registro de firmware](evidence/n71-pmd-firmware-qualified.json) contém 30 testes/38 mutações por AssertionError no Mac: 6/5 novos e 24/33 anteriores. Seleção, filesystem, shell, captura e journal são reais nos gates; dados de firmware, UID/sysfs/SSH e observações do kernel são sintéticos. A fixture inicial ainda restaurava Sessions/checkpoints power2; passou a gerar o cenário PMD desde a fábrica e o checkpoint inicial, mantendo a recusa de ABI da produção. O teste isolado e o gate corrigido completo passaram.
+
+O pacote privado real, com três arquivos e 633.573 bytes, também passou pela seleção e configuração com a Session PMD e seus sete módulos reais. Os hashes foram preservados; não houve transferência, vínculo do loader, carga de firmware, conexão SSH/USB, output ou boot inventado. AST/lint aprovados, sem typechecker Python configurado. A VM permaneceu parada. Faltam a CLI, o compositor e a candidata completa antes da prova física agrupada.
+
 ## Aceite no aparelho ainda pendente
 
 O kernel, os sete diagnósticos, o conjunto Wi-Fi e a integração base estão qualificados sem uso do telefone. Faltam ampliar os gates de runtime explicitamente e montar o perfil completo antes de uma sessão física reunindo DART/firmware com HDQ/UJM. Não solicitar outro DFU para repetir o fault conhecido sem a candidata pronta. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
