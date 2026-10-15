@@ -53,6 +53,12 @@ static int n71_diagnostic_configure(bool read_control)
 	n71_i2c_configuration_run(&request, read_control, &result);
 	pr_info("N71_I2C_CONFIGURATION_STAGE stage=%u read=%u error=%d cleanup_error=%d\n",
 		result.stage, read_control, result.error, result.cleanup_error);
+	pr_info("N71_I2C_RESET_TRACE attempts=%u samples=%u sample_error=%d first_ctl=%08x last_rev=%08x last_smsta=%08x last_xfsta=%08x last_imask=%08x last_ctl=%08x added_reads=0 added_writes=0\n",
+		result.reset_trace.attempts, result.reset_trace.samples,
+		result.reset_trace.sample_error, result.reset_trace.first_ctl,
+		result.reset_trace.words[N71_I2C_REV], result.reset_trace.words[N71_I2C_SMSTA],
+		result.reset_trace.words[N71_I2C_XFSTA], result.reset_trace.words[N71_I2C_IMASK],
+		result.reset_trace.words[N71_I2C_CTL]);
 	if (!read_control)
 		pr_info("N71_I2C_CONFIGURE error=%d cleanup_error=%d pins_pending=%u controller_pending=%u last_saved_ctl=%08x last_saved_smsta=%08x charger_io=0\n",
 			result.error, result.cleanup_error, diagnostic_pins.cleanup_pending,

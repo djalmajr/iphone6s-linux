@@ -27,6 +27,7 @@ struct n71_i2c_configuration_result {
 	int error;
 	unsigned int stage;
 	struct n71_i2c_hdq_trace trace;
+	struct n71_i2c_reset_trace reset_trace;
 	u32 value;
 	bool value_valid;
 };
@@ -79,7 +80,10 @@ static inline void n71_i2c_configuration_run(const struct n71_i2c_configuration_
 	}
 	if (!result->error) {
 		result->stage = N71_I2C_STAGE_CONTROLLER;
+		/* A refusal before reset must not publish a previous acquisition. */
+		request->controller->reset_trace = (struct n71_i2c_reset_trace) {0};
 		result->error = n71_i2c_controller_acquire(&ownership, request->controller);
+		result->reset_trace = request->controller->reset_trace;
 	}
 	if (!result->error && read_control) {
 		result->stage = N71_I2C_STAGE_HDQ;

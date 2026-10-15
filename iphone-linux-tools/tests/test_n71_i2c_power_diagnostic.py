@@ -9,6 +9,18 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
+    ('reset-trace-wiring', 'result->reset_trace = request->controller->reset_trace;', '(void)0;'),
+    ('reset-trace-freshness', 'request->controller->reset_trace = (struct n71_i2c_reset_trace) {0};', '(void)0;'),
+    ('reset-trace-marker', 'N71_I2C_RESET_TRACE attempts=', 'N71_I2C_RESET_HIDDEN attempts='),
+    ('reset-trace-attempts', 'result.reset_trace.attempts,', '0U,'),
+    ('reset-trace-samples', 'result.reset_trace.samples,', '0U,'),
+    ('reset-trace-error', 'result.reset_trace.sample_error,', '0,'),
+    ('reset-trace-first-ctl', 'result.reset_trace.first_ctl,', '0U,'),
+    ('reset-trace-last-rev', 'result.reset_trace.words[N71_I2C_REV],', '0U,'),
+    ('reset-trace-last-smsta', 'result.reset_trace.words[N71_I2C_SMSTA],', '0U,'),
+    ('reset-trace-last-xfsta', 'result.reset_trace.words[N71_I2C_XFSTA],', '0U,'),
+    ('reset-trace-last-imask', 'result.reset_trace.words[N71_I2C_IMASK],', '0U,'),
+    ('reset-trace-last-ctl', 'result.reset_trace.words[N71_I2C_CTL]);', '0U);'),
     ('trace-wiring', '.trace = &result->trace', '.trace = NULL'),
     ('trace-freshness', '*result = (struct n71_i2c_configuration_result) {0};',
      '*result = (struct n71_i2c_configuration_result) {.trace = {.stage = 99}};'),

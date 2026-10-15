@@ -32,6 +32,7 @@ static char controller_log[1024];
 static char hdq_log[1024];
 static char hdq_trace_log[1024];
 static char configuration_log[1024];
+static char reset_trace_log[1024];
 static void mutex_lock(int *lock) { assert(!*lock); *lock=1; }
 static void mutex_unlock(int *lock) { assert(*lock); *lock=0; }
 static bool try_module_get(void *module) { assert(module==THIS_MODULE); if (!module_live) return false; module_refs++; return true; }
@@ -48,6 +49,8 @@ static void pr_info(const char *format, ...)
 		strcpy(hdq_trace_log,last_log);
 	if (!strncmp(last_log,"N71_I2C_CONFIGURATION_STAGE ",strlen("N71_I2C_CONFIGURATION_STAGE ")))
 		strcpy(configuration_log,last_log);
+	if (!strncmp(last_log,"N71_I2C_RESET_TRACE ",strlen("N71_I2C_RESET_TRACE ")))
+		strcpy(reset_trace_log,last_log);
 }
 static struct device *root_device_register(const char *name)
 {
@@ -77,9 +80,11 @@ static struct device_node *diagnostic_find_node(const char *path)
 #define N71_I2C_CONTROLLER_H
 #define N71_I2C_PIN_OWNER_H
 #define N71_I2C_HDQ_READ_H
-enum { N71_I2C_SMSTA=1, N71_I2C_CTL=4 };
+enum { N71_I2C_REV=0, N71_I2C_SMSTA=1, N71_I2C_XFSTA=2, N71_I2C_IMASK=3, N71_I2C_CTL=4, N71_I2C_WORDS=5 };
+struct n71_i2c_reset_trace { u32 first_ctl, words[5]; unsigned int attempts,samples; int sample_error; };
 struct n71_i2c_pin_owner { int cleanup_error; bool cleanup_pending,selected,held; };
-struct n71_i2c_controller { int cleanup_error; bool claimed,restore_pending,clock_enabled,transfer_pending; u32 saved[5]; };
+struct n71_i2c_controller { int cleanup_error; bool claimed,restore_pending,clock_enabled,transfer_pending; u32 saved[5]; struct n71_i2c_reset_trace reset_trace; };
+static struct n71_i2c_reset_trace config_reset_trace;
 struct n71_i2c_controller_request {
 	struct device *consumer;
 	void *pin_context;
@@ -129,6 +134,8 @@ static int n71_i2c_controller_acquire(const struct n71_i2c_controller_request *r
 	assert(request->consumer==&consumer && request->power->active && request->power->usage_held);
 	assert(request->verify_pins==n71_i2c_pin_owner_verify && request->verify_pins(request->pin_context)==0);
 	assert(n71_i2c_controller_clean(state) && !config_controller_live); config_controller_acquires++;
+	assert(!state->reset_trace.attempts && !state->reset_trace.samples && !state->reset_trace.first_ctl);
+	state->reset_trace=config_reset_trace;
 	state->saved[N71_I2C_CTL]=0x2a; state->saved[N71_I2C_SMSTA]=0x08010100;
 	if (config_controller_acquire_error && !config_controller_release_error) return config_controller_acquire_error;
 	state->claimed=state->restore_pending=state->clock_enabled=config_controller_live=true;
@@ -192,7 +199,8 @@ static void caller_reset(void)
 	memset(&diagnostic_state,0,sizeof(diagnostic_state)); memset(&diagnostic_io,0,sizeof(diagnostic_io));
 	diagnostic_pmgr=diagnostic_node=NULL; diagnostic_ready=diagnostic_retained=false;
 	run=true; root_error=root_validation_error=unregisters=0; missing_node=-1; module_live=true; last_log[0]=0;
-	observe_reset(); controller_log[0]=hdq_log[0]=hdq_trace_log[0]=configuration_log[0]=0;
+	observe_reset(); controller_log[0]=hdq_log[0]=hdq_trace_log[0]=configuration_log[0]=reset_trace_log[0]=0;
+	config_reset_trace=(struct n71_i2c_reset_trace){.first_ctl=0x10f,.words={2,0x08010100,0,0,0xf},.attempts=2,.samples=2};
 	assert(!config_pins_live && !config_controller_live && !config_transfer_live);
 	diagnostic_pins=(struct n71_i2c_pin_owner){0}; diagnostic_controller=(struct n71_i2c_controller){0};
 	diagnostic_read=(struct n71_i2c_hdq_read_state){0};
@@ -306,8 +314,28 @@ int main(void)
 	caller_reset(); assert(n71_diagnostic_action("configure",NULL)==-ENODEV); caller_clean(); cases++;
 	caller_reset(); caller_init(); assert(n71_diagnostic_action("configure\n",NULL)==0);
 	assert(strstr(configuration_log,"stage=5 read=0 error=0 cleanup_error=0"));
+	assert(!strcmp(reset_trace_log,"N71_I2C_RESET_TRACE attempts=2 samples=2 sample_error=0 first_ctl=0000010f last_rev=00000002 last_smsta=08010100 last_xfsta=00000000 last_imask=00000000 last_ctl=0000000f added_reads=0 added_writes=0\n"));
+	/* Earlier stage failures publish zeros even when the controller retains an old trace. */
+	config_pin_acquire_error=-EBUSY;
+	assert(n71_diagnostic_action("configure",NULL)==-EBUSY && config_controller_acquires==1);
+	assert(!strcmp(reset_trace_log,"N71_I2C_RESET_TRACE attempts=0 samples=0 sample_error=0 first_ctl=00000000 last_rev=00000000 last_smsta=00000000 last_xfsta=00000000 last_imask=00000000 last_ctl=00000000 added_reads=0 added_writes=0\n"));
+	config_pin_acquire_error=0;
+	assert(n71_diagnostic_action("configure",NULL)==0 && config_controller_acquires==2); cases++;
 	assert(!hdq_trace_log[0]);
-	assert(config_pin_acquires==1 && config_pin_releases==1 && config_controller_acquires==1 && put_calls==1);
+	assert(config_pin_acquires==3 && config_pin_releases==2 && config_controller_acquires==2 && put_calls==2);
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_controller_acquire_error=-ETIMEDOUT;
+	config_reset_trace.attempts=config_reset_trace.samples=100; config_reset_trace.words[N71_I2C_CTL]=0x10f;
+	assert(n71_diagnostic_action("configure",NULL)==-ETIMEDOUT && !config_controller_live && put_calls==1);
+	assert(strstr(reset_trace_log,"attempts=100 samples=100 sample_error=0 first_ctl=0000010f"));
+	assert(strstr(reset_trace_log,"last_ctl=0000010f added_reads=0 added_writes=0"));
+	caller_idle(); caller_exit(); cases++;
+	caller_reset(); caller_init(); config_controller_acquire_error=-ENODEV;
+	config_reset_trace.samples=1; config_reset_trace.sample_error=-ENODEV;
+	config_reset_trace.words[N71_I2C_XFSTA]=0x35; config_reset_trace.words[N71_I2C_IMASK]=0x29;
+	assert(n71_diagnostic_action("configure",NULL)==-ENODEV && put_calls==1);
+	assert(strstr(reset_trace_log,"attempts=2 samples=1 sample_error=-19 first_ctl=0000010f"));
+	assert(strstr(reset_trace_log,"last_xfsta=00000035 last_imask=00000029"));
 	caller_idle(); caller_exit(); cases++;
 	caller_reset(); caller_init(); config_pin_acquire_error=-ENXIO;
 	assert(n71_diagnostic_action("configure",NULL)==-ENXIO && !attaches && !config_controller_acquires);
