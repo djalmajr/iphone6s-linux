@@ -30,6 +30,7 @@ static bool module_live;
 static char last_log[1024];
 static char controller_log[1024];
 static char hdq_log[1024];
+static char hdq_trace_log[1024];
 static char configuration_log[1024];
 static void mutex_lock(int *lock) { assert(!*lock); *lock=1; }
 static void mutex_unlock(int *lock) { assert(*lock); *lock=0; }
@@ -43,6 +44,8 @@ static void pr_info(const char *format, ...)
 	va_list args; va_start(args,format); vsnprintf(last_log,sizeof(last_log),format,args); va_end(args);
 	if (!strncmp(last_log,"N71_I2C_CONTROLLER ",19)) strcpy(controller_log,last_log);
 	if (!strncmp(last_log,"N71_I2C_HDQ_CONTROL ",20)) strcpy(hdq_log,last_log);
+	if (!strncmp(last_log,"N71_I2C_HDQ_TRACE ",strlen("N71_I2C_HDQ_TRACE ")))
+		strcpy(hdq_trace_log,last_log);
 	if (!strncmp(last_log,"N71_I2C_CONFIGURATION_STAGE ",strlen("N71_I2C_CONFIGURATION_STAGE ")))
 		strcpy(configuration_log,last_log);
 }
@@ -87,7 +90,12 @@ static int config_pin_acquire_error, config_pin_release_error, config_controller
 static int config_controller_release_error;
 static unsigned int config_pin_acquires, config_pin_releases, config_controller_acquires;
 static bool config_pins_live, config_controller_live;
-struct n71_i2c_hdq_read_request { struct n71_i2c_controller *controller; const struct n71_i2c_controller_request *ownership; };
+#include "n71-i2c-hdq-trace.h"
+struct n71_i2c_hdq_read_request {
+	struct n71_i2c_controller *controller;
+	const struct n71_i2c_controller_request *ownership;
+	struct n71_i2c_hdq_trace *trace;
+};
 struct n71_i2c_hdq_read_state { int cleanup_error; bool cleanup_pending; struct n71_i2c_controller *controller; u32 last_status; };
 static int config_read_error, config_read_cleanup_error;
 static unsigned int config_read_calls;
@@ -140,6 +148,7 @@ static int n71_i2c_controller_release(const struct n71_i2c_controller_request *r
 static int n71_i2c_hdq_read_cleanup(const struct n71_i2c_hdq_read_request *request,
 		struct n71_i2c_hdq_read_state *state)
 {
+	assert(!request->trace);
 	if (!state->cleanup_pending) return 0;
 	assert(config_transfer_live && config_controller_live && config_pins_live);
 	assert(request->ownership->power->active && request->controller==state->controller);
@@ -152,13 +161,25 @@ static int n71_i2c_read_hdq_control(const struct n71_i2c_hdq_read_request *reque
 {
 	assert(config_controller_live && config_pins_live && !config_transfer_live);
 	assert(request->ownership->power->active && request->ownership->power->usage_held);
+	/* Mutation captured: lost trace wiring or stale fields leaking across attempts. */
+	assert(request->trace && !request->trace->stage && !request->trace->status &&
+		!request->trace->sampled && !request->trace->cleanup_stage &&
+		!request->trace->cleanup_status && !request->trace->cleanup_sampled);
+	*request->trace=(struct n71_i2c_hdq_trace){.stage=N71_HDQ_IDLE,
+		.status=0x08010100,.sampled=true};
 	config_read_calls++;
 	if (config_read_cleanup_error) {
+		request->trace->stage=config_read_error ? N71_HDQ_POLL : N71_HDQ_RECOVERY;
+		request->trace->cleanup_stage=N71_HDQ_C_POLL;
+		request->trace->cleanup_sampled=true; request->trace->cleanup_status=0x11010100;
 		state->cleanup_pending=config_transfer_live=request->controller->transfer_pending=true;
 		state->controller=request->controller; state->cleanup_error=config_read_cleanup_error;
 		return config_read_error ? config_read_error : config_read_cleanup_error;
 	}
 	if (config_read_error) return config_read_error;
+	request->trace->stage=N71_HDQ_COMPLETE;
+	request->trace->cleanup_stage=N71_HDQ_C_COMPLETE;
+	request->trace->cleanup_status=0x00010100; request->trace->cleanup_sampled=true;
 	*output=0x20; return 0;
 }
 #include "n71-i2c-power-diagnostic.c"
@@ -171,7 +192,7 @@ static void caller_reset(void)
 	memset(&diagnostic_state,0,sizeof(diagnostic_state)); memset(&diagnostic_io,0,sizeof(diagnostic_io));
 	diagnostic_pmgr=diagnostic_node=NULL; diagnostic_ready=diagnostic_retained=false;
 	run=true; root_error=root_validation_error=unregisters=0; missing_node=-1; module_live=true; last_log[0]=0;
-	observe_reset(); controller_log[0]=hdq_log[0]=configuration_log[0]=0;
+	observe_reset(); controller_log[0]=hdq_log[0]=hdq_trace_log[0]=configuration_log[0]=0;
 	assert(!config_pins_live && !config_controller_live && !config_transfer_live);
 	diagnostic_pins=(struct n71_i2c_pin_owner){0}; diagnostic_controller=(struct n71_i2c_controller){0};
 	diagnostic_read=(struct n71_i2c_hdq_read_state){0};
@@ -285,6 +306,7 @@ int main(void)
 	caller_reset(); assert(n71_diagnostic_action("configure",NULL)==-ENODEV); caller_clean(); cases++;
 	caller_reset(); caller_init(); assert(n71_diagnostic_action("configure\n",NULL)==0);
 	assert(strstr(configuration_log,"stage=5 read=0 error=0 cleanup_error=0"));
+	assert(!hdq_trace_log[0]);
 	assert(config_pin_acquires==1 && config_pin_releases==1 && config_controller_acquires==1 && put_calls==1);
 	caller_idle(); caller_exit(); cases++;
 	caller_reset(); caller_init(); config_pin_acquire_error=-ENXIO;
@@ -317,8 +339,14 @@ int main(void)
 	caller_reset(); assert(n71_diagnostic_action("read-hdq-control",NULL)==-ENODEV && !config_read_calls); caller_clean(); cases++;
 	caller_reset(); caller_init(); assert(n71_diagnostic_action("read-hdq-control\n",NULL)==0 && config_read_calls==1);
 	assert(strstr(hdq_log,"valid=1 value=20") && strstr(hdq_log,"charger_value_writes=0 gauge_verified=0"));
+	assert(!strcmp(hdq_trace_log,"N71_I2C_HDQ_TRACE stage=11 sampled=1 status=08010100 cleanup_stage=9 cleanup_sampled=1 cleanup_status=00010100\n"));
 	caller_idle(); cases++;
 	assert(n71_diagnostic_action("read-hdq-control",NULL)==0 && config_read_calls==2 && put_calls==2);
+	caller_idle(); cases++;
+	/* Mutation captured: a fresh upstream failure must not reuse the last read's trace. */
+	config_pin_acquire_error=-ENXIO;
+	assert(n71_diagnostic_action("read-hdq-control",NULL)==-ENXIO && config_read_calls==2);
+	assert(!strcmp(hdq_trace_log,"N71_I2C_HDQ_TRACE stage=0 sampled=0 status=00000000 cleanup_stage=0 cleanup_sampled=0 cleanup_status=00000000\n"));
 	caller_idle(); caller_exit(); cases++;
 	caller_reset(); caller_init(); config_pin_acquire_error=-ENXIO;
 	assert(n71_diagnostic_action("read-hdq-control",NULL)==-ENXIO && !config_read_calls && strstr(hdq_log,"valid=0"));
@@ -329,11 +357,13 @@ int main(void)
 	caller_reset(); caller_init(); config_read_error=-ETIMEDOUT; config_read_cleanup_error=-EIO;
 	assert(n71_diagnostic_action("read-hdq-control",NULL)==-ETIMEDOUT && config_transfer_live && config_controller_live && config_pins_live);
 	assert(module_refs==1 && !put_calls && strstr(hdq_log,"valid=0") && strstr(hdq_log,"cleanup_error=-5"));
+	assert(!strcmp(hdq_trace_log,"N71_I2C_HDQ_TRACE stage=8 sampled=1 status=08010100 cleanup_stage=3 cleanup_sampled=1 cleanup_status=11010100\n"));
 	assert(n71_diagnostic_configuration_status(status,NULL)>0 && strstr(status,"transfer_pending=1 transfer_error=-5")); cases++;
 	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EBUSY && config_read_calls==1); cases++;
 	assert(n71_diagnostic_action("cleanup",NULL)==-EIO && !put_calls && module_refs==1); cases++;
 	config_read_cleanup_error=0;
 	assert(n71_diagnostic_action("cleanup",NULL)==0 && put_calls==1 && !config_transfer_live);
+	assert(!strcmp(hdq_trace_log,"N71_I2C_HDQ_TRACE stage=8 sampled=1 status=08010100 cleanup_stage=3 cleanup_sampled=1 cleanup_status=11010100\n"));
 	caller_idle(); caller_exit(); cases++;
 	caller_reset(); caller_init(); config_controller_release_error=-EIO;
 	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EIO && config_read_calls==1 && strstr(hdq_log,"valid=1 value=20"));
@@ -357,6 +387,7 @@ int main(void)
 	caller_reset(); caller_init(); config_read_error=-EBUSY;
 	assert(n71_diagnostic_action("read-hdq-control",NULL)==-EBUSY && config_read_calls==1 && put_calls==1);
 	assert(strstr(configuration_log,"stage=4 read=1 error=-16 cleanup_error=0") && strstr(hdq_log,"valid=0"));
+	assert(!strcmp(hdq_trace_log,"N71_I2C_HDQ_TRACE stage=5 sampled=1 status=08010100 cleanup_stage=0 cleanup_sampled=0 cleanup_status=00000000\n"));
 	caller_idle(); caller_exit(); cases++;
 	printf("N71_I2C_CALLER_OK cases=%u\n",cases);
 	return 0;

@@ -59,10 +59,15 @@ static int n71_diagnostic_configure(bool read_control)
 			diagnostic_controller.restore_pending,
 			diagnostic_controller.saved[N71_I2C_CTL],
 			diagnostic_controller.saved[N71_I2C_SMSTA]);
-	if (read_control)
+	if (read_control) {
+		pr_info("N71_I2C_HDQ_TRACE stage=%u sampled=%u status=%08x cleanup_stage=%u cleanup_sampled=%u cleanup_status=%08x\n",
+			result.trace.stage, result.trace.sampled, result.trace.status,
+			result.trace.cleanup_stage, result.trace.cleanup_sampled,
+			result.trace.cleanup_status);
 		pr_info("N71_I2C_HDQ_CONTROL error=%d cleanup_error=%d valid=%u value=%02x transfer_pending=%u transfer_error=%d charger_value_writes=0 gauge_verified=0\n",
 			result.error, result.cleanup_error, result.value_valid, result.value,
 			diagnostic_read.cleanup_pending, diagnostic_read.cleanup_error);
+	}
 	return result.error ? result.error : result.cleanup_error;
 }
 

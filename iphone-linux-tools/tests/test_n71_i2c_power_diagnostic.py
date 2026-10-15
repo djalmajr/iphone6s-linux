@@ -9,6 +9,17 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = (
+    ('trace-wiring', '.trace = &result->trace', '.trace = NULL'),
+    ('trace-freshness', '*result = (struct n71_i2c_configuration_result) {0};',
+     '*result = (struct n71_i2c_configuration_result) {.trace = {.stage = 99}};'),
+    ('trace-marker', 'N71_I2C_HDQ_TRACE stage=', 'N71_I2C_HDQ_HIDDEN stage='),
+    ('trace-read-mode', 'if (read_control) {', 'if (true) {'),
+    ('trace-primary-stage', 'result.trace.stage,', '0U,'),
+    ('trace-primary-sampled', 'result.trace.sampled,', '0U,'),
+    ('trace-primary-status', 'result.trace.status,', '0U,'),
+    ('trace-cleanup-stage', 'result.trace.cleanup_stage,', '0U,'),
+    ('trace-cleanup-sampled', 'result.trace.cleanup_sampled,', '0U,'),
+    ('trace-cleanup-status', 'result.trace.cleanup_status);', '0U);'),
     ('stage-pins', 'result->stage = N71_I2C_STAGE_PINS;', 'result->stage = 0;'),
     ('stage-power', 'result->stage = N71_I2C_STAGE_POWER;', 'result->stage = 0;'),
     ('stage-controller', 'result->stage = N71_I2C_STAGE_CONTROLLER;', 'result->stage = 0;'),
@@ -75,7 +86,7 @@ class N71I2CControlTests(unittest.TestCase):
                 (folder / 'linux' / (name + '.h')).write_text('/* Kernel APIs supplied by harness. */\n')
             for name in ('n71-i2c-genpd.h', 'n71-i2c-power-lifecycle.h', 'n71-pmgr-access.h',
                          'n71-i2c-controller-observe.h', 'n71-i2c-controller.h', 'n71-i2c-pin-owner.h',
-                         'n71-i2c-hdq-read.h'):
+                         'n71-i2c-hdq-read.h', 'n71-i2c-hdq-trace.h'):
                 (folder / name).write_bytes((ROOT / 'phone/kernel' / name).read_bytes())
             (folder / 'n71_i2c_genpd_fixture.c').write_text(fixture)
             binary = folder / 'caller'

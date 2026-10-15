@@ -1,9 +1,8 @@
 {
   "format": 1,
-  "status": "phase_a_native_qualified_module_build_and_physical_test_pending",
+  "status": "native_qualified_external_module_built_physical_test_pending",
   "date": "2026-10-15",
   "issue": 48,
-  "marker": "N71_I2C_CONFIGURATION_STAGE",
   "stages": {
     "1": "pin ownership",
     "2": "power acquisition",
@@ -22,21 +21,118 @@
     "stage_5_proves_cleanup": false
   },
   "qualification": {
-    "mac_native_cases": 81,
-    "arm64_native_cases": 81,
-    "assertion_mutations_each": 29,
-    "new_assertion_mutations_each": 6,
+    "phase_a_prior": {
+      "mac_native_cases": 81,
+      "arm64_native_cases": 81,
+      "assertion_mutations_each": 29,
+      "new_assertion_mutations_each": 6,
+      "c_compiler_werror": true,
+      "python_ast_lint": true,
+      "python_typechecker_configured": false,
+      "source_inputs_unchanged": 661,
+      "kernel_module_built": false,
+      "physical_boot_tested": false,
+      "mac_packages_or_global_config_changed": false
+    },
+    "transport": {
+      "cases_each": 42,
+      "assertion_mutations_each": 24,
+      "source_inputs_unchanged": 8
+    },
+    "caller": {
+      "cases_each": 82,
+      "assertion_mutations_each": 39,
+      "source_inputs_unchanged": 14,
+      "mac_first_run_assertion_kills": 36,
+      "mac_resumed_assertion_kills": 3,
+      "arm64_first_run_assertion_kills": 13,
+      "arm64_resumed_assertion_kills": 26,
+      "initial_mutation_execution_timeout_seconds": 5,
+      "initial_timeout_logs_preserved": true
+    },
+    "platforms": [
+      "macOS native",
+      "Ubuntu ARM64 native in dedicated Multipass VM"
+    ],
+    "io_counts_equal_with_and_without_trace": [
+      "reads",
+      "writes",
+      "commands",
+      "rx_reads",
+      "poll_reads",
+      "acknowledgements",
+      "resets",
+      "delays"
+    ],
     "c_compiler_werror": true,
     "python_ast_lint": true,
     "python_typechecker_configured": false,
-    "source_inputs_unchanged": 661,
-    "kernel_module_built": false,
+    "kernel_module_built": true,
+    "module": {
+      "module_bytes": 52456,
+      "module_sha256": "50db40f19bfe8f4afbdd577e7278ac0953847b5434ccb716de9a2b9946eb50e8",
+      "imports": 79,
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "protected": {
+        ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+        "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+        "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+      },
+      "werror": true,
+      "elf_aarch64_relocatable": true,
+      "source_inputs_unchanged": 11
+    },
+    "dma_profile_local_check": true,
     "physical_boot_tested": false,
     "mac_packages_or_global_config_changed": false
   },
   "limits": [
-    "Kernel API and hardware boundaries are modelled; caller, genpd backend and configuration helper are compiled real code.",
-    "No physical cause of EBUSY, gauge identity, battery telemetry or Linux charging was proved.",
-    "Transport substage/status, final external-module build and grouped physical test remain pending."
-  ]
+    "Native gates model kernel APIs and hardware; they do not prove physical controller state.",
+    "The new module and DMA candidate have not been booted on the iPhone.",
+    "No cause of EBUSY, gauge identity, battery telemetry, Linux charging or native Wi-Fi was proved.",
+    "A grouped runbook is prepared; full goal and issue 48 remain open."
+  ],
+  "markers": [
+    "N71_I2C_CONFIGURATION_STAGE",
+    "N71_I2C_HDQ_TRACE"
+  ],
+  "transport": {
+    "primary_stages": [
+      "arguments",
+      "ready",
+      "ownership",
+      "sample",
+      "idle",
+      "ack",
+      "submit",
+      "poll",
+      "data",
+      "recovery",
+      "complete"
+    ],
+    "cleanup_stages": [
+      "arguments",
+      "ready",
+      "poll",
+      "sample",
+      "flush",
+      "ack",
+      "verify",
+      "final_ready",
+      "complete"
+    ],
+    "sampled_means": "a completed raw register read, not a valid gauge result",
+    "optional_request_trace": true,
+    "external_cleanup_preserves_original_trace": true
+  },
+  "source_sha256": {
+    "phone/kernel/n71-i2c-configuration.h": "e26b395c4620d3f30219eea9d897aa2099c89032844c8312fcba79a37b3c22dd",
+    "phone/kernel/n71-i2c-power-diagnostic.c": "71fc9a911f8d356b3e58da07288535b5c7601daf5855bf1db8e71f87c013aeb3",
+    "phone/kernel/n71-i2c-hdq-read.h": "7ad6316f6136586017bbe0ece12d5a4c8853058f3223ac0654cdd8d031defdea",
+    "phone/kernel/n71-i2c-hdq-trace.h": "71db618c884deea93bd4eb01c37aec7d98ace8e91ee3f8082dd047e096392823",
+    "tests/n71_i2c_hdq_read.c": "ca068962760f8faea6a5cca751b44eb3ddecbb07781cdbf155a6ff3b41f0eb4c",
+    "tests/test_n71_i2c_hdq_read.py": "1ada5be76f0fd2d8ccb522438ab05772a4da9658344cf87ed2039f486e7f781e",
+    "tests/n71_i2c_power_diagnostic.c": "2b292588586b13670c3fa745d0a1ac1cd513bd56b946670d14fd46a4441e2c4e",
+    "tests/test_n71_i2c_power_diagnostic.py": "f84c1c47afa973650b5d1aa8f61a9e1465341f0de83def2a6ef61db97d0e9aa4"
+  }
 }

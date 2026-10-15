@@ -70,15 +70,18 @@ static void hdq_iowrite32(u32 value, void *address)
 
 static struct n71_i2c_hdq_read_request hdq_request;
 static struct n71_i2c_hdq_read_state hdq_state;
+static struct n71_i2c_hdq_trace hdq_trace;
 
 static void begin(bool completion_baseline)
 {
 	reset_fixture();
 	hdq_controller=(struct n71_i2c_controller){0};
 	hdq_state=(struct n71_i2c_hdq_read_state){0};
+	hdq_trace=(struct n71_i2c_hdq_trace){.stage=99,.status=0xdeadbeef,.sampled=true,
+		.cleanup_stage=99,.cleanup_status=0xdeadbeef,.cleanup_sampled=true};
 	hdq_power=(struct n71_i2c_power_state){.active=true,.attached=true,.usage_held=true,.cleanup_pending=true};
 	hdq_ownership=(struct n71_i2c_controller_request){.consumer=&consumer,.pin_context=&consumer,.power=&hdq_power,.verify_pins=verify_pins};
-	hdq_request=(struct n71_i2c_hdq_read_request){.controller=&hdq_controller,.ownership=&hdq_ownership};
+	hdq_request=(struct n71_i2c_hdq_read_request){.controller=&hdq_controller,.ownership=&hdq_ownership,.trace=&hdq_trace};
 	commands=rx_reads=acknowledgements=poll_reads=0;
 	rx_value=0x20; completion_error=0;
 	never_complete=keep_busy=status_all_ones=ack_stuck=reset_stuck=foreign_completion=busy_after_poll=false;
@@ -111,6 +114,8 @@ int main(void)
 		assert(n71_i2c_read_hdq_control(&hdq_request,&hdq_state,&output)==0);
 		assert(output==rx_value && commands==4 && rx_reads==1 && acknowledgements==(i==3 ? 1U : 2U));
 		assert(registers[1]==0x00010100 && hdq_controller.saved[N71_I2C_SMSTA]==(i==3 ? 0x00010100U : 0x08010100U));
+		assert(hdq_trace.stage==11 && hdq_trace.cleanup_stage==9 && hdq_trace.sampled && hdq_trace.cleanup_sampled);
+		assert(hdq_trace.status==0x08090100 && hdq_trace.cleanup_status==0x00010100);
 		finish(); cases++;
 	}
 	/* Mutation captured: bypassed ownership, clock, scope, baseline or fresh pin check. */
@@ -133,6 +138,8 @@ int main(void)
 		if (i==13) { registers[1]|=1U<<28; expected=-EBUSY; }
 		if (i==14) { registers[1]&=~(1U<<27); expected=-EBUSY; }
 		assert(n71_i2c_read_hdq_control(&hdq_request,&hdq_state,&output)==expected);
+		assert(hdq_trace.stage==(i<7 ? 2U : i<12 ? 4U : 5U) && !hdq_trace.cleanup_stage);
+		assert(hdq_trace.sampled==(i>=7) && (i>=7 || !hdq_trace.status));
 		assert(output==0x1234 && !commands && !acknowledgements && !hdq_state.cleanup_pending);
 		hdq_power.usage_held=hdq_power.active=true;
 		hdq_controller.clock_enabled=hdq_controller.clock_protected=hdq_controller.claimed=true;
@@ -155,6 +162,8 @@ int main(void)
 		if (i==8) { never_complete=true; expected=-ETIMEDOUT; }
 		if (i==9) { completion_error=(1U<<23)|(1U<<21); expected=-ETIME; }
 		assert(n71_i2c_read_hdq_control(&hdq_request,&hdq_state,&output)==expected && output==0x1234);
+		assert(hdq_trace.stage==(i>=5 && i<=7 ? 9U : 8U) && hdq_trace.cleanup_stage==9);
+		assert(hdq_trace.sampled && hdq_trace.cleanup_sampled);
 		assert(!hdq_state.cleanup_pending && (i==8 ? delays==100 && !rx_reads : resets==2));
 		finish(); cases++;
 	}
@@ -174,8 +183,11 @@ int main(void)
 		assert(n71_i2c_read_hdq_control(&hdq_request,&hdq_state,&output)==(pin_fail_from ? -EACCES : -EBUSY));
 		pin_fail_from=0; status_all_ones=ack_stuck=reset_stuck=false;
 		registers[1]=0x00010100;
+		struct n71_i2c_hdq_trace before_cleanup=hdq_trace;
 		assert(n71_i2c_hdq_read_cleanup(&hdq_request,&hdq_state)==0);
 		assert(n71_i2c_hdq_read_cleanup(&hdq_request,&hdq_state)==0);
+		assert(hdq_trace.stage==before_cleanup.stage && hdq_trace.status==before_cleanup.status && hdq_trace.sampled==before_cleanup.sampled);
+		assert(hdq_trace.cleanup_stage==9 && !hdq_trace.cleanup_sampled && !hdq_trace.cleanup_status);
 		finish(); cases++;
 	}
 	/* Mutation captured: resetting a bus that became busy after the idle poll. */
@@ -190,6 +202,24 @@ int main(void)
 	commands=rx_reads=acknowledgements=poll_reads=0; rx_value=0x06;
 	assert(n71_i2c_read_hdq_control(&hdq_request,&hdq_state,&output)==0 && output==0x06);
 	assert(commands==4 && rx_reads==1 && acknowledgements==1 && mapped && claimed);
+	finish(); cases++;
+	/* Mutations: stale diagnostics, unqualified partial sample, or trace changing I/O. */
+	begin(true); output=0x1234;
+	assert(n71_i2c_read_hdq_control(&hdq_request,&hdq_state,NULL)==-EINVAL);
+	assert(hdq_trace.stage==1 && !hdq_trace.sampled && !hdq_trace.cleanup_stage && output==0x1234);
+	finish(); cases++;
+	begin(true); output=0x1234; all_ones_at=reads+1;
+	assert(n71_i2c_read_hdq_control(&hdq_request,&hdq_state,&output)==-ENODEV);
+	assert(hdq_trace.stage==4 && !hdq_trace.sampled && !hdq_trace.status && !commands);
+	all_ones_at=0; finish(); cases++;
+	begin(true); output=0x1234;
+	assert(n71_i2c_read_hdq_control(&hdq_request,&hdq_state,&output)==0);
+	unsigned int baseline[]={reads,writes,commands,rx_reads,poll_reads,acknowledgements,resets,delays};
+	finish(); cases++;
+	begin(true); output=0x1234; hdq_request.trace=NULL;
+	assert(n71_i2c_read_hdq_control(&hdq_request,&hdq_state,&output)==0 && output==0x20);
+	unsigned int legacy[]={reads,writes,commands,rx_reads,poll_reads,acknowledgements,resets,delays};
+	assert(!memcmp(baseline,legacy,sizeof(baseline)) && hdq_trace.stage==99 && hdq_trace.status==0xdeadbeef);
 	finish(); cases++;
 	printf("N71_I2C_HDQ_READ_OK cases=%u\n",cases);
 	return 0;

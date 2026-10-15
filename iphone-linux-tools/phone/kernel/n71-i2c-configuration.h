@@ -26,6 +26,7 @@ struct n71_i2c_configuration_result {
 	int cleanup_error;
 	int error;
 	unsigned int stage;
+	struct n71_i2c_hdq_trace trace;
 	u32 value;
 	bool value_valid;
 };
@@ -66,7 +67,7 @@ static inline void n71_i2c_configuration_run(const struct n71_i2c_configuration_
 {
 	struct n71_i2c_controller_request ownership = n71_i2c_configuration_ownership(request);
 	struct n71_i2c_hdq_read_request read = {
-		.controller = request->controller, .ownership = &ownership,
+		.controller = request->controller, .ownership = &ownership, .trace = &result->trace,
 	};
 
 	*result = (struct n71_i2c_configuration_result) {0};

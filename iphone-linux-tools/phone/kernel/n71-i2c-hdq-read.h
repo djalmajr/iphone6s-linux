@@ -3,6 +3,7 @@
 #ifndef N71_I2C_HDQ_READ_H
 #define N71_I2C_HDQ_READ_H
 #include "n71-i2c-controller.h"
+#include "n71-i2c-hdq-trace.h"
 
 #define N71_I2C_HDQ_ACK_FLAGS ((1U << 27) | (1U << 25) | (1U << 23) | \
 			      (1U << 22) | (1U << 21) | (1U << 6))
@@ -12,6 +13,7 @@
 struct n71_i2c_hdq_read_request {
 	struct n71_i2c_controller *controller;
 	const struct n71_i2c_controller_request *ownership;
+	struct n71_i2c_hdq_trace *trace;
 };
 
 struct n71_i2c_hdq_read_state {
@@ -39,7 +41,7 @@ static inline int n71_i2c_hdq_read_ready(const struct n71_i2c_hdq_read_request *
 }
 
 static inline int n71_i2c_hdq_read_sample(const struct n71_i2c_hdq_read_request *request,
-					  u32 words[N71_I2C_WORDS])
+					  u32 words[N71_I2C_WORDS], bool cleanup)
 {
 	struct n71_i2c_controller *controller = request->controller;
 	u32 variable = N71_I2C_HDQ_ACK_FLAGS | N71_I2C_HDQ_FIFO_FLAGS | N71_I2C_HDQ_BUSY_FLAGS;
@@ -47,6 +49,7 @@ static inline int n71_i2c_hdq_read_sample(const struct n71_i2c_hdq_read_request 
 
 	if (error)
 		return error;
+	n71_hdq_trace_status(request->trace, words[N71_I2C_SMSTA], cleanup);
 	if (words[N71_I2C_REV] != 2 || words[N71_I2C_IMASK] || words[N71_I2C_XFSTA] ||
 	    (words[N71_I2C_CTL] != 0x0f && words[N71_I2C_CTL] != 0x70f) ||
 	    (words[N71_I2C_SMSTA] & ~variable) != (controller->saved[N71_I2C_SMSTA] & ~variable))
@@ -58,23 +61,32 @@ static inline int n71_i2c_hdq_read_cleanup(const struct n71_i2c_hdq_read_request
 					   struct n71_i2c_hdq_read_state *state)
 {
 	struct n71_i2c_controller *controller;
+	struct n71_i2c_hdq_trace *trace = request ? request->trace : NULL;
 	u32 words[N71_I2C_WORDS], status;
 	unsigned int attempt;
 	int error;
 
+	n71_hdq_trace_begin(trace, true);
 	if (!state || !request || !request->controller)
 		return -EINVAL;
-	if (!state->cleanup_pending)
-		return state->controller ? -EINVAL : 0;
+	if (!state->cleanup_pending) {
+		if (state->controller)
+			return -EINVAL;
+		n71_hdq_trace_stage(trace, N71_HDQ_C_COMPLETE, true);
+		return 0;
+	}
 	controller = request->controller;
 	if (state->controller != controller || !controller->transfer_pending)
 		return -EINVAL;
+	n71_hdq_trace_stage(trace, N71_HDQ_C_READY, true);
 	error = n71_i2c_hdq_read_ready(request);
 	if (error)
 		goto pending;
+	n71_hdq_trace_stage(trace, N71_HDQ_C_POLL, true);
 	for (attempt = 0; attempt < 100; attempt++) {
 		status = ioread32(controller->base + 0x14);
 		state->last_status = status;
+		n71_hdq_trace_status(trace, status, true);
 		if (status == ~0U) {
 			error = -ENODEV;
 			goto pending;
@@ -87,7 +99,8 @@ static inline int n71_i2c_hdq_read_cleanup(const struct n71_i2c_hdq_read_request
 		error = -EBUSY;
 		goto pending;
 	}
-	error = n71_i2c_hdq_read_sample(request, words);
+	n71_hdq_trace_stage(trace, N71_HDQ_C_SAMPLE, true);
+	error = n71_i2c_hdq_read_sample(request, words, true);
 	if (error)
 		goto pending;
 	status = words[N71_I2C_SMSTA];
@@ -95,10 +108,11 @@ static inline int n71_i2c_hdq_read_cleanup(const struct n71_i2c_hdq_read_request
 		error = -EBUSY;
 		goto pending;
 	}
+	n71_hdq_trace_stage(trace, N71_HDQ_C_FLUSH, true);
 	if ((status & (N71_I2C_HDQ_ACK_FLAGS & ~(1U << 27))) ||
 	    (status & (1U << 19)) || !(status & (1U << 16)))
 		iowrite32(0x70f, controller->base + 0x1c);
-	error = n71_i2c_hdq_read_sample(request, words);
+	error = n71_i2c_hdq_read_sample(request, words, true);
 	if (error)
 		goto pending;
 	status = words[N71_I2C_SMSTA];
@@ -107,17 +121,20 @@ static inline int n71_i2c_hdq_read_cleanup(const struct n71_i2c_hdq_read_request
 		error = -EBUSY;
 		goto pending;
 	}
+	n71_hdq_trace_stage(trace, N71_HDQ_C_ACK, true);
 	if (status & N71_I2C_HDQ_ACK_FLAGS) {
 		controller->status_acknowledged = true;
 		iowrite32(status & N71_I2C_HDQ_ACK_FLAGS, controller->base + 0x14);
 	}
-	error = n71_i2c_hdq_read_sample(request, words);
+	n71_hdq_trace_stage(trace, N71_HDQ_C_VERIFY, true);
+	error = n71_i2c_hdq_read_sample(request, words, true);
 	if (error)
 		goto pending;
 	if (words[N71_I2C_SMSTA] != n71_i2c_controller_expected(controller, N71_I2C_SMSTA)) {
 		error = -EUCLEAN;
 		goto pending;
 	}
+	n71_hdq_trace_stage(trace, N71_HDQ_C_FINAL_READY, true);
 	error = n71_i2c_hdq_read_ready(request);
 	if (error)
 		goto pending;
@@ -125,6 +142,7 @@ static inline int n71_i2c_hdq_read_cleanup(const struct n71_i2c_hdq_read_request
 	state->controller = NULL;
 	state->cleanup_pending = false;
 	state->cleanup_error = 0;
+	n71_hdq_trace_stage(trace, N71_HDQ_C_COMPLETE, true);
 	return 0;
 pending:
 	state->cleanup_error = error;
@@ -138,21 +156,27 @@ static inline int n71_i2c_read_hdq_control(const struct n71_i2c_hdq_read_request
 					   struct n71_i2c_hdq_read_state *state, u32 *output)
 {
 	struct n71_i2c_controller *controller;
+	struct n71_i2c_hdq_trace *trace = request ? request->trace : NULL;
 	u32 words[N71_I2C_WORDS], status, value;
 	unsigned int attempt;
 	int error;
 
+	n71_hdq_trace_begin(trace, false);
 	if (!state || !output)
 		return -EINVAL;
+	n71_hdq_trace_stage(trace, N71_HDQ_READY, false);
 	error = n71_i2c_hdq_read_ready(request);
 	if (error)
 		return error;
 	controller = request->controller;
+	n71_hdq_trace_stage(trace, N71_HDQ_OWNERSHIP, false);
 	if (state->cleanup_pending || state->controller || controller->transfer_pending)
 		return -EBUSY;
-	error = n71_i2c_hdq_read_sample(request, words);
+	n71_hdq_trace_stage(trace, N71_HDQ_SAMPLE, false);
+	error = n71_i2c_hdq_read_sample(request, words, false);
 	if (error)
 		return error;
+	n71_hdq_trace_stage(trace, N71_HDQ_IDLE, false);
 	if (!n71_i2c_controller_idle(words) ||
 	    words[N71_I2C_SMSTA] != n71_i2c_controller_expected(controller, N71_I2C_SMSTA))
 		return -EBUSY;
@@ -160,10 +184,11 @@ static inline int n71_i2c_read_hdq_control(const struct n71_i2c_hdq_read_request
 	state->cleanup_pending = true;
 	state->cleanup_error = 0;
 	controller->transfer_pending = true;
+	n71_hdq_trace_stage(trace, N71_HDQ_ACK, false);
 	if (words[N71_I2C_SMSTA] & (1U << 27)) {
 		controller->status_acknowledged = true;
 		iowrite32(1U << 27, controller->base + 0x14);
-		error = n71_i2c_hdq_read_sample(request, words);
+		error = n71_i2c_hdq_read_sample(request, words, false);
 		if (error)
 			goto failed;
 		if (words[N71_I2C_SMSTA] !=
@@ -172,13 +197,16 @@ static inline int n71_i2c_read_hdq_control(const struct n71_i2c_hdq_read_request
 			goto failed;
 		}
 	}
+	n71_hdq_trace_stage(trace, N71_HDQ_SUBMIT, false);
 	iowrite32(0x1ea, controller->base + 0x00);
 	iowrite32(0x1d, controller->base + 0x00);
 	iowrite32(0x1eb, controller->base + 0x00);
 	iowrite32(0x601, controller->base + 0x00);
+	n71_hdq_trace_stage(trace, N71_HDQ_POLL, false);
 	for (attempt = 0; attempt < 100; attempt++) {
 		status = ioread32(controller->base + 0x14);
 		state->last_status = status;
+		n71_hdq_trace_status(trace, status, false);
 		if (status == ~0U) {
 			error = -ENODEV;
 			goto failed;
@@ -193,15 +221,18 @@ static inline int n71_i2c_read_hdq_control(const struct n71_i2c_hdq_read_request
 		status & (1U << 22) ? -EBUSY : status & (1U << 21) ? -ENXIO : 0;
 	if (error)
 		goto failed;
+	n71_hdq_trace_stage(trace, N71_HDQ_DATA, false);
 	value = ioread32(controller->base + 0x04);
 	if (value & ~0xffU) {
 		error = value == ~0U ? -ENODEV : value & (1U << 8) ? -ENODATA : -EUCLEAN;
 		goto failed;
 	}
+	n71_hdq_trace_stage(trace, N71_HDQ_RECOVERY, false);
 	error = n71_i2c_hdq_read_cleanup(request, state);
 	if (error)
 		return error;
 	*output = value;
+	n71_hdq_trace_stage(trace, N71_HDQ_COMPLETE, false);
 	return 0;
 failed:
 	n71_i2c_hdq_read_cleanup(request, state);
