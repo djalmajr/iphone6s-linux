@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts/host'))
 import n71_iommu_build
 import test_n71_driver_modules as shell
+import test_n71_pmd_runtime_build as pmd_fixture
 
 
 def load(name, path):
@@ -45,7 +46,7 @@ class PmdDriverModules(unittest.TestCase):
             source_names.update(self.read(name)['inputs'])
         for name in source_names:
             target = self.root / name; target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(ROOT / name, target)
+            target.write_bytes(pmd_fixture.compiled_source(name))
         self.original = {path: path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
         modules = patch.dict(sys.modules, {'n71_pmd_wifi_build': BUILD})
         modules.start(); self.addCleanup(modules.stop)

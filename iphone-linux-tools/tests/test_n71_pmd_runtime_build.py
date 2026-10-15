@@ -1,7 +1,9 @@
 """Real filesystem/record binding probes; no kernel or phone is operated."""
 import gzip
+from functools import lru_cache
 import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -9,6 +11,7 @@ import shutil
 import struct
 import subprocess
 import sys
+import tarfile
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -16,7 +19,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts/host'))
 import n71_iommu_build
-import n71_resource_result
+import n71_pmd_source_reference
 
 
 def load(name, path):
@@ -39,6 +42,45 @@ REUSE = 'n71-pmd-caller-reuse.json'
 NATIVE = 'n71-brcmfmac-caller-qualified.json'
 
 
+@lru_cache(maxsize=1)
+def compiled_inputs():
+    """Read the old build's exact data; never execute an archived test or script."""
+    folder = ROOT / 'docs/evidence'
+    records = json.loads((folder / NATIVE).read_text())['inputs']
+    records.update(json.loads((folder / MANIFEST).read_text())['inputs'])
+    digest = hashlib.sha256(json.dumps(records, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+    if digest != n71_pmd_source_reference.INPUTS_PIN:
+        raise ValueError('Compiled fixture input manifest changed')
+    prefix = ROOT.name + '/'
+    raw = subprocess.check_output(['git', 'archive', '--format=tar',
+        n71_pmd_source_reference.COMMIT, '--', *[prefix + name for name in sorted(records)]],
+        cwd=ROOT.parent, timeout=30)
+    if len(raw) > 1024 * 1024:
+        raise ValueError('Compiled fixture archive exceeds budget')
+    result = {}
+    with tarfile.open(fileobj=io.BytesIO(raw), mode='r:') as archive:
+        for member in archive:
+            if member.isdir():
+                continue
+            name = member.name.removeprefix(prefix)
+            if not member.isfile() or name not in records or name in result:
+                raise ValueError('Compiled fixture archive entry differs')
+            stream = archive.extractfile(member)
+            with stream:
+                data = stream.read()
+            if len(data) != records[name]['bytes'] or hashlib.sha256(data).hexdigest() != records[name]['sha256']:
+                raise ValueError('Compiled fixture source bytes differ')
+            result[name] = data
+    if set(result) != set(records):
+        raise ValueError('Full local Git history with the compiled source commit required')
+    return result
+
+
+def compiled_source(name):
+    historical = compiled_inputs()
+    return historical[name] if name in historical else (ROOT / name).read_bytes()
+
+
 class PmdRuntime(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix='n71-pmd-runtime-')
@@ -56,7 +98,7 @@ class PmdRuntime(unittest.TestCase):
         source_names = set(self.read(MANIFEST)['inputs']) | set(self.read(NATIVE)['inputs'])
         for name in source_names:
             target = self.root / name; target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(ROOT / name, target)
+            target.write_bytes(compiled_source(name))
         self.original = {p: p.read_bytes() for p in self.root.rglob('*') if p.is_file()}
         self.module_patch = patch.dict(sys.modules, {'n71_pmd_runtime_build': SUBJECT})
         self.module_patch.start(); self.addCleanup(self.module_patch.stop)

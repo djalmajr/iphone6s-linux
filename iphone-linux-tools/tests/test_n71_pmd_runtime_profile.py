@@ -5,7 +5,6 @@ import importlib.util
 import json
 import os
 from pathlib import Path
-import shutil
 import struct
 import subprocess
 import sys
@@ -51,7 +50,7 @@ class PmdRuntimeProfile(unittest.TestCase):
         (self.folder / 'n71-pmd-wifi-modules-qualified.json').write_text(json.dumps(proof))
         for name in proof['input_qualification']['inputs']:
             path = self.root / name; path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(ROOT / name, path)
+            path.write_bytes(fixture.compiled_source(name))
         hook = patch.object(PROFILE, 'build', BUILD); hook.start(); self.addCleanup(hook.stop)
         self.request = {'release': RELEASE, 'pcie_sha256': self.read(fixture.DIAGNOSTICS)['modules']['n71_pcie_diagnostic']['sha256']}
         self.actual = self.accepted(BUILD.select, self.root, self.request)
