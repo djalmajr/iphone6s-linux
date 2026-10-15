@@ -1,0 +1,95 @@
+{
+  "format": 1,
+  "status": "pmd_wcc_selection_and_posix_contracts_qualified_runtime_integration_pending",
+  "inputs": {
+    "scripts/host/n71_pmd_wifi_build.py": {
+      "bytes": 4963,
+      "sha256": "3db2540059ad7f0737de5dc1388e420e26c204c642af71f1c1fe85042c7dcd02"
+    },
+    "scripts/host/n71_driver_modules.py": {
+      "bytes": 13625,
+      "sha256": "7fb1d82254bcbc3f832ac31a3faa58f4ec0c0c7396e77f2e36978fda0ef15e99"
+    },
+    "tests/test_n71_pmd_driver_modules.py": {
+      "bytes": 11314,
+      "sha256": "b5beebbbb5f0f11bb4563aef352689e8ef886b521b7e110bb71d5a36ed179c51"
+    },
+    "tests/test_n71_driver_modules.py": {
+      "bytes": 19933,
+      "sha256": "8c72782b20abfebf163387adf732b5cdd1776ed429226e0f6d28a09203047ac4"
+    }
+  },
+  "gates": {
+    "pmd": {
+      "platform": "macOS",
+      "tests": 7,
+      "assertion_mutations": 10,
+      "log_sha256": "18bc7aa7a395d45d5b073aa41703b557bf4dcf6c43639f191bb8165a7d09c747",
+      "passed": true
+    },
+    "legacy": {
+      "platform": "macOS",
+      "tests": 9,
+      "assertion_mutations": 18,
+      "log_sha256": "93daeac4e0fae9dd55dcb1d37f467cf397725a7db05e0d004079cb651c2dc6ab",
+      "passed": true
+    }
+  },
+  "real_module_audit": {
+    "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+    "modules": [
+      {
+        "name": "rfkill",
+        "bytes": 46984,
+        "sha256": "b9ccb41250ca64719073d701139d3dfd3166290c5da53df9d3f120c47b6b9866",
+        "elf_and_abi_verified": true
+      },
+      {
+        "name": "cfg80211",
+        "bytes": 640472,
+        "sha256": "fd04b2f72d9476cc60be305d5320d3cca5805fc28185f82ef0513ac7f0823584",
+        "elf_and_abi_verified": true
+      },
+      {
+        "name": "brcmutil",
+        "bytes": 18096,
+        "sha256": "ab603f47952c06801ce651f0bd8a37f720d8ff03aba2bc4a7cf0f278fbb39a78",
+        "elf_and_abi_verified": true
+      },
+      {
+        "name": "brcmfmac",
+        "bytes": 499272,
+        "sha256": "609903ec13eea888bf0bd1ebee38287ba4493c92ee7ebe4d548c932bd88eee48",
+        "elf_and_abi_verified": true
+      },
+      {
+        "name": "brcmfmac_wcc",
+        "bytes": 6544,
+        "sha256": "1f11d8a0a77ae352857033ecc9cc6baa9807e50e1b7fb9a3b7a049bb2e79ed12",
+        "elf_and_abi_verified": true
+      }
+    ],
+    "module_count": 5,
+    "total_bytes": 1211368,
+    "selected_private_modules_verified": true,
+    "source_inputs_ast_parsed": 4,
+    "installed_or_loaded": false,
+    "vm_started": false,
+    "phone_accessed": false
+  },
+  "ast_passed": true,
+  "fatal_lint_passed": true,
+  "typechecker": "not_configured",
+  "default_power2_preserved": true,
+  "known_and_uniform_manifest_abi_required": true,
+  "live_and_operation_abi_bound_to_manifest": true,
+  "shell_proof": "Real POSIX shell and filesystem; synthetic uname, module tools and sysfs. Complete load/reverse removal, crossed operation and live ABI refusals before receipts/effects. This is not kernel or device execution.",
+  "initial_gate_failure": "Known-ABI mutation survived an incomplete fixture that changed only the first module; remaining rows still triggered the mixed-ABI guard. Corrected to change the entire stack to an unknown ABI. Full corrected gate passed.",
+  "vm_started": false,
+  "phone_accessed": false,
+  "firmware_loaded": false,
+  "session_or_cli_pmd_enabled": false,
+  "wifi_association_tested": false,
+  "battery_telemetry_tested": false,
+  "charging_tested": false
+}

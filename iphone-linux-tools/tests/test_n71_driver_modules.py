@@ -99,7 +99,7 @@ class DriverModuleTests(unittest.TestCase):
         self.assertEqual([x['module'] for x in records], ['rfkill.ko', 'cfg80211.ko', 'brcmutil.ko', 'brcmfmac.ko', 'brcmfmac-wcc.ko'])
         self.assertEqual(sum(x['bytes'] for x in records), 1211120)
         for field, value in [('name', 'other'), ('bytes', True), ('vermagic', 'different ABI'), ('depends', ['rfkill'])]:
-            altered = copy.deepcopy(records); altered[0][field] = value
+            altered = copy.deepcopy(records); altered[1 if field == 'vermagic' else 0][field] = value
             with self.subTest(field=field), self.assertRaises(ValueError): self.subject.manifest(altered)
         public = ROOT / 'docs/evidence/n71-brcmfmac-pcie-modules-qualified.json'
         proof = json.loads(public.read_text()); directory = self.root / 'proof/docs/evidence'; directory.mkdir(parents=True)
@@ -239,7 +239,7 @@ class DriverModuleMutations(unittest.TestCase):
         mutations = [
             ('name', "record['name'] == name", 'True', 'test_qualified_build_and_manifest_select_only_the_wcc_stack'),
             ('bool-bytes', "type(record['bytes']) is int", 'True', 'test_qualified_build_and_manifest_select_only_the_wcc_stack'),
-            ('abi', "record['vermagic'] == RELEASE + ' SMP preempt mod_unload aarch64'", 'True', 'test_qualified_build_and_manifest_select_only_the_wcc_stack'),
+            ('abi', "record['vermagic'] == version", 'True', 'test_qualified_build_and_manifest_select_only_the_wcc_stack'),
             ('qualified', "proof.get('qualified') is True", 'True', 'test_qualified_build_and_manifest_select_only_the_wcc_stack'),
             ('audit', "proof.get('mac_bytes_elf_and_hash_audit') is True", 'True', 'test_qualified_build_and_manifest_select_only_the_wcc_stack'),
             ('imports', "record.get('imports_verified') is True", 'True', 'test_qualified_build_and_manifest_select_only_the_wcc_stack'),

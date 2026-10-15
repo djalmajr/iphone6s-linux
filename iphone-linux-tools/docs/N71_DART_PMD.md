@@ -220,7 +220,22 @@ python3 -B -m unittest discover -s tests -p test_n71_resource_build.py -v
 
 O [registro de seleção](evidence/n71-pmd-runtime-selection-qualified.json) contém 21 testes/43 mutações por AssertionError no Mac: 8/10 novos e 13/33 de regressão. Usa filesystem/JSON reais, gzip e payload sintéticos para recusas; AST e lint fatal aprovados, sem typechecker Python configurado. O log do gate novo antecede somente comentários de teste e remoção de um import não usado, sem mudança no código de produção. Não foi necessário iniciar a VM.
 
-Além do gate, os leitores reais conferiram o Image.gz compilado e o payload privado base: Image SHA256 `c6c020756b970ebb77d1eb8e7975682385efacdbdefaacc78b70b8b8eb177246`, framing DTB/kernel/initramfs exato e arquivos preservados. Isso não prova boot ou comportamento do DART. Session, WCC, CLI e composição completa continuam pendentes.
+Além do gate, os leitores reais conferiram o Image.gz compilado e o payload privado base: Image SHA256 `c6c020756b970ebb77d1eb8e7975682385efacdbdefaacc78b70b8b8eb177246`, framing DTB/kernel/initramfs exato e arquivos preservados. Isso não prova boot ou comportamento do DART.
+
+## Seleção e operações WCC PMD
+
+[n71_pmd_wifi_build.py](../scripts/host/n71_pmd_wifi_build.py) liga os cinco módulos WCC aos oito outputs compilados, ao kernel PMD e aos 16 inputs selados do build. Confere baseline, patch MSI aplicado somente na cópia, imports, alias, ELF e ABI registrados. `n71_driver_modules.qualified(root, release=PMD_RELEASE)` seleciona explicitamente esse conjunto; omitir a release mantém power2.
+
+Manifest, observação e comando precisam concordar numa única ABI conhecida. O shell reconfere o kernel em execução antes de criar receipt ou carregar/remover módulo. Mistura de ABI é recusada; ordem, dependências, propriedade, pins e cleanup continuam iguais.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pmd_driver_modules.py -v
+python3 -B -m unittest discover -s tests -p test_n71_driver_modules.py -v
+```
+
+O [registro WCC](evidence/n71-pmd-wcc-selection-qualified.json) contém 16 testes/28 mutações por AssertionError no Mac: 7/10 novos e 9/18 anteriores. O ciclo completo de carga/remoção usa shell POSIX e filesystem reais, com ferramentas de kernel sintéticas. Não carrega módulos no Mac ou no iPhone. O primeiro gate tinha uma recusa incompleta: mudar só a primeira ABI ainda exercia a guarda de mistura; o caso corrigido muda todo o conjunto para uma ABI desconhecida e elimina a mutação da guarda de releases conhecidas.
+
+Os cinco arquivos reais selecionados, totalizando 1.211.368 bytes, também foram conferidos por tamanho, SHA256, ELF64/AArch64 relocável e vermagic PMD. AST/lint aprovados; sem typechecker Python configurado. A VM permaneceu parada. Integração do caller, serialização do journal WCC, Session, firmware, CLI e composição completa continuam pendentes antes de pedir DFU.
 
 ## Aceite no aparelho ainda pendente
 

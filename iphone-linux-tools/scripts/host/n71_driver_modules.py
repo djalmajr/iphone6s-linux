@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 import n71_driver_runtime_stage
 import n71_scan_held_result
+import n71_iommu_build
 
 RELEASE = n71_scan_held_result.RELEASE
 BOOT = n71_driver_runtime_stage.BOOT
@@ -28,17 +29,29 @@ def require(condition, message):
 
 def manifest(records):
     require(isinstance(records, list) and len(records) == len(NAMES), 'Exact WCC module stack required')
+    version = records[0].get('vermagic') if isinstance(records[0], dict) else None
+    require(version in (RELEASE + ' SMP preempt mod_unload aarch64',
+                        n71_iommu_build.PMD_RELEASE + ' SMP preempt mod_unload aarch64'),
+            'Known WCC module ABI required')
     for record, name, depends in zip(records, NAMES, DEPENDS):
         require(isinstance(record, dict) and set(record) == {'name', 'module', 'bytes', 'sha256', 'vermagic', 'depends'}
                 and record['name'] == name and record['module'] == name.replace('_', '-') + '.ko'
                 and record['depends'] == depends, 'WCC module identity or dependency order differs')
         require(type(record['bytes']) is int and 0 < record['bytes'] <= 2 * 1024 * 1024
                 and isinstance(record['sha256'], str) and re.fullmatch(r'[0-9a-f]{64}', record['sha256'])
-                and record['vermagic'] == RELEASE + ' SMP preempt mod_unload aarch64', 'WCC module bytes/SHA/ABI differ')
+                and record['vermagic'] == version, 'WCC module bytes/SHA/ABI differ')
     return records
 
 
-def qualified(root):
+def selected_release(records):
+    return manifest(records)[0]['vermagic'].split(' ', 1)[0]
+
+
+def qualified(root, *, release=RELEASE):
+    if release == n71_iommu_build.PMD_RELEASE:
+        import n71_pmd_wifi_build
+        return n71_pmd_wifi_build.qualified(root)
+    require(release == RELEASE, 'Known WCC build selection required')
     path = Path(root) / 'docs/evidence/n71-brcmfmac-pcie-modules-qualified.json'
     require(path.is_file() and not path.is_symlink() and path.stat().st_size <= 65536,
             'Qualified PCIe module evidence is unavailable')
@@ -126,7 +139,7 @@ def live(text, expected):
     require(isinstance(text, str) and len(text) <= 2 * 1024 * 1024, 'WCC observation exceeds budget')
     records = manifest(expected['manifest']); target = directory(expected['directory'])
     identity = re.findall('^' + IDENTITY + r'release=(\S+) boot=(' + BOOT + ')$', text, re.M)
-    require(len(identity) == text.count(IDENTITY) == 1 and identity[0] == (RELEASE, expected['boot']),
+    require(len(identity) == text.count(IDENTITY) == 1 and identity[0] == (selected_release(records), expected['boot']),
             'WCC observation belongs to another ABI or boot')
     files = re.findall('^' + FILE + r'name=(\w+) sha256=([0-9a-f]{64}) bytes=([1-9][0-9]{0,9})$', text, re.M)
     require(len(files) == text.count(FILE) == len(records)
@@ -170,11 +183,12 @@ def precondition(records, operation):
 
 
 def command(records, operation):
-    require(operation['release'] == RELEASE and re.fullmatch(BOOT, operation['boot']), 'WCC operation ABI/boot differs')
+    release = selected_release(records)
+    require(operation['release'] == release and re.fullmatch(BOOT, operation['boot']), 'WCC operation ABI/boot differs')
     directory(operation['directory']); precondition(records, operation)
     action, name = operation['action'], operation['name']
     target = operation['directory']; receipt = receipt_path(operation)
-    command = ('set -e; umask 077; test "$(uname -r)" = "' + RELEASE + '"; '
+    command = ('set -e; umask 077; test "$(uname -r)" = "' + release + '"; '
                'test "$(cat /proc/sys/kernel/random/boot_id)" = "' + operation['boot'] + '"; '
                'test "$(cat ' + n71_driver_runtime_stage.result.PCIE + 'driver_runtime)" = Y; '
                'test "$(cat ' + n71_driver_runtime_stage.result.PCIE + 'held)" = "held=1"; ')

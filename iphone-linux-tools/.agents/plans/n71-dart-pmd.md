@@ -62,6 +62,16 @@ Aplicar somente em worktree novo na VM dedicada, com inputs selados. Manter sour
 - **Reverter:** baixo; o ramo é selecionado somente pela release PMD exata, e os caminhos anteriores permanecem intactos.
 - **Status:** aplicada; seleção IOMMU/recursos e payload PMD reais validados no Mac. Novo gate com 8 testes/10 mutações; regressões com 13 testes/33 mutações. VM permaneceu parada. Session, WCC, CLI e composição completa ainda pendentes.
 
+### D6 — manifests e operações WCC para PMD
+
+- **Decisão:** criar scripts/host/n71_pmd_wifi_build.py e acrescentar a seleção explícita PMD em n71_driver_modules.py. Vincular os cinco módulos WCC aos oito outputs realmente compilados, ao kernel PMD e aos 16 inputs selados do build. Manifest, observação e comando devem concordar numa única release conhecida; recusar mistura de ABI antes de gerar comandos e reconferir uname no shell. Manter o padrão power2 e as regras de ordem, receipts e cleanup.
+- **Por quê:** permite que a próxima composição e Session usem os módulos PMD sem alterar a política de carga ou exigir recompilação/DFU.
+- **Alternativas:** trocar RELEASE globalmente quebra perfis antigos; aceitar qualquer vermagic cruza builds não qualificados.
+- **Onde:** os dois helpers, tests/test_n71_pmd_driver_modules.py novo, ajuste focal em tests/test_n71_driver_modules.py e este plano (cinco arquivos).
+- **Verificação:** seleção contra os fatos reais; recusas de kernel, imports, alias, inputs e ABI; POSIX shell real com ferramentas de kernel sintéticas para ciclo completo e ABI trocada, sem efeitos antes das recusas. Mutações novas e regressão dos 18 mutantes anteriores, AST/lint. Sem VM, firmware, SSH ou acesso físico.
+- **Reverter:** baixo; chamada sem release continua power2.
+- **Status:** aplicada; 7 testes/10 mutações novos e 9 testes/18 mutações anteriores aprovados no Mac; cinco binários reais conferidos por hash/ELF/ABI. O teste inicial revelou um caso de recusa incompleto no gate: todos os módulos com ABI desconhecida precisam ser testados juntos para isolar a guarda de releases conhecidas. O caso foi corrigido e as dez mutações passaram por AssertionError. VM parada; nenhuma ação no telefone.
+
 ## Fase C — um teste físico agrupado
 
 Antes de solicitar DFU, preparar kernel, todos os módulos compatíveis, perfil privado com identidades preservadas, diagnóstico HDQ UJM, restore e coleta/cleanup numa sessão limitada. O aparelho está no iOS bloqueado e recarregando; nenhuma ação necessária agora. Após retorno ao iOS, ausência de USB é tratada como tela bloqueada, sem nova confirmação rotineira.
