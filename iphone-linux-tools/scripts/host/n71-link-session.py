@@ -9,7 +9,6 @@ import re
 import secrets
 import struct
 import subprocess
-import sys
 import device_profile
 import n71_bar_result
 import n71_chip_result
@@ -343,6 +342,7 @@ class Session:
             parameters += ' msi_parent=1 iommu_parent=1'
         if n71_driver_runtime_result.capable(self):
             parameters += ' driver_runtime=1'
+            parameters += n71_driver_runtime_profile.observer_parameters(self, ROOT)
         if self.chip_id:
             parameters += ' chip_id=1'
         elif self.bar_sizing:

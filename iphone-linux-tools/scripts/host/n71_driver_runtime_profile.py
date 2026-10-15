@@ -56,6 +56,25 @@ def selected(session, root):
     blobs(session.driver_module_data, expected['drivers'])
 
 
+def observer_parameters(session, root):
+    if not runtime.capable(session) or session.release != iommu.PMD_RELEASE:
+        return ''
+    selected(session, root)
+    import n71_pmd_runtime_build as pmd
+    _, modules, _ = pmd.snapshot(root, release=session.release)
+    pcie = modules['n71_pcie_diagnostic']
+    require(session.modules[0][0]['sha256'] == pcie['sha256'], 'Observer module selection changed')
+    parameters = pcie.get('parameters')
+    require(isinstance(parameters, list) and all(isinstance(row, str) for row in parameters),
+            'Observer module interface missing')
+    names = ('dma_observe', 'dma_iova', 'dma_observation')
+    counts = tuple(sum(row.startswith(name + ':') for row in parameters) for name in names)
+    if not any(counts):
+        return ''
+    require(counts == (1, 1, 1), 'Observer interface must contain all three parameters once')
+    return ' dma_observe=1 dma_iova=0x3ffff028'
+
+
 def staged(session):
     if not runtime.capable(session):
         return []

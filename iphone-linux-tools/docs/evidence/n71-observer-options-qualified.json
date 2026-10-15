@@ -1,0 +1,73 @@
+{
+  "format": 1,
+  "status": "observer_load_options_and_real_profile_qualified_not_phone_loaded",
+  "inputs": {
+    "scripts/host/n71_driver_runtime_profile.py": {
+      "bytes": 3958,
+      "sha256": "7bf1427c81d70e877bcc49282954541baa041b360fa3255ac03261ab0f90e12b"
+    },
+    "scripts/host/n71-link-session.py": {
+      "bytes": 37763,
+      "sha256": "8bbd2a766bddf69294798db44ed7933176fd5052142ee93ee611f71470b5f966"
+    },
+    "tests/test_n71_observer_options.py": {
+      "bytes": 9269,
+      "sha256": "1c9c1afc6085c34e2d134e8674851dbf0a14f96d41dcb34518ad4fbfc657a7a9"
+    }
+  },
+  "host_gate": {
+    "tests": 7,
+    "assertion_mutations": 8,
+    "log_sha256": "3b426371ef785be6a96e599b7b4f0c7758298ddc676a19bb96779283d9494306",
+    "command_phone_preflight_modeled": true,
+    "actual_session_load_command_captured_not_executed": true
+  },
+  "regression": {
+    "methods": 22,
+    "unaffected_methods_passed": 21,
+    "assertion_mutations_passed": 31,
+    "only_failure": "PMD journal fixture consulted active project sources; corrected separately to use its qualified isolated manifest",
+    "affected_journal_and_firmware_rerun_methods": 7,
+    "affected_rerun_assertion_mutations": 5,
+    "affected_rerun_passed": true,
+    "initial_log_sha256": "c8eb3cff8980001a978c23e6a04f22a802943e96995fb16899abb33633fb6cf4",
+    "fixed_log_sha256": "aacd1740548ad249bb1784207a10aeb1c651ca0534aa2797948871862a63040d"
+  },
+  "real_profile": {
+    "format": 1,
+    "real_profile_cli_check_passed": true,
+    "real_session_configured": true,
+    "observer_parameters": "dma_observe=1 dma_iova=0x3ffff028",
+    "runtime_diagnostics": 2,
+    "runtime_wcc_modules": 5,
+    "runtime_bytes": 1376792,
+    "profile_files_preserved": 13,
+    "all_preserved_before_after": true,
+    "profile_files_private": true,
+    "no_phone_access": true,
+    "vm_started": false,
+    "new_firmware_load": false
+  },
+  "composition": {
+    "files": 13,
+    "preserved_source_files": 115,
+    "all_preserved_before_after": true,
+    "private_files_and_directory_verified": true
+  },
+  "contract": {
+    "previous_abis_and_pmd_interface_keep_old_arguments": true,
+    "new_module_hash_rechecked_against_session": true,
+    "session_bytes_revalidated_before_options": true,
+    "all_three_new_parameters_required_once": true,
+    "load_options": "dma_observe=1 dma_iova=0x3ffff028",
+    "single_existing_insmod_no_retry_added": true
+  },
+  "ast_passed": true,
+  "fatal_and_unused_lint_passed": true,
+  "vm_started": false,
+  "phone_accessed": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "charging_verified": false,
+  "goal_complete": false
+}
