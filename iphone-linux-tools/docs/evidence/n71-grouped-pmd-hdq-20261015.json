@@ -1,0 +1,104 @@
+{
+  "format": 1,
+  "status": "physical_pmd_and_ujm_grouped_test_failed_functional_goal_remains_open",
+  "source_head": "05fa9a51c69bc230c9ac59439f2ae0baece8d641",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-pmd1",
+  "kernel_bundle": "n71-dart-serdev-pmd-v1",
+  "profile_payload_sha256": "1940c798a5ca2cd6f8388ffbb59a7ed80037c8041a73f75b26cfd8fee255d60e",
+  "operator_dfu_requests": 1,
+  "host_boot_attempts": 2,
+  "second_attempt_reused_existing_confirmed_dfu": true,
+  "first_attempt_error": "status_open_device_error e00002c5; no Linux payload sent",
+  "restore_verified": true,
+  "ssh_pinned_verified": true,
+  "http_verified_after_cleanup": true,
+  "herdr_boot_hook_completed": true,
+  "same_boot_for_runtime_states": true,
+  "runtime_states": 5,
+  "checkpoint_hashes_verified": true,
+  "hdq": {
+    "module_bytes": 52456,
+    "module_sha256": "6c0e5fcdd8b59fccc6a9498728ad3344ac9312a418b215d37a7f8b24eee2c89f",
+    "inspect_error": 0,
+    "rev": [
+      2,
+      2
+    ],
+    "smsta": [
+      "08010100",
+      "08010100"
+    ],
+    "xfsta": [
+      0,
+      0
+    ],
+    "initial_ctl": "00000104",
+    "configure_stage": 3,
+    "configure_error": -110,
+    "previous_configure_error": -16,
+    "cleanup_error": 0,
+    "clean_unload_verified": true,
+    "read_hdq_control_reached": false,
+    "charger_value_writes": false,
+    "gauge_verified": false,
+    "post_reset_ctl_value_recorded": false
+  },
+  "wifi": {
+    "reg_on_link_resources_publish_completed": true,
+    "first_firmware_query": "cur_etheraddr",
+    "first_firmware_query_error": -5,
+    "dart_fault_status": "80000102",
+    "dart_stream": 0,
+    "dart_code": 2,
+    "dart_fault": "NO PMD FOR IOVA",
+    "dart_reported_address": "3ffff028",
+    "reported_address_is_raw_iova_proof": false,
+    "pmd_bit1_did_not_resolve_fault": true,
+    "wlan_interface_observed": false,
+    "firmware_start_repeated": false
+  },
+  "userspace": {
+    "actual_phone_execution": true,
+    "iw_version": "6.7",
+    "wpa_supplicant_version": "2.10",
+    "wpa_cli_version": "2.10",
+    "private_loader_and_libraries": true,
+    "global_phone_libraries_untouched": true,
+    "credentials_used": false,
+    "association_verified": false
+  },
+  "cleanup": {
+    "coordinator_phase": "stopped",
+    "primary_error": -1,
+    "stop_error": 0,
+    "cleanup_errors": [],
+    "independent_modules_absent": true,
+    "independent_pci_devices_absent": true,
+    "firmware_loader_path_restored": true,
+    "snapshot_verified": true,
+    "sync_verified": true
+  },
+  "supply": {
+    "host_USB_UsbPowerSinkAllocation": 500,
+    "property_is_not_measured_battery_current": true,
+    "power_supply_sensors_present": false,
+    "linux_battery_current_measured": false,
+    "linux_charging_verified": false
+  },
+  "return": {
+    "simple_reboot_did_not_end_ramdisk_init": true,
+    "existing_kernel_reboot_wrapper_used": true,
+    "wrapper_started_before_600s_requested_cutoff": true,
+    "linux_gadget_absent_after_kernel_reboot": true,
+    "ios_USB_confirmed": false,
+    "missing_USB_treated_as_iOS_lockscreen": true,
+    "routine_operator_confirmation_requested": false
+  },
+  "private_data_published": false,
+  "mac_global_packages_or_configuration_changed": false,
+  "vm_started": false,
+  "new_workers_opened": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "goal_complete": false
+}

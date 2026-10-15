@@ -2,7 +2,7 @@
 
 ## Estado e motivo
 
-A correção está qualificada no Mac/ARM64 e compilada em um módulo externo novo. **Ainda não foi executada no iPhone.** A sessão física anterior usou o módulo preservado e identificou a recusa de CTL 0104; consulte o [relatório físico](N71_SESSAO_DMA_HDQ.md), o [plano](../.agents/plans/n71-i2c-ujm-baseline.md) e a [evidência desta candidata](evidence/n71-i2c-ujm-qualified.json).
+A correção está qualificada no Mac/ARM64 e foi executada no iPhone na ABI PMD. O configure passou da recusa -16 anterior para timeout -110, ainda no stage 3; restaurou CTL 0104, limpou os owners e permitiu unload normal. Não chegou ao transporte HDQ. Consulte a [sessão PMD/UJM](N71_SESSAO_PMD_HDQ.md), o [relatório físico anterior](N71_SESSAO_DMA_HDQ.md), o [plano](../.agents/plans/n71-i2c-ujm-baseline.md) e a [qualificação original](evidence/n71-i2c-ujm-qualified.json).
 
 Na fonte PASemi fixada, bit 8 é CTL_UJM; bits 9/10 são MTR/MRR e bit 11 é EN. O código anterior recusava qualquer bit fora do divisor baixo, incluindo a baseline UJM observada. O novo gate admite divisor e UJM (01ff) somente depois das mesmas verificações de ownership, clock, revisão, estabilidade, idle e IMASK/XFSTA zero. MTR, MRR, EN e demais bits continuam recusados antes de writes.
 
@@ -33,3 +33,5 @@ python3 -B -m unittest discover -s tests -p test_n71_i2c_hdq_read.py -v
 Na VM dedicada, usar o [procedimento de módulo externo](N71_I2C_STAGE.md#qualificação-e-reprodução) com os fontes atuais, uma nova pasta de módulo e o kernel preservado. Arquivos e logs privados desta qualificação: runtime/n71-i2c-ujm-20261015 e runtime/n71-i2c-ujm-module-20261015, com diretórios equivalentes em /home/ubuntu na VM. Cada archive é validado por tamanho/hash e extraído somente em diretório novo com membros regulares relativos.
 
 Antes de outro DFU, preparar também o diagnóstico DART para reunir os testes. No aparelho: inspect → configure → read-hdq-control, parando no primeiro erro de setup e exigindo cleanup/unload. A baseline aceita no modelo não comprova leitura HDQ física, gauge, telemetria, carregamento Linux ou Wi-Fi.
+
+O módulo PMD recompilado tem o hash 6c0e5fcdd8b59fccc6a9498728ad3344ac9312a418b215d37a7f8b24eee2c89f e 52456 bytes. A próxima instrumentação deve conservar os valores já lidos depois do comando de reset, sem acrescentar I/O ou ampliar por suposição os estados aceitos. O valor final de CTL nesse polling ainda não foi observado. A prova física desta tentativa está em [n71-grouped-pmd-hdq-20261015.json](evidence/n71-grouped-pmd-hdq-20261015.json).

@@ -301,6 +301,8 @@ Os 262 arquivos protegidos medidos antes da composição permaneceram com tamanh
 
 ## Aceite no aparelho ainda pendente
 
-O kernel, os sete diagnósticos, o conjunto Wi-Fi, os gates de runtime e o perfil completo estão qualificados sem uso do telefone. Falta preparar a coleta conjunta e comprovar DART/firmware com HDQ/UJM na sessão física. Não solicitar outro DFU antes do roteiro completo. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
+O perfil completo foi testado no aparelho em uma [sessão conjunta PMD/HDQ](N71_SESSAO_PMD_HDQ.md). O firmware iniciou, mas NO PMD e o timeout do primeiro comando persistiram; nenhuma interface WLAN apareceu. A alteração de flags PMD não resolveu o problema. Os cinco checkpoints e o cleanup foram auditados, com erro primário preservado. iw/wpa_supplicant/wpa_cli executaram com o loader privado no mesmo boot.
+
+Antes de outro DFU, preparar instrumentação que confronte a tradução de software e a tabela visível ao hardware no momento do fault, junto com as amostras de CTL do reset I2C. Preservar a candidata e seu resultado negativo para comparação; não alterar o padrão nem repetir o firmware sem hipótese nova. O aparelho pode permanecer no iOS bloqueado para recarga; nenhuma confirmação rotineira é necessária.
 
 Wi-Fi nativo, telemetria e carga no Linux continuam sem comprovação. O patch não escreve registradores do carregador nem modifica o armazenamento interno.

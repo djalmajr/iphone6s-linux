@@ -10,7 +10,7 @@ O boot agrupado de 15/10 confirmou execução do firmware, mas o primeiro comand
 - **Por quê:** reproduz uma diferença observável da referência do mesmo aparelho, sem mudar as tabelas dos DART modernos. A causalidade do fault ainda depende do aparelho.
 - **Alternativas:** repetir a janela já falha não oferece diagnóstico novo; alterar todos os DART amplia o escopo; usar o mesmo nome de kernel dificulta distinguir candidatas. Tracing dinâmico não está compilado no kernel atual.
 - **Reverter:** baixo, selecionar o perfil/kernel anterior; nenhum flash ou armazenamento interno modificado.
-- **Status:** em curso.
+- **Status:** aplicada e testada; não resolveu o NO PMD nem o primeiro comando do firmware. Preservar a candidata e preparar diagnóstico que diferencie tradução de software e tabelas vistas pelo hardware antes de outro ajuste.
 
 ## Fase A — fonte e seleção, até cinco executáveis
 
@@ -139,8 +139,11 @@ Gates novos no Mac e ARM64; regressão dos bundles impactados sem repetir gates 
 - [x] Qualificar o integrador opt-in e criar o perfil base privado, sem alterar o padrão.
 - [x] Reconstruir e auditar os oito módulos Wi-Fi da ABI PMD.
 - [x] Integrar o novo kernel/módulos em perfil opt-in sem alterar o padrão.
-- [ ] Reunir HDQ e Wi-Fi antes de um DFU necessário.
-- [ ] Comprovar o comportamento no aparelho e atualizar as issues.
+- [x] Reunir HDQ e Wi-Fi antes de um DFU necessário.
+- [x] Executar a comparação PMD/UJM no aparelho e registrar seu resultado negativo, sem confundir execução do ensaio com funcionamento dos recursos.
+- [ ] Atualizar as issues com a prova sanitizada e os próximos diagnósticos.
+- [ ] Instrumentar DMA/TTBR no momento da falha e as amostras existentes de CTL I2C, qualificando ambos antes de outro DFU.
+- [ ] Comprovar Wi-Fi, telemetria e limites de alimentação físicos; objetivo funcional continua aberto.
 
 ## Andamento e recuperação do build
 
@@ -173,3 +176,9 @@ Próxima fase: qualificação explícita da variante PMD nos seletores de IOMMU/
 ### Recursos ao fim de D4
 
 A VM dedicada foi confirmada ociosa (make/cc1/cc1plus/ld.bfd/git = 0) e desligada pelo Multipass; o estado Stopped foi confirmado. A próxima fase usa os artefatos já copiados no Mac. Kernel/source PMD e power2, módulos e tools v2 foram preservados para a próxima necessidade de VM. Somente as duas cópias v1 na VM e o tar v1 local foram removidos, com recibo privado. Nenhum painel/worker novo, nenhuma instalação/configuração global do Mac e nenhuma ação no iPhone nesta fase.
+
+## Resultado físico PMD/UJM
+
+Um pedido de DFU e duas tentativas do host, a segunda reutilizando o DFU confirmado, iniciaram o perfil completo. HDQ configure mudou de -16 para -110 no stage 3, com CTL original 0104 restaurado e unload limpo; não houve transporte HDQ. Wi-Fi voltou a registrar NO PMD, stream 0/código 2, e timeout de cur_etheraddr (-5), sem WLAN. Não se repetiu o firmware. Os cinco checkpoints pertencem ao mesmo boot; stop preservou erro primário -1, stop_error zero e cleanup_errors vazio. Readback independente confirmou módulos/PCI ausentes, path de firmware restaurado e SSH/HTTP funcionais. Os programas Wi-Fi isolados executaram no telefone.
+
+Snapshot/sync verificados e wrapper de reboot de kernel usado. Gadget Linux ausente; iOS USB não confirmado, tratado como tela bloqueada sem nova pergunta. A VM permaneceu parada. Prova/reprodução: docs/N71_SESSAO_PMD_HDQ.md e docs/evidence/n71-grouped-pmd-hdq-20261015.json. Logs, UUID, firmware, identidades e snapshots continuam privados. Próxima ação: investigar por fonte primária e preparar instrumentação observacional para os dois bloqueios, sem ampliar máscaras ou mudar flags novamente por tentativa.
