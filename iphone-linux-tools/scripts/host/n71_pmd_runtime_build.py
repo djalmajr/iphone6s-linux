@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import re
 import n71_iommu_build as iommu
+import n71_pmd_source_reference as source_reference
 
 RELEASE = iommu.PMD_RELEASE
 LEGACY = '7.2.0-iphone6s-dart-serdev-power2'
@@ -44,7 +45,7 @@ def source_file(root, name, expected):
             'PMD compiled source bytes differ')
 
 
-def native_reference(root, native, manifest, pcie, reuse, kernel):
+def native_reference(root, native, manifest, pcie, reuse, kernel, *, source_root):
     import n71_driver_runtime_build as caller
     require(reuse.get('reference_proof') == {'path': 'docs/evidence/' + NATIVE,
             'sha256': hashlib.sha256((root / 'docs/evidence' / NATIVE).read_bytes()).hexdigest()},
@@ -70,7 +71,7 @@ def native_reference(root, native, manifest, pcie, reuse, kernel):
         require(re.fullmatch(r'(?:phone/kernel/n71-[a-z0-9-]+\.(?:c|h)|tests/(?:n71_[a-z0-9_]+\.(?:c|h)|test_n71_[a-z0-9_]+\.py))', name),
                 'PMD native input path differs')
         current = manifest['inputs'][name] if name == I2C else expected
-        source_file(root, name, current)
+        source_file(source_root, name, current)
         if current != expected:
             changed.append(name)
     require(changed == [I2C] and reuse.get('changed_previous_input_paths') == changed
@@ -111,6 +112,7 @@ def native_reference(root, native, manifest, pcie, reuse, kernel):
 def snapshot(root, *, release):
     require(release == RELEASE and isinstance(root, Path) and root.is_absolute()
             and root.resolve() == root, 'Explicit canonical PMD selection required')
+    source_root = source_reference.resolve(root)
     kernel = evidence(root, 'kernel-n71-pmd-build.json')
     modules = evidence(root, 'n71-pmd-diagnostics-build.json')
     manifest = evidence(root, 'n71-pmd-diagnostic-inputs.json')
@@ -146,7 +148,7 @@ def snapshot(root, *, release):
             and modules.get('inputs_sha256') == {name: row['sha256'] for name, row in manifest['inputs'].items()},
             'PMD compiled input manifest differs')
     for name, row in manifest['inputs'].items():
-        source_file(root, name, row)
+        source_file(source_root, name, row)
     records = modules.get('modules')
     require(isinstance(records, dict) and len(records) == 7, 'Seven PMD diagnostics required')
     for name, filename in (('n71_pcie_diagnostic', 'n71-pcie-diagnostic.ko'),
@@ -157,7 +159,7 @@ def snapshot(root, *, release):
                 and row.get('path') == 'sources/phone/kernel/' + filename
                 and row.get('elf64_aarch64_relocatable') is True,
                 'PMD diagnostic module identity differs')
-    native_reference(root, native, manifest, records['n71_pcie_diagnostic'], reuse, kernel)
+    native_reference(root, native, manifest, records['n71_pcie_diagnostic'], reuse, kernel, source_root=source_root)
     return kernel, records, hashes
 
 

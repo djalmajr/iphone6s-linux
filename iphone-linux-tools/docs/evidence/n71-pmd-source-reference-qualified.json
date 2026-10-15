@@ -1,0 +1,63 @@
+{
+  "format": 1,
+  "status": "explicit_preserved_pmd_inputs_qualified_no_new_device_or_module",
+  "inputs": {
+    "scripts/host/n71_pmd_source_reference.py": {
+      "bytes": 3469,
+      "sha256": "3925b9c0b91cedf23902a82aaecb33f3012a3df198b7e201831d3380612c98a7"
+    },
+    "scripts/host/n71_pmd_runtime_build.py": {
+      "bytes": 11103,
+      "sha256": "0d2961461ef7fc91e84f276681144d1bbc0e3d73172dd9816b9fa1919600461c"
+    },
+    "tests/test_n71_pmd_source_reference.py": {
+      "bytes": 10339,
+      "sha256": "0b8351fed1323043109f537adf8a5dd6540f38232eded7188e1dc2bcb9abe50a"
+    }
+  },
+  "native": {
+    "platform": "macOS",
+    "new_tests": 7,
+    "new_assertion_mutations": 9,
+    "previous_pmd_tests": 8,
+    "previous_assertion_mutations": 10,
+    "new_log_sha256": "fd2376968b35fc34fa6ec842ac192846098f6099582fc93d214a132e7e429a8c",
+    "previous_log_sha256": "9ae63460e352ae6e5c98dd3889d261903f636764501b21d98c44544ee785420c"
+  },
+  "preserved_inputs": {
+    "source_commit": "28b2c922a6a0ca847489b3253cfbe52b1c3e16e9",
+    "files": 78,
+    "bytes": 633894,
+    "canonical_manifest_sha256": "8dcc0e2684c3e14ba3d0cfbdd91a755815c1d2224d1a5d63351a0575e7e28158"
+  },
+  "contract": {
+    "selection_explicit_only": true,
+    "default_current_source_validation_preserved": true,
+    "invalid_reference_never_falls_back": true,
+    "all_source_files_private_owned_regular_and_hashed": true,
+    "public_build_proofs_from_current_project": true,
+    "old_source_never_executed": true,
+    "abi_and_binary_pins_unchanged": true
+  },
+  "real_cli_check": {
+    "selected_frozen_files": 78,
+    "frozen_bytes": 633894,
+    "real_cli_check_passed": true,
+    "preserved_files": 95,
+    "all_preserved_before_after": true,
+    "no_phone_access": true,
+    "no_output_created": true,
+    "vm_started": false,
+    "selection_explicit_only": true
+  },
+  "ast_passed": true,
+  "fatal_and_unused_lint_passed": true,
+  "typechecker": "not_configured",
+  "new_module_built": false,
+  "phone_accessed": false,
+  "vm_started": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "charging_verified": false,
+  "goal_complete": false
+}
