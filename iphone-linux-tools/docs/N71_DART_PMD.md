@@ -161,8 +161,53 @@ O gate usa CLI real e kernels sintéticos não inicializáveis. Seis testes, inc
 
 A [integração base real](evidence/n71-pmd-base-integration.json) também passou com o Image novo e o initramfs privado validado de power2: identidades SSH preservadas, perfil verificado e padrão intacto. Esse perfil ainda não contém o conjunto de runtime/firmware; não deve ser usado como candidato ao teste agrupado antes das etapas seguintes.
 
+## Conjunto Wi-Fi da ABI PMD
+
+O [conjunto de oito módulos](evidence/n71-pmd-wifi-modules-qualified.json) foi compilado na VM ARM64 contra o Image PMD preservado. Inclui rfkill, cfg80211, brcmutil, brcmfmac e os módulos de fabricante WCC/BCA/CYW. O carregamento em runtime usará somente o conjunto WCC qualificado. Os seletores existentes ainda precisam receber a variante PMD antes do teste no aparelho.
+
+[build-n71-wifi-modules.py](../scripts/build/build-n71-wifi-modules.py) exige `--profile n71-dart-serdev-pmd-v1` e os hashes reais de config/Image/exports. Mantém a configuração do kernel e aplica os dois recursos PCIe/MSGBUF somente às três localizações auditadas no pacote. O patch MSI 0008 é aplicado na cópia do driver; o Image contém o bundle 0001–0007 e 0009. Source, Image, configuração e exports PMD/power2 foram conferidos ao terminar. Os oito arquivos copiados para o Mac passaram por hash, ELF64/AArch64 relocável e vermagic; todos os imports foram resolvidos. O alias 14e4:43a3 e os símbolos PCIe/MSGBUF foram verificados.
+
+Para recriar os 16 inputs selados na raiz de `iphone-linux-tools`:
+
+```python
+from pathlib import Path
+import hashlib, io, json, tarfile
+
+proof = json.loads(Path('docs/evidence/n71-pmd-wifi-modules-qualified.json').read_text())['input_qualification']
+target = Path('runtime/n71-pmd-wifi-inputs.tar')
+with tarfile.open(target, 'x', format=tarfile.USTAR_FORMAT) as archive:
+    for name in proof['canonical_tar']['member_order']:
+        data = Path(name).read_bytes()
+        assert len(data) == proof['inputs'][name]['bytes']
+        assert hashlib.sha256(data).hexdigest() == proof['inputs'][name]['sha256']
+        member = tarfile.TarInfo(name)
+        member.mode = 0o644
+        member.size = len(data)
+        archive.addfile(member, io.BytesIO(data))
+assert target.stat().st_size == proof['tar']['bytes']
+assert hashlib.sha256(target.read_bytes()).hexdigest() == proof['tar']['sha256']
+```
+
+O resultado tem 112640 bytes e SHA256 `0b9d0d163039a12487660c15fd1fb4a7bebf4563174032455a65bfa9589313f9`. Transferir para a VM e extrair em diretório próprio novo, após conferir o hash. Executar o builder extraído como usuário `ubuntu`, com o source e build PMD já qualificados e uma saída inexistente:
+
+```sh
+python3 -B scripts/build/build-n71-wifi-modules.py \
+  --source /home/ubuntu/kernel-n71-pmd-source-20261015 \
+  --kernel-output /home/ubuntu/kernel-n71-pmd-build-20261015 \
+  --output-dir /home/ubuntu/n71-pmd-wifi-modules-20261015 \
+  --profile n71-dart-serdev-pmd-v1
+```
+
+O comando compila somente os três pacotes de módulos com Werror e modpost. Um build de Image não gera o `Module.symvers` global dos módulos; o aviso correspondente permanece no log. `vmlinux.symvers` e os exports dos pacotes anteriores são fornecidos por `KBUILD_EXTRA_SYMBOLS`, sem transformar erros de modpost em warnings. Uma auditoria independente de `nm -u` confirmou os imports dos oito arquivos contra esses exports.
+
+A primeira tentativa parou antes de criar saída porque o grep global do kernel excedeu 30 s. Somente essa consulta ganhou prazo limitado de 180 s; um teste Git real e uma mutação que restringe a busca ao pacote confirmam que features fora dele continuam sendo recusadas. Depois do build concluído, um `git status` independente do checkout antigo excedeu 30 s. A leitura completa foi concluída com prazo de observação adequado e o checker original, com seus limites e bytes intactos, passou novamente. Essa recuperação executou somente as verificações finais.
+
+Os gates passaram no Mac e no ARM64: cinco testes PMD/cinco mutações e 15 testes anteriores/24 mutações em cada. AST/lint aprovados; não há typechecker Python configurado. Os testes usam filesystem/Git reais e ELF sintético não inicializável; não acessam o telefone.
+
+A [comparação do caller PCIe](evidence/n71-pmd-caller-reuse.json) confirma cinco seções executáveis idênticas, os mesmos 135 imports e a mesma interface de parâmetros do módulo anterior. Entre as seções PROGBITS/RELA, apenas `.modinfo` mudou, exclusivamente na vermagic. Os arquivos foram recompilados com os headers PMD. Isso permite reutilizar os gates de lógica do caller; o comportamento real do DART modificado permanece pendente.
+
 ## Aceite no aparelho ainda pendente
 
-O kernel, os sete diagnósticos e a integração base estão qualificados sem uso do telefone. Faltam reconstruir o conjunto Wi-Fi para a ABI PMD, ampliar os gates de runtime explicitamente e montar o perfil completo antes de uma sessão física reunindo DART/firmware com HDQ/UJM. Não solicitar outro DFU para repetir o fault conhecido sem a candidata pronta. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
+O kernel, os sete diagnósticos, o conjunto Wi-Fi e a integração base estão qualificados sem uso do telefone. Faltam ampliar os gates de runtime explicitamente e montar o perfil completo antes de uma sessão física reunindo DART/firmware com HDQ/UJM. Não solicitar outro DFU para repetir o fault conhecido sem a candidata pronta. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
 
 Wi-Fi nativo, telemetria e carga no Linux continuam sem comprovação. O patch não escreve registradores do carregador nem modifica o armazenamento interno.

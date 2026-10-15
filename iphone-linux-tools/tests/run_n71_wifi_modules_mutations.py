@@ -29,10 +29,10 @@ MUTATIONS = {
     'release': ("(output / 'include/config/kernel.release').read_text().strip() == release", 'True'),
     'space-budget': ('shutil.disk_usage(parent).free >= 1024 * 1024 * 1024',
                      'shutil.disk_usage(parent).free >= 1024 * 1024 * 1024 - 1'),
-    'unknown-profile': ('profile in (kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE)', 'True'),
+    'unknown-profile': ('profile in (kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE, kernel_bundle.PMD_BUNDLE)', 'True'),
     'binding-hashes': ('return BINDING_RELEASE, BINDING_KERNEL_FILES', 'return BINDING_RELEASE, KERNEL_FILES'),
     'elf-profile': ('release, _ = build_identity(profile)', 'release, _ = build_identity(kernel_bundle.BUNDLE)'),
-    'cli-profile': ('choices=(kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE)', 'choices=(kernel_bundle.BUNDLE,)'),
+    'cli-profile': ('choices=(kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE, kernel_bundle.PMD_BUNDLE)', 'choices=(kernel_bundle.BUNDLE,)'),
 }
 
 

@@ -42,6 +42,16 @@ Aplicar somente em worktree novo na VM dedicada, com inputs selados. Manter sour
 - **Verificação:** CLI real e filesystem temporário com kernels sintéticos não inicializáveis; seleção/identidades/modos, falta de registro, registro power2 cruzado, todos os oito blobs/patches, link/export/release/configuração e módulos antigos; mutações novas por AssertionError, regressão antiga focalizada, AST/lint. A prova física continua pendente.
 - **Status:** aplicada; compilação/integração base verificadas, aceite físico continua pendente.
 
+### D4 — conjunto Wi-Fi recompilado para PMD
+
+- **Decisão:** ampliar scripts/build/build-n71-wifi-modules.py com a identidade PMD explícita e os hashes reais de config/Image/exports do build concluído. Preservar os dois perfis anteriores, o perfil padrão, as recusas existentes e o patch MSI aplicado somente na cópia do pacote. Compilar rfkill/cfg80211/Broadcom em pasta nova da mesma VM, sem instalar ou carregar.
+- **Por quê:** os módulos power2 não podem ser carregados com a release PMD; a próxima sessão precisa do driver e dos diagnósticos na mesma ABI. O kernel PMD já está pronto e será reutilizado.
+- **Alternativas:** forçar vermagic cruza ABI e não será usado; alterar a configuração ou o source preservado desfaz a separação do build. Outro build de kernel não agrega valor nesta etapa.
+- **Reverter:** baixo; selecionar o perfil anterior, cujos hashes e artefatos continuam intactos.
+- **Onde:** builder Wi-Fi, tests/test_n71_wifi_modules.py (CLI/ELF selecionados), tests/run_n71_wifi_modules_mutations.py (duas âncoras), tests/test_n71_pmd_wifi_modules.py (novo) e este plano. Cinco arquivos; seletores de runtime ficam para a próxima fase.
+- **Verificação:** identidade ligada ao registro público compilado; filesystem real e ELF sintético para recusas de hashes/release cruzados; CLI sem build, mutações por AssertionError, regressão dos 24 mutantes antigos, AST/lint no Mac e gates ARM64. Depois, build real com Werror/modpost, oito módulos, alias 14e4:43a3, símbolos PCIe/MSGBUF e imports resolvidos, source/Image/config/exports preservados antes/depois. Nada disso substitui prova física de Wi-Fi.
+- **Status:** aplicada; oito módulos auditados na VM/Mac, carregamento físico pendente.
+
 ## Fase C — um teste físico agrupado
 
 Antes de solicitar DFU, preparar kernel, todos os módulos compatíveis, perfil privado com identidades preservadas, diagnóstico HDQ UJM, restore e coleta/cleanup numa sessão limitada. O aparelho está no iOS bloqueado e recarregando; nenhuma ação necessária agora. Após retorno ao iOS, ausência de USB é tratada como tela bloqueada, sem nova confirmação rotineira.
@@ -57,6 +67,7 @@ Gates novos no Mac e ARM64; regressão dos bundles impactados sem repetir gates 
 - [x] Qualificar objetos e build completo isolado (Image PMD e cópias Mac verificados).
 - [x] Reconstruir os sete diagnósticos com W=1/Werror e imports/ABI conferidos.
 - [x] Qualificar o integrador opt-in e criar o perfil base privado, sem alterar o padrão.
+- [x] Reconstruir e auditar os oito módulos Wi-Fi da ABI PMD.
 - [ ] Integrar o novo kernel/módulos em perfil opt-in sem alterar o padrão.
 - [ ] Reunir HDQ e Wi-Fi antes de um DFU necessário.
 - [ ] Comprovar o comportamento no aparelho e atualizar as issues.
@@ -78,3 +89,17 @@ A limpeza autorizada removeu 72 binários locais obsoletos (1.667.619.582 bytes 
 O build completo terminou com exit 0 em 2489 s; Image c6c020756b970ebb77d1eb8e7975682385efacdbdefaacc78b70b8b8eb177246, configuração/DTB/exports verificados e kernel anterior preservado. A integração base privada real passou, com identidades SSH e padrão intactos. D2 concluiu o build dos sete módulos; D3 concluiu os gates e a integração base. A comparação JSON corrigida não relaxa os pins da fonte. Os fatos públicos estão em kernel-n71-pmd-build.json, n71-pmd-preparation-qualified.json, n71-pmd-diagnostics-build.json e n71-pmd-base-integration.json sob docs/evidence/.
 
 Próxima fatia: selecionar os hashes reais da ABI PMD no builder Wi-Fi e recompilar o conjunto WCC isolado. Depois, ampliar os gates de runtime em fases e compor um perfil completo, preservando power2. Nenhum DFU ou leitura de PIN nesta fatia. Wi-Fi, HDQ e carregamento físico seguem pendentes.
+
+### D4 — recuperação da varredura global
+
+Os gates Mac e ARM64 da primeira candidata passaram, mas a varredura global de features em Git excedeu o limite genérico de 30 s, antes de criar a saída ou iniciar a compilação. O helper global kernel_patchset.py permanece intacto. Apenas essa consulta completa recebe 180 s no builder Wi-Fi; o teste usa um repositório Git real com feature fora do pacote e uma mutação que limita a busca ao Broadcom, exigindo falha por AssertionError. O arquivo temporário staged do teste é removido explicitamente na pasta descartável, sem tocar no repositório do projeto. Mac: cinco testes PMD/cinco mutações, 15 testes anteriores/24 mutações; AST/lint aprovados. A retomada exige destino ainda inexistente; não reiniciar builds por timeout de observação.
+
+### Resultado D4
+
+Mac e ARM64 aprovaram 20 testes e 29 mutações por plataforma. O conjunto Wi-Fi foi compilado com Werror/modpost; oito módulos com imports resolvidos e ELF/ABI/hashes auditados no Mac. PMD e power2 preservados. O timeout da auditoria Git após a compilação foi recuperado somente com verificações; não se recompilaram os módulos prontos. Os inputs e resultados estão em docs/evidence/n71-pmd-wifi-modules-qualified.json. A comparação de cinco seções executáveis, 135 imports e parâmetros do caller antigo/PMD está em docs/evidence/n71-pmd-caller-reuse.json; só a vermagic mudou em .modinfo. Os 69 inputs antigos diferem apenas no C do módulo I2C separado, sem mudança no caller PCIe/headers ou nos seus testes nativos.
+
+Próxima fase: qualificação explícita da variante PMD nos seletores de IOMMU/recursos, depois manifests WCC/Session/CLI e composição do perfil completo. Preservar caminhos power2, provas históricas e o padrão. Nenhum carregamento físico nesta fase.
+
+### Recursos ao fim de D4
+
+A VM dedicada foi confirmada ociosa (make/cc1/cc1plus/ld.bfd/git = 0) e desligada pelo Multipass; o estado Stopped foi confirmado. A próxima fase usa os artefatos já copiados no Mac. Kernel/source PMD e power2, módulos e tools v2 foram preservados para a próxima necessidade de VM. Somente as duas cópias v1 na VM e o tar v1 local foram removidos, com recibo privado. Nenhum painel/worker novo, nenhuma instalação/configuração global do Mac e nenhuma ação no iPhone nesta fase.

@@ -1,0 +1,96 @@
+{
+  "source_base_commit": "94a99377b79aafd637bd0ba7e66d5f6d360e5c61",
+  "previous_caller_input_count": 69,
+  "changed_previous_input_paths": [
+    "phone/kernel/n71-i2c-power-diagnostic.c"
+  ],
+  "pcie_caller_c_and_all_recorded_headers_unchanged": true,
+  "pcie_imports_equal_to_previous": true,
+  "pcie_parameter_interface_equal_to_previous": true,
+  "pcie_import_count": 135,
+  "reusable_native_gates_per_platform": {
+    "cases": 575,
+    "assertion_mutations": 455
+  },
+  "physical_compatibility_proven": false,
+  "reference_proof": {
+    "path": "docs/evidence/n71-brcmfmac-caller-qualified.json",
+    "sha256": "bde250f890fbe0dbe85cb0c841282706cc4910389b86c7f281bc9252b2920fa5"
+  },
+  "binary_comparison": {
+    "old_module_sha256": "b4888de18e8e93f9320300350cdd646a6c583fe127e7c2adee99549a7216b136",
+    "new_module_sha256": "cce4ac89803d77810be741c290809be469f28bd94bccf238a67c289f9c2cda18",
+    "all_executable_progbits_sections_identical": true,
+    "executable_sections": {
+      ".text": {
+        "bytes": 69204,
+        "type": 1,
+        "flags": 6,
+        "sha256": "84962f0c7e6069967f0cd63eebf5d208e16c1f151bfa58ffff45ab5612977f1e"
+      },
+      ".init.text": {
+        "bytes": 440,
+        "type": 1,
+        "flags": 6,
+        "sha256": "fdfe5681b999e2a62e7e194c16ce5479ef1e5adc95edc0019f5c1dafdada4580"
+      },
+      ".exit.text": {
+        "bytes": 36,
+        "type": 1,
+        "flags": 6,
+        "sha256": "37876cafb02960ccd041a86da2ba595b11344d633d3166a9379d10fe817b2266"
+      },
+      ".plt": {
+        "bytes": 1,
+        "type": 1,
+        "flags": 6,
+        "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+      },
+      ".text.ftrace_trampoline": {
+        "bytes": 1,
+        "type": 1,
+        "flags": 6,
+        "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+      }
+    },
+    "changed_progbits_or_rela_sections": {
+      ".modinfo": {
+        "old": {
+          "bytes": 2593,
+          "type": 1,
+          "flags": 2,
+          "sha256": "2d5100866fadfde602d58b09e66982033e69caa5e3cca027cd4e256ee526df61"
+        },
+        "new": {
+          "bytes": 2591,
+          "type": 1,
+          "flags": 2,
+          "sha256": "62388f9cab6b727a6498844a351820b06f146ae9309fc90876a22073064d2bf2"
+        }
+      }
+    },
+    "section_comparison_is_not_kernel_or_physical_behavior_proof": true,
+    "modinfo_diff_is_only_selected_vermagic": true
+  },
+  "rebuilt_module_proof": "docs/evidence/n71-pmd-diagnostics-build.json",
+  "status": "caller_binary_logic_preserved_separate_i2c_source_changed_new_kernel_hardware_pending",
+  "limits": "Reuses the unchanged caller/control-plane native gates only. The modified DART kernel and its real DMA/IRQ behavior are not qualified by section equality.",
+  "new_kernel_context": {
+    "symbols": {
+      "iommu_group_get": "T",
+      "iommu_group_id": "T",
+      "iommu_group_put": "T",
+      "pci_for_each_dma_alias": "T",
+      "pci_real_dma_dev": "W",
+      "serdev_device_set_stop_bits": "T"
+    },
+    "exports": {
+      "serdev_device_set_stop_bits": "EXPORT_SYMBOL_GPL",
+      "iommu_group_get": "EXPORT_SYMBOL_GPL",
+      "iommu_group_put": "EXPORT_SYMBOL_GPL",
+      "iommu_group_id": "EXPORT_SYMBOL_GPL"
+    },
+    "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+    "exports_sha256": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  }
+}

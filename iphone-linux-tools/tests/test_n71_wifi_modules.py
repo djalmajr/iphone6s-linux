@@ -185,7 +185,8 @@ class WifiModuleTests(unittest.TestCase):
 
     def test_selected_elf_rejects_crossed_kernel_release(self):
         releases = {'n71-dart-serdev-v1': '7.2.0-iphone6s-dart-serdev1',
-                    'n71-dart-serdev-power-v2': '7.2.0-iphone6s-dart-serdev-power2'}
+                    'n71-dart-serdev-power-v2': '7.2.0-iphone6s-dart-serdev-power2',
+                    'n71-dart-serdev-pmd-v1': '7.2.0-iphone6s-dart-serdev-pmd1'}
         for profile, release in releases.items():
             raw = bytearray(64)
             raw[:7] = b'\x7fELF\x02\x01\x01'
@@ -232,7 +233,7 @@ class WifiModuleTests(unittest.TestCase):
         call = subprocess.run([sys.executable, str(SPEC.origin), '--help'], capture_output=True,
                               text=True, env=environment, timeout=10)
         self.assertEqual(call.returncode, 0, call.stderr)
-        self.assertIn('--profile {n71-dart-serdev-v1,n71-dart-serdev-power-v2}', call.stdout)
+        self.assertIn('--profile {n71-dart-serdev-v1,n71-dart-serdev-power-v2,n71-dart-serdev-pmd-v1}', call.stdout)
 
 
 if __name__ == '__main__':

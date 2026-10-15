@@ -27,6 +27,12 @@ BINDING_KERNEL_FILES = {
     'arch/arm64/boot/Image': 'f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed',
     'vmlinux.symvers': '03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61',
 }
+PMD_RELEASE = '7.2.0-iphone6s-dart-serdev-pmd1'
+PMD_KERNEL_FILES = {
+    '.config': '0c352352c54571b55d3b1676e92c9d4abc320dd478705aa30af5b3bc75bc599d',
+    'arch/arm64/boot/Image': 'c6c020756b970ebb77d1eb8e7975682385efacdbdefaacc78b70b8b8eb177246',
+    'vmlinux.symvers': '03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61',
+}
 REQUIRED = {'CONFIG_BRCMFMAC': 'm', 'CONFIG_BRCMFMAC_PCIE': 'n',
             'CONFIG_BRCMFMAC_PROTO_MSGBUF': 'n', 'CONFIG_BRCMFMAC_SDIO': 'y',
             'CONFIG_BRCMUTIL': 'm', 'CONFIG_CFG80211': 'm', 'CONFIG_FW_LOADER': 'y',
@@ -92,8 +98,18 @@ def macro_scope(paths):
     require(set(paths) == MACRO_FILES, 'PCIe/MSGBUF macros escaped the audited driver package')
 
 
+def feature_paths(source):
+    # Keep the complete-tree audit; cold guest storage can exceed the 30s Git helper budget.
+    command = ['git', '-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false',
+               '-c', 'core.autocrlf=false', '-C', str(source), 'grep', '-l', '-E',
+               'CONFIG_BRCMFMAC_(PCIE|PROTO_MSGBUF)']
+    return subprocess.check_output(command, timeout=180).decode().splitlines()
+
+
 def build_identity(profile):
-    require(profile in (kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE), 'Unsupported Wi-Fi kernel profile')
+    require(profile in (kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE, kernel_bundle.PMD_BUNDLE), 'Unsupported Wi-Fi kernel profile')
+    if profile == kernel_bundle.PMD_BUNDLE:
+        return PMD_RELEASE, PMD_KERNEL_FILES
     if profile == kernel_bundle.BINDING_BUNDLE:
         return BINDING_RELEASE, BINDING_KERNEL_FILES
     return RELEASE, KERNEL_FILES
@@ -161,8 +177,7 @@ def build(source, output, target, *, profile=kernel_bundle.BUNDLE):
     release, hashes = build_identity(profile)
     kernel_bundle.inspect(source, profile=profile)
     config = kernel_state(output, profile=profile)
-    paths = kernel_bundle.kernel_patchset.git(source, 'grep', '-l', '-E',
-                                              'CONFIG_BRCMFMAC_(PCIE|PROTO_MSGBUF)').decode().splitlines()
+    paths = feature_paths(source)
     macro_scope(paths)
     destination(target, source, output)
     os.umask(0o077)
@@ -224,7 +239,7 @@ def main():
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--kernel-output', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
-    parser.add_argument('--profile', choices=(kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE),
+    parser.add_argument('--profile', choices=(kernel_bundle.BUNDLE, kernel_bundle.BINDING_BUNDLE, kernel_bundle.PMD_BUNDLE),
                         default=kernel_bundle.BUNDLE)
     options = parser.parse_args()
     require(sys.platform == 'linux' and platform.machine() == 'aarch64' and os.geteuid() != 0,
