@@ -141,7 +141,7 @@ Gates novos no Mac e ARM64; regressão dos bundles impactados sem repetir gates 
 - [x] Integrar o novo kernel/módulos em perfil opt-in sem alterar o padrão.
 - [x] Reunir HDQ e Wi-Fi antes de um DFU necessário.
 - [x] Executar a comparação PMD/UJM no aparelho e registrar seu resultado negativo, sem confundir execução do ensaio com funcionamento dos recursos.
-- [ ] Atualizar as issues com a prova sanitizada e os próximos diagnósticos.
+- [x] Atualizar as issues com a prova sanitizada e os próximos diagnósticos (#2, #42, #44, #46 e #48; #44 permanece encerrada).
 - [ ] Instrumentar DMA/TTBR no momento da falha e as amostras existentes de CTL I2C, qualificando ambos antes de outro DFU.
 - [ ] Comprovar Wi-Fi, telemetria e limites de alimentação físicos; objetivo funcional continua aberto.
 
@@ -182,3 +182,9 @@ A VM dedicada foi confirmada ociosa (make/cc1/cc1plus/ld.bfd/git = 0) e desligad
 Um pedido de DFU e duas tentativas do host, a segunda reutilizando o DFU confirmado, iniciaram o perfil completo. HDQ configure mudou de -16 para -110 no stage 3, com CTL original 0104 restaurado e unload limpo; não houve transporte HDQ. Wi-Fi voltou a registrar NO PMD, stream 0/código 2, e timeout de cur_etheraddr (-5), sem WLAN. Não se repetiu o firmware. Os cinco checkpoints pertencem ao mesmo boot; stop preservou erro primário -1, stop_error zero e cleanup_errors vazio. Readback independente confirmou módulos/PCI ausentes, path de firmware restaurado e SSH/HTTP funcionais. Os programas Wi-Fi isolados executaram no telefone.
 
 Snapshot/sync verificados e wrapper de reboot de kernel usado. Gadget Linux ausente; iOS USB não confirmado, tratado como tela bloqueada sem nova pergunta. A VM permaneceu parada. Prova/reprodução: docs/N71_SESSAO_PMD_HDQ.md e docs/evidence/n71-grouped-pmd-hdq-20261015.json. Logs, UUID, firmware, identidades e snapshots continuam privados. Próxima ação: investigar por fonte primária e preparar instrumentação observacional para os dois bloqueios, sem ampliar máscaras ou mudar flags novamente por tentativa.
+
+### Próxima investigação — dados, antes de novo DFU
+
+Os três fontes primários do commit fixado foram obtidos novamente e seus SHA256 conferidos contra os registros públicos: apple-dart.c, io-pgtable-dart.c e i2c-pasemi-core.c. A cópia privada está em runtime/n71-pmd-postphysical-research-20261015; nada foi executado desses arquivos. O kernel usa coherent_walk=1 e o allocator recusa o caminho não coerente; isso identifica a política atual, sem demonstrar causalidade. A referência Apple escolhe opções conforme a propriedade non-coherent; a sequência de bytes desse nome está ausente no ADT preservado, mas isso não prova que IOKit não possa acrescentá-la em runtime. Não mudar a política de cache por essa hipótese isolada.
+
+Prioridade imediata: projetar captura limitada e com lifetime correto da tradução de software/TTBR e do fault bruto, antes de os buffers do firmware serem liberados. Em paralelo lógico, conservar as amostras CTL já lidas pelo reset I2C, sem novos I/O. Preservar os inputs compilados PMD/power2 e qualificar qualquer módulo novo separadamente; não atualizar pins para ocultar divergências. Os próximos builds usarão a VM dedicada quando a implementação e os gates estiverem prontos, sem repetir o kernel atual nem abrir workers sob pressão de memória.

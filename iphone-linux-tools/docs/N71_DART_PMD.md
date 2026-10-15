@@ -297,6 +297,28 @@ O [registro da composição](evidence/n71-pmd-compose-qualified.json) reúne 11 
 
 Para reproduzir, colocar cópias verificadas dos dois diagnósticos e dos cinco WCC em uma pasta privada nova; usar os hashes de [diagnósticos](evidence/n71-pmd-diagnostics-build.json) e [Wi-Fi](evidence/n71-pmd-wifi-modules-qualified.json). Os nomes planos são n71-pcie-diagnostic.ko, n71-wlan-power-diagnostic.ko, rfkill.ko, cfg80211.ko, brcmutil.ko, brcmfmac.ko e brcmfmac-wcc.ko. Executar compose-n71-diagnostic.py com o perfil base PMD, artefatos de kernel PMD, DTB diagnóstico original e todas as opções de runtime acima. O destino deve ser novo, diretamente sob runtime. Executar n71-runtime-session.py com --profile, --action acquire, --firmware-dir e --check antes de qualquer boot. Os procedimentos privados ficam nos registros locais; firmware e chaves não são publicados.
 
+Na raiz do projeto, depois dos builds, da integração base e do preparo do DTB diagnóstico original, o comando completo é:
+
+```sh
+python3 -B scripts/build/compose-n71-diagnostic.py \
+  --source-profile runtime/n71-pmd-base-profile-20261015/deployment.json \
+  --kernel-dir runtime/kernel-n71-pmd-artifacts-20261015 \
+  --kernel-patchset n71-dart-serdev-pmd-v1 \
+  --diagnostic-dir runtime/n71-runtime-compose-production-20261010/diagnostic \
+  --module runtime/meus-modulos-pmd/n71-pcie-diagnostic.ko \
+  --module-sha256 cce4ac89803d77810be741c290809be469f28bd94bccf238a67c289f9c2cda18 \
+  --pcie-aspm-off --pcie-scan-hold --pcie-resource-capable \
+  --pcie-iommu-parent --pcie-driver-runtime \
+  --wcc-dir runtime/meus-modulos-pmd \
+  --reg-on-module runtime/meus-modulos-pmd/n71-wlan-power-diagnostic.ko \
+  --output-dir runtime/minha-candidata-pmd
+python3 -B scripts/host/n71-runtime-session.py \
+  --profile runtime/minha-candidata-pmd/deployment.json \
+  --action acquire --firmware-dir runtime/n71-trusted-firmware-20261010 --check
+```
+
+meus-modulos-pmd representa a pasta privada 0700 previamente preenchida com os sete arquivos verificados, em modo 0600. Os caminhos de inputs podem apontar para os diretórios reconstruídos; manter o bundle e hashes qualificados. minha-candidata-pmd deve continuar inexistente antes da composição. Esses comandos não acessam USB/SSH; o boot é uma etapa separada.
+
 Os 262 arquivos protegidos medidos antes da composição permaneceram com tamanho/hash idênticos, incluindo padrão, snapshots e origem. Pasta 0700 e arquivos 0600 conferidos. AST/lint aprovados, sem typechecker Python configurado. A VM permaneceu parada. O resultado comprova a composição e os gates locais; não comprova o DART, rádio ou HDQ no aparelho.
 
 ## Aceite no aparelho ainda pendente
