@@ -1,0 +1,94 @@
+{
+  "format": 1,
+  "status": "bounded_read_only_dma_helper_native_mac_qualified_not_integrated",
+  "inputs": {
+    "phone/kernel/n71-dma-observe.h": {
+      "bytes": 3554,
+      "sha256": "8ea8affa6359dbbbe3479569cab228fae25094ff7272b658cd217d9cc7e69014"
+    },
+    "phone/kernel/n71-pcie-contract.h": {
+      "bytes": 2529,
+      "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8"
+    },
+    "tests/n71_dma_observe.c": {
+      "bytes": 7576,
+      "sha256": "62d008d418e439e0a653a39f15d006914d0a35f8de6e13b3a25be1ada2745dfb"
+    },
+    "tests/test_n71_dma_observe.py": {
+      "bytes": 3945,
+      "sha256": "16fa4f0e828151b83471365893591b7be9eaa45d2ce6420ea31b7f220bda351e"
+    }
+  },
+  "native": {
+    "platform": "macOS",
+    "cases": 100,
+    "assertion_mutations": 17,
+    "unittest_methods": 1,
+    "compiler_flags": [
+      "-std=c11",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-pedantic"
+    ],
+    "log_sha256": "d1348eb956b8e160c2d0ab74d8d15555777a4bdf4e1df74e58f2dfff94eaf58a",
+    "mutation_failure_requires": "SIGABRT and assert; compile failure is not a kill"
+  },
+  "contract": {
+    "opt_in": true,
+    "iova_bits": 32,
+    "physical_bits": 36,
+    "iova_offset_preserved": true,
+    "aperture_enforced": true,
+    "samples": 2,
+    "maximum_mmio_reads": 16,
+    "maximum_software_queries": 2,
+    "maximum_clock_queries": 2,
+    "maximum_guards": 21,
+    "mmio_offsets": [
+      0,
+      12,
+      16,
+      28,
+      64,
+      68,
+      72,
+      76
+    ],
+    "field_validity_and_partial_data_preserved": true,
+    "stability_is_not_mapping_or_hardware_translation_proof": true,
+    "callbacks_have_no_write_operation": true,
+    "no_owner_acquisition_or_kernel_calls_in_helper": true
+  },
+  "api_reference": [
+    {
+      "path": "include/linux/iommu.h",
+      "url": "https://raw.githubusercontent.com/HoolockLinux/linux/958481f87fee0949ff6a9a4af77f7eb6dac8a149/include/linux/iommu.h",
+      "bytes": 58206,
+      "sha256": "ce6d31c2ff1a32ce5678d934519659a7c8d1233186c444c2804eefb73a342ad9",
+      "verification": "HTTPS from fixed source commit; new API reference, not an earlier byte pin"
+    },
+    {
+      "path": "drivers/iommu/iommu.c",
+      "url": "https://raw.githubusercontent.com/HoolockLinux/linux/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/iommu/iommu.c",
+      "bytes": 116312,
+      "sha256": "27ec62e95f5d5d4e3f7103587e8f955c3722f2a61ae7436daf95615fd1a42875",
+      "verification": "HTTPS from fixed source commit; new API reference, not an earlier byte pin"
+    }
+  ],
+  "api_lifetime_constraint": "Integration must serialize bound endpoint lifetime and require its current DMA domain; host borrowed pointer alone is insufficient. No private apple-dart casts.",
+  "ast_passed": true,
+  "fatal_and_unused_lint_passed": true,
+  "typechecker": "not_configured",
+  "existing_pmd_inputs_still_qualify": true,
+  "proof_scope": "Real helper compiled and executed; callbacks, scope/lifetime, clock, software translation and register data modeled. No real kernel, DMA or hardware access.",
+  "arm64_gate_passed": false,
+  "kernel_context_compiled": false,
+  "caller_integrated": false,
+  "vm_started": false,
+  "phone_accessed": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "charging_verified": false,
+  "goal_complete": false
+}
