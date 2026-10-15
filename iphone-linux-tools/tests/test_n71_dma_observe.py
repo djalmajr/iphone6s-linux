@@ -13,7 +13,7 @@ MUTATIONS = (
     ('wide-aperture', 'request->aperture_end > 0xffffffffULL', 'false'),
     ('below-aperture', 'request->iova < request->aperture_start', 'false'),
     ('above-aperture', 'request->iova > request->aperture_end', 'false'),
-    ('missing-read-guard', '\t\t\terror = n71_dma_error(io->guard(io->context));', '\t\t\terror = 0;'),
+    ('missing-read-guard', '\t\t\terror = n71_dma_error(io->validate(io->context));', '\t\t\terror = 0;'),
     ('wrong-ttbr-offset', '0x40 + (index - 4) * 4', '0x44 + (index - 4) * 4'),
     ('rounded-iova', 'request->iova, &current->physical', 'request->iova & ~0xfffULL, &current->physical'),
     ('truncated-physical', 'current->valid |= N71_DMA_TRANSLATION_VALID;',

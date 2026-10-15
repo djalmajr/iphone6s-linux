@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+/* Linux cleanup.h defines this function-like macro in the real build. */
+#define guard(...) invalid_kernel_guard_macro
 #include "n71-dma-observe.h"
 
 static unsigned int cases;
@@ -15,7 +17,7 @@ struct mock {
 	int failure;
 };
 
-static int guard(void *context)
+static int validate(void *context)
 {
 	struct mock *mock = context;
 	return ++mock->guards == mock->fail_guard ? mock->failure : 0;
@@ -83,7 +85,7 @@ static struct n71_dma_io initialize(struct mock *mock)
 		for (index = 4; index < 8; index++)
 			mock->words[sample][index] = 0x80801234 + index;
 	}
-	return (struct n71_dma_io){mock, guard, clock_ns, translate, read32};
+	return (struct n71_dma_io){mock, validate, clock_ns, translate, read32};
 }
 
 static void prefix_valid(const struct n71_dma_observation *result, unsigned int completed_effects)
@@ -184,7 +186,7 @@ int main(void)
 	for (index = 0; index < 7; index++) {
 		io = initialize(&mock); broken = io;
 		switch (index) {
-		case 0: broken.guard = NULL; break;
+		case 0: broken.validate = NULL; break;
 		case 1: broken.time_ns = NULL; break;
 		case 2: broken.translate = NULL; break;
 		case 3: broken.read32 = NULL; break;

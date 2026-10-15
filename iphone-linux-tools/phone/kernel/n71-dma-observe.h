@@ -24,7 +24,7 @@ struct n71_dma_request {
 
 struct n71_dma_io {
 	void *context;
-	int (*guard)(void *context);
+	int (*validate)(void *context);
 	int (*time_ns)(void *context, u64 *value);
 	int (*translate)(void *context, u64 iova, u64 *physical);
 	int (*read32)(void *context, u32 offset, u32 *value);
@@ -64,7 +64,7 @@ static inline int n71_dma_observe(const struct n71_dma_io *io,
 
 	if (!out)
 		return -EINVAL;
-	if (!io || !request || !io->guard || !io->time_ns || !io->translate || !io->read32)
+	if (!io || !request || !io->validate || !io->time_ns || !io->translate || !io->read32)
 		goto done;
 	result.iova = request->iova;
 	if (!request->requested || request->aperture_start > request->aperture_end ||
@@ -74,14 +74,14 @@ static inline int n71_dma_observe(const struct n71_dma_io *io,
 	for (sample = 0; sample < 2; sample++) {
 		struct n71_dma_sample *current = &result.samples[sample];
 
-		error = n71_dma_error(io->guard(io->context));
+		error = n71_dma_error(io->validate(io->context));
 		if (error)
 			goto done;
 		error = n71_dma_error(io->time_ns(io->context, &current->time_ns));
 		if (error)
 			goto done;
 		current->valid |= N71_DMA_TIME_VALID;
-		error = n71_dma_error(io->guard(io->context));
+		error = n71_dma_error(io->validate(io->context));
 		if (error)
 			goto done;
 		error = n71_dma_error(io->translate(io->context, request->iova, &current->physical));
@@ -93,7 +93,7 @@ static inline int n71_dma_observe(const struct n71_dma_io *io,
 			goto done;
 		}
 		for (index = 0; index < N71_DMA_WORDS; index++) {
-			error = n71_dma_error(io->guard(io->context));
+			error = n71_dma_error(io->validate(io->context));
 			if (error)
 				goto done;
 			error = n71_dma_error(io->read32(io->context, n71_dma_offset(index), &current->words[index]));
@@ -107,7 +107,7 @@ static inline int n71_dma_observe(const struct n71_dma_io *io,
 		}
 		result.complete++;
 	}
-	error = n71_dma_error(io->guard(io->context));
+	error = n71_dma_error(io->validate(io->context));
 	if (error)
 		goto done;
 	error = -EAGAIN;
