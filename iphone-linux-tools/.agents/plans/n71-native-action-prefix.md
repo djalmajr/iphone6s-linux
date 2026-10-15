@@ -14,7 +14,7 @@ A sessão física de 11/10/2026 passou acquire/assign e driver-prepare com exit0
 
 - [x] Corrigir e qualificar parser/gates dependentes no Mac.
 - [x] Reconciliar intent e continuar/limpar runtime no mesmo boot, dentro de600 segundos.
-- [ ] Qualificar ARM64 e publicar evidência sanitizada/pendência.
+- [x] Qualificar ARM64 e publicar evidência sanitizada/pendência.
 
 ## Verificação
 
@@ -22,6 +22,6 @@ Unittest e mutações AssertionError do parser, stage e recovery; AST/lint fatal
 
 ## Resultado
 
-31 testes e49 mutações AssertionError por Mac/ARM64; AST/lint aprovados, sem typechecker Python. Intent prepare reconciliado com shell_exit=null e driver publicado no mesmo boot. Duas tentativas de lint com infraestrutura inválida e transferência VM parcial não contaram como gates; execução final qualificada com --jobs=1 e archive completo autenticado. CI/publicação e issue45 aguardam o commit desta fase.
+31 testes e49 mutações AssertionError por Mac/ARM64; AST/lint aprovados, sem typechecker Python. Intent prepare reconciliado com shell_exit=null e driver publicado no mesmo boot. Duas tentativas de lint com infraestrutura inválida e transferência VM parcial não contaram como gates; execução final qualificada com --jobs=1 e archive completo autenticado. Commit788a49c publicado; CIs38145793848 e38145791099 concluídas com success em11/10/2026. Issue45 apta a fechamento com aceite físico e de CI.
 
 O teste físico encontrou fault DART e timeout do rádio (issue46), recusa do parser de stop por eventos anteriores (issue47) e HDQ EBUSY (issue48). Owners/power/reset limpos em readbacks; unload normal e REG_ON80 verificados em log separado, sem forjar aceite do coordenador. Snapshot e sync salvos; retorno USB iOS não confirmado.

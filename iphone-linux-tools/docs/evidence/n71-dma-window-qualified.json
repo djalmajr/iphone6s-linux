@@ -1,0 +1,62 @@
+{
+  "format": 1,
+  "status": "qualified_composition_not_booted",
+  "date": "2026-10-15",
+  "issue": 46,
+  "hardware_acceptance": false,
+  "motivation": {
+    "physical_session_commit": "788a49c899fbbc5d3b0b547db53bf5ebcd3f7311",
+    "fault_iova": "0x3ffff028",
+    "fault_reason": "NO PMD FOR IOVA",
+    "cause_proven": false
+  },
+  "primary_sources": {
+    "kernel_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "reference": "docs/evidence/n71-dart-apple-stream-reference.json",
+    "reference_sha256": "7e71222b78099dbca7b2487dcc4b727f8a922c3b1885fc47f086d518eefef040",
+    "apple_vm_offset_first_u32": "0x80000000",
+    "apple_randomization_window_u32": "0x08000000",
+    "apple_vm_size": "0x3ffff000",
+    "linux_property_type": "two big-endian u64; start,length",
+    "linux_s5l_mask": "~dma_min"
+  },
+  "candidate": {
+    "property": "apple,dma-range",
+    "start": "0x80000000",
+    "length": "0x3ffff000",
+    "end_inclusive": "0xbfffefff",
+    "msi_page_excluded": "0xbffff000..0xbfffffff",
+    "mapped_offset_range": "0x00000000..0x3fffefff",
+    "randomization_copied": false,
+    "dt_property_delta_count": 1,
+    "kernel_changed": false,
+    "modules_changed": false,
+    "calibration_changed": false,
+    "keys_changed": false,
+    "default_profile_changed": false,
+    "physical_boot_tested": false
+  },
+  "qualification": {
+    "mac_tests": 5,
+    "arm64_tests": 5,
+    "assertion_mutations_per_platform": 14,
+    "ast_passed": true,
+    "lint_passed": true,
+    "typechecker_configured": false,
+    "public_inputs_identical": 658,
+    "real_source_profile_files_unchanged": 14,
+    "real_candidate_files": 14,
+    "unchanged_candidate_files": 11,
+    "loader_kernel_initramfs_preserved": true,
+    "real_runtime_source_check": true,
+    "real_runtime_candidate_check": true,
+    "private_modes_verified": true,
+    "ssh_or_usb_action": false,
+    "mac_install_or_global_config": false
+  },
+  "limits": [
+    "Composition and identity gates do not prove the physical DMA window or Wi-Fi.",
+    "Initial redundant mutation and ambiguous mutation anchor were rejected as proof; corrected gates passed.",
+    "Stop-history classification and HDQ stage diagnostics must join the next grouped physical test."
+  ]
+}
