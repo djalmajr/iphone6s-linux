@@ -72,23 +72,23 @@ static inline int n71_dma_observe(const struct n71_dma_io *io,
 	    request->iova > request->aperture_end)
 		goto done;
 	for (sample = 0; sample < 2; sample++) {
-		struct n71_dma_sample *current = &result.samples[sample];
+		struct n71_dma_sample *row = &result.samples[sample];
 
 		error = n71_dma_error(io->validate(io->context));
 		if (error)
 			goto done;
-		error = n71_dma_error(io->time_ns(io->context, &current->time_ns));
+		error = n71_dma_error(io->time_ns(io->context, &row->time_ns));
 		if (error)
 			goto done;
-		current->valid |= N71_DMA_TIME_VALID;
+		row->valid |= N71_DMA_TIME_VALID;
 		error = n71_dma_error(io->validate(io->context));
 		if (error)
 			goto done;
-		error = n71_dma_error(io->translate(io->context, request->iova, &current->physical));
+		error = n71_dma_error(io->translate(io->context, request->iova, &row->physical));
 		if (error)
 			goto done;
-		current->valid |= N71_DMA_TRANSLATION_VALID;
-		if (current->physical > N71_DMA_PA_MAX) {
+		row->valid |= N71_DMA_TRANSLATION_VALID;
+		if (row->physical > N71_DMA_PA_MAX) {
 			error = -ERANGE;
 			goto done;
 		}
@@ -96,11 +96,11 @@ static inline int n71_dma_observe(const struct n71_dma_io *io,
 			error = n71_dma_error(io->validate(io->context));
 			if (error)
 				goto done;
-			error = n71_dma_error(io->read32(io->context, n71_dma_offset(index), &current->words[index]));
+			error = n71_dma_error(io->read32(io->context, n71_dma_offset(index), &row->words[index]));
 			if (error)
 				goto done;
-			current->valid |= N71_DMA_WORD_VALID(index);
-			if (current->words[index] == 0xffffffffU) {
+			row->valid |= N71_DMA_WORD_VALID(index);
+			if (row->words[index] == 0xffffffffU) {
 				error = -EIO;
 				goto done;
 			}

@@ -4,6 +4,7 @@
 #include <string.h>
 /* Linux cleanup.h defines this function-like macro in the real build. */
 #define guard(...) invalid_kernel_guard_macro
+#define current kernel_current_task()
 #include "n71-dma-observe.h"
 
 static unsigned int cases;
