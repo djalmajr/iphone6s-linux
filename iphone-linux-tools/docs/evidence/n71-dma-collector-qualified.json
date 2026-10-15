@@ -1,0 +1,38 @@
+{
+  "format": 1,
+  "status": "local_protocol_and_owned_process_qualified",
+  "issue": 49,
+  "tests": 10,
+  "assertion_mutations": 6,
+  "mutations": ["boot", "mask", "zero-pa", "hardware-proof", "private-mode", "partial-loss"],
+  "observable_probes": {
+    "generated_shell_fractional_frames": 100,
+    "generated_shell_fallback_frames": 20,
+    "scope_refusal_before_ready": true,
+    "fixture_files_unchanged": true,
+    "ready_before_modeled_publish": true,
+    "real_local_child_transition": true,
+    "timeout_reaped_child": true,
+    "missing_ready_reaped_child": true,
+    "output_overflow_reaped_child": true,
+    "exclusive_private_file": true,
+    "partial_samples_preserved": true,
+    "zero_physical_address_is_not_mapping": true
+  },
+  "limits": {
+    "output_bytes": 262144,
+    "readiness_seconds": 5,
+    "total_seconds": 50,
+    "samples_per_frame": 2,
+    "register_reads_per_getter_max": 16
+  },
+  "validation": {"python_ast": true, "fatal_and_unused_lint": true},
+  "phone_accessed": false,
+  "runtime_journal_integrated": false,
+  "physical_dma_observation": false,
+  "hardware_translation_proved": false,
+  "wifi_verified": false,
+  "battery_telemetry_verified": false,
+  "charging_verified": false,
+  "caveat": "The getter serializes with driver publication. A later software-domain lookup or register snapshot does not establish the fault-time mapping or hardware translation. Raw device records remain private."
+}
