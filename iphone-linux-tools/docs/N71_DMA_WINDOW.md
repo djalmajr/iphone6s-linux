@@ -2,7 +2,7 @@
 
 ## Estado
 
-Composição e gates locais qualificados; **não foi iniciada no iPhone**. A falha física permanece na [issue46](https://github.com/djalmajr/iphone6s-linux/issues/46). Não há prova nova de Wi-Fi, DMA, IRQ ou carga. [Evidência sanitizada](evidence/n71-dma-window-qualified.json) e [plano/decisão D46](../.agents/plans/n71-dma-window.md).
+Composição e gates locais qualificados; **iniciada no iPhone em 15/10/2026**. O firmware executou, mas persistiu NO PMD no stream 0, agora em bfffe000, sem interface WLAN. A falha permanece na [issue46](https://github.com/djalmajr/iphone6s-linux/issues/46). [Sessão física e limites](N71_SESSAO_DMA_HDQ.md), [qualificação offline](evidence/n71-dma-window-qualified.json) e [plano/decisão D46](../.agents/plans/n71-dma-window.md).
 
 ## Hipótese apoiada nas fontes
 
@@ -39,6 +39,6 @@ Mac/Ubuntu ARM64:5 testes e14 mutações AssertionError por plataforma, AST/lint
 
 Um mutante de guard redundante sobreviveu; a redundância foi removida e não contou como kill. Uma âncora de mutação ambígua foi corrigida antes do gate final. Logs e reprodução privada em runtime/n71-dma-window-20261015 e /home/ubuntu/n71-dma-window-20261015 na VM dedicada.
 
-## Antes do próximo DFU
+## Depois do teste físico
 
-Concluir a classificação de stop com erro anterior (#47), diagnóstico da etapa HDQ EBUSY (#48) e definir readbacks de tradução/IRQ/firmware no teste. Reunir tudo numa sessão limitada com snapshot, USB/SSH e cleanup. Apenas composição, testes ou CI não encerram a issue46 nem o goal.
+A classificação de stop foi qualificada e a sessão comprovou cleanup com os erros primários preservados. O novo diagnóstico HDQ identificou a guarda de CTL na aquisição do controlador. Investigar as tabelas/tradução DART e essa condição inicial I2C antes de preparar outra candidata; reunir os próximos testes com snapshot, USB/SSH e cleanup. A janela testada não resolveu a issue46 nem o goal.

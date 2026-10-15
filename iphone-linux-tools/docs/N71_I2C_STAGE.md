@@ -2,7 +2,7 @@
 
 ## Estado
 
-O diagnóstico de configuração e transporte passou nos gates nativos do Mac/ARM64 e no build do módulo externo para Linux 7.2. **Ainda não foi executado no iPhone.** A recusa EBUSY física permanece sem causa determinada. [Evidência sanitizada](evidence/n71-i2c-stage-qualified.json), [plano D48](../.agents/plans/n71-i2c-stage-diagnostics.md) e [issue #48](https://github.com/djalmajr/iphone6s-linux/issues/48).
+O diagnóstico de configuração e transporte passou nos gates nativos do Mac/ARM64 e no build do módulo externo para Linux 7.2. **O módulo foi executado no iPhone em 15/10/2026:** configure recusou na aquisição do controlador, stage 3, CTL inicial 0104 rejeitado pela guarda de baseline. Cleanup/unload passaram; o transporte HDQ não foi atingido. [Sessão física](N71_SESSAO_DMA_HDQ.md), [qualificação offline](evidence/n71-i2c-stage-qualified.json), [plano D48](../.agents/plans/n71-i2c-stage-diagnostics.md) e [issue #48](https://github.com/djalmajr/iphone6s-linux/issues/48).
 
 ## Configuração
 
@@ -80,8 +80,8 @@ Conferir cada import de nm nos exports do vmlinux.symvers fixado. O SHA256 do m�
 
 Logs/archives/fingerprints e scripts privados ficam em runtime/n71-hdq-trace-20261015, runtime/n71-hdq-trace-caller-20261015 e runtime/n71-hdq-trace-module-20261015. Os diretórios equivalentes em /home/ubuntu na VM guardam a reprodução e os logs ARM64/build. Não houve instalação de pacotes nem configuração global do Mac.
 
-## Sessão agrupada preparada
+## Sessão agrupada executada
 
 O roteiro privado reúne baseline SSH/HTTP/restore, inspect → configure → read-hdq-control, status/readback/cleanup/unload, a candidata Wi-Fi com janela DMA, inventário e stop. Parar no primeiro erro HDQ, sem forçar unload quando houver ownership retido. Preservar snapshot/sync e retornar ao iOS para recarga; limite 600s de teste Linux.
 
-A candidata DMA passou novamente no CLI --check, sem SSH/USB. Build e validação local não comprovam o boot, a causa da recusa, gauge, telemetria, carregamento Linux ou Wi-Fi. Essas provas permanecem pendentes; o goal continua ativo.
+A candidata DMA passou no CLI --check e no boot físico. A sessão localizou a guarda I2C e preservou cleanup, mas não obteve leitura HDQ nem WLAN utilizável. O bit 8 de CTL é UJM na fonte primária fixada; seu tratamento seguro permanece pendente. Os resultados físicos e limites estão no relatório da sessão. O objetivo de telemetria, carga e Wi-Fi funcionais permanece incompleto.

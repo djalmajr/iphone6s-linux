@@ -40,7 +40,7 @@ Compilar módulo externo novo na VM dedicada com W=1/KCFLAGS=-Werror e KBUILD_EX
 - [x] A: instrumento de etapa e caller qualificados Mac/ARM64.
 - [x] B: subetapa/status do transporte qualificados sem MMIO adicional.
 - [x] C: módulo real, documentação e roteiro agrupado prontos.
-- [ ] Prova física da etapa de recusa; causa e eventual correção serão decididas pelo resultado, sem inventar gauge/ABI ou carga.
+- [x] Prova física da etapa de recusa: configure stage 3, CTL 0104 rejeitado pela guarda de baseline; cleanup/unload verificados. Leitura HDQ e correção permanecem na issue48.
 
 ## Verificação
 
@@ -55,3 +55,7 @@ Mac/ARM64:81 cenários nativos e29 mutações SIGABRT/assert por plataforma;6 no
 Transporte Mac/ARM64:42 cenários e24 mutações por plataforma,8 inputs íntegros; caller:82 cenários e39 mutações por plataforma,14 inputs íntegros. Timeout de5s em uma mutação de cada plataforma: retomadas somente as pendentes,3 no Mac e26 no ARM64, todas mortas por SIGABRT/assert; logs originais preservados. AST/lint aprovados, sem typechecker Python. Comparação com/sem trace preservou as oito contagens de I/O; causa e cleanup separados, sem palavra parcial ou dados antigos.
 
 Build externo W=1/KCFLAGS=-Werror concluído na VM dedicada:52456 bytes,79 imports válidos, ELF AArch64 relocável e vermagic fixado. .config/Image/vmlinux.symvers e11 inputs mantiveram hashes; módulo anterior intacto. CLI da candidata DMA passou --check sem hardware. Roteiro privado agrupa HDQ e Wi-Fi num boot limitado600s; nenhuma nova sessão física iniciada. Issue48 e goal permanecem abertos até a prova no aparelho.
+
+## Resultado físico de 15/10
+
+Módulo executado no mesmo boot do teste DMA. Inspect passou; configure recusou na aquisição do controlador, stage 3, erro -16, CTL salvo 0104 e cleanup 0. A guarda de baseline exige CTL dentro de 00ff; 0104 contém CTL_UJM (bit 8 na fonte PASemi fixada). Nenhum comando HDQ foi enviado. Cleanup e unload normal passaram; a guarda não foi relaxada. A sessão também provou reaquisição/atribuição/limpeza de recursos Wi-Fi sem DFU adicional, mantendo a falha DART. Evidência em docs/evidence/n71-grouped-dma-hdq-20261015.json. Issue48 permanece aberta para tratamento seguro da baseline e leitura válida.
