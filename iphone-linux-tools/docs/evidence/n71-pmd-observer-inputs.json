@@ -1,7 +1,7 @@
 {
   "format": 1,
   "status": "sealed_new_observer_inputs_not_built",
-  "source_head": "6c682b701f2642ac795fca056354b6c08a238c83",
+  "source_head": "4c5d2dbc054d88b0397ad8128cf738da744b9697",
   "input_count": 64,
   "inputs": {
     "phone/kernel/Makefile": {
@@ -49,8 +49,8 @@
       "sha256": "b621933a29e29a53b43f6a0d79785d47971a2932ef62ce39ce40905f4808fcd4"
     },
     "phone/kernel/n71-dma-observe.h": {
-      "bytes": 3554,
-      "sha256": "8ea8affa6359dbbbe3479569cab228fae25094ff7272b658cd217d9cc7e69014"
+      "bytes": 3572,
+      "sha256": "753720706803d1aaf6750bbd6df95af4b70e40081562a28073db5c6483398305"
     },
     "phone/kernel/n71-hdq-codec.h": {
       "bytes": 1909,
@@ -261,10 +261,10 @@
       "sha256": "bcdf5f0bf675d9a113cb2d7e7d4910fd4ea6b1c7444f9eac02cf9d807a982bd9"
     }
   },
-  "canonical_manifest_sha256": "3000b4ac5144991a2a51864375db9c3b0480541221eb3f8a30b376f041cdb606",
+  "canonical_manifest_sha256": "9936c3655c906fb1c463d73ee13d2e41debb361062d3a4d9f0e42c316f82d7e7",
   "canonical_tar": {
     "bytes": 399360,
-    "sha256": "c4c0f18a46a06597379866d40281fa0027a37997c61e65ac01818d4295ec5cba",
+    "sha256": "18a0aca21c6db40e4eb87fd4284242126df1c85b41f247a068fe5aff4e3b0e56",
     "format": "USTAR",
     "mtime": 0,
     "uid": 0,

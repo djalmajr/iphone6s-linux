@@ -19,3 +19,5 @@ Até cinco arquivos nesta fase. Registro sanitizado do build virá somente após
 ## Primeira execução ARM64
 
 --check passou na VM real. O primeiro build W=1/Werror recusou a chamada io->guard(...), expandida pela macro guard(...) de linux/cleanup.h. O finally confirmou fonte e artefatos do kernel PMD preservados. Nenhum módulo foi instalado/carregado. Renomear esse callback em uma fase explícita e gerar novo selo a partir do commit corrigido; não alterar os pins dos módulos PMD antigos nem atribuir sucesso ao build recusado. A VM está em uso para a correção, sem outros painéis.
+
+A segunda execução usou 4c5d2dbc054d88b0397ad8128cf738da744b9697 e o tar 18a0aca21c6db40e4eb87fd4284242126df1c85b41f247a068fe5aff4e3b0e56. --check passou, mas Werror identificou a variável local current, expandida pela macro get_current do kernel. As mensagens completas ficaram privadas; Image/config/exports/fonte novamente preservados. Corrigir também esse nome e manter ambos os casos no gate nativo antes do terceiro selo.

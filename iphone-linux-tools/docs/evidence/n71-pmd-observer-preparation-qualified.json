@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "status": "observer_preparation_qualified_first_kernel_compile_refused",
+  "status": "observer_preparation_qualified_two_kernel_compile_refusals",
   "inputs": {
     "scripts/build/build-n71-pmd-observers.py": {
       "bytes": 7634,
-      "sha256": "cfe29257b1a9bc80927c745e451fcd3afaa0c8249b3edb2653c98a2810dc3526"
+      "sha256": "bcbe98ec7fa3d01ba9c453eb04e374d9502e01ec3559c3fb71c75336bca32a70"
     },
     "tests/test_n71_pmd_observers.py": {
       "bytes": 5967,
@@ -12,7 +12,7 @@
     },
     "docs/evidence/n71-pmd-observer-inputs.json": {
       "bytes": 10424,
-      "sha256": "e8a776e98b763cdd4bdb429941c092496cf270b1e5e2e3557d4c2b7e03618c82"
+      "sha256": "71306e51d2adf727d1cbdf3fb01e6e220dafaa401c833ce30b836010adb6af6a"
     }
   },
   "host": {
@@ -25,7 +25,7 @@
   },
   "real_guest_preflight_passed": true,
   "real_kernel_compile_passed": false,
-  "compile_failure": "Linux cleanup.h guard(...) macro expands the new io->guard(...) callback invocation",
+  "compile_failure": "The corrected guard name exposed the independent local current macro collision; no module build pass claimed",
   "preserved_pmd_kernel_verified_after_failure": true,
   "new_module_installed": false,
   "new_module_loaded": false,
@@ -34,5 +34,17 @@
   "wifi_verified": false,
   "telemetry_verified": false,
   "charging_verified": false,
-  "goal_complete": false
+  "goal_complete": false,
+  "compile_attempts": [
+    {
+      "source_head": "6c682b701f2642ac795fca056354b6c08a238c83",
+      "error": "guard callback collides with cleanup.h macro",
+      "kernel_preserved": true
+    },
+    {
+      "source_head": "4c5d2dbc054d88b0397ad8128cf738da744b9697",
+      "error": "local variable current collides with kernel get_current macro",
+      "kernel_preserved": true
+    }
+  ]
 }
