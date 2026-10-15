@@ -12,6 +12,7 @@ import n71_msi_allocation_result as allocation
 import n71_resource_stage as resources
 import n71_session_history as history
 import n71_driver_firmware_session as firmware
+import n71_dma_collector as dma
 
 
 def require(condition, message):
@@ -127,7 +128,8 @@ def start(session, journal, live):
             proved = wlan.act(session, journal, {'action': 'load', 'name': name, 'live': live, 'snapshot': held.snapshot})
             require(proved['applied'], 'Runtime WCC load failed; owners retained')
             live, _, _ = observe(session, journal, 'runtime-after-load-' + name.replace('_', '-'))
-    proved = native.act(session, journal, {'action': 'publish', 'live': live})
+    with dma.collecting(session, journal, session.output.parent.parent):
+        proved = native.act(session, journal, {'action': 'publish', 'live': live})
     require(proved['native']['error'] == 0, 'Runtime publication failed; owners retained')
 
 

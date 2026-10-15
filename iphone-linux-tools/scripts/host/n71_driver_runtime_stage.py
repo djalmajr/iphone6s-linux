@@ -3,6 +3,7 @@ import re
 import n71_driver_runtime_result as result
 import n71_session_history
 import n71_iommu_build
+import n71_dma_collector
 
 ACTIONS = ('prepare', 'publish', 'release')
 BOOT = r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}'
@@ -92,7 +93,7 @@ def fields(session):
 
 
 def extra_proofs(session, data):
-    return tuple(stage(index, entry['action']) for index, entry in enumerate(ledger(session, data)))
+    return tuple(stage(index, entry['action']) for index, entry in enumerate(ledger(session, data))) + n71_dma_collector.proof_names(session, data)
 
 
 def live(session, text, boot):
@@ -131,6 +132,7 @@ def completion(session, entry, observation):
 
 def load_source(session, data, proofs):
     entries = ledger(session, data)
+    n71_dma_collector.saved(session, data, proofs)
     previous_history = []
     for index, entry in enumerate(entries):
         require(entry['history'][:len(previous_history)] == previous_history,

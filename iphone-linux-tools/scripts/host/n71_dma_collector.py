@@ -1,14 +1,100 @@
 """Own and reap one bounded SSH reader; never retry a reader or driver action."""
 import hashlib
+import json
 import os
 from pathlib import Path
 import subprocess
 import time
+from contextlib import contextmanager
 import device_profile
 import n71_dma_observation as wire
+import n71_driver_runtime_profile as profile
 
 READY_SECONDS = 5
 TOTAL_SECONDS = 50
+STAGE = 'dma-observer'
+
+
+def receipt(raw, boot, *, exit, timed_out):
+    wire.identity(boot)
+    wire.require((exit is None or type(exit) is int and -128 <= exit <= 255)
+        and type(timed_out) is bool, 'DMA process receipt differs')
+    try:
+        value = wire.parse(raw, boot); error = None
+    except ValueError as failure:
+        value = None; error = str(failure)
+    return {'format': 1, 'boot_id': boot, 'observation': value, 'parse_error': error,
+            'exit': exit, 'timed_out': timed_out, 'bytes': len(raw),
+            'sha256': hashlib.sha256(raw).hexdigest()}
+
+
+def root(session):
+    output = getattr(session, 'output', None)
+    wire.require(isinstance(output, Path) and output.is_absolute(), 'DMA Session output differs')
+    return output.parent.parent
+
+
+def proof_names(session, data):
+    result = data.get('result', getattr(session, 'result', {}))
+    if 'dma_observer' not in result:
+        return ()
+    wire.require(profile.observer_parameters(session, root(session)) != '',
+                 'DMA proof requires the qualified observer Session')
+    return (STAGE,)
+
+
+def saved(session, data, proofs):
+    names = proof_names(session, data)
+    if not names:
+        wire.require(STAGE not in proofs, 'DMA proof lacks its saved receipt')
+        return
+    result = data['result']; value = result['dma_observer']
+    wire.require(isinstance(value, dict) and type(value.get('format')) is int and value['format'] == 1
+        and STAGE in proofs and isinstance(proofs[STAGE], str), 'DMA saved receipt or proof missing')
+    raw = proofs[STAGE].encode('utf-8')
+    wire.require(len(raw) <= wire.LIMIT, 'DMA saved proof exceeds its budget')
+    expected = receipt(raw, result['boot_id'], exit=value.get('exit'), timed_out=value.get('timed_out'))
+    wire.require(json.dumps(value, sort_keys=True, allow_nan=False) == json.dumps(expected, sort_keys=True),
+                 'DMA saved receipt differs from its raw boot-scoped proof')
+
+
+def persist(reader, journal):
+    value = reader.finish()
+    raw = reader.read()
+    wire.require(hashlib.sha256(raw).hexdigest() == value['sha256'], 'DMA reader changed before journal persistence')
+    text = raw.decode('utf-8')
+    journal.session.result['dma_observer'] = value
+    journal.proof(STAGE, text)
+
+
+@contextmanager
+def collecting(session, journal, selected_root):
+    if not profile.observer_parameters(session, selected_root):
+        yield
+        return
+    wire.require(root(session) == selected_root
+        and session.ssh == device_profile.ssh_options(selected_root) + ['root@' + device_profile.PHONE],
+        'DMA reader must use the selected pinned Session SSH identity')
+    wire.require('dma_observer' not in session.result and STAGE not in journal.proofs,
+                 'DMA observer cannot be replayed')
+    reader = Collector({'boot': session.result.get('boot_id'), 'output': session.output, 'ssh': session.ssh})
+    try:
+        try:
+            yield
+        except BaseException:
+            try:
+                persist(reader, journal)
+            except (OSError, ValueError, UnicodeError, subprocess.SubprocessError) as error:
+                session.result['dma_observer_error'] = str(error)
+                try:
+                    journal.save()
+                except (OSError, ValueError) as failure:
+                    session.result['dma_observer_journal_error'] = str(failure)
+            raise
+        else:
+            persist(reader, journal)
+    finally:
+        reader.close()
 
 
 class Collector:
@@ -55,9 +141,7 @@ class Collector:
                 time.sleep(0.02)
             self.close()
             raw = self.read()
-            value = wire.parse(raw, self.boot)
-            return {'observation': value, 'exit': self.process.returncode, 'timed_out': timed_out,
-                    'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
+            return receipt(raw, self.boot, exit=self.process.returncode, timed_out=timed_out)
         finally:
             self.close()
 
