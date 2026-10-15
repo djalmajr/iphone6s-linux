@@ -28,6 +28,7 @@ static struct of_phandle_args clock_spec;
 static struct resource resource_value;
 static unsigned char memory[0x1000];
 static u32 registers[5];
+static u32 baseline_ctl;
 static bool claimed, mapped, region_busy, map_failure, clock_null;
 static bool clock_available, clock_compatible, timeout_reset, restore_corrupt, reset_all_ones, reset_busy;
 static unsigned int pin_calls, pin_fail_from, reads, writes, resets, restores, delays, node_refs;
@@ -120,8 +121,8 @@ static void iowrite32(u32 value, void *address)
 		if (reset_all_ones) registers[0]=~0U;
 		if (reset_busy) registers[1]|=1U<<28;
 	} else if (index==4) {
-		assert(value==0x2a); restores++;
-		if (restore_corrupt) registers[4]=0x2b;
+		assert(value==baseline_ctl); restores++;
+		if (restore_corrupt) registers[4]=baseline_ctl^1U;
 	}
 }
 static void iounmap(void *address) { assert(address==memory && mapped && claimed); mapped=false; }
@@ -140,7 +141,7 @@ static void reset_fixture(void)
 	resource_value=(struct resource){.start=0x20a111000ULL,.end=0x20a111fffULL,.flags=IORESOURCE_MEM};
 	clock_spec=(struct of_phandle_args){.np=&clock_node};
 	clock_handle=(struct clk){.enables=1}; /* Preserve another consumer's reference. */
-	registers[0]=2; registers[1]=0x08010100; registers[2]=0; registers[3]=0; registers[4]=0x2a;
+	registers[0]=2; registers[1]=0x08010100; registers[2]=0; registers[3]=0; registers[4]=baseline_ctl=0x2a;
 	region_busy=map_failure=clock_null=false;
 	timeout_reset=restore_corrupt=reset_all_ones=reset_busy=false;
 	clock_available=clock_compatible=true;
@@ -263,6 +264,27 @@ int main(void)
 	assert(n71_i2c_controller_release(&request,&state)==-EBUSY && !restores); assert_pending(&state); cases++;
 	registers[4]=0x0f;
 	assert(n71_i2c_controller_release(&request,&state)==0); assert_clean(&state); cases++;
+	/* Mutations: reject observed UJM, strip it during restore, or accept RX/TX/unknown bits. */
+	for (unsigned int i=0;i<2;i++) {
+		reset_fixture(); baseline_ctl=registers[4]=i ? 0x1ff : 0x104;
+		assert(n71_i2c_controller_acquire(&request,&state)==0 && state.saved[N71_I2C_CTL]==baseline_ctl);
+		assert(state.restore_pending && resets==1 && writes==2);
+		assert(n71_i2c_controller_release(&request,&state)==0 && registers[4]==baseline_ctl);
+		assert(restores==1 && writes==4); assert_clean(&state); cases++;
+	}
+	for (unsigned int bit=9;bit<32;bit++) {
+		reset_fixture(); registers[4]=0x104U|(1U<<bit);
+		assert(n71_i2c_controller_acquire(&request,&state)==-EBUSY && !writes);
+		assert_clean(&state); cases++;
+	}
+	reset_fixture(); baseline_ctl=registers[4]=0x104;
+	assert(n71_i2c_controller_acquire(&request,&state)==0);
+	restore_corrupt=true;
+	assert(n71_i2c_controller_release(&request,&state)==-EUCLEAN && state.saved[N71_I2C_CTL]==0x104);
+	assert_pending(&state); assert(restores==1 && writes==4);
+	restore_corrupt=false;
+	assert(n71_i2c_controller_release(&request,&state)==0 && registers[4]==0x104 && restores==2 && writes==6);
+	assert_clean(&state); cases++;
 	printf("N71_I2C_CONTROLLER_TRANSACTION_OK cases=%u\n",cases);
 	return 0;
 }

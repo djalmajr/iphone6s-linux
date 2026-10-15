@@ -248,7 +248,8 @@ static inline int n71_i2c_controller_acquire(const struct n71_i2c_controller_req
 	error = n71_i2c_controller_sample(state->base, state->saved);
 	if (error)
 		goto failed;
-	if (!n71_i2c_controller_idle(state->saved) || (state->saved[N71_I2C_CTL] & ~0xffU)) {
+	/* N71 can retain UJM (bit 8) while idle; RX/TX reset and EN remain refused. */
+	if (!n71_i2c_controller_idle(state->saved) || (state->saved[N71_I2C_CTL] & ~0x1ffU)) {
 		error = -EBUSY;
 		goto failed;
 	}

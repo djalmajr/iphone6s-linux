@@ -2,7 +2,7 @@
 
 ## Estado
 
-Fase1 em609dd39 e fase2 emd226603/45a3aa5: MMIO/clkref, baseline, reset/restauração de revisão2 e owner operacional de GPIO/pinctrl integrados ao novo action configure. Ainda não foram executados no aparelho. Os probes de compilação retornam ENODEV no init; o módulo operacional é um artefato distinto, cujo init run1 apenas qualifica. SN2400, gauge e carga Linux continuam sem prova física. [Plano](../.agents/plans/n71-i2c-controller.md), [D37/D38/D39](../.agents/plans/n71-funcional-goal-decisoes.md#d37-inicializar-i2c1-por-polling-com-restauração-própria), [fase1](evidence/n71-i2c-controller-reset.json), [fase2](evidence/n71-i2c-configure-qualified.json).
+Fase1 em609dd39 e fase2 emd226603/45a3aa5 integraram MMIO/clkref, baseline, reset/restauração e owner de pinos ao action configure. O módulo operacional foi executado em 15/10/2026 e recusou CTL 0104 antes do reset; cleanup/unload passaram. A [nova baseline UJM](N71_I2C_UJM.md) está qualificada offline e ainda sem teste físico. Os probes históricos retornam ENODEV no init e não são o módulo operacional. SN2400, gauge e carga Linux continuam sem prova. [Plano](../.agents/plans/n71-i2c-controller.md), [D37/D38/D39](../.agents/plans/n71-funcional-goal-decisoes.md#d37-inicializar-i2c1-por-polling-com-restauração-própria), [fase1](evidence/n71-i2c-controller-reset.json), [fase2](evidence/n71-i2c-configure-qualified.json).
 
 A [leitura HDQ limitada](N71_I2C_HDQ_READ.md), em3e0a597/93da4be, acrescenta um transporte opt-in e recovery retido. A igualdade integral descrita abaixo continua sendo o contrato de configure sem transferência; depois de consumir SMSTA/XEN, somente esse evento histórico é removido da comparação, mantendo a baseline original. Provas e artefatos abaixo pertencem às fases históricas identificadas; a nova candidata tem manifesto/build próprios.
 
@@ -14,7 +14,7 @@ O código só poderá ser chamado com consumidor N71/I2C1 já qualificado pelo b
 flowchart TD
   A["Genpd ativo e pinos retidos"] --> B["clkref OF24MHz<br>proteger taxa e habilitar referência própria"]
   B --> C["Reservar MMIO exclusivo<br>baseline dupla de cinco words"]
-  C --> D["Revisão2, idle e FIFOs vazios<br>IMASK0, CTL sem comandos"]
+  C --> D["Revisão2, idle e FIFOs vazios<br>IMASK0, CTL divisor e UJM"]
   D --> E["Marcar obrigação de restore<br>IMASK0 e CTL070f"]
   E --> F["Polling limitado e conferência dos pinos"]
   F --> G["Restaurar CTL/IMASK<br>readback duplo igual à baseline"]
@@ -24,13 +24,13 @@ flowchart TD
 
 Recurso exato20a111000/1000, consumidor root sem bus/driver/pm_domain. Clock por único phandle OF para `/clock-ref`, fixed-clock com cells0 e24MHz; taxa real deve corresponder. O header protege a taxa e balanceia apenas suas referências. Outro consumidor pode manter o clock habilitado após o release. A contabilidade pertence ao [Common Clk Framework](https://docs.kernel.org/driver-api/clk.html); as APIs e os hashes da versão efetivamente usada constam na evidência.
 
-Baseline lê REV28, SMSTA14, XFSTA0c, IMASK18 e CTL1c duas vezes. All-ones, drift, revisão diferente de2, status ocupado/com RX pendente/TX não vazio, XFSTA nãozero, IMASK nãozero ou CTL com bits fora do divisor baixo recusam a escrita. IMASK nãozero poderia reativar interrupções herdadas; CTL com bits de comando não seria seguro para replay de restore.
+Baseline lê REV28, SMSTA14, XFSTA0c, IMASK18 e CTL1c duas vezes. All-ones, drift, revisão diferente de2, status ocupado/com RX pendente/TX não vazio, XFSTA nãozero ou IMASK nãozero recusam a escrita. A candidata UJM admite somente divisor baixo e bit 8 em CTL (01ff); MTR/MRR, EN e bits desconhecidos continuam recusados. A versão física anterior usou a máscara 00ff e recusou 0104. IMASK nãozero poderia reativar interrupções herdadas. O restore preserva integralmente o valor salvo; a nova política ainda exige prova física.
 
 O reset segue a fonte PASemi fixada: CTL070f contém MTR/MRR/UJM e divisor15 para24MHz/(16×100kHz). Não inclui EN usado a partir da revisão6. A condição aceita após reset é CTL0f ou070f com as outras quatro words idênticas à baseline. O código não presume que os command bits se limpem sozinhos. São condições ainda a conferir no hardware. Não escreve SMSTA, FIFO, carregador ou limites de corrente; reset pode ter efeitos elétricos e não comprova carga.
 
 O polling usa no máximo100 esperas nominais de1ms, além das leituras; não há promessa de prazo absoluto para backend bloqueado. Release requer domínio ativo, callback de pinos e amostra estável/idle com CTL dentro da máscara conhecida07ff. Só então escreve CTL/IMASK originais e exige igualdade dupla das cinco words. Falha conserva os recursos, `restore_pending` e `cleanup_error`; acquire preserva o erro primário separado. Normal unload do futuro caller precisa permanecer bloqueado enquanto houver cleanup pendente. Force unload não será uma recuperação suportada.
 
-## Provas executadas
+## Provas históricas antes da baseline UJM
 
 | Gate | Resultado | Limite |
 | --- | --- | --- |
