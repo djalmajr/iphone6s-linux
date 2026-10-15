@@ -188,7 +188,7 @@ class HeldProfileTests(unittest.TestCase):
         argv = [sys.executable, MODULE.__file__, *self.args[1:], *self.held[:-2], '--output-dir', str(output)]
         process = subprocess.run(argv, capture_output=True, text=True, timeout=15)
         self.assertEqual(process.returncode, 1)
-        self.assertIn('Held profile requires explicit ASPM off, power2 and REG_ON module', process.stderr)
+        self.assertIn('Held profile requires explicit ASPM off, qualified bundle and REG_ON module', process.stderr)
         self.assertFalse(output.exists())
 
     def test_pcie_size_and_hash_are_bound_to_the_qualified_pair(self):
