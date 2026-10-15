@@ -283,10 +283,24 @@ O pacote privado real, com três arquivos e 633.573 bytes, também passou pela s
 python3 -B -m unittest discover -s tests -p test_n71_pmd_runtime_cli.py -v
 ```
 
-O [registro da CLI](evidence/n71-pmd-cli-qualified.json) contém 12 testes/24 mutações por AssertionError no Mac: 5/4 novos e 7/20 anteriores. Arquivos, seletores, ELF e Session são reais; payload/módulos não inicializáveis, identidade/gzip e handlers são modelados. Os contratos dos handlers são arquivos locais; não representam efeitos no telefone. AST/lint aprovados, sem typechecker Python configurado. O --check completo com identidades, payload e firmware privados reais ainda depende da candidata do compositor.
+O [registro da CLI](evidence/n71-pmd-cli-qualified.json) contém 12 testes/24 mutações por AssertionError no Mac: 5/4 novos e 7/20 anteriores. Arquivos, seletores, ELF e Session são reais; payload/módulos não inicializáveis, identidade/gzip e handlers são modelados. Os contratos dos handlers são arquivos locais; não representam efeitos no telefone. AST/lint aprovados, sem typechecker Python configurado. A execução privada completa foi verificada separadamente na composição abaixo.
+
+## Composição PMD completa
+
+O compositor reconhece o bundle/ABI PMD e exige runtime, ASPM desativado, held, recursos, IOMMU, REG_ON e os cinco módulos WCC explícitos. Todos os gates anteriores de kernel, loader, topologia, payload e identidades continuam ativos; o perfil padrão não muda.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pmd_runtime_compose.py -v
+```
+
+O [registro da composição](evidence/n71-pmd-compose-qualified.json) reúne 11 testes/19 mutações por AssertionError no Mac: 4/4 novos e 7/15 anteriores. Os testes usam o compositor e filesystem reais, com módulos/payload sintéticos e adapters de kernel/identidade. A prova privada separada usa todos os binários reais, sem adapters: kernel PMD, DTB diagnóstico original, loader preservado, dois diagnósticos e cinco WCC, initramfs e identidades SSH preservados. O perfil novo contém 13 arquivos privados e passou pela CLI --check com os três arquivos reais do catálogo de firmware/regdb. Não houve conexão SSH, transferência, carga ou ação USB.
+
+Para reproduzir, colocar cópias verificadas dos dois diagnósticos e dos cinco WCC em uma pasta privada nova; usar os hashes de [diagnósticos](evidence/n71-pmd-diagnostics-build.json) e [Wi-Fi](evidence/n71-pmd-wifi-modules-qualified.json). Os nomes planos são n71-pcie-diagnostic.ko, n71-wlan-power-diagnostic.ko, rfkill.ko, cfg80211.ko, brcmutil.ko, brcmfmac.ko e brcmfmac-wcc.ko. Executar compose-n71-diagnostic.py com o perfil base PMD, artefatos de kernel PMD, DTB diagnóstico original e todas as opções de runtime acima. O destino deve ser novo, diretamente sob runtime. Executar n71-runtime-session.py com --profile, --action acquire, --firmware-dir e --check antes de qualquer boot. Os procedimentos privados ficam nos registros locais; firmware e chaves não são publicados.
+
+Os 262 arquivos protegidos medidos antes da composição permaneceram com tamanho/hash idênticos, incluindo padrão, snapshots e origem. Pasta 0700 e arquivos 0600 conferidos. AST/lint aprovados, sem typechecker Python configurado. A VM permaneceu parada. O resultado comprova a composição e os gates locais; não comprova o DART, rádio ou HDQ no aparelho.
 
 ## Aceite no aparelho ainda pendente
 
-O kernel, os sete diagnósticos, o conjunto Wi-Fi e a integração base estão qualificados sem uso do telefone. Faltam ampliar os gates de runtime explicitamente e montar o perfil completo antes de uma sessão física reunindo DART/firmware com HDQ/UJM. Não solicitar outro DFU para repetir o fault conhecido sem a candidata pronta. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
+O kernel, os sete diagnósticos, o conjunto Wi-Fi, os gates de runtime e o perfil completo estão qualificados sem uso do telefone. Falta preparar a coleta conjunta e comprovar DART/firmware com HDQ/UJM na sessão física. Não solicitar outro DFU antes do roteiro completo. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
 
 Wi-Fi nativo, telemetria e carga no Linux continuam sem comprovação. O patch não escreve registradores do carregador nem modifica o armazenamento interno.

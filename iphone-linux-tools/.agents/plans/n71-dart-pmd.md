@@ -112,6 +112,16 @@ Aplicar somente em worktree novo na VM dedicada, com inputs selados. Manter sour
 - **Reverter:** baixo; seleção power2 e defaults preservados.
 - **Status:** aplicada; 5 testes/4 mutações novos e 7 testes/20 mutações anteriores aprovados no Mac. Seletores, leitores ELF e Session reais; identidade/gzip e handlers modelados. Ainda exigir o --check privado completo após D10b. Nenhuma ação SSH/USB, início de VM ou alteração do perfil padrão.
 
+### D10b — compositor e candidata privada completa
+
+- **Decisão:** ampliar compose-n71-diagnostic.py com ABI/bundle PMD explícitos. PMD exige runtime completo e os mesmos gates de kernel, sete módulos, topologia, loader, initramfs e identidades; preservar todos os perfis anteriores. Montar a candidata nova com os binários reais e executar a CLI --check com o firmware privado, sem acessar o aparelho.
+- **Por quê:** os seletores e a CLI estão prontos; falta produzir e comprovar o artefato que será efetivamente carregado no próximo DFU.
+- **Alternativas:** editar provenance manualmente não comprova a composição; usar módulos antigos cruza ABI; compor sobre o perfil padrão destrói a separação de candidatas.
+- **Onde:** compositor, tests/test_n71_pmd_runtime_compose.py novo e este plano (três arquivos de implementação). Evidências/documentação e outputs privados são registrados após os gates.
+- **Verificação:** CLI real com módulos/topologia/payload sintéticos e adapters de kernel/identidade, recusas de PMD sem runtime e ABI cruzada, preservação dos inputs e identidade, mutações e regressão dos 15 mutantes antigos; AST/lint. Depois, kernel/loader/DTB/identidades/módulos reais, composição nova, --check real com firmware, padrão e arquivos de origem intactos. Não carregar o aparelho antes dessa prova.
+- **Reverter:** baixo; remover somente o output privado novo, mantendo padrões e artefatos anteriores.
+- **Status:** aplicada; 4 testes/4 mutações novos e 7 testes/15 mutações anteriores aprovados no Mac. A composição real verificou kernel, loader, DTB, sete módulos e identidades, gerou perfil privado novo e passou pela CLI --check com o firmware real. Os 262 arquivos protegidos de origem/padrão/snapshots permaneceram intactos; permissões privadas conferidas. AST/lint aprovados, sem typechecker Python configurado. VM parada; boot e prova física continuam pendentes.
+
 ## Fase C — um teste físico agrupado
 
 Antes de solicitar DFU, preparar kernel, todos os módulos compatíveis, perfil privado com identidades preservadas, diagnóstico HDQ UJM, restore e coleta/cleanup numa sessão limitada. O aparelho está no iOS bloqueado e recarregando; nenhuma ação necessária agora. Após retorno ao iOS, ausência de USB é tratada como tela bloqueada, sem nova confirmação rotineira.
@@ -128,7 +138,7 @@ Gates novos no Mac e ARM64; regressão dos bundles impactados sem repetir gates 
 - [x] Reconstruir os sete diagnósticos com W=1/Werror e imports/ABI conferidos.
 - [x] Qualificar o integrador opt-in e criar o perfil base privado, sem alterar o padrão.
 - [x] Reconstruir e auditar os oito módulos Wi-Fi da ABI PMD.
-- [ ] Integrar o novo kernel/módulos em perfil opt-in sem alterar o padrão.
+- [x] Integrar o novo kernel/módulos em perfil opt-in sem alterar o padrão.
 - [ ] Reunir HDQ e Wi-Fi antes de um DFU necessário.
 - [ ] Comprovar o comportamento no aparelho e atualizar as issues.
 

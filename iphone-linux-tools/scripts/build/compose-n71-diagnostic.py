@@ -93,7 +93,8 @@ def compose(original, loader, baseline_dtb, diagnostic_dtb, kernel, initramfs, *
 def validate_module(raw, *, kernel_release='7.2.0-iphone6s-source'):
     known = ('7.2.0-iphone6s-source', '7.2.0' + KERNEL.kernel_bundle.LOCALVERSION,
              '7.2.0' + KERNEL.kernel_bundle.POWER_LOCALVERSION,
-             '7.2.0' + KERNEL.kernel_bundle.BINDING_LOCALVERSION)
+             '7.2.0' + KERNEL.kernel_bundle.BINDING_LOCALVERSION,
+             '7.2.0' + KERNEL.kernel_bundle.PMD_LOCALVERSION)
     if kernel_release not in known:
         raise ValueError('Only a recorded baseline or explicit bundle ABI is accepted')
     vermagic = ('vermagic=' + kernel_release + ' SMP preempt mod_unload aarch64\0').encode()
@@ -135,7 +136,8 @@ def main():
     parser.add_argument('--source-profile', type=Path, required=True)
     parser.add_argument('--kernel-dir', type=Path, required=True)
     parser.add_argument('--kernel-patchset', choices=(KERNEL.kernel_patchset.PATCHSET, KERNEL.kernel_bundle.BUNDLE,
-                                                     KERNEL.kernel_bundle.POWER_BUNDLE, KERNEL.kernel_bundle.BINDING_BUNDLE))
+                                                     KERNEL.kernel_bundle.POWER_BUNDLE, KERNEL.kernel_bundle.BINDING_BUNDLE,
+                                                     KERNEL.kernel_bundle.PMD_BUNDLE))
     parser.add_argument('--diagnostic-dir', type=Path, required=True)
     parser.add_argument('--module', type=Path, required=True)
     parser.add_argument('--module-sha256', required=True)
@@ -148,6 +150,8 @@ def main():
     parser.add_argument('--wcc-dir', type=Path, help='Private directory containing the five qualified WCC module files; requires runtime selection')
     parser.add_argument('--reg-on-module', type=Path, help='Qualified private REG_ON module; required only with --pcie-scan-hold')
     options = parser.parse_args()
+    if options.kernel_patchset == KERNEL.kernel_bundle.PMD_BUNDLE and not options.pcie_driver_runtime:
+        raise ValueError('PMD profile requires explicit complete driver runtime selection')
     if options.pcie_driver_runtime and (not options.pcie_iommu_parent or options.wcc_dir is None):
         raise ValueError('Runtime profile requires explicit IOMMU mode and private WCC files')
     if options.wcc_dir is not None and not options.pcie_driver_runtime:
@@ -157,9 +161,10 @@ def main():
     if options.pcie_resource_capable and not options.pcie_scan_hold:
         raise ValueError('Resource-capable profile requires explicit held selection')
     if options.pcie_scan_hold:
-        if (not options.pcie_aspm_off or options.kernel_patchset != KERNEL.kernel_bundle.BINDING_BUNDLE
+        if (not options.pcie_aspm_off or options.kernel_patchset not in
+                (KERNEL.kernel_bundle.BINDING_BUNDLE, KERNEL.kernel_bundle.PMD_BUNDLE)
                 or options.reg_on_module is None):
-            raise ValueError('Held profile requires explicit ASPM off, power2 and REG_ON module')
+            raise ValueError('Held profile requires explicit ASPM off, qualified bundle and REG_ON module')
     elif options.reg_on_module is not None:
         raise ValueError('REG_ON selection requires explicit held profile')
     previous = os.environ.get('IPHONE_LINUX_PROFILE')

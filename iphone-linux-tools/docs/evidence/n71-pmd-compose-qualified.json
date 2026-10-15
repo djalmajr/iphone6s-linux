@@ -1,0 +1,66 @@
+{
+  "format": 1,
+  "status": "private_pmd_runtime_profile_composed_and_local_cli_checked_not_booted",
+  "inputs": {
+    "scripts/build/compose-n71-diagnostic.py": {
+      "bytes": 15536,
+      "sha256": "d5c64655e636d144a92e619ec33d242d3b3672a89d03a4ba0fc31f104e5030cf"
+    },
+    "tests/test_n71_pmd_runtime_compose.py": {
+      "bytes": 9252,
+      "sha256": "683f13cc7171ffd8862853b1857c654ac907063c4c081e97ecdf200dba4acacd"
+    },
+    "tests/test_n71_driver_runtime_compose.py": {
+      "bytes": 13849,
+      "sha256": "b4d9aa66fd5aac9de758c1ca9c3e31669b452fae3723b5053fc5241245549262"
+    }
+  },
+  "gates": {
+    "pmd": {
+      "tests": 4,
+      "assertion_mutations": 4,
+      "passed": true,
+      "platform": "macOS",
+      "log_sha256": "6dc72aceac696ecfd4b486db3c4616d62ba5685f6f95f366dd3ac6fa78b147d7"
+    },
+    "legacy": {
+      "tests": 7,
+      "assertion_mutations": 15,
+      "passed": true,
+      "platform": "macOS",
+      "log_sha256": "99441323a5e7b5ff6da31c288f6b2fa92121e9edd93cb4541cd1c053662a985d"
+    }
+  },
+  "ast_passed": true,
+  "fatal_lint_passed": true,
+  "typechecker": "not_configured",
+  "test_proof_scope": "Real compositor and filesystem with synthetic nonbootable kernel/modules/payload; kernel and identity I/O modeled. Mutation kills require AssertionError.",
+  "real_private_composition": {
+    "protected_inputs_files": 262,
+    "protected_inputs_unchanged": true,
+    "private_output_permissions_verified": true,
+    "profile_files": 13,
+    "kernel_release": "7.2.0-iphone6s-dart-serdev-pmd1",
+    "kernel_bundle": "n71-dart-serdev-pmd-v1",
+    "payload_bytes": 29933610,
+    "payload_sha256": "1940c798a5ca2cd6f8388ffbb59a7ed80037c8041a73f75b26cfd8fee255d60e",
+    "dtb_sha256": "3578dc6bc97b5378965cfc36f70e8babb4e8a863e451e995f17d9163056d091b",
+    "identities_and_initramfs_preserved": true,
+    "cli_local_check_passed": true,
+    "actual_kernel_loader_dtb_modules_identity_gates": true,
+    "firmware": {
+      "files": 3,
+      "bytes": 633573,
+      "selected_and_configured": true,
+      "staged_or_loaded": false
+    }
+  },
+  "real_composition_uses_adapters": false,
+  "exact_profile_flags_required": true,
+  "default_profile_preserved": true,
+  "phone_accessed": false,
+  "vm_started": false,
+  "wifi_physically_verified": false,
+  "telemetry_physically_verified": false,
+  "charging_physically_verified": false
+}
