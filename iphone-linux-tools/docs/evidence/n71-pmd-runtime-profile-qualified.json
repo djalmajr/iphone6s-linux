@@ -1,0 +1,80 @@
+{
+  "format": 1,
+  "status": "pmd_caller_local_session_configuration_and_journal_qualified_entrypoints_pending",
+  "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+  "inputs": {
+    "scripts/host/n71_driver_runtime_build.py": {
+      "bytes": 7023,
+      "sha256": "fcb2bd818803640e687669192a0bdd2b06cf9ceed0f668bfb48d1d304cd7a97d"
+    },
+    "scripts/host/n71_driver_runtime_profile.py": {
+      "bytes": 3029,
+      "sha256": "7f663398da4ce0f822e57206003a6ad2d24dc299f5ab5acfa31ab83f18d41401"
+    },
+    "scripts/host/n71_driver_module_stage.py": {
+      "bytes": 17503,
+      "sha256": "466e258a1bdd302ec2fee924c18e8207fe4343c0eb6fb9f7f3125a9ca75e23fb"
+    },
+    "tests/test_n71_pmd_runtime_profile.py": {
+      "bytes": 12735,
+      "sha256": "0374f1d90465feebe397c66176850dcfa1afde76c65528deb0ca7243283b72ed"
+    }
+  },
+  "gates": {
+    "pmd": {
+      "tests": 6,
+      "assertion_mutations": 8,
+      "log_sha256": "249cf8cdedb0797adb461594c5392c47b898005c0b5cd98996bea6352c6186a3",
+      "passed": true,
+      "platform": "macOS"
+    },
+    "legacy_build": {
+      "tests": 9,
+      "assertion_mutations": 14,
+      "log_sha256": "f848662cbe6d4ccb3e79646fca6b3c569a914028240b7d15df2306ee16f8675e",
+      "passed": true,
+      "platform": "macOS"
+    },
+    "legacy_profile": {
+      "tests": 9,
+      "assertion_mutations": 16,
+      "log_sha256": "95c7d9b227b022c5b3b2a688280e2c287543f5bcc9a52b90404c93393acbf42d",
+      "passed": true,
+      "platform": "macOS"
+    },
+    "legacy_journal": {
+      "tests": 12,
+      "assertion_mutations": 16,
+      "log_sha256": "57e13134c60b1c676f2d83daa8d1f1737861fb04d4c280787336bad43383a3ca",
+      "passed": true,
+      "platform": "macOS"
+    }
+  },
+  "real_module_configuration": {
+    "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+    "diagnostics": 2,
+    "drivers": 5,
+    "total_module_bytes": 1371288,
+    "all_bytes_hashes_elf_abi_verified": true,
+    "local_configuration_and_fresh_revalidation_passed": true,
+    "journal_manifest_matches_session": true,
+    "raw_inputs_preserved": true,
+    "ssh_or_usb_performed": false,
+    "vm_started": false,
+    "complete_link_constructor_qualified": false,
+    "ast_files": 4
+  },
+  "ast_passed": true,
+  "fatal_lint_passed": true,
+  "typechecker": "not_configured",
+  "proof_scope": "Real selectors, private byte checks, ownership configuration and filesystem journal. Tests use synthetic nonbootable ELF output metadata and simulated kernel/transport observations. Actual seven compiled files were checked separately without effects.",
+  "default_power2_preserved": true,
+  "link_session_constructor_enabled": false,
+  "native_action_entrypoints_enabled": false,
+  "firmware_cli_complete_composition_enabled": false,
+  "phone_accessed": false,
+  "vm_started": false,
+  "wifi_physically_verified": false,
+  "telemetry_physically_verified": false,
+  "charging_physically_verified": false
+}

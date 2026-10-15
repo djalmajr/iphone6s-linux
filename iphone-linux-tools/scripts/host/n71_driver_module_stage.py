@@ -17,6 +17,8 @@ def selected(session):
     if records is not None:
         require(driver.result.capable(session), 'WCC module selection requires driver runtime')
         modules.manifest(records)
+        require(getattr(session, 'release', None) == modules.selected_release(records),
+                'WCC manifest and Session ABI differ')
     return records
 
 
@@ -27,7 +29,7 @@ def state_text(records, state):
             and isinstance(state['states'], dict) and set(state['states']) == set(modules.OBSERVED),
             'WCC journal snapshot differs')
     modules.directory(state['directory'])
-    text = modules.IDENTITY + 'release=' + modules.RELEASE + ' boot=' + state['boot'] + '\n'
+    text = modules.IDENTITY + 'release=' + modules.selected_release(records) + ' boot=' + state['boot'] + '\n'
     for record in records:
         text += modules.FILE + f"name={record['name']} sha256={record['sha256']} bytes={record['bytes']}\n"
     for name in modules.OBSERVED:

@@ -72,6 +72,16 @@ Aplicar somente em worktree novo na VM dedicada, com inputs selados. Manter sour
 - **Reverter:** baixo; chamada sem release continua power2.
 - **Status:** aplicada; 7 testes/10 mutações novos e 9 testes/18 mutações anteriores aprovados no Mac; cinco binários reais conferidos por hash/ELF/ABI. O teste inicial revelou um caso de recusa incompleto no gate: todos os módulos com ABI desconhecida precisam ser testados juntos para isolar a guarda de releases conhecidas. O caso foi corrigido e as dez mutações passaram por AssertionError. VM parada; nenhuma ação no telefone.
 
+### D7 — caller, configuração da Session e journal PMD
+
+- **Decisão:** ampliar n71_driver_runtime_build.py somente para a release PMD exata, reutilizando as qualificações D5/D6 e o hash explícito do caller recompilado. Permitir essa release na configuração local de n71_driver_runtime_profile.py. Serializar o journal WCC pela ABI do manifest e recusar manifest divergente da Session em n71_driver_module_stage.py.
+- **Por quê:** os binários já estão compilados e auditados. Precisamos vincular os registros/bytes possuídos e a recuperação ao mesmo kernel antes de ampliar os pontos de entrada e compor o perfil completo.
+- **Alternativas:** modificar registros históricos power2 cruza as provas; usar constantes globais no journal faz a candidata PMD parecer power2.
+- **Onde:** os três helpers, tests/test_n71_pmd_runtime_profile.py novo e este plano (cinco arquivos). Construtor/link, firmware/reacquire e CLI/composição serão tratados depois desta verificação.
+- **Verificação:** seleção atual contra fatos reais; configuração local com ELF sintético, bytes imutáveis e recusa antes de efeitos; journal em filesystem real, carga/remoção e recuperação sem replay com kernel/transporte sintéticos; mutações e regressões focalizadas dos três helpers; AST/lint. Depois, configuração contra os sete binários reais, sem SSH/USB/VM.
+- **Reverter:** baixo; padrão e provas power2 preservados.
+- **Status:** aplicada; 6 testes/8 mutações novos e 30 testes/46 mutações de regressão passaram no Mac. Os sete binários reais (1.371.288 bytes) passaram por bytes/SHA/ELF/ABI, configuração local e revalidação fresca. VM parada; construtor/link, ações nativas, firmware e CLI/composição ainda pendentes.
+
 ## Fase C — um teste físico agrupado
 
 Antes de solicitar DFU, preparar kernel, todos os módulos compatíveis, perfil privado com identidades preservadas, diagnóstico HDQ UJM, restore e coleta/cleanup numa sessão limitada. O aparelho está no iOS bloqueado e recarregando; nenhuma ação necessária agora. Após retorno ao iOS, ausência de USB é tratada como tela bloqueada, sem nova confirmação rotineira.

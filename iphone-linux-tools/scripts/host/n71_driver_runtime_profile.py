@@ -4,6 +4,7 @@ import hashlib
 import n71_driver_modules as wlan
 import n71_driver_runtime_build as build
 import n71_driver_runtime_result as runtime
+import n71_iommu_build as iommu
 
 
 def require(condition, message):
@@ -26,7 +27,8 @@ def blobs(pairs, records):
 
 def selection(session, root):
     require(all(getattr(session, name, None) is True for name in ('scan_hold', 'resource_capable', 'iommu_parent'))
-        and session.release == wlan.RELEASE, 'Runtime Session requires explicit held resource/IOMMU power2 mode')
+        and session.release in (wlan.RELEASE, iommu.PMD_RELEASE),
+        'Runtime Session requires an explicit qualified held resource/IOMMU mode')
     pairs = session.modules
     require(isinstance(pairs, list) and len(pairs) == 2 and isinstance(pairs[0], tuple)
         and len(pairs[0]) == 2 and isinstance(pairs[0][0], dict), 'Runtime diagnostic selection is incomplete')

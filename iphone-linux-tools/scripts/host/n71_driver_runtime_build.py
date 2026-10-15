@@ -47,11 +47,17 @@ def inputs(root, proof):
 
 
 def qualified(root, request):
-    require(isinstance(request, dict) and set(request) == {'release', 'pcie_sha256'} and request['release'] == wlan.RELEASE
+    require(isinstance(request, dict) and set(request) == {'release', 'pcie_sha256'}
+        and request['release'] in (wlan.RELEASE, iommu.PMD_RELEASE)
         and isinstance(request['pcie_sha256'], str) and re.fullmatch(r'[0-9a-f]{64}', request['pcie_sha256']),
         'Runtime caller selection must be explicit')
     release = request['release']; parent = iommu.qualified(root, release=release)
     outputs = iommu.image_record(root, release=release)
+    if release == iommu.PMD_RELEASE:
+        require(request['pcie_sha256'] == parent['module_sha256'], 'PMD runtime caller hash differs')
+        return {'diagnostic': {'bytes': parent['module_bytes'], 'sha256': parent['module_sha256'],
+                              'vermagic': parent['vermagic']},
+                'drivers': wlan.qualified(root, release=release), 'kernel_outputs': outputs}
     proof = iommu.evidence(root, 'n71-brcmfmac-caller-qualified.json')
     require(type(proof.get('format')) is int and proof['format'] == 1
         and proof.get('status') == 'runtime_caller_qualified_host_journal_firmware_energy_and_physical_activation_pending'

@@ -237,6 +237,16 @@ O [registro WCC](evidence/n71-pmd-wcc-selection-qualified.json) contém 16 teste
 
 Os cinco arquivos reais selecionados, totalizando 1.211.368 bytes, também foram conferidos por tamanho, SHA256, ELF64/AArch64 relocável e vermagic PMD. AST/lint aprovados; sem typechecker Python configurado. A VM permaneceu parada. Integração do caller, serialização do journal WCC, Session, firmware, CLI e composição completa continuam pendentes antes de pedir DFU.
 
+## Caller, configuração local e journal PMD
+
+[n71_driver_runtime_build.py](../scripts/host/n71_driver_runtime_build.py) seleciona o caller PMD somente por release/hash explícitos e pelas qualificações de kernel, diagnósticos e WCC descritas acima. A configuração de `n71_driver_runtime_profile` possui cópias dos dois diagnósticos e cinco drivers, mantendo bytes imutáveis e revalidando os dados antes de uso. O journal WCC serializa a ABI do manifest e recusa divergência com a Session.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pmd_runtime_profile.py -v
+```
+
+O [registro da configuração](evidence/n71-pmd-runtime-profile-qualified.json) contém 36 testes/54 mutações por AssertionError no Mac: 6/8 novos e 30/46 anteriores. Seletores, configuração e journal/filesystem são reais; ELF e observações de kernel/transporte são sintéticos nos testes. O ciclo e a recuperação de transporte perdido não repetem a carga. Uma verificação separada configurou e revalidou os sete binários compilados reais, 1.371.288 bytes, após conferir SHA/ELF/ABI. AST/lint aprovados, sem typechecker Python configurado; nenhuma ação SSH/USB ou início de VM. Construtor/link e ações nativas ainda precisam de seleção PMD explícita; firmware, CLI e composição completa continuam pendentes.
+
 ## Aceite no aparelho ainda pendente
 
 O kernel, os sete diagnósticos, o conjunto Wi-Fi e a integração base estão qualificados sem uso do telefone. Faltam ampliar os gates de runtime explicitamente e montar o perfil completo antes de uma sessão física reunindo DART/firmware com HDQ/UJM. Não solicitar outro DFU para repetir o fault conhecido sem a candidata pronta. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.
