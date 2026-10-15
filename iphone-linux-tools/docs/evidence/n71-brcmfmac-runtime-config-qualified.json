@@ -1,0 +1,134 @@
+{
+  "format": 1,
+  "status": "runtime_configuration_policy_qualified_not_integrated",
+  "code_commit": "5a1c8df",
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "scope": {
+    "production_header": "phone/kernel/n71-brcmfmac-config.h",
+    "driver_sequence": "modeled",
+    "ecam_backend": "modeled",
+    "kernel_context": "three real policy functions in derived probe",
+    "caller_integrated": false,
+    "physical_profile_changed": false,
+    "loaded_on_phone": false,
+    "dfu_requests": 0
+  },
+  "gates": {
+    "macos": {
+      "format": 1,
+      "exit": 0,
+      "scenarios": 58,
+      "assertion_mutations": 23,
+      "ast_passed": true,
+      "fatal_lint_passed": true,
+      "loaded_on_phone": false
+    },
+    "ubuntu_arm64": {
+      "scenarios": 58,
+      "assertion_mutations": 23,
+      "ast_passed": true,
+      "stages": {
+        "config-arm64": {
+          "exit": 0,
+          "seconds": 1.41
+        },
+        "kernel-context": {
+          "exit": 0,
+          "seconds": 0.88
+        },
+        "fatal-lint": {
+          "exit": 0,
+          "seconds": 0.28
+        }
+      },
+      "inputs_preserved": true,
+      "baseline_preserved": true
+    }
+  },
+  "kernel_probe": {
+    "module_bytes": 11184,
+    "module_sha256": "bcb2b1250ba079e60040486de89f24db7aec25289a26af17472a0951cdb389a4",
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "elf64_aarch64": true,
+    "imports_verified": [
+      "__stack_chk_fail",
+      "memset"
+    ],
+    "derived_probe_only": true,
+    "loaded_on_phone": false
+  },
+  "kernel_probe_source_sha256": "8d3c8df76f090685e18dfc776eb09fb2fbcac7db82ea9a1dc21bdfcf9fa25085",
+  "original_inputs": {
+    "phone/kernel/n71-brcmfmac-config.h": {
+      "sha256": "f9ea69084ae534cb81b916e89b19d8ef13948c00cc99bc4937aacc9234f22a46",
+      "bytes": 7445
+    },
+    "phone/kernel/n71-wlan-msi-config.h": {
+      "sha256": "f388a3f89183c57e652334c8eaba8f1bf60ec9041ffa35c9263e072f03edd9df",
+      "bytes": 9501
+    },
+    "phone/kernel/n71-pcie-scan-config.h": {
+      "sha256": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8",
+      "bytes": 10201
+    },
+    "phone/kernel/n71-pcie-ecam.h": {
+      "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3",
+      "bytes": 1977
+    },
+    "phone/kernel/n71-pcie-contract.h": {
+      "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8",
+      "bytes": 2529
+    },
+    "tests/n71_brcmfmac_config.c": {
+      "sha256": "484bcff2695667846dae4b3b4ab5e30c0d8ef4f06bca409f8db87d78994a645b",
+      "bytes": 8457
+    },
+    "tests/test_n71_brcmfmac_config.py": {
+      "sha256": "3d3f86cf2d1b5ef8b92894b514eaecb57662b8b9e0410f9f54d1bc2ed51ac46c",
+      "bytes": 4666
+    }
+  },
+  "preserved_kernel": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "tracked_patch_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+    "config_sha256": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+    "image_sha256": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+    "exports_sha256": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "primary_sources_sha256": {
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c": "2bc4ff2f06eb515b404e08973a39c029ec975155a17a7baaf6f62e76ca181b4c",
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c": "f2b6fe570981bf69a81fd5965712f18840df9b97dabcdbd4aa4cf260b4e9760b",
+    "drivers/base/firmware_loader/main.c": "fef0d9e7dc4b650beab1a70211a229f8fc1be528643919e92b267da702460f48",
+    "kernel/module/main.c": "40e0ae1d3c9f7d96b84b9dc179362434ba018cd617105d94a90299649d503c2f",
+    "drivers/pci/pci.c": "4e726a79c54736f8c58166dc4af0a19a0001ce20e476686efa1975e61d318ad4",
+    "drivers/base/bus.c": "ca5c7869054b603b64c21df45279decf32f540c2f29c801e851e94fe2f788a4a"
+  },
+  "private_log_sha256": {
+    "config-mac-v2-private.log": "9cacddcf50e01dbcc0be42cde4e45387489a47e27b6880ded39a77c3a785b03b",
+    "config-arm64-private.log": "4fd6097c5d4c278a411fefba621b1736e4d5cc957689682caa74945c058ae26d",
+    "kernel-context-private.log": "4f508f2d1a541d2d7c21e6f22a34490078be1c124c0ef98d56d8ab8137d64337",
+    "fatal-lint-private.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fixture_correction": "First baseline failed: drift read30 was after capture ended. Injection moved to second BAR0_WINDOW read26; no assertion kills from the failed-baseline round are evidence.",
+  "previous_ci": {
+    "head": "6a9ed79bf651f6f3869ec3d87580219a2b1f2b80",
+    "pr": 38030989085,
+    "push": 38030986233,
+    "conclusion": "success",
+    "jobs_success": 6
+  },
+  "physical_proof": {
+    "irq_delivery": false,
+    "dma_translation": false,
+    "firmware_compatible": false,
+    "wifi_scan_association": false,
+    "charging": false,
+    "gauge": false
+  },
+  "next": [
+    "runtime scan/adapter/caller and held cleanup",
+    "journal/module/firmware selection and asynchronous readiness",
+    "firmware/calibration and energy preparation",
+    "one grouped physical session for Wi-Fi and energy"
+  ]
+}

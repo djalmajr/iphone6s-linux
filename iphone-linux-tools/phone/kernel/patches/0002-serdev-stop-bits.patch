@@ -1,0 +1,93 @@
+Subject: [PATCH] serdev: expose explicit stop bit selection
+
+N71 HDQ requires an explicit two-stop-bit UART configuration. Add a
+controller callback and TTY adapter that validate the count, preserve the
+other terminal settings, propagate errors and verify accepted stop bits.
+No client or port configuration is changed automatically.
+
+---
+--- a/include/linux/serdev.h
++++ b/include/linux/serdev.h
+@@ -84,6 +84,7 @@
+ 	void (*close)(struct serdev_controller *);
+ 	void (*set_flow_control)(struct serdev_controller *, bool);
+ 	int (*set_parity)(struct serdev_controller *, enum serdev_parity);
++	int (*set_stop_bits)(struct serdev_controller *ctrl, unsigned int stop_bits);
+ 	unsigned int (*set_baudrate)(struct serdev_controller *, unsigned int);
+ 	void (*wait_until_sent)(struct serdev_controller *, long);
+ 	int (*get_tiocm)(struct serdev_controller *);
+@@ -294,6 +295,8 @@
+ 
+ int serdev_device_set_parity(struct serdev_device *serdev,
+ 			     enum serdev_parity parity);
++int serdev_device_set_stop_bits(struct serdev_device *serdev,
++				unsigned int stop_bits);
+ 
+ /*
+  * serdev hooks into TTY core
+--- a/drivers/tty/serdev/core.c
++++ b/drivers/tty/serdev/core.c
+@@ -351,6 +351,20 @@
+ }
+ EXPORT_SYMBOL_GPL(serdev_device_set_parity);
+ 
++int serdev_device_set_stop_bits(struct serdev_device *serdev,
++				unsigned int stop_bits)
++{
++	struct serdev_controller *ctrl = serdev->ctrl;
++
++	if (stop_bits != 1 && stop_bits != 2)
++		return -EINVAL;
++	if (!ctrl || !ctrl->ops || !ctrl->ops->set_stop_bits)
++		return -EOPNOTSUPP;
++
++	return ctrl->ops->set_stop_bits(ctrl, stop_bits);
++}
++EXPORT_SYMBOL_GPL(serdev_device_set_stop_bits);
++
+ void serdev_device_wait_until_sent(struct serdev_device *serdev, long timeout)
+ {
+ 	struct serdev_controller *ctrl = serdev->ctrl;
+--- a/drivers/tty/serdev/serdev-ttyport.c
++++ b/drivers/tty/serdev/serdev-ttyport.c
+@@ -207,6 +207,32 @@
+ 	return 0;
+ }
+ 
++static int ttyport_set_stop_bits(struct serdev_controller *ctrl,
++				 unsigned int stop_bits)
++{
++	struct serport *serport = serdev_controller_get_drvdata(ctrl);
++	struct tty_struct *tty = serport->tty;
++	struct ktermios ktermios;
++	int ret;
++
++	if (stop_bits != 1 && stop_bits != 2)
++		return -EINVAL;
++	if (!tty)
++		return -ENODEV;
++	ktermios = tty->termios;
++	ktermios.c_cflag &= ~CSTOPB;
++	if (stop_bits == 2)
++		ktermios.c_cflag |= CSTOPB;
++
++	ret = tty_set_termios(tty, &ktermios);
++	if (ret)
++		return ret;
++	if ((tty->termios.c_cflag & CSTOPB) != (ktermios.c_cflag & CSTOPB))
++		return -EINVAL;
++
++	return 0;
++}
++
+ static void ttyport_wait_until_sent(struct serdev_controller *ctrl, long timeout)
+ {
+ 	struct serport *serport = serdev_controller_get_drvdata(ctrl);
+@@ -255,6 +281,7 @@
+ 	.close = ttyport_close,
+ 	.set_flow_control = ttyport_set_flow_control,
+ 	.set_parity = ttyport_set_parity,
++	.set_stop_bits = ttyport_set_stop_bits,
+ 	.set_baudrate = ttyport_set_baudrate,
+ 	.wait_until_sent = ttyport_wait_until_sent,
+ 	.get_tiocm = ttyport_get_tiocm,

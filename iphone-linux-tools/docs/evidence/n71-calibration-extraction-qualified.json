@@ -1,0 +1,70 @@
+{
+  "format": 1,
+  "code_commit": "e482f8691caf2f6fd22b9c115f5dd32651c083f3",
+  "status": "cached_private_calibration_extraction_qualified_dt_route_firmware_and_physical_acceptance_pending",
+  "input_count": 4,
+  "input_manifest_sha256": "02bcaae2b35a94d8f0be7f100c74a7e0e621db156c476bdb858a03ce076b855f",
+  "inputs": {
+    "scripts/research/n71_runtime_tunables.py": {
+      "sha256": "8a7f323109a447cb296bc67bd3d60fb2cb956b1902a828bc68c36e76a0891cb1",
+      "bytes": 7774
+    },
+    "scripts/research/n71_wifi_calibration.py": {
+      "sha256": "20c5f322434b85c4d938c60d0b947e478ec93412d42cbb2f17487218d228f725",
+      "bytes": 2204
+    },
+    "tests/test_n71_runtime_tunables.py": {
+      "sha256": "6dbcb406aaf27b68d7a6c116d1377da49932a8a30d6b34bb60d897fc2a2c0744",
+      "bytes": 4415
+    },
+    "tests/test_n71_wifi_calibration.py": {
+      "sha256": "f7bc88be58a1936d15445dce1a8c97240118a7be1b7d6e8fe27fafc33f5e33d8",
+      "bytes": 11312
+    }
+  },
+  "tests_per_platform": 14,
+  "assertion_mutations_per_platform": 14,
+  "platforms": {
+    "mac": {
+      "exit": 0,
+      "tests": 14,
+      "assertion_mutations": 14,
+      "log_sha256": [
+        "988397443b99a0df884bba09954d26fff2d86f30cc8f81f1ab30fec77b1c5614",
+        "69647247192f035a99fe56ea60fea7c694ac992832767a80c5d365af7ff0c34c"
+      ]
+    },
+    "ubuntu_arm64": {
+      "exit": 0,
+      "tests": 14,
+      "assertion_mutations": 14,
+      "log_sha256": [
+        "b0677e37292f980b1121293efbabc11e3407e90f6f9b394760430fcd0b3f14da",
+        "e9011cca74f2a4d7d461275433372ec4aa435eee4d987116ce13a160e5539242"
+      ]
+    }
+  },
+  "real_extraction_mac": {
+    "real_cli_passed": true,
+    "candidate_bytes": 1024,
+    "candidate_matches_cached_property": true,
+    "source_preserved": true,
+    "private_modes_verified": true,
+    "physical_acceptance": false,
+    "iphone_accessed": false
+  },
+  "real_cached_capture_tunable_json_unchanged": true,
+  "compiled_c_inputs_preserved": 69,
+  "ast": true,
+  "fatal_lint": true,
+  "iphone_accessed": false,
+  "limits": [
+    "Nine new tests include a real source-mutation runner; five existing tunable tests passed unchanged on Mac and Ubuntu ARM64.",
+    "Complete functional baseline precedes fourteen actual source mutations; only AssertionError failures accepted.",
+    "CLI/argparse, parser and temporary filesystem are real; capture fixtures are synthetic in tests.",
+    "Actual Mac CLI extracted the existing private 1024-byte property; source, modes and prior tunable JSON preserved.",
+    "No Python type checker configured; AST and fatal lint passed.",
+    "No kernel/Image/module/loader/profile changes, hardware access, DFU, radio firmware execution or Wi-Fi/charging proof.",
+    "Device calibration bytes/hashes/identifiers remain private; DT endpoint route and physical firmware acceptance remain pending."
+  ]
+}

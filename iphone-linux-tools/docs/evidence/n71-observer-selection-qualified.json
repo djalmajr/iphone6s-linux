@@ -1,0 +1,68 @@
+{
+  "format": 1,
+  "status": "explicit_observer_catalog_selection_qualified_no_profile_or_phone_action",
+  "inputs": {
+    "scripts/host/n71_pmd_observer_build.py": {
+      "bytes": 4787,
+      "sha256": "309b17078a38dd4cb9d25f02f43b8d5f31cb0c87eba3a857f5d817fd2f30be5a"
+    },
+    "scripts/host/n71_pmd_runtime_build.py": {
+      "bytes": 11259,
+      "sha256": "ad46690280a610790ab8e36a95cd50cb55c01a4851b5f50ef85a7451dcdb86cf"
+    },
+    "tests/test_n71_observer_selection.py": {
+      "bytes": 9726,
+      "sha256": "db203bd0f4727a27478acb7ee6cf4f327b0317ffdf35dd353a50b3d1a545c221"
+    }
+  },
+  "host_gates": {
+    "platform": "macOS",
+    "new_tests": 8,
+    "new_assertion_mutations": 8,
+    "legacy_tests": 15,
+    "legacy_assertion_mutations": 19,
+    "logs_sha256": {
+      "new": "0c075929a61d552d9211d636165eaab7e173c4061ab7d6895da9c1db200a5d46",
+      "legacy": "6a54f53d61248f37aa37c968295cb4929c9a4c342d89bf3ad60b22ce2c480481"
+    }
+  },
+  "real_selection": {
+    "format": 1,
+    "variant": "pmd-observers-v1",
+    "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+    "diagnostics_catalog_modules": 7,
+    "runtime_diagnostics": 2,
+    "runtime_wcc_modules": 5,
+    "real_module_files_verified": 12,
+    "runtime_module_bytes": 1376792,
+    "protected_files_preserved": 92,
+    "all_preserved_before_after": true,
+    "source_reference_and_variant_explicit": true,
+    "no_phone_access": true,
+    "vm_started": false,
+    "profile_composed": false,
+    "new_coordinator_options_enabled": false
+  },
+  "contract": {
+    "variant": "pmd-observers-v1",
+    "selector": "IPHONE_LINUX_PMD_DIAGNOSTICS",
+    "default_legacy_selection_preserved": true,
+    "unknown_or_empty_selector_refused": true,
+    "legacy_base_qualification_precedes_overlay": true,
+    "compiled_source_and_module_pins_fixed": true,
+    "kernel_and_source_bundle_coupled": true,
+    "source_fields_verified_from_current_bytes": true,
+    "old_compiled_inputs_remain_explicit_and_preserved": true,
+    "no_abi_override": true
+  },
+  "ast_passed": true,
+  "fatal_and_unused_lint_passed": true,
+  "vm_started": false,
+  "profile_composed": false,
+  "dma_options_enabled": false,
+  "phone_accessed": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "charging_verified": false,
+  "goal_complete": false
+}

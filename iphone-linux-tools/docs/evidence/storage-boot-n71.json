@@ -1,0 +1,156 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issues": [
+    10,
+    11
+  ],
+  "status": "partial-investigation-no-storage-or-autoboot-proof",
+  "sources": [
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "drivers/nvme/host/apple.c",
+      "blob": "bf1c32c66153ec6b1a41a08f741617968558e4e9",
+      "sha256": "0402148b57431725c7babcd2b20b0ffa8b0b84dd682fac367cdac6b518926cad",
+      "bytes": 45879,
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/nvme/host/apple.c"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "drivers/nvme/host/Kconfig",
+      "blob": "31974c7dd20c9174961eac91e3823e939d325daa",
+      "sha256": "07a56b6036fa42113d971c84285d9bd4daf1d8582b225a430c1cd38f7f528673",
+      "bytes": 3968,
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/nvme/host/Kconfig"
+    },
+    {
+      "repository": "HoolockLinux/docs",
+      "revision": "23ebe1fbc375599221553a7e1815e5de182a6b42",
+      "path": "tutorials/SETUP_iBoot.md",
+      "blob": "c3e26f882c1ecdaef08f38ae3de4460b83ef5dfd",
+      "sha256": "f3433d29f423d45deee1a4fc96039e1186f5fea03850586afcde74558a1bf530",
+      "bytes": 7113,
+      "url": "https://github.com/HoolockLinux/docs/blob/23ebe1fbc375599221553a7e1815e5de182a6b42/tutorials/SETUP_iBoot.md"
+    },
+    {
+      "repository": "HoolockLinux/docs",
+      "revision": "23ebe1fbc375599221553a7e1815e5de182a6b42",
+      "path": "tutorials/SETUP_pongoOS.md",
+      "blob": "26c6fc852eb0832e6b5961c41b5e17b1741bc3fc",
+      "sha256": "541784e4f2de297762f9d58210762a4be40779525adfc305665b491326586c2a",
+      "bytes": 4560,
+      "url": "https://github.com/HoolockLinux/docs/blob/23ebe1fbc375599221553a7e1815e5de182a6b42/tutorials/SETUP_pongoOS.md"
+    },
+    {
+      "repository": "HoolockLinux/docs",
+      "revision": "23ebe1fbc375599221553a7e1815e5de182a6b42",
+      "path": "tutorials/gdisk.md",
+      "blob": "02a5d3370cc53e4ec5f55459ab20f48fe5b76240",
+      "sha256": "16765d0121f87df25cbabaea842820a30867ce379cf3f7011cd7d7ac08ed5724",
+      "bytes": 6951,
+      "url": "https://github.com/HoolockLinux/docs/blob/23ebe1fbc375599221553a7e1815e5de182a6b42/tutorials/gdisk.md"
+    },
+    {
+      "repository": "axi0mX/ipwndfu",
+      "revision": "0e28932ec6a2a570b10fd77e50bda4216418cd98",
+      "path": "README.md",
+      "blob": "9415c2c179d4d8674a24f47d6d7d586ae33c8085",
+      "sha256": "8197a9ae7424f55102fb589cef8acb1f5a02aa27c4b99e56daecbc0dc9e0c111",
+      "bytes": 4438,
+      "url": "https://github.com/axi0mX/ipwndfu/blob/0e28932ec6a2a570b10fd77e50bda4216418cd98/README.md"
+    }
+  ],
+  "web_references": [
+    {
+      "url": "https://support.apple.com/en-gb/guide/security/secb3000f149/web",
+      "scope": "Apple signed chain, A9 LLB stage and failed-loader recovery; read only."
+    },
+    {
+      "url": "https://checkra.in/index.html",
+      "scope": "FAQ describes DFU/host dependence and return to stock iOS after reboot; not executed."
+    }
+  ],
+  "selected_artifacts": {
+    "scope": "static-selected-artifacts-not-runtime",
+    "dtb_bytes": 22884,
+    "dtb_sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58",
+    "dtb_nodes": 136,
+    "storage_controller_matches": [],
+    "config_sha256": "ae1348cdd46bb94eb9e3725b6089a2ecddae5b4dfa423164b4d4f085a8707d2c",
+    "config": {
+      "CONFIG_BLK_DEV_NVME": "CONFIG_BLK_DEV_NVME=m",
+      "CONFIG_NVME_APPLE": "CONFIG_NVME_APPLE=m",
+      "CONFIG_APPLE_RTKIT": "CONFIG_APPLE_RTKIT=m",
+      "CONFIG_APPLE_SART": "CONFIG_APPLE_SART=m",
+      "CONFIG_APPLE_MAILBOX": "CONFIG_APPLE_MAILBOX=m",
+      "CONFIG_APPLE_DART": "CONFIG_APPLE_DART=y",
+      "CONFIG_NVMEM": "CONFIG_NVMEM=y",
+      "CONFIG_EXT4_FS": "CONFIG_EXT4_FS=y"
+    },
+    "module_input_reference": "wifi-n71-path.json: initramfs selected hash, zero .ko files; same artifact unchanged",
+    "pmic_nvmem_matches_separate": [
+      {
+        "path": "/soc/i2c@20a110000/pmic@74/nvmem@5000",
+        "compatible": [
+          "apple,pmic-nvmem"
+        ]
+      },
+      {
+        "path": "/soc/i2c@20a110000/pmic@74/nvmem@5000/nvmem-layout",
+        "compatible": [
+          "fixed-layout"
+        ]
+      },
+      {
+        "path": "/soc/i2c@20a110000/pmic@74/nvmem@5000/nvmem-layout/rtc-offset@4",
+        "compatible": []
+      }
+    ],
+    "matching_note": "Initial nvme substring search also matched nvmem. Those three PMIC records are separated here and are not disk-controller evidence. Compiled tree inspected with controller/path boundaries."
+  },
+  "shared_input_reference": "wifi-n71-path.json: same initramfs SHA, zero modules; same upstream N71 DT include chain.",
+  "storage": {
+    "apple_nvme_driver_matches": [
+      "apple,t8015-nvme-ans2",
+      "apple,t8103-nvme-ans2",
+      "apple,nvme-ans2"
+    ],
+    "n71_match_or_topology_demonstrated": false,
+    "actual_a9_controller_identity": "unresolved pending private board/device information",
+    "read_only_native_disk_detection": "not-performed-this-phase",
+    "filesystem_persistence": "private Mac snapshots verified previously; internal filesystem not available",
+    "pmic_nvmem_is_phone_disk": false
+  },
+  "boot": {
+    "current_verified_chain": "manual DFU -> host palera1n/PongoOS -> m1n1 -> Linux in RAM",
+    "remote_iboot_alternative": "upstream method starts DFU and receives prepared model-specific images from host; N71 not piloted",
+    "autonomous_cold_boot": "not-demonstrated-no-ready-chain-found-in-examined-sources",
+    "host_automation_limit": "Cannot replace missing native DFU entry or prove cold boot; existing wrapper starts after coordinated physical action.",
+    "powerloss_behaviour": "RAM state is volatile; automatic selected-Linux recovery after total depletion/return of energy not tested in controlled native pilot.",
+    "internal_rootfs_is_autoboot": false
+  },
+  "not_performed": [
+    "disk identification commands on phone",
+    "partition write",
+    "filesystem format",
+    "APFS resize or fakefs",
+    "firmware/driver deployment",
+    "iBoot remote chain execution",
+    "cold power-loss experiment",
+    "Mac packages or VM startup"
+  ],
+  "next_steps": [
+    "Successful selected-chain boot and native read-only block/controller inventory.",
+    "Private N71 controller/firmware/DMA/topology identification before designing disk driver port.",
+    "Validate restart/iOS return and known-chain rollback (#12/#21).",
+    "Establish power gate before sustained/cold-recovery pilot (#2/#8)."
+  ],
+  "limits": [
+    "Static matches do not establish controller support or impossibility of future work.",
+    "A10/A11 storage demonstrations do not prove A9 compatibility.",
+    "NVMEM PMIC records are not the 32 GB internal disk.",
+    "No autonomous-server completion claim; #10/#11 remain open."
+  ]
+}

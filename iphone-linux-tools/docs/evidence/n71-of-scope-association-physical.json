@@ -1,0 +1,129 @@
+{
+  "format": 1,
+  "date_local": "2026-10-09",
+  "code_commit": "3a61c76492d894fbb479812b7a414a28db6ebe82",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "session": {
+    "dfu_sequences": 1,
+    "linux_boots": 1,
+    "intermediate_reboots": 0,
+    "dfu_usb_product": "0x1227",
+    "linux_usb_product": "0x4142",
+    "boot_and_snapshot_restore_verified": true,
+    "grouped_runner_elapsed_seconds": 50.06,
+    "gpio_physical_gate_reused_without_repeat": true
+  },
+  "iommu": {
+    "pcie_module_sha256": "48df330a6ddf6da524ad47979df9b056a6ffa8b793002a03814e1885c6739dc9",
+    "provider_initialized": true,
+    "held_acquisition_verified": true,
+    "association": {
+      "observed_devices": 2,
+      "software_association_observed": true,
+      "dma_topology": {
+        "requester_ids": [
+          8,
+          256
+        ],
+        "group_id": 0,
+        "mask_bits": 32,
+        "root_aliases_inferred": 1,
+        "endpoint_aliases_inferred": 1,
+        "aliases_inferred_from_fixed_source": true,
+        "physical_translation_verified": false
+      },
+      "irq_delivery_verified": false,
+      "dma_translation_verified": false,
+      "wifi_verified": false,
+      "battery_or_charging_verified": false
+    },
+    "endpoint_id": "43a314e4"
+  },
+  "resources": {
+    "error": 0,
+    "action_exit": 0,
+    "event": {
+      "error": 0,
+      "assigned": 1,
+      "pending": 1,
+      "claimed": 1,
+      "attempts": 17,
+      "writes": 5,
+      "write_readback": {
+        "failed": 0,
+        "root": 0,
+        "where": 0,
+        "size": 0,
+        "value": 0,
+        "before": 0,
+        "after_valid": 0,
+        "after": 0,
+        "write_error": 0,
+        "read_error": 0
+      },
+      "optional_windows": {
+        "captured": 1,
+        "io_absent": 0,
+        "pref_absent": 0,
+        "io_noops": 0,
+        "pref_noops": 0
+      },
+      "io16_upper": {
+        "captured": 1,
+        "enabled": 1,
+        "noops": 1
+      },
+      "pref64_disable": {
+        "captured": 1,
+        "enabled": 1,
+        "writes": 1
+      }
+    },
+    "assignment_verified": true,
+    "early_refusal": false
+  },
+  "cleanup": {
+    "host_collector_refusal": "Resource ownership still pending",
+    "actual_pending_owners_zero": true,
+    "pci_bus_empty": true,
+    "dart_provider_removed": true,
+    "dart_lease_restore_error": 0,
+    "ttbr_words_restored": 16,
+    "dart_cycle_operation_error": -5,
+    "dart_control_changed": true,
+    "command_before": "00000f02",
+    "command_after": "00000102",
+    "tcr_before_after": "00000000",
+    "fault_before_after": "00000100",
+    "resource_config_pme_tls_reset_and_power_restored": true,
+    "pcie_normal_unload_verified": true,
+    "reg_on_original_restored_and_normal_unload_verified": true,
+    "same_boot_recovery_verified": true,
+    "force_unload_used": false
+  },
+  "services": {
+    "ssh_bash_http_herdr_before_after": true,
+    "power_supply_count": 0,
+    "usb_declared_maxpower_ma": 500
+  },
+  "return": {
+    "snapshot_verified": true,
+    "snapshot_entries": 44,
+    "sync_verified": true,
+    "automatic_ios_usb_return_verified": false,
+    "ios_return_assumed_operational_per_operator_instruction": true,
+    "manual_screen_confirmation_not_available": true,
+    "no_further_screen_confirmation_requested": true,
+    "pin_required": false
+  },
+  "limits": {
+    "wifi_verified": false,
+    "irq_delivery_verified": false,
+    "dma_translation_verified": false,
+    "successful_unchanged_dart_cycle_verified": false,
+    "battery_gauge_verified": false,
+    "charging_current_verified": false,
+    "internal_storage_written": false,
+    "private_logs_firmware_keys_or_device_identifiers_published": false
+  }
+}

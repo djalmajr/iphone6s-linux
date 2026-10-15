@@ -1,0 +1,65 @@
+{
+  "format": 1,
+  "status": "compiled_verified_not_phone_loaded",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "module": {
+    "bytes": 48208,
+    "sha256": "0a91c8402db24f1fc83c1376771c54f7296cae42d2cde02762a26ee3ade0e486",
+    "module": "n71-pcie-diagnostic.ko"
+  },
+  "preserved_kernel_sha256": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "sources_sha256": {
+    "phone/kernel/n71-dart-observe.h": "6a340ccf7449ac45a33e879762aefc00b47fd937966246f3ce88730959bf48e2",
+    "phone/kernel/n71-dart-mmio.h": "1482255c24423d5ef483d15bf74adf668fef72cae1d985d6f957df873124252c",
+    "phone/kernel/n71-pcie-diagnostic.c": "d547bbdde831faab4f38f4aa20202fb57ebd0f510f72891d3981ff1dca4c9a1e",
+    "tests/n71_dart_observe.c": "4c3eb5053d62b1e7b73e851758b3e72f5437d0c28085ee78270a84589e3b5334",
+    "tests/test_n71_dart_observe.py": "48f4413bd9ca90caff2b061d047fbc603975f4bc2b70ac2248903bd1d87635f0"
+  },
+  "native_checks": {
+    "macos": true,
+    "linux_arm64": true,
+    "c_fault_test": true,
+    "assertion_mutations": 6,
+    "werror": true,
+    "modpost_fatal": true,
+    "elf_aarch64": true,
+    "exact_vermagic": true
+  },
+  "private_log_sha256": {
+    "contract-private.log": "3e01929608857a119a94d6d48d456b5ccb46d6f85fa27386dbd4f5da9bf377f8",
+    "module-private.log": "2c784af4294bb0b23837fa31d1b6a015369e911bfd68ce3c044ced7409c23ed1"
+  },
+  "dart_reference": {
+    "source_file": "drivers/iommu/apple-dart.c",
+    "patched_sha256": "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc",
+    "physical": "0x602008000",
+    "bytes": 16384,
+    "separate_nvmmu": "0x602004000",
+    "interrupt": 248,
+    "registers": [
+      "0x0",
+      "0xc",
+      "0x10",
+      "0x40-0x7c"
+    ],
+    "ttbr_count": 16,
+    "samples": 2,
+    "read_budget": 38,
+    "quiet_guard_budget": 39,
+    "tcr_enabled_bit_per_byte": 7,
+    "ttbr_valid_bit": 31
+  },
+  "dart_observe_default": false,
+  "physical_dart_observed": false,
+  "dart_register_writes": 0,
+  "provider_activated": false,
+  "irq_requested": false,
+  "dma_enabled": false,
+  "wifi_verified": false,
+  "firmware_loaded": false
+}

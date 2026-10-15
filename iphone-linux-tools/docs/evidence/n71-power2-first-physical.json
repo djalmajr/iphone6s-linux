@@ -1,0 +1,632 @@
+{
+  "format": 1,
+  "status": "physical_power2_boot_energy_observation_link_chip_dart_and_negative_scan_with_clean_ios_return",
+  "utc_date": "2026-10-05",
+  "source_code_head": "70d47362d09216a461ddd7cd89193877588cdbf7",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "kernel_image_sha256": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+  "profile_payload_sha256": "3834d17c2cd9026b640ce1640cdc1baf0f1c85cab8e6bd8051a0d9a7b8316ffa",
+  "profile_dtb_sha256": "940976925caee59a3db8d118d6e6f4278529eafa6d60b86c76d9cb651ace4004",
+  "profile_record": "n71-binding-profile.json",
+  "code_contract_record": "n71-link-binding-session.json",
+  "i2c_contract_record": "n71-i2c-controller-inspection.json",
+  "boot": {
+    "wrapper_exit": 0,
+    "board": "N71/S8000",
+    "one_linux_boot": true,
+    "intermediate_reboots": 0,
+    "strict_ssh_restore_http_and_herdr": true,
+    "boot_identity_sha256": "f679e46353cd5878531609cef1a887f32f1dbf821270a5bb318814cf67c4de65",
+    "restore_members": 44,
+    "boot_log_sha256": "e6503ce9d3afe8e20b723740987cb42c61993f3a5180645f7df3ff2d603016fd"
+  },
+  "passive_energy": {
+    "format": 1,
+    "complete": true,
+    "modules": [
+      {
+        "name": "n71_i2c_topology_observe",
+        "sha256": "55a2034d2bb0d17158ef05b635757d7261b84764e5481b98389718f51a0d9d30",
+        "fresh_lines": [
+          "[   94.010480] N71_I2C1_GPIO pin=114 cached-before=00076221 hardware-first=00076221 hardware-second=00076221 cached-after=00076221 stable=1 cache-matches=1",
+          "[   94.023731] N71_I2C1_GPIO pin=115 cached-before=00076221 hardware-first=00076221 hardware-second=00076221 cached-after=00076221 stable=1 cache-matches=1",
+          "[   94.037427] N71_I2C1_OBSERVED disabled=1 children=0 platform=absent adapter=absent base=20a111000 size=1000 raw-irq=0,207,4 declared-clock-hz=24000000 domain-reg=801a0,4 declared-pinmux=10073,10072; no writes, activation or ownership claim",
+          "[   94.059312] N71_I2C1_UNLOADED; no writes or activation"
+        ],
+        "fresh_dmesg_sha256": "51750dff9a5458e256465f9d229ee9f55b77ae832b1c41b45218bcdc706d93c2",
+        "observed": true,
+        "unloaded": true
+      },
+      {
+        "name": "n71_pmgr_power_observe",
+        "sha256": "346752e0261df1a8f7f7f8b83ce704ea35fd669bac6ecbdacc3e9189699b8b8b",
+        "fresh_lines": [
+          "[   94.876681] N71_PMGR domain=i2c1 offset=801a0 sample0=00000200 sample1=00000200 stable=1",
+          "[   94.883337] N71_PMGR domain=sio_p offset=80158 sample0=000000ff sample1=000000ff stable=1",
+          "[   94.891528] N71_PMGR domain=sio_busif offset=80150 sample0=1400024f sample1=1400024f stable=1",
+          "[   94.900073] N71_PMGR_OBSERVED writes=0 reads=6 atomic-chain=0 ownership=0",
+          "[   94.907410] N71_PMGR_UNLOADED hardware-changes=0"
+        ],
+        "fresh_dmesg_sha256": "fcc18e43d375dee09cac785598d8d5f78e15014d0840a9567059e39b4768155d",
+        "observed": true,
+        "unloaded": true
+      }
+    ],
+    "stage_removed": true
+  },
+  "controller_power": {
+    "format": 1,
+    "complete": true,
+    "stage_removed": true,
+    "binding_absence_verified": true,
+    "two_domain_cycles_verified": true,
+    "controller_observation_verified": true,
+    "module_unloaded": true,
+    "charger_io_performed": false,
+    "fresh_lines": [
+      "[  153.456958] N71_I2C_POWER_READY controller=disabled leaf=quiescent action=explicit charger_io=0",
+      "[  153.465438] N71_I2C_POWER_ACTION cycle=1 error=0 active=0 attached=0 cleanup_pending=0 usage_held=0 retained=0 cleanup_error=0",
+      "[  153.476604] N71_I2C_POWER_ACTION cycle=1 error=0 active=0 attached=0 cleanup_pending=0 usage_held=0 retained=0 cleanup_error=0",
+      "[  153.487957] N71_I2C_CONTROLLER complete=1 stable=1 idle_status=1 error=0 rev=00000002,00000002 smsta=08010100,08010100 xfsta=00000000,00000000 controller_writes=0 charger_io=0",
+      "[  153.502889] N71_I2C_POWER_ACTION cycle=0 error=0 active=0 attached=0 cleanup_pending=0 usage_held=0 retained=0 cleanup_error=0",
+      "[  153.516327] N71_I2C_POWER_UNLOADED controller_writes=0 charger_io=0"
+    ],
+    "fresh_dmesg_sha256": "632c32287ff15650623466691996112806ada2e580a8a9214d2260324bd5a842",
+    "control_exit_code": 0,
+    "controller_observation": {
+      "complete": true,
+      "stable": true,
+      "idle_status": true,
+      "rev": [
+        2,
+        2
+      ],
+      "smsta": [
+        134283520,
+        134283520
+      ],
+      "xfsta": [
+        0,
+        0
+      ]
+    },
+    "module_sha256": "f40e21326ac58aa7c910d6686584a4cc6cf2bb3a4f16e518542425214303980a"
+  },
+  "link_stages": [
+    {
+      "mode": "first",
+      "result": {
+        "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+        "endpoint_identified": true,
+        "cleanup_verified": true,
+        "wifi_verified": false,
+        "hdq_io_performed": false,
+        "dma_enabled": false,
+        "link": {
+          "error": 0,
+          "port88": "00000005",
+          "reads": 12
+        },
+        "endpoint_id": "43a314e4",
+        "cleanup_errors": []
+      },
+      "private_result_sha256": "dfbc5d80729fd21d7e426e4cfe8929422bce466c7e20aa2d9d0b7e95e1bffb2a",
+      "private_logs_sha256": {
+        "activate-private.log": "4c584a74c5a26ddf79fb63f3826ddaa7c2ca6c06984ac75bae210a001e992ce6",
+        "hash-n71-pcie-diagnostic.ko-private.log": "ab2016a5eda615237eba31fc379c811cfc83eaf547c98729387c1fb3f97222fc",
+        "hash-n71-wlan-power-diagnostic.ko-private.log": "a0268f7a10aa37255eb6adac6e7ac2b01e0acd9969c068cd4123be5c33c5978a",
+        "observe-private.log": "d6e844960a2112b71f68dcd5d6380493b3b04dfedbfa1a9e198d6facfa6a0fdb",
+        "pcie-cleanup-private.log": "e46c583bb98433561368a06c5438bdaaad19e9af494fe18a22ef0abce1acaf88",
+        "pcie-private.log": "e46c583bb98433561368a06c5438bdaaad19e9af494fe18a22ef0abce1acaf88",
+        "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+        "preflight-private.log": "cd2fbd094153f3ed2b80aaed0725020df349de93d11dad109041e6a680a5a614",
+        "reg-unload-private.log": "79d997bc335327b82302f0fc7b28891376aaa37fc31a3d99929adeb53a7474e8",
+        "restore-private.log": "22bfc21315672ba8624bb38f3b54f456402fefa42c72e8a1ca6ec1765ac859fe",
+        "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+      }
+    },
+    {
+      "mode": "chip",
+      "result": {
+        "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+        "endpoint_identified": true,
+        "cleanup_verified": true,
+        "wifi_verified": false,
+        "hdq_io_performed": false,
+        "dma_enabled": false,
+        "link": {
+          "error": 0,
+          "port88": "00000005",
+          "reads": 12
+        },
+        "endpoint_id": "43a314e4",
+        "inventory": {
+          "class_revision": 41943048,
+          "header": 0,
+          "subsystem": 285085803,
+          "command_status": 1048576,
+          "interrupt": 256,
+          "reads": 19,
+          "capabilities": 4,
+          "bars_raw": [
+            4,
+            0,
+            4,
+            0,
+            0,
+            0
+          ],
+          "capability_headers_raw": [
+            172,
+            131088,
+            88,
+            8939525,
+            0,
+            0
+          ]
+        },
+        "bar_sizing": {
+          "error": 0,
+          "reads": 72,
+          "attempts": 13,
+          "writes": 10,
+          "refusals": 0,
+          "bars": [
+            {
+              "index": 0,
+              "raw": 4,
+              "mask": 4294934532,
+              "bytes": 32768
+            },
+            {
+              "index": 1,
+              "raw": 0,
+              "mask": 4294967295,
+              "bytes": 0
+            },
+            {
+              "index": 2,
+              "raw": 4,
+              "mask": 4290772996,
+              "bytes": 4194304
+            },
+            {
+              "index": 3,
+              "raw": 0,
+              "mask": 4294967295,
+              "bytes": 0
+            },
+            {
+              "index": 4,
+              "raw": 0,
+              "mask": 0,
+              "bytes": 0
+            },
+            {
+              "index": 5,
+              "raw": 0,
+              "mask": 0,
+              "bytes": 0
+            }
+          ]
+        },
+        "chip_id": {
+          "error": 0,
+          "config_reads": 59,
+          "mmio_reads": 1,
+          "raw": 386417488,
+          "chip": 17232,
+          "revision": 8
+        },
+        "cleanup_errors": []
+      },
+      "private_result_sha256": "e331698cf7cd13ceb22b4ac1af01ba3371c5d644fa784dbaee8039ebed57840a",
+      "private_logs_sha256": {
+        "activate-private.log": "bfb7c43b027a72071213bcfb39fbc6188af2afbb0ca39944cd687c45a24209c9",
+        "hash-n71-pcie-diagnostic.ko-private.log": "c9a8409ca60989cab13b7a9ef616aef04b417f9c12fc93f21ee0cd90992931c8",
+        "hash-n71-wlan-power-diagnostic.ko-private.log": "2345023c4059367f84c9f9bc7dba878d5c17abf7ce0ca67b5022cdbee3853231",
+        "module-directory-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "observe-private.log": "3161c5061314a67b62fec1a42bc71ab47f70833768feeed2bd9c01bedf30a6d2",
+        "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+        "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+        "pcie-cleanup-private.log": "2ba002f0309cdb9e06783d173574e7525e890a047ff667a70d7ccef11d8d726b",
+        "pcie-private.log": "2ba002f0309cdb9e06783d173574e7525e890a047ff667a70d7ccef11d8d726b",
+        "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+        "preflight-private.log": "10963ee4eb5457d3dde3b9b3147f4a206fc30647ff520ab2eb7d395b2d408357",
+        "reg-unload-private.log": "c49f30521808b0e2859dce872e8b17a8f3075ce251753649f486a66ccb7e22f5",
+        "restore-private.log": "d5c8ff6721f592d151c852bd7521ab0f5feddfe98d7edf3ecc7dfb2adcbb989b",
+        "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+      }
+    },
+    {
+      "mode": "dart-observe",
+      "result": {
+        "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+        "endpoint_identified": true,
+        "cleanup_verified": true,
+        "wifi_verified": false,
+        "hdq_io_performed": false,
+        "dma_enabled": false,
+        "link": {
+          "error": 0,
+          "port88": "00000005",
+          "reads": 12
+        },
+        "endpoint_id": "43a314e4",
+        "inventory": {
+          "class_revision": 41943048,
+          "header": 0,
+          "subsystem": 285085803,
+          "command_status": 1048576,
+          "interrupt": 256,
+          "reads": 19,
+          "capabilities": 4,
+          "bars_raw": [
+            4,
+            0,
+            4,
+            0,
+            0,
+            0
+          ],
+          "capability_headers_raw": [
+            172,
+            131088,
+            88,
+            8939525,
+            0,
+            0
+          ]
+        },
+        "dart_observation": {
+          "error": 0,
+          "reads": 38,
+          "guards": 39,
+          "command": 3842,
+          "tcr": 0,
+          "fault_raw": 256,
+          "enabled_streams": 0,
+          "valid_ttbr_mask": 65535,
+          "valid_ttbr_count": 16,
+          "ttbr_words_preserved": 16,
+          "ttbr_sha256": "034006f39d54ba2f616bbc29363a4e314d6638994771340ec71ee49616b004e3",
+          "fault_flag": false,
+          "fault_stream": 0,
+          "fault_code": 0
+        },
+        "cleanup_errors": []
+      },
+      "private_result_sha256": "e1b3aa9d5f3cecbd9fdd085a82a7a7b76c3f54c1fbd3084aad886f23ebaf3604",
+      "private_logs_sha256": {
+        "activate-private.log": "71a4dda59393ba0f064650e6cc1bdbd2ba003117c1c87c03f30a1685856b9376",
+        "hash-n71-pcie-diagnostic.ko-private.log": "c254a947417baf1930cc8431e84738506cdec00abf9ecd18bf9b227fb453d764",
+        "hash-n71-wlan-power-diagnostic.ko-private.log": "9dd30f20850a851c73137932985fa3c85fd8e7f2d62adf767718e7cbd4e1a171",
+        "module-directory-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "observe-private.log": "9bd8ca4b43ef82096d0ae45ccbd2f483e510c2d78a8e52392cee0b1d6a0b4022",
+        "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+        "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+        "pcie-cleanup-private.log": "c3ab78c5152438cb1794cc28ec2d00624d3e3180cf62ed5548f6083dd5510898",
+        "pcie-private.log": "c3ab78c5152438cb1794cc28ec2d00624d3e3180cf62ed5548f6083dd5510898",
+        "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+        "preflight-private.log": "e4da6fd769df226c68b60bc1f411eb10c671bba8e6edbda869670ebe4f38790e",
+        "reg-unload-private.log": "44d4b9386ca32abb39c57a83d51420bf73ec2da55922a50d62795eab70faa8ce",
+        "restore-private.log": "f51fc7f4a487b2b06552e9a15405f7d12302766b5fc39ccc6c4b6b74ffa58ee0",
+        "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+      }
+    },
+    {
+      "mode": "dart-cycle",
+      "result": {
+        "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+        "endpoint_identified": true,
+        "cleanup_verified": true,
+        "wifi_verified": false,
+        "hdq_io_performed": false,
+        "dma_enabled": false,
+        "link": {
+          "error": 0,
+          "port88": "00000005",
+          "reads": 12
+        },
+        "endpoint_id": "43a314e4",
+        "inventory": {
+          "class_revision": 41943048,
+          "header": 0,
+          "subsystem": 285085803,
+          "command_status": 1048576,
+          "interrupt": 256,
+          "reads": 19,
+          "capabilities": 4,
+          "bars_raw": [
+            4,
+            0,
+            4,
+            0,
+            0,
+            0
+          ],
+          "capability_headers_raw": [
+            172,
+            131088,
+            88,
+            8939525,
+            0,
+            0
+          ]
+        },
+        "dart_cycle": {
+          "error": 0,
+          "snapshots": 4,
+          "reads": 152,
+          "guards": 156,
+          "quiet": 17,
+          "writes": 16,
+          "attempted": 1,
+          "stopped": 1,
+          "restored": 1,
+          "control_changed": 0,
+          "provider_initialized": true,
+          "ttbr_words_restored": 16,
+          "ttbr_sha256": "034006f39d54ba2f616bbc29363a4e314d6638994771340ec71ee49616b004e3",
+          "command": 3842,
+          "fault_raw": 256,
+          "dma_enabled": false
+        },
+        "cleanup_errors": []
+      },
+      "private_result_sha256": "984b3b81f8c41aebc954fdde3178fe5a0a158cbf83c3b276e0e1989bf1d2681f",
+      "private_logs_sha256": {
+        "activate-private.log": "7507b2bc0ca7ab8b9bd723037991748b2b127bf1828e2702c4901735e2c876f8",
+        "hash-n71-pcie-diagnostic.ko-private.log": "2c7fd81928888f2928b354e7b555883849248770dd6d13c7fb2329cf9b249733",
+        "hash-n71-wlan-power-diagnostic.ko-private.log": "bbe993ca655b388697c0a4a041fbb4792a2491a14d94127300b76be4f05cef66",
+        "module-directory-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "observe-private.log": "ae08459769958d5d4faf61f61e6968ad0f5a0220b89978e0b5a67e8d45a959ed",
+        "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+        "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+        "pcie-cleanup-private.log": "f1d81f1081372e15ae6f09c754fd13045fc55645da6b60429e3e21180e7ebb09",
+        "pcie-private.log": "f1d81f1081372e15ae6f09c754fd13045fc55645da6b60429e3e21180e7ebb09",
+        "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+        "preflight-private.log": "5d9e6ca6d71a6df27da0c081e6fe0b85f2eb5ab8234f850093b40cb66be4ff7a",
+        "reg-unload-private.log": "fd2409e6815d038853828bfba50023ba22642650c2330ae2f91a88cfcdabdb05",
+        "restore-private.log": "4b112a6bb8dc04df22941369367af1859a75466c5df9f3a1b4392b85b3769106",
+        "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+      }
+    },
+    {
+      "mode": "host-scan",
+      "result": {
+        "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+        "endpoint_identified": true,
+        "cleanup_verified": true,
+        "wifi_verified": false,
+        "hdq_io_performed": false,
+        "dma_enabled": false,
+        "link": {
+          "error": 0,
+          "port88": "00000005",
+          "reads": 12
+        },
+        "endpoint_id": "43a314e4",
+        "inventory": {
+          "class_revision": 41943048,
+          "header": 0,
+          "subsystem": 285085803,
+          "command_status": 1048576,
+          "interrupt": 256,
+          "reads": 19,
+          "capabilities": 4,
+          "bars_raw": [
+            4,
+            0,
+            4,
+            0,
+            0,
+            0
+          ],
+          "capability_headers_raw": [
+            172,
+            131088,
+            88,
+            8939525,
+            0,
+            0
+          ]
+        },
+        "experiment_error": "Successful PCI-core scan with no refused writes required",
+        "cleanup_errors": [],
+        "host_scan": {
+          "error": -1,
+          "devices": 2,
+          "endpoints": 1,
+          "reads": 556,
+          "attempts": 14,
+          "writes": 10,
+          "refusals": 1
+        },
+        "first_refusal": {
+          "bus": "0",
+          "devfn": "08",
+          "where": "0a0",
+          "size": "2",
+          "value": "00000002",
+          "error": "-1"
+        },
+        "subsequent_refusals_latched_not_independent": true,
+        "control_reference_lines": [
+          "[  649.035319] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_CAPTURE root=1 reads=22 capabilities=5 words=13; read-only reference",
+          "[  649.047329] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=044 size=2 value=00000008 capability=00001",
+          "[  649.059099] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=052 size=2 value=00000080 capability=00005",
+          "[  649.070873] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=078 size=2 value=00002010 capability=00010",
+          "[  649.082646] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=07c size=4 value=00733812 capability=00010",
+          "[  649.094419] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=080 size=2 value=00000000 capability=00010",
+          "[  649.106192] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=082 size=2 value=00003011 capability=00010",
+          "[  649.117969] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=098 size=2 value=00000000 capability=00010",
+          "[  649.129740] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=0a0 size=2 value=00000001 capability=00010",
+          "[  649.141511] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=104 size=4 value=00000000 capability=10001",
+          "[  649.153285] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=10c size=4 value=00462030 capability=10001",
+          "[  649.165057] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=110 size=4 value=00000000 capability=10001",
+          "[  649.176832] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=114 size=4 value=00006000 capability=10001",
+          "[  649.188605] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=1 where=118 size=4 value=00000000 capability=10001",
+          "[  649.200414] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_CAPTURE root=0 reads=28 capabilities=11 words=13; read-only reference",
+          "[  649.212506] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=04c size=2 value=00004108 capability=00001",
+          "[  649.224272] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=05a size=2 value=00000088 capability=00005",
+          "[  649.236048] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=0b4 size=2 value=00002c10 capability=00010",
+          "[  649.247819] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=0b8 size=4 value=0046dc11 capability=00010",
+          "[  649.259595] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=0bc size=2 value=00000000 capability=00010",
+          "[  649.271365] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=0be size=2 value=00001011 capability=00010",
+          "[  649.283138] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=0d4 size=2 value=00000000 capability=00010",
+          "[  649.294910] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=0dc size=2 value=00000001 capability=00010",
+          "[  649.306685] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=104 size=4 value=00000000 capability=10001",
+          "[  649.318457] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=10c size=4 value=00062030 capability=10001",
+          "[  649.330230] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=110 size=4 value=00000000 capability=10001",
+          "[  649.342004] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=114 size=4 value=00002000 capability=10001",
+          "[  649.353777] n71-pcie-diagnostic 610000000.pcie: N71_PCIE_CONTROL_REFERENCE root=0 where=118 size=4 value=000000a0 capability=10001"
+        ]
+      },
+      "private_result_sha256": "fb08fde0d7ff530b01c01eb26b597fb025071390ea5cb31431633b3c5cfa1b0c",
+      "private_logs_sha256": {
+        "activate-private.log": "218286c889dc93f52cdf8f5ec16e63e3ad70271e845d728fb2d35ad8824158b6",
+        "hash-n71-pcie-diagnostic.ko-private.log": "4472629362f70b1a75ebc891db4f757d06b0e778a071b41f38e85401b6326d49",
+        "hash-n71-wlan-power-diagnostic.ko-private.log": "df5a4973490bfea010c110494362aef30eb70ce0ebf9139845bda617d9980b05",
+        "module-directory-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "observe-private.log": "1cb4035b6fccc4f83e1cc733142ad1949d9ade5e0611f59e8231a497bc2d9da9",
+        "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+        "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+        "pcie-cleanup-private.log": "d5826aa0f1433673c33509b74bf0b5b92006d3f2e1db88bba6e6a6410cc28f10",
+        "pcie-private.log": "d5826aa0f1433673c33509b74bf0b5b92006d3f2e1db88bba6e6a6410cc28f10",
+        "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+        "preflight-private.log": "4f8bcceb6fc50618bd51567cd2d99eca5af30a1b2044af12ad23d87a3e7d4c54",
+        "reg-unload-private.log": "0ca28c86211da5339041e2641a07101b8e93a22a93d9b0bc3879b75fdcc722eb",
+        "restore-private.log": "73be1ead7a24ee8b50afbc0485fd595804db9e68f4e301e848af48e163370f40",
+        "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+      }
+    }
+  ],
+  "final_linux": {
+    "ssh_exit": 0,
+    "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+    "uptime": "712.16 1441.97",
+    "diagnostic_modules_and_pci_devices_absent": true,
+    "dmesg_log_sha256": "749b708ce883bd8d2e393d9a93ed2e61816b16e18c93b728e43b82f8b12d15ef",
+    "herdr_status_exit": 0,
+    "http_exit": 0
+  },
+  "snapshot": {
+    "verified_under_lock": true,
+    "members": 44,
+    "archive_sha256": "ba61524845d3f2486fb884f5cb36422283d75f37498edab2b7de002ebdd85249"
+  },
+  "ios_return": {
+    "snapshot_verified": true,
+    "sync_verified": true,
+    "software_return_verified": true,
+    "raw_log_sha256": "1d456537e93c06eb2ffa20d3b25a5c0892b85447312b5c5c2161cf0c9fa90e29"
+  },
+  "battery": {
+    "before_ios_percent": 91,
+    "after_ios_percent": 81,
+    "after_utc": "2026-10-05T13:06:23.759390+00:00",
+    "after_charging": true,
+    "after_external_connected": true,
+    "after_external_charge_capable": true,
+    "includes_boot_and_return_transitions": true,
+    "linux_net_current_measured": false,
+    "battery_health_measured": false
+  },
+  "ci": {
+    "format": 1,
+    "head": "70d47362d09216a461ddd7cd89193877588cdbf7",
+    "runs": [
+      {
+        "conclusion": "success",
+        "headSha": "70d47362d09216a461ddd7cd89193877588cdbf7",
+        "jobs": [
+          {
+            "conclusion": "success",
+            "databaseId": 111625383602,
+            "name": "windows-dns",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "databaseId": 111625383770,
+            "name": "source (ubuntu-24.04)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "databaseId": 111625383844,
+            "name": "source (macos-15)",
+            "status": "completed"
+          }
+        ],
+        "status": "completed",
+        "run_id": 37266850654
+      },
+      {
+        "conclusion": "success",
+        "headSha": "70d47362d09216a461ddd7cd89193877588cdbf7",
+        "jobs": [
+          {
+            "conclusion": "success",
+            "databaseId": 111625371863,
+            "name": "windows-dns",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "databaseId": 111625372240,
+            "name": "source (ubuntu-24.04)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "databaseId": 111625372304,
+            "name": "source (macos-15)",
+            "status": "completed"
+          }
+        ],
+        "status": "completed",
+        "run_id": 37266847052
+      }
+    ],
+    "log_proofs": [
+      {
+        "log": "ci-macos-70-private.log",
+        "sha256": "8e5f81741c312455116c3a701a29151a5b48a8f8bc84f1c279722b6f23b321c2",
+        "new_test_methods_verified": 6,
+        "assertion_mutation_markers": 26
+      },
+      {
+        "log": "ci-ubuntu-70-private.log",
+        "sha256": "5acf3e2ab66d448c7c83ed4505d1f2ac85c4f0c03e8230251027e88c66514f7e",
+        "new_test_methods_verified": 6,
+        "assertion_mutation_markers": 26
+      }
+    ],
+    "proof_scope": "CI input/contract checks only; no hardware proof"
+  },
+  "limits": {
+    "wifi_functional": false,
+    "irq_delivery_verified": false,
+    "dma_enabled": false,
+    "broadcom_modules_loaded": false,
+    "firmware_selected_or_loaded": false,
+    "i2c_pin_ownership_verified": false,
+    "i2c_transfers_performed": false,
+    "hdq_io_performed": false,
+    "sn2400_commands_performed": false,
+    "linux_charging_verified": false,
+    "stable_idle_registers_do_not_authorize_reset_or_transfers": true
+  },
+  "private_result_hashes": {
+    "passive": "d84ebdf2615d28d3da9d955a382764e9274d494666c3e7fc9206f77a5a53823b",
+    "controller": "2e57c75af23b2e3b2df665d2720a1054850b2381e17cae618280f0d63f27c3a3",
+    "final": "ab247ff3edaa17745a5b49a977aa861cc4c8d0d8c29bf712e06faa131a0a8450"
+  }
+}

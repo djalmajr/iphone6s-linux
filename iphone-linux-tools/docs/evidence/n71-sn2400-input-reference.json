@@ -1,0 +1,158 @@
+{
+  "format": 1,
+  "status": "static_n71_arithmetic_implemented_no_charger_io",
+  "decoded_kernel_sha256": "0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a",
+  "proof_scope": "Selected pinned N71 Apple instructions and cstrings; no charger access or qualified operating limits",
+  "input_arithmetic": {
+    "calibration_path_implemented": false,
+    "uncalibrated_clamp_ma": [
+      90,
+      2000
+    ],
+    "quantization_ma": 10,
+    "register_value_range": [
+      0,
+      191
+    ],
+    "reference_multiply": 52429,
+    "reference_shift": 19,
+    "request_zero_suspend": true,
+    "code_zero_also_encodes_ma": 90,
+    "encoded_value_is_charge_current_measurement": false
+  },
+  "input_setter_reference": {
+    "input_register": "0x09",
+    "control_register": "0x10",
+    "positive_order": [
+      "cached software control",
+      "encoded input limit"
+    ],
+    "suspend_order": [
+      "input register zero",
+      "(cached control & ~3) | 8"
+    ],
+    "initial_software_control_cache": 4,
+    "spread_spectrum_property_sets_bits": 3,
+    "cache_is_live_register_snapshot": false,
+    "first_write_error_propagated_by_reference": false,
+    "physical_sequence_reversible_qualified": false
+  },
+  "charger_state_reference": {
+    "read_register": "0x07",
+    "output_bits": [
+      0,
+      2
+    ],
+    "bit_meanings_qualified": false,
+    "read_side_effects_qualified": false
+  },
+  "charge_current_reference": {
+    "write_register": "0x0d",
+    "clamp_parameter_max": 2550,
+    "encoding": "floor(parameter / 10) with zero preserved",
+    "safe_battery_current_qualified": false
+  },
+  "timer_reference": {
+    "reset_calls_software_charger_mode": 1,
+    "completion_calls_software_charger_mode": 0,
+    "default_timeout_argument": 8,
+    "direct_watchdog_register_write_observed_in_selected_timer_routine": false,
+    "linux_discharge_cause_isolated": false,
+    "timer_slot_function": "0xfffffff00772ae18",
+    "timer_slot_symbol": "IOTimerEventSource::setTimeout(unsigned int, unsigned int)",
+    "scale_argument_nanoseconds": 1000000000,
+    "default_timer_delay_seconds": 8,
+    "api_source_url": "https://github.com/apple-oss-distributions/xnu/blob/main/iokit/IOKit/IOTimerEventSource.h",
+    "api_source_is_n71_binary_abi_proof": false
+  },
+  "a10_comparison": {
+    "commit": "d49ac41cb898881457a97bb3cd44b7d92ff50a8c",
+    "source_sha256": "27005d853ccb6cd62ff3e79a24d651de15b2d88eb229ecdb139b3a3785885566",
+    "source_url": "https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/power/supply/apple_sn2400_charger.c",
+    "suspend_write_order_matches_n71": false,
+    "probe_writes_charge_limit": true,
+    "n71_driver_qualification": false
+  },
+  "verification_windows": [
+    {
+      "name": "input_setting",
+      "address": "0xfffffff005d69560",
+      "end_exclusive": "0xfffffff005d696fc",
+      "file_offset": 19092832,
+      "size": 412,
+      "sha256": "2b6b56b3afb5cf6f4bfb8e9670b02bbeabfe260faa3d59bba415505002277753"
+    },
+    {
+      "name": "input_setter",
+      "address": "0xfffffff005d696fc",
+      "end_exclusive": "0xfffffff005d69880",
+      "file_offset": 19093244,
+      "size": 388,
+      "sha256": "b8fc2258399f6a3d027a700fea98251d06f5c9206a2bac517960a2d12fb02a40"
+    },
+    {
+      "name": "software_control_cache_init",
+      "address": "0xfffffff005d67244",
+      "end_exclusive": "0xfffffff005d672d0",
+      "file_offset": 19083844,
+      "size": 140,
+      "sha256": "860a2b2fcd97a06d37d5e56f35061bb74a55ba09dc8142a3ef86cc8fa9c09152"
+    },
+    {
+      "name": "charger_state",
+      "address": "0xfffffff005d694a4",
+      "end_exclusive": "0xfffffff005d69560",
+      "file_offset": 19092644,
+      "size": 188,
+      "sha256": "5b3f6a39cb7bb3dcb14acd55eeea5743bdc281a7514a085f289a55592b2b2dbc"
+    },
+    {
+      "name": "charge_current_encoder",
+      "address": "0xfffffff005d69a3c",
+      "end_exclusive": "0xfffffff005d69a74",
+      "file_offset": 19094076,
+      "size": 56,
+      "sha256": "1596930e2bae16c468da4b7a3ac56cd903e94df100447d7c2f7fea713da468aa"
+    },
+    {
+      "name": "charge_timer",
+      "address": "0xfffffff005d69a74",
+      "end_exclusive": "0xfffffff005d69b44",
+      "file_offset": 19094132,
+      "size": 208,
+      "sha256": "08792b3b7d54cf431ad20da968820a9889b01f71e453c7e6b8b7f2a6c506f1c7"
+    },
+    {
+      "name": "timer_completion",
+      "address": "0xfffffff005d68dc8",
+      "end_exclusive": "0xfffffff005d68e6c",
+      "file_offset": 19090888,
+      "size": 164,
+      "sha256": "b4c9c7dda906d44f551e042ba794d98e03a4367a79a59258579f1f289ec7fc85"
+    },
+    {
+      "name": "timer_setTimeout_vtable_slot",
+      "address": "0xfffffff00711bc60",
+      "file_offset": 1145952,
+      "size": 8,
+      "sha256": "5af77c3cfa8a444705ee219d727a139858e2f9c67f5f0acbb5a175455d2ea427"
+    }
+  ],
+  "hardware_io_performed": false,
+  "physical_charging_validated": false,
+  "limits": "Arithmetic reference only. Calibration, chip revision, I2C ownership/read effects, error cleanup and battery/USB limits remain unqualified. No setting may be applied based on this record alone.",
+  "verification": {
+    "mac_native_baseline_passed": true,
+    "mac_compiled_assertion_mutations": 8,
+    "arm64_native_baseline_passed": true,
+    "arm64_compiled_assertion_mutations": 8,
+    "arm64_gate_log_sha256": "c7dfe42f9d912b77c2e5ec7bc79421cf4c80de84220459e67361a11f7fb0a9be",
+    "kernel_context_werror_object_compiled": true,
+    "kernel_context_object_sha256": "91d65cfa223139578b28373ff1482b7347334d5dc9509bc7a0f3251108de49a5",
+    "kernel_context_gate_log_sha256": "202326427f9235128570d3d13e5a1b8aebbe08020e60d5eaffab28592f7ff50c",
+    "kernel_image_config_exports_preserved": true,
+    "hardware_driver_created": false,
+    "header_sha256": "f67d5fcb3ffa5e9fdfec80f6091f52b6ae965e0a6eac5aef5187f43d61c8a161",
+    "public_inputs_archive_sha256": "8c225d77a365e3dffca4412fe84b377b49b645af14b708c1e8d232f214b23a07"
+  }
+}

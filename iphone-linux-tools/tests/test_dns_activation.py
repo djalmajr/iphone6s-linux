@@ -1,0 +1,571 @@
+"""Real descriptor handoff; privileged cases require the project's isolated VM namespace."""
+import array
+from contextlib import ExitStack
+from dataclasses import replace
+import os
+from pathlib import Path
+import socket
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+from types import SimpleNamespace
+import unittest
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'scripts/host'))
+import dns_activation as activation  # noqa: E402
+import dns_privileged as privileged  # noqa: E402
+
+
+def fd_count():
+    return len(os.listdir('/proc/self/fd' if sys.platform == 'linux' else '/dev/fd'))
+
+
+class ActivationTests(unittest.TestCase):
+    def setUp(self):
+        self.stack = ExitStack()
+        self.addCleanup(self.stack.close)
+        self.udp = self.stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
+        self.udp.bind(('127.0.0.1', 0))
+        self.tcp = self.stack.enter_context(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+        self.tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.tcp.bind(self.udp.getsockname())
+        self.expected = activation.Expected('127.0.0.1', os.getgid(), b'n' * 32,
+                                            self.udp.getsockname()[1], os.getuid())
+        self.frame = activation.FRAME.pack(b'DNS1', os.getuid(), os.getgid(), 0, b'n' * 32)
+
+    def handoff(self, payload=None, descriptors=None, fragment=False, hold=False):
+        sender, receiver = socket.socketpair()
+        self.stack.enter_context(sender)
+        self.stack.enter_context(receiver)
+        values = [self.udp.fileno(), self.tcp.fileno()] if descriptors is None else descriptors
+        payload = self.frame if payload is None else payload
+        errors = []
+
+        def transmit():
+            try:
+                rights = [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array('i', values))]
+                sender.sendmsg([payload[:1] if fragment else payload], rights)
+                if fragment:
+                    sender.sendall(payload[1:])
+                if not hold:
+                    sender.shutdown(socket.SHUT_WR)
+            except BaseException as error:
+                errors.append(error)
+
+        worker = threading.Thread(target=transmit)
+        worker.start()
+        try:
+            return activation.receive_sockets(receiver, self.expected)
+        finally:
+            worker.join(2)
+            self.assertFalse(worker.is_alive(), 'Sender survived cleanup')
+            if errors:
+                raise errors[0]
+
+    def refuse(self, **kwargs):
+        # Create/close the transport before comparing descriptor counts.
+        before = fd_count()
+        old = self.stack
+        self.stack = ExitStack()
+        try:
+            with self.assertRaises((ValueError, TimeoutError)):
+                self.handoff(**kwargs)
+        finally:
+            self.stack.close()
+            self.stack = old
+        self.assertEqual(fd_count(), before, 'Rejected descriptors leaked')
+
+    def test_valid_fragmented_transfer_carries_udp_tcp_data(self):
+        udp, tcp = self.handoff(fragment=True)
+        self.stack.enter_context(udp)
+        self.stack.enter_context(tcp)
+        self.assertFalse(udp.get_inheritable())
+        self.assertFalse(tcp.get_inheritable())
+        udp.settimeout(1)
+        tcp.settimeout(1)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
+            client.sendto(b'udp-data', udp.getsockname())
+            self.assertEqual(udp.recvfrom(64)[0], b'udp-data')
+        tcp.listen(1)
+        with socket.create_connection(tcp.getsockname(), timeout=1) as client:
+            with tcp.accept()[0] as connection:
+                client.sendall(b'tcp-data')
+                self.assertEqual(connection.recv(64), b'tcp-data')
+                client.shutdown(socket.SHUT_WR)
+                self.assertEqual(connection.recv(64), b'')
+
+    def test_peer_identity_matches_real_unix_connection(self):
+        first, second = socket.socketpair()
+        with first, second:
+            self.assertEqual(activation.peer_identity(first), (os.getuid(), os.getgid()))
+
+    def test_wrong_peer_refused(self):
+        self.expected = replace(self.expected, uid=os.getuid() + 1)
+        self.frame = activation.FRAME.pack(b'DNS1', self.expected.uid, self.expected.gid, 0, b'n' * 32)
+        self.refuse()
+
+    def test_wrong_nonce_refused(self):
+        self.expected = replace(self.expected, nonce=b'x' * 32)
+        self.refuse()
+
+    def test_frame_identity_and_groups_refused(self):
+        for uid, gid, groups, magic in [(os.getuid() + 1, os.getgid(), 0, b'DNS1'),
+                                        (os.getuid(), os.getgid() + 1, 0, b'DNS1'),
+                                        (os.getuid(), os.getgid(), 1, b'DNS1'),
+                                        (os.getuid(), os.getgid(), 0, b'EVIL')]:
+            with self.subTest(uid=uid, gid=gid, groups=groups, magic=magic):
+                self.refuse(payload=activation.FRAME.pack(magic, uid, gid, groups, b'n' * 32))
+
+    def test_short_or_trailing_frame_refused(self):
+        for payload in (self.frame[:-1], self.frame + b'x', self.frame + b'xx'):
+            with self.subTest(size=len(payload)):
+                self.refuse(payload=payload)
+
+    def test_descriptor_count_and_truncation_refused(self):
+        for count in (0, 1, 3, 17, 65):
+            with self.subTest(count=count):
+                self.refuse(descriptors=[self.udp.fileno()] * count)
+
+    def test_extra_descriptor_refused(self):
+        self.refuse(descriptors=[self.udp.fileno(), self.tcp.fileno(), self.udp.fileno()])
+
+    def test_reversed_types_refused(self):
+        self.refuse(descriptors=[self.tcp.fileno(), self.udp.fileno()])
+
+    def test_wrong_first_type_refused(self):
+        self.refuse(descriptors=[self.tcp.fileno(), self.tcp.fileno()])
+
+    def test_wrong_address_and_port_refused(self):
+        original = self.expected
+        for expected in (replace(original, bind='127.0.0.2'),
+                         replace(original, port=original.port + 1)):
+            self.expected = expected
+            self.refuse()
+
+    def test_rejected_adopted_fds_close_even_with_references_held(self):
+        original, observed = socket.socket, []
+
+        def track(*args, **kwargs):
+            value = original(*args, **kwargs)
+            if 'fileno' in kwargs:
+                observed.append(value)
+            return value
+
+        self.expected = replace(self.expected, port=self.expected.port + 1)
+        with patch.object(activation.socket, 'socket', side_effect=track):
+            self.refuse()
+        self.assertTrue(observed, 'No real adopted descriptors observed')
+        self.assertTrue(all(value.fileno() == -1 for value in observed))
+
+    def test_ipv6_refused(self):
+        with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as udp:
+            udp.bind(('::1', 0))
+            self.refuse(descriptors=[udp.fileno(), self.tcp.fileno()])
+
+    def test_listening_tcp_refused(self):
+        self.tcp.listen(1)
+        self.refuse()
+
+    def test_connected_udp_refused(self):
+        self.udp.connect(('127.0.0.1', 9))
+        self.refuse()
+
+    def test_reuse_options_refused(self):
+        for option in (socket.SO_REUSEADDR, socket.SO_REUSEPORT):
+            with self.subTest(option=option):
+                self.udp.setsockopt(socket.SOL_SOCKET, option, 1)
+                self.refuse()
+                self.udp.setsockopt(socket.SOL_SOCKET, option, 0)
+        self.tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
+        self.refuse()
+
+    def test_open_sender_times_out_and_closes_received_fds(self):
+        start = time.monotonic()
+        self.refuse(hold=True)
+        self.assertLess(time.monotonic() - start, 4)
+
+    def test_bootstrap_bind_scope(self):
+        for value in ('0.0.0.0', '127.0.0.1', '8.8.8.8', '172.16.42.2', '010.1.2.3', '::1'):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    privileged.private_bind(value)
+        for value in ('10.1.2.3', '172.20.1.2', '192.168.1.2'):
+            self.assertEqual(privileged.private_bind(value), value)
+
+    def test_private_channel_refuses_permissions_symlinks_and_owner(self):
+        with tempfile.TemporaryDirectory(prefix='idns-test-') as folder:
+            path = Path(folder).resolve() / 's'
+            options = SimpleNamespace(channel=str(path), uid=os.getuid())
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
+                server.bind(str(path))
+                os.chmod(path, 0o600)
+                privileged.private_channel(options)
+                os.chmod(path, 0o666)
+                with self.assertRaises(ValueError):
+                    privileged.private_channel(options)
+                os.chmod(path, 0o600)
+                os.chmod(folder, 0o755)
+                with self.assertRaises(ValueError):
+                    privileged.private_channel(options)
+                os.chmod(folder, 0o700)
+                with self.assertRaises(ValueError):
+                    privileged.private_channel(replace_namespace(options, uid=os.getuid() + 1))
+                link = path.with_name('link')
+                link.symlink_to(path)
+                with self.assertRaises(ValueError):
+                    privileged.private_channel(replace_namespace(options, channel=str(link)))
+
+    def test_root_controller_refused_before_launch(self):
+        with patch.object(activation.os, 'getuid', return_value=0):
+            with patch.object(activation.subprocess, 'Popen') as launch:
+                with self.assertRaisesRegex(ValueError, 'ordinary non-root'):
+                    activation.acquire('10.1.2.3')
+                launch.assert_not_called()
+
+    def test_nonce_exact_length_and_eof(self):
+        code = ('import sys; sys.path.insert(0, sys.argv[1]); '
+                'import dns_privileged; print(len(dns_privileged.read_nonce()))')
+        for value in (b'', b'n' * 31, b'n' * 32, b'n' * 33):
+            result = subprocess.run([sys.executable, '-I', '-c', code,
+                                     str(ROOT / 'scripts/host')], input=value,
+                                    capture_output=True, timeout=4)
+            self.assertEqual(result.returncode == 0, len(value) == 32)
+            if len(value) == 32:
+                self.assertEqual(result.stdout, b'32\n')
+
+    def test_acquire_acknowledges_adoption_before_donor_exit(self):
+        # Mutation captured: no ACK leaves the donor waiting and acquire must fail.
+        self.udp.close()
+        self.tcp.close()
+        code = '''import argparse,array,os,socket,struct,sys
+p=argparse.ArgumentParser()
+for name in ('channel','bind','uid','gid','test-port'): p.add_argument('--'+name)
+o=p.parse_args(); nonce=sys.stdin.buffer.read()
+with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as udp, socket.socket() as tcp:
+ udp.bind(('127.0.0.1',int(o.test_port))); tcp.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+ tcp.bind(udp.getsockname())
+ with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as channel:
+  channel.settimeout(3); channel.connect(o.channel)
+  frame=struct.pack('!4sIII32s',b'DNS1',int(o.uid),int(o.gid),0,nonce)
+  channel.sendmsg([frame],[(socket.SOL_SOCKET,socket.SCM_RIGHTS,array.array('i',[udp.fileno(),tcp.fileno()]))])
+  channel.shutdown(socket.SHUT_WR)
+  ack=b''
+  while len(ack)<=32:
+   piece=channel.recv(33-len(ack))
+   if not piece: break
+   ack+=piece
+  assert ack==nonce
+'''
+        launch = subprocess.Popen
+        original_expected = activation.Expected
+        port = self.expected.port
+
+        def own_child(command, **kwargs):
+            return launch([sys.executable, '-I', '-S', '-c', code] + command[7:]
+                          + ['--test-port', str(port)], **kwargs)
+
+        def own_expected(bind, gid, nonce, port, uid):
+            return original_expected('127.0.0.1', gid, nonce, self.expected.port, uid)
+
+        before = fd_count()
+        directories = set(Path(tempfile.gettempdir()).glob('idns-*'))
+        with patch.object(activation.subprocess, 'Popen', side_effect=own_child), \
+                patch.object(activation, 'Expected', side_effect=own_expected):
+            try:
+                udp, tcp = activation.acquire('10.231.0.1')
+            except (ValueError, OSError) as error:
+                self.fail('Acknowledged adoption failed: ' + str(error))
+            with udp, tcp:
+                udp.settimeout(1)
+                tcp.settimeout(1)
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
+                    client.sendto(b'after-donor-exit', udp.getsockname())
+                    self.assertEqual(udp.recvfrom(64)[0], b'after-donor-exit')
+                tcp.listen(1)
+                with socket.create_connection(tcp.getsockname(), timeout=1) as client:
+                    with tcp.accept()[0] as connection:
+                        client.sendall(b'after-donor-exit')
+                        self.assertEqual(connection.recv(64), b'after-donor-exit')
+        self.assertEqual(fd_count(), before)
+        self.assertEqual(set(Path(tempfile.gettempdir()).glob('idns-*')), directories)
+
+    def test_helper_ack_exact_nonce_fragmented_and_eof(self):
+        sender, receiver = socket.socketpair()
+        with sender, receiver:
+            sender.sendall(b'n')
+            sender.sendall(b'n' * 31)
+            sender.shutdown(socket.SHUT_WR)
+            privileged.wait_for_ack(receiver, b'n' * 32)
+
+    def test_helper_ack_wrong_short_extra_or_absent_refused(self):
+        for payload in (b'x' * 32, b'n' * 31, b'n' * 33, b''):
+            with self.subTest(length=len(payload)):
+                sender, receiver = socket.socketpair()
+                with sender, receiver:
+                    sender.sendall(payload)
+                    sender.shutdown(socket.SHUT_WR)
+                    with self.assertRaisesRegex(ValueError, 'acknowledgement refused'):
+                        privileged.wait_for_ack(receiver, b'n' * 32)
+
+    def test_helper_ack_requires_eof_and_deadline(self):
+        sender, receiver = socket.socketpair()
+        with sender, receiver:
+            sender.sendall(b'n' * 32)
+            start = time.monotonic()
+            with self.assertRaises(TimeoutError):
+                privileged.wait_for_ack(receiver, b'n' * 32)
+            self.assertLess(time.monotonic() - start, 4)
+
+    def test_helper_ack_deadline_is_global_across_fragments(self):
+        sender, receiver = socket.socketpair()
+        with sender, receiver:
+            sender.sendall(b'n' * 32)
+            sender.shutdown(socket.SHUT_WR)
+            first = [True]
+            def fragmented_receive(size):
+                amount = 1 if first.pop() else size
+                first.append(False)
+                return receiver.recv(amount)
+            channel = SimpleNamespace(settimeout=receiver.settimeout, recv=fragmented_receive)
+            with patch.object(privileged.time, 'monotonic', side_effect=[0, 0, 4, 4]):
+                with self.assertRaises(TimeoutError):
+                    privileged.wait_for_ack(channel, b'n' * 32)
+
+
+
+    def modeled_bootstrap(self, platform, kernel_groups, account_groups, count=None, ack=b'n' * 32):
+        """Model OS identity/group reads; execute the real handoff/domain guards."""
+        import ctypes
+        from unittest.mock import MagicMock
+        uid, gid = os.getuid(), os.getgid()
+        identity = {'uid': 0, 'gid': 0}
+        frames = []
+
+        def native_groups(size, buffer):
+            if count is not None:
+                return count
+            for index, value in enumerate(kernel_groups):
+                buffer[index] = value
+            return len(kernel_groups)
+
+        native = MagicMock(side_effect=native_groups)
+        library = SimpleNamespace(getgroups=native)
+        def socket_fixture(*_args, **_kwargs):
+            value = MagicMock()
+            value.__enter__.return_value = value
+            value.fileno.return_value = self.udp.fileno()
+            value.recv.side_effect = [ack, b'']
+            def send(payload, _rights):
+                data = b''.join(payload)
+                frames.append(privileged.FRAME.unpack(data))
+                return len(data)
+            value.sendmsg.side_effect = send
+            return value
+
+        with tempfile.TemporaryDirectory(prefix='idns-groups-') as folder:
+            path = Path(folder).resolve() / 's'
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as channel:
+                channel.bind(str(path))
+                os.chmod(path, 0o600)
+                options = SimpleNamespace(bind='10.231.0.1', channel=str(path), uid=uid, gid=gid)
+                with ExitStack() as context:
+                    context.enter_context(patch.object(privileged, 'ctypes', ctypes, create=True))
+                    context.enter_context(patch.object(ctypes, 'CDLL', return_value=library))
+                    context.enter_context(patch.object(ctypes, 'get_errno', return_value=5))
+                    context.enter_context(patch.object(privileged.sys, 'platform', platform))
+                    for name in ('getuid', 'geteuid'):
+                        context.enter_context(patch.object(privileged.os, name, side_effect=lambda: identity['uid']))
+                    for name in ('getgid', 'getegid'):
+                        context.enter_context(patch.object(privileged.os, name, side_effect=lambda: identity['gid']))
+                    context.enter_context(patch.object(privileged.os, 'setuid', side_effect=lambda value: identity.update(uid=value)))
+                    context.enter_context(patch.object(privileged.os, 'setgid', side_effect=lambda value: identity.update(gid=value)))
+                    context.enter_context(patch.object(privileged.os, 'setgroups'))
+                    context.enter_context(patch.object(privileged.os, 'getgroups', return_value=account_groups))
+                    context.enter_context(patch.dict(privileged.os.environ, {'SUDO_UID': str(uid), 'SUDO_GID': str(gid)}))
+                    context.enter_context(patch.object(privileged, 'read_nonce', return_value=b'n' * 32))
+                    context.enter_context(patch.object(privileged.socket, 'socket', side_effect=socket_fixture))
+                    try:
+                        privileged.bootstrap(options)
+                    except (OSError, ValueError) as error:
+                        return error, frames
+        return None, frames
+
+    def test_bootstrap_refuses_bad_acknowledgement(self):
+        error, frames = self.modeled_bootstrap('darwin', [os.getgid()], [], ack=b'x' * 32)
+        self.assertIsInstance(error, ValueError)
+        self.assertIn('acknowledgement refused', str(error))
+        self.assertEqual(len(frames), 1, 'The refusal must occur after the handoff frame.')
+
+    def test_darwin_primary_only_handoff_ignores_account_groups(self):
+        # Mutation captured: using Python's account access list refuses a valid dropped process.
+        error, frames = self.modeled_bootstrap('darwin', [os.getgid()], [0, os.getgid(), 80])
+        self.assertIsNone(error, 'Valid kernel groups refused: ' + str(error))
+        self.assertEqual(frames, [(b'DNS1', os.getuid(), os.getgid(), 0, b'n' * 32)])
+
+    def test_darwin_nonprimary_groups_refuse_handoff(self):
+        # Mutation captured: erasing extras or removing the group guard hands off with root group retained.
+        error, frames = self.modeled_bootstrap('darwin', [os.getgid(), 0], [])
+        self.assertIsInstance(error, ValueError)
+        self.assertIn('Privilege drop incomplete', str(error))
+        self.assertEqual(frames, [])
+
+    def test_darwin_getgroups_errno_refuses_handoff(self):
+        # Mutation captured: ignoring native getgroups errno changes the failure contract.
+        error, frames = self.modeled_bootstrap('darwin', [], [], count=-1)
+        self.assertIsInstance(error, OSError)
+        self.assertEqual(error.errno, 5)
+        self.assertEqual(frames, [])
+
+    def test_darwin_getgroups_overflow_refuses_handoff(self):
+        # Mutation captured: dropping the count bound silently truncates the native group list.
+        error, frames = self.modeled_bootstrap('darwin', [], [], count=1025)
+        self.assertIsInstance(error, ValueError)
+        self.assertIn('count', str(error))
+        self.assertEqual(frames, [])
+
+    def test_linux_supplementary_groups_still_refuse_handoff(self):
+        # Mutation captured: selecting the Darwin reader on Linux ignores real supplemental groups.
+        error, frames = self.modeled_bootstrap('linux', [os.getgid()], [0])
+        self.assertIsInstance(error, ValueError)
+        self.assertEqual(frames, [])
+
+    def test_linux_empty_groups_still_handoff(self):
+        error, frames = self.modeled_bootstrap('linux', [0], [])
+        self.assertIsNone(error, str(error))
+        self.assertEqual(frames, [(b'DNS1', os.getuid(), os.getgid(), 0, b'n' * 32)])
+
+
+class ActivationBootstrapTests(unittest.TestCase):
+    """Run explicitly as ubuntu inside a root-created private network namespace."""
+    def setUp(self):
+        self.assertEqual(sys.platform, 'linux', 'Privileged fixture is Linux VM only')
+        self.bind = os.environ['IPHONE_ACTIVATION_TEST_BIND']
+        self.assertNotEqual(os.geteuid(), 0)
+        initial = subprocess.check_output(['/usr/bin/sudo', '-n', '--', '/usr/bin/readlink',
+                                           '/proc/1/ns/net'], timeout=4).decode().strip()
+        self.assertNotEqual(os.readlink('/proc/self/ns/net'), initial,
+                            'Private network namespace required')
+        self.assertEqual(Path('/proc/sys/net/ipv4/ip_unprivileged_port_start').read_text().strip(), '1024')
+
+    def assert_free(self):
+        with ExitStack() as stack:
+            for kind in (socket.SOCK_DGRAM, socket.SOCK_STREAM):
+                sock = stack.enter_context(socket.socket(socket.AF_INET, kind))
+                # A free privileged port still refuses the ordinary controller.
+                with self.assertRaises(PermissionError):
+                    sock.bind((self.bind, 53))
+        code = ('import socket,sys; a=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); '
+                'b=socket.socket(); b.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1); '
+                'a.bind((sys.argv[1],53)); b.bind((sys.argv[1],53))')
+        result = subprocess.run(['/usr/bin/sudo', '-n', '--', '/usr/bin/python3', '-I', '-S',
+                                 '-c', code, self.bind], capture_output=True, timeout=4)
+        self.assertEqual(result.returncode, 0, 'Privileged sockets survived cleanup')
+
+    def test_actual_root_bind_drop_handoff_data_and_cleanup(self):
+        before = fd_count()
+        temp_before = set(Path(tempfile.gettempdir()).glob('idns-*'))
+        with ExitStack() as stack:
+            try:
+                udp, tcp = activation.acquire(self.bind)
+            except (ValueError, OSError) as error:
+                self.fail('Actual bootstrap handshake failed: ' + str(error))
+            stack.enter_context(udp)
+            stack.enter_context(tcp)
+            self.assertEqual(udp.getsockname(), (self.bind, 53))
+            self.assertEqual(tcp.getsockname(), (self.bind, 53))
+            self.assertFalse(udp.get_inheritable())
+            self.assertFalse(tcp.get_inheritable())
+            udp.settimeout(1)
+            tcp.settimeout(1)
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
+                client.sendto(b'privileged-udp', (self.bind, 53))
+                self.assertEqual(udp.recvfrom(64)[0], b'privileged-udp')
+            tcp.listen(1)
+            with socket.create_connection((self.bind, 53), timeout=1) as client:
+                with tcp.accept()[0] as connection:
+                    client.sendall(b'privileged-tcp')
+                    self.assertEqual(connection.recv(64), b'privileged-tcp')
+                    client.shutdown(socket.SHUT_WR)
+                    self.assertEqual(connection.recv(64), b'')
+        self.assertEqual(fd_count(), before)
+        self.assertEqual(set(Path(tempfile.gettempdir()).glob('idns-*')), temp_before)
+        self.assert_free()
+
+    def test_bootstrap_refuses_wrong_original_identity(self):
+        with tempfile.TemporaryDirectory(prefix='idns-test-') as folder:
+            path = str(Path(folder).resolve() / 's')
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as channel:
+                channel.bind(path)
+                os.chmod(path, 0o600)
+                helper = ROOT / 'scripts/host/dns_privileged.py'
+                command = ['/usr/bin/sudo', '-n', '--', '/usr/bin/python3', '-I', '-S',
+                           str(helper), '--bind', self.bind, '--channel', path,
+                           '--uid', str(os.getuid() + 1), '--gid', str(os.getgid())]
+                result = subprocess.run(command, input=b'n' * 32,
+                                        capture_output=True, timeout=4)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(b'original sudo identity', result.stderr)
+        self.assert_free()
+
+    def test_tcp_active_close_allows_next_bootstrap_without_reuseport(self):
+        with ExitStack() as stack:
+            udp, tcp = activation.acquire(self.bind)
+            stack.enter_context(udp)
+            stack.enter_context(tcp)
+            self.assertEqual(tcp.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR), 1)
+            self.assertEqual(tcp.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT), 0)
+            tcp.listen(1)
+            with socket.create_connection((self.bind, 53), timeout=1) as client:
+                with tcp.accept()[0] as connection:
+                    connection.shutdown(socket.SHUT_WR)
+                    self.assertEqual(client.recv(64), b'')
+                    client.shutdown(socket.SHUT_WR)
+                    self.assertEqual(connection.recv(64), b'')
+        rows = Path('/proc/net/tcp').read_text().splitlines()[1:]
+        self.assertTrue(any(int(row.split()[1].split(':')[1], 16) == 53
+                            and row.split()[3] == '06' for row in rows),
+                        'Fixture did not create TIME_WAIT at 53')
+        try:
+            sockets = activation.acquire(self.bind)
+        except (ValueError, OSError) as error:
+            self.fail('TIME_WAIT prevented the next bootstrap: ' + str(error))
+        for value in sockets:
+            value.close()
+        self.assert_free()
+
+    def test_tcp_conflict_closes_first_udp_and_child(self):
+        code = ('import socket,sys; s=socket.socket(); '
+                's.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1); '
+                's.bind((sys.argv[1],53)); s.listen(1); '
+                'print("READY",flush=True); sys.stdin.buffer.read()')
+        process = subprocess.Popen(['/usr/bin/sudo', '-n', '--', '/usr/bin/python3', '-I', '-S',
+                                    '-c', code, self.bind], stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            self.assertEqual(process.stdout.readline(), b'READY\n')
+            start, before = time.monotonic(), fd_count()
+            with self.assertRaises(ValueError):
+                activation.acquire(self.bind)
+            self.assertLess(time.monotonic() - start, 3)
+            self.assertEqual(fd_count(), before)
+        finally:
+            process.communicate(input=b'', timeout=4)
+        self.assertEqual(process.returncode, 0)
+        self.assert_free()
+
+
+def replace_namespace(options, **changes):
+    return SimpleNamespace(**(vars(options) | changes))
+
+
+def load_tests(loader, _tests, _pattern):
+    # Discovery never launches sudo; the VM class must be explicitly selected.
+    return loader.loadTestsFromTestCase(ActivationTests)
+
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='ActivationTests')

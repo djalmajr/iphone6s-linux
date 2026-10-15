@@ -1,0 +1,79 @@
+{
+  "format": 1,
+  "status": "inventory_verified_host_scan_refused",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "module_sha256": "1fe1b30800e23b47a02dbc92996ac29326c3e60953abcf04cae2493d6d38f002",
+  "link": {
+    "error": 0,
+    "port88": "00000005",
+    "reads": 12
+  },
+  "endpoint_id": "43a314e4",
+  "inventory": {
+    "class_revision": 41943048,
+    "header": 0,
+    "subsystem": 285085803,
+    "command_status": 1048576,
+    "interrupt": 256,
+    "reads": 19,
+    "capabilities": 4,
+    "bars_raw": [
+      4,
+      0,
+      4,
+      0,
+      0,
+      0
+    ],
+    "capability_headers_raw": [
+      172,
+      131088,
+      88,
+      8939525,
+      0,
+      0
+    ]
+  },
+  "scan": {
+    "error": -1,
+    "devices": 2,
+    "endpoints": 1,
+    "reads": 478,
+    "attempts_before_latch": 1,
+    "accepted_probe_writes": 0,
+    "refusals_latched": 1,
+    "first_refused_request": {
+      "bus": 0,
+      "devfn": 8,
+      "where": 4,
+      "size": 2,
+      "value": 1024
+    },
+    "bar_sizes_verified": false
+  },
+  "cleanup_verified": true,
+  "scan_bus_removed": true,
+  "config_restore_readback_verified": true,
+  "pci_sysfs_empty_after": true,
+  "reset_power_reg_restore_unload_verified": true,
+  "dart_runtime_status": "disabled",
+  "dma_enabled": false,
+  "wifi_verified": false,
+  "physical_boots_this_round": 1,
+  "private_log_sha256": {
+    "pcie-cleanup-private.log": "f44897d34a59f2b1d69589fab2d122c04570754e71c6cfdaa8ceb4448d297913",
+    "hash-n71-pcie-diagnostic.ko-private.log": "ab2016a5eda615237eba31fc379c811cfc83eaf547c98729387c1fb3f97222fc",
+    "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+    "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+    "preflight-private.log": "eff3d0287f33e9fd2b4de83bbaa92c10d9db07e5a9e062f16421653a197e6f01",
+    "activate-private.log": "f53298dce01d192138f996293ee4386f409c3a354c2219f7f95afb633be77da7",
+    "pcie-private.log": "f44897d34a59f2b1d69589fab2d122c04570754e71c6cfdaa8ceb4448d297913",
+    "reg-unload-private.log": "43498a4e2b81aaef1d8c6ad1277b72d5ab5c8f192047388004f2757b93356d21",
+    "observe-private.log": "c9c102286622796bebffd32fb016215cb688e95888e40ad4e6a6e005e95fe1a1",
+    "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+    "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+    "restore-private.log": "b154fc5d6079c4d0ecb3fc583224682553ef7370cafeda026a2cdfb577d1145f",
+    "hash-n71-wlan-power-diagnostic.ko-private.log": "a0268f7a10aa37255eb6adac6e7ac2b01e0acd9969c068cd4123be5c33c5978a",
+    "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36"
+  }
+}

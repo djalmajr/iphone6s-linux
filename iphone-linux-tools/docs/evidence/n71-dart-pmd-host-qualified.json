@@ -1,0 +1,156 @@
+{
+  "format": 1,
+  "status": "mac_and_arm64_qualified_full_kernel_compiled_verified",
+  "input_count": 16,
+  "inputs": {
+    "scripts/build/kernel_bundle.py": {
+      "bytes": 8406,
+      "sha256": "0f18ca78f960800214dbb34c3b956e6a6679a455fac830e502fbcd969520e2f6"
+    },
+    "scripts/build/kernel_patchset.py": {
+      "bytes": 5466,
+      "sha256": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817"
+    },
+    "tests/test_kernel_pmd_bundle.py": {
+      "bytes": 8863,
+      "sha256": "541b0d7229f2fc0a190b7e9e56e4eed6611b0ece128fe26ac7b561534f179a34"
+    },
+    "tests/test_kernel_binding_bundle.py": {
+      "bytes": 7428,
+      "sha256": "2735a7bb71d3569f6f4bc5741d1afdb3fa965bf4d5b9e3d240bd1292ddd39adc"
+    },
+    "tests/test_kernel_power_bundle.py": {
+      "bytes": 9644,
+      "sha256": "9815c0558a312578cf4bcf77915688e121a2b04b4d2d2e54c5107e4afb3a1ecf"
+    },
+    "tests/test_kernel_bundle.py": {
+      "bytes": 7728,
+      "sha256": "3477cabcbb9c7f18c9a5bafdf1e35d87a856160ef67e065285f63144afa6bda8"
+    },
+    "tests/test_n71_dart_pmd.py": {
+      "bytes": 5110,
+      "sha256": "3f53486c89988bcede73af554aa08d293ce2daafde900ec586347fb2b3e7864f"
+    },
+    "tests/n71_dart_pmd.c": {
+      "bytes": 3660,
+      "sha256": "e2d6f1546e3f4ee99ab08f01c1e41325595f3154121119281b5cc7286665d478"
+    },
+    "phone/kernel/patches/0001-s5l8960x-dart-stream-tcr.patch": {
+      "bytes": 593,
+      "sha256": "da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74"
+    },
+    "phone/kernel/patches/0002-serdev-stop-bits.patch": {
+      "bytes": 2952,
+      "sha256": "f987f64912a410d588ac0d1d9a47c7cc275a0dc234fbe27549011255e98e0d11"
+    },
+    "phone/kernel/patches/0003-apple-gpio-write-errors.patch": {
+      "bytes": 11634,
+      "sha256": "739b9fc44bec4bad00bea367af70decef5fb56248a636d822d51396343088094"
+    },
+    "phone/kernel/patches/0004-apple-pmgr-errors.patch": {
+      "bytes": 8677,
+      "sha256": "d8202c48516faec2bf4506af486ca2fd1b256360a41aad2d4df584c140d7e135"
+    },
+    "phone/kernel/patches/0005-apple-pmgr-probe-errors.patch": {
+      "bytes": 10967,
+      "sha256": "b005ddf799b9cdea7149b38d850936c30c16342af47d11a61595157d14e24b2f"
+    },
+    "phone/kernel/patches/0006-apple-pmgr-provider-cleanup.patch": {
+      "bytes": 1428,
+      "sha256": "e0159ec77cec26beafb1332526f9ba7f287f53c05f70a6dcd2376abca6dc445b"
+    },
+    "phone/kernel/patches/0007-apple-pmgr-no-manual-bind.patch": {
+      "bytes": 334,
+      "sha256": "3f5a3e4c97a6cf898eaf90d53fcdc45a9796707c4123a14b1d0e043b58934aaa"
+    },
+    "phone/kernel/patches/0009-s5l8960x-dart-pmd.patch": {
+      "bytes": 4889,
+      "sha256": "cddfa9cfb894b80236eee0df0a1c199fc2c14b0ebb5570e3a3d502ddc5666e3f"
+    }
+  },
+  "canonical_tar": {
+    "format": "ustar",
+    "member_order": [
+      "scripts/build/kernel_bundle.py",
+      "scripts/build/kernel_patchset.py",
+      "tests/test_kernel_pmd_bundle.py",
+      "tests/test_kernel_binding_bundle.py",
+      "tests/test_kernel_power_bundle.py",
+      "tests/test_kernel_bundle.py",
+      "tests/test_n71_dart_pmd.py",
+      "tests/n71_dart_pmd.c",
+      "phone/kernel/patches/0001-s5l8960x-dart-stream-tcr.patch",
+      "phone/kernel/patches/0002-serdev-stop-bits.patch",
+      "phone/kernel/patches/0003-apple-gpio-write-errors.patch",
+      "phone/kernel/patches/0004-apple-pmgr-errors.patch",
+      "phone/kernel/patches/0005-apple-pmgr-probe-errors.patch",
+      "phone/kernel/patches/0006-apple-pmgr-provider-cleanup.patch",
+      "phone/kernel/patches/0007-apple-pmgr-no-manual-bind.patch",
+      "phone/kernel/patches/0009-s5l8960x-dart-pmd.patch"
+    ],
+    "uid": 0,
+    "gid": 0,
+    "mtime": 0,
+    "mode": "0644",
+    "sha256": "b88de095c1a6d54db51c9926a6ee1609cbbc8404b7b2783d44fb9c9882568806",
+    "bytes": 112640
+  },
+  "mac_gates": {
+    "native": {
+      "tests": 1,
+      "assertion_mutations": 12,
+      "log_sha256": "bc94ab7ba112b25581ca69af523301ceb3162625eacdd233fa9981d48452bbad",
+      "status": "pass"
+    },
+    "test_kernel_pmd_bundle": {
+      "tests": 5,
+      "assertion_mutations": 7,
+      "log_sha256": "77d45227e95d05514fd15f3fe1f12913d52a1d13b14b4946fcf9586e0a3cc42b",
+      "status": "pass"
+    },
+    "test_kernel_bundle": {
+      "tests": 3,
+      "assertion_mutations": 0,
+      "log_sha256": "80c842f7e6c9711b6507135b7edb4934883c99e1dc0699e8ee6642587c9acc10",
+      "status": "pass"
+    },
+    "test_kernel_power_bundle": {
+      "tests": 4,
+      "assertion_mutations": 8,
+      "log_sha256": "34f411047336c3f81f19df423f8aabc05f90e3c040f0d8bcdeb1a09bffd2dd26",
+      "status": "pass"
+    },
+    "test_kernel_binding_bundle": {
+      "tests": 8,
+      "assertion_mutations": 6,
+      "log_sha256": "b010e1aaa9966ad30264e7d6d9c0b01d2742cc6c895e84799d99141a7585c54e",
+      "status": "pass"
+    }
+  },
+  "native_descriptor_scenarios": 387,
+  "native_concurrency": "modeled compare-and-exchange winner only; not kernel concurrency proof",
+  "ast": "pass",
+  "lint": "pass",
+  "python_typechecker_configured": false,
+  "arm64_gates": {
+    "test_n71_dart_pmd": {
+      "status": "pass",
+      "tests": 1,
+      "assertion_mutations": 12,
+      "log_sha256": "dcfd5b01c98241d7000f27a8015094be65deebd2709d22f47c664e9fe51d48f7"
+    },
+    "test_kernel_pmd_bundle": {
+      "status": "pass",
+      "tests": 5,
+      "assertion_mutations": 7,
+      "log_sha256": "0bd75521b26321a8ddc20b4a5b0a7afb943d3ed78c5f23e478d9194a939965c6"
+    }
+  },
+  "full_kernel_build": "compiled_verified; kernel-n71-pmd-build.json",
+  "physical_boot_tested": false,
+  "wifi_verified": false,
+  "charging_validated": false,
+  "default_profile_changed": false,
+  "arm64_full_source_blobs_verified": 8,
+  "arm64_real_dart_objects_w1_werror": "pass"
+}

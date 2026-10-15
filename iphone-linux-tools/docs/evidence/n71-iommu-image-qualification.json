@@ -1,0 +1,126 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T09:38:48.104892+00:00",
+  "code_commit": "53a978910b54c43eaf49c5cbb2925f7dca2c77db",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "scope": "Offline kernel Image identity and D18 source/export/ABI qualification.",
+  "python_typechecker": "not configured",
+  "fatal_flake8_exit": 0,
+  "hardware_claims": {
+    "physical_boot_verified": false,
+    "irq_delivery_verified": false,
+    "dma_translation_verified": false,
+    "wifi_verified": false,
+    "linux_gauge_or_charging_verified": false
+  },
+  "private_data_published": false,
+  "main_merged": false,
+  "qualification": {
+    "macos": {
+      "reports": [
+        {
+          "pattern": "test_n71_iommu_build.py",
+          "exit": 0,
+          "tests": 8,
+          "mutation_kills": 24,
+          "elapsed_s": 2.606
+        },
+        {
+          "pattern": "test_n71_iommu_result.py",
+          "exit": 0,
+          "tests": 17,
+          "mutation_kills": 42,
+          "elapsed_s": 15.095
+        },
+        {
+          "pattern": "test_n71_held_session.py",
+          "exit": 0,
+          "tests": 21,
+          "mutation_kills": 30,
+          "elapsed_s": 45.983
+        },
+        {
+          "pattern": "test_n71_resource_stage.py",
+          "exit": 0,
+          "tests": 16,
+          "mutation_kills": 26,
+          "elapsed_s": 41.825
+        },
+        {
+          "pattern": "test_n71_link_session.py",
+          "exit": 0,
+          "tests": 45,
+          "mutation_kills": 0,
+          "elapsed_s": 0.305
+        }
+      ],
+      "tests": 107,
+      "compiled_assertion_mutations": 122,
+      "exit": 0,
+      "ast_exit": 0,
+      "public_inputs_unchanged_during_gates": true
+    },
+    "ubuntu_arm64": {
+      "reports": [
+        {
+          "pattern": "test_n71_iommu_build.py",
+          "exit": 0,
+          "tests": 8,
+          "mutation_kills": 24,
+          "elapsed_s": 1.883
+        },
+        {
+          "pattern": "test_n71_iommu_result.py",
+          "exit": 0,
+          "tests": 17,
+          "mutation_kills": 42,
+          "elapsed_s": 16.566
+        },
+        {
+          "pattern": "test_n71_held_session.py",
+          "exit": 0,
+          "tests": 21,
+          "mutation_kills": 30,
+          "elapsed_s": 18.625
+        },
+        {
+          "pattern": "test_n71_resource_stage.py",
+          "exit": 0,
+          "tests": 16,
+          "mutation_kills": 26,
+          "elapsed_s": 28.65
+        },
+        {
+          "pattern": "test_n71_link_session.py",
+          "exit": 0,
+          "tests": 45,
+          "mutation_kills": 0,
+          "elapsed_s": 0.184
+        }
+      ],
+      "tests": 107,
+      "compiled_assertion_mutations": 122,
+      "exit": 0,
+      "ast_exit": 0,
+      "public_inputs_unchanged_during_gates": true
+    }
+  },
+  "inputs_sha256": {
+    "scripts/host/n71_iommu_build.py": "eebe9b931124d0d164c83e8d4b580791aca6314ed2df3e96428f0b9d75a28b32",
+    "scripts/host/n71_iommu_result.py": "7c3c907e06bcc0560078121a0ce38a7ed3901a95e7a15451cd1d3efcea2c4e18",
+    "tests/test_n71_iommu_build.py": "8848aa6b5e26faa826faa0ad1a6c4f596078dfd4348b90fce99519a197a528ee",
+    "tests/test_n71_iommu_result.py": "aa64508618b82151c5ec9415c9281ca9cde8ce33175f11e229484748a35c880c"
+  },
+  "real_preserved_artifacts": {
+    "compressed_kernel_verified": true,
+    "bounded_single_stream_decompression_verified": true,
+    "embedded_image_in_preserved_profile_verified": true,
+    "image_bytes": 52070912,
+    "image_sha256": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+    "gzip_bytes": 15651256,
+    "gzip_sha256": "78a423539fdd1a6be371ca7489737c7dacf9ecbee893e3d3f2e7794d0ea2c578",
+    "new_profile_composed": false,
+    "module_rebuilt": false,
+    "native_inputs_unchanged": 84
+  }
+}

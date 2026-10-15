@@ -1,0 +1,69 @@
+{
+  "format": 1,
+  "status": "compiled_verified_complete_table_not_phone_loaded",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "module": {
+    "bytes": 48504,
+    "sha256": "af2663a42e6645eea88879df3386901ace6bf696e76adb26f06531bf4c035727",
+    "module": "n71-pcie-diagnostic.ko"
+  },
+  "preserved_kernel_sha256": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "sources_sha256": {
+    "phone/kernel/n71-dart-observe.h": "fa65e2c487b80b52d16edbacd9a7450892f14acf2d6bbed1362f7cc94120b4af",
+    "phone/kernel/n71-dart-mmio.h": "b76e50b078bd8b8c764093c6fb6b101ca19b9c11b27cd77e76a05a3a47187d97",
+    "phone/kernel/n71-pcie-diagnostic.c": "d547bbdde831faab4f38f4aa20202fb57ebd0f510f72891d3981ff1dca4c9a1e",
+    "tests/n71_dart_observe.c": "ec1b54e1151e5059bdd641950194bd6b231fb79bbd8e72c58161e0995b439a0d",
+    "tests/test_n71_dart_observe.py": "279723a48f8cd183caeaf7be6f8b8efcb6fb743d77b5e515af4adec1d09f72a5"
+  },
+  "native_checks": {
+    "macos": true,
+    "linux_arm64": true,
+    "c_fault_test": true,
+    "assertion_mutations": 7,
+    "werror": true,
+    "modpost_fatal": true,
+    "elf_aarch64": true,
+    "exact_vermagic": true
+  },
+  "private_log_sha256": {
+    "contract-private.log": "5e50e35f967e90ecdb3359961bd0ad84a3742fa8dcd683f86e10d8bffda4d689",
+    "module-private.log": "8b5ac08ce24a832c0c876c894067bf9521316d0968fe102d0ec98db97ccd3831"
+  },
+  "dart_reference": {
+    "source_file": "drivers/iommu/apple-dart.c",
+    "patched_sha256": "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc",
+    "physical": "0x602008000",
+    "bytes": 16384,
+    "separate_nvmmu": "0x602004000",
+    "interrupt": 248,
+    "registers": [
+      "0x0",
+      "0xc",
+      "0x10",
+      "0x40-0x7c"
+    ],
+    "ttbr_count": 16,
+    "samples": 2,
+    "read_budget": 38,
+    "quiet_guard_budget": 39,
+    "tcr_enabled_bit_per_byte": 7,
+    "ttbr_valid_bit": 31
+  },
+  "dart_observe_default": false,
+  "physical_dart_observed": false,
+  "dart_register_writes": 0,
+  "provider_activated": false,
+  "irq_requested": false,
+  "dma_enabled": false,
+  "wifi_verified": false,
+  "firmware_loaded": false,
+  "ttbr_words_retained": 16,
+  "ttbrs_terminal_output": false,
+  "ttbrs_public_json": false,
+  "prior_build_evidence": "n71-dart-observe-build.json"
+}

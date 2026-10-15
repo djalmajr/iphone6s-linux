@@ -1,0 +1,62 @@
+{
+  "date": "2026-09-30",
+  "index_url": "https://mirror.nura.eco/postmarketos/main/postmarketos/aarch64/APKINDEX.tar.gz",
+  "index_bytes": 106022,
+  "index_sha256": "da53e0f06b6500d3fd8ebc65cccbe6a1ab4200729b6764f5ccb94d7017d2ff28",
+  "index_signature_member": ".SIGN.RSA.build.postmarketos.org.rsa.pub",
+  "index_signature_verified": true,
+  "openssl_verify_exit": 0,
+  "openssl_verify_stdout": "Verified OK",
+  "trusted_key_source_commit": "39e9c17c1439b25f7aced54e03f19b0515cdb029",
+  "trusted_key_source": "https://gitlab.postmarketos.org/postmarketOS/pmbootstrap/-/blob/39e9c17c1439b25f7aced54e03f19b0515cdb029/pmb/data/keys/build.postmarketos.org.rsa.pub",
+  "trusted_key_pem_sha256": "b70e6ffc64a652d63aee0c28cb9ecb2ca3b49d759ca7a023bcb854d08780964b",
+  "package": {
+    "P": "linux-postmarketos-apple-16k",
+    "V": "7.0.12-r0",
+    "A": "aarch64",
+    "S": "16999527",
+    "C": "Q1P8imlSMXnsTe2Z3/v+Xj3WpjQHM=",
+    "c": "-dirty",
+    "L": "GPL-2.0-only"
+  },
+  "package_sha256": "5cedfa79ad8bdaff8fa05327624071e7b17c24f24370b11ef3b58bde2c7220b2",
+  "package_control_identity_matches_signed_index": true,
+  "package_datahash_matches_authenticated_control": true,
+  "package_authenticated_via_signed_index": true,
+  "package_own_signature_verified": false,
+  "negative_controls": {
+    "index_content_bit_flip": {
+      "exit": 1,
+      "stdout": "Verification Failure",
+      "rejected": true
+    },
+    "package_control_bit_flip": {
+      "rejected": true
+    },
+    "package_data_bit_flip": {
+      "rejected": true
+    }
+  },
+  "transport_https_only": true,
+  "openssl": "LibreSSL 3.3.6",
+  "limits": [
+    "APK own signature key remains unavailable",
+    "APK v2 signed index identity uses SHA-1; datahash uses SHA-256",
+    "package source commit is -dirty",
+    "no independent kernel source build performed",
+    "index is a 2026-09-30 snapshot, not timeless repository state"
+  ],
+  "scope_of_index_authentication": "compressed control and data streams; APK own signature stream is not authenticated by this linkage",
+  "preserved_index": "kernel-index-20260930.apkindex",
+  "named_key_directory_check": {
+    "url": "https://gitlab.postmarketos.org/api/v4/projects/235/repository/tree?path=pmb%2Fdata%2Fkeys&ref=39e9c17c1439b25f7aced54e03f19b0515cdb029&per_page=100",
+    "source_commit": "39e9c17c1439b25f7aced54e03f19b0515cdb029",
+    "entries": 20,
+    "pagination_complete": true,
+    "named_package_key_present": false,
+    "official_distribution_key_present": true,
+    "response_sha256": "f04d491f386ad7959c6f4bab1b8a3f14c539cab9697d1142c5c8b7342b6d1b02"
+  },
+  "documented_replay_verified": true,
+  "documented_replay_python_sha256": "c8c42035f58cd3f40f69e7bce1a180de32ac95a6e63b0181b3d86f2e66433a3b"
+}

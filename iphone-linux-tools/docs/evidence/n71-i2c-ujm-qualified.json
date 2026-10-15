@@ -1,0 +1,83 @@
+{
+  "format": 1,
+  "date": "2026-10-15",
+  "status": "native_and_external_module_qualified_physical_test_pending",
+  "issue": 48,
+  "physical_premise": {
+    "reference": "n71-grouped-dma-hdq-20261015.json",
+    "initial_ctl": "0x104",
+    "configuration_stage": 3,
+    "error": -16
+  },
+  "primary_source": {
+    "kernel_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "file": "drivers/i2c/busses/i2c-pasemi-core.c",
+    "sha256": "79fba3545729becc1c42f9706f01e5fd782dc06b152a219739d07ca5eeb98181",
+    "CTL_UJM_bit": 8,
+    "CTL_MTR_bit": 9,
+    "CTL_MRR_bit": 10
+  },
+  "contract": {
+    "old_initial_ctl_mask": "0xff",
+    "new_initial_ctl_mask": "0x1ff",
+    "restore_preserves_initial_ujm": true,
+    "reject_bits_9_through_31": true,
+    "idle_stability_imask_and_xfsta_guards_preserved": true,
+    "reset_commands_offsets_timeouts_or_counts_changed": false,
+    "charger_value_writes_added": false,
+    "ownership_or_clock_reference_contract_changed": false
+  },
+  "qualification": {
+    "platforms": [
+      "macOS native",
+      "Ubuntu ARM64 native in dedicated Multipass VM"
+    ],
+    "controller_cases_each": 76,
+    "controller_assertion_mutations_each": 17,
+    "controller_new_assertion_mutations_each": 2,
+    "hdq_cases_each": 42,
+    "hdq_assertion_mutations_each": 24,
+    "mac_hdq_prior_assertion_kills": 9,
+    "mac_hdq_resumed_assertion_kills": 15,
+    "original_timeout_seconds": 5,
+    "original_timeout_log_preserved": true,
+    "arm64_required_resume": false,
+    "c_compiler_werror": true,
+    "python_ast_lint": true,
+    "python_typechecker_configured": false,
+    "unchanged_native_inputs": 9,
+    "caller_stub_evidence_reused_with_unchanged_contract": true
+  },
+  "module": {
+    "module_bytes": 52456,
+    "module_sha256": "13c49a3c8b2ab83577188401c6f648f22330258a305ec09209ee6bd43298f99f",
+    "imports": 79,
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "protected": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "werror": true,
+    "elf_aarch64_relocatable": true,
+    "source_inputs_unchanged": 11
+  },
+  "source_sha256": {
+    "phone/kernel/n71-i2c-controller.h": "ceb8f90ba9de6b648456d42b294edfc0105e94a24708678dcea2c4d984de4e65",
+    "tests/n71_i2c_controller.c": "8a43b17f35467baefe37a2ae64a73d5e790ef25c1fec509a83189f7ce73c1e6b",
+    "tests/test_n71_i2c_controller.py": "444ee401a605161bc50672e29e393dc0ce2121210041021d02e4197397088621"
+  },
+  "physical": {
+    "new_module_executed": false,
+    "hdq_read_valid": false,
+    "battery_telemetry_proven": false,
+    "linux_charging_proven": false,
+    "native_wifi_proven": false
+  },
+  "limits": [
+    "Hardware and kernel APIs are modelled in native gates.",
+    "The relaxed baseline policy has not been executed on the phone.",
+    "Prior controller, source profile and physical module remain preserved.",
+    "No global Mac packages or configuration were installed or changed."
+  ]
+}

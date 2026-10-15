@@ -1,0 +1,36 @@
+{
+  "format": 1,
+  "status": "both_linux_macro_collisions_fixed_native_mac_qualified",
+  "inputs": {
+    "phone/kernel/n71-dma-observe.h": {
+      "bytes": 3536,
+      "sha256": "913ef18e725d3da6cfcc020db916ad2ce03cbae73689b4c5f902c2b9ea659eb7"
+    },
+    "tests/n71_dma_observe.c": {
+      "bytes": 7743,
+      "sha256": "f05b53d45e61d69534fe3035eff5a925cee632084d3664065bf2415f96252c84"
+    },
+    "tests/test_n71_dma_observe.py": {
+      "bytes": 3920,
+      "sha256": "88543f1ae6b8649f248e8102da5d7821e863d1490dd62cfe8c8b2d84b53dce25"
+    }
+  },
+  "native": {
+    "helper_cases": 100,
+    "backend_cases": 58,
+    "assertion_mutations": 32,
+    "fixture_defines_guard_and_current_macros": true,
+    "log_sha256": "04457f33357543c054e2d157583aabbe95e93233d32aa6d4deab3b10c7648766"
+  },
+  "changes": [
+    "guard callback member renamed validate",
+    "current local pointer renamed row"
+  ],
+  "layout_flow_and_io_unchanged": true,
+  "kernel_macros_not_undefined_or_warnings_suppressed": true,
+  "ast_passed": true,
+  "fatal_and_unused_lint_passed": true,
+  "corrected_kernel_compile_passed": false,
+  "phone_accessed": false,
+  "goal_complete": false
+}

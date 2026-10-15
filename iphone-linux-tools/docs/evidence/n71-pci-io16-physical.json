@@ -1,0 +1,129 @@
+{
+  "format": 1,
+  "date": "2026-10-06",
+  "code_commit": "5412c01",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "pcie_module_sha256": "d6188a13d8871b00af637b68cf1c322e616fd9891c14c72fb926571965f90245",
+  "session": {
+    "dfu_sequences": 1,
+    "linux_boots": 1,
+    "monitor_attempts": 2,
+    "first_monitor_timeout_before_payload": true,
+    "intermediate_reboots": 0,
+    "snapshot_restored_entries": 44,
+    "boot_exit": 0,
+    "held_acquisition_exit": 0,
+    "held_acquisition_verified": true
+  },
+  "assignment": {
+    "error": -5,
+    "action_exit": 1,
+    "event": {
+      "error": -5,
+      "assigned": 0,
+      "pending": 1,
+      "claimed": 1,
+      "attempts": 14,
+      "writes": 4,
+      "write_readback": {
+        "failed": 1,
+        "root": 1,
+        "where": 36,
+        "size": 4,
+        "value": 65520,
+        "before": 65537,
+        "after_valid": 1,
+        "after": 131057,
+        "write_error": 0,
+        "read_error": 0
+      },
+      "optional_windows": {
+        "captured": 1,
+        "io_absent": 0,
+        "pref_absent": 0,
+        "io_noops": 0,
+        "pref_noops": 0
+      },
+      "io16_upper": {
+        "captured": 1,
+        "enabled": 1,
+        "noops": 1
+      }
+    },
+    "assignment_verified": false,
+    "early_refusal": false
+  },
+  "read_only_root_config": {
+    "root": "0000:00:01.0",
+    "vendor": "106b",
+    "device": "1004",
+    "io_base_limit_word_1c": 240,
+    "io_upper_dword_30": 0,
+    "mem_base_limit_dword_20": 3225468928,
+    "pref_base_limit_dword_24": 131057,
+    "pref_base_upper_dword_28": 0,
+    "pref_limit_upper_dword_2c": 0,
+    "same_boot_verified": true,
+    "no_writes": true
+  },
+  "cleanup": {
+    "first_release_exit": 1,
+    "retry_release_exit": 1,
+    "verified": true,
+    "stop_error": -5,
+    "owners_unloaded": true,
+    "pci_devices_empty": true,
+    "same_assignment_and_reports_preserved": true,
+    "retry_no_scan_or_assignment": true
+  },
+  "services": {
+    "cleanup_verified": true,
+    "bash_ssh_sync_exit": 0,
+    "herdr_status_exit": 0,
+    "http_exit": 0,
+    "uptime_at_services_seconds": 344.22
+  },
+  "return": {
+    "exit": 1,
+    "backup_verified": true,
+    "snapshot_entries": 44,
+    "sync_verified": true,
+    "ios_usb_verified": false,
+    "manual_fallback_reported": true
+  },
+  "ios_before": {
+    "BatteryCurrentCapacity": 100,
+    "ExternalConnected": true,
+    "ExternalChargeCapable": true,
+    "BatteryIsCharging": false
+  },
+  "ios_after": {
+    "manual_lock_screen_reported": true,
+    "ios_usb_detected": false,
+    "battery_measured": false
+  },
+  "private_log_sha256": {
+    "boot-retry-private.log": "69df90fdc9bcefde11658c3b1c288baa5e7a24b9842b17513ed05069f454963f",
+    "return-ios-private.log": "13fb1ef70c9262f632e7c3b98083d4389e19150584ec60cafb5317ae1ac11a7a",
+    "pci-read-only-private.log": "d1fbafa0d442c2d986e95802eaa0762589748a0d648b1c8403a947d6e7eb8842",
+    "http-after-cleanup-private.log": "e92d101ce12a426cbe53c46efaf7f487f68a20ca5ba8511d8c3e870b711c80b4",
+    "acquire-private.log": "4544bdd9c9299a3707f152698cae2873afbb59802a4a2b1e71988cec781bcd2a",
+    "herdr-after-cleanup-private.log": "d3008652f8ba7eadc9e3b4a51c8315255ad98448e4adb97962a2f34477a65f4e",
+    "release2-private.log": "59209ad8e01f41a99fc00bf33df98d0cd1fb55825ab0695dd2008b4c02bd20a3",
+    "assign-private.log": "b7a8cd19ef1eb2206b15f2faf7efa9f5e0c036b550f257dc6efcf8897b86d871",
+    "services-after-cleanup-private.log": "21a70438cda724cd855a091a40d510e2514aa5079ca8810f800e09e6867b2d24",
+    "boot-private.log": "87781b5eec3015816ef2fdb5e4915f6323f06a63648d62c2f8537ac614168382",
+    "release-private.log": "a4714ea499b17a9bbe6a62d5152162726eff84dac607849ad5dfa58e03cb17fb"
+  },
+  "limits": {
+    "io16_correction_loaded": true,
+    "io16_temporary_upper_noop_proven": true,
+    "assignment_positive": false,
+    "pref64_disable_correction_loaded": false,
+    "irq_dma_iommu_enabled": false,
+    "wifi_functional": false,
+    "linux_gauge_or_charge_proven": false,
+    "battery_health_measured": false,
+    "raw_logs_or_private_files_published": false
+  }
+}

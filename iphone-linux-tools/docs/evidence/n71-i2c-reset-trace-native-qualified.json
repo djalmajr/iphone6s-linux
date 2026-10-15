@@ -1,0 +1,63 @@
+{
+  "format": 1,
+  "status": "i2c_existing_reset_samples_native_mac_qualified_not_built",
+  "inputs": {
+    "phone/kernel/n71-i2c-controller.h": {
+      "bytes": 8680,
+      "sha256": "b08967a96abb301834c47cd27bd506f12221e52a5fdacb7bc9a4e5d25dcba77a"
+    },
+    "tests/n71_i2c_controller.c": {
+      "bytes": 16605,
+      "sha256": "a27e61678d8ef4dc2df976700cd9f83477b027e5a77452305f6284554885fc3f"
+    },
+    "tests/test_n71_i2c_controller.py": {
+      "bytes": 5572,
+      "sha256": "05fc2502854fd45add4e298f60f8e47ed4911df87e65de358a01a0119f0cbba7"
+    }
+  },
+  "native": {
+    "platform": "macOS",
+    "controller_cases": 81,
+    "controller_assertion_mutations": 25,
+    "hdq_regression_cases": 42,
+    "caller_regression_cases": 82,
+    "regression_assertion_mutations": 63,
+    "logs_sha256": {
+      "mac-i2c-reset-trace-private.log": "fd985cd72633a74cbd5a63abe45b81dd832ca45430eeb9bf16d3ab03649ae005",
+      "mac-i2c-reset-regression-private.log": "cffe9d88d4a2e5a268b43614ab336cc08978f634475ce39685a7a8844c26bc79"
+    }
+  },
+  "contract": {
+    "first_ctl_and_last_complete_words": true,
+    "attempts_and_valid_samples_distinct": true,
+    "partial_failed_sample_not_published_as_valid": true,
+    "sample_error_preserved": true,
+    "trace_survives_cleanup": true,
+    "new_clean_acquisition_clears_trace": true,
+    "busy_acquisition_preserves_trace": true,
+    "ownership_predicate_unchanged": true,
+    "reads_writes_sleeps_and_poll_limit_unchanged": true,
+    "sticky_ujm_still_refused": true,
+    "primary_error_and_exact_restore_unchanged": true
+  },
+  "modeled_mmio": {
+    "successful_reset_total_reads": 40,
+    "sticky_ujm_timeout_total_reads": 1030,
+    "total_writes_including_restore": 4,
+    "timeout_polls": 100,
+    "sticky_ctl": "0x010f",
+    "exact_original_ctl_restored": "0x0104"
+  },
+  "real_old_module_cli_check_passed_after_current_header_changed": true,
+  "ast_passed": true,
+  "fatal_and_unused_lint_passed": true,
+  "kernel_context_compiled": false,
+  "arm64_gate_passed": false,
+  "caller_publishes_trace": false,
+  "phone_accessed": false,
+  "vm_started": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "charging_verified": false,
+  "goal_complete": false
+}

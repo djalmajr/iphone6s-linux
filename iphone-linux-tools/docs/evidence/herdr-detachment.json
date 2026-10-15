@@ -1,0 +1,69 @@
+{
+  "tests": 12,
+  "new_regression": "restricted PATH and real SIGHUP before startup confirmation",
+  "detach_mutations": 2,
+  "mutations_detected": 2,
+  "suite": {
+    "total": 172,
+    "passed": 164,
+    "skipped": 8,
+    "seconds": 112.909
+  },
+  "flake8_fatal": "passed",
+  "generated_shellcheck_scripts": 7,
+  "typechecker": "not configured",
+  "vm": {
+    "official_herdr_digest_verified": true,
+    "phone_busybox_path": true,
+    "nohup": false,
+    "bash_and_idempotent_reconnect": true,
+    "scoped_restart": true,
+    "fresh_volatile_namespace_from_marker": true,
+    "phone_boot": false,
+    "cleanup": "HERDR_DETACH_FIXTURE_CLEANUP_OK",
+    "final_state": "Stopped",
+    "mounts": {},
+    "packages_installed": false
+  },
+  "ci": {
+    "status": "success",
+    "pr": 36851283400,
+    "push": 36851277105,
+    "commit": "d5e45975f9e856b104b6a51a735435ac5a654209",
+    "jobs": 4,
+    "cases_per_job": 172,
+    "passed_per_job": 163,
+    "skipped_per_job": 9,
+    "detach_mutations_per_job": 2,
+    "logs_inspected": true
+  },
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 29,
+  "status": "fixed_verified_local_vm_ci",
+  "fixed_commit": "d5e45975f9e856b104b6a51a735435ac5a654209",
+  "historical_before": {
+    "busybox_sha256": "52151e7f322f926b64049cdaa1410dc3ea6485525e0624b05813791c219ae933",
+    "nohup": false,
+    "setsid": true,
+    "original_start_failed": true,
+    "assertion_failures": 1,
+    "errors": 0,
+    "source_baseline_cases": 1,
+    "fixture_runtime": "actual phone BusyBox applets; synthetic Bash peer; guest Bash interpreter",
+    "first_probe": "exit 127 with argv0 phone-busybox; not accepted as applet evidence; narrow retry with argv0 busybox passed",
+    "native_phone": false
+  },
+  "phone_proof": false,
+  "reading_inventory_checkpoint": {
+    "commit": "d5e45975f9e856b104b6a51a735435ac5a654209",
+    "complete_reads": 129,
+    "entries": 164,
+    "complete_pr_review": false
+  },
+  "limits": [
+    "Guest Bash/libraries and actual candidate BusyBox; not a complete initramfs boot.",
+    "CLI reconnect proof is not physical SSH/TUI reconnect.",
+    "No sustained charging, Wi-Fi, internal storage, autonomous boot or rollback proof."
+  ]
+}

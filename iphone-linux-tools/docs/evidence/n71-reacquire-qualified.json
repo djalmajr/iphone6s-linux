@@ -1,0 +1,63 @@
+{
+  "format": 1,
+  "status": "stopped_reacquisition_preparation_qualified_offline_cli_and_physical_proof_pending",
+  "code_commit": "1e9697e71ed480f7bc7080f8f51d505fc7662013",
+  "new_contract_tests_per_platform": 9,
+  "unittest_cases_including_mutation_runner": 10,
+  "new_assertion_mutations_per_platform": 13,
+  "platforms": [
+    "macOS",
+    "Ubuntu24.04 ARM64 dedicated VM"
+  ],
+  "public_input_count": 604,
+  "canonical_manifest_sha256": "d4365e0984928ecb2c2cdcc1084ef1de673630b6c748583017217595828110b9",
+  "same_inputs_both_platforms": true,
+  "changed_inputs": [
+    {
+      "path": "scripts/host/n71_driver_reacquire.py",
+      "bytes": 7144,
+      "sha256": "fa28c63a2f3f5a5e1851c6217c9e8125ec1396f028a2ff5b5a605e7b28ca721e"
+    },
+    {
+      "path": "tests/test_n71_driver_reacquire.py",
+      "bytes": 17324,
+      "sha256": "4fce4e3536ade1d6839d46ce0dba017e6b721c34411fca29e52ebbb6e5817185"
+    }
+  ],
+  "ast_python_files": 273,
+  "fatal_lint_passed_both_platforms": true,
+  "python_typechecker_configured": false,
+  "real_dependencies": [
+    "private filesystem and SHA checks",
+    "held loader and journals",
+    "runtime coordinator and teardown validators",
+    "generated Bash through local transport"
+  ],
+  "simulated_dependencies": [
+    "PCI/WCC state and observations",
+    "kernel boot and firmware_class sysfs"
+  ],
+  "stopped_source_bytes_unchanged": true,
+  "fresh_session_restored_on_refusal": true,
+  "local_check_no_capture_or_output": true,
+  "negative_previous_cause_preserved": true,
+  "raw_kernel_history_preserved": true,
+  "old_journals_or_assignment_migrated": false,
+  "cli_reacquire_exposed": false,
+  "two_complete_reacquired_cycles_proved": false,
+  "iphone_accessed": false,
+  "physical_radio_or_energy_proof": false,
+  "dependencies_installed": false,
+  "mac_global_config_changed": false,
+  "discarded_baseline_failure": "Initial isolated fixtures had different boot UUIDs; baseline refusal was corrected by aligning their synthetic boot and was not counted as a mutation kill",
+  "reused_proofs": [
+    "unchanged coordinator and held teardown gates",
+    "C6c2 firmware lifetime and CLI entry gates",
+    "unchanged native C and kernel/module build artifacts"
+  ],
+  "next": [
+    "CLI reacquire action and two complete cycles in one boot",
+    "Energy and firmware reproduction prerequisites",
+    "Grouped physical Wi-Fi and energy telemetry proof"
+  ]
+}

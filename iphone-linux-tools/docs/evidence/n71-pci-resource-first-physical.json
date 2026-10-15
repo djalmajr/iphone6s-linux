@@ -1,0 +1,98 @@
+{
+  "format": 1,
+  "host_code_commit": "71df9735c03f3e24d995023880f7f8039b34ef7b",
+  "board": "N71/S8000",
+  "model": "iPhone8,1",
+  "started_at_utc": "2026-10-06T12:06:19.575471+00:00",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "module_build_reference": "n71-pci-resource-assignment.json",
+  "host_history_fix_reference": "n71-reg-on-held-history.json",
+  "boot": {
+    "linux_boots": 1,
+    "intermediate_reboots": 0,
+    "restore_entries": 44,
+    "new_image_or_module_build_during_session": false,
+    "phone_unlock_requested": false
+  },
+  "acquisition": {
+    "verified": true,
+    "devices": 2,
+    "endpoints": 1,
+    "root_identity": "1004106b",
+    "endpoint_identity": "43a314e4",
+    "commands_decode_and_master_clear": true
+  },
+  "history_regression": {
+    "initial_continuation_refused_before_setter": true,
+    "qualified_reg_on_read_only_event_identified": true,
+    "fixed_and_resumed_without_new_scan_or_boot": true
+  },
+  "assignment": {
+    "error": -5,
+    "action_exit": 1,
+    "event": {
+      "error": -5,
+      "assigned": 0,
+      "pending": 1,
+      "claimed": 1,
+      "attempts": 9,
+      "writes": 2
+    },
+    "assignment_verified": false,
+    "early_refusal": false
+  },
+  "first_refusal": {
+    "bus": 0,
+    "devfn": "08",
+    "offset": "0x030",
+    "width": 4,
+    "requested": "0x0000ffff",
+    "error": -5,
+    "actual_readback_value_recorded": false,
+    "later_latched_refusals_are_not_independent_evidence": true
+  },
+  "cleanup": {
+    "first_release_retained_reset_and_power": true,
+    "bus_removed": true,
+    "extra_and_generic_configuration_restored": true,
+    "mem32_window_released": true,
+    "cleanup_retries": 1,
+    "retry_did_not_repeat_scan_or_assignment": true,
+    "reset_and_power_restored": true,
+    "pci_and_reg_modules_unloaded": true,
+    "reg_on_control_restored": "0x80",
+    "pci_sysfs_empty": true,
+    "verified": true,
+    "final_stop_error": -5,
+    "negative_result_preserved": true
+  },
+  "server": {
+    "ssh": true,
+    "http": true,
+    "bash": true,
+    "herdr": true,
+    "final_snapshot_entries": 44,
+    "snapshot_verified": true,
+    "sync_verified": true,
+    "automatic_ios_usb_return_verified": true
+  },
+  "battery": {
+    "ios_percent_before": 100,
+    "ios_percent_after": 77,
+    "ios_external_connected_before_and_after": true,
+    "ios_charging_after": true,
+    "linux_power_supply_entries": 0,
+    "final_uptime_minutes": 26,
+    "extended_while_fixing_host_history": true,
+    "percent_interval_includes_transitions": true,
+    "linux_current_health_or_sustained_charging_verified": false
+  },
+  "limits": {
+    "positive_assignment": false,
+    "positive_assignment_reuse_tested": false,
+    "irq_iommu_dma_or_driver_delivery_verified": false,
+    "native_wifi": false,
+    "hdq_or_charger_io_performed": false,
+    "payload_dt_keys_aliases_snapshot_ids_or_raw_device_logs_published": false
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "format": 1,
+  "status": "compiled_verified_not_phone_loaded",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "module": {
+    "bytes": 57112,
+    "sha256": "f98869b246e582479302ddfbd1edc228adf515c09ec7e7517becfbdeab615a67",
+    "module": "n71-pcie-diagnostic.ko"
+  },
+  "preserved_kernel_sha256": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "sources_sha256": {
+    "phone/kernel/n71-pcie-diagnostic.c": "b14a7f8920d58e2866065c3cb1696e486afd7d6be0035fc1cf902ce5d473d0d2",
+    "phone/kernel/n71-pcie-scan.h": "311dc6ab57c3430172f8ddbdc2d2b9229dc92b5fd76997ff89137418aadd182e",
+    "phone/kernel/n71-pcie-scan-config.h": "3a4abace7e0ac261dd527c79f51cb3084cbc450c5c861f17e3e0be3ceebdf7b5",
+    "tests/n71_pcie_scan_host.c": "8fe094444ff9c92e2290e5e479776f4ea63957b0de59b6bea83e9c1ffc8a9ec5",
+    "tests/test_n71_pcie_scan_host.py": "8163d4ced3a377903ad5d3d0e1fee94c9c4df5072410a3771d841f32a61a35b7",
+    "phone/kernel/n71-dart-cycle.h": "08b39c05a41b87936962b341525d7188a28909c91613ea902c5b899e9d431a4a",
+    "phone/kernel/n71-dart-provider.h": "4598dee76099f2a53fbd6f4d37054315f4df3e0c4b722a42728c1e2b9b99b168",
+    "tests/n71_pcie_scan_config.c": "6c0f42da00e2e377fea6e86a9f54736b8dbeaee2e0baf51f2d364acc1bfcc882",
+    "tests/run_n71_pcie_scan_mutations.py": "ff7e8e986b8c638e59bccb963d4e2bb47d11e93155ba63afaec6fe207cc622f9"
+  },
+  "native_checks": {
+    "macos": true,
+    "linux_arm64": true,
+    "c_contract_tests": 3,
+    "host_fault_scenarios": 11,
+    "config_assertion_mutations": 16,
+    "host_assertion_mutations": 6,
+    "werror": true,
+    "modpost_fatal": true,
+    "elf_aarch64": true,
+    "exact_vermagic": true,
+    "kernel_pci_symbols_linked": true
+  },
+  "private_log_sha256": {
+    "config-private.log": "1f467f99e464d4d7449c96333ca7482b8ca6be374354b5df1e5d04c3253b6301",
+    "mutation-private.log": "fd9dc098cb55362391a78491d0840fb90b45db45ddafdefae3e203fc75ab50ce",
+    "host-private.log": "c18a67f126880c0b60c5619a7520c1aedb49bdf58dba907bac77fa2212f9465b",
+    "module-private.log": "2cc7bde25c2c94346692ff38fa7c8488f0dc983667cf3af78c0ddf4bbd7807a7"
+  },
+  "host_scan_default": false,
+  "pci_binding_enabled": false,
+  "dma_enabled": false,
+  "bar_mmio_performed": false,
+  "resource_assignment_performed": false,
+  "physical_host_scan_verified": false,
+  "wifi_verified": false,
+  "firmware_loaded": false,
+  "public_inputs_sha256": "fb2aa576cc2ac926d7f6c60daa50e390d1c3cbd9c0dde684b1bf869bdeeada8b",
+  "prior_build_evidence": "n71-pcie-host-scan.json",
+  "intx_probe_policy": {
+    "command_width_bits": 16,
+    "toggle_bit": 10,
+    "other_command_bits_preserved": true,
+    "new_decode_prohibited": true,
+    "adjacent_w1c_status_untouched": true,
+    "original_command_restored": true
+  }
+}

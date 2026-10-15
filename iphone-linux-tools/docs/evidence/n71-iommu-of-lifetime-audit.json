@@ -1,0 +1,107 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T05:00:59.803840+00:00",
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "source_sha256": {
+    "drivers/iommu/of_iommu.c": "45b8483228d75a20a8d0aa3360ef8571ac1e1edbab373cb733a6bdaa3dedf61d",
+    "drivers/iommu/apple-dart.c": "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc",
+    "drivers/pci/pci-driver.c": "68fb85a00f63171e9d4a27f9358e4f1ce5b68c72ef1ac73d7b6f6744531b3dd1",
+    "drivers/iommu/iommu.c": "27ec62e95f5d5d4e3f7103587e8f955c3722f2a61ae7436daf95615fd1a42875",
+    "drivers/of/platform.c": "76511351e585839cd944ac59f7e92f45c3cda2b6eb855da86a865c13e8cef57d",
+    "drivers/of/dynamic.c": "72a54e86d96d0ff79d751514db7d541ac9af2262e3049d2d93085f68a29e411a",
+    "drivers/pci/search.c": "86cd467b75760ec05d570f57a3f83dd22669fe251aaac3417fbd6b927b5f9a24"
+  },
+  "symbols_sha256": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61",
+  "facts": [
+    {
+      "source": "drivers/iommu/of_iommu.c",
+      "lines": [
+        28,
+        29
+      ],
+      "fact": "Disabled IOMMU node returns ENODEV before fwspec init; a manually bound provider alone does not satisfy availability."
+    },
+    {
+      "source": "drivers/iommu/of_iommu.c",
+      "lines": [
+        136,
+        145
+      ],
+      "fact": "PCI association iterates DMA aliases and uses master host mapping."
+    },
+    {
+      "source": "drivers/iommu/apple-dart.c",
+      "lines": [
+        913,
+        956
+      ],
+      "fact": "of_xlate resolves the provider platform device by node and adds the requested SID to its stream map."
+    },
+    {
+      "source": "drivers/iommu/apple-dart.c",
+      "lines": [
+        1393,
+        1414
+      ],
+      "fact": "Provider remove resets hardware and unregisters IOMMU; S5L variant has four SIDs."
+    },
+    {
+      "source": "drivers/of/platform.c",
+      "lines": [
+        743,
+        745,
+        763,
+        776
+      ],
+      "fact": "OF_POPULATED gates dynamic creation/removal; disabling an owned node while its provider is registered can unregister that device."
+    },
+    {
+      "source": "drivers/of/dynamic.c",
+      "lines": [
+        767,
+        775
+      ],
+      "fact": "Apply-notify errors return after entries have applied; do not infer restoration from a negative return."
+    },
+    {
+      "source": "drivers/of/dynamic.c",
+      "lines": [
+        533,
+        547,
+        680,
+        698
+      ],
+      "fact": "Destroy drops changeset entries and node refs, not the dynamic property itself. Property memory must not be embedded in a freed module owner."
+    },
+    {
+      "source": "drivers/pci/search.c",
+      "lines": [
+        39,
+        57,
+        60,
+        109
+      ],
+      "fact": "Walker starts at real DMA device RID, iterates explicit aliases and then upstream bridge rules. Restrict mapping to measured N71 RIDs and reject unknown aliases; the source walk does not prove absence of runtime quirks."
+    }
+  ],
+  "configuration": {
+    "CONFIG_OF_DYNAMIC": true,
+    "CONFIG_OF_OVERLAY": true,
+    "CONFIG_IOMMU_DEFAULT_DMA_STRICT": true
+  },
+  "next_contract": "Separate ownership of provider availability and host mapping; consumers removed before unmap/provider stop/status restoration. Validate identity/readback on errors and preserve refs for same-session recovery.",
+  "stream_reference": "n71-dart-apple-stream-reference.json",
+  "limits": {
+    "new_helper_implemented": false,
+    "new_physical_boot_or_writes": false,
+    "native_irq_dma_or_wifi_proved": false,
+    "linux_charge_or_gauge_proved": false,
+    "kernel_mac_configuration_changed": false
+  },
+  "private_evidence_sha256": {
+    "iommu-source-private.json": "9a89ef76f7a72a83ee1f256a5031653691444851af1acf2874d7548f8ca63695",
+    "of-lifetime-source-private.json": "76b70ac42d9656be84448c088eefa6c33173fc1c92bc9450795fdb0b4166a3bc",
+    "of-changeset-source-private.json": "6d15ce5427641ade79e1d515c1da1c5469cfb29cb1bf2337fd8b5a39a5ea477c",
+    "pci-alias-source-private.json": "bc9c90ca3239fb2862a6312954b4c1a81021996e9e7b8aa71aa1ac32c54bd071"
+  }
+}

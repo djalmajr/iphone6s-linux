@@ -1,0 +1,217 @@
+{
+  "format": 1,
+  "code_commit": "3a6afb8ce066aa4707d28e2814b3f587590a0c8e",
+  "status": "explicit_runtime_session_staging_qualified_cli_acquisition_exit_firmware_energy_and_physical_proof_pending",
+  "input_count": 372,
+  "input_manifest_sha256": "e0f1bb8223282821dbf6969311b091e83cee01d7f8fd07cfbec7d3df9efc5e78",
+  "changed_inputs": {
+    "scripts/host/n71-link-session.py": {
+      "bytes": 37008,
+      "sha256": "58a006693358ab21e8c874ec08dc86b8b39ac2d3e38b2073ce98ca9e8c4f1a07"
+    },
+    "scripts/host/n71_iommu_result.py": {
+      "bytes": 19367,
+      "sha256": "b4017691257d28afa3cbd8c4899f38639f2d163d8ba3ea6bc028aff871309b1f"
+    },
+    "scripts/host/n71_driver_runtime_profile.py": {
+      "bytes": 2962,
+      "sha256": "4cd96571d7687fe2740fd17e11699ba3522741dab3f237faefb4adc980907958"
+    },
+    "tests/test_n71_driver_runtime_profile.py": {
+      "bytes": 19289,
+      "sha256": "4d854a37661033d20f7f99b5b582b2a0a597a78970b7fb925d64c279a0350ef3"
+    }
+  },
+  "new_tests_per_platform": 9,
+  "new_assertion_mutations_per_platform": 16,
+  "affected_tests_per_platform": 135,
+  "affected_assertion_mutations_per_platform": 149,
+  "platforms": {
+    "mac": {
+      "input_count": 372,
+      "ast": true,
+      "stages": {
+        "runtime-profile": {
+          "exit": 0,
+          "seconds": 54.92,
+          "tests": 9,
+          "assertion_mutations": 16,
+          "log_sha256": "e08287506fed4a2af8c3517361e258f8e8da36598c63c9603331e0ff6813ec74"
+        },
+        "link-session": {
+          "exit": 0,
+          "seconds": 0.61,
+          "tests": 45,
+          "assertion_mutations": 0,
+          "log_sha256": "f884e41ef663bf2234128556084497379e553a484421e94b0c7c735e4f31ef88"
+        },
+        "iommu-result": {
+          "exit": 0,
+          "seconds": 30.59,
+          "tests": 21,
+          "assertion_mutations": 53,
+          "log_sha256": "56881ef86854f25da13d6b21abb552d160e9177c4bb88b20d0c54ecb47907b4f"
+        },
+        "held-session": {
+          "exit": 0,
+          "seconds": 50.48,
+          "tests": 21,
+          "assertion_mutations": 30,
+          "log_sha256": "580c86d216da09f62c6188eb7fe51a30c7e417fb7107329166348bc1dbc09e04"
+        },
+        "resource-stage": {
+          "exit": 0,
+          "seconds": 46.7,
+          "tests": 16,
+          "assertion_mutations": 26,
+          "log_sha256": "9a660c8912bdeaf26fa85d1fc46e2c34b0cb5cc563474bb01671001055499c51"
+        },
+        "held-profile": {
+          "exit": 0,
+          "seconds": 1.11,
+          "tests": 11,
+          "assertion_mutations": 3,
+          "log_sha256": "644ffe0b4d36a25435435e82990f5bf189c37ae127169c04e68a505c512ceffb"
+        },
+        "io16-profile": {
+          "exit": 0,
+          "seconds": 0.23,
+          "tests": 1,
+          "assertion_mutations": 0,
+          "log_sha256": "694ac8524ba36c7b7689f31262a8463584f1c971cdbbbae557f516f4c58b66d0"
+        },
+        "optional-profile": {
+          "exit": 0,
+          "seconds": 0.28,
+          "tests": 1,
+          "assertion_mutations": 0,
+          "log_sha256": "43a08772ee03544d8d8f22f08dca421cd512aeecd429a1cb62bf62243203072a"
+        },
+        "pref64-profile": {
+          "exit": 0,
+          "seconds": 0.29,
+          "tests": 2,
+          "assertion_mutations": 0,
+          "log_sha256": "bc181991a75db5e76af00e34335c8b11af11b884db5164b55ebfd8276301b5ca"
+        },
+        "iommu-profile": {
+          "exit": 0,
+          "seconds": 17.73,
+          "tests": 8,
+          "assertion_mutations": 21,
+          "log_sha256": "5cb44f9bb52ba8530d92c37d44eac550add4ac58e5b6990dbe5bde3db5802966"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true,
+      "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ubuntu_arm64": {
+      "input_count": 372,
+      "ast": true,
+      "stages": {
+        "runtime-profile": {
+          "exit": 0,
+          "seconds": 53.45,
+          "tests": 9,
+          "assertion_mutations": 16,
+          "log_sha256": "0a165980c37e3efd788990ab8e2c3e8c8afcaee720bdac91ea98fb96f9caa2bd"
+        },
+        "link-session": {
+          "exit": 0,
+          "seconds": 0.27,
+          "tests": 45,
+          "assertion_mutations": 0,
+          "log_sha256": "4d1edb4f115c6cc2c8246fb5a4301413fee1d1cc1837bf8e22a81dcb6002c359"
+        },
+        "iommu-result": {
+          "exit": 0,
+          "seconds": 56.52,
+          "tests": 21,
+          "assertion_mutations": 53,
+          "log_sha256": "1bce245dc5884d99bd73475550da00374de98489e4feb26a673ca88fed6735f1"
+        },
+        "held-session": {
+          "exit": 0,
+          "seconds": 38.47,
+          "tests": 21,
+          "assertion_mutations": 30,
+          "log_sha256": "97ddfdf2970ec8e6f2338d179cdc8509e36acd64d08f31bce547c84e626afb1f"
+        },
+        "resource-stage": {
+          "exit": 0,
+          "seconds": 42.08,
+          "tests": 16,
+          "assertion_mutations": 26,
+          "log_sha256": "5421f2d11e6f3a15bf872267cd1c0625ad74b3efcedc90c1104283fd1834b16c"
+        },
+        "held-profile": {
+          "exit": 0,
+          "seconds": 0.85,
+          "tests": 11,
+          "assertion_mutations": 3,
+          "log_sha256": "fbfeba7d2f578b5131e9e9c796ef8e0cd4eb49c26b29a2d034254fb9be2260ab"
+        },
+        "io16-profile": {
+          "exit": 0,
+          "seconds": 0.49,
+          "tests": 1,
+          "assertion_mutations": 0,
+          "log_sha256": "ff5a7f9fda953c1d75e0f9888ac55b8ff089ba79d2b6b797aece64f8696a7b23"
+        },
+        "optional-profile": {
+          "exit": 0,
+          "seconds": 0.22,
+          "tests": 1,
+          "assertion_mutations": 0,
+          "log_sha256": "d20dee8f7d03029e61265c205c847b1ee7ee6ab3bcb94677795131660870bd13"
+        },
+        "pref64-profile": {
+          "exit": 0,
+          "seconds": 0.17,
+          "tests": 2,
+          "assertion_mutations": 0,
+          "log_sha256": "0ef89e6395cfccaf11d8bfd17e2d55b86e0d80efd6a8f4ed9e90564adc4e9766"
+        },
+        "iommu-profile": {
+          "exit": 0,
+          "seconds": 14.96,
+          "tests": 8,
+          "assertion_mutations": 21,
+          "log_sha256": "964332220a9ff8b08c50dca8291e6109e5124021e33965215b223b09b3aa19ec"
+        }
+      },
+      "iphone_accessed": false,
+      "lint": true,
+      "inputs_preserved": true,
+      "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "production_constructor": {
+    "diagnostics": 2,
+    "drivers": 5,
+    "bytes": 1371040,
+    "real_artifacts_validated": true,
+    "constructor_and_selectors_real": true,
+    "iphone_accessed": false,
+    "modules_executed": false,
+    "ssh_options_dependency_synthetic": true
+  },
+  "reused": {
+    "prior_inputs_unchanged": 358,
+    "prior_input_count": 360,
+    "compiled_c_inputs_unchanged": 69,
+    "compiled_c_cases_per_platform": 575,
+    "compiled_c_assertion_mutations_per_platform": 455,
+    "kernel_image_exports_and_module_binaries_unchanged": true
+  },
+  "limits": [
+    "Filesystem, POSIX shell, selectors and Session code are real; phone, SSH and kernel replies are synthetic in tests.",
+    "Production constructor checked immutable bytes, SHA, ELF64/AArch64 and vermagic without loading modules or opening SSH.",
+    "No Python type checker is configured; AST and fatal lint passed.",
+    "CLI and profile composition are not exposed yet; initial unassigned cleanup must be qualified first.",
+    "No physical Wi-Fi association, IRQ delivery, DMA translation, battery telemetry or Linux charging proof.",
+    "No firmware, keys, private device identifiers, Mac packages or system configuration were published or changed."
+  ]
+}

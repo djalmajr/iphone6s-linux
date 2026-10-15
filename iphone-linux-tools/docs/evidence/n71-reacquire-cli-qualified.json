@@ -1,0 +1,114 @@
+{
+  "format": 1,
+  "status": "same_boot_reacquisition_cli_and_two_cycles_qualified_offline_not_physical_wifi_or_energy",
+  "code_commit": "8d0b47a21140069000117653dc49885f62459126",
+  "new_contract_tests_per_platform": 6,
+  "new_assertion_mutations_per_platform": 8,
+  "affected_unittest_cases_per_platform": 81,
+  "platforms": [
+    "macOS",
+    "Ubuntu24.04 ARM64 dedicated VM"
+  ],
+  "matrix_test_modules": [
+    "test_n71_runtime_reacquire_cli",
+    "test_n71_driver_runtime_cli",
+    "test_n71_driver_reacquire",
+    "test_n71_driver_runtime_session",
+    "test_n71_runtime_held_capture",
+    "test_n71_resource_stage",
+    "test_n71_iommu_result"
+  ],
+  "public_input_count": 605,
+  "canonical_manifest_sha256": "2a30989c97ae5484c48c4da092be1e445b78ab16a400ec71b484922bf891c2b0",
+  "same_inputs_both_platforms": true,
+  "changed_inputs": [
+    {
+      "path": "scripts/host/n71_driver_runtime_cli.py",
+      "bytes": 7063,
+      "sha256": "36c5a88202fa0a711b719a96663fd44676cab741faa58b7ea2562a2c5058882b"
+    },
+    {
+      "path": "scripts/host/n71_held_session.py",
+      "bytes": 26736,
+      "sha256": "59254c2dc52fc6ecc42c24a7a434b79f05950b50e1807fd8ff9f1446eef86510"
+    },
+    {
+      "path": "scripts/host/n71_resource_stage.py",
+      "bytes": 11676,
+      "sha256": "b789ee658b567aa15b29d422010e85f5966eefeb1e399594116d014219411baf"
+    },
+    {
+      "path": "tests/test_n71_driver_runtime_cli.py",
+      "bytes": 16062,
+      "sha256": "69cc29635a2339c5f570b2c69a97303b6ea173d8f826b7859da9aa9f306a4366"
+    },
+    {
+      "path": "tests/test_n71_runtime_reacquire_cli.py",
+      "bytes": 23245,
+      "sha256": "cba0f582c2322eaaaa0b9171093a0ac43a8c97087c04bbf6163f6bf25eec8a0f"
+    }
+  ],
+  "ast_python_files": 274,
+  "fatal_lint_passed_both_platforms": true,
+  "python_typechecker_configured": false,
+  "mac_matrix_seconds": 266.662,
+  "arm64_matrix_seconds": 237.447,
+  "real_dependencies": [
+    "CLI and argparse entry",
+    "Session/preflight/experiment",
+    "private profile selection and journals",
+    "held loader and coordinator",
+    "resource/IOMMU/native/WCC parsers",
+    "generated firmware Bash and filesystem transport"
+  ],
+  "simulated_dependencies": [
+    "PCI and REG observations/effects",
+    "native driver and WCC state/effects",
+    "kernel boot and firmware_class sysfs"
+  ],
+  "two_complete_cycles_same_boot": true,
+  "two_cycles_through_cli_actions": [
+    "acquire or reacquire",
+    "assign",
+    "start",
+    "observe",
+    "stop"
+  ],
+  "source_raw_bytes_and_native_journals_preserved": true,
+  "distinct_outputs_and_remote_directories": true,
+  "second_stop_loader_check_passed": true,
+  "local_check_no_transport_or_output": true,
+  "previous_negative_cause_regression_passed": true,
+  "firmware_path_restored_after_cycles": true,
+  "actual_calibrated_profile_and_real_package_acquire_entry_check_passed": true,
+  "real_regression": "Second stop originally failed Assignment must not repeat because full proof contained both cycles; ordered baseline/native history validation view fixes current-cycle parsers without discarding raw evidence",
+  "discarded_fixture_failures": [
+    "Missing native/modern assignment reports and WCC receipt in the new model",
+    "Model filtered preflight stdout or retained old caller status; aligned with actual Session/current acquisition semantics; failures were not mutation kills"
+  ],
+  "new_mutation_targets": [
+    "CLI preparation and fresh acquisition dispatch",
+    "check propagation and output gate",
+    "reacquire action selection",
+    "ordered baseline prefix",
+    "ordered native prefix",
+    "native view history alignment"
+  ],
+  "firmware_executed": false,
+  "iphone_accessed": false,
+  "physical_reacquisition_proved": false,
+  "physical_radio_dma_or_energy_proof": false,
+  "kernel_payload_initramfs_modules_defaults_changed": false,
+  "mac_global_config_changed": false,
+  "dependencies_installed": false,
+  "reused_proofs": [
+    "unchanged native C/build artifacts",
+    "firmware library and package pinning",
+    "diagnostic composer/profile identities"
+  ],
+  "next": [
+    "Energy/HDQ prerequisites and firmware/regdb reproduction",
+    "One grouped physical session for Wi-Fi/IRQ/DMA/battery telemetry and reacquisition",
+    "Sustained charging proof before unattended operation"
+  ]
+}

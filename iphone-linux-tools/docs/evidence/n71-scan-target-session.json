@@ -1,0 +1,197 @@
+{
+  "format": 1,
+  "status": "collector_and_private_profile_qualified_not_physically_loaded",
+  "code_commit": "e1a483524c02753f7b119f5572c5d062e7312485",
+  "module_record": "n71-pcie-scan-target-build.json",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "kernel_patchset": "n71-dart-serdev-power-v2",
+  "inputs": {
+    "scripts/host/n71-link-session.py": {
+      "bytes": 25756,
+      "sha256": "2940d4ce66d2bdca05b5cb5a28293b36d4dacb22ec2a277f86cabde91d85d771"
+    },
+    "scripts/host/device_profile.py": {
+      "bytes": 6526,
+      "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+    },
+    "scripts/host/n71_bar_result.py": {
+      "bytes": 3096,
+      "sha256": "77f0046bf9589c4f530813724a1b65678ee1afef7bb44680ac0de56cd76b0e80"
+    },
+    "scripts/host/n71_chip_result.py": {
+      "bytes": 2166,
+      "sha256": "5635ff77403a8b9211be1909fac6228bf25c75b548a6962ec4b7fc42ecf0a511"
+    },
+    "scripts/host/n71_dart_result.py": {
+      "bytes": 3171,
+      "sha256": "98d707949851b9e7a2bee6d01300d2c46a442edc6d815a91272bb85b45a87ade"
+    },
+    "scripts/host/n71_dart_cycle_result.py": {
+      "bytes": 4562,
+      "sha256": "571fa7e2318a916da1c24eb0830cac86445e9e05e9d101534e1a4056acab0c9f"
+    },
+    "scripts/host/n71_scan_result.py": {
+      "bytes": 3580,
+      "sha256": "23b95aaa0cb35867f4cfb44620ddbb9b5d6670b08cf0528e8231fbdd4d645cbb"
+    },
+    "scripts/host/n71_session_history.py": {
+      "bytes": 2725,
+      "sha256": "4f6760e9b125cbcb7434631a91d2d88e59be53e29b6d889aad865855a70797bc"
+    },
+    "tests/test_n71_link_session.py": {
+      "bytes": 47514,
+      "sha256": "832a99b5cefaf593aca23eb02b927b30e4dc8d83473eb72cf5592ade82ffd061"
+    },
+    "tests/run_n71_link_session_mutations.py": {
+      "bytes": 6696,
+      "sha256": "1cfe29a7167ce44e395de567ed7d406942e4cb5f118ff4eff5d07ff802086192"
+    },
+    "tests/test_n71_bar_result.py": {
+      "bytes": 3647,
+      "sha256": "f509d2e1d90befab0557d6c1b9bc307a35b3e7a330d10b9a7f35e7ac864fb60c"
+    },
+    "tests/test_n71_chip_result.py": {
+      "bytes": 3104,
+      "sha256": "5a3983443cafca968d85f9bd920ebc2ba8a06a7697dc6094595c44d1e37a5c62"
+    },
+    "tests/test_n71_dart_result.py": {
+      "bytes": 4910,
+      "sha256": "f52ca466fa8bcf8b2dc7aac6f3b109ea40a4bf6b50c2e8bbe289a0f346bb3038"
+    },
+    "tests/test_n71_dart_cycle_result.py": {
+      "bytes": 5529,
+      "sha256": "0d6828f3bad0896da06f5fdacd2e15c224804a56aa279013867bc04ee15099be"
+    },
+    "docs/evidence/kernel-n71-bundle-build.json": {
+      "bytes": 4558,
+      "sha256": "01c2db2d9b6319555161e2438de22cecf4bb20adb0a3d34524d90023e099879c"
+    },
+    "docs/evidence/n71-binding-profile.json": {
+      "bytes": 13857,
+      "sha256": "7099326bbe809d3b658be58a2ac723475fffe20ccb8cb6419ee9ff44809484cc"
+    },
+    "docs/evidence/n71-dart-cycle-build.json": {
+      "bytes": 3528,
+      "sha256": "b9fafc4237833f8a61bad5b30066ef0fc3ebd04b51a8fc31d23346edc21ec46a"
+    },
+    "docs/evidence/n71-dart-state-build.json": {
+      "bytes": 2563,
+      "sha256": "dc5f3c8c40fc8a120f5f4e8375339a11a20e96cd284a1ad3db61c0ee15859705"
+    },
+    "docs/evidence/n71-pcie-chip-id-build.json": {
+      "bytes": 2003,
+      "sha256": "bf0e7614097314ab640a28f5623266eb5a547b9ddcf51ad814b3874a709ac9ef"
+    },
+    "docs/evidence/n71-pcie-bar-sizing.json": {
+      "bytes": 2027,
+      "sha256": "29ffe4338960489f7a7ac6bd4d55492fadef3b51fda4b56d25b475d99c4eff9b"
+    },
+    "docs/evidence/n71-pcie-controls-scan-build.json": {
+      "bytes": 3994,
+      "sha256": "4b31fb6005b85f113e4afc375a5f0376c3bef2a34409e716cfb596bb804126d1"
+    },
+    "docs/evidence/n71-pcie-config-inventory.json": {
+      "bytes": 3277,
+      "sha256": "11a4f6b373ce35dc003f9bd9cabe9383fde45584a6efa9e3a8f9a9099c62235d"
+    },
+    "docs/evidence/n71-pcie-bridge-scan-build.json": {
+      "bytes": 3113,
+      "sha256": "7e222f43bebf0f4e7167e248b4594b114755d4c5b7f9cf03896c09f7ea5d0a26"
+    },
+    "scripts/host/n71_scan_target_result.py": {
+      "bytes": 3903,
+      "sha256": "1f8387bcbb3784d94a6cf3703783a460e785ff16f2556527496f06f29841cc58"
+    },
+    "docs/evidence/n71-pcie-scan-target-build.json": {
+      "bytes": 10691,
+      "sha256": "b98cda2136fb37883a2f2dc83e86350fe02fb43af4e5809dd8bdd81cc223cbad"
+    }
+  },
+  "native_gates": {
+    "macos_arm64": {
+      "tests": 36,
+      "assertion_mutations": 45,
+      "python_version": "3.14.7",
+      "native_log_sha256": "1cfc28a76f5c01075f4cb281a3732a0e0cc3cbd19b184d66bfcdeeb9ad8c4ab0",
+      "mutations_log_sha256": "80c0d9be082cd618e1780b6ba949cbe5b7b0c1cfc0b4785d31025d6692cb2476"
+    },
+    "ubuntu_arm64": {
+      "tests": 36,
+      "assertion_mutations": 45,
+      "python_version": "3.12.3",
+      "log_sha256": {
+        "native-private.log": "414550319be4e0eb4d8aed6fbba31470927a6a34783686e4ee9dcd9b6f27edc1",
+        "mutations-private.log": "80c0d9be082cd618e1780b6ba949cbe5b7b0c1cfc0b4785d31025d6692cb2476"
+      },
+      "generated_shell_syntax_verified": true,
+      "generated_commands": 10,
+      "inputs_preserved": true,
+      "config_image_exports_preserved": true
+    }
+  },
+  "profile_gate": {
+    "cli_check_passed": true,
+    "cli_log_sha256": "2826026f872b534b343c3d1aeb9ad56e267265babc0ac79195b286f21b875393",
+    "required_flags": [
+      "--host-scan",
+      "--scan-link-target"
+    ],
+    "provenance_flag": "pcie_scan_link_target=true",
+    "payload_sha256": "3834d17c2cd9026b640ce1640cdc1baf0f1c85cab8e6bd8051a0d9a7b8316ffa",
+    "dtb_sha256": "940976925caee59a3db8d118d6e6f4278529eafa6d60b86c76d9cb651ace4004",
+    "selected_modules": {
+      "n71-pcie-diagnostic.ko": {
+        "bytes": 69976,
+        "sha256": "b3fc79aa86b2e291edea464851f028b4516ff7053f5cf20a48787170440096b1",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64"
+      },
+      "n71-wlan-power-diagnostic.ko": {
+        "bytes": 17688,
+        "sha256": "fdf887e7572b70d09e76f770272bee5dc9ffcde799277e894ee8965007c5a8f1",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64"
+      }
+    },
+    "payload_initramfs_identities_reg_on_preserved": true,
+    "private_permissions_verified": true,
+    "default_changed": false
+  },
+  "contract": {
+    "unique_live_caller_status": true,
+    "same_boot_and_release_before_cleanup": true,
+    "bind_unbind_absent_before_cleanup": true,
+    "maximum_cleanup_actions": 1,
+    "cleanup_action_repeats_scan": false,
+    "reg_on_release_after_proved_pci_unload_only": true,
+    "primary_error_preserved": true,
+    "raw_logs_and_staging_preserved": true,
+    "accounting_annotation_only_translated": true
+  },
+  "reused_evidence": {
+    "module_record": "n71-pcie-scan-target-build.json",
+    "inputs_unchanged": true,
+    "module_rebuilt": false,
+    "new_image_built": false,
+    "scan_scenarios": 21,
+    "scan_assertion_mutations": 13,
+    "caller_scenarios": 67,
+    "caller_assertion_mutations": 18
+  },
+  "limits": {
+    "transport_simulated_in_native_tests": true,
+    "physical_loaded": false,
+    "physical_link_after_tls_proven": false,
+    "physical_scan_proven": false,
+    "irq_delivery_proven": false,
+    "dma_proven": false,
+    "wifi_functional": false,
+    "linux_charging_proven": false,
+    "global_mac_packages_or_config_changed": false
+  },
+  "previous_ci": {
+    "head": "096d69a136fd444d0bdb82817b4bb4d8a666fbd7",
+    "pr_run": 37326642354,
+    "push_run": 37326631225,
+    "conclusion": "success",
+    "covers_this_collector": false
+  }
+}

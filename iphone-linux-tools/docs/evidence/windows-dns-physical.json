@@ -1,0 +1,129 @@
+{
+  "format": 1,
+  "local_date": "2026-10-01",
+  "timezone": "America/Maceio",
+  "issue": 20,
+  "status": "native_windows_iphone_dns_passed",
+  "kernel": "7.2.0-iphone6s-source",
+  "source_pongo": true,
+  "wrapper_exit": 0,
+  "operator_console_confirmed": true,
+  "strict_ssh_http_and_snapshot_restore": true,
+  "three_restored_dns_files_compared_exactly": true,
+  "phone_dns_port": 5353,
+  "mac_proxy_port": 1053,
+  "proxy": "versioned non-root LAN proxy; explicit private bind; two individual clients allowed",
+  "mac_dig": {
+    "udp": "passed",
+    "tcp": "passed"
+  },
+  "windows": {
+    "native_parser": true,
+    "microsoft_child_signature_verified": true,
+    "matched_line": "DNS20_PHYSICAL_CLIENT_DONE",
+    "cases": [
+      {
+        "Case": "phone-1053",
+        "Exit": 0,
+        "UDP": true,
+        "TCP": true,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "phone-wrong-name",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "phone-wrong-address",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "phone-wrong-port",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "phone-1053-repeat",
+        "Exit": 0,
+        "UDP": true,
+        "TCP": true,
+        "ExpectedOutcome": true
+      }
+    ]
+  },
+  "cleanup": {
+    "windows": {
+      "matched_line": "DNS20_PHYSICAL_TEMP_CLEANUP_DONE",
+      "cases": [
+        {
+          "Case": "physical-temp-cleanup",
+          "WasPresent": true,
+          "FilesRemoved": 2,
+          "RootRemoved": true
+        },
+        {
+          "Case": "physical-temp-cleanup",
+          "WasPresent": false,
+          "FilesRemoved": 0,
+          "RootRemoved": true
+        }
+      ]
+    },
+    "mac_listeners": [
+      {
+        "endpoint": "project_dns_proxy",
+        "transport": "udp",
+        "present": false
+      },
+      {
+        "endpoint": "project_dns_proxy",
+        "transport": "tcp",
+        "present": false
+      },
+      {
+        "endpoint": "owned_ssh_tunnel",
+        "transport": "tcp",
+        "present": false
+      }
+    ],
+    "owned_proxy_exit": 0,
+    "owned_phone_dns_stopped": true,
+    "owned_phone_herdr_stopped": true,
+    "main_mac_herdr_untouched": true
+  },
+  "uptime_before_return_seconds": 261.57,
+  "return_cli_exit": 0,
+  "backup_sync_and_ios_usb_verified": true,
+  "ios_battery_before_percent": 92,
+  "ios_battery_after_percent": 91,
+  "ios_charging_after": true,
+  "new_packages_installed": false,
+  "global_dns_firewall_policy_changed": false,
+  "private_artifacts": "runtime/windows-dns-physical-20261001/",
+  "source_sha256": {
+    "dns_windows.cs": "e3a23d7643abc839d692c26472b7490b67751bd78c27c4d715e81c8f9674beee",
+    "dns-check-windows.ps1": "0dfd2cad85b409189ec49d4bf4b3f65ef0c65e2ed61f52250f1757967113046a"
+  },
+  "reused_unchanged_client_gates": {
+    "cases": 61,
+    "assertion_mutations": 18,
+    "ci_pr": 36867261810,
+    "ci_push": 36867254184
+  },
+  "preparation_recovery": "Oversized initial terminal paste was not accepted as proof; only the owned test shell was replaced in the same workspace. Source transfer in 2048-byte chunks passed hashes and native parsing. Initial named temporary directory absent at cleanup.",
+  "limits": [
+    "Direct queries on explicit port1053 only; no Windows resolver/NRPT/Android or standard-port53 proof.",
+    "Negative CLI cases abort in the UDP phase; this pilot does not claim separate negative TCP validation. Parser/transport negative gates are recorded in prior unchanged-code tests.",
+    "Short supervised pilot; battery delta includes preparation and reboot, not sustained charging or 24-hour stability proof.",
+    "Specific nslookup failure cause remains unknown; the alternate public client is proven against the phone.",
+    "No Wi-Fi, NAND, autonomous boot or complete PR review proof."
+  ]
+}

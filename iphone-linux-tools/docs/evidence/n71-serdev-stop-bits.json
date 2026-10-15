@@ -1,0 +1,73 @@
+{
+  "format": 1,
+  "base_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "patch": "phone/kernel/patches/0002-serdev-stop-bits.patch",
+  "patch_sha256": "f987f64912a410d588ac0d1d9a47c7cc275a0dc234fbe27549011255e98e0d11",
+  "files": [
+    {
+      "path": "include/linux/serdev.h",
+      "original_sha256": "54a3e78e8ca0e29311070c87b6811e486a15453b1b938f221655a1ed3278e2c3",
+      "patched_sha256": "fbf86a763c535f07646beb49c14ac3582e7ba2f4d9a7bd0b680aecf32d11dd0c"
+    },
+    {
+      "path": "drivers/tty/serdev/core.c",
+      "original_sha256": "b3130abc6078d5353c38a0ef029c7afee4989cbccbb784e785dc7ebefa882e6c",
+      "patched_sha256": "fefe1fdbc17a0c7239df964ba0eee7fd8ec95f2e7ee157be451630c167e9d340"
+    },
+    {
+      "path": "drivers/tty/serdev/serdev-ttyport.c",
+      "original_sha256": "e4c9d73545e27fe8c995ef7a0d8ae23381fede11909f4b250c34a8004b1a437d",
+      "patched_sha256": "4643ddeac9973176346c04dd7054027153d49291960f1d89cd8e7280e45e7068"
+    }
+  ],
+  "api": "serdev_device_set_stop_bits",
+  "accepted_bits": [
+    1,
+    2
+  ],
+  "tty_mask": "CSTOPB",
+  "unchanged_other_termios_fields": true,
+  "verify_tty_readback": true,
+  "called_automatically": false,
+  "physical_uart_verified": false,
+  "primary_termios_reference": "https://www.kernel.org/doc/html/latest/driver-api/serial/driver.html",
+  "limits": "Separate source patch only. Driver owns open/close and lifetime. No pinmux, clock, UART5 node, HDQ transmission, SN2400 access, gauge measurement or physical restoration proof. Not integrated in the existing DART patchset or device profile.",
+  "offline_validation": {
+    "mac_native_baseline_and_assertion_kills": 12,
+    "arm64_native_baseline_and_assertion_kills": 12,
+    "kernel_compile_flags": "ARCH=arm64 -j2 KCFLAGS=-Werror",
+    "checkpatch_errors": 0,
+    "checkpatch_warnings": 0,
+    "full_kernel_image_linked": false,
+    "modpost_or_physical_boot_proved": false,
+    "artifacts": {
+      "source_sha256": {
+        "include/linux/serdev.h": "fbf86a763c535f07646beb49c14ac3582e7ba2f4d9a7bd0b680aecf32d11dd0c",
+        "drivers/tty/serdev/core.c": "fefe1fdbc17a0c7239df964ba0eee7fd8ec95f2e7ee157be451630c167e9d340",
+        "drivers/tty/serdev/serdev-ttyport.c": "4643ddeac9973176346c04dd7054027153d49291960f1d89cd8e7280e45e7068"
+      },
+      "objects": [
+        {
+          "path": "drivers/tty/serdev/core.o",
+          "size": 22248,
+          "sha256": "a23cb52ad20b0bf6beb449b8db2954ae781f2c8a559a8acb36493a1e2f81fddd",
+          "machine": "AArch64"
+        },
+        {
+          "path": "drivers/tty/serdev/serdev-ttyport.o",
+          "size": 8360,
+          "sha256": "37b9133468b9c8893b48a78fe87280876dd5600655f0d530238998fbd06ed6fa",
+          "machine": "AArch64"
+        }
+      ],
+      "config_sha256": "ae1348cdd46bb94eb9e3725b6089a2ecddae5b4dfa423164b4d4f085a8707d2c",
+      "exported_symbol_object_verified": true,
+      "preserved_source_diff_empty": true,
+      "modified_worktree_exact_three_files": true
+    },
+    "test_inputs_sha256": {
+      "tests/n71_serdev_stop_bits.c": "09358a977787b4f480c720c460d086ecb548e55998d379bcd24c8961bb73bcea",
+      "tests/run_n71_serdev_stop_bits_mutations.py": "807e7545332fa8fb23befd3f13fab126c34245719ed012787601d25b5c62b36c"
+    }
+  }
+}

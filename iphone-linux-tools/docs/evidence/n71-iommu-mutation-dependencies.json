@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T09:58:35.702661+00:00",
+  "code_commit": "9faff88cacdecabda0449bba5ef2bb8927c620b3",
+  "issue": "https://github.com/djalmajr/iphone6s-linux/issues/40",
+  "scope": "Repair public-only disposable dependency set in the external diagnostic payload mutation gate; no production or phone change.",
+  "subject_sha256": "8fff88e0df4001dabf17bac63e3253f3dc1a33261ba2060c5037d3cdb9acfda9",
+  "reproduced_before": {
+    "exit": 1,
+    "missing_iommu_build": true,
+    "elapsed_s": 1.25
+  },
+  "qualification": {
+    "macos": {
+      "exit": 0,
+      "elapsed_s": 24.8,
+      "compiled_assertion_kills": 34,
+      "input_hashes_unchanged": true,
+      "no_import_errors": true,
+      "gate_complete": true
+    },
+    "ubuntu_arm64": {
+      "exit": 0,
+      "elapsed_s": 14.91,
+      "compiled_assertion_kills": 34,
+      "input_hashes_unchanged": true,
+      "no_import_errors": true,
+      "gate_complete": true
+    },
+    "baseline_tests_per_platform": 22,
+    "compiled_assertion_mutants_per_platform": 34,
+    "ast_exit": 0,
+    "fatal_flake8_exit": 0,
+    "python_typechecker": "not configured",
+    "arm64_disposable_public_inputs": 591
+  },
+  "verification_reuse": {
+    "format": 1,
+    "d20_inputs_sha256": {
+      "scripts/host/n71_iommu_build.py": "eebe9b931124d0d164c83e8d4b580791aca6314ed2df3e96428f0b9d75a28b32",
+      "scripts/host/n71_iommu_result.py": "7c3c907e06bcc0560078121a0ce38a7ed3901a95e7a15451cd1d3efcea2c4e18",
+      "scripts/host/n71_resource_build.py": "6066fad1b2679c39a480d527f713635ab7834b241febccdf5b5ed4202bade3f5",
+      "scripts/host/n71_resource_result.py": "a398821e555b5186620a5862c57030737ba7be8019e2dee5c0859e55f0dbf921",
+      "scripts/host/n71-link-session.py": "6ef7b5da6a5953660a44fb53a31e5333f269c3469102501388b5f2a5d2288dc9",
+      "scripts/build/compose-n71-diagnostic.py": "c797d15a64348456803095050586c59c94e54ec70c13fa57531843b0c2599576",
+      "tests/test_n71_iommu_profile.py": "c52f62e6438e17073f0c4d3575f99182d43c79e79d137f488da475d8cc243e3d"
+    },
+    "native_d18_inputs_unchanged": 84,
+    "private_candidate_unchanged": true,
+    "kernel_or_module_rebuilt": false,
+    "usb_action": false
+  },
+  "contracts": {
+    "public_iommu_build_helper_copied": true,
+    "no_production_sys_path_fallback": true,
+    "selectors_and_failure_criteria_preserved": true,
+    "import_errors_not_counted_as_kills": true
+  },
+  "limits": {
+    "new_full_ci_verified": false,
+    "physical_usb_boot_or_dfu": false,
+    "kernel_or_module_rebuilt": false,
+    "irq_dma_wifi_or_charging_verified": false,
+    "mac_global_packages_or_configuration": false,
+    "private_artifacts_or_identity_published": false,
+    "main_merge_tag_or_release": false
+  },
+  "prior_full_ci": {
+    "head": "33fca56e35b411a139dbd45d5e21871e573a8fc4",
+    "pr_run": 37602851952,
+    "conclusion": "failure",
+    "source_jobs": "both failed in synthetic tests",
+    "windows_dns": "success",
+    "failure": "test_n71_held_session mutation selector resource-cli-check-session has zero matches after the new Session keyword argument",
+    "dependency_runner_reached": false
+  }
+}

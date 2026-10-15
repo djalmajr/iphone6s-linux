@@ -1,0 +1,42 @@
+{
+  "format": 1,
+  "status": "compiled_verified",
+  "source": {
+    "commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "epoch": 1787064859,
+    "patchset": "n71-dart-tcr-v1",
+    "patch_sha256": "da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74",
+    "patched_blob_sha256": "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc"
+  },
+  "build": {
+    "exit_code": 0,
+    "kernel_release": "7.2.0-iphone6s-source",
+    "compiler_version": "13.3.0",
+    "page_size_kib": 16,
+    "dtb_compatible": "apple,n71 apple,s8000 apple,arm-platform",
+    "outputs": {
+      "Image": {"bytes": 52136448, "sha256": "844a85705d0ce79ee97e878bbbd4ff62e76054e6547eabcdf36882e2eef6bd52"},
+      "Image.gz": {"bytes": 15662105, "sha256": "bdc652d8581771a86a5d18551cf24171510d00e6e4ff0e62724650b98db6a0e7"},
+      "s8000-n71.dtb": {"bytes": 22884, "sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58"},
+      "config": {"bytes": 321747, "sha256": "ae1348cdd46bb94eb9e3725b6089a2ecddae5b4dfa423164b4d4f085a8707d2c"},
+      "config-embedded": {"bytes": 321747, "sha256": "ae1348cdd46bb94eb9e3725b6089a2ecddae5b4dfa423164b4d4f085a8707d2c"}
+    }
+  },
+  "gates": {
+    "separate_linked_source_worktree": true,
+    "pinned_patchset_verified_before_and_after_build": true,
+    "required_kconfig_values_verified": 47,
+    "embedded_config_exact_match": true,
+    "gzip_matches_image": true,
+    "mac_transfer_hashes_recalculated": true,
+    "baseline_tracked_source_preserved": true,
+    "dtb_matches_preserved_baseline": true,
+    "private_artifacts_only": true
+  },
+  "physical_boot_tested": false,
+  "installed": false,
+  "default_profile_changed": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "limits": "Separate build only. DART SID/layout, shared-register locking, ownership and DMA faults remain unverified on N71. Existing compositor remains pinned to the earlier baseline. No firmware, identities or calibration published."
+}

@@ -1,0 +1,113 @@
+{
+  "format": 1,
+  "date": "2026-10-15",
+  "code_commit": "42dbd665b600840fec50525802f2f41cf617edfa",
+  "status": "physical_diagnosis_completed_native_wifi_and_energy_still_incomplete",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "single_linux_boot": true,
+  "same_boot_across_eight_runtime_actions": true,
+  "last_measured_linux_uptime_seconds": 449.86,
+  "baseline": {
+    "strict_ssh": true,
+    "snapshot_restore": true,
+    "http": true,
+    "herdr": true,
+    "low_brightness": true
+  },
+  "hdq": {
+    "inspect": 0,
+    "configure_error": -16,
+    "configuration_stage": 3,
+    "saved_ctl": "0x104",
+    "saved_smsta": "0x08010100",
+    "controller_baseline_guard_rejects_ctl_above_low_byte": true,
+    "primary_source_bit8": "CTL_UJM",
+    "hdq_transport_reached": false,
+    "battery_value_valid": false,
+    "cleanup_error": 0,
+    "normal_unload_verified": true,
+    "charger_value_writes": 0
+  },
+  "wifi": {
+    "dma_window_start": "0x80000000",
+    "dma_window_length": "0x3ffff000",
+    "firmware_execution_observed": true,
+    "wlan_interface_present": false,
+    "first_command_error": -5,
+    "dart_stream": 0,
+    "dart_fault_code": 2,
+    "dart_fault": "NO PMD FOR IOVA",
+    "dma_translation_proven": false,
+    "radio_irq_delivery_proven": false,
+    "association_proven": false,
+    "reported_fault_iova": "0xbfffe000",
+    "previous_profile_reported_fault_iova": "0x3ffff028",
+    "fault_handler_ors_dma_min": true,
+    "reported_address_change_proves_hardware_base_bits": false
+  },
+  "recovery": {
+    "first_stop_primary_error": -1,
+    "first_stop_error": 0,
+    "first_cleanup_errors": [],
+    "reacquire": true,
+    "resource_reassignment_verified": true,
+    "second_firmware_start_performed": false,
+    "second_stop_primary_error": -5,
+    "second_stop_error": 0,
+    "second_cleanup_errors": [],
+    "final_modules_and_pci_devices_absent": true,
+    "ssh_http_preserved": true,
+    "registered_proof_digests_verified": {
+      "acquire": {
+        "registered_proofs": 0,
+        "checkpoint_verified": true
+      },
+      "assign": {
+        "registered_proofs": 1,
+        "checkpoint_verified": true
+      },
+      "start": {
+        "registered_proofs": 8,
+        "checkpoint_verified": true
+      },
+      "observe": {
+        "registered_proofs": 8,
+        "checkpoint_verified": true
+      },
+      "stop": {
+        "registered_proofs": 18,
+        "checkpoint_verified": true
+      },
+      "reacquire": {
+        "registered_proofs": 0,
+        "checkpoint_verified": true
+      },
+      "reassign": {
+        "registered_proofs": 1,
+        "checkpoint_verified": true
+      },
+      "restop": {
+        "registered_proofs": 5,
+        "checkpoint_verified": true
+      }
+    }
+  },
+  "persistence": {
+    "snapshot_verified": true,
+    "sync_verified": true,
+    "ios_usb_verified": false,
+    "ios_lock_screen_confirmed_by_operator": true,
+    "usb_absence_does_not_prove_reboot_failure": true
+  },
+  "energy": {
+    "power_supply_entries": 0,
+    "thermal_zone_entries": 0,
+    "linux_charging_proven": false
+  },
+  "limits": [
+    "Second cycle tested reacquisition, assignment and cleanup only; no second firmware start.",
+    "Coordinator running/published is not WLAN availability; both stop primary errors remain preserved.",
+    "No gauge identity, battery reading, Linux charging, radio IRQ delivery or successful DMA translation was proved.",
+    "Original logs, boot identifiers, profiles, firmware, calibration and keys remain private."
+  ]
+}

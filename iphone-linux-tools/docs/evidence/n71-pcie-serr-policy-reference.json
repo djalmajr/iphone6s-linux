@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "status": "source_qualified_not_phone_loaded",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "sources": {
+    "drivers/pci/probe.c": "c14188e7d25a8a33d09bd415c50f70c62be91ebb3a240627fee6c6c5298765d6",
+    "include/uapi/linux/pci_regs.h": "51d2a1344da2a56e913e9d69b3b5d90eaaf4fb0bf96e672a5674ea819182c69b"
+  },
+  "root_identity": "1004106b",
+  "control_offset": 62,
+  "width_bytes": 2,
+  "set_mask": 2,
+  "already_qualified_clear_mask": 32,
+  "policy": "original or master-abort-cleared, optionally SERR set; preserve all other bits",
+  "original_control_restored": true,
+  "interrupt_line_adjacent_untouched": true,
+  "port_interrupt_mask_written_zero_by_existing_link_sequence": true,
+  "irq_delivery_verified": false,
+  "dma_enabled": false,
+  "wifi_verified": false
+}

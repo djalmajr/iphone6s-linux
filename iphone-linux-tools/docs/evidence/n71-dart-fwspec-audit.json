@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "proof_scope": "Pinned primary-source audit only; no phone execution.",
+  "source_sha256": {
+    "drivers/iommu/apple-dart.c": "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc",
+    "drivers/iommu/iommu.c": "27ec62e95f5d5d4e3f7103587e8f955c3722f2a61ae7436daf95615fd1a42875",
+    "drivers/iommu/of_iommu.c": "45b8483228d75a20a8d0aa3360ef8571ac1e1edbab373cb733a6bdaa3dedf61d"
+  },
+  "facts": [
+    {
+      "path": "drivers/iommu/apple-dart.c",
+      "lines": [
+        913,
+        961
+      ],
+      "fact": "of_xlate records args SID in private stream_maps/sidmap and never calls iommu_fwspec_add_ids."
+    },
+    {
+      "path": "drivers/iommu/of_iommu.c",
+      "lines": [
+        22,
+        41
+      ],
+      "fact": "Initializes fwspec then delegates to of_xlate; does not append stream IDs."
+    },
+    {
+      "path": "drivers/iommu/iommu.c",
+      "lines": [
+        3073,
+        3097
+      ],
+      "fact": "fwspec allocation is zeroed; num_ids remains0 until explicitly added."
+    },
+    {
+      "path": "drivers/iommu/iommu.c",
+      "lines": [
+        3112,
+        3136
+      ],
+      "fact": "Explicit add_ids updates array/count; unused by the Apple DART xlate path."
+    },
+    {
+      "path": "drivers/iommu/apple-dart.c",
+      "lines": [
+        1393,
+        1403
+      ],
+      "fact": "Provider remove runs hw_reset before IRQ free, IOMMU unregister and clocks disable."
+    }
+  ],
+  "decision": "Validate exact owned OF map, empty Apple fwspec/provider/flags, and core domain; label map SID separately from private SID observation.",
+  "inference": "A validated OF mapping to SID0 supplies args SID0 to the pinned xlate routine. This is source-based inference, not direct live private-state or physical DMA proof.",
+  "physical_proof": false
+}

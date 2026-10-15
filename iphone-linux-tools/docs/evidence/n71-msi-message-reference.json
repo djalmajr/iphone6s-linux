@@ -1,0 +1,133 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07T02:48:55.282106+00:00",
+  "proof_scope": "Static N71 MSI message inference from immutable code/properties and an earlier official XNU flag comparison. No actual message, allocation, delivery or mask baseline measured.",
+  "apple_kernel_sha256": "0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a",
+  "apple_adt_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+  "apple_xnu_binary_version": "8020.241.44",
+  "exact_xnu_source_tag_check": {
+    "tag": "xnu-8020.241.44",
+    "github_ref_result": "HTTP 404",
+    "not_used_as_source": true
+  },
+  "upstream_sources": [
+    {
+      "url": "https://github.com/apple-oss-distributions/IOPCIFamily/blob/4822b27a36e2de70e231ecf2bf3021384fab6ec2/IOPCIMessagedInterruptController.cpp",
+      "blob_sha": "3aa606d134e2a356722ecbfa91843073a4786740",
+      "sha256": "47227c89d045ce56a5bc7793cf36d2143375fc51545044fc1db84a0977c06b74",
+      "use": "firstVector plus _vectorBase supplied to message function, separately from parent registration"
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-8020.140.41/osfmk/kern/zalloc.h",
+      "blob_sha": "70ca5480ef0d5ea0e2462509484cc8b49a106b3f",
+      "sha256": "c784675d933d7804ab1cb4b530311cfb4c7a341b3c81d04ba3e6d5713708d01a",
+      "use": "Earlier comparison: Z_ZERO=0x0004, Z_VM_TAG_BT_BIT=0x1000; not exact binary version"
+    }
+  ],
+  "inference": {
+    "factory_object_bytes": 216,
+    "typed_allocator_target": "0xfffffff0076a1834",
+    "typed_allocator_zone_flags": "0xd1004",
+    "flag_bit_compared_to_Z_ZERO": "0x0004",
+    "controller_vector_base_assumed_from_zero_allocation_and_initializer": 0,
+    "registration_offset_in_distinct_field": 256,
+    "message_address_lo": "0xbffff000",
+    "message_address_hi": 0,
+    "expected_data": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "aic_parent_numbers": [
+      264,
+      265,
+      266,
+      267,
+      268,
+      269,
+      270,
+      271
+    ],
+    "adt_parent_phandle": 22,
+    "argument_x5_to_message_word_2": true,
+    "vector_base_zero_physically_measured": false,
+    "exact_binary_zeroing_path_fully_traced": false
+  },
+  "source_windows": [
+    {
+      "name": "embedded_msi_factory",
+      "address": "0xfffffff005f7f2c0",
+      "bytes": 84,
+      "file_offset": 21279424,
+      "sha256": "4933696da1442ba11a2919ff74f1861bd76a7c0675a7d4d3a2aeffed9e46f9e5"
+    },
+    {
+      "name": "typed_allocator_stub",
+      "address": "0xfffffff005f8a7f4",
+      "bytes": 12,
+      "file_offset": 21325812,
+      "sha256": "c773567f09174b8b9da56c7cc0ef8b169b00b3efa288effb10376749d932de7e"
+    },
+    {
+      "name": "typed_allocator_import",
+      "address": "0xfffffff006e243b0",
+      "bytes": 8,
+      "file_offset": 36635568,
+      "sha256": "a9360073c4e3374dc47c19e977440b25101ecb4e7a1c4d97db4f60d038fa125f"
+    },
+    {
+      "name": "typed_allocator_flags",
+      "address": "0xfffffff0076a1834",
+      "bytes": 144,
+      "file_offset": 6936628,
+      "sha256": "13f2eb5129eedba650b7d285a1a48049fe2748138d7dc48ef8d50b8b0863eca3"
+    },
+    {
+      "name": "embedded_msi_initializer",
+      "address": "0xfffffff005f7f3ac",
+      "bytes": 692,
+      "file_offset": 21279660,
+      "sha256": "5a76994140ec036027b20420eeab9f0193c446212661a2d943cde5cfe53bc6f9"
+    },
+    {
+      "name": "first_vector_plus_controller_base",
+      "address": "0xfffffff005f7ba24",
+      "bytes": 48,
+      "file_offset": 21264932,
+      "sha256": "0fa414963d70ccc815ce5dc82eb3c492ec401e5d92dd1c8e0092e3b4907ff87e"
+    },
+    {
+      "name": "message_argument_registers",
+      "address": "0xfffffff005f828d0",
+      "bytes": 20,
+      "file_offset": 21293264,
+      "sha256": "d3206e6bbe01c7ef69e7663f09379624dceb2d6f9365d077c106f90a26beea63"
+    },
+    {
+      "name": "message_words_write",
+      "address": "0xfffffff005f82b88",
+      "bytes": 24,
+      "file_offset": 21293960,
+      "sha256": "1e94549574ae8c54021ea25b9c4573e92fb2d0b478f3301d2b0f03e3712a8a99"
+    },
+    {
+      "name": "registration_offset_added_separately",
+      "address": "0xfffffff005f7f6c0",
+      "bytes": 28,
+      "file_offset": 21280448,
+      "sha256": "893bfd1c12d26689ab54ff00ea6d26f084a1079886459e14fab9ca5a31a43096"
+    }
+  ],
+  "limits": {
+    "physical_message_or_irq_delivery_verified": false,
+    "parent_domain_ownership_or_mask_restore_verified": false,
+    "dma_or_wlan_bind_enabled": false,
+    "firmware_disassembly_or_raw_bytes_published": false
+  },
+  "next_gate": "Native MSI parent lifecycle must retain its bitmap/domains and roll back partial parent allocation; validate the reference during one grouped physical session before WLAN bind."
+}

@@ -1,0 +1,57 @@
+Date: 2026-09-30
+Scope: issue #15, synthetic files only, dedicated Ubuntu ARM64 VM.
+No phone action, no real snapshots/SSH identities copied, no package install.
+
+Local:
+python3 -m unittest discover -s iphone-linux-tools/tests -v
+Ran 19 tests: 17 passed, 2 Linux/root VM tests explicitly skipped on macOS.
+Python AST passed (syntax only; no typechecker configured).
+Pyflakes 3.4.0 passed on changed Python files.
+Flake8 7.3.0 --isolated --select=E9,F63,F7,F82 passed on changed Python files.
+Existing Python 3.12.6 selected per command through ASDF_PYTHON_VERSION;
+no .tool-versions or Mac installation modified.
+git diff --check passed.
+
+Real dependency:
+BusyBox v1.36.1 (Ubuntu 1:1.36.1-6ubuntu3.1), Bash in owned chroot.
+Transport dependency replaced by chroot execution; restore/backup not mocked.
+
+Case 1: tmpfs size=64k,nosuid,nodev,noexec at synthetic srv/data.
+Incoming second file: 1 MiB, original: 8 KiB.
+Actual BusyBox tar: write error: No space left on device.
+Restore raised extraction error; journal recovery-needed and previous snapshot
+command available. Explicit restore of previous snapshot succeeded.
+
+Case 2: SIGKILL of actual tar process group after first file changed.
+Incoming second file: 64 MiB.
+Transport failure 255 preserved despite cleanup failure 77.
+Incomplete second file verified. Explicit previous-snapshot restore succeeded.
+
+Both cases verified:
+Original file contents recovered; modes 640/600 recovered.
+Synthetic SSH identity unchanged. Extra created after pre-backup preserved.
+Journal directory 700, record 600. Pending command printed; after successful
+explicit recovery original journal recovered, no pending records.
+Ran 2 VM tests: both passed.
+
+Versioned tests/run_restore_mutations.py executed in disposable source copies:
+missing-pre-upload-journal: exit=1, FAILED (failures=2), 88 instead of 255.
+ignored-remote-errors: exit=1, FAILED (failures=2), CalledProcessError not raised.
+Both mutations rejected; originals untouched, copies removed.
+
+Initial fixture error: copied Bash loader lacked executable mode.
+Fixed library copy to preserve mode; both actual scenarios then passed.
+Independent static review corrections:
+- absolute shell-quoted recovery launcher;
+- journal validity checked before remote actions;
+- metadata error after application reported separately;
+- extra-file preservation included in fixture assertions.
+Final static review: no blocking findings.
+
+Cleanup verified: owned fixtures=0; owned mounts=0.
+Dedicated VM restored to prior Stopped state after validation.
+
+Limits: file overlay remains nontransactional; no automatic rollback or deletion
+of extras; services must be stopped or databases exported consistently.
+No new physical interruption test on the phone; earlier cold-restore evidence
+remains distinct. Power/charging issue #2 and prolonged stability #8 remain open.

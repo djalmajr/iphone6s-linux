@@ -1,0 +1,46 @@
+{
+  "source_repository": "https://github.com/HoolockLinux/m1n1",
+  "phase": "original checkout inventory and CI comparison, before clean source rebuild",
+  "subsequent_rebuild_evidence": "m1n1-rebuild.json",
+  "source_checkout_commit": "d5a10ac52a6468484854419a6c5130f1d62073eb",
+  "source_commit_signature_verified": false,
+  "source_checkout_tracked_changes": [],
+  "artwork_commit": "80d14f8b6f485b310e305a84b4b806361518ddd1",
+  "artwork_tracked_changes": [],
+  "build_cfg": [
+    "CHAINLOADING"
+  ],
+  "build_tag": "d5a10ac",
+  "preserved_bytes": 1196032,
+  "preserved_sha256": "13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b",
+  "vm_output_matches_preserved": true,
+  "vm_gcc_version": "13.3.0",
+  "vm_rustc_version": "1.98.1",
+  "vm_rustc_commit": "48a229ceaefd4985c50990b14116b6d856af0985",
+  "vm_cargo_version": "1.98.1",
+  "official_ci_run": "https://github.com/HoolockLinux/m1n1/actions/runs/33380676898",
+  "official_ci_artifact_id": 9753630137,
+  "official_ci_zip_bytes": 785924,
+  "official_ci_zip_sha256": "b92c7a15c8c7c6720eedd9e7021ac6ffb5ff0e15d62afddb45897ec705496867",
+  "official_ci_zip_digest_matches_api": true,
+  "official_ci_binary_sha256": "2e377fb72a8555c944bf30e08f1604cc2b889678250df34ca2d61d0dda8fb0a1",
+  "official_ci_rustc_commit": "88d9e12ae178fab0fb5cc050a94da85685d449ea",
+  "comparison": {
+    "equal_byte_for_byte": false,
+    "different_bytes": 1456,
+    "first_difference": 465245,
+    "last_difference": 470932,
+    "all_differences_within_preserved_rodata": true,
+    "preserved_rodata_start": 393216,
+    "preserved_rodata_end_exclusive": 488952,
+    "text_bytes_equal": true
+  },
+  "limits": [
+    "existing checkout and compiler inventory only",
+    "this inventory predates the separate clean source rebuild evidence",
+    "no fresh VM/clean-clone full-image proof",
+    "marker can be overridden by M1N1_VERSION_TAG",
+    "CI binary was not selected or booted",
+    "APK download identity recorded separately; APK signature remains unverified"
+  ]
+}

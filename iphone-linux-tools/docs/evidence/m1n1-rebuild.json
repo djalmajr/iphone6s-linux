@@ -1,0 +1,140 @@
+{
+  "date": "2026-09-30",
+  "scope": "fresh official source checkouts in existing VM, using verified existing Cargo cache",
+  "source_repository": "https://github.com/HoolockLinux/m1n1",
+  "full_clone": {
+    "source_commit": "d5a10ac52a6468484854419a6c5130f1d62073eb",
+    "artwork_commit": "80d14f8b6f485b310e305a84b4b806361518ddd1",
+    "source_clean_before": true,
+    "recipes_match_original_checkout": true,
+    "build_directory_absent_before": true,
+    "cargo_lock_sha256": "5ae145509cda84c067426690fee2083d5a51374fb9264c3c59d67f3f8d1321fb",
+    "cached_registry": [
+      {
+        "name": "bitflags",
+        "version": "2.13.0",
+        "sha256": "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8",
+        "cached_source_files_matching_archive": 64
+      },
+      {
+        "name": "log",
+        "version": "0.4.33",
+        "sha256": "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad",
+        "cached_source_files_matching_archive": 23
+      },
+      {
+        "name": "sha1_smol",
+        "version": "1.0.1",
+        "sha256": "bbfa15b3dddfee50a0fff136974b3e1bde555604ba463834a7eb7deb6417705d",
+        "cached_source_files_matching_archive": 14
+      },
+      {
+        "name": "uuid",
+        "version": "1.23.4",
+        "sha256": "bf80a72845275afea99e7f2b434723d3bc7e38470fcd1c7ed39a599c73319a53",
+        "cached_source_files_matching_archive": 30
+      }
+    ],
+    "original_sha256_before": "13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b",
+    "build_command": [
+      "make",
+      "-j2",
+      "ARCH=",
+      "CHAINLOADING=1",
+      "CARGO_FLAGS=--locked --offline --features chainload",
+      "build/m1n1.bin"
+    ],
+    "exit_code": 0,
+    "seconds": 7,
+    "original_sha256_after": "13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b",
+    "tracked_changes_after": "",
+    "compiler": {
+      "gcc": "13.3.0",
+      "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+      "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)"
+    },
+    "cargo_offline": true,
+    "version_override_removed": true,
+    "fatfs_commit": "4eccb50d011146fbed20e133d33b22f3c27292e7",
+    "bytes": 1196032,
+    "sha256": "53f94ebd2473d15c48af6377ad6f45e34e54b003b2dc55cacb1c280b61fdd7fc",
+    "matches_original": false,
+    "upstream_warnings": [
+      "warning: unused import: `crate::println`",
+      "warning: feature `stmt_expr_attributes` is declared but not used"
+    ],
+    "version_text": "#define BUILD_TAG \"v1.6.0-137-gd5a10ac5\"",
+    "artwork_tracked_changes_after": "",
+    "original_checkout_tracked_changes_after": ""
+  },
+  "shallow_clone": {
+    "source_commit": "d5a10ac52a6468484854419a6c5130f1d62073eb",
+    "artwork_commit": "80d14f8b6f485b310e305a84b4b806361518ddd1",
+    "source_clean_before": true,
+    "recipes_match_original_checkout": true,
+    "build_directory_absent_before": true,
+    "cargo_lock_sha256": "5ae145509cda84c067426690fee2083d5a51374fb9264c3c59d67f3f8d1321fb",
+    "cached_registry": [
+      {
+        "name": "bitflags",
+        "version": "2.13.0",
+        "sha256": "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8",
+        "cached_source_files_matching_archive": 64
+      },
+      {
+        "name": "log",
+        "version": "0.4.33",
+        "sha256": "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad",
+        "cached_source_files_matching_archive": 23
+      },
+      {
+        "name": "sha1_smol",
+        "version": "1.0.1",
+        "sha256": "bbfa15b3dddfee50a0fff136974b3e1bde555604ba463834a7eb7deb6417705d",
+        "cached_source_files_matching_archive": 14
+      },
+      {
+        "name": "uuid",
+        "version": "1.23.4",
+        "sha256": "bf80a72845275afea99e7f2b434723d3bc7e38470fcd1c7ed39a599c73319a53",
+        "cached_source_files_matching_archive": 30
+      }
+    ],
+    "original_sha256_before": "13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b",
+    "source_shallow": true,
+    "source_commits": 1,
+    "source_tags": 0,
+    "build_command": [
+      "make",
+      "-j2",
+      "ARCH=",
+      "CHAINLOADING=1",
+      "CARGO_FLAGS=--locked --offline --features chainload",
+      "build/m1n1.bin"
+    ],
+    "exit_code": 0,
+    "seconds": 4.97,
+    "original_sha256_after": "13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b",
+    "tracked_changes_after": "",
+    "cargo_offline": true,
+    "version_override_removed": true,
+    "build_tag": "#define BUILD_TAG \"d5a10ac\"",
+    "bytes": 1196032,
+    "sha256": "13d49ab42c6e071857ca05c8414f30dca70699df8a3f472b9c70e4f1233a092b",
+    "matches_original": true,
+    "upstream_warnings": [
+      "warning: unused import: `crate::println`",
+      "warning: feature `stmt_expr_attributes` is declared but not used"
+    ],
+    "version_text": "#define BUILD_TAG \"d5a10ac\"",
+    "artwork_tracked_changes_after": "",
+    "original_checkout_tracked_changes_after": ""
+  },
+  "limits": [
+    "not a fresh VM or independent full-image build",
+    "no APK signature verification",
+    "no rebuild candidate selected or booted",
+    "compiler and Cargo cache reused from existing VM",
+    "upstream code not comprehensively audited"
+  ]
+}

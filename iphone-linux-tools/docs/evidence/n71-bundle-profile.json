@@ -1,0 +1,36 @@
+{
+  "format": 1,
+  "stage": "private_profile_composed_verified",
+  "kernel_bundle": "n71-dart-serdev-v1",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "source_profile_verified": true,
+  "kernel_artifact_hashes_verified": true,
+  "exact_payload_layout_verified": true,
+  "diagnostic_dtb_delta_verified": true,
+  "initramfs_entries": 5,
+  "initramfs_bytes_unchanged": true,
+  "embedded_modules": 0,
+  "usb_max_power_ma": 500,
+  "ssh_identities_preserved": true,
+  "identity_files_copied_to_vm": false,
+  "external_modules": {
+    "n71-pcie-diagnostic.ko": {
+      "bytes": 21640,
+      "sha256": "0eba4038ace98b52ed3b935ca9942f8aec2047922b4d3405a155b0ee8daa468f"
+    },
+    "n71-wlan-power-diagnostic.ko": {
+      "bytes": 17680,
+      "sha256": "839c206ab1fd456dc265e7cf75977155156bfb5436e6c6acfcf3c39576831e37"
+    }
+  },
+  "module_vermagic_verified": true,
+  "module_automatic_load": false,
+  "snapshot_verified_entries": 44,
+  "private_directory_mode": "0700",
+  "private_file_mode": "0600",
+  "default_profile_changed": false,
+  "usb_action_performed": false,
+  "physical_boot_tested": false,
+  "wifi_verified": false,
+  "battery_telemetry_verified": false
+}

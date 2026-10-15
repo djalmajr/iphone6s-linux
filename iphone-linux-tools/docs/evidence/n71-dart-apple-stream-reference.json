@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "status": "apple_board_stream_zero_qualified_no_physical_dma",
+  "adt_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+  "apple_kernelcache_sha256": "0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a",
+  "adt_chain": {
+    "wlan_path": "/device-tree/arm-io/apcie/pci-bridge1/wlan",
+    "wlan_iommu_parent": "0x84",
+    "mapper_path": "/device-tree/arm-io/dart-apcie1/mapper-apcie1",
+    "mapper_phandle": "0x84",
+    "mapper_reg": 0,
+    "dart_path": "/device-tree/arm-io/dart-apcie1",
+    "dart_phandle": "0x83",
+    "dart_mmio": "0x602008000",
+    "dart_bytes": 16384,
+    "dart_irq": 248,
+    "page_bytes": 4096,
+    "vm_size": "0x3ffff000",
+    "vm_offset_u32_pair": [
+      "0x80000000",
+      "0x08000000"
+    ]
+  },
+  "source_interpretation": {
+    "mapper_method": "IODARTMapper::_registerMapper",
+    "method_address": "0xfffffff005d87b4c",
+    "reg_literal_address": "0xfffffff0054fea7b",
+    "load_reg_address": "0xfffffff005d87bb8",
+    "store_sid_offset": "0x110",
+    "dart_register_call_address": "0xfffffff005d87bd0",
+    "sid_argument": "w2",
+    "tcr_enable_address": "0xfffffff006060c44",
+    "tcr_enabled_bit_per_stream_byte": 7,
+    "ttbr_encode_address": "0xfffffff0060607a8",
+    "ttbr_valid_bit": 31,
+    "ttbr_address_shift": 12,
+    "ttbr_address_bits": 24,
+    "vm_offset_first_u32": "page offset after shift12",
+    "vm_offset_second_u32": "power-of-two randomization window, masked before shift12"
+  },
+  "apple_intended_stream": 0,
+  "linux_endpoint_requester_id": "0x0100",
+  "runtime_dt_agrees": true,
+  "linux_requester_to_sid_physically_verified": false,
+  "iommu_provider_activated": false,
+  "dma_enabled": false,
+  "irq_delivery_verified": false,
+  "firmware_loaded": false,
+  "limits": [
+    "Apple vm-offset pair is not a Linux FDT u64 DMA range.",
+    "NVMMU602004000 is separate from DART602008000.",
+    "Do not copy M1 RID2SID/MSI routing offsets onto S8000.",
+    "Reference SID0 does not prove physical DMA or fault isolation."
+  ]
+}

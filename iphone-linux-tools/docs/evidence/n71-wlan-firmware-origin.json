@@ -1,0 +1,29 @@
+{
+  "format": 1,
+  "status": "official_firmware_origin_and_data_identity_verified_radio_compatibility_unproven",
+  "origin": "https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/",
+  "commit": "31ec35bf14df835e2f9f7c8b1a8516a34f836df5",
+  "files": {
+    "WHENCE": {
+      "git_blob_id": "ae61470a03b41ab7453092fefc5a3e8a40753a87",
+      "sha256": "ea410e9f167310410a9a5c5e4beb493782f1785c5f9a1bd6f47180775666d55e",
+      "bytes": 191643,
+      "file_declared": true
+    },
+    "LICENCE.broadcom_bcm43xx": {
+      "git_blob_id": "ff26fdd72fe125000d73c0aaa227b9e88dbe71db",
+      "sha256": "b16056fc91b82a0e3e8de8f86c2dac98201aa9dc3cbd33e8d38f1b087fcec30d",
+      "bytes": 4178
+    },
+    "brcm/brcmfmac4350-pcie.bin": {
+      "git_blob_id": "3031251977875a54acd80e607a718ec9a67a529a",
+      "sha256": "5691d1e0ceb70baf18efb7a0ec6cb84feb9edd2d0700c525b42930c4e7e4b845",
+      "bytes": 626140
+    }
+  },
+  "firmware_executed": false,
+  "iphone_compatibility_qualified": false,
+  "license_and_whence_inspected": true,
+  "regdb_origin": "https://www.kernel.org/pub/software/network/wireless-regdb/",
+  "regdb_version": "2026.09.03"
+}

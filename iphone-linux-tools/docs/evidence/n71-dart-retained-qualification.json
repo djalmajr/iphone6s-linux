@@ -1,0 +1,111 @@
+{
+  "format": 1,
+  "date_utc": "2026-10-07",
+  "code_commit": "003998d7474fdfca450100b561147cf1977d094d",
+  "proof_scope": "Retained DART state machine, production provider callbacks and production cleanup functions with resource fixtures on macOS and Ubuntu ARM64; complete native module build, no device execution",
+  "inputs_sha256": {
+    "phone/kernel/n71-dart-lease.h": "00614a4ccc6e9dd7c22bfd3df4bb3dbed2acf4ebd9a909c4e10909840bbab368",
+    "phone/kernel/n71-dart-provider.h": "cb81b7996f791ed842f0c9c0cc680b7a6e9870d957b2d420901d3f7433b08fc5",
+    "phone/kernel/n71-pcie-mmio.h": "63f8c22a5ab0bd2b5c962dcd56dea3acd97deb2cdc35ebd5833d1769371cf8c5",
+    "phone/kernel/n71-pcie-diagnostic.c": "268329c977e2b38a62c6ddff6e152aae95839920d35a70d7e646941c1515bdfb",
+    "tests/n71_dart_lease.c": "a6b8df05806b27847f7877f1140bedabb714b608e1383028c8422f25de268f3f",
+    "tests/test_n71_dart_lease.py": "976aa9135f774c90b399ccb0d412f6a2e5b0f5120861606bba1e4f214cbaa2e3",
+    "tests/n71_dart_provider.c": "1dca978e8c640a43d4e5abd54bd28024043fb9faea9f55b500e88dc3162b5cef",
+    "tests/n71_dart_cleanup.c": "ebe3247d70b7873748bfc4c260299f349fb678f85937172d7fc074f06db550b7",
+    "tests/test_n71_dart_provider.py": "15a19c260dc6112b9e897df4819bda302f3ea510fc8fbb18d14c7ba15d603104"
+  },
+  "all_qualified_inputs": {
+    "files": 44,
+    "manifest_sha256": "8cffe852f5d92cb3431f984a63c1890367f56298d7b700a9a668864e6cd4f345",
+    "same_on_macos_and_ubuntu_arm64": true
+  },
+  "qualification": {
+    "macos": {
+      "tests": 3,
+      "lease_cases": 73,
+      "provider_cases": 15,
+      "cleanup_cases": 4,
+      "cases": 92,
+      "compiled_assertion_mutations": 32,
+      "native_exit": 0,
+      "legacy_cycle_and_parser_tests": 6,
+      "legacy_exit": 0,
+      "ast_exit": 0,
+      "fatal_flake8_exit": 0
+    },
+    "ubuntu_arm64": {
+      "tests": 3,
+      "lease_cases": 73,
+      "provider_cases": 15,
+      "cleanup_cases": 4,
+      "cases": 92,
+      "compiled_assertion_mutations": 32,
+      "native_exit": 0,
+      "legacy_cycle_tests": 1,
+      "legacy_cycle_assertion_mutations": 6,
+      "legacy_exit": 0
+    },
+    "mutation_kill_policy": "Each mutant compiled and its executable exited -6 with assertion text; compiler/import/timeout failures are not kills",
+    "fixture_boundary": "Production lease and provider code execute directly. The two production session cleanup functions are extracted verbatim and compiled. Platform/OF/IRQ/MMIO operations are tracked fixtures, not real hardware. Physical effects and concurrency remain unproved."
+  },
+  "native_module": {
+    "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "baseline_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "baseline_preserved": true,
+    "werror": true,
+    "w1": true,
+    "modpost_exit": 0,
+    "modpost_warn_enabled": false,
+    "explicit_extra_symbols": "vmlinux.symvers",
+    "sha256": "ae3e71f24b748e81af25ed4ae7c73dd5f9dac90524f39f5b0c5238fbf6b21bfd",
+    "bytes": 91736,
+    "elf": "ELF64 little-endian AArch64",
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+    "loaded": false,
+    "expected_warning": "Build root lacks Module.symvers; pinned vmlinux.symvers supplied explicitly, no unresolved-symbol errors permitted."
+  },
+  "verified_contracts": {
+    "original_snapshot_retained": true,
+    "partial_start_requires_cleanup": true,
+    "failed_stop_or_restore_retains_owner": true,
+    "cleanup_retries_in_same_session": true,
+    "resume_at_first_unconfirmed_word": true,
+    "recheck_confirmed_prefix_on_retry": true,
+    "all_words_verified_after_restore": true,
+    "stop_invoked_once_after_success": true,
+    "readiness_invalidated_when_cleanup_starts": true,
+    "first_operation_error_preserved": true,
+    "pci_reset_power_module_wait_for_dart": true,
+    "temporary_cycle_success_contract_preserved": true,
+    "dedicated_dart_getter": true
+  },
+  "private_evidence_sha256": {
+    "arm64-kernel-private.log": "9cbbc1162469219a6188831c2c87ea9b2de2252ced46e4bf9a8afc2a7c503ae1",
+    "arm64-kernel-result-private.json": "4465d7021bca2acb5ce52ebe1e60c274890d3f3248a0bf771b36b0187ac7f06a",
+    "arm64-native-result-private.json": "df4c75b14dae9dc0317ec04328cdc7dd7b9fa95642b4744d416269ef5741e075",
+    "local-verification-private.json": "cc8c05dfc87bc272d6e58421d1f6fe40fc1c0c2c4fc9f39545dc9a0b5e70f34c"
+  },
+  "limits": {
+    "caller_integrated": true,
+    "profile_or_autoload_integrated": false,
+    "irq_mapping_ownership_atomic": false,
+    "irq_mask_baseline_restore_qualified": false,
+    "physical_retained_provider_verified": false,
+    "iommu_attachment_or_dma_verified": false,
+    "msi_delivery_verified": false,
+    "native_wifi_verified": false,
+    "linux_charge_or_gauge_verified": false,
+    "new_dfu_or_boot": false,
+    "global_mac_installs": false,
+    "private_module_or_raw_logs_published": false
+  },
+  "next_gates": [
+    "Atomic IRQ ownership and parent mask/teardown baseline",
+    "Retained-provider collector and profile selection bound to qualified hashes",
+    "One combined physical session before PCI DMA attachment and WLAN driver bind"
+  ]
+}

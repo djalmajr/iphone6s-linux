@@ -1,0 +1,49 @@
+{
+  "format": 1,
+  "status": "compiled_verified_not_phone_loaded",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "module": {
+    "bytes": 35072,
+    "sha256": "1fe1b30800e23b47a02dbc92996ac29326c3e60953abcf04cae2493d6d38f002",
+    "module": "n71-pcie-diagnostic.ko"
+  },
+  "preserved_kernel_sha256": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "sources_sha256": {
+    "phone/kernel/n71-pcie-diagnostic.c": "3ae1f05b6a38a377146d4939a2764c429ce48b6d234c70a969b1749fe47de2cc",
+    "phone/kernel/n71-pcie-scan.h": "d08dde2a01ad530c55d282a2504b5602b7c953fb30f786241cbbf0237191b48c",
+    "phone/kernel/n71-pcie-scan-config.h": "8ecd9ec942409c3d15eca75355311aa30bc5f7ffcad4618eb297728a7d43a93d",
+    "tests/n71_pcie_scan_host.c": "8fe094444ff9c92e2290e5e479776f4ea63957b0de59b6bea83e9c1ffc8a9ec5",
+    "tests/test_n71_pcie_scan_host.py": "8163d4ced3a377903ad5d3d0e1fee94c9c4df5072410a3771d841f32a61a35b7"
+  },
+  "native_checks": {
+    "macos": true,
+    "linux_arm64": true,
+    "c_contract_tests": 3,
+    "host_fault_scenarios": 11,
+    "config_assertion_mutations": 14,
+    "host_assertion_mutations": 6,
+    "werror": true,
+    "modpost_fatal": true,
+    "elf_aarch64": true,
+    "exact_vermagic": true,
+    "kernel_pci_symbols_linked": true
+  },
+  "private_log_sha256": {
+    "contract-v3-private.log": "9e2de7c78314f860a244d299426e82454ce5e7d570dd1b90ca54267146231d74",
+    "module-v2-private.log": "0f830a1e681417762166affa6702de2301696477f002a5a388b86ab4f9ab7df9",
+    "mutation-v2-private.log": "4f7028b2c307500065af95caa5b995250ca8623dbe9bc597fc1a7f697c8ded6f"
+  },
+  "host_scan_default": false,
+  "pci_binding_enabled": false,
+  "dma_enabled": false,
+  "bar_mmio_performed": false,
+  "resource_assignment_performed": false,
+  "physical_host_scan_verified": false,
+  "wifi_verified": false,
+  "firmware_loaded": false
+}

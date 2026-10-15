@@ -1,0 +1,89 @@
+{
+  "format": 1,
+  "status": "pmd_session_and_action_entrypoints_qualified_firmware_cli_composition_pending",
+  "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+  "inputs": {
+    "scripts/host/n71-link-session.py": {
+      "bytes": 37689,
+      "sha256": "e035a448781a71373fb5a5eb7c9d5e0606138ee0dbb7284999d9750e5c601fed"
+    },
+    "scripts/host/n71_resource_stage.py": {
+      "bytes": 12228,
+      "sha256": "ac7e7d717b1486ea857e0a032e1dbac3757e74e0d310e1d43f46dadb146c468c"
+    },
+    "scripts/host/n71_driver_runtime_stage.py": {
+      "bytes": 11924,
+      "sha256": "abe70cf1038f29cc59470cd276054a6a29217eaf1f52524e140035ce07482e7d"
+    },
+    "tests/test_n71_pmd_session_entry.py": {
+      "bytes": 12077,
+      "sha256": "5ce071c85572391a2d53b47abbbb830bdb4687a07cf7f0659d4b73294729790c"
+    }
+  },
+  "gates": {
+    "pmd": {
+      "tests": 7,
+      "assertion_mutations": 7,
+      "log_sha256": "61e78111d9301458adfb0dea38972b4a2ea387306c40b5f15864c30290b60d79",
+      "passed": true,
+      "platform": "macOS"
+    },
+    "legacy_native": {
+      "tests": 10,
+      "assertion_mutations": 15,
+      "log_sha256": "2f44d892ec2f0ca2944f7a6c9b792a1d441c8612bcb7b0b3489af2b5df77f2bc",
+      "passed": true,
+      "platform": "macOS"
+    },
+    "legacy_resources": {
+      "tests": 16,
+      "assertion_mutations": 26,
+      "log_sha256": "6871cf0f96422af66667b9a0a64884acc7889142cc65b10a89a51a6f94c29494",
+      "passed": true,
+      "platform": "macOS"
+    },
+    "legacy_link": {
+      "tests": 45,
+      "assertion_mutations": 0,
+      "log_sha256": "61e175858a20058c61a999fdb4d175a7cc64ff9acaedb5cb8f7d13bf081e0c69",
+      "passed": true,
+      "platform": "macOS"
+    },
+    "legacy_profile_constructor": {
+      "tests": 3,
+      "assertion_mutations": 0,
+      "log_sha256": "0e3fcb47cc1a957aa60f9cb45f971a084e52b73e0b8268842ce2ee5b52804185",
+      "passed": true,
+      "platform": "macOS"
+    }
+  },
+  "real_constructor": {
+    "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+    "constructor_with_real_modules_passed": true,
+    "local_ssh_options_without_connection": true,
+    "module_count": 7,
+    "module_bytes": 1371288,
+    "private_identity_files_preserved": true,
+    "output_not_created": true,
+    "ssh_usb_or_hardware_actions": false,
+    "vm_started": false,
+    "firmware_or_cli_qualified": false,
+    "ast_files": 4
+  },
+  "ast_passed": true,
+  "fatal_lint_passed": true,
+  "typechecker": "not_configured",
+  "proof_scope": "Real Session/selection/ELF reader and POSIX shell. Synthetic module bytes and regular files model sysfs, uname and boot; action files prove guards precede writes. No kernel or phone execution. Actual seven files and private SSH option construction verified separately.",
+  "legacy_evidence_reused": "D7 blob/journal/native-C algorithm gates reused only for unchanged behavior; after linker changes reran all 45 linker cases and three legacy constructor/configuration cases, plus native and resource gates.",
+  "initial_gate_failure": "Removing the PMD old-selector refusal reached a legacy JSON omitted from the fixture. Supplied that unchanged public dependency; the corrected mutation now fails by assertion.",
+  "default_profiles_preserved": true,
+  "legacy_pmd_diagnostic_fallback_refused": true,
+  "complete_pmd_runtime_mode_required": true,
+  "action_live_abi_and_boot_rechecked": true,
+  "firmware_or_cli_complete_composition_enabled": false,
+  "phone_accessed": false,
+  "vm_started": false,
+  "wifi_physically_verified": false,
+  "telemetry_physically_verified": false,
+  "charging_physically_verified": false
+}

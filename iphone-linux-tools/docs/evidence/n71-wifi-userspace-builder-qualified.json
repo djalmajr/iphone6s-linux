@@ -1,0 +1,289 @@
+{
+  "format": 1,
+  "status": "offline_builder_and_isolated_arm64_execution_qualified_no_phone_actions",
+  "code_commit": "51abc5ba8c1912f002b6eef93aa1a2cfeb6e7182",
+  "inputs": {
+    "scripts/build/n71_wifi_userspace.py": {
+      "bytes": 10860,
+      "sha256": "778639c768ae025a220575942050406f98eafa312a78bbbdf5e309d28ec2f8a2"
+    },
+    "scripts/build/build-n71-wifi-userspace.py": {
+      "bytes": 894,
+      "sha256": "8802002fe3ec064418ea746be45ab70d99ef70a53adc3bf98fa6b6bf6332d61b"
+    },
+    "tests/test_n71_wifi_userspace.py": {
+      "bytes": 8819,
+      "sha256": "a279d88bdee32353c8200ff3878b94f7a4315336ca8fe1b4f9731a47af771eb7"
+    },
+    "docs/evidence/n71-wifi-userspace-packages.json": {
+      "bytes": 17802,
+      "sha256": "eccfac8efd4080b6574be6a8f60d9397a1ea4474a6acd09ce4b2fbb7abed9f24"
+    }
+  },
+  "source_manifest_sha256": "eccfac8efd4080b6574be6a8f60d9397a1ea4474a6acd09ce4b2fbb7abed9f24",
+  "input_packages": 38,
+  "tools": [
+    "iw",
+    "wpa_cli",
+    "wpa_passphrase",
+    "wpa_supplicant"
+  ],
+  "library_objects": 19,
+  "elf_objects": 23,
+  "files": 77,
+  "copyright_files": 37,
+  "common_license_files": 17,
+  "package": {
+    "bytes": 17786880,
+    "sha256": "5f1396ae55f41783c360cd28c111ee6d78d9d72a6188f9714e0b6e3b48dfd617"
+  },
+  "mac": {
+    "tests": 11,
+    "seconds": 0.104,
+    "assertion_mutations": 10,
+    "skipped": 0
+  },
+  "arm64": {
+    "tests": 11,
+    "seconds": 0.077,
+    "assertion_mutations": 10,
+    "skipped": 1
+  },
+  "ast": "passed_both",
+  "lint": "E9,F63,F7,F82,F401,F841_passed_both",
+  "python_typechecker": "not_configured",
+  "real_execution": {
+    "versions": {
+      "iw": "iw version 6.7",
+      "wpa_supplicant": "wpa_supplicant v2.10",
+      "wpa_cli": "wpa_cli v2.10"
+    },
+    "psk_fixture_matches_pbkdf2": true,
+    "isolated_network_and_chroot": true,
+    "missing_library_refused_exit": 127,
+    "package_refusals": [
+      {
+        "case": "tampered",
+        "exit": 1,
+        "no_output": true
+      },
+      {
+        "case": "missing",
+        "exit": 1,
+        "no_output": true
+      }
+    ],
+    "source_packages_and_accepted_bundle_unchanged": true,
+    "radio_or_phone_actions": false,
+    "entropy_devices_bound_only_in_child_namespace": true,
+    "entropy_warnings": false,
+    "initial_entropy_warning_gate_replaced": true
+  },
+  "objects": {
+    "bin/iw": {
+      "needed": [
+        "libnl-genl-3.so.200",
+        "libnl-3.so.200",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": [
+        "/lib/ld-linux-aarch64.so.1"
+      ]
+    },
+    "bin/wpa_supplicant": {
+      "needed": [
+        "libnl-3.so.200",
+        "libnl-genl-3.so.200",
+        "libnl-route-3.so.200",
+        "libm.so.6",
+        "libpcsclite.so.1",
+        "libssl.so.3",
+        "libcrypto.so.3",
+        "libdbus-1.so.3",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": [
+        "/lib/ld-linux-aarch64.so.1"
+      ]
+    },
+    "bin/wpa_cli": {
+      "needed": [
+        "libreadline.so.8",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": [
+        "/lib/ld-linux-aarch64.so.1"
+      ]
+    },
+    "bin/wpa_passphrase": {
+      "needed": [
+        "libcrypto.so.3",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": [
+        "/lib/ld-linux-aarch64.so.1"
+      ]
+    },
+    "lib/ld-linux-aarch64.so.1": {
+      "needed": [],
+      "interpreter": []
+    },
+    "lib/libc.so.6": {
+      "needed": [
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": [
+        "/lib/ld-linux-aarch64.so.1"
+      ]
+    },
+    "lib/libcrypto.so.3": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libreadline.so.8": {
+      "needed": [
+        "libtinfo.so.6",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libtinfo.so.6": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libdbus-1.so.3": {
+      "needed": [
+        "libsystemd.so.0",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libsystemd.so.0": {
+      "needed": [
+        "libcap.so.2",
+        "libgcrypt.so.20",
+        "liblz4.so.1",
+        "liblzma.so.5",
+        "libzstd.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libzstd.so.1": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/liblzma.so.5": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/liblz4.so.1": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libgcrypt.so.20": {
+      "needed": [
+        "libgpg-error.so.0",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libgpg-error.so.0": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libcap.so.2": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": [
+        "/lib/ld-linux-aarch64.so.1"
+      ]
+    },
+    "lib/libssl.so.3": {
+      "needed": [
+        "libcrypto.so.3",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libpcsclite.so.1": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libm.so.6": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libnl-route-3.so.200": {
+      "needed": [
+        "libnl-3.so.200",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libnl-3.so.200": {
+      "needed": [
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    },
+    "lib/libnl-genl-3.so.200": {
+      "needed": [
+        "libnl-3.so.200",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ],
+      "interpreter": []
+    }
+  },
+  "production_kernel_or_profile_changed": false,
+  "mac_linux_code_executed": false,
+  "packages_installed": false,
+  "physical_wifi_or_energy_proven": false,
+  "limitations": [
+    "VM execution does not prove iPhone radio, association, IRQ/DMA or charging",
+    "DT_NEEDED closure and PSK fixture do not prove optional dlopen plugins",
+    "Requires explicit bundled loader and same-boot transfer/identity checks"
+  ],
+  "reused_gates": [
+    "Unchanged kernel/I2C/runtime proofs",
+    "Source qualification CI f9747f1 six successful jobs"
+  ]
+}

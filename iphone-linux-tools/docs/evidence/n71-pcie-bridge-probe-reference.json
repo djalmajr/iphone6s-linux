@@ -1,0 +1,47 @@
+{
+  "format": 1,
+  "status": "source_qualified_bridge_window_policy_not_phone_loaded",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "source_file": "drivers/pci/probe.c",
+  "source_sha256": "c14188e7d25a8a33d09bd415c50f70c62be91ebb3a240627fee6c6c5298765d6",
+  "source_function": "pci_read_bridge_windows",
+  "root_identity": "1004106b",
+  "probe_requests": [
+    {
+      "offset": 28,
+      "width_bytes": 2,
+      "probe": 57584,
+      "field": "IO_BASE_LIMIT",
+      "adjacent_secondary_status_excluded": true
+    },
+    {
+      "offset": 36,
+      "width_bytes": 4,
+      "probe": 4292935664,
+      "field": "PREF_MEMORY_BASE_LIMIT"
+    },
+    {
+      "offset": 40,
+      "width_bytes": 4,
+      "probe": 4294967295,
+      "field": "PREF_BASE_UPPER32"
+    }
+  ],
+  "policy": {
+    "original_values_captured_before_any_probe": true,
+    "exact_original_or_probe_only": true,
+    "all_decode_and_master_off_before_probe": true,
+    "restore_all_three_with_readback_before_original_command": true,
+    "restore_after_scan_failure": true,
+    "failed_window_restore_keeps_decode_off": true,
+    "resource_assignment": false,
+    "arbitrary_capability_writes": false
+  },
+  "physical_bridge_probes_verified": false,
+  "dma_enabled": false,
+  "wifi_verified": false,
+  "pci_registers_source": {
+    "file": "include/uapi/linux/pci_regs.h",
+    "sha256": "51d2a1344da2a56e913e9d69b3b5d90eaaf4fb0bf96e672a5674ea819182c69b"
+  }
+}

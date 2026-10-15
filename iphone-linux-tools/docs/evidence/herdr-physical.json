@@ -1,0 +1,82 @@
+{
+  "format": 1,
+  "local_date": "2026-10-01",
+  "timezone": "America/Maceio",
+  "issue": 13,
+  "status": "native_two_boots_and_ssh_tui_passed",
+  "kernel": "7.2.0-iphone6s-source",
+  "herdr_version": "0.9.1",
+  "herdr_sha256": "f4ccf4de745f2cb9a39a983e9ba3703dad50ec2a58dea83026ceab721bbd8d9e",
+  "cable": "rear USB-A to Lightning",
+  "boots": [
+    {
+      "label": "first",
+      "wrapper_exit": 0,
+      "restore_ssh_http_passed": true,
+      "startup": "enable",
+      "tui": {
+        "version": "0.9.1",
+        "first_tui_rendered_bytes": 19581,
+        "second_tui_rendered_bytes": 18804,
+        "bash_command_completed": true,
+        "same_pane_and_terminal_after_ssh_disconnect": true,
+        "repeat_start_did_not_duplicate": true,
+        "pane_count": 1,
+        "cwd": "/srv/data",
+        "own_clients_terminated": true,
+        "host_main_herdr_untouched": true
+      },
+      "uptime_before_return_seconds": 342.35,
+      "return_cli_exit": 0,
+      "backup_sync_ios_usb_verified": true,
+      "ios_battery_before_percent": 100,
+      "ios_battery_after_percent": 92,
+      "ios_charging_after": true
+    },
+    {
+      "label": "second",
+      "wrapper_exit": 0,
+      "restore_ssh_http_passed": true,
+      "startup": "wrapper_after_restore",
+      "tui": {
+        "version": "0.9.1",
+        "first_tui_rendered_bytes": 19258,
+        "second_tui_rendered_bytes": 18804,
+        "bash_command_completed": true,
+        "same_pane_and_terminal_after_ssh_disconnect": true,
+        "repeat_start_did_not_duplicate": true,
+        "pane_count": 1,
+        "cwd": "/srv/data",
+        "own_clients_terminated": true,
+        "host_main_herdr_untouched": true
+      },
+      "uptime_before_return_seconds": 343.71,
+      "return_cli_exit": 0,
+      "backup_sync_ios_usb_verified": true,
+      "ios_battery_before_percent": 92,
+      "ios_battery_after_percent": 92,
+      "ios_charging_after": true
+    }
+  ],
+  "new_terminal_between_boots": true,
+  "restored_marker": "1 newline",
+  "restored_marker_mode": "0600",
+  "restored_work_file_verified": true,
+  "main_mac_herdr_untouched": true,
+  "new_packages_installed": false,
+  "global_configuration_changed": false,
+  "operator_console_confirmed_both": true,
+  "private_artifacts": "runtime/herdr-physical-20261001/",
+  "unchanged_code_ci": {
+    "commit": "6386b2b",
+    "pr": 36940701485,
+    "push": 36940697946,
+    "status": "success"
+  },
+  "limits": [
+    "Short supervised sessions only; no sustained charging or 24-hour stability proof.",
+    "Live processes, sockets and terminal IDs are not restored across boot.",
+    "Power button does not start Linux independently: Mac, manual DFU and restore remain required.",
+    "No Wi-Fi, internal storage, client DNS policy or complete PR review proof."
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "format": 1,
+  "status": "iommu_resource_selection_qualified_driver_runtime_pending",
+  "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+  "inputs": {
+    "scripts/host/n71_pmd_runtime_build.py": {
+      "bytes": 10947,
+      "sha256": "11de9e7141f69b9c6c7c094222dcd2289c8519532d10f2c812285502d2a6a83f"
+    },
+    "scripts/host/n71_iommu_build.py": {
+      "bytes": 6473,
+      "sha256": "d6d454d049abc8e51cd62751d4888693265fcc6926a769b13b12a5d30ac53629"
+    },
+    "scripts/host/n71_resource_result.py": {
+      "bytes": 13645,
+      "sha256": "2c889e9792ee82e7ba8ccf19a0f1445b4b23f89e17d10196f2f80cef1a9d02cc"
+    },
+    "tests/test_n71_pmd_runtime_build.py": {
+      "bytes": 15605,
+      "sha256": "92ddd6739ba9bbfad85e51ed60317fe7c2d6a6158a4ac6fc43d751a40c360f93"
+    }
+  },
+  "gates": {
+    "pmd": {
+      "platform": "macOS",
+      "tests": 8,
+      "assertion_mutations": 10,
+      "log_sha256": "a7332208eab7066855a94ed74428941455f10a8cedc9294d8de68fc8399592d1",
+      "passed": true
+    },
+    "legacy_iommu": {
+      "platform": "macOS",
+      "tests": 8,
+      "assertion_mutations": 24,
+      "log_sha256": "1a8b86ae7f8abc3bf5810d199e5f5826c58217c476c84f264f832e6fb80205f1",
+      "passed": true
+    },
+    "legacy_resources": {
+      "platform": "macOS",
+      "tests": 5,
+      "assertion_mutations": 9,
+      "log_sha256": "bb140a1640cc1104675922eb0c0ae4fdd061728575ad9a2198535730a5207e67",
+      "passed": true
+    }
+  },
+  "reuse_note": "New gate log predates comment-only changes and removal of one unused import; production bytes unchanged. Native caller 575 cases/455 mutations reused only under the separately verified caller comparison.",
+  "real_artifacts": {
+    "release": "7.2.0-iphone6s-dart-serdev-pmd1",
+    "image_sha256": "c6c020756b970ebb77d1eb8e7975682385efacdbdefaacc78b70b8b8eb177246",
+    "prefix_bytes": 1196095,
+    "dtb_bytes": 22884,
+    "payload_bytes": 29931394,
+    "payload_sha256": "be67440367a64915348f8058e9c27b8e1159c8a8d44da17761946ead008657bb",
+    "initramfs_bytes": 13061140,
+    "initramfs_sha256": "e17091af72ff5b4cb44e0b4890ec92e42f7545312dac1cb08be82b1ce53a2c76",
+    "image_and_profile_verified": true,
+    "files_preserved": true,
+    "ast_files": 4,
+    "hardware_accessed": false,
+    "vm_started": false
+  },
+  "ast_passed": true,
+  "fatal_lint_passed": true,
+  "typechecker": "not_configured",
+  "vm_started": false,
+  "private_files_modified": false,
+  "legacy_selection_preserved": true,
+  "driver_runtime_enabled": false,
+  "phone_boot_tested": false,
+  "wifi_association_tested": false,
+  "battery_telemetry_tested": false,
+  "charging_tested": false
+}

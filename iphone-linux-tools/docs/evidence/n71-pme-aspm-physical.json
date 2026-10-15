@@ -1,0 +1,338 @@
+{
+  "format": 1,
+  "status": "one_boot_four_stages_passed_cleanup_and_automatic_ios_return_verified",
+  "utc_date": "2026-10-05",
+  "code_head": "dd2b0da4224f244d2fd13126b588134ff88f425a",
+  "collector_commit": "7708a5c",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "module_build_record": "n71-pcie-pme-aspm-build.json",
+  "offline_session_record": "n71-pme-aspm-session.json",
+  "boot": {
+    "linux_boots": 1,
+    "manual_dfu_entries": 1,
+    "monitors_started": 2,
+    "first_monitor_timed_out_before_payload": true,
+    "resumed_existing_dfu_without_another_button_sequence": true,
+    "intermediate_reboots": 0,
+    "restore_entries": 44,
+    "same_boot_identity_verified": true,
+    "ssh_http_bash_herdr_start_verified": true,
+    "wrapper_exit": 0,
+    "wrapper_log_sha256": "f9c04757b847f4da820256db7edd1d6098320febec60925e0faf45ee8c72a7b9",
+    "linux_uptime_at_final_services_seconds": 506.59
+  },
+  "aspm": {
+    "exact_payload_option_verified": true,
+    "live_cmdline_and_kernel_disabled_marker_verified": true,
+    "before_module_transfer": true,
+    "preflight_log_sha256": "edb7e08722205070d366665ed4c1d82761d89fc5a19e85b572db6af449ca1863"
+  },
+  "pci_core_scan": {
+    "error": 0,
+    "devices": 2,
+    "endpoints": 1,
+    "reads": 660,
+    "attempts": 40,
+    "writes": 23,
+    "refusals": 0,
+    "bars": [
+      {
+        "index": 0,
+        "start": 0,
+        "end": 32767,
+        "flags": 1311236,
+        "bytes": 32768
+      },
+      {
+        "index": 1,
+        "start": 0,
+        "end": 0,
+        "flags": 0,
+        "bytes": 0
+      },
+      {
+        "index": 2,
+        "start": 0,
+        "end": 4194303,
+        "flags": 1311236,
+        "bytes": 4194304
+      },
+      {
+        "index": 3,
+        "start": 0,
+        "end": 0,
+        "flags": 0,
+        "bytes": 0
+      },
+      {
+        "index": 4,
+        "start": 0,
+        "end": 0,
+        "flags": 0,
+        "bytes": 0
+      },
+      {
+        "index": 5,
+        "start": 0,
+        "end": 0,
+        "flags": 0,
+        "bytes": 0
+      }
+    ],
+    "device_details": [
+      {
+        "bus": 0,
+        "devfn": 8,
+        "identity": "1004106b",
+        "class": "060400",
+        "command": 0
+      },
+      {
+        "bus": 1,
+        "devfn": 0,
+        "identity": "43a314e4",
+        "class": "028000",
+        "command": 0
+      }
+    ],
+    "pme_prepare_verified": true,
+    "pme_cleanup_verified": true
+  },
+  "chipcommon": {
+    "error": 0,
+    "config_reads": 59,
+    "mmio_reads": 1,
+    "raw": 386417488,
+    "chip": 17232,
+    "revision": 8
+  },
+  "direct_bar_sizing": {
+    "error": 0,
+    "reads": 72,
+    "attempts": 13,
+    "writes": 10,
+    "refusals": 0,
+    "bars": [
+      {
+        "index": 0,
+        "raw": 4,
+        "mask": 4294934532,
+        "bytes": 32768
+      },
+      {
+        "index": 1,
+        "raw": 0,
+        "mask": 4294967295,
+        "bytes": 0
+      },
+      {
+        "index": 2,
+        "raw": 4,
+        "mask": 4290772996,
+        "bytes": 4194304
+      },
+      {
+        "index": 3,
+        "raw": 0,
+        "mask": 4294967295,
+        "bytes": 0
+      },
+      {
+        "index": 4,
+        "raw": 0,
+        "mask": 0,
+        "bytes": 0
+      },
+      {
+        "index": 5,
+        "raw": 0,
+        "mask": 0,
+        "bytes": 0
+      }
+    ]
+  },
+  "dart_observation": {
+    "error": 0,
+    "reads": 38,
+    "guards": 39,
+    "command": 3842,
+    "tcr": 0,
+    "fault_raw": 256,
+    "enabled_streams": 0,
+    "valid_ttbr_mask": 65535,
+    "valid_ttbr_count": 16,
+    "ttbr_words_preserved": 16,
+    "ttbr_sha256": "034006f39d54ba2f616bbc29363a4e314d6638994771340ec71ee49616b004e3",
+    "fault_flag": false,
+    "fault_stream": 0,
+    "fault_code": 0
+  },
+  "dart_temporary_cycle": {
+    "error": 0,
+    "snapshots": 4,
+    "reads": 152,
+    "guards": 156,
+    "quiet": 17,
+    "writes": 16,
+    "attempted": 1,
+    "stopped": 1,
+    "restored": 1,
+    "control_changed": 0,
+    "provider_initialized": true,
+    "ttbr_words_restored": 16,
+    "ttbr_sha256": "034006f39d54ba2f616bbc29363a4e314d6638994771340ec71ee49616b004e3",
+    "command": 3842,
+    "fault_raw": 256,
+    "dma_enabled": false
+  },
+  "hot_module_selection": {
+    "kernel_dt_initramfs_identities_reg_on_match": true,
+    "module_profile_payload_not_booted": true,
+    "live_payload_remains_pme_aspm": true,
+    "live_aspm_already_verified": true,
+    "module_profile_bootargs_differ_only_aspm_option": true,
+    "same_boot_clean_history_required": true,
+    "module_profile_pcie_sha256": "e715ad64013eb0238c9074dba9b05157d2a7153835fd4a800bd53adb0e170785"
+  },
+  "cleanup": {
+    "all_four_stages_verified": true,
+    "config_pme_tls_bus_reset_power_reg_on_restored": true,
+    "pci_devices_empty": true,
+    "diagnostic_modules_absent": true,
+    "final_ssh_http_bash_herdr_binary_verified": true,
+    "raw_private_logs_sha256": {
+      "physical": {
+        "activate-private.log": "15cb86f05fdb7dbc7cf4be163f1517ed9e6320f70ccfc0356592e490669061da",
+        "aspm-private.log": "edb7e08722205070d366665ed4c1d82761d89fc5a19e85b572db6af449ca1863",
+        "hash-n71-pcie-diagnostic.ko-private.log": "ab2016a5eda615237eba31fc379c811cfc83eaf547c98729387c1fb3f97222fc",
+        "hash-n71-wlan-power-diagnostic.ko-private.log": "a0268f7a10aa37255eb6adac6e7ac2b01e0acd9969c068cd4123be5c33c5978a",
+        "observe-private.log": "2264b02aba82f90ec53966fee948d76ac591beb52166e8a674244d7a0c178b14",
+        "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+        "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+        "pcie-cleanup-private.log": "60737e7e15659a63a647cd5d3701080e21c7dde2ec904bbe05476e04c7255feb",
+        "pcie-private.log": "60737e7e15659a63a647cd5d3701080e21c7dde2ec904bbe05476e04c7255feb",
+        "pcie-status-private.log": "34106ba4de015e700cef914eac1a7f593b3c53eb702a000c10e282e8f64e6d11",
+        "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+        "preflight-private.log": "13a40ab5fe27128fe7cc03fafc9088ee49297512988540350789a36c95c34f13",
+        "reg-unload-private.log": "942427b8a176d86c23970ac9b1eff17fce3110cd5405c234442221b9ea4d23fd",
+        "restore-private.log": "9b6ffbc0cc0562898bb0beff757a3e88553af13a5e1d45b53e5d8e85b0ec3183",
+        "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+      },
+      "chip-hot": {
+        "activate-private.log": "12c4636e5c46e2adf79aec2b81b154d46a9cc3e43065518351395145334c4e5e",
+        "hash-n71-pcie-diagnostic.ko-private.log": "12f4e5d7370f478a1919b168e90b0e3fa3044122f2ee66ff03262e581ba03fdc",
+        "hash-n71-wlan-power-diagnostic.ko-private.log": "d895ac61cbecee86678968eb3c9f8b32514b80e85db8c40d2e65f712c70dded8",
+        "module-directory-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "observe-private.log": "278716185062a0f7a60c26fd5f7cbb81b04f7403c48666dc01fe2d7f2b958f6e",
+        "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+        "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+        "pcie-cleanup-private.log": "87d29db9abdebb52647ee718cef694b19f4979d67481ffa6b8ab29cadcd58a12",
+        "pcie-private.log": "87d29db9abdebb52647ee718cef694b19f4979d67481ffa6b8ab29cadcd58a12",
+        "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+        "preflight-private.log": "cc1876d0e6c43f9870a47567eaf44811dc9fd4940f06368f3c62b83c17f1ad93",
+        "reg-unload-private.log": "7161d022183289e9896d60dd63dde7fc291c5f2a2d23737a39a289d4bba5bcff",
+        "restore-private.log": "c3f63324d7b50db9d3c0b9d53ef7bf840fa8464ae637efbd3e905af808afc292",
+        "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+      },
+      "dart-hot": {
+        "activate-private.log": "701c7275fc5c35dbfe9b3c2aa4f2eec91e38750d56141c6fc2f706a1352eff6f",
+        "hash-n71-pcie-diagnostic.ko-private.log": "6a1416d3fd788aa8ded360753e73e588c6a585098ccd8934bfef23d6f19ea668",
+        "hash-n71-wlan-power-diagnostic.ko-private.log": "6dabfe135a486f1c1d76ddedf21a2d2a5133536fc590254563f30cc3d7cba442",
+        "module-directory-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "observe-private.log": "facfde553a8745f009059740d153a6a8fac2e1ca1745c3db7eba88d489087ba2",
+        "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+        "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+        "pcie-cleanup-private.log": "85eddda1c5255f5835f1b67a3fa2203136f9b3d266de679fb1fe5fa245d0a4e4",
+        "pcie-private.log": "85eddda1c5255f5835f1b67a3fa2203136f9b3d266de679fb1fe5fa245d0a4e4",
+        "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+        "preflight-private.log": "378e8ddfc17c1885f576436f1fa1a70996fc09dcb0f0cd97e957822f63b829d4",
+        "reg-unload-private.log": "dfe137f1cae341f59ea3d9a500a2365818ceb17e363419182798b6abd178dc2c",
+        "restore-private.log": "b30fda84bada2a9f355cc8278fcf74b6db555b01d1b61f4d3d6d2c0f7768a379",
+        "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+      },
+      "dart-cycle-hot": {
+        "activate-private.log": "efafa9009f25fce27e44deffc1ef62be678ccf2c97d7afcbf37df2221ecea4a6",
+        "hash-n71-pcie-diagnostic.ko-private.log": "f5600d8eab12083bae1d240382138e4658bbc4c11e499eb4289551415d5e47b0",
+        "hash-n71-wlan-power-diagnostic.ko-private.log": "2f26ed961471e11cf1fe7844870f2ec082d62ea2055be6964af06391d697ab1b",
+        "module-directory-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "observe-private.log": "4d1391c5a0c83a304645613b55c2cdce7d9bb1e70d808c1e64735bec7d33cb12",
+        "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+        "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+        "pcie-cleanup-private.log": "833f5973e88f1c3b9e8d71b5f9dc1be6fe07243eb34b80a456d97ba5d72f9874",
+        "pcie-private.log": "833f5973e88f1c3b9e8d71b5f9dc1be6fe07243eb34b80a456d97ba5d72f9874",
+        "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+        "preflight-private.log": "d34ec5e1e20fe63bd505a433599d34cba17686b0f30f50ac00b763c4adcd6ec3",
+        "reg-unload-private.log": "05126107e95ee640a2ddcd5ac78e8aeade5deff17c5ea14989834aaaae577369",
+        "restore-private.log": "2b22226d8c6a1382b752278383cc6b2c457438ffc40bfbbbd18196440882dfd5",
+        "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+        "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+      }
+    },
+    "result_sha256": {
+      "n71-pme-aspm-physical-20261005": "8efacd13f4846883ac7c31b17afc2da519777b12323119b43673fbe2b35a6538",
+      "n71-pme-aspm-chip-hot-20261005": "2975f746322e06bc6c1feeee4196aeb06d625e523b13e40a1fb9f50257641544",
+      "n71-pme-aspm-dart-hot-20261005": "22f6e46ab15c6ea33cd34c8682a9799fa4aa4814288d100379163a6afaf8435c",
+      "n71-pme-aspm-dart-cycle-hot-20261005": "dc5a336dfb27314e92d94c40e4acc7f4211f0702510009fe5b0497bd1400427b"
+    }
+  },
+  "snapshot": {
+    "entries": 44,
+    "verified_under_lock": true,
+    "archive_sha256": "5ca89c20d7d265b231e4cdc949a9cfef51fa08e475f6579c93dc4af84c09c691"
+  },
+  "ios_return": {
+    "backup_verified": true,
+    "sync_verified": true,
+    "software_usb_confirmation": true,
+    "cli_exit": 0,
+    "manual_fallback_required": false,
+    "ios_confirmed_utc": "2026-10-05T19:00:58.288597+00:00",
+    "return_log_sha256": "1d456537e93c06eb2ffa20d3b25a5c0892b85447312b5c5c2161cf0c9fa90e29"
+  },
+  "battery": {
+    "before_ios_percent": 100,
+    "after_ios_percent": 100,
+    "after_charging": true,
+    "after_external_connected": true,
+    "includes_boot_linux_return_and_ios_intervals": true,
+    "linux_power_supply_count": 0,
+    "gadget_declared_max_power_ma": [
+      500
+    ],
+    "linux_net_current_measured": false,
+    "charging_validated": false,
+    "health_percent_measured": false
+  },
+  "ci": {
+    "head": "dd2b0da4224f244d2fd13126b588134ff88f425a",
+    "pr": {
+      "run": 37356247973,
+      "conclusion": "success",
+      "all_three_jobs": true,
+      "collector_assertion_mutations_mac_and_ubuntu": 81
+    },
+    "push": {
+      "run": 37356242967,
+      "conclusion": "failure",
+      "failed_fixture": "test_n71_pmgr_provider_failure",
+      "mutant_timeout_seconds": 10,
+      "baseline_passed": true,
+      "cause_confirmed": false,
+      "issue": 38
+    }
+  },
+  "limits": {
+    "wifi_functional": false,
+    "persistent_pci_host_or_resources_assigned": false,
+    "broadcom_or_firmware_loaded": false,
+    "irq_delivery_verified": false,
+    "dma_enabled": false,
+    "hdq_or_charger_io_performed": false,
+    "new_kernel_image_built": false,
+    "global_mac_configuration_changed": false,
+    "new_pin_or_console_operation_requested": false
+  }
+}

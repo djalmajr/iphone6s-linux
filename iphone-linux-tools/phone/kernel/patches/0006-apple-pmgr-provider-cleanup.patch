@@ -1,0 +1,55 @@
+--- a/drivers/pmdomain/apple/pmgr-pwrstate.c
++++ b/drivers/pmdomain/apple/pmgr-pwrstate.c
+@@ -282,25 +282,25 @@
+ 			return ret;
+ 	}
+ 
+ 	ret = pm_genpd_init(&ps->genpd, NULL, !active);
+ 	if (ret < 0) {
+ 		dev_err(dev, "pm_genpd_init failed\n");
+ 		return ret;
+ 	}
+ 
+ 	ret = of_genpd_add_provider_simple(node, &ps->genpd);
+ 	if (ret < 0) {
+ 		dev_err(dev, "of_genpd_add_provider_simple failed\n");
+-		return ret;
++		goto err_remove_domain;
+ 	}
+ 
+ 	of_for_each_phandle(&it, ret, node, "power-domains", "#power-domain-cells", -1) {
+ 		struct of_phandle_args parent, child;
+ 
+ 		parent.np = it.node;
+ 		parent.args_count = of_phandle_iterator_args(&it, parent.args, MAX_PHANDLE_ARGS);
+ 		child.np = node;
+ 		child.args_count = 0;
+ 		ret = of_genpd_add_subdomain(&parent, &child);
+ 
+ 		if (ret == -EPROBE_DEFER) {
+@@ -325,24 +325,25 @@
+ 	ps->rcdev.ops = &apple_pmgr_reset_ops;
+ 	ps->rcdev.of_node = dev->of_node;
+ 	ps->rcdev.of_reset_n_cells = 0;
+ 	ps->rcdev.of_xlate = apple_pmgr_reset_xlate;
+ 
+ 	ret = devm_reset_controller_register(dev, &ps->rcdev);
+ 	if (ret < 0)
+ 		goto err_remove;
+ 
+ 	return 0;
+ err_remove:
+ 	of_genpd_del_provider(node);
++err_remove_domain:
+ 	pm_genpd_remove(&ps->genpd);
+ 	return ret;
+ }
+ 
+ static const struct of_device_id apple_pmgr_ps_of_match[] = {
+ 	{ .compatible = "apple,t8103-pmgr-pwrstate" },
+ 	{ .compatible = "apple,pmgr-pwrstate" },
+ 	{}
+ };
+ 
+ MODULE_DEVICE_TABLE(of, apple_pmgr_ps_of_match);
+ 

@@ -1,0 +1,118 @@
+{
+  "format": 1,
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "preserved_kernel_sha256": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "config": {
+    "CONFIG_BRCMFMAC": "m",
+    "CONFIG_BRCMFMAC_PCIE": "n",
+    "CONFIG_BRCMFMAC_PROTO_MSGBUF": "n",
+    "CONFIG_BRCMFMAC_SDIO": "y",
+    "CONFIG_BRCMUTIL": "m",
+    "CONFIG_CFG80211": "m",
+    "CONFIG_FW_LOADER": "y",
+    "CONFIG_MODVERSIONS": "n",
+    "CONFIG_PCI": "y",
+    "CONFIG_RFKILL": "m"
+  },
+  "macro_files": [
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile",
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h",
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h"
+  ],
+  "modules": {
+    "brcm80211/brcmfmac/bca/brcmfmac-bca.ko": {
+      "bytes": 6472,
+      "sha256": "79e8154060be38717bad7d73f1a9b9b5453d77577f7c0318ae2e1194cd1f378f",
+      "depends": [
+        "brcmfmac"
+      ]
+    },
+    "brcm80211/brcmfmac/brcmfmac.ko": {
+      "bytes": 499192,
+      "sha256": "8773adabea188d38937e788370af319218e26dcbfee585ffc157647199c2375c",
+      "depends": [
+        "brcmutil",
+        "cfg80211"
+      ]
+    },
+    "brcm80211/brcmfmac/cyw/brcmfmac-cyw.ko": {
+      "bytes": 16048,
+      "sha256": "32bb85ec78c55bbadd9c34142007d9f5a244820a55f24c45a1c1d75a896b4eb8",
+      "depends": [
+        "brcmfmac",
+        "cfg80211"
+      ]
+    },
+    "brcm80211/brcmfmac/wcc/brcmfmac-wcc.ko": {
+      "bytes": 6544,
+      "sha256": "a9b16c699421482dc0b8a562fe9092c493cd3466ba2d5397caeee95fc212d437",
+      "depends": [
+        "brcmfmac"
+      ]
+    },
+    "brcm80211/brcmutil/brcmutil.ko": {
+      "bytes": 18088,
+      "sha256": "234826b1594329116fbfbe835e4c52b8269a98512bcef212bc743d364ce53bf6",
+      "depends": []
+    },
+    "cfg80211/cfg80211.ko": {
+      "bytes": 640696,
+      "sha256": "a121b149ba94102b725d4ad54ff9c0188bbe43038f8222a8d217e56986eba795",
+      "depends": [
+        "rfkill"
+      ]
+    },
+    "rfkill/rfkill-gpio.ko": {
+      "bytes": 11824,
+      "sha256": "17e3675a8a8ba533785e6f6ee88b0599c4300968f99e07e39c7b452b918452da",
+      "depends": [
+        "rfkill"
+      ]
+    },
+    "rfkill/rfkill.ko": {
+      "bytes": 46984,
+      "sha256": "df2ccf76d66eb94625c7613302513bf1cd48366ff398ab8617708dbc17c39025",
+      "depends": []
+    }
+  },
+  "pci_alias_verified": "pci:v000014E4d000043A3sv*sd*bc02sc80i*",
+  "pcie_msgbuf_symbols_linked": true,
+  "werror_modpost_passed": true,
+  "kernel_source_and_image_preserved": true,
+  "installed": false,
+  "loaded_on_phone": false,
+  "firmware_selected": false,
+  "wifi_verified": false,
+  "proof_scope": "Offline native ARM64 external module build and Mac artifact verification; no driver loaded or native Wi-Fi proof",
+  "mac_hash_elf_abi_recalculated": true,
+  "gates": {
+    "mac_contract_tests": 8,
+    "mac_assertion_mutation_kills": 13,
+    "arm64_contract_tests": 8,
+    "arm64_assertion_mutation_kills": 13,
+    "python_ast_checked": true,
+    "configured_type_checker": false
+  },
+  "reboots_for_this_work": 0,
+  "limits": "Driver match requires class 02:80, not yet inventoried on phone. Host PCI, BAR sizing/routing, IRQ/DART and chip revision/calibration/firmware remain unqualified. No module installation or loading.",
+  "public_source_sha256": {
+    "scripts/build/build-n71-wifi-modules.py": "73daa0a45fa05c017825ad34a3e12f45b7848d387a7f0d2b8f38e9a27c7c5dd8",
+    "tests/test_n71_wifi_modules.py": "3fefa71f242906d915714574c46d63fdf15be9a08a6d8cdb61e9fc5e7304b71c",
+    "tests/run_n71_wifi_modules_mutations.py": "844de1617307865b6ece26b86d543c404b4932d9718ce3d3797ed637fcc3e8e6"
+  },
+  "build_recipe": {
+    "source": "/home/ubuntu/kernel-n71-bundle-source-20261002",
+    "kernel_output": "/home/ubuntu/kernel-n71-bundle-build-20261002",
+    "module_output": "/home/ubuntu/n71-wifi-modules-build-20261003-v2",
+    "module_only_free_space_gate_gib": 1,
+    "fresh_image_free_space_gate_gib_unchanged": 8,
+    "compiler_version": "13.3.0",
+    "native_builder_exit_code": 0
+  },
+  "first_attempt": "All three packages compiled; final validation refused the overly broad expected alias. The unchanged upstream PCI table requires class 02:80. Corrected the alias gate and completed the recipe in a new v2 output; the earlier output was preserved."
+}

@@ -1,0 +1,1267 @@
+{
+  "format": 1,
+  "status": "read_only_intent_checkpoint_recovery_qualified_unload_coordinator_cleanup_selection_and_physical_activation_pending",
+  "code_commit": "4e4177f3b2f67de1ecae167c11ca910eb7a58576",
+  "input_count": 270,
+  "inputs": {
+    "docs/evidence/autosnap-state-paths.json": {
+      "sha256": "247c27c25c9721e71533d109c46f7eba32c3e79e6ea1c840f5034fb493376bcb",
+      "bytes": 1634
+    },
+    "docs/evidence/boot-tools-check.json": {
+      "sha256": "c233e6d191c2b750178ad3066d641447ff26e712b6656af7f3dd9a88de6097d3",
+      "bytes": 2671
+    },
+    "docs/evidence/ci-native-crash-isolation.json": {
+      "sha256": "6f9e26a88791b8ec57538318acd592e045299ca0339a7465cf6121e508d31333",
+      "bytes": 4725
+    },
+    "docs/evidence/compose-output-paths.json": {
+      "sha256": "2ab25d327cb8a7354687fee324cafc8910c915f54b4952abb97d79e2153c1552",
+      "bytes": 1881
+    },
+    "docs/evidence/dart-s5l-stream-tcr.json": {
+      "sha256": "843dfd4024acd2c6533a98ba7cf4f3a06897b97283097482b4ca8745494d457c",
+      "bytes": 1444
+    },
+    "docs/evidence/dev-session.json": {
+      "sha256": "0f7cd0d4a29cc75aedb4746996ba0cd03e0b697dc80061eb49cb4f1abd682863",
+      "bytes": 849
+    },
+    "docs/evidence/dns-bundle-scope.json": {
+      "sha256": "b72d629a02ff0d762b503505fe57da86500d442b5d09905136331e68b8c6e82c",
+      "bytes": 3036
+    },
+    "docs/evidence/dns-physical-check.json": {
+      "sha256": "e8172adffb202085775d7f8c83f18ee40b00b6a04cc38df8379a88d1492bffeb",
+      "bytes": 3265
+    },
+    "docs/evidence/dns-provenance.json": {
+      "sha256": "116a33f4e90022152a5384ed30618a6241fd737c4a2efe902976abdcb2d9e661",
+      "bytes": 3455
+    },
+    "docs/evidence/dns-rebuild-provenance.json": {
+      "sha256": "3022da92af332b40474ff88b4efa60376b08ab819b903a471f6652857089219a",
+      "bytes": 3455
+    },
+    "docs/evidence/dns-standard-port.json": {
+      "sha256": "8d325eb545c9300bc85a5801a0c44e97a299ab71c131ac5c7190cc2d52ad2062",
+      "bytes": 17727
+    },
+    "docs/evidence/fresh-build-provenance.json": {
+      "sha256": "04eb5bd78e35fee0c8c95faf5561de00ac8633f8c3d85568b157eb2facf606e0",
+      "bytes": 11906
+    },
+    "docs/evidence/herdr-autostart.json": {
+      "sha256": "7f22fd4c6ed5f62c6f71551e12b0316dcb12262ab193c5179166cfb2b067ed85",
+      "bytes": 3721
+    },
+    "docs/evidence/herdr-detachment.json": {
+      "sha256": "0d93d203ffc9bb048d95fb69f8c4704db4804283faecda68fb12bfafd0aea42d",
+      "bytes": 2185
+    },
+    "docs/evidence/herdr-physical.json": {
+      "sha256": "eda2b365019d4e4bc1c913db4a54d90024de35b5c1695c7b49114a2b6fbb9e5c",
+      "bytes": 2785
+    },
+    "docs/evidence/kernel-dart-build.json": {
+      "sha256": "53720e0344959df2e45ec282d7c09b87a762dc8e40f9c961904c55a143671985",
+      "bytes": 1987
+    },
+    "docs/evidence/kernel-index-verification.json": {
+      "sha256": "39d678737a93f1873f301d13861374073306507f465b3ae94a7920a306630a16",
+      "bytes": 2730
+    },
+    "docs/evidence/kernel-integration.json": {
+      "sha256": "2d2dc02a9022cc4d54719fc1b4f8fa5e80f954e7a5beb5d4d5c315bc440e5733",
+      "bytes": 1911
+    },
+    "docs/evidence/kernel-n71-binding-build.json": {
+      "sha256": "2a0c51757065baf1b8cd3cdb6ee40acf844b1f59dafcc51bdbca473da9f1ec80",
+      "bytes": 6645
+    },
+    "docs/evidence/kernel-n71-bundle-build.json": {
+      "sha256": "01c2db2d9b6319555161e2438de22cecf4bb20adb0a3d34524d90023e099879c",
+      "bytes": 4558
+    },
+    "docs/evidence/kernel-n71-bundle.json": {
+      "sha256": "eba6cb72eb9955742a0ad0d96425615052ea285ce9538329985ddd9f0bf225a0",
+      "bytes": 3535
+    },
+    "docs/evidence/kernel-n71-power-bundle-build.json": {
+      "sha256": "5c6f3fee7f46494f9e8065564c11b6b564113c329ed247010af2c5465c45e6de",
+      "bytes": 5420
+    },
+    "docs/evidence/kernel-n71-power-bundle.json": {
+      "sha256": "60ff6e777dbd899c1003085ee3b59c071335fd188648e333207be0300524b15a",
+      "bytes": 5854
+    },
+    "docs/evidence/kernel-package-provenance.json": {
+      "sha256": "3f2ecc3a6f1a0514c64abf50d80c2802e3b4c5d04f886afab5cf6147ed944928",
+      "bytes": 1709
+    },
+    "docs/evidence/kernel-source-build.json": {
+      "sha256": "9459a6079e9fdc88fb9cb06261ce758a5df1ecdf6503f6b42bebc09ebc7ef3f9",
+      "bytes": 4723
+    },
+    "docs/evidence/local-snapshot-paths.json": {
+      "sha256": "28ce645b4c72b255ca7a4e0f4d71d1487cc29124fecc2d60d15eab44adb21339",
+      "bytes": 2528
+    },
+    "docs/evidence/m1n1-rebuild.json": {
+      "sha256": "47c05448a71661082a756e8d0bc05dd700fe3aff64e7382c55c920dee013c569",
+      "bytes": 5173
+    },
+    "docs/evidence/m1n1-source-provenance.json": {
+      "sha256": "2e7fe701cad8630688a7bbc807507140dfa3ae81f54f3a6ff0805595156dd8d5",
+      "bytes": 2013
+    },
+    "docs/evidence/multipass-build.json": {
+      "sha256": "89e62de032a57546c706e6931fd902a6f81039110b076a5850a3acfcb19b9b86",
+      "bytes": 700
+    },
+    "docs/evidence/n71-bar-sizing-first-physical.json": {
+      "sha256": "78ad6ce570153c4ceb32d2e147fd58fd2f78eba76cfe5d2f5e0b9818b88039c0",
+      "bytes": 3325
+    },
+    "docs/evidence/n71-binding-profile.json": {
+      "sha256": "7099326bbe809d3b658be58a2ac723475fffe20ccb8cb6419ee9ff44809484cc",
+      "bytes": 13857
+    },
+    "docs/evidence/n71-board-map.json": {
+      "sha256": "309296e5eebf0a8b61f1616f16f9b7b07ce45926662642bddbd7bbabf3f24c06",
+      "bytes": 3847
+    },
+    "docs/evidence/n71-brcmfmac-caller-qualified.json": {
+      "sha256": "bde250f890fbe0dbe85cb0c841282706cc4910389b86c7f281bc9252b2920fa5",
+      "bytes": 24491
+    },
+    "docs/evidence/n71-brcmfmac-host-adapter-qualified.json": {
+      "sha256": "2aa353d2850cd55e79a2b260fd28b206e1e171da2949e7ffade02e1ebba3c44e",
+      "bytes": 23048
+    },
+    "docs/evidence/n71-brcmfmac-msi-error-qualified.json": {
+      "sha256": "8e94bf1fdf133cc6dc16b75e3206387c9c2cf6cbfdb06a0344798b12ca478b10",
+      "bytes": 8033
+    },
+    "docs/evidence/n71-brcmfmac-pcie-modules-qualified.json": {
+      "sha256": "4de6b1008bad8e3be12dd2c86d3d3304babfe044aa72f55b4873b8e06ed2e60c",
+      "bytes": 7360
+    },
+    "docs/evidence/n71-brcmfmac-runtime-config-qualified.json": {
+      "sha256": "8e1c4cbfbe7c9cd43ec045204448d7c505a66998fd44a879502cf3ef88255cdc",
+      "bytes": 5175
+    },
+    "docs/evidence/n71-bundle-first-physical.json": {
+      "sha256": "183050529b3f4be583d3d42d03e2e638ff8bd97f72f7f569d7231a4206972b3e",
+      "bytes": 3341
+    },
+    "docs/evidence/n71-bundle-profile.json": {
+      "sha256": "7525c207aec8f9b5933b6d23fa884c8890903ae3e6324fc299a8039b82332502",
+      "bytes": 1170
+    },
+    "docs/evidence/n71-chip-id-first-physical.json": {
+      "sha256": "1c546d52c2c5e01e33bbad2efe6c5ff26cf1c4f0f186bd137b1357aa56454f27",
+      "bytes": 3501
+    },
+    "docs/evidence/n71-chip-id-reference.json": {
+      "sha256": "2b15443c826a1b20c8be827dacf71a8a93e61db8b4ffa149578bafd8add53527",
+      "bytes": 1170
+    },
+    "docs/evidence/n71-consumer-removal-qualification.json": {
+      "sha256": "f093074237a00908d55d44e45549cbe0ed46ba032de8ef30716c8b27cf4d6b66",
+      "bytes": 12402
+    },
+    "docs/evidence/n71-dart-apple-stream-reference.json": {
+      "sha256": "7e71222b78099dbca7b2487dcc4b727f8a922c3b1885fc47f086d518eefef040",
+      "bytes": 2041
+    },
+    "docs/evidence/n71-dart-cleanup-operation-qualified.json": {
+      "sha256": "bffa5673108d537d5f04a636d3d7591540eb72b01aacad04956e09603d772c04",
+      "bytes": 6691
+    },
+    "docs/evidence/n71-dart-cycle-build.json": {
+      "sha256": "b9fafc4237833f8a61bad5b30066ef0fc3ebd04b51a8fc31d23346edc21ec46a",
+      "bytes": 3528
+    },
+    "docs/evidence/n71-dart-cycle-first-physical.json": {
+      "sha256": "ecf497930ab300ec417d191d43ce417a504a266b1d0b21b19ad7aa65acbf5e79",
+      "bytes": 2492
+    },
+    "docs/evidence/n71-dart-first-physical.json": {
+      "sha256": "0272e7f89a4df6b69ac0eb09b742401e51b886c588605dc042954ff5aac5adfb",
+      "bytes": 2082
+    },
+    "docs/evidence/n71-dart-fwspec-audit.json": {
+      "sha256": "8c921df73fa22b993880753942bb5986b81800a20410ae6831068dec393aa8d9",
+      "bytes": 1868
+    },
+    "docs/evidence/n71-dart-host-qualification.json": {
+      "sha256": "4f5998a242b8c751f6e943654d2922c6a9c43a45c0db3ae9b2ea428b9492b36e",
+      "bytes": 4052
+    },
+    "docs/evidence/n71-dart-irq-qualification.json": {
+      "sha256": "fc80e0530ccd45191828205dd0bbc3a6af8f208691cb20c216f28606dc80e0c4",
+      "bytes": 13135
+    },
+    "docs/evidence/n71-dart-observe-build.json": {
+      "sha256": "f86e209bfb1468f9beb6ae0de8171547b2e1129a116d2c69e808057f3d8fe809",
+      "bytes": 2398
+    },
+    "docs/evidence/n71-dart-phandle-qualification.json": {
+      "sha256": "ef1f2c563757c988a9c1c35ee1d6385b762cccafbd1f8b86c662f20742c29496",
+      "bytes": 6581
+    },
+    "docs/evidence/n71-dart-retained-qualification.json": {
+      "sha256": "c9ee746e2437f9b3433ea933da880ecf68d8d82d0b98b151f170fe9872393ee2",
+      "bytes": 5377
+    },
+    "docs/evidence/n71-dart-scan-qualification.json": {
+      "sha256": "801c6027a4aa059821c97d93199fdcd4e6953038f8a9a1f75a40efe6df102680",
+      "bytes": 13752
+    },
+    "docs/evidence/n71-dart-state-build.json": {
+      "sha256": "dc5f3c8c40fc8a120f5f4e8375339a11a20e96cd284a1ad3db61c0ee15859705",
+      "bytes": 2563
+    },
+    "docs/evidence/n71-dart-state-first-physical.json": {
+      "sha256": "ea54863c7c80143ba6d94c89a1cef56dd014af71e05846d3b7dcb692a157f719",
+      "bytes": 1972
+    },
+    "docs/evidence/n71-dma-collector-qualification.json": {
+      "sha256": "063bd6d27cd9a5fd57cd52018fc6dd666bd8526405bcad8242cb51443194c5d0",
+      "bytes": 4759
+    },
+    "docs/evidence/n71-dma-topology-qualification.json": {
+      "sha256": "3ccbd1e84ff0b4fbd98aea40c57abb0d40a5dd976731d35c2cfb46ca2f5872ab",
+      "bytes": 22227
+    },
+    "docs/evidence/n71-driver-reference.json": {
+      "sha256": "75a690a0ff6de5aef3625e38089911c9efc559069a3db056f30d8691b11f4ef0",
+      "bytes": 6841
+    },
+    "docs/evidence/n71-driver-runtime-continuation-qualified.json": {
+      "sha256": "642a92ed1b05d568cb86d34ff2afc38bacd9b1798716a7c70ef63f23471c1294",
+      "bytes": 48488
+    },
+    "docs/evidence/n71-driver-runtime-journal-qualified.json": {
+      "sha256": "bd327f77b45c3daff3d4ceab443281920831d3d3da1e2faaedcd68925729ac06",
+      "bytes": 47999
+    },
+    "docs/evidence/n71-driver-runtime-observation-qualified.json": {
+      "sha256": "351bfeab98ca745e9e4f652d47c77cc98d0e171f2487324fc8859f7e4a909a64",
+      "bytes": 45551
+    },
+    "docs/evidence/n71-firmware-candidate-origin.json": {
+      "sha256": "3339f6aa935a20edf7cb7a47610bc9ae28d234baf808f381c22c9207a9c0c775",
+      "bytes": 1498
+    },
+    "docs/evidence/n71-firmware-selection.json": {
+      "sha256": "2a97d6fb2e3a87aa34110c285c4b526b145d8b9ae8e579a38e5919a62bc1d9c1",
+      "bytes": 841
+    },
+    "docs/evidence/n71-gpio-write-errors.json": {
+      "sha256": "8637ca825362f63a4eee35026fe136dfc76fbee6d4c634b579fce9f065086a01",
+      "bytes": 3571
+    },
+    "docs/evidence/n71-hdq-charger-reference.json": {
+      "sha256": "3c4a320245b5df6bea26bf335607ad157e57053087d0e640434db3d542912555",
+      "bytes": 10691
+    },
+    "docs/evidence/n71-hdq-gpio-observer.json": {
+      "sha256": "2888dfeb0a34743c2e48f634af0bee3d61511757a4e2ac7c8ef59d68a2e66b7d",
+      "bytes": 2256
+    },
+    "docs/evidence/n71-held-iommu-selectors.json": {
+      "sha256": "07e85fda6f8b70687d4ba01a45689af0da5add0d8309f17052393bb5a7ebbbd4",
+      "bytes": 2129
+    },
+    "docs/evidence/n71-i2c-acquisition-reference.json": {
+      "sha256": "b83218f11388f8c0a256e10f2d915d3799a54f22715c6c97d2111c3f1333c094",
+      "bytes": 8243
+    },
+    "docs/evidence/n71-i2c-controller-inspection.json": {
+      "sha256": "dd3c182c14cf044c9b497627a6dc3794b9f2633ccd6fdaac4ffa0c17ab0445da",
+      "bytes": 14590
+    },
+    "docs/evidence/n71-i2c-genpd.json": {
+      "sha256": "b7056057e3e9e35cd653fbc82ecf48772479cb54fb4b3afdc091354501bd75c1",
+      "bytes": 7320
+    },
+    "docs/evidence/n71-i2c-pin-cycles-ci.json": {
+      "sha256": "a679aa1537d8f55cbc8cdf445b2d80a6751f0b7e3f6cd5124017ab2e2d8e6520",
+      "bytes": 3973
+    },
+    "docs/evidence/n71-i2c-pin-cycles.json": {
+      "sha256": "a73971db15513c6ad2a90c24a8e9e0ff6f61e29e2fc1863857b1dd16b8b59745",
+      "bytes": 2960
+    },
+    "docs/evidence/n71-i2c-power-lifecycle.json": {
+      "sha256": "6b09595793e0685b08aae71f50fed4f09c4af8c7e1ef8561808af391dcb0478a",
+      "bytes": 5370
+    },
+    "docs/evidence/n71-i2c-topology-observer.json": {
+      "sha256": "92e64c83cc2a4df4316e131080bb48502a8cf3cb9536b6fb2daf4cd76fdfa36e",
+      "bytes": 5362
+    },
+    "docs/evidence/n71-inventory-and-scan-first-physical.json": {
+      "sha256": "f75a8087a919c9a686337a96beddcf9b587e94b50568a24d68e971db1f9f9785",
+      "bytes": 2814
+    },
+    "docs/evidence/n71-iommu-caller-qualification.json": {
+      "sha256": "92e3e6084ee40d144bbb6ba57fafea9f5543e299bc820a44275ac471e3430aee",
+      "bytes": 12125
+    },
+    "docs/evidence/n71-iommu-ci-qualified.json": {
+      "sha256": "cef5e539725f032f23715289dc4570339bbb010038ebf6eabe18c450e4bd0278",
+      "bytes": 3317
+    },
+    "docs/evidence/n71-iommu-collector-qualification.json": {
+      "sha256": "f8ed50e77952804c12940cdf5e2d090ac8e6a496700509906556c96f3c216e9b",
+      "bytes": 6179
+    },
+    "docs/evidence/n71-iommu-image-qualification.json": {
+      "sha256": "fc13b51176af207ab804fd480a12141154590ba4eb76ef441558c18d4d97db27",
+      "bytes": 3783
+    },
+    "docs/evidence/n71-iommu-mutation-dependencies.json": {
+      "sha256": "1534156c969f9b90da9e90f1a6f0e0190cf726cad909cb959cbcf08b7b89ea98",
+      "bytes": 3124
+    },
+    "docs/evidence/n71-iommu-of-lifetime-audit.json": {
+      "sha256": "24e6cb2d53e7d036e39dc29bc8a594b9bab0634eab77ea072b8e3a330dbd50c9",
+      "bytes": 4081
+    },
+    "docs/evidence/n71-iommu-pins-physical.json": {
+      "sha256": "64bfab4e5252a95102588832f09d4dd73cac84aac363786379d610a063fa6f8b",
+      "bytes": 2896
+    },
+    "docs/evidence/n71-iommu-private-profile.json": {
+      "sha256": "115eae3b9221b65bf8a3e2e38aa3330daab514fdc210512f35376fb6c47e5c0a",
+      "bytes": 4745
+    },
+    "docs/evidence/n71-iommu-profile-qualification.json": {
+      "sha256": "d808713c1e4f0e36bc5783f57d670d2959d6b0cb168e3bd08d983788c238ec4c",
+      "bytes": 7662
+    },
+    "docs/evidence/n71-iommu-publication-audit.json": {
+      "sha256": "5dc05809fadeaf3cba025bcb09c2c389d565d145fd6cd844760dcd9d42b5a92b",
+      "bytes": 2380
+    },
+    "docs/evidence/n71-ios-battery-checkpoint-20261004.json": {
+      "sha256": "f9c7c51d6d5f103e7230a5d4e4363d915c56332c82d796a678c6d7ec95c58848",
+      "bytes": 2570
+    },
+    "docs/evidence/n71-irq-iommu-reference.json": {
+      "sha256": "3971c80676128918205400340300a360fb3a153e707dba604fea5a1a88c81a35",
+      "bytes": 4228
+    },
+    "docs/evidence/n71-link-binding-session.json": {
+      "sha256": "5f25f299d6248c3e67bb3687a9b5b7eaeb24664e138b5ff9c24f81fa17529b5b",
+      "bytes": 8050
+    },
+    "docs/evidence/n71-low-battery-ios-20261004.json": {
+      "sha256": "c35beef0b81bad249a0ae2052b6dff8c66474312e3878c2daf79d561d48434e3",
+      "bytes": 1272
+    },
+    "docs/evidence/n71-msi-allocation-caller-qualified.json": {
+      "sha256": "1c80a8e104ac991fef5518603c2119b805f0426efd6179e7bdcb1e45b0cfc34d",
+      "bytes": 13973
+    },
+    "docs/evidence/n71-msi-allocation-qualified.json": {
+      "sha256": "56dda846659324876987ad19ec2082dab41abf71e530eeb80af2c906d7154af8",
+      "bytes": 11922
+    },
+    "docs/evidence/n71-msi-caller-qualification.json": {
+      "sha256": "61c9767593c25a3a2c984516e17ad4952913c53e74fd44ebe93519367cfc38db",
+      "bytes": 11640
+    },
+    "docs/evidence/n71-msi-config-qualified.json": {
+      "sha256": "af4e69c80dbae8d68965a589314c3add280e23de09270b6d44743b473e10e2f6",
+      "bytes": 12847
+    },
+    "docs/evidence/n71-msi-lease-storage-qualified.json": {
+      "sha256": "c9ed543067ae3cb38de2de3dc76b3261b03db86c0a227534fe92967e50051dc5",
+      "bytes": 11872
+    },
+    "docs/evidence/n71-msi-message-reference.json": {
+      "sha256": "4d730ec644c7326c6c45a40825c081f99fccdf5142eb5d640e9fafee1a87fac3",
+      "bytes": 4744
+    },
+    "docs/evidence/n71-msi-passive-collector-qualified.json": {
+      "sha256": "94e9b3d51199b4cb575aca39cb86373a3f9e49335d16d6f778b97512d9c8bc23",
+      "bytes": 4301
+    },
+    "docs/evidence/n71-msi-scan-qualification.json": {
+      "sha256": "cad0707fde28e6b501defb5796a695176f0c905b55269023def057f1104cb288",
+      "bytes": 14199
+    },
+    "docs/evidence/n71-of-scope-association-physical.json": {
+      "sha256": "63322d35495ba50a3594f97f33c2ed80accd672512462698481d3db0d1a4d69f",
+      "bytes": 3692
+    },
+    "docs/evidence/n71-of-scope-negative-cleanup.json": {
+      "sha256": "c22458d60f19dd6cb2180da4dc870e3420e67c1f440c42409dd82b6986d10800",
+      "bytes": 3822
+    },
+    "docs/evidence/n71-of-scope-profile-qualified.json": {
+      "sha256": "9fdee8cbefaa1a589545e1160c9d7c2b9f3122e3c6a8543a93f4e8aaa62363fc",
+      "bytes": 1452
+    },
+    "docs/evidence/n71-pci-held-bus.json": {
+      "sha256": "312d52589fc6e6a5e7622620aa63eacfab39d58b11a88ce937c741d60d952689",
+      "bytes": 15103
+    },
+    "docs/evidence/n71-pci-held-caller.json": {
+      "sha256": "5ff425784fa9d4ae919de3a26cf3c29f9faac63ac5d2980ff54ce6c1b28460c8",
+      "bytes": 15698
+    },
+    "docs/evidence/n71-pci-held-parser.json": {
+      "sha256": "43b5e4efd30f0b8aec9832bcfccc15ceb64347c3096757ea45d85a89185a3a00",
+      "bytes": 20849
+    },
+    "docs/evidence/n71-pci-held-profile.json": {
+      "sha256": "dd428f94ef5bcdb78982b6bc8a9f244770fe350c96f6551eab283bcd0035a43a",
+      "bytes": 9442
+    },
+    "docs/evidence/n71-pci-held-session.json": {
+      "sha256": "42a2c912573717b6d555e7cf5e0c1c923b8cf008d80c699a8538ff272e3741f4",
+      "bytes": 18499
+    },
+    "docs/evidence/n71-pci-io16-build.json": {
+      "sha256": "12f773765c7338941f7ba41e2dc8ad9d7fbc709efb81e439cd68931991b2b840",
+      "bytes": 58368
+    },
+    "docs/evidence/n71-pci-io16-physical.json": {
+      "sha256": "4e6b53062755c6f471b1f11ddaa6311f1cdaa970615c535cb95d9fd8652a43ff",
+      "bytes": 4085
+    },
+    "docs/evidence/n71-pci-io16-policy.json": {
+      "sha256": "43ab988decf24c10f9ba8bcbc878cd8b7d15f26614be587d8d21e5803409abba",
+      "bytes": 22750
+    },
+    "docs/evidence/n71-pci-io16-profile.json": {
+      "sha256": "2e3c8b645c66fd1ffc1015b97330a9c931eebe92c13b195e94e3efe5bec7e53e",
+      "bytes": 24071
+    },
+    "docs/evidence/n71-pci-optional-build.json": {
+      "sha256": "f69e47e90d7589214a65a45b5bf18a6bf39fd6ad7b3d6f89a0109866c2d389c4",
+      "bytes": 51492
+    },
+    "docs/evidence/n71-pci-optional-physical.json": {
+      "sha256": "8bd59e2df149cdc301e0730a1f70bb458a1f0de7f8a6bf96427c49d1a02f641b",
+      "bytes": 3774
+    },
+    "docs/evidence/n71-pci-optional-policy.json": {
+      "sha256": "cfc627a937d7e3cce33a28f9a14a79b3c0c3664a5ff0d26fce85c9e802806685",
+      "bytes": 14153
+    },
+    "docs/evidence/n71-pci-optional-profile.json": {
+      "sha256": "972650b0ade4f0f6f7dfef617dcbbc50ba39f48da99d0e11ba539f4160c90c48",
+      "bytes": 20856
+    },
+    "docs/evidence/n71-pci-pref64-build.json": {
+      "sha256": "bb08a813a34444158a1b6262c23de65f996a1de6d19e0ab4097087f6290658d2",
+      "bytes": 56278
+    },
+    "docs/evidence/n71-pci-pref64-physical.json": {
+      "sha256": "38ef62158b2ef1baf4543911c7fd660ff5da82825788391d6185cbf4fd90b532",
+      "bytes": 4665
+    },
+    "docs/evidence/n71-pci-pref64-policy.json": {
+      "sha256": "71cf5295b0cebc10940258f57a3cd69811fd776b9e8ea713fadea29f473cb079",
+      "bytes": 120147
+    },
+    "docs/evidence/n71-pci-pref64-profile.json": {
+      "sha256": "ddc71d0306a7973cb5c739cb8df4e7f72980d25ba22b4c1c17b905d4486313be",
+      "bytes": 42966
+    },
+    "docs/evidence/n71-pci-pref64-unsized-adapter.json": {
+      "sha256": "b2a768fde10d3fba6ff0568118f7581a10a800d75646d91a1d9ec3a694b84445",
+      "bytes": 37321
+    },
+    "docs/evidence/n71-pci-pref64-unsized-build.json": {
+      "sha256": "2c976d8bbaa38137b0dcdd87e6d1a2463d6626af64c871ea1879e87385599424",
+      "bytes": 95746
+    },
+    "docs/evidence/n71-pci-pref64-unsized-physical.json": {
+      "sha256": "a4b34ed0161c7e3e8fbd422901e5e762dfb46ecec51513431fcf06d14db1de53",
+      "bytes": 4986
+    },
+    "docs/evidence/n71-pci-pref64-unsized-profile.json": {
+      "sha256": "a05882e14d38a743b5be79aff278fa58012d834b3eaa5cfabc80c5068341b9b5",
+      "bytes": 49444
+    },
+    "docs/evidence/n71-pci-readback-physical.json": {
+      "sha256": "dd16dd0ac00f6aa9f7520c24541d6ad8e5f6375f784696ee7f9645b18519578b",
+      "bytes": 3366
+    },
+    "docs/evidence/n71-pci-readback-profile.json": {
+      "sha256": "71f57cd97ca9a5e2a2d929762d0355eb0a52e5902e69d87845b2169f114a85ac",
+      "bytes": 13880
+    },
+    "docs/evidence/n71-pci-resource-assignment.json": {
+      "sha256": "5d764660436d5ec7ad494a07913eba3e899c9c978d87357bffd49cc1b558bc49",
+      "bytes": 27768
+    },
+    "docs/evidence/n71-pci-resource-first-physical.json": {
+      "sha256": "5483bb96c9354ef66ee5ec054d83b9d8855bdeeda6b44b922a10775b0fad3472",
+      "bytes": 2909
+    },
+    "docs/evidence/n71-pci-resource-profile.json": {
+      "sha256": "cb3463f0d4b658d7f76c21fb7fb04195f06e5b04c7c1b2669d54f0b4c583fb97",
+      "bytes": 20449
+    },
+    "docs/evidence/n71-pci-resource-readback.json": {
+      "sha256": "74e4eeccb16e9867b27baa67f5e413cf406898d95e92ccd66c2cb0dae2de14c0",
+      "bytes": 45343
+    },
+    "docs/evidence/n71-pci-resource-session.json": {
+      "sha256": "1e910affbc654908042d1d60b79b2f434640bb0a0cf67099d6b6a5cc225863df",
+      "bytes": 14195
+    },
+    "docs/evidence/n71-pci-resource-write.json": {
+      "sha256": "c60bf384be2366d6a923f9069bc45b130689c7bf89ef355ddc5135199c89a453",
+      "bytes": 6530
+    },
+    "docs/evidence/n71-pcie-bar-sizing.json": {
+      "sha256": "29ffe4338960489f7a7ac6bd4d55492fadef3b51fda4b56d25b475d99c4eff9b",
+      "bytes": 2027
+    },
+    "docs/evidence/n71-pcie-bridge-probe-reference.json": {
+      "sha256": "2877ac76f933cfb62c86fd76bbf693df513cd96a5f8aa5ba1d8e13be39f1e5f7",
+      "bytes": 1450
+    },
+    "docs/evidence/n71-pcie-bridge-scan-build.json": {
+      "sha256": "7e222f43bebf0f4e7167e248b4594b114755d4c5b7f9cf03896c09f7ea5d0a26",
+      "bytes": 3113
+    },
+    "docs/evidence/n71-pcie-bridge-scan-first-physical.json": {
+      "sha256": "4dd871cf05850a5a3bf8c49792cd2e6ac8ddf4562b164f3ce268e4226280e591",
+      "bytes": 3203
+    },
+    "docs/evidence/n71-pcie-chip-id-build.json": {
+      "sha256": "bf0e7614097314ab640a28f5623266eb5a547b9ddcf51ad814b3874a709ac9ef",
+      "bytes": 2003
+    },
+    "docs/evidence/n71-pcie-config-inventory.json": {
+      "sha256": "11a4f6b373ce35dc003f9bd9cabe9383fde45584a6efa9e3a8f9a9099c62235d",
+      "bytes": 3277
+    },
+    "docs/evidence/n71-pcie-controls-scan-build.json": {
+      "sha256": "4b31fb6005b85f113e4afc375a5f0376c3bef2a34409e716cfb596bb804126d1",
+      "bytes": 3994
+    },
+    "docs/evidence/n71-pcie-ecam.json": {
+      "sha256": "a13d53df1fc4075a351aabf13924a5176715a11a25bc6d91758a37543ff59587",
+      "bytes": 3107
+    },
+    "docs/evidence/n71-pcie-first-physical.json": {
+      "sha256": "b2bfa804c74272703716901bc84d054cafd45aaa2606a18bfda1d87e1ed79806",
+      "bytes": 1999
+    },
+    "docs/evidence/n71-pcie-host-scan.json": {
+      "sha256": "c00bc24c917405ea3493560d7771748c2815ec1bc6b04fda56bcdf035d683083",
+      "bytes": 2134
+    },
+    "docs/evidence/n71-pcie-intx-scan-build.json": {
+      "sha256": "11019025089947c49526d706b97af40d94974ad877214832cee25f362b115032",
+      "bytes": 3031
+    },
+    "docs/evidence/n71-pcie-intx-scan-first-physical.json": {
+      "sha256": "fcd3e14b307390bad1394039e5b45707c5f7cb464e42abe6a74771da1bc60017",
+      "bytes": 3052
+    },
+    "docs/evidence/n71-pcie-pme-aspm-build.json": {
+      "sha256": "3d347360c9937a396030f5d62ee5cba723ca0d9d6494e6bc705694143d8c7bc1",
+      "bytes": 23753
+    },
+    "docs/evidence/n71-pcie-pme-noop-build.json": {
+      "sha256": "e697928495e358d908fedc0d2cd1efdbd2763e3d4db034f094686ed437e85efb",
+      "bytes": 15776
+    },
+    "docs/evidence/n71-pcie-scan-link-target.json": {
+      "sha256": "ef535ed7c906774c21f0838c71493d87e9bf4d35171048434f37d754758ad1e0",
+      "bytes": 5247
+    },
+    "docs/evidence/n71-pcie-scan-target-build.json": {
+      "sha256": "b98cda2136fb37883a2f2dc83e86350fe02fb43af4e5809dd8bdd81cc223cbad",
+      "bytes": 10691
+    },
+    "docs/evidence/n71-pcie-serr-policy-reference.json": {
+      "sha256": "305d24daa6930b561735dfb82d200cf307967ce7d4bc73957da10a29bc9910cf",
+      "bytes": 816
+    },
+    "docs/evidence/n71-pme-aspm-physical.json": {
+      "sha256": "47b87bcbe24cc9ca8d63b1fc315259fbec94250026fafe8a4fff00aa7a45abfd",
+      "bytes": 13792
+    },
+    "docs/evidence/n71-pme-aspm-session.json": {
+      "sha256": "6923905b1952b8740df0f429376af8a79a3a4ffc300a067d03a7dff8dc366c97",
+      "bytes": 7782
+    },
+    "docs/evidence/n71-pme-first-physical.json": {
+      "sha256": "518f40afda851496644dbc399533dd42f3c265ae40f953746b55e719bc040620",
+      "bytes": 7175
+    },
+    "docs/evidence/n71-pme-scan-session.json": {
+      "sha256": "ab2bce8c62208d071429caf9b8312dcc89d36bdecb78fe115a35ef33102a40b3",
+      "bytes": 7072
+    },
+    "docs/evidence/n71-pmgr-access.json": {
+      "sha256": "768388f19f855e17ac5ab068a7d2b38c6ea7ec5f22411b572dd95e33ba4612d8",
+      "bytes": 2914
+    },
+    "docs/evidence/n71-pmgr-errors.json": {
+      "sha256": "973d6f821f49384157ff238aaa2601bdb78be772d05421918c433244d4fd7dd8",
+      "bytes": 3691
+    },
+    "docs/evidence/n71-pmgr-power-observer.json": {
+      "sha256": "d68686b9588f426caed30b91d19d996fdbe9980ae8f9a600622fd5f3edbd7883",
+      "bytes": 4821
+    },
+    "docs/evidence/n71-pmgr-probe-errors.json": {
+      "sha256": "1ae309fbe38799ba1dad0e22128a4f0f087d91d2e44373874ea68d874cac42f1",
+      "bytes": 3741
+    },
+    "docs/evidence/n71-pmgr-provider-cleanup.json": {
+      "sha256": "5ad40e9b8b575162937df428229a48a84bf090a0f50ce9d8306a18ad2ed0bd00",
+      "bytes": 3506
+    },
+    "docs/evidence/n71-power-diagnostic-gate.json": {
+      "sha256": "819e3a7981653cf377d4778e0d26803db9a7d14f68d2556347e11ae9cea928d1",
+      "bytes": 2693
+    },
+    "docs/evidence/n71-power-integration-gate.json": {
+      "sha256": "b65981698431c5ce1fb95f843a10d737682b9ff5dad7872020a48a9e89b10cd5",
+      "bytes": 2664
+    },
+    "docs/evidence/n71-power-profile.json": {
+      "sha256": "63723916ed5a298ffc9dda29b32e954a6ccf67321e4109b4630d989d9a2332a9",
+      "bytes": 7498
+    },
+    "docs/evidence/n71-power-session-gate.json": {
+      "sha256": "129ac0700e461cd38709ef41a7c483dd85bfbd03c0b6d9437237f93eb004a9c4",
+      "bytes": 6227
+    },
+    "docs/evidence/n71-power2-first-physical.json": {
+      "sha256": "183d8e6faba73db380c90c9767530b531e992425d178bb6fddd8153ed50014cb",
+      "bytes": 28382
+    },
+    "docs/evidence/n71-reg-on-first-physical.json": {
+      "sha256": "947fba51905caef82ff6915e36009819706563e8ea2cc4294bb022779c935e33",
+      "bytes": 2902
+    },
+    "docs/evidence/n71-reg-on-held-history.json": {
+      "sha256": "945deb4ff3347de523fa3bd0eb15a5ed14a0bb580f164d01e4b0451990dfeaac",
+      "bytes": 12869
+    },
+    "docs/evidence/n71-reg-on-latch80-physical.json": {
+      "sha256": "31c72908504cd0ea04b10e83ee12f533151397ecaee16c911828041e8872efdd",
+      "bytes": 2795
+    },
+    "docs/evidence/n71-reg-on-mode1-physical.json": {
+      "sha256": "2711b1eca18f16a3c0af70d71a88e05c71e7de4c7d12e276fd80c9a8094cdede",
+      "bytes": 3076
+    },
+    "docs/evidence/n71-runtime-reference.json": {
+      "sha256": "bd322ef86f33c55f800f122ea7832316e5d51f0a903ad97273bb808a8f466037",
+      "bytes": 2486
+    },
+    "docs/evidence/n71-scan-target-physical.json": {
+      "sha256": "5a031a9f27eb202b29d2c52dc6da4e58e08986fcd3463ecdb54367437daf9569",
+      "bytes": 12586
+    },
+    "docs/evidence/n71-scan-target-session.json": {
+      "sha256": "479606779c8aadc311241ea076dd7caafb8b627ac60a6fb02a56a21d25adfa93",
+      "bytes": 7472
+    },
+    "docs/evidence/n71-serdev-stop-bits.json": {
+      "sha256": "8277d6cdbe67a31ad9236c0fe545535fa312729677d07f6c6b0d420c91391425",
+      "bytes": 3247
+    },
+    "docs/evidence/n71-sn2400-input-reference.json": {
+      "sha256": "380501bf79c3d66fff95fc8fc662e949f7374bdabe210b2f3ef539c25a6b606f",
+      "bytes": 5954
+    },
+    "docs/evidence/n71-topology.json": {
+      "sha256": "597b7251720093764c8ba3070919c33f5deebc9a85b9d1fd80c189d735e38960",
+      "bytes": 3481
+    },
+    "docs/evidence/n71-wifi-binding-modules.json": {
+      "sha256": "a662a39cbdf91e62df86ea8897df9d93302c391ccb5eae4f0d94f628cbfb2453",
+      "bytes": 8105
+    },
+    "docs/evidence/n71-wifi-modules.json": {
+      "sha256": "4845b4a4b09b7de840cb29291c3c1c91b274f106c9268a29269d84b7888bcb7f",
+      "bytes": 4520
+    },
+    "docs/evidence/n71-wlan-aic-reference.json": {
+      "sha256": "07681b926f345c5359d07e8c888dce3170be2403f0666aa02a603decc3aae033",
+      "bytes": 3484
+    },
+    "docs/evidence/n71-wlan-msi-host-qualification.json": {
+      "sha256": "6ba4fa011413f6db6d13e2607391c5fff7128aa3e0cf3753b7e3f01d171894ea",
+      "bytes": 5847
+    },
+    "docs/evidence/n71-wlan-msi-message-qualification.json": {
+      "sha256": "05fd8b42e254d07044bae0cbc90ce85b0a64ae89ec616f9432173465bc759747",
+      "bytes": 3814
+    },
+    "docs/evidence/n71-wlan-msi-native-qualification.json": {
+      "sha256": "2cc3bb932d5d6d464a90270fee977cccea9070de38c1596bd8b8c9fcb87fea9b",
+      "bytes": 7448
+    },
+    "docs/evidence/n71-wlan-power-reference.json": {
+      "sha256": "47f3912545df77269ffac34aad3cf946f4f6a4fd0c3582490daf2f13ba65b25a",
+      "bytes": 8903
+    },
+    "docs/evidence/pongo-source-build.json": {
+      "sha256": "0ecdb3453e7b8e926139c87876de15bb5b0d32bd765ef072752bd9fa1cf4a628",
+      "bytes": 5495
+    },
+    "docs/evidence/pr-review-coverage.json": {
+      "sha256": "3069519b72d00f4cb9f1466bd213fa09a8cfc23bb0ba010175d9975ba0e9e376",
+      "bytes": 32782
+    },
+    "docs/evidence/restore-proof-gates.json": {
+      "sha256": "ddf70b47d400624e5bc4b1812fc01184289a109453e7d67a962640cd6ccec9b4",
+      "bytes": 3277
+    },
+    "docs/evidence/review-proof-gates.json": {
+      "sha256": "c9640daea7a2fd8dd3cdaf76188a624f21a7aa2cfb2d2f69056df4f4c209d043",
+      "bytes": 4057
+    },
+    "docs/evidence/source-chain-pilot.json": {
+      "sha256": "b4eacb4f7b105cb1fc6af93180391e9ef74489378e022947ea3bf4f53c5e6a93",
+      "bytes": 3726
+    },
+    "docs/evidence/storage-boot-n71.json": {
+      "sha256": "72b11bdef3c8fbaa618010d9e616ef9c6a543ec3aca9c4d81f1263dc935c21bb",
+      "bytes": 6962
+    },
+    "docs/evidence/wifi-n71-path.json": {
+      "sha256": "70fadbf44511d5b29e4e270f3b336a427ec2a550c83c3bc025ba7920eb0fe350",
+      "bytes": 8392
+    },
+    "docs/evidence/wifi-runtime.json": {
+      "sha256": "a914e8b3feffb9eb73f89bf4ac13472172a6896600188cf340d6e524c4bc5607",
+      "bytes": 1077
+    },
+    "docs/evidence/windows-dns-fixture.json": {
+      "sha256": "150d6781421fc1f4ae963dfc32e515dd7bb8575c102d6e176174fdf4354477ca",
+      "bytes": 12823
+    },
+    "docs/evidence/windows-dns-physical.json": {
+      "sha256": "c025c7b106b18fd36f65fa7333234f0a3ce1c39c5c00f99f9dfea744309bed18",
+      "bytes": 4017
+    },
+    "docs/evidence/windows-dns53-client.json": {
+      "sha256": "de3091be029eb12d44db63e3fc6f4c3fbc0be05d2a48516edbbe79da7af719ba",
+      "bytes": 4801
+    },
+    "scripts/boot/boot_tools.py": {
+      "sha256": "c6c0becd81535fbc458a680f99fdeaedfc3a193e4c5d8904e3e7138d32d074bb",
+      "bytes": 1766
+    },
+    "scripts/boot/dfu_boot.py": {
+      "sha256": "6303010ed342e0d4d558b57b2e93efdd4b4a7e9c02632ee94d70c06c1fd13b89",
+      "bytes": 4030
+    },
+    "scripts/boot/dfu_state.py": {
+      "sha256": "2e4824c415caa05e76151981950b18483920caea160d016ca40fab3fcaf94215",
+      "bytes": 1133
+    },
+    "scripts/boot/pongo_select.py": {
+      "sha256": "9fe374d4bb7617125945c2598b4650de9c1015427e45e87f53b026bbb5ad82f5",
+      "bytes": 1657
+    },
+    "scripts/build/build-dns-runtime.py": {
+      "sha256": "f7fd562358838faf51e605504b9f97767d08d505f654cda85cd85a4fb945ce63",
+      "bytes": 5846
+    },
+    "scripts/build/build-n71-wifi-modules.py": {
+      "sha256": "8563465479a2e156b081d99b97f437d56023733c2038b54df9c550c15eaf703f",
+      "bytes": 12223
+    },
+    "scripts/build/build-runtime.py": {
+      "sha256": "e4cf0c0871557ea8bb56ccc12f008ef629af1800a8aff0293bcde025f3ead29d",
+      "bytes": 4179
+    },
+    "scripts/build/compose-n71-diagnostic.py": {
+      "sha256": "c797d15a64348456803095050586c59c94e54ec70c13fa57531843b0c2599576",
+      "bytes": 13638
+    },
+    "scripts/build/compose-payload.py": {
+      "sha256": "55f3de81f0f656fc08de87de25b96299c2e94ce2b0ec8cb2f63f5267231c43ec",
+      "bytes": 3002
+    },
+    "scripts/build/integrate-source-kernel.py": {
+      "sha256": "c775173d3f0782387ac4374c675efc08a6833556662e1912fbd926e56ecd9f8b",
+      "bytes": 12044
+    },
+    "scripts/build/kernel_bundle.py": {
+      "sha256": "807bfc3a59801a2703b1135fc3887a2873b25cc2e05b10de9c9cd0bd89d8ed64",
+      "bytes": 7424
+    },
+    "scripts/build/kernel_patchset.py": {
+      "sha256": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817",
+      "bytes": 5466
+    },
+    "scripts/build/prepare-n71-pcie-diagnostic.py": {
+      "sha256": "0d95c6d234a6b864efc1bddec509c246a17dd0ce53146014d52cb52c9c13c7e7",
+      "bytes": 6840
+    },
+    "scripts/build/prepare-n71-topology.py": {
+      "sha256": "a9eba794589d8d135ea9a3734da9b6a91b75113192625b4e6009e0b82779afb9",
+      "bytes": 13531
+    },
+    "scripts/build/rebuild-loopback-initramfs.py": {
+      "sha256": "9a371a98209c9daf994bf86295587d7d6c5d8d87969ad758302a2cd2780eb5b8",
+      "bytes": 3215
+    },
+    "scripts/build/rebuild-usb-budget.py": {
+      "sha256": "0223ac773be773cf557e2e5f2e2586442c2590c88e41e79e36f1dfcdbe280b2c",
+      "bytes": 5454
+    },
+    "scripts/build/verify-pongo-build.py": {
+      "sha256": "0a6b9cb5f5c156e46b47117361e68b334a193f17e5de7adf1307340da7ccfd7f",
+      "bytes": 4062
+    },
+    "scripts/ci/check-public.py": {
+      "sha256": "d752113fb5fea74850937cc1ec601f9776c7b86b8d8ae404fcab5772ea075d33",
+      "bytes": 2132
+    },
+    "scripts/host/autosnap.py": {
+      "sha256": "46082e1d99b0e53b30b110fccdaf2759959766ab77b308990ccc399f12ed5ac9",
+      "bytes": 5060
+    },
+    "scripts/host/dev.py": {
+      "sha256": "3393ebcedb693c08156fe9ebfaba943cfe7a0d9197cf967ffdfc18dd3ee16436",
+      "bytes": 10860
+    },
+    "scripts/host/device_profile.py": {
+      "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb",
+      "bytes": 6526
+    },
+    "scripts/host/dns.py": {
+      "sha256": "35548ad3a268826cdce0aa89180714ba550e4957dad2efc5261fd0ec8a5214c5",
+      "bytes": 6981
+    },
+    "scripts/host/dns_activation.py": {
+      "sha256": "513b3b79b6b560c083b17ee5f1b958cfcc58cd0eba1358ec5900a068bf7562c3",
+      "bytes": 8755
+    },
+    "scripts/host/dns_lan.py": {
+      "sha256": "cb0744bf8847fb957677a4cbdd6359866eeaaf8e2b86858840c24ad7dbafee48",
+      "bytes": 6170
+    },
+    "scripts/host/dns_privileged.py": {
+      "sha256": "150be73f7ca85c320eaa068a184c18e5c237b7ee91b706f6e9c6e0994aff0f13",
+      "bytes": 5766
+    },
+    "scripts/host/dns_transport.py": {
+      "sha256": "435560b6498f31f600d5ca51d292e5e86bf223f7dc45686fb8be0e3420d9190b",
+      "bytes": 1851
+    },
+    "scripts/host/herdr.py": {
+      "sha256": "13b1e6326b43988f40d47e7ab2d3567ed0571f81cb5e25509d8f158993663fe1",
+      "bytes": 5754
+    },
+    "scripts/host/lan.py": {
+      "sha256": "962d0b4f251c43cae9b6d105edaf529be02f929664f491c3599c7a29bdb7e7d7",
+      "bytes": 2897
+    },
+    "scripts/host/n71-link-session.py": {
+      "sha256": "6ef7b5da6a5953660a44fb53a31e5333f269c3469102501388b5f2a5d2288dc9",
+      "bytes": 36101
+    },
+    "scripts/host/n71_bar_result.py": {
+      "sha256": "77f0046bf9589c4f530813724a1b65678ee1afef7bb44680ac0de56cd76b0e80",
+      "bytes": 3096
+    },
+    "scripts/host/n71_chip_result.py": {
+      "sha256": "5635ff77403a8b9211be1909fac6228bf25c75b548a6962ec4b7fc42ecf0a511",
+      "bytes": 2166
+    },
+    "scripts/host/n71_dart_cycle_result.py": {
+      "sha256": "571fa7e2318a916da1c24eb0830cac86445e9e05e9d101534e1a4056acab0c9f",
+      "bytes": 4562
+    },
+    "scripts/host/n71_dart_result.py": {
+      "sha256": "98d707949851b9e7a2bee6d01300d2c46a442edc6d815a91272bb85b45a87ade",
+      "bytes": 3171
+    },
+    "scripts/host/n71_driver_runtime_recovery.py": {
+      "sha256": "ddc324f05416a04942380973a0bc428ee6f05c380a6a48a02a8906dadc08eb58",
+      "bytes": 8132
+    },
+    "scripts/host/n71_driver_runtime_result.py": {
+      "sha256": "7d60b09aaa1f6ab9b4a521eab9c48825a371e15b07ea14bf8bceee92a594825a",
+      "bytes": 10036
+    },
+    "scripts/host/n71_driver_runtime_stage.py": {
+      "sha256": "971094eda9557790a2aa79cdf9c3499c574304a7ddc040248756e18786aa101a",
+      "bytes": 11644
+    },
+    "scripts/host/n71_held_history.py": {
+      "sha256": "88d4426778ff328e81b8b6a00bf7035d1c2aa165ee9f03234640c635db3a431d",
+      "bytes": 1042
+    },
+    "scripts/host/n71_held_session.py": {
+      "sha256": "850e12637f6a44595c9e57c062cbaac983b0a3a11d894de3f05a6b1ecf2e18b0",
+      "bytes": 23838
+    },
+    "scripts/host/n71_iommu_build.py": {
+      "sha256": "eebe9b931124d0d164c83e8d4b580791aca6314ed2df3e96428f0b9d75a28b32",
+      "bytes": 6203
+    },
+    "scripts/host/n71_iommu_result.py": {
+      "sha256": "daf748c21fc072692aa95ec13db358225e5f3f9b0db9d4b85d01f551f1d5004c",
+      "bytes": 19001
+    },
+    "scripts/host/n71_msi_allocation_result.py": {
+      "sha256": "1a43990d1914d9d1c7876d9fd145720d88dd554fa04e4e52c86622f41af3e102",
+      "bytes": 2737
+    },
+    "scripts/host/n71_resource_build.py": {
+      "sha256": "6066fad1b2679c39a480d527f713635ab7834b241febccdf5b5ed4202bade3f5",
+      "bytes": 12165
+    },
+    "scripts/host/n71_resource_io16.py": {
+      "sha256": "c27f560ea0128bb7e02c2a8266edccdf4ffe0b1650bc5833508415f273be0222",
+      "bytes": 2184
+    },
+    "scripts/host/n71_resource_optional.py": {
+      "sha256": "7f91963a533aa5c1175b0d3867244e0b994e42a5afd69860314dd5aa59ab6250",
+      "bytes": 2192
+    },
+    "scripts/host/n71_resource_pref64.py": {
+      "sha256": "4353075dd2786ee09804273aa8cff1921a793dbbd429b33d1604d389237d3d61",
+      "bytes": 2288
+    },
+    "scripts/host/n71_resource_readback.py": {
+      "sha256": "24b2106e05d9832de66ae6b6bf291358ac385a6ff79108871b9b08d5b1b261f9",
+      "bytes": 4517
+    },
+    "scripts/host/n71_resource_result.py": {
+      "sha256": "c7d55854ecf98a9af23dd9febe69471e983ee400c892accb2bbe3361c891773d",
+      "bytes": 12315
+    },
+    "scripts/host/n71_resource_stage.py": {
+      "sha256": "6af546aa1a83344e25adba50878dd5b40568c3b74fea76e481f4ba107b4e514c",
+      "bytes": 10084
+    },
+    "scripts/host/n71_scan_held_result.py": {
+      "sha256": "70612133fb02d26a4cceaddde01c4777f22c070c20fc69b61e439e13573f2e3d",
+      "bytes": 10863
+    },
+    "scripts/host/n71_scan_pme_result.py": {
+      "sha256": "ea08620386e7c65de46b4b2a753ce0365bfce81e4c204c797ba7fb8c84e72590",
+      "bytes": 2959
+    },
+    "scripts/host/n71_scan_result.py": {
+      "sha256": "051615003afa1eb7091d5f2a73d931958e3463a407a1efc7cc5390c61a53a58f",
+      "bytes": 3702
+    },
+    "scripts/host/n71_scan_target_result.py": {
+      "sha256": "37f2e7ce6fab4c26231097c7591d5bc7e9909c848e377b6a87c3c427d38afe7e",
+      "bytes": 4066
+    },
+    "scripts/host/n71_session_history.py": {
+      "sha256": "4f6760e9b125cbcb7434631a91d2d88e59be53e29b6d889aad865855a70797bc",
+      "bytes": 2725
+    },
+    "scripts/host/persist.py": {
+      "sha256": "fbdea22d81619ac3ad874089a7dc3f07a1e7c5f30eb6de5f16f42153ac5b4747",
+      "bytes": 12562
+    },
+    "scripts/host/profile_image.py": {
+      "sha256": "19d4610eeb44ba50d9c29267e1b3bba250a03bb30e8f9a0e0d99abc4533fd427",
+      "bytes": 4463
+    },
+    "scripts/host/restore_journal.py": {
+      "sha256": "8b475eab521ad7fb5c41a3c881f2de3d6ab580b5fff17e624f1c0166248fedb4",
+      "bytes": 3265
+    },
+    "scripts/host/return_ios.py": {
+      "sha256": "1270d88375250eba01c169650e04555f18a1454a7f7cdae6b80ffdaf8609f2b5",
+      "bytes": 5247
+    },
+    "scripts/host/snapshot_lock.py": {
+      "sha256": "c0196820353642da9fc56b5ee1e133d99764a36c3c76707c59b5805a97d4be72",
+      "bytes": 1914
+    },
+    "scripts/host/snapshot_retention.py": {
+      "sha256": "f81d3770665ac9542022ab4f5f4f7d948cb01f112d812ebcad65ada30da470a3",
+      "bytes": 5390
+    },
+    "scripts/host/usb-shell.py": {
+      "sha256": "c3faa3dc2bdbc0f4d6bb7dacaf8c6e073b820978cf0d5e04370f15a19fcb5c45",
+      "bytes": 4794
+    },
+    "scripts/research/apple-n71-kernel.py": {
+      "sha256": "ccbe6cf8cbbeb97c51ee77e8e23752329a2c9ce51c5f9fba6790b8558c3460ce",
+      "bytes": 5903
+    },
+    "scripts/research/apple-n71-map.py": {
+      "sha256": "00585ddb9504af8f2cba7cd4d25ba825f03c084df80457d7e56120d28d7d863d",
+      "bytes": 9005
+    },
+    "scripts/research/apple_kernel_format.py": {
+      "sha256": "ec132dcaa51cbd009f269063172dd0c17fa96774d89d86c8d19c868b754d4963",
+      "bytes": 3775
+    },
+    "scripts/research/n71_runtime_tunables.py": {
+      "sha256": "6be603cbcdacc6974f4d472a4bef751a9b707de9038366cb66127136778ec3e7",
+      "bytes": 6395
+    },
+    "scripts/research/pongo-n71-reference.py": {
+      "sha256": "b020c5742784ea13baa689d91876dae0da692ccdc05360ebda7765e80d032186",
+      "bytes": 4966
+    },
+    "tests/test_n71_bar_result.py": {
+      "sha256": "f509d2e1d90befab0557d6c1b9bc307a35b3e7a330d10b9a7f35e7ac864fb60c",
+      "bytes": 3647
+    },
+    "tests/test_n71_chip_result.py": {
+      "sha256": "5a3983443cafca968d85f9bd920ebc2ba8a06a7697dc6094595c44d1e37a5c62",
+      "bytes": 3104
+    },
+    "tests/test_n71_dart_cycle_result.py": {
+      "sha256": "0d6828f3bad0896da06f5fdacd2e15c224804a56aa279013867bc04ee15099be",
+      "bytes": 5529
+    },
+    "tests/test_n71_dart_result.py": {
+      "sha256": "f52ca466fa8bcf8b2dc7aac6f3b109ea40a4bf6b50c2e8bbe289a0f346bb3038",
+      "bytes": 4910
+    },
+    "tests/test_n71_driver_runtime_continuation.py": {
+      "sha256": "4d3d45c14ca29f26e1c4230a33c0c990d0684161f3cadf4ae71d62d1b3516dbc",
+      "bytes": 13655
+    },
+    "tests/test_n71_driver_runtime_recovery.py": {
+      "sha256": "742ce9d29e6470a904229a3ea642197396c5fdf96b2f0ca83e558f4f81cbf5e3",
+      "bytes": 18115
+    },
+    "tests/test_n71_driver_runtime_result.py": {
+      "sha256": "837181e7f6e7588aa5d64426f370858aea0b80c7814f6bf6149de67917dfd4f4",
+      "bytes": 17701
+    },
+    "tests/test_n71_driver_runtime_stage.py": {
+      "sha256": "47d9fc35ff49c1fcb2516a88535a953e4b571d51ac8c380e50ebf04d3623460e",
+      "bytes": 20608
+    },
+    "tests/test_n71_held_history.py": {
+      "sha256": "79bc45b1aab11ff12b93a119151adb60d051e5bc7c0d82ed88b1533abd8ad230",
+      "bytes": 6830
+    },
+    "tests/test_n71_held_session.py": {
+      "sha256": "4b4881055dc4d9d294f5460b7a7b976a258d084c414c10e2f727b890400c84a5",
+      "bytes": 44443
+    },
+    "tests/test_n71_iommu_result.py": {
+      "sha256": "a6b46be6ef02cb815e77cfc302ea2c0206287421275f8a4c22a529faee67ccd9",
+      "bytes": 44877
+    },
+    "tests/test_n71_link_session.py": {
+      "sha256": "93732109d4e8c33ecbabbbb9d7c65b0c45c07a362ab0a78271c0b09229537d90",
+      "bytes": 72368
+    },
+    "tests/test_n71_msi_allocation_result.py": {
+      "sha256": "373c76a0ba5b25284d7566bf181bd4224704f3aa0fc9c2ebfa79ed6442f05ea9",
+      "bytes": 10153
+    },
+    "tests/test_n71_resource_result.py": {
+      "sha256": "7d51e8235acddfae764268a0ff41803bf5a31ed57a702be5bcd23242fc866e85",
+      "bytes": 23088
+    },
+    "tests/test_n71_resource_stage.py": {
+      "sha256": "a1880293791c3bfcbd85c58aacc2edf3b52c3751fdc873ee41fb34972a106b87",
+      "bytes": 35675
+    },
+    "tests/test_n71_scan_held_result.py": {
+      "sha256": "9a2df80fe4374074efe2c8e5b9332cc6a102f85b1a44189e9118884225b9ab57",
+      "bytes": 19857
+    }
+  },
+  "mac": {
+    "input_count": 270,
+    "ast": true,
+    "stages": {
+      "driver-recovery": {
+        "exit": 0,
+        "seconds": 0.76,
+        "tests": 12,
+        "assertion_mutations": 10,
+        "log_sha256": "579259915d365750bea22c7ee0e87fdbabfe6930f7fa80e23fa31b03c4a77716"
+      },
+      "driver-continuation": {
+        "exit": 0,
+        "seconds": 0.66,
+        "tests": 8,
+        "assertion_mutations": 17,
+        "log_sha256": "e6e909ee4f7a094f3fdfa9e18aa4c2684c5a8f655151efc3904e227d07444d35"
+      },
+      "driver-journal": {
+        "exit": 0,
+        "seconds": 1.59,
+        "tests": 10,
+        "assertion_mutations": 15,
+        "log_sha256": "996841681f5cc9e8d96c4b0b650cd06205953e981e480955bd5ddb015903e97e"
+      },
+      "driver-result": {
+        "exit": 0,
+        "seconds": 0.66,
+        "tests": 8,
+        "assertion_mutations": 22,
+        "log_sha256": "961af071a5418071fb87b30553dbcaca322293de53865ff4069eaddcdcfe7d68"
+      },
+      "iommu": {
+        "exit": 0,
+        "seconds": 21.97,
+        "tests": 21,
+        "assertion_mutations": 53,
+        "log_sha256": "7fd123467c5767a8896f8aecf2ffefb862eb8a5a40b19354898fda425240f4d9"
+      },
+      "msi-getter": {
+        "exit": 0,
+        "seconds": 0.37,
+        "tests": 7,
+        "assertion_mutations": 16,
+        "log_sha256": "989b0ccc1ac2ab1f81c7d1e847848d23d2fe6e18e96ab8aedb8fe2db7445d411"
+      },
+      "held": {
+        "exit": 0,
+        "seconds": 39.51,
+        "tests": 21,
+        "assertion_mutations": 30,
+        "log_sha256": "71b007b127cd380cda78afb7dcd99bef2b371d059f392ca50b241ef568ba4f72"
+      },
+      "resource": {
+        "exit": 0,
+        "seconds": 33.93,
+        "tests": 16,
+        "assertion_mutations": 26,
+        "log_sha256": "0a5c99028c157876a5d5336c286a39994c3eb61380b6f6140eb00e5503ef7c6e"
+      },
+      "history": {
+        "exit": 0,
+        "seconds": 1.72,
+        "tests": 7,
+        "assertion_mutations": 7,
+        "log_sha256": "f6e1e2f25416eada4e01787f12535d9b441eaaf1d2c211070a1334d53455b879"
+      }
+    },
+    "iphone_accessed": false,
+    "lint": true,
+    "inputs_preserved": true,
+    "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "ubuntu_arm64": {
+    "input_count": 270,
+    "ast": true,
+    "stages": {
+      "driver-recovery": {
+        "exit": 0,
+        "seconds": 1.8,
+        "tests": 12,
+        "assertion_mutations": 10,
+        "log_sha256": "35af2f0f11a1dcd14e1bc758e5de93f2b08e6b759bb2aa8ba13615ceb677b6f3"
+      },
+      "driver-continuation": {
+        "exit": 0,
+        "seconds": 0.75,
+        "tests": 8,
+        "assertion_mutations": 17,
+        "log_sha256": "c97a6441ab58adacb116011a4bbb01e22a5be72c206f7f8d6a3d0d031cb7bb1c"
+      },
+      "driver-journal": {
+        "exit": 0,
+        "seconds": 1.69,
+        "tests": 10,
+        "assertion_mutations": 15,
+        "log_sha256": "6f76d9c943dfba4ea575da21f2862a82ee8e129a7c93d1dafc9ff1d951b8766d"
+      },
+      "driver-result": {
+        "exit": 0,
+        "seconds": 0.22,
+        "tests": 8,
+        "assertion_mutations": 22,
+        "log_sha256": "1e8f5cc707ce03a5f0188b1dd56b1fe9c4a78ce6e248baf201e4a797b6e1e6e9"
+      },
+      "iommu": {
+        "exit": 0,
+        "seconds": 31.28,
+        "tests": 21,
+        "assertion_mutations": 53,
+        "log_sha256": "d7ebb6294cb262db7605d00585c03e241327b3680c70249f0be092054bd06ffe"
+      },
+      "msi-getter": {
+        "exit": 0,
+        "seconds": 0.11,
+        "tests": 7,
+        "assertion_mutations": 16,
+        "log_sha256": "a879b9e4f37fb87ead704b02c48015d827eeddf40ea3f6f121ae966cd17e9edd"
+      },
+      "held": {
+        "exit": 0,
+        "seconds": 20.9,
+        "tests": 21,
+        "assertion_mutations": 30,
+        "log_sha256": "d75713d572bcece29a02f5b4c541ddf6d3a19b212331d11291476b3bddb42883"
+      },
+      "resource": {
+        "exit": 0,
+        "seconds": 23.16,
+        "tests": 16,
+        "assertion_mutations": 26,
+        "log_sha256": "83734b67054af01ca1ebf43573997176694095e9dd1498e44e795bd910be57d1"
+      },
+      "history": {
+        "exit": 0,
+        "seconds": 2.47,
+        "tests": 7,
+        "assertion_mutations": 7,
+        "log_sha256": "a2f58276355b1dc84be18b4d48085741f6355806426c4a19b7e39e2a2bde10f6"
+      }
+    },
+    "iphone_accessed": false,
+    "lint": true,
+    "inputs_preserved": true,
+    "lint_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "tests_per_platform": 110,
+  "assertion_mutations_per_platform": 196,
+  "contracts": [
+    "source identity, private files, registered hashes and existing checkpoint validated before live read",
+    "fresh same-boot complete snapshot; module hashes and immutable parameters verified",
+    "pending native outcome reconciled as observed with no invented SSH exit",
+    "orphan proof remains unchanged and cannot authorize completion",
+    "old or absent checkpoint replaced only in a private exclusive validated copy",
+    "history checked from intent, not from a checkpoint that may already contain its outcome",
+    "partial owners and first cause retained; no setter replay",
+    "registered direct proofs keep their original validated transport result",
+    "legacy loader and refusal behavior preserved"
+  ],
+  "reused_kernel": {
+    "input_count": 69,
+    "inputs_preserved": true,
+    "scenarios_per_platform": 575,
+    "assertion_mutations_per_platform": 455,
+    "rebuild_required": false
+  },
+  "limits": {
+    "recovery_without_native_result_permitted": false,
+    "all_module_load_unload_crash_windows_recoverable": false,
+    "unload_cleanup_coordinator_qualified": false,
+    "profile_or_cli_enabled": false,
+    "iphone_accessed": false,
+    "physical_wifi_verified": false,
+    "physical_irq_or_dma_verified": false,
+    "physical_battery_or_charging_verified": false,
+    "typechecker_configured": false,
+    "global_packages_installed": false
+  },
+  "reproduction": "docs/N71_BRCMFMAC_RUNTIME.md#recupera\u00e7\u00e3o-read-only-de-intentcheckpoint--fase-b2b1"
+}

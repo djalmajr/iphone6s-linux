@@ -1,0 +1,43 @@
+{
+  "format": 1,
+  "status": "selected_abi_and_payload_contract_verified_no_real_composition",
+  "selected_profile": "n71-dart-serdev-power-v1",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power1",
+  "known_release_count": 3,
+  "tests": 5,
+  "source_mutations": 6,
+  "native_platforms": [
+    "macOS ARM64",
+    "Ubuntu ARM64"
+  ],
+  "input_hashes": {
+    "scripts/build/compose-n71-diagnostic.py": "7bdecaf4f6dc58c07ff2d842d0103ed1249a4433179b24e177803e013f2a5efc",
+    "scripts/build/integrate-source-kernel.py": "9b38c82c5665d6b955fefeda3d1360b636af640115157d1fb4d96525047e13ae",
+    "scripts/build/kernel_bundle.py": "9aa13bc126ff7776261e542185ba9db2d17be3a1e7516ebf4e4e1f55e6b4143a",
+    "scripts/build/kernel_patchset.py": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817",
+    "scripts/build/prepare-n71-pcie-diagnostic.py": "0d95c6d234a6b864efc1bddec509c246a17dd0ce53146014d52cb52c9c13c7e7",
+    "scripts/build/prepare-n71-topology.py": "9aa9ecae3a25a340e76a2aab270288e13741012671b0bd9b435c6f7d7adf01b7",
+    "scripts/research/n71_runtime_tunables.py": "6be603cbcdacc6974f4d472a4bef751a9b707de9038366cb66127136778ec3e7",
+    "scripts/host/device_profile.py": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb",
+    "scripts/host/profile_image.py": "19d4610eeb44ba50d9c29267e1b3bba250a03bb30e8f9a0e0d99abc4533fd427",
+    "tests/test_n71_diagnostic_payload.py": "6b277cef888a20db90e08af1ad0036a4afd1196128fb9e4f3d401e2ba6b40210",
+    "tests/run_n71_diagnostic_payload_mutations.py": "852011774b3e7ecfe862ca6d6b9c2e45caf27ed503678fcf7e2b43e5be12e1e4",
+    "tests/test_n71_pcie_diagnostic.py": "45fc388ad895ef1658dcb50db388f33f10e0814ae9452c37d4cabc896da37779",
+    "tests/test_n71_topology.py": "e034af6f8152af0f0ecc281624d344130d3d5ae97a7c08237ed5cad2db6f7060",
+    "tests/test_n71_runtime_tunables.py": "6dbcb406aaf27b68d7a6c116d1377da49932a8a30d6b34bb60d897fc2a2c0744"
+  },
+  "logs": {
+    "mac-diagnostic-gate-private.log": "bcfc9fabfed8432774d917e5cc9efe3dcda34f3c793e40964e2e88e59b674366",
+    "arm64-diagnostic-gate-v2-private.log": "bcfc9fabfed8432774d917e5cc9efe3dcda34f3c793e40964e2e88e59b674366"
+  },
+  "python_ast_and_lint_passed": true,
+  "all_cross_abi_pairs_refused": true,
+  "unknown_and_plus_releases_refused": true,
+  "exact_payload_and_dtb_boundary_preserved": true,
+  "default_profile_preserved": true,
+  "real_profile_composed": false,
+  "physical_boot_tested": false,
+  "phone_driver_modified": false,
+  "linux_charging_validated": false,
+  "limits": "Synthetic ABI/payload/DT contract only. Real full Image, rebuilt modules, composition and physical charging/Wi-Fi remain independent requirements; no USB or hardware writes."
+}

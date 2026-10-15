@@ -1,0 +1,52 @@
+{
+  "format": 1,
+  "status": "diagnostic_mutation_copy_dependency_fixed_local_and_remote_ci_accepted",
+  "fix_commit": "234b6ec567fc1377bcfd0cb6bcda2a31a83e7911",
+  "failed_ci_head": "0c61631c4f4db066af1145ff22c3e8781929938f",
+  "failed_ci_runs": [
+    38097729077,
+    38097726625
+  ],
+  "cause": "Missing n71_runtime_source_reference.py in public disposable mutation copy; ModuleNotFoundError is not a kill",
+  "inputs": {
+    "tests/run_n71_diagnostic_payload_mutations.py": {
+      "bytes": 7323,
+      "sha256": "de8262eea875f97834840c3d680ecdfa761253092510cf173d7a0661d753b6bf"
+    },
+    "scripts/host/n71_runtime_source_reference.py": {
+      "bytes": 2673,
+      "sha256": "6b976a234e1fadc78b08a8bc6ba9a38b8486a8aa1bfc95aff96143f1d31c287a"
+    },
+    "scripts/host/device_profile.py": {
+      "bytes": 6526,
+      "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+    }
+  },
+  "public_copy_inputs_verified": 746,
+  "mac": {
+    "baseline_tests": 22,
+    "runner_assertion_mutations": 34,
+    "readback_assertion_mutations": 3
+  },
+  "arm64": {
+    "baseline_tests": 22,
+    "runner_assertion_mutations": 34,
+    "readback_assertion_mutations": 3
+  },
+  "ast": "passed_both",
+  "fatal_lint": "passed_both",
+  "python_typechecker": "not_configured",
+  "unchanged_evidence_reused": [
+    "66-test/70-assertion runtime source matrix",
+    "I2C transport/controller/caller and module builds"
+  ],
+  "production_guards_or_artifacts_changed": false,
+  "phone_actions": false,
+  "issue43": "closed_after_source_qualification_ci_no_physical_claim",
+  "ci": {
+    "head": "f9747f1004df463a13336a9ccd68802354f4818e",
+    "pr_run": 38099429237,
+    "push_run": 38099425942,
+    "successful_terminal_jobs": 6
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "format": 1,
+  "date": "2026-10-02",
+  "board": "N71 / S8000",
+  "kernel": "7.2.0-iphone6s-source",
+  "dfu_count": 1,
+  "original_module_sha256": "7684577acc5de5578acce47ae99d0955188cdcdecb0c0ed48e423fc5d3557279",
+  "shared_mfd_observation_module_sha256": "fdf7ba25cc5b5a74f4ca581530780596b0237c57d6f613e73831be2135b7fb8d",
+  "corrected_mode_module_sha256": "92aefccc9c5992f50abb4df350c181d7a2eab71ba4413d5089c3b435f5c3dcca",
+  "physical": {
+    "ssh_http": "passed",
+    "restore": "44 entries; Herdr started",
+    "initial_driver_refusal": "EBUSY; exact PMIC client already owned by simple-mfd-i2c",
+    "parent_driver": "simple-mfd-i2c",
+    "parent_children": [
+      "rtc@500",
+      "nvmem@5000"
+    ],
+    "module_update_same_boot": true,
+    "regmap_read": "passed; exact known parent driver/map; no rebind",
+    "reg_on_control_hex": "00",
+    "reg_on_bit0": 0,
+    "old_guard_compatible": false,
+    "reg_on_value_write_performed": false,
+    "activation": "not attempted; old guard refused00",
+    "new_pcie_attempt": "not attempted without a qualified activation",
+    "dma_radio": "not enabled",
+    "power_off_check": "active=0 restore_pending=0",
+    "diagnostic_unload": "passed",
+    "parent_preserved_and_http_after_unload": true,
+    "hdq_i2c1_status": "disabled",
+    "hdq_uart5_status": "disabled",
+    "power_supply_entries": 0,
+    "backup_sync": "verified",
+    "software_ios_usb_return": "not confirmed within60s",
+    "physical_ios_return": "operator confirmed lock screen after manual fallback",
+    "ios_usb_after_fallback": "not enumerated at final read; Lightning reconnection requested",
+    "battery_post_percent": null,
+    "charging_validation": "unverified",
+    "wifi_validation": "unverified"
+  },
+  "software": {
+    "corrected_mode_module_build": "ARM64/Werror/modpost; exact ABI",
+    "corrected_mode_native_contracts": "Mac and ARM64 passed",
+    "mode_contract_assertion_mutations": 10,
+    "power_sequence_assertion_mutations": 7,
+    "corrected_mode_physical_load": false
+  },
+  "next_gate": "Observe correct GPIO10 control914 with the corrected module before any activation; require qualified mode/owner, readback and GPIO status before PCIe",
+  "raw_evidence": "Private logs and artifacts only; no identifiers, keys, raw tunables, firmware or disassembly published",
+  "retrospective_address_correction": {
+    "observed_control_register_hex": "8fc",
+    "correct_gpio10_control_register_hex": "914",
+    "reason": "Inverted CSEL source interpretation in the original contract; LO selects 900+2*pin for GPIO10",
+    "physical_reg_on_control_validation": "not proved; old control observations/writes were at the wrong mapped address",
+    "gpio_status_187_bit2": "separate read-only mapping; unchanged by the control-address correction",
+    "historical_results": "retained; do not replay these modules or infer GPIO10 mode from the 8fc readback"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "endpoint_identified": true,
+  "cleanup_verified": true,
+  "wifi_verified": false,
+  "hdq_io_performed": false,
+  "dma_enabled": false,
+  "link": {
+    "error": 0,
+    "port88": "00000005",
+    "reads": 12
+  },
+  "endpoint_id": "43a314e4",
+  "inventory": {
+    "class_revision": 41943048,
+    "header": 0,
+    "subsystem": 285085803,
+    "command_status": 1048576,
+    "interrupt": 256,
+    "reads": 19,
+    "capabilities": 4,
+    "bars_raw": [
+      4,
+      0,
+      4,
+      0,
+      0,
+      0
+    ],
+    "capability_headers_raw": [
+      172,
+      131088,
+      88,
+      8939525,
+      0,
+      0
+    ]
+  },
+  "dart_cycle": {
+    "error": 0,
+    "snapshots": 4,
+    "reads": 152,
+    "guards": 156,
+    "quiet": 17,
+    "writes": 16,
+    "attempted": 1,
+    "stopped": 1,
+    "restored": 1,
+    "control_changed": 0,
+    "provider_initialized": true,
+    "ttbr_words_restored": 16,
+    "ttbr_sha256": "034006f39d54ba2f616bbc29363a4e314d6638994771340ec71ee49616b004e3",
+    "command": 3842,
+    "fault_raw": 256,
+    "dma_enabled": false
+  },
+  "cleanup_errors": [],
+  "format": 1,
+  "status": "physical_provider_initialized_removed_and_full_table_restored_no_dma",
+  "module_sha256": "e78a3c865ad4bcc380901d8595c4396eb5f1a88ba2269bec3fc451c4ef5374ea",
+  "new_dfu_for_cycle": false,
+  "kernel_image_changed": false,
+  "dtb_changed": false,
+  "of_status_changed": false,
+  "ssh_http_after_cleanup": true,
+  "snapshot_after_cleanup": true,
+  "provider_device_after_cleanup": false,
+  "provider_irq_handler_after_cleanup": false,
+  "ttbr_values_published": false,
+  "irq_delivery_verified": false,
+  "radio_firmware_loaded": false,
+  "private_log_sha256": {
+    "preflight-private.log": "db92c666378174cc41e14fda79f09d9cf5553828c9d91db61cc448a191925cda",
+    "pcie-private.log": "d91f31393cb49640b35bd07b6e4f9b9c22ad8fefeda418fe104d22358b8634b4",
+    "pcie-cleanup-private.log": "d91f31393cb49640b35bd07b6e4f9b9c22ad8fefeda418fe104d22358b8634b4",
+    "reg-unload-private.log": "087d715bd7aa98cf95112963c35b31ebeba3ef4e27c8f47c17ebff5c6fd2259c"
+  },
+  "limits": [
+    "Provider registration/reset/removal is proved; requester-to-stream DMA and IRQ delivery are not.",
+    "Adapter restored16TTBR words; the provider itself resets TCR/TTBR/ERROR during probe/remove.",
+    "COMMAND/ERROR unchanged across the physical cycle; no direct write to either by the adapter.",
+    "No radio firmware/calibration loaded or Wi-Fi enabled."
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 22,
+  "tested_commit": "6a7775c7884c38b2c2cd9f135a6c8fb140d698bf",
+  "status": "local_vm_ci_verified",
+  "synthetic_data_only": true,
+  "reproduction_before_fix": {
+    "synthetic_only": true,
+    "journal_followed_symlink": true,
+    "unrelated_directory_mode_before": "0o755",
+    "unrelated_directory_mode_after": "0o700",
+    "snapshot_followed_directory_symlink": true
+  },
+  "guard": {
+    "real_owned_directories": true,
+    "regular_owned_single_link_files": true,
+    "special_modes_rejected": true,
+    "descriptor_metadata_for_lock": true,
+    "external_fixture_contents_and_modes_preserved": true
+  },
+  "local": {
+    "path_tests": 9,
+    "persistence_tests": 6,
+    "retention_lock_tests": 8,
+    "scheduler_tests": 6,
+    "path_mutations_killed": 11,
+    "autosnapshot_mutations_killed": 15,
+    "fatal_lint": "passed",
+    "diff_check": "passed",
+    "type_checker": "not_configured"
+  },
+  "vm": {
+    "path_tests": 9,
+    "busybox_failure_recovery_tests": 2,
+    "scheduler_restore_tests": 1,
+    "restore_mutations_killed": 2,
+    "restore_mutation_evidence_reused_after_metadata_refactor": true,
+    "real_fixtures": "BusyBox, ENOSPC, SIGKILL, synthetic chroot transport",
+    "private_keys_or_snapshots_transferred": false,
+    "new_packages_installed": false,
+    "own_fixtures_mounts_and_transfer_tree_removed": true,
+    "stopped": true,
+    "mounts": false,
+    "other_vms_modified": false
+  },
+  "ci": {
+    "status": "passed",
+    "pr_run": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36822619421",
+    "push_run": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36822616022",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-15"
+    ],
+    "terminal_job_logs_checked": 4,
+    "tests_per_platform_per_run": 109,
+    "passed": 100,
+    "skipped": 9,
+    "path_mutations": 11,
+    "profile_mutations": 20,
+    "return_ios_mutations": 9,
+    "kernel_integration_mutations": 7,
+    "pongo_format_mutations": 6,
+    "pongo_selection_mutations": 11,
+    "public_guard": "passed",
+    "fatal_lint_and_shell_syntax": "passed",
+    "shellcheck_linux": "passed"
+  },
+  "limits": {
+    "phone_operations_performed": false,
+    "phone_boot_proof": false,
+    "host_packages_installed": false,
+    "host_global_configuration_changed": false,
+    "real_backups_modified": false,
+    "transactional_restore": false,
+    "concurrent_same_user_authors_supported": false,
+    "complete_pr_review": false,
+    "merge_performed": false
+  }
+}

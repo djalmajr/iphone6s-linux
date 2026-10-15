@@ -1,0 +1,110 @@
+{
+  "format": 1,
+  "status": "compiled_verified",
+  "source": {
+    "commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "bundle": "n71-dart-serdev-power-v1",
+    "required_localversion": "-iphone6s-dart-serdev-power1",
+    "patches": {
+      "0001-s5l8960x-dart-stream-tcr.patch": "da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74",
+      "0002-serdev-stop-bits.patch": "f987f64912a410d588ac0d1d9a47c7cc275a0dc234fbe27549011255e98e0d11",
+      "0003-apple-gpio-write-errors.patch": "739b9fc44bec4bad00bea367af70decef5fb56248a636d822d51396343088094",
+      "0004-apple-pmgr-errors.patch": "d8202c48516faec2bf4506af486ca2fd1b256360a41aad2d4df584c140d7e135",
+      "0005-apple-pmgr-probe-errors.patch": "b005ddf799b9cdea7149b38d850936c30c16342af47d11a61595157d14e24b2f",
+      "0006-apple-pmgr-provider-cleanup.patch": "e0159ec77cec26beafb1332526f9ba7f287f53c05f70a6dcd2376abca6dc445b"
+    },
+    "files": {
+      "drivers/iommu/apple-dart.c": [
+        "f19d3c2a7ada7451956f2a87fea09c174584bfd68ba7a1f6e8793db653047f85",
+        "059546b68b266a5fb30c230a4d805572b2f601076cf04f06dfb41250312c67cc"
+      ],
+      "include/linux/serdev.h": [
+        "54a3e78e8ca0e29311070c87b6811e486a15453b1b938f221655a1ed3278e2c3",
+        "fbf86a763c535f07646beb49c14ac3582e7ba2f4d9a7bd0b680aecf32d11dd0c"
+      ],
+      "drivers/tty/serdev/core.c": [
+        "b3130abc6078d5353c38a0ef029c7afee4989cbccbb784e785dc7ebefa882e6c",
+        "fefe1fdbc17a0c7239df964ba0eee7fd8ec95f2e7ee157be451630c167e9d340"
+      ],
+      "drivers/tty/serdev/serdev-ttyport.c": [
+        "e4c9d73545e27fe8c995ef7a0d8ae23381fede11909f4b250c34a8004b1a437d",
+        "4643ddeac9973176346c04dd7054027153d49291960f1d89cd8e7280e45e7068"
+      ],
+      "drivers/pinctrl/pinctrl-apple-gpio.c": [
+        "9e387713c4443d0af50fde108ae46d35e2f57adc2738c005b3de5bf8d4c7533c",
+        "81767e760802ce9fc1a9d9383268ccefd930aff821e59f414d2f8e99193e603a"
+      ],
+      "drivers/pmdomain/apple/pmgr-pwrstate.c": [
+        "4b0adc3013e2fabe9ca1cb8228f8f6b7934af4b667f7f0f893b675102d8710df",
+        "ec4841316d8c3a8dad7ac44d93edac0209c581b4e4c0d2fb9dcfb89853754414"
+      ]
+    }
+  },
+  "build": {
+    "exit_code": 0,
+    "kernel_release": "7.2.0-iphone6s-dart-serdev-power1",
+    "full_image_linked": true,
+    "vmlinux_modpost_verified": true,
+    "serdev_stop_bits_export_verified": true,
+    "page_size_kib": 16,
+    "dtb_compatible": "apple,n71 apple,s8000 apple,arm-platform",
+    "config_only_localversion_changed": true,
+    "embedded_config_exact_match": true,
+    "source_before_equals_after": true,
+    "preflight_free_bytes": 16479498240,
+    "start_utc": "2026-10-04T22:52:32.195073+00:00",
+    "elapsed_seconds": 761,
+    "elapsed_scope": "Resumed after exact configuration preparation, through prepare/Image/DTB, validation, copies, gzip and modules_prepare; excludes earlier configuration/source preparation and Mac transfers.",
+    "compiler_version": "13.3.0",
+    "outputs": {
+      "Image": {
+        "bytes": 52070912,
+        "sha256": "278feceeffcd552dadc23a165f62d3f420199d63d453d457e06d54a36667798e"
+      },
+      "Image.gz": {
+        "bytes": 15651259,
+        "sha256": "e86707c500ef221335c0140e6e3255a2c7ded1e16af8318b06823086ccbde8e2"
+      },
+      "s8000-n71.dtb": {
+        "bytes": 22884,
+        "sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58"
+      },
+      "config": {
+        "bytes": 321759,
+        "sha256": "546d0d62d722d7a4784b31c65fc82523d444b74da623d0ba93bdf84dc512ce36"
+      },
+      "config-embedded": {
+        "bytes": 321759,
+        "sha256": "546d0d62d722d7a4784b31c65fc82523d444b74da623d0ba93bdf84dc512ce36"
+      }
+    },
+    "vmlinux_symvers_sha256": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61",
+    "modules_prepare_executed": true,
+    "provider_objects_builtin_verified": true,
+    "mac_artifact_hashes_recalculated": true
+  },
+  "legacy_output_preserved": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "logs": {
+    "full-build-private.log": "42b275ed989932e45f13f49bab51c1d303cb76e9f17ac14ea8c6a63f2cc69654",
+    "prepare-private.log": "c705b86dfe6bcbadacf45947b7f1687483f2b0f8aa2ffb6af0e268c14a069f50",
+    "modules-prepare-private.log": "fe3506012b819e5fdb94cb929fe0a08c5066fa87f9395594e331c6291ca03fa3"
+  },
+  "physical_boot_tested": false,
+  "installed": false,
+  "default_profile_changed": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "linux_charging_validated": false,
+  "limits": "Full linked kernel only. Native Wi-Fi, charging, HDQ telemetry, ownership/idle and physical boot remain unqualified; no charger I/O or DT activation performed.",
+  "build_recipe": {
+    "source_directory": "/home/ubuntu/kernel-n71-power-source-20261004",
+    "output_directory": "/home/ubuntu/kernel-n71-power-build-20261004",
+    "flags": "ARCH=arm64 -j2 KCFLAGS=-Werror; LOCALVERSION empty explicitly",
+    "initial_config_sha256": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "first_attempt": "olddefconfig succeeded; reading kernel.release before prepare failed before Image. Existing config reused with prepare in a new log directory; original logs retained."
+  }
+}

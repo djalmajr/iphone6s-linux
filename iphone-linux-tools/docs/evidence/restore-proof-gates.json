@@ -1,0 +1,86 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 28,
+  "status": "fixed_verified_local_vm_ci",
+  "fixed_commit": "3df09560d73307e773d02e2695e90f185993e87e",
+  "historical_before": {
+    "scope": "owned disposable sources; only external fixture process outcomes and platform preconditions simulated",
+    "runner_exit": 0,
+    "false_success": true,
+    "reports_injected": 2,
+    "assertion_failures_in_injected_reports": 0,
+    "real_fixture_started": false,
+    "real_privilege_changed": false,
+    "real_operator_files_modified": false
+  },
+  "local_verification": {
+    "regressions": 10,
+    "contract_mutations": 13,
+    "mutations_detected": 13,
+    "suite_cases": 171,
+    "passed": 163,
+    "skipped": 8,
+    "fixture_options_refactor": "only 10 regressions and 13 mutations rerun; unaffected full-suite evidence reused",
+    "fatal_flake8": "passed",
+    "diff_check": "passed",
+    "typechecker": "not configured"
+  },
+  "vm_revalidation": {
+    "scope": "existing dedicated Ubuntu ARM64 VM; real BusyBox/Bash restore and failure recovery in synthetic chroots",
+    "project_mounts": {},
+    "project_identities_transferred": false,
+    "sources_only_transfer": {
+      "files": 18,
+      "bytes": 30185,
+      "sha256": "fa769fa7c1fc057b8637913ed98ade49315fe08b2e2fa326881ce7367da1687d",
+      "scope": "tracked public host sources and two restore test files only; no keys, snapshots, image or private runtime"
+    },
+    "private_mount_namespace": true,
+    "baseline_cases_passed": 2,
+    "mutations_detected": [
+      "missing-pre-upload-journal",
+      "ignored-remote-errors"
+    ],
+    "matching_assertion_required": true,
+    "runner_exit": 0,
+    "initial_mount_check": "not executed: rg unavailable in guest; not accepted as proof",
+    "narrow_cleanup_retry": "findmnt and grep; transfer tree and fixtures absent; RESTORE_FIXTURE_CLEANUP_OK",
+    "final_state": "Stopped",
+    "final_project_mounts": {},
+    "packages_installed": false
+  },
+  "code_ci": {
+    "commit": "3df09560d73307e773d02e2695e90f185993e87e",
+    "pr": 36846983347,
+    "push": 36846977041,
+    "status": "success",
+    "jobs": 4,
+    "cases_per_job": 171,
+    "passed_per_job": 162,
+    "skipped_per_job": 9,
+    "contract_mutations_per_job": 13
+  },
+  "previous_docs_ci": {
+    "commit": "20e7fc2e8ece9a4970f0844082ee0151d1d2e8ab",
+    "pr": 36845182743,
+    "push": 36845176763,
+    "status": "success"
+  },
+  "host_packages_installed": false,
+  "real_snapshots_modified": false,
+  "phone_proof": false,
+  "limits": [
+    "Synthetic subprocess reports prove main CLI acceptance policy without running privileged fixtures on the Mac.",
+    "Real VM gates prove the restore fixture contracts, not phone power, stability or physical boot.",
+    "Exact test names and assertion reports are fixture contracts; fixture changes require corresponding regression/mutation updates.",
+    "Restore implementation and native fixture remained unchanged; this correction does not add atomicity or same-user concurrency support.",
+    "Reading inventory remains partial; no merge, tag or release authority."
+  ],
+  "reading_inventory_checkpoint": {
+    "commit": "3df09560d73307e773d02e2695e90f185993e87e",
+    "complete_reads": 108,
+    "entries": 162,
+    "complete_pr_review": false
+  }
+}

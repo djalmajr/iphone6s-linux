@@ -1,0 +1,166 @@
+{
+  "schema": 1,
+  "issue": 19,
+  "scope": "Windows explicit DNS port policy, not native DNS53 service",
+  "commit": "b4fe9e4fc258d29bddcdda39332e994a2949a27c",
+  "source_sha256": {
+    "scripts/host/dns_windows.cs": "17bdc3964f9d22eaa2386737a5627692f87274966bf47ec6784c6f117cedaf96",
+    "scripts/host/dns-check-windows.ps1": "86c10e9a921c484ed8296e9dbd4a012cda8b789c9114743d939fc353107a65db",
+    "tests/dns_windows_fixture.cs": "bd2b0ee06fba3d68b2f9cbfeee9175bcabe68cbea1508561e1f8c235d804ef72",
+    "tests/test_dns_windows.ps1": "e8a3e41ea732acd089e7282a719bde06c007bea14a4208d27463678cbfc47449"
+  },
+  "native_windows": {
+    "cases": 64,
+    "mutations": 20,
+    "mutation_names": [
+      "standard-port-denied",
+      "reserved-port-open",
+      "identity",
+      "flags",
+      "question-count",
+      "record-count",
+      "question-name",
+      "question-type",
+      "question-class",
+      "owner",
+      "address",
+      "record-class",
+      "a-size",
+      "trailing",
+      "missing-answer",
+      "compression",
+      "message-limit",
+      "deadline",
+      "random-id",
+      "private-range"
+    ],
+    "source_before_assertion": true,
+    "source_after_exit": 0,
+    "public_cli_cases": [
+      {
+        "Case": "port53-address-guard",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "port54",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "port1023",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "port52",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "port65536",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "default-high-address-guard",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      },
+      {
+        "Case": "port65535-address-guard",
+        "Exit": 1,
+        "UDP": false,
+        "TCP": false,
+        "ExpectedOutcome": true
+      }
+    ],
+    "microsoft_signature_verified": true,
+    "syntax_types_native": true,
+    "actual_dns53": false,
+    "standard_mac_auth_available": false
+  },
+  "regression_before_fix": {
+    "valid_compilation": true,
+    "assertion": "DNS_TEST_ASSERTION standard-port",
+    "exit": 1
+  },
+  "ci": [
+    {
+      "conclusion": "success",
+      "event": "pull_request",
+      "headSha": "b4fe9e4fc258d29bddcdda39332e994a2949a27c",
+      "jobs": [
+        {
+          "name": "windows-dns",
+          "conclusion": "success",
+          "status": "completed",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36949215659/job/110658162233"
+        },
+        {
+          "name": "source (macos-15)",
+          "conclusion": "success",
+          "status": "completed",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36949215659/job/110658162453"
+        },
+        {
+          "name": "source (ubuntu-24.04)",
+          "conclusion": "success",
+          "status": "completed",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36949215659/job/110658162600"
+        }
+      ],
+      "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36949215659"
+    },
+    {
+      "conclusion": "success",
+      "event": "push",
+      "headSha": "b4fe9e4fc258d29bddcdda39332e994a2949a27c",
+      "jobs": [
+        {
+          "name": "source (ubuntu-24.04)",
+          "conclusion": "success",
+          "status": "completed",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36949211094/job/110658149293"
+        },
+        {
+          "name": "source (macos-15)",
+          "conclusion": "success",
+          "status": "completed",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36949211094/job/110658149421"
+        },
+        {
+          "name": "windows-dns",
+          "conclusion": "success",
+          "status": "completed",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36949211094/job/110658149539"
+        }
+      ],
+      "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/36949211094"
+    }
+  ],
+  "cleanup": {
+    "test_and_log_files_removed": 4,
+    "test_directory_removed": true,
+    "verified_client_files_preserved_for_next_pilot": 2,
+    "own_children_completed": true
+  },
+  "native_mac_dns53_completed": false,
+  "android_test_completed": false,
+  "resolver_policy_changed": false,
+  "global_host_configuration_changed": false,
+  "packages_installed": false,
+  "complete_pr_review": false
+}

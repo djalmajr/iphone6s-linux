@@ -1,0 +1,52 @@
+{
+  "format": 1,
+  "status": "endpoint_bound_dma_backend_native_mac_qualified_not_integrated",
+  "inputs": {
+    "phone/kernel/n71-pcie-dma-live.h": {
+      "bytes": 3821,
+      "sha256": "7468fef9d9bd278531d5f9a849395bc78f3cbc54f9552e2d90e05430ecf4dffd"
+    },
+    "tests/n71_dma_live.c": {
+      "bytes": 8371,
+      "sha256": "a34efcafa4a98a36f1297269ef814e1cee22ae551ba5eb53e7480edb4ac75307"
+    },
+    "tests/test_n71_dma_live.py": {
+      "bytes": 3743,
+      "sha256": "adc0be1d38c8489dc25d97bcd3cd97952df9cb200ea27533d714c5580578ff9c"
+    }
+  },
+  "native": {
+    "platform": "macOS",
+    "cases": 58,
+    "assertion_mutations": 15,
+    "log_sha256": "1cc8b82853de212994d06ed1ae2f5e56b820585a03c2342af87a205064a539ef",
+    "mutation_failure_requires": "compiled then SIGABRT and assert; compile failure is not a kill"
+  },
+  "contract": {
+    "outer_session_mutex_required": true,
+    "endpoint_bind_unbind_serialized_by_device_lock": true,
+    "all_endpoint_locks_released_on_return": true,
+    "bound_brcmfmac_and_core_managed_dma_required": true,
+    "current_dma_domain_must_equal_retained_domain": true,
+    "held_power_provider_and_graph_required": true,
+    "existing_provider_mmio_mapping_only": true,
+    "no_new_allocation_mapping_region_claim_dma_or_write": true,
+    "max_dart_register_reads": 16,
+    "max_public_translation_queries": 2,
+    "clock": "boottime_ns",
+    "partial_result_preserved": true,
+    "stable_is_not_mapping_or_fault_time_proof": true
+  },
+  "ast_passed": true,
+  "fatal_and_unused_lint_passed": true,
+  "typechecker": "not_configured",
+  "caller_integrated": false,
+  "kernel_context_compiled": false,
+  "arm64_gate_passed": false,
+  "phone_accessed": false,
+  "vm_started": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "charging_verified": false,
+  "goal_complete": false
+}

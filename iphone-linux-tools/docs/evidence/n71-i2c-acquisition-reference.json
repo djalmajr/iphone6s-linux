@@ -1,0 +1,249 @@
+{
+  "format": 1,
+  "status": "offline_i2c_probe_cleanup_reference_no_activation",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "selected_sources_clean_against_head": true,
+  "sources": {
+    "drivers/i2c/busses/i2c-pasemi-platform.c": {
+      "sha256": "39c368ba1d90b872dadbac150716d5bf2b42cd034eee39cbe278eb91c148edf6",
+      "probe_lines": [
+        45,
+        89
+      ],
+      "remove_line": 92,
+      "name": "i2c-apple",
+      "of_compatible_fallback": "apple,i2c"
+    },
+    "drivers/i2c/busses/i2c-pasemi-core.c": {
+      "sha256": "79fba3545729becc1c42f9706f01e5fd782dc06b152a219739d07ca5eeb98181",
+      "reset_lines": [
+        80,
+        88
+      ],
+      "probe_lines": [
+        423,
+        449
+      ],
+      "irq_lines": [
+        453,
+        459
+      ]
+    },
+    "arch/arm64/boot/dts/apple/s800-0-3.dtsi": {
+      "sha256": "7dea8e989e58b12b56a33f127b40b332814fa78d46ae4c11ac57bcc0e2f30525",
+      "i2c1_lines": [
+        106,
+        117
+      ],
+      "pinmux_lines": [
+        245,
+        247
+      ]
+    }
+  },
+  "config": {
+    "CONFIG_I2C_APPLE": "y",
+    "CONFIG_I2C_CHARDEV": "y",
+    "CONFIG_PINCTRL_APPLE_GPIO": "y"
+  },
+  "linux_i2c1": {
+    "path": "/soc/i2c@20a111000",
+    "status": "disabled",
+    "physical_base": "0x20a111000",
+    "resource_size": "0x1000",
+    "interrupt_hardware_aic": 207,
+    "interrupt_type": "level high",
+    "clock": "clkref",
+    "power_domain": "ps_i2c1",
+    "linux_pinmux_pins": [
+      115,
+      114
+    ],
+    "linux_pinmux_selector": 1,
+    "apple_runtime_pinmux_physical_qualification": false
+  },
+  "probe": {
+    "default_bus_frequency_hz": 100000,
+    "clock_enabled": true,
+    "controller_revision_read": "0x28",
+    "writes": {
+      "interrupt_mask": "0x18 = 0",
+      "control": "0x1c = FIFO resets | UJM | divisor; EN additionally for revision >=6"
+    },
+    "adapter_registration": "devm_i2c_add_adapter",
+    "irq_requested_after_adapter": true,
+    "irq_request_error_falls_back_to_polling": true
+  },
+  "cleanup": {
+    "platform_remove_empty": true,
+    "explicit_initial_ctl_imask_restore_in_remove": false,
+    "pinmux_restoration_verified": false,
+    "fifo_state_restoration_verified": false,
+    "controller_cycle_ready": false,
+    "adapter_clock_irq_handler_mmio_devres": true,
+    "irq_domain_mapping_ownership_and_disposal_qualified": false
+  },
+  "next_adapter": {
+    "first_stage": "passive DT/owner/child/client/clock/domain/IRQ and pinmux inventory",
+    "later_stage": "bounded temporary platform device cycle only after idle and cleanup qualification",
+    "charger_access_separate": true,
+    "i2c_scan_permitted": false,
+    "rebind_i2c0_permitted": false
+  },
+  "physical_controller_activated": false,
+  "charger_io_performed": false,
+  "charging_linux_validated": false,
+  "limits": "Existing driver and source resources are not physical I2C1 proof. Do not enable controller/client or replay charger settings without qualified pin ownership, power/idle state, read effects and cleanup.",
+  "apple_i2c1_reference": {
+    "im4p_sha256": "739aeb1b52a76ac9147b2479e86a06b3c49b1e09499377ea73f1329a034b5184",
+    "adt_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+    "kernel_sha256": "0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a",
+    "descriptor_windows": [
+      {
+        "name": "gpio-iic_scl",
+        "file_offset": 71700,
+        "size": 12,
+        "sha256": "062dfc2b4c65684dd172cb6e7659a7a0414ee809211d6b9ef870708547ac4fdd",
+        "words": [
+          115,
+          65794,
+          20545
+        ]
+      },
+      {
+        "name": "gpio-iic_sda",
+        "file_offset": 71816,
+        "size": 12,
+        "sha256": "11456d0120710ab4df19f0a834357f7dbf23523ead51d95141f79cbd269fdbe7",
+        "words": [
+          114,
+          65794,
+          20545
+        ]
+      }
+    ],
+    "verification_windows": [
+      {
+        "name": "i2c_gpio_lookup",
+        "vm_address": "0xfffffff00611b48c",
+        "file_offset": 22967436,
+        "size": 140,
+        "sha256": "164b38296ecb95f97df3231412f3505f337985e574a021f006591d5b786df9ad"
+      },
+      {
+        "name": "i2c_init",
+        "vm_address": "0xfffffff00611b80c",
+        "file_offset": 22968332,
+        "size": 188,
+        "sha256": "0641c78fdb0f0023e569d78a13fa502f64ef4efa6563b9f63209385b02665265"
+      },
+      {
+        "name": "gpio_descriptor_init",
+        "vm_address": "0xfffffff00611639c",
+        "file_offset": 22946716,
+        "size": 112,
+        "sha256": "00c567bd3ce8b72c8d5bed8133c552c329f8cf61aee98e2c4083f73d1ead403d"
+      },
+      {
+        "name": "gpio_mode_forward",
+        "vm_address": "0xfffffff006116274",
+        "file_offset": 22946420,
+        "size": 28,
+        "sha256": "7d99c3f1b01001e1aa3bfa0f4e431d6edcac688639290f24bb4de627dc6061eb"
+      },
+      {
+        "name": "gpio_role_match",
+        "vm_address": "0xfffffff006117190",
+        "file_offset": 22950288,
+        "size": 188,
+        "sha256": "34c1b7204e00c5b592f5b6c5b3f64805493bac3f3a1dc50823bdaf46c86ad499"
+      },
+      {
+        "name": "gpio_role_capture",
+        "vm_address": "0xfffffff006116bdc",
+        "file_offset": 22948828,
+        "size": 84,
+        "sha256": "213c8c88c53f6cd138d4cbfa460359ce06d199f2425cce0ca92d523345e7b917"
+      },
+      {
+        "name": "i2c_unjam",
+        "vm_address": "0xfffffff00611c5fc",
+        "file_offset": 22971900,
+        "size": 552,
+        "sha256": "714329809a5e65b6bffe77bca58171bcdc6d3f412ae2ce841197a6de11ac4da4"
+      },
+      {
+        "name": "gpio_descriptor_vtable",
+        "vm_address": "0xfffffff006e78b68",
+        "file_offset": 36981608,
+        "size": 32,
+        "sha256": "77db11cdedae22f16c5cd39823ae9a70ff49f193dec4aa2f08c2108cb6ba3f79"
+      }
+    ],
+    "path": "/device-tree/arm-io/i2c1",
+    "compatible": [
+      "i2c,s8000",
+      "i2c,s5l8940x",
+      "iic,soft"
+    ],
+    "reg_offset": "0xa111000",
+    "resource_size": "0x1000",
+    "interrupt_hardware_aic": 207,
+    "clock_gate_declared": 71,
+    "clock_id_declared": 280,
+    "clock_gate_to_pmgr_offset_conversion_qualified": false,
+    "controller_class": "AppleS5L8940XI2CController",
+    "scl_pin": 115,
+    "sda_pin": 114,
+    "matches_linux_pin_numbers": true,
+    "descriptor_word1": "0x10102",
+    "descriptor_mode_byte": 2,
+    "descriptor_polarity_byte": 1,
+    "descriptor_initial_value_byte": 1,
+    "descriptor_role_word": "0x5041",
+    "descriptor_role_text": "AP",
+    "role_is_phandle": false,
+    "descriptor_initial_value_used_in_mode2": false,
+    "gpio_mode_forward_slot": "0x5e8",
+    "gpio_mode_mapping_hardware_observed": false,
+    "i2c_object_scl_offset": "0x100",
+    "i2c_object_sda_offset": "0x108",
+    "function_device_reset_declared_words": [
+      "0x18",
+      "0x41525354",
+      "0x47"
+    ],
+    "controller_init_reference": {
+      "ctl_1c": "divider low8, fallback4 for divider<2; add bit11 for revision>=6",
+      "smsta_14_write": "0x0aa00040",
+      "imask_18_write": 0,
+      "offset_10_write": "0x80000000; register semantics not qualified",
+      "tunable_masked_writes": [
+        "0x38",
+        "0x30",
+        "0x2c"
+      ],
+      "uses_software_cached_revision_or_reads_28": true
+    },
+    "unjam_reference": {
+      "touches_sda_scl": true,
+      "loop_count_initial": 9,
+      "calls_device_reset": true,
+      "calls_controller_init": true,
+      "electrical_restore_proven": false,
+      "replay_implemented": false
+    },
+    "descriptor_is_factory_data_not_physical_pin_ownership": true,
+    "limits": "Pin numbers, descriptor bytes, factory lookup and code paths are qualified static reference. They do not prove current pin drive/pull/idle, controller ownership, IRQ/clock/reset behavior, SN2400 read effects or charge current."
+  },
+  "ios_recharge_checkpoint_107": {
+    "BatteryCurrentCapacity": 89,
+    "BatteryIsCharging": true,
+    "ExternalConnected": true,
+    "ExternalChargeCapable": true,
+    "utc": "2026-10-04T20:29:05.524062+00:00",
+    "source": "com.apple.mobile.battery",
+    "raw_log_sha256": "95e4c9d70da4bcc1014f401487cae0e44df2973852a8fc418a89d609d9d512e8",
+    "limits": "Local iOS state only. No battery current measurement or Linux charging validation."
+  }
+}

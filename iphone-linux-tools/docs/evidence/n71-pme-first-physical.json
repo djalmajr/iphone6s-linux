@@ -1,0 +1,174 @@
+{
+  "format": 1,
+  "status": "one_pme_scan_endpoint_pm_refused_cleanup_verified_manual_ios_recovery",
+  "utc_date": "2026-10-05",
+  "boot_code_head": "d5ead7d0162bead93d7e1db9b54bd089788e7a5b",
+  "collector_commit": "4cea1ce0ae8c8a0ec55318d32b5b32b9d21ebfc9",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "module_record": "n71-pcie-pme-noop-build.json",
+  "module_sha256": "63ee7d460bf9161a2105108a98667cf5966a8b31fd02460559fadd762da25e07",
+  "module_bytes": 70424,
+  "boot": {
+    "boots": 1,
+    "scans": 1,
+    "intermediate_reboots": 0,
+    "restore_entries": 44,
+    "wrapper_exit": 0,
+    "strict_ssh_http_bash_herdr_start_verified": true,
+    "raw_log_sha256": "dba0da7787d92a437c904d097a8de1c6764f860a657930abb90449dfd61b2168"
+  },
+  "scan": {
+    "result": {
+      "error": -1,
+      "devices": 2,
+      "endpoints": 1,
+      "reads": 613,
+      "attempts": 33,
+      "writes": 23,
+      "refusals": 1
+    },
+    "endpoint_id": "43a314e4",
+    "first_refusal": {
+      "bus": "1",
+      "devfn": "00",
+      "where": "04c",
+      "size": "2",
+      "value": "0000c008",
+      "error": "-1"
+    },
+    "later_refusals_latched_not_independent": true,
+    "root_pme_request_no_longer_first_refusal": true,
+    "root_pme_no_write_contract_from_source_not_mmio_trace": true,
+    "target_prepare_restore_verified": true,
+    "fresh_log_sha256": "53c258ee8ef082233c751b5da9f730ae0e6212489322cef5bf00dc2a971b6660"
+  },
+  "cleanup": {
+    "verified": true,
+    "errors": [],
+    "negative_probe_unbound_clean_accepted": true,
+    "config_bus_target_reset_power_restored": true,
+    "reg_on_restored_to_hex80": true,
+    "reg_on_pending_zero": true,
+    "diagnostic_modules_absent": true,
+    "pci_devices_empty": true,
+    "final_ssh_http_bash_and_herdr_binary_verified": true,
+    "result_sha256": "c30794205b2d4175f345b86e3a5adf8753836d97b1f7c435f947e8cc4b7c6608",
+    "private_logs_sha256": {
+      "activate-private.log": "5da860c1adbb5c96432fcd8859a984eeb0b4d625a5ecdb1aec01cb7af5f8a6c8",
+      "hash-n71-pcie-diagnostic.ko-private.log": "ab2016a5eda615237eba31fc379c811cfc83eaf547c98729387c1fb3f97222fc",
+      "hash-n71-wlan-power-diagnostic.ko-private.log": "a0268f7a10aa37255eb6adac6e7ac2b01e0acd9969c068cd4123be5c33c5978a",
+      "observe-private.log": "98afecc3c2c3e9e502125d07a05510165c22696db6eb5406d7c30bf7c69425fb",
+      "pci-empty-after-private.log": "b7c0892c5d95d196ef66c2adecd112cb1cba1fff6ced80ed3cb3d95abaa7e530",
+      "pci-empty-private.log": "1807df4494d96585911c770f73691918e1f5e146d59b46c79bac8c89f02c4443",
+      "pcie-cleanup-private.log": "067704a3a7a760c3b5dcad0c3a7f2c4c1f255ecaeca209c8a376b07e20009a2e",
+      "pcie-private.log": "067704a3a7a760c3b5dcad0c3a7f2c4c1f255ecaeca209c8a376b07e20009a2e",
+      "pcie-status-private.log": "f69033a3956acd0d093174de3d7906861429b64939c23add3f73896eb1db8a2a",
+      "pcie-unload-private.log": "ecb195840b838d64a619226ba90321a14fdf2204db29979334a401c366c5bc36",
+      "preflight-private.log": "bef8efc14760890b95476d59499d3365f56c50183e47cc8e5d1f7a9294a9a81c",
+      "reg-unload-private.log": "aa3750d40cd1e592f3301edb3019f9726268b7a95ea25435842c923ed4c3e5a5",
+      "restore-private.log": "e5fad132143a94984b7bffe631c52bd6f3bc8b9fd5327946fbf6dbbe0598faf0",
+      "transfer-n71-pcie-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c",
+      "transfer-n71-wlan-power-diagnostic.ko-private.log": "2a70e1d9b40cb72d5ea6c4c6d32d4c7711538ee85eea98ddd936f0f4a4a4de7c"
+    }
+  },
+  "snapshot": {
+    "members": 44,
+    "archive_sha256": "4cb163b464723468ae5cf752f0e5e94953f7ce47750f16c072cd552d069574d6",
+    "verified_under_lock": true
+  },
+  "ios_return": {
+    "backup_verified": true,
+    "sync_verified": true,
+    "software_usb_confirmation": false,
+    "cli_exit": 1,
+    "linux_usb_disappeared": true,
+    "manual_fallback_requested": true,
+    "operator_reported_ios_unlocked": true,
+    "ios_model_confirmed_after_manual_recovery": true,
+    "recovery_utc": "2026-10-05T17:13:53.386383+00:00",
+    "raw_return_log_sha256": "13fb1ef70c9262f632e7c3b98083d4389e19150584ec60cafb5317ae1ac11a7a"
+  },
+  "battery": {
+    "before_ios_percent": 100,
+    "after_manual_recovery_percent": 99,
+    "after_charging": true,
+    "after_external_connected": true,
+    "includes_linux_boot_return_manual_recovery_and_ios_intervals": true,
+    "linux_gadget_declared_max_power_ma": 500,
+    "linux_power_supply_count": 0,
+    "linux_charge_or_net_current_measured": false,
+    "health_percent_measured": false,
+    "gasgauge_cycle_count": 1465,
+    "gasgauge_design_capacity_field": 1690,
+    "gasgauge_full_charge_capacity_field": 100,
+    "gasgauge_fields_not_assumed_same_units": true
+  },
+  "ci": {
+    "candidate_head_c08c7e2": {
+      "pr_run": 37341531693,
+      "pr_conclusion": "success",
+      "push_run": 37341525349,
+      "push_conclusion": "failure",
+      "push_failure_phase": "first synthetic USB enumeration before event body"
+    },
+    "fixture_head_d5ead7d": {
+      "pr_run": 37344202401,
+      "pr_conclusion": "success",
+      "push_run": 37344195076,
+      "push_conclusion": "cancelled",
+      "push_ubuntu_cancelled_macos_windows_success": true
+    }
+  },
+  "next_offline_helper": {
+    "code_commit": "0098def4179337c743ed7c5c575ebf6718258e39",
+    "native_baseline_tests_per_platform": 1,
+    "compiled_sigabrt_assertion_mutations_per_platform": 14,
+    "platforms": [
+      "macos_arm64",
+      "ubuntu_arm64"
+    ],
+    "inputs": {
+      "phone/kernel/n71-pcie-contract.h": {
+        "bytes": 2529,
+        "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8"
+      },
+      "phone/kernel/n71-pcie-control-reference.h": {
+        "bytes": 4190,
+        "sha256": "6ac0fd634272206f70ec8ad12ba5bdf9aa4517a4e8ce0807f62e2661533ef764"
+      },
+      "phone/kernel/n71-pcie-ecam.h": {
+        "bytes": 1977,
+        "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3"
+      },
+      "phone/kernel/n71-pcie-pme-control.h": {
+        "bytes": 3284,
+        "sha256": "757e37d15f569addb89b7ac8abbbdc82fa5246a7dd69e875efa768bf32c026fa"
+      },
+      "phone/kernel/n71-pcie-scan-config.h": {
+        "bytes": 10201,
+        "sha256": "47ec24ec530352892338183155885476cc98a11a37eff0acdba20ccba1a400a8"
+      },
+      "tests/n71_pcie_pme_control.c": {
+        "bytes": 9394,
+        "sha256": "20a4fd4e7023c2bab65c91d4937f14412e89f43d92c86952023e3cc6db040456"
+      },
+      "tests/test_n71_pcie_pme_control.py": {
+        "bytes": 3779,
+        "sha256": "373ba52b4e9db659f46a82d91370ae63865113c1b73e601fdfda2284116103e0"
+      }
+    },
+    "mac_log_sha256": "34297dc378a7c542cdab90e34829f222835de27c295246bc7317f2c6bd46d12b",
+    "arm64_log_sha256": "53873165de492678a84acb3bbe40076014e439a096bfab8209bda5f44622824e",
+    "integrated_into_scan_or_caller": false,
+    "kernel_module_built_or_loaded": false
+  },
+  "limits": {
+    "wifi_functional": false,
+    "broadcom_or_firmware_loaded": false,
+    "irq_delivery_verified": false,
+    "dma_enabled": false,
+    "endpoint_pm_written": false,
+    "hdq_or_charger_io_performed": false,
+    "new_image_or_global_mac_configuration": false
+  }
+}

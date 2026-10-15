@@ -1,0 +1,331 @@
+{
+  "format": 1,
+  "status": "power2_profiles_and_operational_caller_prepared_not_physically_executed",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "kernel_image_record": "docs/evidence/kernel-n71-binding-build.json",
+  "code_commits": {
+    "integration": "5fa140a6363f2edd228fd52266f65b456b8f01db",
+    "operational_control": "3e0bebb5abac59cc842758faf90def29706982f2",
+    "diagnostic_compositor": "b2690293f0ca5c52b3d017741d3efd3099d21bb2"
+  },
+  "integration_gate": {
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "tests_per_platform": 22,
+    "assertion_mutations_per_platform": 25,
+    "real_cli_filesystem_with_synthetic_nonbootable_kernel_inputs": true,
+    "mac_log_sha256": "fe06554e018e1d97e5295bfa8fdd3cc1ae8358c65e4efb36d1c635afe4fd9940",
+    "arm64_log_sha256": {
+      "native-private.log": "6f9294a70f0022f4c7f944a2d12350a625f9334b4af458ac7d51c6b794a70e92",
+      "mutations-private.log": "d626ee7734130105e4abba596deff692d20db4cee1b358e033e138da48374d7d"
+    }
+  },
+  "operational_control_gate": {
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "scenarios_per_platform": 39,
+    "compiled_assertion_mutations_per_platform": 11,
+    "real_caller_and_genpd_backend_with_kernel_api_fixtures": true,
+    "pmgr_qualification_separately_tested": true,
+    "mac_log_sha256": "04856ea145a5022e09f4d7bbc4f05aeb6e8b6179aede538d7c80aad2c3952932",
+    "arm64_log_sha256": "bbce6a5bc5876e9691adf207d69256cab5bb304e55d3c77133ec2649975c091f",
+    "retains_module_and_refs_on_pending_cleanup": true,
+    "force_unload_supported": false
+  },
+  "diagnostic_compositor_gate": {
+    "platforms": [
+      "macOS ARM64",
+      "Ubuntu ARM64"
+    ],
+    "tests_per_platform": 6,
+    "assertion_mutations_per_platform": 8,
+    "synthetic_nonbootable_payloads_and_elf": true,
+    "mac_log_sha256": "1f382a9ce97cd546df26038e33ca5b5ff1ce83b68371aa9251fb87ad07a9f646",
+    "arm64_log_sha256": {
+      "native-private.log": "4aef0507ded7ec06caa1399ab87f6d0327bdffaaf4c8f58b9d4653d35a6035dc",
+      "mutations-private.log": "3a80857e159359f1c8eaef3096b11ba15d6980a3bd834eb52f6c7b1e326ba66f"
+    }
+  },
+  "module_build": {
+    "werror": true,
+    "warning_level": 1,
+    "modpost_passed": true,
+    "elf_aarch64_vermagic_verified": true,
+    "mac_hashes_elf_vermagic_recalculated": true,
+    "modules": {
+      "n71-pcie-diagnostic.ko": {
+        "bytes": 60536,
+        "sha256": "e715ad64013eb0238c9074dba9b05157d2a7153835fd4a800bd53adb0e170785",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64"
+      },
+      "n71-wlan-power-diagnostic.ko": {
+        "bytes": 17688,
+        "sha256": "fdf887e7572b70d09e76f770272bee5dc9ffcde799277e894ee8965007c5a8f1",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64"
+      },
+      "n71-hdq-gpio-observe.ko": {
+        "bytes": 9248,
+        "sha256": "c6a99740956c2fc714e27beb1f4fcdf56aed852986ea363c752fff4190de77a3",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64"
+      },
+      "n71-i2c-topology-observe.ko": {
+        "bytes": 15776,
+        "sha256": "55a2034d2bb0d17158ef05b635757d7261b84764e5481b98389718f51a0d9d30",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64"
+      },
+      "n71-pmgr-power-observe.ko": {
+        "bytes": 12248,
+        "sha256": "346752e0261df1a8f7f7f8b83ce704ea35fd669bac6ecbdacc3e9189699b8b8b",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64"
+      },
+      "n71-i2c-power-diagnostic.ko": {
+        "bytes": 27728,
+        "sha256": "741ed0ff763bab94146f5a3601172b014d4b6bc14a68f4b1fd52a190f902565e",
+        "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64"
+      }
+    },
+    "log_sha256": "6067c7898ccf6ec311301c54df038314eeeb039c795bb4aa676279d60324bf4e",
+    "source_config_image_exports_preserved": true,
+    "protected_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    }
+  },
+  "input_sha256": {
+    "phone/kernel/Makefile": {
+      "bytes": 267,
+      "sha256": "b7bd176e3fa4bb925bed34d2a6af5a861fe2d611d966cc53eae275c3107a1edc"
+    },
+    "phone/kernel/n71-hdq-gpio-observe.c": {
+      "bytes": 3139,
+      "sha256": "37c6a6d2e9b3ccf220ed041d1785a65cad91d6fa7ae77248309296ec949c371f"
+    },
+    "phone/kernel/n71-i2c-power-diagnostic.c": {
+      "bytes": 5988,
+      "sha256": "b917b19a413e93221e1d84e13bd53c5fc16ca2e1ed1f5738e56750e4339776e2"
+    },
+    "phone/kernel/n71-i2c-topology-observe.c": {
+      "bytes": 7733,
+      "sha256": "5dc56e1dcbcc8e91b671ae4e6eeae53289550a6e7a7bdf42dfbdfc99ccf2223d"
+    },
+    "phone/kernel/n71-pcie-diagnostic.c": {
+      "bytes": 11465,
+      "sha256": "b14a7f8920d58e2866065c3cb1696e486afd7d6be0035fc1cf902ce5d473d0d2"
+    },
+    "phone/kernel/n71-pmgr-power-observe.c": {
+      "bytes": 1673,
+      "sha256": "fec9d8d28ae34deef0c0da1528f0b341a1dd043e4917b3677c789a182070fc99"
+    },
+    "phone/kernel/n71-wlan-power-diagnostic.c": {
+      "bytes": 8544,
+      "sha256": "1dc9ef28bafaa49cb15c3faa0d1e6caf9c728ec2fcb7ee8aaa074587aaf8c34e"
+    },
+    "phone/kernel/n71-dart-cycle.h": {
+      "bytes": 3359,
+      "sha256": "08b39c05a41b87936962b341525d7188a28909c91613ea902c5b899e9d431a4a"
+    },
+    "phone/kernel/n71-dart-mmio.h": {
+      "bytes": 4252,
+      "sha256": "b76e50b078bd8b8c764093c6fb6b101ca19b9c11b27cd77e76a05a3a47187d97"
+    },
+    "phone/kernel/n71-dart-observe.h": {
+      "bytes": 1971,
+      "sha256": "fa65e2c487b80b52d16edbacd9a7450892f14acf2d6bbed1362f7cc94120b4af"
+    },
+    "phone/kernel/n71-dart-provider.h": {
+      "bytes": 7363,
+      "sha256": "4598dee76099f2a53fbd6f4d37054315f4df3e0c4b722a42728c1e2b9b99b168"
+    },
+    "phone/kernel/n71-hdq-codec.h": {
+      "bytes": 1909,
+      "sha256": "f71ceb810d5f9ee654b8b26598f5ebac213a7f56e2cec9c2d852d5e73e449176"
+    },
+    "phone/kernel/n71-hdq-handshake.h": {
+      "bytes": 2011,
+      "sha256": "07740deeeee260326684898fc463dcfbdd3741c27c9ba608c3fb9fd6b2962032"
+    },
+    "phone/kernel/n71-hdq-pinmux.h": {
+      "bytes": 1023,
+      "sha256": "8c84a6fad766ce8347afc4d93144d212b4e91437900113bd478db06aef6049a4"
+    },
+    "phone/kernel/n71-hdq-release-plan.h": {
+      "bytes": 1685,
+      "sha256": "d77ef3d965e52311ca58f15c3b523e79791fa2e4bfeee0439948a1c2159416ee"
+    },
+    "phone/kernel/n71-i2c-genpd.h": {
+      "bytes": 8259,
+      "sha256": "6d772609640235a03b381ca0c7bcd49eb2d2cbbe5ef053ca1844bcf3b2488fea"
+    },
+    "phone/kernel/n71-i2c-power-lifecycle.h": {
+      "bytes": 3013,
+      "sha256": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2"
+    },
+    "phone/kernel/n71-pcie-bar-sizing.h": {
+      "bytes": 2645,
+      "sha256": "9242d467d90feca8a286d8d7d7931a314e083f7eecbb6459f6867e5a119336cb"
+    },
+    "phone/kernel/n71-pcie-chip-id.h": {
+      "bytes": 3975,
+      "sha256": "a71b62b785def3344b2539db660167f3adf2dd86ca1aa48d7743b5338a567405"
+    },
+    "phone/kernel/n71-pcie-chip-mmio.h": {
+      "bytes": 2258,
+      "sha256": "e37a65f3e7b846937d84654180657c5a3981200ea470a5f571f867a719e7fe6c"
+    },
+    "phone/kernel/n71-pcie-contract.h": {
+      "bytes": 2529,
+      "sha256": "0dc768495bf7a9c0031a700f2deaff983f74544d0114e2bcb68e5b77778138f8"
+    },
+    "phone/kernel/n71-pcie-control-reference.h": {
+      "bytes": 4190,
+      "sha256": "6ac0fd634272206f70ec8ad12ba5bdf9aa4517a4e8ce0807f62e2661533ef764"
+    },
+    "phone/kernel/n71-pcie-ecam.h": {
+      "bytes": 1977,
+      "sha256": "1730b42ae7fe8798874bee66976fb420c1250dff5f5153a2af581f27b77ef4d3"
+    },
+    "phone/kernel/n71-pcie-init.h": {
+      "bytes": 3707,
+      "sha256": "bcb0b842d7a46e47b061a69b481750b50c6f4e412f0dbdd605803ac3e6ed1158"
+    },
+    "phone/kernel/n71-pcie-inventory.h": {
+      "bytes": 3903,
+      "sha256": "507d9a7a7d5a848377453f66d8366f77f99cf3c8466a6cc433f940d4bc8a052e"
+    },
+    "phone/kernel/n71-pcie-link.h": {
+      "bytes": 5444,
+      "sha256": "a4ddb3ab756450388d4734f555295e2b801930eaaa746767fbc20adbdef0f237"
+    },
+    "phone/kernel/n71-pcie-mmio.h": {
+      "bytes": 2814,
+      "sha256": "c81e3d7aa6810f8eb79c5088ba5cab361d8b857ef6621dc096925a6a407c94f0"
+    },
+    "phone/kernel/n71-pcie-port.h": {
+      "bytes": 3328,
+      "sha256": "ac155857e994d6e8d60c05527a3fb9e9169925219585696349a8b7ed3ba828bb"
+    },
+    "phone/kernel/n71-pcie-scan-config.h": {
+      "bytes": 8947,
+      "sha256": "3e40161e408bdabc1116a3998986a25fb0c9d9e7458b458a6ebb51f6e09bec27"
+    },
+    "phone/kernel/n71-pcie-scan.h": {
+      "bytes": 9891,
+      "sha256": "424246df185664c0f5f35eb3bb54a9bdc4b0a2e85adb6b3a61982af218b69287"
+    },
+    "phone/kernel/n71-pmgr-access.h": {
+      "bytes": 5487,
+      "sha256": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae"
+    },
+    "phone/kernel/n71-sn2400-input-reference.h": {
+      "bytes": 1371,
+      "sha256": "f67d5fcb3ffa5e9fdfec80f6091f52b6ae965e0a6eac5aef5187f43d61c8a161"
+    },
+    "phone/kernel/n71-wlan-power-contract.h": {
+      "bytes": 2550,
+      "sha256": "2034977747e830da0464bc8b9df29a98c176e7dcf6e4e8dbe1137ed10f1a8013"
+    },
+    "phone/kernel/n71-wlan-power.h": {
+      "bytes": 2595,
+      "sha256": "bcdf5f0bf675d9a113cb2d7e7d4910fd4ea6b1c7444f9eac02cf9d807a982bd9"
+    },
+    "tests/n71_i2c_genpd.c": {
+      "bytes": 17208,
+      "sha256": "99fcf7964a8387487c5cae757ccf52c641ad6a5a61db53dc7e9a5a0d98f9c935"
+    },
+    "tests/n71_i2c_power_diagnostic.c": {
+      "bytes": 9206,
+      "sha256": "58ab25e851e53c273be4bb95f74c683b10a211e86ef8cfb1b62b0f37c43c2014"
+    },
+    "tests/test_n71_i2c_power_diagnostic.py": {
+      "bytes": 5107,
+      "sha256": "1097cbb5eda8c707b59e6e01eccf407d53b082a34d05f375e26339dd1b74aa85"
+    }
+  },
+  "base_profile": {
+    "format": 1,
+    "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "kernel_patchset": "n71-dart-serdev-power-v2",
+    "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+    "initramfs_changed_paths": [],
+    "identities_preserved": true,
+    "client_private_key_copied_to_vm": false,
+    "payload_sha256": "9e85ee7ff6dfe54fcc031063f116ed680e006040ff8ca9c09656aab7bc1e8363",
+    "payload_bytes": 29931375,
+    "initramfs_sha256": "e17091af72ff5b4cb44e0b4890ec92e42f7545312dac1cb08be82b1ce53a2c76",
+    "initramfs_bytes": 13061140,
+    "profile_verified": true,
+    "physical_boot_tested": false,
+    "default_payload_changed": false
+  },
+  "diagnostic_profile": {
+    "format": 1,
+    "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "kernel_patchset": "n71-dart-serdev-power-v2",
+    "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+    "payload_sha256": "3834d17c2cd9026b640ce1640cdc1baf0f1c85cab8e6bd8051a0d9a7b8316ffa",
+    "dtb_sha256": "940976925caee59a3db8d118d6e6f4278529eafa6d60b86c76d9cb651ace4004",
+    "module_sha256": "e715ad64013eb0238c9074dba9b05157d2a7153835fd4a800bd53adb0e170785",
+    "kernel_initramfs_identities_preserved": true,
+    "module_automatic_load": false,
+    "requires_explicit_run": true,
+    "requires_explicit_enumerate": true,
+    "physical_boot_tested": false,
+    "default_profile_changed": false,
+    "wifi_verified": false
+  },
+  "preservation": {
+    "source_profiles_unchanged": true,
+    "initramfs_exactly_preserved": true,
+    "client_key_and_known_hosts_exactly_preserved": true,
+    "host_keys_or_private_payloads_sent_to_vm": false,
+    "directory_mode": "0700",
+    "file_mode": "0600",
+    "old_images_and_profiles_preserved": true,
+    "default_profile_changed": false
+  },
+  "ci": {
+    "integration_head": "5fa140a6363f2edd228fd52266f65b456b8f01db",
+    "integration_pr_run": 37257225731,
+    "integration_push_run": 37257222417,
+    "integration_conclusion": "success",
+    "integration_successful_jobs": 6,
+    "operational_control_and_compositor_ci_pending": false,
+    "operational_control_and_compositor_head": "6a66ff51bf8740782a4777beec8e73ecdd4dea67",
+    "operational_control_and_compositor_pr_run": 37258928814,
+    "operational_control_and_compositor_push_run": 37258925978,
+    "operational_control_and_compositor_conclusion": "success",
+    "operational_control_and_compositor_successful_jobs": 6
+  },
+  "physical_boot_tested": false,
+  "operational_control_loaded_on_phone": false,
+  "physical_bind_unbind_absence_verified": false,
+  "physical_domain_cycle_executed": false,
+  "charger_io_performed": false,
+  "linux_charging_validated": false,
+  "wifi_validated": false,
+  "new_dfu_or_reboot": false,
+  "limits": "Preparation only: synthetic contract tests and real kernel module builds plus private profile composition. All six modules remain outside the initramfs without autoload. Runtime power2 release and absent PMGR bind/unbind attributes must be confirmed before loading the explicit cycle/cleanup caller. Pending cleanup retains objects and a module reference; retry cannot guarantee hardware recovery. No controller/adapter/pinctrl/clock/IRQ, SN2400 I/O, HDQ telemetry or Wi-Fi qualification.",
+  "grouped_collection_preparation": {
+    "passive_collector_legacy_body_preserved": true,
+    "passive_transport_fixtures": 3,
+    "passive_fixture_command_syntax_counts": [
+      23,
+      12,
+      12
+    ],
+    "genpd_command_syntax_cases": 2,
+    "genpd_outcome_contract_cases": 8,
+    "actual_temporary_shell_unload_guard_cases": 3,
+    "assertion_killed_shell_guard_mutations": 2,
+    "genpd_collector_sha256": "74a620b5cb11285e308ccb9ef4484941b4021d221dd60f15f1d90a4e4549f3cc",
+    "fixture_only": true,
+    "complete_active_transport_tested": false,
+    "phone_commands_executed": false,
+    "requires_usb_reconnection": true
+  }
+}

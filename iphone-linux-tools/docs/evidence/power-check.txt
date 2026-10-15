@@ -1,0 +1,156 @@
+Date: 2026-09-29
+Device: iPhone 6s N71/A9, Linux 7.0.12
+Read-only live SSH check:
+charging_validation=unverified
+power_supply=unavailable
+thermal_zone=unavailable
+I2C: i2c-0 and 0-0074; PMIC RTC registered in kernel log.
+Kernel config: /proc/config.gz unavailable.
+Operator observation: cold, physically intact; no reported physical abnormality.
+Result: sustained charging and thermal protection not established.
+Local tests: 9/9 passed (6 persistence, 3 power-check).
+Mutation checks: dropping unverified status and missing-sensor fallback both detected.
+Shell syntax: sh -n passed.
+No package installation, hardware-register writes or network changes.
+
+Follow-up: private snapshot completed, then requested reboot to iOS.
+Operator saw lock screen followed by low-battery symbol; USB device disappeared.
+No initial battery percentage was obtained; cause of insufficient charge unknown.
+Sustained-charge gate failed. Waiting for supervised wall charging and baseline.
+Repeated Linux boots and unattended tests deferred pending power diagnosis.
+ShellCheck: installed shellcheck passed for power-check.sh.
+
+2026-09-30 follow-up: different cable connected to front USB-C port.
+After unlock, iPhone detected on USB; battery query succeeded in iOS:
+BatteryCurrentCapacity=100
+BatteryIsCharging=true
+ExternalConnected=true
+Data connectivity and iOS-reported external power established for this cable.
+Earlier absence of USB detection does not establish a cable defect.
+Battery recovered; sustained charging under Linux remains unverified.
+No reboot/DFU in this check. Goal remains paused.
+
+2026-09-30 iOS diagnostics before supervised boot:
+CycleCount=1462
+DesignCapacity=1690
+NominalChargeCapacity=1146
+Nominal/design ratio=67.8% (estimate, not Settings health percentage)
+AppleRawMaxCapacity=830
+BatteryData.MaxCapacity=820
+BatteryHealthMetric=725 (interpretation not verified)
+Normalized capacity fields=100 (not a health percentage)
+
+New USB-C front-port boot attempt:
+DFU and Checkmate confirmed; download-mode reconnect timed out.
+PongoOS absent; no Linux payload sent. Attempt terminated.
+CleanMyMac classified temporary checkra1n file as Jailbreak/riskware.
+Official v2.4 API digest matches executed palera1n SHA-256.
+Official source confirms extraction to checkra1n.XXXXXX and cleanup.
+Temporary file not present after cleanup; independent hash unavailable.
+No protection disabled or Mac exclusion created.
+
+Goal subsequently resumed. USB-A boot reached PongoOS; corrected wrapper resumed
+from active PongoOS and started integrated image, with strict SSH and HTTP verified.
+This two-stage execution does not satisfy the full cold-wrapper gate (#3).
+Local regression: 14/14 tests passed, including wrapper failure cleanup/no transfer.
+Bash syntax, ShellCheck and git diff --check passed.
+
+Supervised pilot using new USB-C -> Lightning, front Mac port:
+Start: 2026-09-30 11:40:13 UTC, Linux uptime 523.35 s.
+Reboot requested: 2026-09-30 11:50:32 UTC, Linux uptime 1147.24 s.
+Periodic SSH/HTTP checks: successful; HTTP 200 throughout sampled interval.
+Operator at end: cold/lukewarm, console visible.
+Linux power_supply and thermal_zone remain unavailable.
+Private snapshot completed before reboot; archives and keys excluded from Git.
+Initial iOS charge: 100% at 11:07:57 UTC, before DFU/PongoOS attempts and
+roughly eight minutes of Linux using USB-A. Comparison cannot isolate USB-C.
+Post-test iOS reading at 2026-09-30 11:51:15 UTC:
+BatteryCurrentCapacity=94
+BatteryIsCharging=true
+ExternalConnected=true
+Six-point drop spans all attempts and Linux intervals, not only USB-C pilot.
+Sustained charging under Linux remains unverified; #2 stays open.
+
+Later iOS query: capacity 90%, charging=true, external_connected=true.
+Cable/port for this reading awaiting operator confirmation after requested swap.
+Detailed diagnostic service unavailable while passcode-locked (error classified;
+raw device output withheld). Next boot deferred pending iOS power clarification.
+
+Read-only source inspection at HoolockLinux/linux revision
+6831bc701a6ce059e71e5aaa9488c9195bea6927, branch hoolock:
+N71/6s DeviceTree include chain inspected; Antigua PMIC at I2C 0x74 describes
+RTC and NVMEM, no battery/charger node found in consulted chain.
+Hoolock docs hw/SMC.md applies to T8015; cannot assume same interface on A9.
+These bounded observations do not establish physical charging behavior.
+
+Second supervised procedure, confirmed USB-A -> Lightning at rear Mac port:
+Operator: iOS on, cold/lukewarm.
+Baseline 2026-09-30 12:00:14 UTC: capacity 94%, charging/external_connected true.
+Single wrapper invocation completed with exit 0, integrated Linux 7.0.12,
+strict SSH, HTTP 200, framebuffer blank 0/simpledrmdrmfb.
+Reboot 2026-09-30 12:14:18 UTC: uptime 734.12 s; private snapshot completed.
+iOS 2026-09-30 12:15:42 UTC: capacity 100%, charging/external_connected true.
+Favorable short-interval charge-level result, not isolated current measurement.
+Reboot-related gauge variation and 100% ceiling prevent sustained-charge claim.
+Guide subsequently removed at operator request; replacement monitor has no
+browser/HTTP listener and passed simulated checks. New physical gate pending.
+
+Third supervised procedure, same USB-A -> Lightning/rear port:
+Manual headless full boot completed; strict SSH, HTTP and console verified.
+Earlier iOS baseline 2026-09-30 12:15:42 UTC: capacity 100%.
+New Linux session began approximately 12:23:23 UTC.
+Operator during interval: cold/lukewarm, console visible.
+Relocated host CLI status at 12:46:40 UTC: Linux 7.0.12, HTTP 200.
+Relocated CLI private snapshot completed at 12:48:08 UTC.
+Reboot 12:48:09 UTC: uptime 1485.28 s (approximately 24m45s).
+iOS 12:50:22 UTC: capacity 90%, charging/external_connected true.
+Comparison includes iOS/DFU preparation and reboot, with possible gauge variation.
+Ten-point decline does not isolate Linux charging current but leaves sustained
+power unresolved. #2 remains open; prolonged unattended test #8 is not approved.
+No snapshots, SSH identities or raw device identifiers published.
+
+2026-09-30 descriptor investigation, fixed rear USB-A confirmed by operator:
+iOS baseline 13:21:47 UTC: 98%, charging/external_connected true.
+Single cold boot using relocated paths: exit 0; SSH/HTTP and console confirmed.
+Read-only configfs diagnostic:
+  charging_validation=unverified
+  power_supply=unavailable
+  thermal_zone=unavailable
+  usb_configuration=iphone6s/c.1
+  usb_MaxPower_mA=500
+  usb_bmAttributes=0x80
+Hypothesis of an implicit 2mA USB budget discarded for this image.
+No USB descriptor or PMIC register modified.
+Kernel source consulted at 6831bc701a6ce059e71e5aaa9488c9195bea6927; exact
+APK build configuration/provenance remains outside this bounded source proof.
+Mac IORegistry supplied no power-budget property for this Linux gadget.
+13:27:31 UTC: uptime 291.64s, schedutil, reported CPU frequency 1512000kHz,
+load average 0.00/0.00/0.00, backlight 1526/2047, framebuffer blank 0.
+Backlight reduction at uptime539.49s: 1526 -> 256; adjustment at690.27s to512;
+operator later accepted low visibility, reduced to256 at780.67s.
+Operator at reduced brightness: cold/lukewarm, console hard to see.
+17/17 local tests passed; sh syntax and ShellCheck passed for diagnostic.
+Mutation replacing actual MaxPower reading with unavailable was detected.
+Python AST passed; no configured type checker.
+
+Pilot observation completed: 11 SSH/HTTP samples from13:33:02 to13:38:03 UTC,
+all SSH succeeded and HTTP200; final sampled uptime923.76s.
+Private snapshot completed before reboot, no contents published.
+Reboot requested13:39:44 UTC: uptime1024.05s (17m04s).
+iOS basic13:40:14 UTC: capacity100%, charging/external_connected true.
+Detailed readings before preparation13:19:21 vs after return13:42:04 UTC:
+  CurrentCapacity: 98 -> 100
+  AppleRawCurrentCapacity: 873 -> 854
+  AppleRawMaxCapacity: 884 -> 877
+  NominalChargeCapacity: 1146 -> 1146
+  InstantAmperage: 50 -> 137
+  Temperature: 3300 -> 3460
+Units/semantics of raw Apple fields not validated; no inferred mAh/current/heat.
+Percentage increase conflicts with lower raw-current-capacity reading; pre/post
+also include iOS preparation/recharge, variable backlight and gauge variation.
+100% ceiling prevents claiming sustained positive charging in Linux.
+IODeviceTree diagnostic query unavailable; A9 charger/gauge topology unverified.
+A10 SN2400 bindings/probe require regmap, HDQ mux and battery limits and program
+registers; no driver copied or hardware register written on this A9.
+Battery/path-of-power technical assessment recommended given wear evidence.
+#2 remains open; #8 stays gated. Phone now in iOS, snapshot private.

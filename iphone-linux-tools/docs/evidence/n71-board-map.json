@@ -1,0 +1,108 @@
+{
+  "date": "2026-10-02",
+  "source": {
+    "source": "Apple HTTPS distribution; third-party index for URL only",
+    "version": "15.8.8",
+    "buildid": "19H422",
+    "member": "Firmware/all_flash/DeviceTree.n71ap.im4p",
+    "sha256": "739aeb1b52a76ac9147b2479e86a06b3c49b1e09499377ea73f1329a034b5184",
+    "bytes": 25946,
+    "range_download_bytes": 31376,
+    "archive_crc_verified": true,
+    "cryptographic_signature_verified": false,
+    "flashed": false,
+    "url": "https://updates.cdn-apple.com/2025FallFCS/fullrestores/122-77510/5D4563BF-445C-4D8D-AF56-0BAC336265F3/iPhone_4.7_15.8.8_19H422_Restore.ipsw"
+  },
+  "decoded_bytes": 142148,
+  "decoded_sha256": "5e7ad3a1df32acbb872bb18164f67c9903130e03e337b841f75ef7cacc6e979b",
+  "node_count": 200,
+  "independent_extractions_equal": true,
+  "board_reference_only": true,
+  "selected_nodes": [
+    {
+      "path": "/device-tree/arm-io/uart4/wlan",
+      "compatible": "wlan-pcie-uart,bcm4350,wlan-pcie-uart,bcm"
+    },
+    {
+      "path": "/device-tree/arm-io/uart5/gas-gauge",
+      "compatible": "gas-gauge,bq27540,gas-gauge,hdq"
+    },
+    {
+      "path": "/device-tree/arm-io/i2c0/pmu",
+      "compatible": "pmu,d2255"
+    },
+    {
+      "path": "/device-tree/arm-io/i2c1/tigris",
+      "compatible": "charger,sn2400"
+    },
+    {
+      "path": "/device-tree/arm-io/apcie",
+      "compatible": "apcie,s8000"
+    },
+    {
+      "path": "/device-tree/arm-io/apcie/pci-bridge1",
+      "compatible": ""
+    },
+    {
+      "path": "/device-tree/arm-io/apcie/pci-bridge1/wlan",
+      "compatible": "wlan-pcie,bcm4350,wlan-pcie,bcm"
+    },
+    {
+      "path": "/device-tree/arm-io/dart-apcie1",
+      "compatible": "dart,s8000,dart,s5l8960x"
+    }
+  ],
+  "n71_pcie_port": 1,
+  "driver_sources": [
+    {
+      "path": "drivers/pci/controller/pcie-apple-h9p.c",
+      "commit": "d49ac41cb898881457a97bb3cd44b7d92ff50a8c",
+      "sha256": "4e3436c34aa1f84909535cb57bd38e5f2633e51e67f5741c5fe0747376ec95f2",
+      "bytes": 59784,
+      "url": "https://raw.githubusercontent.com/Pauli1Go/HoolockLinux/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/pci/controller/pcie-apple-h9p.c"
+    },
+    {
+      "path": "drivers/power/supply/apple_sn2400_charger.c",
+      "commit": "d49ac41cb898881457a97bb3cd44b7d92ff50a8c",
+      "sha256": "27005d853ccb6cd62ff3e79a24d651de15b2d88eb229ecdb139b3a3785885566",
+      "bytes": 20634,
+      "url": "https://raw.githubusercontent.com/Pauli1Go/HoolockLinux/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/power/supply/apple_sn2400_charger.c"
+    },
+    {
+      "path": "drivers/iommu/apple-dart.c",
+      "commit": "d49ac41cb898881457a97bb3cd44b7d92ff50a8c",
+      "sha256": "bd5affcf8d63bbeee5aa11c237941e6a7a64605ba20067d826a480365e897605",
+      "bytes": 48034,
+      "url": "https://raw.githubusercontent.com/Pauli1Go/HoolockLinux/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/drivers/iommu/apple-dart.c"
+    }
+  ],
+  "usb_budget_candidate": {
+    "changed_paths": [
+      "init"
+    ],
+    "identities_preserved": true,
+    "kernel_dtb_loader_prefix_unchanged": true,
+    "payload_sha256": "1a29df4c49bb76c12bb3bcd5929182734172b4f6f0aed76ffbadf885c5f1dbab",
+    "initramfs_sha256": "e17091af72ff5b4cb44e0b4890ec92e42f7545312dac1cb08be82b1ce53a2c76",
+    "usb_budget_mA": 500,
+    "physical_boot_tested": false,
+    "charging_validation": "unverified",
+    "default_profile_changed": false
+  },
+  "usb_order_gate": {
+    "mac_and_vm_passed": true,
+    "assertion_mutations_killed": 6
+  },
+  "image_gate": {
+    "mac_and_vm_passed": true,
+    "tests": 5,
+    "assertion_mutations_killed": 4
+  },
+  "physical_wifi_enabled": false,
+  "runtime_power_supply_available": false,
+  "runtime_thermal_available": false,
+  "runtime_configfs_MaxPower_mA": 2,
+  "host_descriptor_confirmed": false,
+  "reboots_performed": 0,
+  "raw_firmware_or_calibration_published": false
+}

@@ -1,0 +1,503 @@
+{
+  "format": 1,
+  "date": "2026-10-05",
+  "code_commit": "36c7f537a9cb266e6f79f09443f56733e2c1f9cc",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "contract": {
+    "cli_acquire": "--host-scan --scan-link-target --scan-pme-disable --scan-hold",
+    "cli_release": "--release-held <private-session> with the same explicit held candidate",
+    "held_default_enabled": false,
+    "exact_boolean_provenance": true,
+    "local_check_has_no_ssh_or_usb": true,
+    "private_state_reserved_before_effects": true,
+    "atomic_private_state_replacement": true,
+    "identity_fields": [
+      "deployment_sha256",
+      "payload_sha256",
+      "initramfs_sha256",
+      "modules"
+    ],
+    "resume_requires_same_boot_and_exact_kernel_history": true,
+    "live_stage_hashes_and_readonly_parameters_checked": true,
+    "live_reg_on_and_pci_owners_checked_before_release": true,
+    "missing_pci_directory_not_reported_empty": true,
+    "cleanup_before_unload_and_reg_on_restore": true,
+    "partial_cleanup_resumes_without_rescan_or_duplicate_release": true,
+    "negative_stop_error_preserved_after_owner_release": true,
+    "attempt_flags_without_checkpoint_authorize_no_release": true
+  },
+  "qualification": {
+    "platforms": {
+      "macos-arm64": {
+        "qualified": true,
+        "tests": 63,
+        "assertion_mutations": 103,
+        "held_tests": 18,
+        "held_assertion_mutations": 22,
+        "compatibility_tests": 45,
+        "compatibility_assertion_mutations": 81,
+        "stages": [
+          {
+            "stage": "held-session",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 18,
+            "assertion_mutations": 22,
+            "mutations": [
+              "held-profile-identity",
+              "held-boot",
+              "held-checkpoint-hash",
+              "held-proof-hash",
+              "held-history",
+              "held-private-mode",
+              "held-sysfs-parameters",
+              "held-staged-hash",
+              "held-live-owner",
+              "held-cleanup-parser",
+              "held-stop-error",
+              "held-stop-exit",
+              "held-bind-suppression",
+              "held-pci-directory",
+              "held-reg-repeat-write",
+              "held-checkpoint-name",
+              "held-journal-before-effect",
+              "held-caller-parameter",
+              "held-caller-parser",
+              "held-build-selection",
+              "held-provenance",
+              "held-release-scope"
+            ],
+            "log_sha256": "f1f14cf4af389187d14c5735098570d307b87a6aa00db5129fc91403dbb3b130"
+          },
+          {
+            "stage": "link",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 45,
+            "assertion_mutations": 0,
+            "mutations": [],
+            "log_sha256": "19887c7627ca0ae0e4a6da1193168db6959db276c8241752b34ecd298346a6a9"
+          },
+          {
+            "stage": "link-mutations",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 0,
+            "assertion_mutations": 81,
+            "mutations": [
+              "endpoint-pme-scope",
+              "endpoint-pme-mode",
+              "endpoint-pme-parser",
+              "endpoint-pme-profile",
+              "aspm-profile",
+              "aspm-payload",
+              "aspm-loader",
+              "aspm-bootargs-hash",
+              "aspm-live-option",
+              "aspm-live-marker",
+              "endpoint-pme-disable-contract",
+              "endpoint-pme-enable-only",
+              "endpoint-pme-no-w1c",
+              "endpoint-pme-active",
+              "endpoint-pme-reread",
+              "endpoint-pme-opt-in",
+              "endpoint-pme-owner",
+              "aspm-contract",
+              "pme-target-scope",
+              "pme-profile-flag",
+              "pme-no-write-contract",
+              "pme-active-contract",
+              "pme-reread-contract",
+              "pme-root-contract",
+              "profile-release-pair",
+              "profile-payload",
+              "binding-build-flags",
+              "binding-module-abi",
+              "selected-elf-release",
+              "selected-live-release",
+              "selected-result-release",
+              "selected-history-release",
+              "binding-profile-module-hash",
+              "selected-session-release",
+              "target-profile-flag",
+              "target-mode-abi",
+              "target-module-abi",
+              "target-module-pin",
+              "target-build-flags",
+              "target-unbind",
+              "reg-on-under-retention",
+              "ignore-live-status",
+              "ignore-retry-state",
+              "host-selection",
+              "cycle-mode",
+              "cycle-cleanup",
+              "private-ttbr-output",
+              "original-latch",
+              "fresh-control",
+              "restore-pending",
+              "cleanup-finally",
+              "read-budget",
+              "endpoint-validity",
+              "link-predicate",
+              "inventory-budget",
+              "inventory-master",
+              "inventory-bars",
+              "inventory-mode",
+              "inventory-selection",
+              "status-unique",
+              "ignore-retained",
+              "ignore-powered",
+              "ignore-put-pending",
+              "counts-annotation",
+              "final-caller-cleanup",
+              "final-config",
+              "final-target",
+              "bus-removed",
+              "caller-primary",
+              "unbound-success",
+              "unbound-primary",
+              "pme-complete-records",
+              "pme-unique-prepare",
+              "pme-prepare-state",
+              "pme-final-restore",
+              "pme-retry-state",
+              "pme-after-config",
+              "pme-after-bus-removal",
+              "pme-before-tls",
+              "pme-after-prepare",
+              "pme-before-scan"
+            ],
+            "log_sha256": "63bdb9f1227cd7c04a133da2af1313db807baa759f5eb7e4424b90f708a3196c"
+          }
+        ],
+        "final_input_sha256": "5253bb2e3b6d375eca3e57d82393304ff17e4562b227579531c578463a228116",
+        "inputs_preserved": true,
+        "compatibility_reused_after_held_only_directory_fix": true
+      },
+      "ubuntu-arm64": {
+        "qualified": true,
+        "tests": 63,
+        "assertion_mutations": 103,
+        "held_tests": 18,
+        "held_assertion_mutations": 22,
+        "compatibility_tests": 45,
+        "compatibility_assertion_mutations": 81,
+        "stages": [
+          {
+            "stage": "held-session",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 18,
+            "assertion_mutations": 22,
+            "mutations": [
+              "held-profile-identity",
+              "held-boot",
+              "held-checkpoint-hash",
+              "held-proof-hash",
+              "held-history",
+              "held-private-mode",
+              "held-sysfs-parameters",
+              "held-staged-hash",
+              "held-live-owner",
+              "held-cleanup-parser",
+              "held-stop-error",
+              "held-stop-exit",
+              "held-bind-suppression",
+              "held-pci-directory",
+              "held-reg-repeat-write",
+              "held-checkpoint-name",
+              "held-journal-before-effect",
+              "held-caller-parameter",
+              "held-caller-parser",
+              "held-build-selection",
+              "held-provenance",
+              "held-release-scope"
+            ],
+            "log_sha256": "d72644769dd12a0db1ce74fd695aa02aba255657729acf026c11aefbe23b2cd2"
+          },
+          {
+            "stage": "link",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 45,
+            "assertion_mutations": 0,
+            "mutations": [],
+            "log_sha256": "ee78e959aaad94f6de72fb4450f2a5fd8fd217b6dc4010f3a8c6ec280030b4f9"
+          },
+          {
+            "stage": "link-mutations",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 0,
+            "assertion_mutations": 81,
+            "mutations": [
+              "endpoint-pme-scope",
+              "endpoint-pme-mode",
+              "endpoint-pme-parser",
+              "endpoint-pme-profile",
+              "aspm-profile",
+              "aspm-payload",
+              "aspm-loader",
+              "aspm-bootargs-hash",
+              "aspm-live-option",
+              "aspm-live-marker",
+              "endpoint-pme-disable-contract",
+              "endpoint-pme-enable-only",
+              "endpoint-pme-no-w1c",
+              "endpoint-pme-active",
+              "endpoint-pme-reread",
+              "endpoint-pme-opt-in",
+              "endpoint-pme-owner",
+              "aspm-contract",
+              "pme-target-scope",
+              "pme-profile-flag",
+              "pme-no-write-contract",
+              "pme-active-contract",
+              "pme-reread-contract",
+              "pme-root-contract",
+              "profile-release-pair",
+              "profile-payload",
+              "binding-build-flags",
+              "binding-module-abi",
+              "selected-elf-release",
+              "selected-live-release",
+              "selected-result-release",
+              "selected-history-release",
+              "binding-profile-module-hash",
+              "selected-session-release",
+              "target-profile-flag",
+              "target-mode-abi",
+              "target-module-abi",
+              "target-module-pin",
+              "target-build-flags",
+              "target-unbind",
+              "reg-on-under-retention",
+              "ignore-live-status",
+              "ignore-retry-state",
+              "host-selection",
+              "cycle-mode",
+              "cycle-cleanup",
+              "private-ttbr-output",
+              "original-latch",
+              "fresh-control",
+              "restore-pending",
+              "cleanup-finally",
+              "read-budget",
+              "endpoint-validity",
+              "link-predicate",
+              "inventory-budget",
+              "inventory-master",
+              "inventory-bars",
+              "inventory-mode",
+              "inventory-selection",
+              "status-unique",
+              "ignore-retained",
+              "ignore-powered",
+              "ignore-put-pending",
+              "counts-annotation",
+              "final-caller-cleanup",
+              "final-config",
+              "final-target",
+              "bus-removed",
+              "caller-primary",
+              "unbound-success",
+              "unbound-primary",
+              "pme-complete-records",
+              "pme-unique-prepare",
+              "pme-prepare-state",
+              "pme-final-restore",
+              "pme-retry-state",
+              "pme-after-config",
+              "pme-after-bus-removal",
+              "pme-before-tls",
+              "pme-after-prepare",
+              "pme-before-scan"
+            ],
+            "log_sha256": "63bdb9f1227cd7c04a133da2af1313db807baa759f5eb7e4424b90f708a3196c"
+          }
+        ],
+        "final_input_sha256": "5253bb2e3b6d375eca3e57d82393304ff17e4562b227579531c578463a228116",
+        "inputs_preserved": true,
+        "compatibility_reused_after_held_only_directory_fix": true
+      }
+    },
+    "public_input_count": 36,
+    "inputs": {
+      "docs/evidence/kernel-n71-bundle-build.json": {
+        "bytes": 4558,
+        "sha256": "01c2db2d9b6319555161e2438de22cecf4bb20adb0a3d34524d90023e099879c"
+      },
+      "docs/evidence/m1n1-rebuild.json": {
+        "bytes": 5173,
+        "sha256": "47c05448a71661082a756e8d0bc05dd700fe3aff64e7382c55c920dee013c569"
+      },
+      "docs/evidence/n71-binding-profile.json": {
+        "bytes": 13857,
+        "sha256": "7099326bbe809d3b658be58a2ac723475fffe20ccb8cb6419ee9ff44809484cc"
+      },
+      "docs/evidence/n71-dart-cycle-build.json": {
+        "bytes": 3528,
+        "sha256": "b9fafc4237833f8a61bad5b30066ef0fc3ebd04b51a8fc31d23346edc21ec46a"
+      },
+      "docs/evidence/n71-dart-state-build.json": {
+        "bytes": 2563,
+        "sha256": "dc5f3c8c40fc8a120f5f4e8375339a11a20e96cd284a1ad3db61c0ee15859705"
+      },
+      "docs/evidence/n71-pci-held-caller.json": {
+        "bytes": 15698,
+        "sha256": "5ff425784fa9d4ae919de3a26cf3c29f9faac63ac5d2980ff54ce6c1b28460c8"
+      },
+      "docs/evidence/n71-pcie-bar-sizing.json": {
+        "bytes": 2027,
+        "sha256": "29ffe4338960489f7a7ac6bd4d55492fadef3b51fda4b56d25b475d99c4eff9b"
+      },
+      "docs/evidence/n71-pcie-bridge-scan-build.json": {
+        "bytes": 3113,
+        "sha256": "7e222f43bebf0f4e7167e248b4594b114755d4c5b7f9cf03896c09f7ea5d0a26"
+      },
+      "docs/evidence/n71-pcie-chip-id-build.json": {
+        "bytes": 2003,
+        "sha256": "bf0e7614097314ab640a28f5623266eb5a547b9ddcf51ad814b3874a709ac9ef"
+      },
+      "docs/evidence/n71-pcie-config-inventory.json": {
+        "bytes": 3277,
+        "sha256": "11a4f6b373ce35dc003f9bd9cabe9383fde45584a6efa9e3a8f9a9099c62235d"
+      },
+      "docs/evidence/n71-pcie-controls-scan-build.json": {
+        "bytes": 3994,
+        "sha256": "4b31fb6005b85f113e4afc375a5f0376c3bef2a34409e716cfb596bb804126d1"
+      },
+      "docs/evidence/n71-pcie-pme-aspm-build.json": {
+        "bytes": 23753,
+        "sha256": "3d347360c9937a396030f5d62ee5cba723ca0d9d6494e6bc705694143d8c7bc1"
+      },
+      "docs/evidence/n71-pcie-pme-noop-build.json": {
+        "bytes": 15776,
+        "sha256": "e697928495e358d908fedc0d2cd1efdbd2763e3d4db034f094686ed437e85efb"
+      },
+      "docs/evidence/n71-pcie-scan-target-build.json": {
+        "bytes": 10691,
+        "sha256": "b98cda2136fb37883a2f2dc83e86350fe02fb43af4e5809dd8bdd81cc223cbad"
+      },
+      "scripts/host/device_profile.py": {
+        "bytes": 6526,
+        "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+      },
+      "scripts/host/n71-link-session.py": {
+        "bytes": 32543,
+        "sha256": "af3dea0b7cdd624032d5e6d8ea87e97b544e8a7b748e86490924316f55a20758"
+      },
+      "scripts/host/n71_bar_result.py": {
+        "bytes": 3096,
+        "sha256": "77f0046bf9589c4f530813724a1b65678ee1afef7bb44680ac0de56cd76b0e80"
+      },
+      "scripts/host/n71_chip_result.py": {
+        "bytes": 2166,
+        "sha256": "5635ff77403a8b9211be1909fac6228bf25c75b548a6962ec4b7fc42ecf0a511"
+      },
+      "scripts/host/n71_dart_cycle_result.py": {
+        "bytes": 4562,
+        "sha256": "571fa7e2318a916da1c24eb0830cac86445e9e05e9d101534e1a4056acab0c9f"
+      },
+      "scripts/host/n71_dart_result.py": {
+        "bytes": 3171,
+        "sha256": "98d707949851b9e7a2bee6d01300d2c46a442edc6d815a91272bb85b45a87ade"
+      },
+      "scripts/host/n71_held_session.py": {
+        "bytes": 20262,
+        "sha256": "f0e6c709b10917f6039cff50d2ec9cba5aa828e8f7d82c3d4f3ca625116a3791"
+      },
+      "scripts/host/n71_scan_held_result.py": {
+        "bytes": 10311,
+        "sha256": "b33be4898124e87fd4c2eea386d2fb8117a32fbcd9a7b504da2ae727f4b3720e"
+      },
+      "scripts/host/n71_scan_pme_result.py": {
+        "bytes": 2959,
+        "sha256": "ea08620386e7c65de46b4b2a753ce0365bfce81e4c204c797ba7fb8c84e72590"
+      },
+      "scripts/host/n71_scan_result.py": {
+        "bytes": 3702,
+        "sha256": "051615003afa1eb7091d5f2a73d931958e3463a407a1efc7cc5390c61a53a58f"
+      },
+      "scripts/host/n71_scan_target_result.py": {
+        "bytes": 4066,
+        "sha256": "37f2e7ce6fab4c26231097c7591d5bc7e9909c848e377b6a87c3c427d38afe7e"
+      },
+      "scripts/host/n71_session_history.py": {
+        "bytes": 2725,
+        "sha256": "4f6760e9b125cbcb7434631a91d2d88e59be53e29b6d889aad865855a70797bc"
+      },
+      "tests/run_n71_link_session_mutations.py": {
+        "bytes": 10933,
+        "sha256": "64d6f842cd863bca796ff2b4e0bb21f16fd29b20f58511ee40a6c7c5ec86b566"
+      },
+      "tests/run_n71_scan_result_mutations.py": {
+        "bytes": 2119,
+        "sha256": "d081a049a72375951646c7e8a3a029fa0e646d4e35a130d7e865b755c43f895b"
+      },
+      "tests/test_n71_bar_result.py": {
+        "bytes": 3647,
+        "sha256": "f509d2e1d90befab0557d6c1b9bc307a35b3e7a330d10b9a7f35e7ac864fb60c"
+      },
+      "tests/test_n71_chip_result.py": {
+        "bytes": 3104,
+        "sha256": "5a3983443cafca968d85f9bd920ebc2ba8a06a7697dc6094595c44d1e37a5c62"
+      },
+      "tests/test_n71_dart_cycle_result.py": {
+        "bytes": 5529,
+        "sha256": "0d6828f3bad0896da06f5fdacd2e15c224804a56aa279013867bc04ee15099be"
+      },
+      "tests/test_n71_dart_result.py": {
+        "bytes": 4910,
+        "sha256": "f52ca466fa8bcf8b2dc7aac6f3b109ea40a4bf6b50c2e8bbe289a0f346bb3038"
+      },
+      "tests/test_n71_held_session.py": {
+        "bytes": 33876,
+        "sha256": "4c9aec1ea7cb96ecabd8ac9c035e0f648873e0f6bc95f82b6ed78bed2b0608c7"
+      },
+      "tests/test_n71_link_session.py": {
+        "bytes": 72368,
+        "sha256": "93732109d4e8c33ecbabbbb9d7c65b0c45c07a362ab0a78271c0b09229537d90"
+      },
+      "tests/test_n71_scan_held_result.py": {
+        "bytes": 19778,
+        "sha256": "6d0fd723e1d9d38e58734edbfdbea1904ef648066484524886d91a83a8e3012e"
+      },
+      "tests/test_n71_scan_result.py": {
+        "bytes": 3810,
+        "sha256": "fd3cfdea2e5231d2efe934a6714bc1c4747f61785be34abd7fc1741cd2719c06"
+      }
+    },
+    "generated_bash_commands_syntax_checked": 17,
+    "snapshot_shell_executed_against_synthetic_sysfs": true,
+    "ast_passed": true,
+    "fatal_flake8_passed": true,
+    "flake8_version": "7.3.0",
+    "lint_python_version": "3.12.6",
+    "python_static_typechecker_configured": false,
+    "compile_import_timeout_counted_as_mutation_kill": false,
+    "ssh_kernel_dependencies_simulated": true
+  },
+  "reused_evidence": [
+    "n71-pci-held-parser.json",
+    "n71-pci-held-caller.json",
+    "n71-pci-held-bus.json"
+  ],
+  "limits": {
+    "physical_held_bus_verified": false,
+    "physical_profile_selected": false,
+    "module_loaded_on_phone": false,
+    "new_kernel_or_image_built": false,
+    "resources_assigned": false,
+    "driver_bound": false,
+    "irq_delivery_verified": false,
+    "dma_enabled": false,
+    "firmware_loaded": false,
+    "wifi_verified": false,
+    "battery_telemetry_verified": false,
+    "linux_charging_verified": false,
+    "server_services_retested_on_phone": false,
+    "future_diagnostics_that_change_history_must_join_session_checkpoint_protocol": true,
+    "ssh_transport_exercised_on_phone": false
+  }
+}

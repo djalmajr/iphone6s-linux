@@ -1,0 +1,69 @@
+{
+  "format": 1,
+  "status": "offline_gpio_descriptor_cycles_qualified_physical_pending",
+  "kernel": {
+    "source": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "patch": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+    "config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+    "image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+    "exports": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "inputs": {
+    "phone/kernel/i2c-pins/Makefile": "5f5f9cea131eb6ec5ae08099fe080f0ee4a46377e1fc7a0747d8c33ef23ac78b",
+    "phone/kernel/i2c-pins/n71-i2c-pin-cycle.c": "46422de2f77dec10c8478af8d80cdb09ebc034599c80eabeea1d53033e85d2ca",
+    "tests/n71_i2c_pin_cycle.c": "a8a0a6fbc1ed1a837937ebf634fd92cdb39de94f9fc5bc1f20837cd4e80c74e2",
+    "tests/test_n71_i2c_pin_cycle.py": "3ba0116402c8a43beb1571e562e2e3e995bfb7326dbbde670982019015f68884"
+  },
+  "tests": {
+    "mac-native": {
+      "exit": 0,
+      "seconds": 7.7,
+      "log_sha256": "5aa3dd13b942c6cdf95797c9266e167545d6c6aa50a2847dd5c11c23f338dc36",
+      "python_tests": 1,
+      "native_scenarios": 107,
+      "compiled_assertion_mutations": 22
+    },
+    "arm-native": {
+      "exit": 0,
+      "seconds": 1.52,
+      "log_sha256": "890f1b7f7636ae9ab2248887aeda2798e8b304542a3e8a585a2fd149f4b81e4c",
+      "python_tests": 1,
+      "native_scenarios": 107,
+      "compiled_assertion_mutations": 22
+    }
+  },
+  "build": {
+    "exit": 0,
+    "seconds": 1.0,
+    "log_sha256": "19a8af15074687275ac2ce7c14a31038275d0992a6c61083d3a78250e97ec00e"
+  },
+  "module": {
+    "bytes": 13720,
+    "sha256": "95bc260634fe6fa065e00f15553a4059fbc6acf95db2f2079cb4361b7b9a180e",
+    "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64"
+  },
+  "abi": {
+    "imports_count": 39,
+    "missing_exports": [],
+    "elf64_aarch64": true,
+    "missing_kernel_Module_symvers_warning": true,
+    "KBUILD_MODPOST_WARN_used": false
+  },
+  "kernel_before_after_identical": true,
+  "lint": {
+    "exit": 0,
+    "seconds": 0.19,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "ast_valid": true,
+  "python_type_checker_configured": false,
+  "ci_integration": "existing unittest discovery on Ubuntu and macOS",
+  "physical_boot_performed": false,
+  "physical_gpio_reservation_verified": false,
+  "physical_pinmux_ownership_verified": false,
+  "i2c_controller_activated": false,
+  "charger_io_performed": false,
+  "battery_telemetry_verified": false,
+  "linux_charging_verified": false,
+  "limits": "Native tests execute the production module using synthetic OF/device/GPIO/regmap APIs. Build/exports do not prove physical pin reservation, mux ownership, I2C, charger operation or net battery current. The Image-only build lacks aggregate Module.symvers; preserved vmlinux.symvers was supplied through KBUILD_EXTRA_SYMBOLS and all 39 imports were separately matched."
+}

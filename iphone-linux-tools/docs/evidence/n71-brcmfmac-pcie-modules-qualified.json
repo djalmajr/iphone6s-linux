@@ -1,0 +1,211 @@
+{
+  "format": 1,
+  "baseline": {
+    ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+    "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+    "full-link-v1-20261005/Image.gz": "78a423539fdd1a6be371ca7489737c7dacf9ecbee893e3d3f2e7794d0ea2c578",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61",
+    "source_head": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "source_diff_sha256": "6e1fccc1c936ee94c3f921ebe75e6dda4670c647f16b6c864df5475e20764657",
+    "source_status_sha256": "dcaac11a316ccfa6a461ecf52f8c74cd2e36f38bf2427b52f812ae22d069678b"
+  },
+  "source_and_baseline_preserved": true,
+  "iphone_accessed": false,
+  "image_built_or_selected": false,
+  "global_packages_installed": false,
+  "variant_config_changes": {
+    "CONFIG_BRCMFMAC_PROTO_MSGBUF": [
+      "n",
+      "y"
+    ],
+    "CONFIG_BRCMFMAC_PCIE": [
+      "n",
+      "y"
+    ]
+  },
+  "variant_config_raw_changes": {
+    "CONFIG_BRCMFMAC_PROTO_MSGBUF": [
+      null,
+      "y"
+    ],
+    "CONFIG_BRCMFMAC_PCIE": [
+      "n",
+      "y"
+    ]
+  },
+  "variant_config_sha256": "f73d586eb3a12e8f7e0ff867201eff69cf2ab1a4800220d642335a5e15059a0c",
+  "qualified": true,
+  "accepted_log_sha256": {
+    "select-pcie-final-private.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "olddefconfig-private.log": "eb28777ee6e322f1534926d84b900db71e55ff1d7592f932a456f8b4ddd95319",
+    "prepare-abi-private.log": "5d69b3cfde656a1c05d10aa41fe7322c5eee4503f16ac782cb2b2e7fa80747c0",
+    "rfkill-abi-private.log": "ecc3ae1bd9e59a9126dabb95bd1e537af439babcbcfaa6683f4d38541c9eaeff",
+    "cfg80211-abi-private.log": "143999ccc195546464d29bf0a59504d1a51aa4b3dd89b246137eeec6c924d0f5",
+    "brcmutil-abi-private.log": "5bd9ea887efc823bac49fc01d2936bc7e95680e9a68cecf1824411fbdd655d94",
+    "brcmfmac-abi-private.log": "6b0514d27771e96454515f009fcdc81096fd6bd2ba48916aeb6b2db307011db3"
+  },
+  "status": "pcie_modules_qualified_physical_runtime_selection_calibration_and_energy_pending",
+  "stages": {
+    "select-pcie-final": {
+      "exit": 0,
+      "seconds": 0.02
+    },
+    "olddefconfig": {
+      "exit": 0,
+      "seconds": 1.6
+    },
+    "prepare-abi": {
+      "exit": 0,
+      "seconds": 0.37
+    },
+    "rfkill-abi": {
+      "exit": 0,
+      "seconds": 0.44
+    },
+    "cfg80211-abi": {
+      "exit": 0,
+      "seconds": 7.15
+    },
+    "brcmutil-abi": {
+      "exit": 0,
+      "seconds": 0.77
+    },
+    "brcmfmac-abi": {
+      "exit": 0,
+      "seconds": 7.7
+    }
+  },
+  "module_count": 8,
+  "total_module_bytes": 1245480,
+  "modules": {
+    "module-rfkill/rfkill.ko": {
+      "bytes": 46992,
+      "sha256": "3500e7852e11188efa912241d45805b669586ad5a90fe01dd4bcb1f3754e38f3",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "import_count": 63,
+      "imports_verified": true,
+      "depends": []
+    },
+    "module-rfkill/rfkill-gpio.ko": {
+      "bytes": 11832,
+      "sha256": "585bc3929f72b9ae3e0cdd6f0a2f87a13fa135fe2770e261168ce6a3078f9064",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "import_count": 24,
+      "imports_verified": true,
+      "depends": [
+        "rfkill"
+      ]
+    },
+    "module-cfg80211/cfg80211.ko": {
+      "bytes": 640776,
+      "sha256": "970977f33124d1c3c9d658b6dc71cab03a75a504a54d55a6de861aaf56709895",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "import_count": 168,
+      "imports_verified": true,
+      "depends": [
+        "rfkill"
+      ]
+    },
+    "module-brcmutil/brcmutil.ko": {
+      "bytes": 18008,
+      "sha256": "866e7e66747c86a48a965c0fc54ba02a9f2a2b30a4ff9038a1af4200792dc393",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "import_count": 11,
+      "imports_verified": true,
+      "depends": []
+    },
+    "module-brcmfmac/brcmfmac.ko": {
+      "bytes": 498800,
+      "sha256": "ffc713a0ecf94d30dff765fd33f1fb4eb7be572fbeac954507b9229013f84660",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "import_count": 269,
+      "imports_verified": true,
+      "depends": [
+        "brcmutil",
+        "cfg80211"
+      ],
+      "endpoint_pci_alias_verified": true
+    },
+    "module-brcmfmac/wcc/brcmfmac-wcc.ko": {
+      "bytes": 6544,
+      "sha256": "d5c7fa258c37d4d4e22103adb1a31761f4842f984594b63824731dfb1940008f",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "import_count": 5,
+      "imports_verified": true,
+      "depends": [
+        "brcmfmac"
+      ]
+    },
+    "module-brcmfmac/bca/brcmfmac-bca.ko": {
+      "bytes": 6480,
+      "sha256": "239a133856970c299cddd7a89cdccc626140349a2cd9dd1c8a38ca7535870c2f",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "import_count": 4,
+      "imports_verified": true,
+      "depends": [
+        "brcmfmac"
+      ]
+    },
+    "module-brcmfmac/cyw/brcmfmac-cyw.ko": {
+      "bytes": 16048,
+      "sha256": "eb9db72d2e43aa6fc2466e34ac75ddd8c5aec899e230e4a222a721e390460bb7",
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "import_count": 24,
+      "imports_verified": true,
+      "depends": [
+        "cfg80211",
+        "brcmfmac"
+      ]
+    }
+  },
+  "mac_bytes_elf_and_hash_audit": true,
+  "installed_or_loaded": false,
+  "source_url": "https://github.com/HoolockLinux/linux/tree/958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "build_settings": {
+    "W": 1,
+    "KCFLAGS": "-Werror",
+    "jobs": 2,
+    "LOCALVERSION": "",
+    "kernel_export_table": "copy of preserved vmlinux.symvers in isolated Module.symvers",
+    "KBUILD_EXTRA_SYMBOLS": "only already built dependency Module.symvers",
+    "MODPOST_WARN": false
+  },
+  "prior_failures": [
+    "incorrect gzip path before copy/build",
+    "scripts/config requires Bash, not sh; no original config changed",
+    "hidden boolean PROTO_MSGBUF absent is normalized as n",
+    "undefined LOCALVERSION appended plus; corrected using official empty LOCALVERSION rule",
+    "initial missing aggregate export table warning; isolated copy of preserved exports supplied"
+  ],
+  "pending": [
+    "journal/coordinator recovery and normal unload/release",
+    "exact profile/CLI/module selection",
+    "N71 firmware/calibration and signed regulatory data",
+    "HDQ/gauge/charging and grouped physical Wi-Fi/IRQ/DMA proof"
+  ],
+  "export_tables": {
+    "module-rfkill/Module.symvers": {
+      "sha256": "f712a8ab9b0a8828f195867de96ff09e39f2b540bea3d9e1fb6637515160f25f",
+      "bytes": 794
+    },
+    "module-cfg80211/Module.symvers": {
+      "sha256": "d22b7112fc4f9e0af85d90122742279c1627c1c7c819626506788f8cbae534b0",
+      "bytes": 10930
+    },
+    "module-brcmutil/Module.symvers": {
+      "sha256": "77ecf9b4ec2f85427cb55e74ba03837906a0c5af38a25ec917060624ac79be4d",
+      "bytes": 858
+    },
+    "module-brcmfmac/Module.symvers": {
+      "sha256": "48aee9fe6ddd44748c0ec140cfe8aeae23562f7882bc2748fe46c104de2456db",
+      "bytes": 992
+    }
+  },
+  "prior_ci": {
+    "commit": "3a2539061f627bb4298eaec06a9448ff0736f8aa",
+    "pr_run": 38043917207,
+    "push_run": 38043914412,
+    "terminal_success_jobs": 6,
+    "covers_this_module_build": false
+  }
+}

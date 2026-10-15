@@ -1,0 +1,12 @@
+--- a/drivers/pmdomain/apple/pmgr-pwrstate.c
++++ b/drivers/pmdomain/apple/pmgr-pwrstate.c
+@@ -350,8 +350,9 @@
+ static struct platform_driver apple_pmgr_ps_driver = {
+ 	.probe = apple_pmgr_ps_probe,
+ 	.driver = {
+ 		.name = "apple-pmgr-pwrstate",
+ 		.of_match_table = apple_pmgr_ps_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ };
+ 

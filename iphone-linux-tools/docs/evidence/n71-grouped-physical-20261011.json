@@ -1,0 +1,98 @@
+{
+  "format": 1,
+  "status": "physical_partial",
+  "date": "2026-10-11",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "single_dfu": true,
+  "services": {
+    "strict_ssh": true,
+    "http": true,
+    "herdr_started": true,
+    "snapshot_restored": true,
+    "snapshot_saved_and_verified": true,
+    "sync_verified": true
+  },
+  "energy": {
+    "power_supply_entries": 0,
+    "thermal_entries": 0,
+    "usb_declared_budget_ma": 500,
+    "usb_actual_current_measured": false,
+    "linux_charging_proved": false,
+    "hdq_action_exit": 1,
+    "hdq_error": -16,
+    "hdq_value_valid": false,
+    "hdq_cleanup_error": 0,
+    "hdq_unload_verified": true,
+    "charger_value_writes": 0
+  },
+  "wifi": {
+    "reg_on_readback_verified": true,
+    "link_verified": true,
+    "resource_assignment_verified": true,
+    "native_prepare_exit": 0,
+    "native_prepare_reconciled_same_boot": true,
+    "native_publish_exit": 0,
+    "firmware_execution_observed": true,
+    "chip": "BCM4350",
+    "revision": 8,
+    "wlan_interface_available": false,
+    "initialization_error": -5,
+    "dart_fault": {
+      "stream": 0,
+      "code": 2,
+      "reason": "NO PMD FOR IOVA",
+      "iova": "0x3ffff028"
+    },
+    "radio_irq_delivery_proved": false,
+    "association_proved": false
+  },
+  "userspace": {
+    "package_bytes": 17786880,
+    "package_sha256": "5f1396ae55f41783c360cd28c111ee6d78d9d72a6188f9714e0b6e3b48dfd617",
+    "phone_transfer_hash_verified": true,
+    "isolated_loader": true,
+    "iw": "6.7",
+    "wpa_supplicant": "2.10",
+    "wpa_cli": "2.10",
+    "execution_exit": 0,
+    "iw_dev_exit": 0,
+    "iw_dev_interfaces": 0,
+    "mac_packages_installed": false
+  },
+  "cleanup": {
+    "wcc_unload_verified": true,
+    "native_release_exit": 0,
+    "bus_removed_stop_error": 0,
+    "prior_runtime_error_preserved": -1,
+    "power_reset_restored": true,
+    "coordinator_accepted": false,
+    "coordinator_failure": "Held stop refusal and error differ",
+    "separate_readback_normal_unload_verified": true,
+    "forced_unload": false,
+    "reg_on_restored": true,
+    "ios_usb_return_verified": false
+  },
+  "parser_fix": {
+    "files": [
+      "scripts/host/n71_driver_runtime_result.py",
+      "tests/test_n71_driver_runtime_result.py"
+    ],
+    "mac_tests": 31,
+    "arm64_tests": 31,
+    "assertion_mutations_per_platform": 49,
+    "ast_passed": true,
+    "lint_passed": true,
+    "typechecker_configured": false,
+    "same_boot_physical_resume_passed": true
+  },
+  "pending_issues": [
+    2,
+    9,
+    40,
+    42,
+    45,
+    46,
+    47,
+    48
+  ]
+}

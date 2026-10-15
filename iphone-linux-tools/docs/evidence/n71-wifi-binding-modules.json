@@ -1,0 +1,203 @@
+{
+  "format": 1,
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_profile": "n71-dart-serdev-power-v2",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "preserved_kernel_sha256": {
+    ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+    "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "config": {
+    "CONFIG_BRCMFMAC": "m",
+    "CONFIG_BRCMFMAC_PCIE": "n",
+    "CONFIG_BRCMFMAC_PROTO_MSGBUF": "n",
+    "CONFIG_BRCMFMAC_SDIO": "y",
+    "CONFIG_BRCMUTIL": "m",
+    "CONFIG_CFG80211": "m",
+    "CONFIG_FW_LOADER": "y",
+    "CONFIG_MODVERSIONS": "n",
+    "CONFIG_PCI": "y",
+    "CONFIG_RFKILL": "m"
+  },
+  "macro_files": [
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile",
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h",
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h"
+  ],
+  "modules": {
+    "brcm80211/brcmfmac/bca/brcmfmac-bca.ko": {
+      "bytes": 6480,
+      "sha256": "239a133856970c299cddd7a89cdccc626140349a2cd9dd1c8a38ca7535870c2f",
+      "depends": [
+        "brcmfmac"
+      ]
+    },
+    "brcm80211/brcmfmac/brcmfmac.ko": {
+      "bytes": 499256,
+      "sha256": "a36fadc864e0daa357622070ec01c19e416b01d437e1b532068a9014b2242449",
+      "depends": [
+        "brcmutil",
+        "cfg80211"
+      ]
+    },
+    "brcm80211/brcmfmac/cyw/brcmfmac-cyw.ko": {
+      "bytes": 16056,
+      "sha256": "5394d4c4a563192ad7662c34ce2ffef1e5cf679f3e376f233df091f82ec5718d",
+      "depends": [
+        "brcmfmac",
+        "cfg80211"
+      ]
+    },
+    "brcm80211/brcmfmac/wcc/brcmfmac-wcc.ko": {
+      "bytes": 6544,
+      "sha256": "d5c7fa258c37d4d4e22103adb1a31761f4842f984594b63824731dfb1940008f",
+      "depends": [
+        "brcmfmac"
+      ]
+    },
+    "brcm80211/brcmutil/brcmutil.ko": {
+      "bytes": 18096,
+      "sha256": "14a584cd508ac9c1f84f8f248eab10ef4606b03ae85af82237ba6cda2940b682",
+      "depends": []
+    },
+    "cfg80211/cfg80211.ko": {
+      "bytes": 640776,
+      "sha256": "970977f33124d1c3c9d658b6dc71cab03a75a504a54d55a6de861aaf56709895",
+      "depends": [
+        "rfkill"
+      ]
+    },
+    "rfkill/rfkill-gpio.ko": {
+      "bytes": 11832,
+      "sha256": "585bc3929f72b9ae3e0cdd6f0a2f87a13fa135fe2770e261168ce6a3078f9064",
+      "depends": [
+        "rfkill"
+      ]
+    },
+    "rfkill/rfkill.ko": {
+      "bytes": 46992,
+      "sha256": "3500e7852e11188efa912241d45805b669586ad5a90fe01dd4bcb1f3754e38f3",
+      "depends": []
+    }
+  },
+  "pci_alias_verified": "pci:v000014E4d000043A3sv*sd*bc02sc80i*",
+  "pcie_msgbuf_symbols_linked": true,
+  "werror_modpost_passed": true,
+  "kernel_source_and_image_preserved": true,
+  "installed": false,
+  "loaded_on_phone": false,
+  "firmware_selected": false,
+  "wifi_verified": false,
+  "implementation_commit": "3ce8aaf7ead9368e5bdf2bd2b221b0f89ecbd203",
+  "proof_scope": "Offline native ARM64 external module build and independent Mac artifact verification; no driver installation, phone load, firmware selection or native Wi-Fi proof",
+  "public_input_sha256": {
+    "scripts/build/build-n71-wifi-modules.py": {
+      "bytes": 10121,
+      "sha256": "dea53839e8b49ec3bc58a5e216a64f8a7fea9af4769d6b239fa1a35e39285f6f"
+    },
+    "scripts/build/kernel_bundle.py": {
+      "bytes": 7424,
+      "sha256": "807bfc3a59801a2703b1135fc3887a2873b25cc2e05b10de9c9cd0bd89d8ed64"
+    },
+    "scripts/build/kernel_patchset.py": {
+      "bytes": 5466,
+      "sha256": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817"
+    },
+    "tests/test_n71_wifi_modules.py": {
+      "bytes": 10709,
+      "sha256": "ff3395c3bab867677e1de0336bfab75b0df9f063aa064ecf5d06479d0d033c6b"
+    },
+    "tests/run_n71_wifi_modules_mutations.py": {
+      "bytes": 2987,
+      "sha256": "3ef34bcda39d0f7a87e6f602ff8c7b44d80fae199b99adc1982c148c7aef6ec0"
+    },
+    "phone/kernel/patches/0001-s5l8960x-dart-stream-tcr.patch": {
+      "bytes": 593,
+      "sha256": "da321ed0e213a5ab4e3e27691f64d529b186474c556a00a2e7ee90957c785f74"
+    },
+    "phone/kernel/patches/0002-serdev-stop-bits.patch": {
+      "bytes": 2952,
+      "sha256": "f987f64912a410d588ac0d1d9a47c7cc275a0dc234fbe27549011255e98e0d11"
+    },
+    "phone/kernel/patches/0003-apple-gpio-write-errors.patch": {
+      "bytes": 11634,
+      "sha256": "739b9fc44bec4bad00bea367af70decef5fb56248a636d822d51396343088094"
+    },
+    "phone/kernel/patches/0004-apple-pmgr-errors.patch": {
+      "bytes": 8677,
+      "sha256": "d8202c48516faec2bf4506af486ca2fd1b256360a41aad2d4df584c140d7e135"
+    },
+    "phone/kernel/patches/0005-apple-pmgr-probe-errors.patch": {
+      "bytes": 10967,
+      "sha256": "b005ddf799b9cdea7149b38d850936c30c16342af47d11a61595157d14e24b2f"
+    },
+    "phone/kernel/patches/0006-apple-pmgr-provider-cleanup.patch": {
+      "bytes": 1428,
+      "sha256": "e0159ec77cec26beafb1332526f9ba7f287f53c05f70a6dcd2376abca6dc445b"
+    },
+    "phone/kernel/patches/0007-apple-pmgr-no-manual-bind.patch": {
+      "bytes": 334,
+      "sha256": "3f5a3e4c97a6cf898eaf90d53fcdc45a9796707c4123a14b1d0e043b58934aaa"
+    }
+  },
+  "source_file_count": 187,
+  "source_manifest_sha256": "40b681f0a7b4723c854a3719f2d113ce5dfec3c6c85b0dc7c98184b413dac06c",
+  "raw_provenance_sha256": "916dd266d79cb55a20fdbe1c618c7a03f987938d4f0ebfc4e6fa6c873cd64a0a",
+  "kernel_legacy_preserved_sha256": {
+    ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+    "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+    "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+  },
+  "inputs_preserved": true,
+  "legacy_source_output_preserved": true,
+  "mac_hash_elf_abi_dependency_closure_recalculated": true,
+  "artifacts_private_mode_700_600_verified": true,
+  "gates": {
+    "mac_contract_tests": 12,
+    "mac_assertion_mutation_kills": 17,
+    "arm64_contract_tests": 12,
+    "arm64_assertion_mutation_kills": 17,
+    "native_builder_exit_code": 0,
+    "python_ast_checked": true,
+    "fatal_flake8_checked": true,
+    "configured_type_checker": false,
+    "mac_log_sha256": {
+      "mac-tests-private.log": "000d9fb3a3fd6674a591725e2118e0a99b2be1020bd367ea6bcd635e4358f1f5",
+      "mac-mutations-private.log": "dbb4f2581860659a241afd8c2f9b5c2eacc3812da836c67ae9933fa1bd6ddd6d"
+    },
+    "arm64_build_log_sha256": {
+      "native-private.log": "7e6db92d4a16c61f643ff7c167d50d46bb8fe5e7d29a1fa633007ac025525ba8",
+      "mutations-private.log": "dbb4f2581860659a241afd8c2f9b5c2eacc3812da836c67ae9933fa1bd6ddd6d",
+      "rfkill-build-private.log": "2a576d5b0aa224ed542d02ae8de1a8c0c2a4e32f3bb34c3983f347c147634687",
+      "cfg80211-build-private.log": "e44c67012ec5e642500fe2535a44e54054115b93bf71849984741ce91b10091d",
+      "brcm80211-build-private.log": "01ef58ed77ff0836dfd31e743687c3e2d080c754a6e9da0f4e859d976c6dce3c"
+    }
+  },
+  "build_recipe": {
+    "profile": "n71-dart-serdev-power-v2",
+    "source": "/home/ubuntu/kernel-n71-binding-source-20261005",
+    "kernel_output": "/home/ubuntu/kernel-n71-binding-build-20261005",
+    "module_output": "/home/ubuntu/n71-wifi-binding-module-build-20261005-v1",
+    "new_output_required": true,
+    "compiler_version": "13.3.0",
+    "module_only_free_space_gate_gib": 1,
+    "fresh_image_free_space_gate_gib_unchanged": 8
+  },
+  "legacy_default_profile_unchanged": "n71-dart-serdev-v1",
+  "brcmfmac_dependency_load_order": [
+    "rfkill",
+    "cfg80211",
+    "brcmutil",
+    "brcmfmac"
+  ],
+  "additional_modules_not_automatically_loaded": [
+    "rfkill-gpio",
+    "brcmfmac-bca",
+    "brcmfmac-cyw",
+    "brcmfmac-wcc"
+  ],
+  "reboots_for_this_work": 0,
+  "phone_commands_executed": false,
+  "limits": "The class-filtered PCI alias is a build contract. Actual endpoint identity, BAR sizing/routing, IRQ delivery, DART mapping/isolation, chip revision and compatible firmware/calibration remain unqualified for driver loading. power2 has not been physically booted. Charging and battery telemetry are unproven."
+}

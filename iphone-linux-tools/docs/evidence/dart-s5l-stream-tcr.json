@@ -1,0 +1,29 @@
+{
+  "format": 1,
+  "source": "HoolockLinux pinned kernel",
+  "source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "file": "drivers/iommu/apple-dart.c",
+  "method": "apple_dart_s5l8960x_write_tcr",
+  "original_method_sha256": "ec7576ce878cc5b92c419eeab81f7a4141e816a8657fbfe33162e87d62a4a5ad",
+  "layout_from_source": "Four stream bytes in one32-bit TCR;8 bits per stream",
+  "defect": "Original AND preserves the selected mask instead of the other streams; value is ORed into stream0 without SID shift",
+  "counterexample": {
+    "initial": "01020304",
+    "sid": 1,
+    "value": "80",
+    "original_result": "00000380",
+    "required_result": "01028004"
+  },
+  "patch_scope": "Correct mask/shift; reject SID>=4 and value>ff before MMIO. Does not add shared-register concurrency locking",
+  "gates": {
+    "actual_pinned_method_matches_patch_old_hunk": true,
+    "native_macos_fixed_passes": true,
+    "native_macos_original_and_four_mutants_assert": true,
+    "native_arm64_original_asserts_fixed_passes": true,
+    "kernel_object_werror": true,
+    "preserved_source_unchanged_after_build": true
+  },
+  "not_applied_to_preserved_kernel_image": true,
+  "n71_dart_layout_sid_mapping_and_dma_not_physically_verified": true,
+  "limits": "Only simulated MMIO and source regression proof. No native Wi-Fi or DMA test; N71 DART topology remains disabled. Concurrency and stream ownership require separate validation before enabling DMA"
+}

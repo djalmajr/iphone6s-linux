@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "status": "regdb_cryptographically_verified_cached_calibration_found_no_radio_load",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_sources": {
+    "pcie.c": "2bc4ff2f06eb515b404e08973a39c029ec975155a17a7baaf6f62e76ca181b4c",
+    "of.c": "a3005c3984c5473277ad67a8da4d718084675b061f0863fc6614d3b33992acf8",
+    "common.c": "8b16af808a17e3a141f34e14b76d7c83090fbc04a9b98428744b98008b65bfc7"
+  },
+  "regdb": {
+    "origin": "https://www.kernel.org/pub/software/network/wireless-regdb/",
+    "version": "2026.09.03",
+    "files": {
+      "regulatory.db": {
+        "sha256": "7e236caecd939c8ec98be4870bf30422f28ffef2565a38aaaa2d9ddabd0c2641",
+        "bytes": 6348
+      },
+      "regulatory.db.p7s": {
+        "sha256": "50332f0db09b8bcc719235ec4985c27377f2cc2f42abb7b5dcf951866c5a888a",
+        "bytes": 1085
+      }
+    },
+    "official_archive_checksum_matches": true,
+    "archive_pgp_signature_verified": false,
+    "format": 1,
+    "kernel_certificate_source_sha256": "6485f5ddecbecbf73113dc669fe23da07f1a5ab60fb1ad932b0062f9d7fe8753",
+    "kernel_certificate_der_sha256": "eeb049594eb3a83e50bfb6782e7fdf9e96fbd5c2954a0bbb0931cd55321d0bcf",
+    "regulatory_db_sha256": "7e236caecd939c8ec98be4870bf30422f28ffef2565a38aaaa2d9ddabd0c2641",
+    "signature_sha256": "50332f0db09b8bcc719235ec4985c27377f2cc2f42abb7b5dcf951866c5a888a",
+    "cms_signature_against_explicit_kernel_certificate": true,
+    "internal_signer_certificate_not_used": true,
+    "altered_content_refused": true,
+    "kernel_loader_physically_verified": false,
+    "iphone_accessed": false
+  },
+  "calibration": {
+    "same_device_cached_live_capture": true,
+    "capture_complete_bounded": true,
+    "candidate_property": "wifi-calibration-msf",
+    "candidate_bytes": 1024,
+    "linux_target_property": "brcm,cal-blob",
+    "m1n1_source_commit": "d5a10ac52a6468484854419a6c5130f1d62073eb",
+    "m1n1_kboot_sha256": "abd9228f171bbfce65a95a60203839ea58cd90e110ce0ebc3fbcf643e764edd0",
+    "upstream_source_copies_same_property_to_linux_cal_blob": true,
+    "n71_automatic_loader_mapping_verified": false,
+    "driver_firmware_acceptance_physically_verified": false,
+    "device_bytes_hashes_and_identity_published": false
+  },
+  "chip_4350_apple_otp_parser_supported_in_pinned_source": false,
+  "iphone_accessed": false,
+  "limits": [
+    "CMS verification used the explicit certificate from the pinned kernel source; internal signer certificate was excluded and changed content was refused.",
+    "No kernel regdb load, firmware execution, radio association, IRQ/DMA or charging proof.",
+    "Cached properties extracted only privately; scalar rx-calibration-temp was not reconstructed from its text rendering.",
+    "The current loader looks for /arm-io/wlan and wifi0; cached N71 WLAN is under /arm-io/uart4/wlan. DT endpoint routing and antenna handling need explicit qualification.",
+    "The 1024-byte candidate matches the source property handoff contract; it is not yet proved accepted by the N71 firmware."
+  ]
+}

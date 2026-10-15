@@ -1,0 +1,92 @@
+{
+  "format": 1,
+  "verified_head": "ba9473c6e62bbb4c1ad0bb7f7c0c265b19e5eb24",
+  "runs": [
+    {
+      "run_id": 37613054924,
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37613054924",
+      "jobs": [
+        {
+          "name": "windows-dns",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-07T11:18:05Z",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37613054924/job/112764711186"
+        },
+        {
+          "name": "source (macos-15)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-07T11:31:14Z",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37613054924/job/112764711426",
+          "new_pin_cycle_gate_executed": true,
+          "native_scenarios": 107,
+          "compiled_assertion_mutations": 22,
+          "log_sha256": "0c10d138aee9de98e9e52d1f6a86f7c913dee2d411a9c50cdfa7a8929d23ba1c"
+        },
+        {
+          "name": "source (ubuntu-24.04)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-07T11:28:07Z",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37613054924/job/112764711445",
+          "new_pin_cycle_gate_executed": true,
+          "native_scenarios": 107,
+          "compiled_assertion_mutations": 22,
+          "log_sha256": "ee5d9d0219cb16e93989de79c6d1512e7f24e4e757850ca553eea06f4a316a1b"
+        }
+      ]
+    },
+    {
+      "run_id": 37613048208,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37613048208",
+      "jobs": [
+        {
+          "name": "source (ubuntu-24.04)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-07T11:28:07Z",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37613048208/job/112764687911",
+          "new_pin_cycle_gate_executed": true,
+          "native_scenarios": 107,
+          "compiled_assertion_mutations": 22,
+          "log_sha256": "3d5a536a449cf5a0936d50521cb88fe3bb5e8db2848c1f8ad209c89c9164dc24"
+        },
+        {
+          "name": "windows-dns",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-07T11:17:57Z",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37613048208/job/112764688071"
+        },
+        {
+          "name": "source (macos-15)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-07T11:29:48Z",
+          "url": "https://github.com/djalmajr/iphone6s-linux/actions/runs/37613048208/job/112764688174",
+          "new_pin_cycle_gate_executed": true,
+          "native_scenarios": 107,
+          "compiled_assertion_mutations": 22,
+          "log_sha256": "80e7358910057bab7deb1308dceaaf0d86b36dccd46432f9206884de50c9624b"
+        }
+      ]
+    }
+  ],
+  "inputs_sha256": {
+    "phone/kernel/i2c-pins/Makefile": "5f5f9cea131eb6ec5ae08099fe080f0ee4a46377e1fc7a0747d8c33ef23ac78b",
+    "phone/kernel/i2c-pins/n71-i2c-pin-cycle.c": "46422de2f77dec10c8478af8d80cdb09ebc034599c80eabeea1d53033e85d2ca",
+    "tests/n71_i2c_pin_cycle.c": "a8a0a6fbc1ed1a837937ebf634fd92cdb39de94f9fc5bc1f20837cd4e80c74e2",
+    "tests/test_n71_i2c_pin_cycle.py": "3ba0116402c8a43beb1571e562e2e3e995bfb7326dbbde670982019015f68884"
+  },
+  "physical_gpio_reservation_verified": false,
+  "linux_charging_verified": false,
+  "wifi_verified": false,
+  "limits": "Six completed CI jobs qualify public software. The new production-module synthetic gate executed on all four source jobs, each with 107 scenarios and 22 compiled assertion mutations. No device, mux ownership, I2C/charger, gauge, IRQ/DMA or Wi-Fi physical proof."
+}

@@ -1,0 +1,165 @@
+{
+  "format": 1,
+  "date": "2026-10-01",
+  "issue": 9,
+  "status": "investigation-partial-no-native-wifi",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "source_branch": "hoolock-stable",
+  "sources": [
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "arch/arm64/boot/dts/apple/s8000-n71.dts",
+      "blob": "f2964a1fc4349bb110f77f5a2c9a7d853511b562",
+      "bytes": 353,
+      "sha256": "c2acff7dc487be4cf53d715389f7c12e119264029d9e5b1931f3486750cad422",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/arch/arm64/boot/dts/apple/s8000-n71.dts"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "arch/arm64/boot/dts/apple/s800x-6s.dtsi",
+      "blob": "1ac114eecd262d58fdb8372f5eccb06c2625c72d",
+      "bytes": 1601,
+      "sha256": "5df18145b750f3dd0131af585574ea8f2957bb37a15b372c217b348fb0d0231f",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/arch/arm64/boot/dts/apple/s800x-6s.dtsi"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "arch/arm64/boot/dts/apple/s800-0-3-common.dtsi",
+      "blob": "ad31117983f4a1199dafe3b842a5748eac7c5552",
+      "bytes": 975,
+      "sha256": "cf65c0da937e05fa768d775c86f0a5b22dab8c0d1d0f2f4371bc3e8c1f9793ba",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/arch/arm64/boot/dts/apple/s800-0-3-common.dtsi"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "arch/arm64/boot/dts/apple/s8000.dtsi",
+      "blob": "72322f5677ab15820675a0c4e04eba0a4210bdde",
+      "bytes": 1427,
+      "sha256": "41cd7a5c1edef6e0bbe89c898b263d4b919568d402c163ae5530553c67c059d3",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/arch/arm64/boot/dts/apple/s8000.dtsi"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "arch/arm64/boot/dts/apple/s800-0-3.dtsi",
+      "blob": "fc7dc7c5ba3a4ff53b104b7f1b87d5a4766d8c9f",
+      "bytes": 8738,
+      "sha256": "7dea8e989e58b12b56a33f127b40b332814fa78d46ae4c11ac57bcc0e2f30525",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/arch/arm64/boot/dts/apple/s800-0-3.dtsi"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "arch/arm64/boot/dts/apple/s800-0-3-pmgr.dtsi",
+      "blob": "196b8e745a957c3735ea68bd2d035c0fb891b9fa",
+      "bytes": 19531,
+      "sha256": "dbce98106ed4007d7040e2d415cf31bf29f9be8d2fde9f2f8284e38be50569bf",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/arch/arm64/boot/dts/apple/s800-0-3-pmgr.dtsi"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "drivers/pci/controller/pcie-apple.c",
+      "blob": "c2cffc0659f449a0b89f2cfb7f4f028c56dbd2d8",
+      "bytes": 24051,
+      "sha256": "416dce904eabc6859f36a051cf9ce0d77473634b3f1526587a9d58870b70898c",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/pci/controller/pcie-apple.c"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "drivers/iommu/apple-dart.c",
+      "blob": "df75fad246c149ad2a4b3980d5b7c3ad66584310",
+      "bytes": 44818,
+      "sha256": "f19d3c2a7ada7451956f2a87fea09c174584bfd68ba7a1f6e8793db653047f85",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/iommu/apple-dart.c"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c",
+      "blob": "55f4d7b970f28787f89534838f00248ace00cfee",
+      "bytes": 77496,
+      "sha256": "2bc4ff2f06eb515b404e08973a39c029ec975155a17a7baaf6f62e76ca181b4c",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c"
+    },
+    {
+      "repository": "HoolockLinux/linux",
+      "revision": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+      "path": "drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c",
+      "blob": "22ff326f1924a32043e6765c39d8bae24066035a",
+      "bytes": 21174,
+      "sha256": "f2b6fe570981bf69a81fd5965712f18840df9b97dabcdbd4aa4cf260b4e9760b",
+      "url": "https://github.com/HoolockLinux/linux/blob/958481f87fee0949ff6a9a4af77f7eb6dac8a149/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c"
+    },
+    {
+      "repository": "HoolockLinux/docs",
+      "revision": "23ebe1fbc375599221553a7e1815e5de182a6b42",
+      "path": "features/A9.md",
+      "blob": "00c370f3ee279a9e048735baab6b2ca04ef48e8a",
+      "bytes": 3463,
+      "sha256": "e34758da5b56332d7e808b96da6fb2554bb5e07129514450e1ef64950d82098d",
+      "url": "https://github.com/HoolockLinux/docs/blob/23ebe1fbc375599221553a7e1815e5de182a6b42/features/A9.md"
+    },
+    {
+      "repository": "Pauli1Go/HoolockLinux",
+      "revision": "d49ac41cb898881457a97bb3cd44b7d92ff50a8c",
+      "path": "README.md",
+      "blob": "a6ac362b7e0387d20503e2c12647f720294288e5",
+      "bytes": 12292,
+      "sha256": "98255e98d0e02f40234a87e95260e7e1437647abfbb954645fc83ab588ddde45",
+      "url": "https://github.com/Pauli1Go/HoolockLinux/blob/d49ac41cb898881457a97bb3cd44b7d92ff50a8c/README.md"
+    }
+  ],
+  "selected_artifacts": {
+    "scope": "static-selected-artifacts-not-runtime",
+    "dtb_sha256": "b25b2b748d6f934d3b4ed51d9906ae86ae5e031756bfe9009073a4dea7537f58",
+    "dtb_bytes": 22884,
+    "dtb_node_count": 136,
+    "wifi_bus_matches": [],
+    "initramfs_sha256": "05b37cb3521b5fe6db064b577eb146e0c2b4244d9ce230303f76a5f2d941e6d7",
+    "initramfs_entries": 2969,
+    "kernel_module_count": 0,
+    "module_tree_present": true,
+    "kernel_config_sha256": "ae1348cdd46bb94eb9e3725b6089a2ecddae5b4dfa423164b4d4f085a8707d2c",
+    "kernel_config": {
+      "CONFIG_PCI": "CONFIG_PCI=y",
+      "CONFIG_PCIE_APPLE": "CONFIG_PCIE_APPLE=m",
+      "CONFIG_APPLE_DART": "CONFIG_APPLE_DART=y",
+      "CONFIG_BRCMFMAC": "CONFIG_BRCMFMAC=m",
+      "CONFIG_BRCMFMAC_PCIE": "# CONFIG_BRCMFMAC_PCIE is not set",
+      "CONFIG_BRCMFMAC_SDIO": "CONFIG_BRCMFMAC_SDIO=y",
+      "CONFIG_CFG80211": "CONFIG_CFG80211=m",
+      "CONFIG_FW_LOADER": "CONFIG_FW_LOADER=y"
+    }
+  },
+  "findings": {
+    "selected_n71_dtb_has_operational_wifi_bus_node": false,
+    "module_tree": "lib/modules directory only, zero .ko files",
+    "brcmfmac_pcie_enabled": false,
+    "apple_pcie_match_data": "apple,pcie selects t8103 data; apple,t6020-pcie selects t602x data; no S8000-specific match in examined table",
+    "dart_limit": "Generic driver exists, but N71 DTB lacks corresponding radio DMA topology; no A9 port or stream mapping validated.",
+    "firmware_limit": "Generic BCM4350/4350C2 PCIe names exist in driver; chip revision, board suffix, firmware and calibration for this N71 remain unconfirmed.",
+    "a10_fork_validation": "README names iPad7,12/J172 and iPhone9,4/D111, both T8010; this is not A9 proof."
+  },
+  "controller_candidate": {
+    "family": "Broadcom BCM4350",
+    "confidence": "candidate-only-not-enumerated-on-this-device",
+    "primary_reference": "https://doi.org/10.1109/SAM48682.2020.9104399",
+    "reference_scope": "Table I reports BCM4350 as Bluetooth controller for an iPhone 6s. It does not identify this N71 Wi-Fi revision, bus, reset pins or calibration."
+  },
+  "not_performed": [
+    "native enumeration",
+    "firmware download or extraction",
+    "module install",
+    "hardware register writes",
+    "SSID association or DHCP",
+    "image/config replacement",
+    "Mac package installation"
+  ],
+  "next_gate": "Read-only PCI/SDIO/wireless/firmware-log inventory after successful selected-kernel boot; preserve USB, then collect private board topology before designing a port."
+}

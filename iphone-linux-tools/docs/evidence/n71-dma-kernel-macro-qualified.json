@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "status": "kernel_guard_macro_collision_fix_native_mac_qualified",
+  "inputs": {
+    "phone/kernel/n71-dma-observe.h": {
+      "bytes": 3572,
+      "sha256": "753720706803d1aaf6750bbd6df95af4b70e40081562a28073db5c6483398305"
+    },
+    "tests/n71_dma_observe.c": {
+      "bytes": 7705,
+      "sha256": "ebee38051071474b54f7a73bf0145e0cd6c7622b298cabd306483951356afb00"
+    },
+    "tests/test_n71_dma_observe.py": {
+      "bytes": 3948,
+      "sha256": "13cd6bd1dd537e47266e9e5bbab96ac891b4c1e28b7f9c1a2d9ad1dde71562e4"
+    }
+  },
+  "native": {
+    "platform": "macOS",
+    "helper_cases": 100,
+    "backend_cases": 58,
+    "assertion_mutations": 32,
+    "guard_macro_present_in_helper_fixture": true,
+    "log_sha256": "0e87f27ab72536680d13e80996a069d3445c47afc3c95a03017dbd68ff694400"
+  },
+  "contract": {
+    "callback_member_renamed_from_guard_to_validate": true,
+    "layout_and_callback_behavior_unchanged": true,
+    "kernel_guard_macro_not_undefined_or_suppressed": true,
+    "prior_275_case_caller_gate_reused_no_caller_source_change": true
+  },
+  "ast_passed": true,
+  "fatal_and_unused_lint_passed": true,
+  "corrected_kernel_compile_passed": false,
+  "phone_accessed": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "charging_verified": false,
+  "goal_complete": false
+}

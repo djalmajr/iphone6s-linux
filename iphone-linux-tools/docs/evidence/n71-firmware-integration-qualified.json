@@ -1,0 +1,84 @@
+{
+  "format": 1,
+  "status": "firmware_session_coordinator_integration_qualified_offline_not_radio_or_energy_proof",
+  "code_commit": "9293239",
+  "new_tests_per_platform": 5,
+  "new_assertion_mutations_per_platform": 4,
+  "affected_tests_per_platform": 21,
+  "affected_assertion_mutations_per_platform": 35,
+  "platforms": [
+    "macOS",
+    "Ubuntu 24.04 ARM64 dedicated VM"
+  ],
+  "public_input_count": 601,
+  "canonical_manifest_sha256": "8e53aa03f8a0a1a5c55c0b7572036611f97dd78ed0cacaab768543ac26bf286c",
+  "same_input_hashes_on_both_platforms": true,
+  "changed_inputs": [
+    {
+      "path": "scripts/host/n71-link-session.py",
+      "bytes": 37091,
+      "sha256": "824b7742fd6d13094386bd532a16c4d3ff134cc3109a9c6c9746b24979fca80a"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_cli.py",
+      "bytes": 6611,
+      "sha256": "b7cc3894327abae8730f8e67e4aacbfac51973bfc3f0dd55266ec178d67d9de2"
+    },
+    {
+      "path": "scripts/host/n71_driver_runtime_session.py",
+      "bytes": 12135,
+      "sha256": "7728d691bb7aafc33eb65ef68644ca172044a1ca6a73c82b8cc7ea3962de45e4"
+    },
+    {
+      "path": "tests/test_n71_firmware_runtime_integration.py",
+      "bytes": 11645,
+      "sha256": "115f502212d2e75890b2310234df0af53c8a6b44e4dbfd18597e9711d7bbe578"
+    }
+  ],
+  "ast_python_files": 270,
+  "fatal_lint_passed_both_platforms": true,
+  "python_typechecker_configured": false,
+  "real_components": [
+    "CLI selectors with actual private data and filesystem",
+    "Session.preflight and reserved capture",
+    "Held Journal/source loader/recovery/coordinator",
+    "generated firmware shell, hashes, modes and private files"
+  ],
+  "modeled_boundaries": [
+    "SSH, UID0 and sysfs",
+    "PCI/WCC hardware and register state",
+    "fixture kernel/image identity verification"
+  ],
+  "actual_calibrated_profile_and_real_package_local_check_passed": true,
+  "legacy_five_field_requests_preserved": true,
+  "source_file_bytes_unchanged_after_cycle_proved": true,
+  "bind_before_wcc_and_restore_before_provider_release_proved": true,
+  "bad_data_observe_refused_but_stop_can_restore": true,
+  "kernel_payload_initramfs_modules_and_defaults_changed": false,
+  "firmware_executed": false,
+  "iphone_accessed": false,
+  "mac_global_dependencies_or_configuration_changed": false,
+  "cli_firmware_option_exposed": false,
+  "discarded_failures": [
+    "Minimal legacy fixture lacked scan_hold; fixture updated consistently",
+    "Local-check process-denial mock was scoped to allow only the private transport during preflight",
+    "Old mutation string anchor/else syntax changed; source kept valid anchors and all existing20+11 mutations passed"
+  ],
+  "reused_proofs": [
+    "Unchanged native C/build artifacts",
+    "C6c2A firmware library9/10 with real VM sysfs restoration",
+    "Diagnostic payload composer/bundle dependencies unchanged"
+  ],
+  "pending_issues": [
+    9,
+    2,
+    40,
+    41,
+    42
+  ],
+  "next": [
+    "Expose --firmware-dir through existing entry and prove argument transport",
+    "Implement same-boot host reacquisition from proved stopped source (#42)",
+    "Complete energy preconditions and public download/regdb reproduction before a grouped physical session"
+  ]
+}

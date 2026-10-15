@@ -1,0 +1,57 @@
+{
+  "format": 1,
+  "status": "dma_getter_native_mac_qualified_not_kernel_built",
+  "inputs": {
+    "phone/kernel/n71-pcie-diagnostic.c": {
+      "bytes": 33154,
+      "sha256": "a2688b21e99553c3a3a358a85419b27d2cb7951213ba11a4a78e0bb15e9c6f76"
+    },
+    "phone/kernel/n71-pcie-dma-live.h": {
+      "bytes": 3821,
+      "sha256": "7468fef9d9bd278531d5f9a849395bc78f3cbc54f9552e2d90e05430ecf4dffd"
+    },
+    "phone/kernel/n71-dma-observe.h": {
+      "bytes": 3554,
+      "sha256": "8ea8affa6359dbbbe3479569cab228fae25094ff7272b658cd217d9cc7e69014"
+    },
+    "tests/n71_pcie_diagnostic_caller.c": {
+      "bytes": 69537,
+      "sha256": "5b911489c38e638b41557d242fea65be3b5fde9a1dfd3a11f8bffeb20fd67bef"
+    },
+    "tests/test_n71_pcie_diagnostic_caller.py": {
+      "bytes": 35979,
+      "sha256": "f903035b4d8038d528dac594452a65b5412fd263c78bf4614004cdf9fe71bc1b"
+    }
+  },
+  "native": {
+    "platform": "macOS",
+    "caller_cases": 275,
+    "dma_getter_cases": 5,
+    "assertion_mutations": 242,
+    "new_getter_mutations": 8,
+    "log_sha256": "b3addcb5b740f941bc2fd5ef67b553e37eb02e9ff64e87182bf973622900cce1"
+  },
+  "contract": {
+    "dma_observe_default": false,
+    "dma_iova_default": "0x3ffff028",
+    "parameter_permissions": "0400",
+    "requires_driver_runtime_and_iommu_parent": true,
+    "session_and_device_lifetime_serialized": true,
+    "result_validity_and_partial_data_reported": true,
+    "no_new_mapping_dma_or_write": true,
+    "no_primary_error_or_owner_changes_from_observation": true,
+    "boottime_timestamps": true,
+    "stable_is_not_hardware_mapping_proof": true
+  },
+  "proof_scope": "Caller/getter/backend/helper compiled and executed with modeled kernel, PCI, IOMMU and MMIO APIs; independent backend/helper gates also recorded.",
+  "ast_passed": true,
+  "fatal_and_unused_lint_passed": true,
+  "kernel_context_compiled": false,
+  "arm64_gate_passed": false,
+  "phone_accessed": false,
+  "vm_started": false,
+  "wifi_verified": false,
+  "telemetry_verified": false,
+  "charging_verified": false,
+  "goal_complete": false
+}

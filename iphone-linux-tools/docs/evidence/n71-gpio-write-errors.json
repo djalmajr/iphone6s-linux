@@ -1,0 +1,64 @@
+{
+  "format": 1,
+  "status": "isolated_provider_patch_built_no_bundle_integration_or_hardware_test",
+  "base_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "target": "drivers/pinctrl/pinctrl-apple-gpio.c",
+  "patch": "phone/kernel/patches/0003-apple-gpio-write-errors.patch",
+  "writes_mask_and_order_changed": false,
+  "error_propagation_callbacks": [
+    "set_mux",
+    "set",
+    "direction_input",
+    "direction_output",
+    "irq_set_type"
+  ],
+  "irq_handler_updated_after_success_only": true,
+  "test_cases_per_platform": 816,
+  "compiled_mutations_per_platform": 11,
+  "old_source_regression_assertion": true,
+  "platforms": [
+    "macOS native",
+    "Ubuntu 24.04 ARM64 native"
+  ],
+  "mac_gate_sha256": "fe6e7bfce81d7af5a6c83eb287e9f78e5ea54ec37594976183eaac39510c531d",
+  "vm_build": {
+    "format": 1,
+    "input_hashes": {
+      "phone/kernel/patches/0003-apple-gpio-write-errors.patch": "739b9fc44bec4bad00bea367af70decef5fb56248a636d822d51396343088094",
+      "tests/n71_gpio_write_errors.c": "ca9ba17e3b0a6863ec1b4dd9228acf3b5b672b72f717d9c45b76d91014860496",
+      "tests/test_n71_gpio_write_errors.py": "4ecb6c66533b7d6206703a239a2016c442764e400ae9196689fec9bd09e98772"
+    },
+    "original_blob_sha256": "9e387713c4443d0af50fde108ae46d35e2f57adc2738c005b3de5bf8d4c7533c",
+    "patched_blob_sha256": "81767e760802ce9fc1a9d9383268ccefd930aff821e59f414d2f8e99193e603a",
+    "artifact_sha256": "a5ef2630603d7410127823e81db0bfb388eb3cda0584a10aefdfe9950a9a52fd",
+    "artifact_bytes": 18672,
+    "vermagic": "7.2.0-iphone6s-dart-serdev1 SMP preempt mod_unload aarch64",
+    "preserved": {
+      ".config": "178fd8a566bf58501fe82730b0a007cc4b5cf1be2cdf773169990fa9db69a6f8",
+      "arch/arm64/boot/Image": "dd03169d097dc47f3fc727d7904039abb39434b3b4b2ca9ff4457bd2f346013d",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "logs": {
+      "arm64-gate-private.log": "e55bef2d7155e79287ba9ccf1a45fcf187975ac2d15a63b3086cd73ea6000b02",
+      "kernel-build-private.log": "014f95a918f30c080badb5f29d553b15c00a579a8cccb18aee9abf4665761966"
+    },
+    "autoload_permitted": false,
+    "physical_loaded": false
+  },
+  "compiled_module_purpose": "ABI verification only; original provider is built-in. Do not load a duplicate provider module. Future activation needs patchset integration and a new Image with preserved rollback.",
+  "kernel_image_changed": false,
+  "phone_driver_changed": false,
+  "charging_linux_validated": false,
+  "limits": "Error propagation is not rollback or a measured charge fix. Partial writes retain cleanup obligations. IRQ void/startup and read error contracts are not covered by this patch. I2C1 ownership, idle, restoration and SN2400 revision/read effects remain pending.",
+  "reproduction": [
+    "python3 -B tests/test_n71_gpio_write_errors.py",
+    "Create isolated copy of pinned drivers/pinctrl/pinctrl-apple-gpio.c; verify original SHA; git apply --check then apply patch; verify patched SHA.",
+    "Compile copied patched source as external provider module with -Werror and drivers/pinctrl include path against preserved source/output and vmlinux.symvers; never load module."
+  ],
+  "verification": "Mac and ARM64 logs retained privately; selected hashes match transferred inputs/results; config/Image/exports and original source unchanged.",
+  "tracking_issue": 35,
+  "python_lint": {
+    "command": "ASDF_PYTHON_VERSION=3.12.6 pyflakes tests/test_n71_gpio_write_errors.py",
+    "result": "passed; existing installation, no configuration or package changes"
+  }
+}

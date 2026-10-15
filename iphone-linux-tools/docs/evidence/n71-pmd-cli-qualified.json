@@ -1,0 +1,47 @@
+{
+  "format": 1,
+  "status": "pmd_cli_contracts_qualified_real_private_check_pending_composition",
+  "inputs": {
+    "scripts/host/n71_driver_runtime_cli.py": {
+      "bytes": 7275,
+      "sha256": "4b2b66769b20c2e87d904b86a06005e94141017d8ab11f17ff2eeb1dd8aa7fe3"
+    },
+    "tests/test_n71_driver_runtime_cli.py": {
+      "bytes": 16062,
+      "sha256": "7c9a4dd89101c7aee1848cb4ff156d2d753a36040e00e7380fc5b3b55bc706ff"
+    },
+    "tests/test_n71_pmd_runtime_cli.py": {
+      "bytes": 11132,
+      "sha256": "ed64391ebb0a9afdd9f85159ab1a778fd420e22e2623bb54307942c14d0ba8d1"
+    }
+  },
+  "gates": {
+    "pmd": {
+      "tests": 5,
+      "assertion_mutations": 4,
+      "passed": true,
+      "platform": "macOS",
+      "log_sha256": "a5f1073476ecc768e0e07025e384e6c06cea5a48340cdd364ff75c9a7ab257b4"
+    },
+    "legacy": {
+      "tests": 7,
+      "assertion_mutations": 20,
+      "passed": true,
+      "platform": "macOS",
+      "log_sha256": "6a47b286ff578f164966c63ac9abe2a02adead192de87e529cecd64055a14789"
+    }
+  },
+  "ast_passed": true,
+  "fatal_lint_passed": true,
+  "typechecker": "not_configured",
+  "proof_scope": "Real files, selectors, ELF/vermagic readers and Session. Nonbootable synthetic payload/module bytes; identity and gzip binding adapters and effect handlers modeled. Handler contracts are filesystem outputs, not phone execution.",
+  "default_power2_preserved": true,
+  "bundle_release_coupled": true,
+  "diagnostic_reader_uses_selected_release": true,
+  "private_real_cli_check_passed": false,
+  "phone_accessed": false,
+  "vm_started": false,
+  "wifi_physically_verified": false,
+  "telemetry_physically_verified": false,
+  "charging_physically_verified": false
+}

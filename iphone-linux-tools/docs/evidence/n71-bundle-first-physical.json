@@ -1,0 +1,92 @@
+{
+  "format": 1,
+  "board": "N71/S8000",
+  "observed_date_utc": "2026-10-03",
+  "proof_scope": "One grouped physical boot: selected kernel/restore, REG_ON latch, PCIe link/identity without DMA, read-only GPIO2 samples and verified recovery; no Wi-Fi or charging proof",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "profile_default_changed": false,
+  "manual_dfu_count": 1,
+  "snapshot_restore_verified": true,
+  "bash_verified": true,
+  "http_verified": true,
+  "reg_on": {
+    "owner": "existing simple-mfd-i2c shared regmap; no rebind",
+    "register": "0x914",
+    "mask": "0x01",
+    "original": "0x80",
+    "active_readback": "0x81",
+    "sample_register": "0x187",
+    "sample_raw": "0x20",
+    "sample_bit2": 0,
+    "sample_power_good_qualified": false,
+    "restored_readback": "0x80",
+    "active_after_restore": false,
+    "restore_pending_after_restore": false,
+    "unloaded": true
+  },
+  "pcie": {
+    "root_id": "1004106b",
+    "link_error": 0,
+    "port88": "00000005",
+    "link_status_reads": 12,
+    "endpoint_id": "43a314e4",
+    "pci_vendor": "14e4",
+    "pci_device": "43a3",
+    "bus_master_clear_verified": true,
+    "reset_restored_asserted": true,
+    "reset_readback_verified": true,
+    "power_references_after_release": 0,
+    "attached_domains_after_release": 0,
+    "module_unloaded": true,
+    "dma_enabled": false,
+    "pci_host_registered": false,
+    "firmware_loaded": false,
+    "wifi_verified": false
+  },
+  "gpio2": {
+    "register_offset": "0x08",
+    "cached_before": "00072220",
+    "hardware_first": "00072220",
+    "hardware_second": "00072220",
+    "cached_after": "00072220",
+    "mask": "0x270",
+    "masked_hardware": "0x220",
+    "samples_stable": true,
+    "cache_matches": true,
+    "hardware_writes": false,
+    "ownership_acquired": false,
+    "uart_or_charger_io": false,
+    "module_unloaded": true
+  },
+  "power_inventory": {
+    "power_supply_available": false,
+    "thermal_zone_available": false,
+    "usb_MaxPower_mA": 500,
+    "usb_bmAttributes": "0x80",
+    "charging_verified": false
+  },
+  "recovery": {
+    "all_three_diagnostic_modules_absent": true,
+    "snapshot_verified": true,
+    "sync_verified": true,
+    "software_ios_return_verified": true
+  },
+  "battery_ios_observations": {
+    "pre_percent": 100,
+    "pre_utc": "2026-10-03T12:12:25.755121+00:00",
+    "post_percent": 100,
+    "post_utc": "2026-10-03T12:20:37.905937+00:00",
+    "post_charging": true,
+    "post_external_connected": true,
+    "net_linux_charge_rate_proved": false,
+    "limits": "100 to100 across preparation/recovery/DFU/Linux/iOS, rounded percentages and full-charge state; does not measure Linux current or sustained charging."
+  },
+  "private_log_sha256": {
+    "boot": "3383183aeffadf242472c9ab10125228f8cfcfb462c0ebb91853085950da8e56",
+    "link": "2a39bd710d970e7a7e44a398e1c6c9ab79d572432b4304c8b0354cea30e13e89",
+    "gpio2": "67988f56c834b2aa149b9d1789cc8955d813d8fe8dff63ef91eb851e6136773f",
+    "power_services": "9203f34ff89b30c1a7476d6b33eb1981fdd132025466e31f43fb658c128f1797",
+    "return_ios": "1d456537e93c06eb2ffa20d3b25a5c0892b85447312b5c5c2161cf0c9fa90e29"
+  },
+  "limits": "Link and identity do not validate BAR routing, interrupts, DART/DMA, radio firmware, scan/association or telemetry. Raw logs, DT tables, modules, identities and snapshots remain private."
+}

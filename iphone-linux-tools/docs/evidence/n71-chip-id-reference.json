@@ -1,0 +1,31 @@
+{
+  "format": 1,
+  "status": "source_contract_verified_no_mmio_yet",
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "primary_sources_sha256": {
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c": "2bc4ff2f06eb515b404e08973a39c029ec975155a17a7baaf6f62e76ca181b4c",
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c": "932e25c75f9ea5247194dfdb78c6b41a457af68d7a558935a7b5489bf548aa9d",
+    "drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h": "32ebf65e5aa69162f8bc1f2f1d5793e8a337fcd47cc4d0c8bee23f0ba4f2d87d"
+  },
+  "upstream_offsets": {
+    "bar0_window_config": "0x80",
+    "chipcommon_base": "0x18000000",
+    "chip_id_offset": "0x0",
+    "id_mask": "0xffff",
+    "revision_mask": "0xf0000",
+    "revision_shift": 16,
+    "type_shift": 28
+  },
+  "temporary_route": {
+    "pci_bar0_base": "0xc0000000",
+    "cpu_bar0_base": "0x7c0000000",
+    "bar0_bytes": 32768,
+    "bridge_memory_window": "0xc000c000",
+    "cpu_range_reference": "n71-pcie-ecam.json"
+  },
+  "native_macos_c_faults": true,
+  "assertion_mutations": 6,
+  "mmio_physically_verified": false,
+  "dma_enabled": false,
+  "firmware_loaded": false
+}

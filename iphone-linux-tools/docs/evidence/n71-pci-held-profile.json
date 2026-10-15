@@ -1,0 +1,265 @@
+{
+  "format": 1,
+  "date": "2026-10-05",
+  "code_commit": "c30a4acd851ca772fbe59a934dcd8e062e938a48",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "contract": {
+    "cli": "--pcie-aspm-off --pcie-scan-hold --reg-on-module <private-qualified-module>",
+    "hold_default_enabled": false,
+    "requires_explicit_power2": true,
+    "requires_explicit_aspm_off": true,
+    "reg_on_without_hold_refused": true,
+    "qualified_build_selected_before_output": true,
+    "both_modules_size_hash_elf_vermagic_checked": true,
+    "reg_on_copied_automatically": true,
+    "target_noop_pme_hold_flags_generated_as_exact_booleans": true,
+    "no_automatic_module_load": true,
+    "legacy_payload_layout_and_default_preserved": true
+  },
+  "qualification": {
+    "platforms": {
+      "macos-arm64": {
+        "qualified": true,
+        "tests": 13,
+        "assertion_mutations": 29,
+        "legacy_tests": 7,
+        "legacy_assertion_mutations": 13,
+        "held_profile_tests": 6,
+        "held_profile_assertion_mutations": 16,
+        "stages": [
+          {
+            "stage": "profile",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 13,
+            "assertion_mutations": 0,
+            "mutations": [],
+            "log_sha256": "6db184f007a47a47d0dcd9fc87e17bcff62f7725e8bcd8aa960ec3049cdefe01"
+          },
+          {
+            "stage": "profile-mutations",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 0,
+            "assertion_mutations": 29,
+            "mutations": [
+              "known-abi",
+              "selected-power-abi",
+              "selected-binding-abi",
+              "binding-cli",
+              "cross-abi",
+              "elf-machine",
+              "payload-binding",
+              "dt-mask",
+              "omit-aspm-opt-in",
+              "enable-aspm-off-by-default",
+              "wrong-aspm-token",
+              "ignore-aspm-flag-type",
+              "omit-aspm-cli",
+              "held-aspm-scope",
+              "held-binding-scope",
+              "held-reg-required",
+              "held-reg-explicit",
+              "held-pcie-size",
+              "held-pcie-hash",
+              "held-reg-size",
+              "held-reg-hash",
+              "held-reg-abi",
+              "held-reg-private-path",
+              "held-reg-copy",
+              "held-profile-flag",
+              "held-profile-target",
+              "held-profile-noop",
+              "held-profile-pme",
+              "held-build-contract"
+            ],
+            "log_sha256": "0287108a948b79785fad083b353aa810cac4ad967e010a89855ef44994aa6da9"
+          }
+        ],
+        "inputs_preserved": true
+      },
+      "ubuntu-arm64": {
+        "qualified": true,
+        "tests": 13,
+        "assertion_mutations": 29,
+        "legacy_tests": 7,
+        "legacy_assertion_mutations": 13,
+        "held_profile_tests": 6,
+        "held_profile_assertion_mutations": 16,
+        "stages": [
+          {
+            "stage": "profile",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 13,
+            "assertion_mutations": 0,
+            "mutations": [],
+            "log_sha256": "af91dff4806b2636e63772822129ee744c400bac3a08a33f8db745a892507940"
+          },
+          {
+            "stage": "profile-mutations",
+            "qualified": true,
+            "exit": 0,
+            "native_tests": 0,
+            "assertion_mutations": 29,
+            "mutations": [
+              "known-abi",
+              "selected-power-abi",
+              "selected-binding-abi",
+              "binding-cli",
+              "cross-abi",
+              "elf-machine",
+              "payload-binding",
+              "dt-mask",
+              "omit-aspm-opt-in",
+              "enable-aspm-off-by-default",
+              "wrong-aspm-token",
+              "ignore-aspm-flag-type",
+              "omit-aspm-cli",
+              "held-aspm-scope",
+              "held-binding-scope",
+              "held-reg-required",
+              "held-reg-explicit",
+              "held-pcie-size",
+              "held-pcie-hash",
+              "held-reg-size",
+              "held-reg-hash",
+              "held-reg-abi",
+              "held-reg-private-path",
+              "held-reg-copy",
+              "held-profile-flag",
+              "held-profile-target",
+              "held-profile-noop",
+              "held-profile-pme",
+              "held-build-contract"
+            ],
+            "log_sha256": "0287108a948b79785fad083b353aa810cac4ad967e010a89855ef44994aa6da9"
+          }
+        ],
+        "inputs_preserved": true
+      }
+    },
+    "public_input_count": 20,
+    "inputs": {
+      "docs/evidence/n71-pci-held-caller.json": {
+        "bytes": 15698,
+        "sha256": "5ff425784fa9d4ae919de3a26cf3c29f9faac63ac5d2980ff54ce6c1b28460c8"
+      },
+      "scripts/build/compose-n71-diagnostic.py": {
+        "bytes": 11222,
+        "sha256": "a33db2c3086f9832b878d89edb5e6582212a1d0ece922b402ff0c951b5868c0a"
+      },
+      "scripts/build/integrate-source-kernel.py": {
+        "bytes": 12044,
+        "sha256": "c775173d3f0782387ac4374c675efc08a6833556662e1912fbd926e56ecd9f8b"
+      },
+      "scripts/build/kernel_bundle.py": {
+        "bytes": 7424,
+        "sha256": "807bfc3a59801a2703b1135fc3887a2873b25cc2e05b10de9c9cd0bd89d8ed64"
+      },
+      "scripts/build/kernel_patchset.py": {
+        "bytes": 5466,
+        "sha256": "51b79728f2ebd09ff1bcfd5cf5e8d144cdebc1177c2f1962459c784a9ecac817"
+      },
+      "scripts/build/prepare-n71-pcie-diagnostic.py": {
+        "bytes": 6840,
+        "sha256": "0d95c6d234a6b864efc1bddec509c246a17dd0ce53146014d52cb52c9c13c7e7"
+      },
+      "scripts/build/prepare-n71-topology.py": {
+        "bytes": 12359,
+        "sha256": "9aa9ecae3a25a340e76a2aab270288e13741012671b0bd9b435c6f7d7adf01b7"
+      },
+      "scripts/host/device_profile.py": {
+        "bytes": 6526,
+        "sha256": "dcebb8cadcc0f2044e63d230a5da3ddc15574433ccd745d2e4885df81e1cc0eb"
+      },
+      "scripts/host/n71_scan_held_result.py": {
+        "bytes": 10311,
+        "sha256": "b33be4898124e87fd4c2eea386d2fb8117a32fbcd9a7b504da2ae727f4b3720e"
+      },
+      "scripts/host/n71_scan_pme_result.py": {
+        "bytes": 2959,
+        "sha256": "ea08620386e7c65de46b4b2a753ce0365bfce81e4c204c797ba7fb8c84e72590"
+      },
+      "scripts/host/n71_scan_result.py": {
+        "bytes": 3702,
+        "sha256": "051615003afa1eb7091d5f2a73d931958e3463a407a1efc7cc5390c61a53a58f"
+      },
+      "scripts/host/n71_scan_target_result.py": {
+        "bytes": 4066,
+        "sha256": "37f2e7ce6fab4c26231097c7591d5bc7e9909c848e377b6a87c3c427d38afe7e"
+      },
+      "scripts/host/profile_image.py": {
+        "bytes": 4463,
+        "sha256": "19d4610eeb44ba50d9c29267e1b3bba250a03bb30e8f9a0e0d99abc4533fd427"
+      },
+      "scripts/research/n71_runtime_tunables.py": {
+        "bytes": 6395,
+        "sha256": "6be603cbcdacc6974f4d472a4bef751a9b707de9038366cb66127136778ec3e7"
+      },
+      "tests/run_n71_diagnostic_payload_mutations.py": {
+        "bytes": 5585,
+        "sha256": "8ab6adf9d66fe44436d95af9441f00a79aea51a2ad7a3629465e179ea8aa1bde"
+      },
+      "tests/test_n71_diagnostic_held_profile.py": {
+        "bytes": 12752,
+        "sha256": "6b4ff97b5fbae73883b97e27109b9bb4901973622a9190418d4c3f584121ac50"
+      },
+      "tests/test_n71_diagnostic_payload.py": {
+        "bytes": 7043,
+        "sha256": "3c9d5a4474172581e6996c1abc7bf7b609474bac9b53330c04f61e7d70d81673"
+      },
+      "tests/test_n71_pcie_diagnostic.py": {
+        "bytes": 4390,
+        "sha256": "45fc388ad895ef1658dcb50db388f33f10e0814ae9452c37d4cabc896da37779"
+      },
+      "tests/test_n71_runtime_tunables.py": {
+        "bytes": 4415,
+        "sha256": "6dbcb406aaf27b68d7a6c116d1377da49932a8a30d6b34bb60d897fc2a2c0744"
+      },
+      "tests/test_n71_topology.py": {
+        "bytes": 13753,
+        "sha256": "e034af6f8152af0f0ecc281624d344130d3d5ae97a7c08237ed5cad2db6f7060"
+      }
+    },
+    "identity_and_kernel_inputs_synthetic_in_unit_tests": true,
+    "ast_passed": true,
+    "fatal_flake8_passed": true,
+    "compile_import_timeout_counted_as_mutation_kill": false
+  },
+  "real_private_profile": {
+    "composed_and_locally_checked": true,
+    "collector_held_check_passed_without_ssh_or_usb": true,
+    "payload_identical_to_previous_pme_aspm": true,
+    "kernel_dtb_loader_userspace_preserved": true,
+    "client_identity_and_host_pin_preserved": true,
+    "profile_default_unchanged": true,
+    "provenance_boolean_types_exact": true,
+    "selected_modules": {
+      "n71-pcie-diagnostic.ko": {
+        "bytes": 76112,
+        "sha256": "b7e51d4d8ee281ace121c11dc60af04265a63c7395613fa8503af590927520b3"
+      },
+      "n71-wlan-power-diagnostic.ko": {
+        "bytes": 17688,
+        "sha256": "fdf887e7572b70d09e76f770272bee5dc9ffcde799277e894ee8965007c5a8f1"
+      }
+    },
+    "boot_tools_verified": true,
+    "snapshot_local_integrity_verified": true,
+    "snapshot_entries": 44,
+    "raw_profile_identities_snapshot_id_and_payload_hash_published": false
+  },
+  "limits": {
+    "physical_boot_attempted": false,
+    "new_kernel_or_module_built": false,
+    "held_bus_verified_on_phone": false,
+    "resources_assigned": false,
+    "irq_delivery_verified": false,
+    "dma_enabled": false,
+    "firmware_loaded": false,
+    "wifi_verified": false,
+    "battery_telemetry_verified": false,
+    "linux_charging_verified": false
+  }
+}

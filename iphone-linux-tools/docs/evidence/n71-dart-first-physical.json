@@ -1,0 +1,76 @@
+{
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "endpoint_identified": true,
+  "cleanup_verified": true,
+  "wifi_verified": false,
+  "hdq_io_performed": false,
+  "dma_enabled": false,
+  "link": {
+    "error": 0,
+    "port88": "00000005",
+    "reads": 12
+  },
+  "endpoint_id": "43a314e4",
+  "inventory": {
+    "class_revision": 41943048,
+    "header": 0,
+    "subsystem": 285085803,
+    "command_status": 1048576,
+    "interrupt": 256,
+    "reads": 19,
+    "capabilities": 4,
+    "bars_raw": [
+      4,
+      0,
+      4,
+      0,
+      0,
+      0
+    ],
+    "capability_headers_raw": [
+      172,
+      131088,
+      88,
+      8939525,
+      0,
+      0
+    ]
+  },
+  "dart_observation": {
+    "error": 0,
+    "reads": 38,
+    "guards": 39,
+    "command": 3842,
+    "tcr": 0,
+    "fault_raw": 256,
+    "enabled_streams": 0,
+    "valid_ttbr_mask": 65535,
+    "valid_ttbr_count": 16,
+    "fault_flag": false,
+    "fault_stream": 0,
+    "fault_code": 0
+  },
+  "cleanup_errors": [],
+  "format": 1,
+  "status": "stable_dart_state_physically_observed_no_dma",
+  "module_sha256": "0a91c8402db24f1fc83c1376771c54f7296cae42d2cde02762a26ee3ade0e486",
+  "provider_activated": false,
+  "irq_requested": false,
+  "dart_register_writes": 0,
+  "ssh_http_after_cleanup": true,
+  "snapshot_after_cleanup": true,
+  "new_dfu_for_observation": false,
+  "kernel_image_changed": false,
+  "dtb_changed": false,
+  "private_log_sha256": {
+    "preflight-private.log": "95a37f9acdd616e7a898fe9fc46795ed282e1a7686112e240e4a4920059485f5",
+    "pcie-private.log": "bbbf45ee9c9293769a8ec075e7973446655c978ff89ad75442c068fb5051fee9",
+    "pcie-cleanup-private.log": "bbbf45ee9c9293769a8ec075e7973446655c978ff89ad75442c068fb5051fee9",
+    "reg-unload-private.log": "0ef966ece7a7dd7bb2fa381ebeee80fcc0971f6dd55a2024be640d8297b27172"
+  },
+  "limits": [
+    "TCR-disabled does not imply cleared TTBRs: all16 valid bits were set.",
+    "No physical proof of requester-to-stream routing, DMA, faults, IRQ delivery, radio or charging telemetry.",
+    "Full table pointers and boot identity are not published."
+  ]
+}

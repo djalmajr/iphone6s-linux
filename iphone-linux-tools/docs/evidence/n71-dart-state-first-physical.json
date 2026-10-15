@@ -1,0 +1,74 @@
+{
+  "kernel_release": "7.2.0-iphone6s-dart-serdev1",
+  "endpoint_identified": true,
+  "cleanup_verified": true,
+  "wifi_verified": false,
+  "hdq_io_performed": false,
+  "dma_enabled": false,
+  "link": {
+    "error": 0,
+    "port88": "00000005",
+    "reads": 12
+  },
+  "endpoint_id": "43a314e4",
+  "inventory": {
+    "class_revision": 41943048,
+    "header": 0,
+    "subsystem": 285085803,
+    "command_status": 1048576,
+    "interrupt": 256,
+    "reads": 19,
+    "capabilities": 4,
+    "bars_raw": [
+      4,
+      0,
+      4,
+      0,
+      0,
+      0
+    ],
+    "capability_headers_raw": [
+      172,
+      131088,
+      88,
+      8939525,
+      0,
+      0
+    ]
+  },
+  "dart_observation": {
+    "error": 0,
+    "reads": 38,
+    "guards": 39,
+    "command": 3842,
+    "tcr": 0,
+    "fault_raw": 256,
+    "enabled_streams": 0,
+    "valid_ttbr_mask": 65535,
+    "valid_ttbr_count": 16,
+    "ttbr_words_preserved": 16,
+    "ttbr_sha256": "034006f39d54ba2f616bbc29363a4e314d6638994771340ec71ee49616b004e3",
+    "fault_flag": false,
+    "fault_stream": 0,
+    "fault_code": 0
+  },
+  "cleanup_errors": [],
+  "format": 1,
+  "status": "complete_stable_dart_words_privately_preserved_no_dma",
+  "module_sha256": "af2663a42e6645eea88879df3386901ace6bf696e76adb26f06531bf4c035727",
+  "provider_activated": false,
+  "irq_requested": false,
+  "dart_register_writes": 0,
+  "new_dfu_for_observation": false,
+  "kernel_image_changed": false,
+  "dtb_changed": false,
+  "ssh_http_after_cleanup": true,
+  "snapshot_after_cleanup": true,
+  "ttbr_values_published": false,
+  "private_log_sha256": {
+    "preflight-private.log": "99e99d3b503134dd9f6251b7ca4a31c80dfbd1499e8b0d6e1ef063e74956d3ec",
+    "pcie-private.log": "0df98b61d17fe3a2574af1adf493d1f23cb0e985eebaa89046ddbedf8f0c816e",
+    "pcie-cleanup-private.log": "0df98b61d17fe3a2574af1adf493d1f23cb0e985eebaa89046ddbedf8f0c816e",
+    "reg-unload-private.log": "720e34459cfa5aab61bb048dd8d9f0b3731765103890f4023a310944b4b625f2"
+  }
+}

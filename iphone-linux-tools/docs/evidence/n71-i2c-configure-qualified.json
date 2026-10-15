@@ -1,0 +1,244 @@
+{
+  "format": 1,
+  "status": "operational_configuration_caller_qualified_not_loaded",
+  "commits": {
+    "owner": "d226603c9e2bfa2bc84efc3147f4dca2a43dda75",
+    "caller": "45a3aa56a03c2adb8941bd1a140b071be79378e9"
+  },
+  "kernel_source_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-power2",
+  "owner_inputs": {
+    "phone/kernel/n71-i2c-pin-owner.h": {
+      "bytes": 7908,
+      "sha256": "fa2b9d65fbf0a6d900023e3f35dea87c59784491bad0b4841db9644fa57d2426"
+    },
+    "phone/kernel/n71-i2c-pin-owner-of.h": {
+      "bytes": 2664,
+      "sha256": "353bdb76b326697f08a1188fda70d1381aab5ae0647ba5a0fe4ffce527cb1854"
+    },
+    "tests/n71_i2c_pin_owner.c": {
+      "bytes": 16066,
+      "sha256": "aeb3f2ad0588fd63e4b12579d93625d5a7d64d362339a6d6c1c311c42715572b"
+    },
+    "tests/test_n71_i2c_pin_owner.py": {
+      "bytes": 4263,
+      "sha256": "3cc36974e400c3c37e30a62dc91a96846d6995f0502c8ad7dd1e28b673c698ef"
+    }
+  },
+  "caller_inputs": {
+    "phone/kernel/n71-i2c-power-diagnostic.c": {
+      "bytes": 10137,
+      "sha256": "df96a3e550f82610c524322a017471a8e52c3f025a93e724644cb2f9dc3847c2"
+    },
+    "phone/kernel/n71-i2c-genpd.h": {
+      "bytes": 8259,
+      "sha256": "6d772609640235a03b381ca0c7bcd49eb2d2cbbe5ef053ca1844bcf3b2488fea"
+    },
+    "phone/kernel/n71-i2c-power-lifecycle.h": {
+      "bytes": 3013,
+      "sha256": "cd1a13368178d1bd3e9a98b15a486d6b9cda4087d890d85ec143d1bef71dc2b2"
+    },
+    "phone/kernel/n71-pmgr-access.h": {
+      "bytes": 5487,
+      "sha256": "213fc77d6f32d34c66e442b5ea2c000b60d0d1fe063a8edf0834e58d3c8a58ae"
+    },
+    "phone/kernel/n71-i2c-controller-observe.h": {
+      "bytes": 2842,
+      "sha256": "8b86f579023ca4270c7eb04a387ce9990f18f825fd4ee395b240e1a1b1ade78a"
+    },
+    "phone/kernel/n71-i2c-controller.h": {
+      "bytes": 7509,
+      "sha256": "60624c630263f765aaf2a5974566b32d8254175d01a33f53b4a56596a0655619"
+    },
+    "phone/kernel/n71-i2c-pin-owner.h": {
+      "bytes": 7908,
+      "sha256": "fa2b9d65fbf0a6d900023e3f35dea87c59784491bad0b4841db9644fa57d2426"
+    },
+    "phone/kernel/n71-i2c-pin-owner-of.h": {
+      "bytes": 2664,
+      "sha256": "353bdb76b326697f08a1188fda70d1381aab5ae0647ba5a0fe4ffce527cb1854"
+    },
+    "tests/n71_i2c_power_diagnostic.c": {
+      "bytes": 19081,
+      "sha256": "23e56e012cfba8f0dcbea08276e2c4e98b0a6d8972829d805529b39d3c7baba2"
+    },
+    "tests/test_n71_i2c_power_diagnostic.py": {
+      "bytes": 6316,
+      "sha256": "2157cce0bfa0a28f7976b74f2ec2a4c3678d8875c1f0ae21fab12f6a7ebc071a"
+    },
+    "tests/n71_i2c_genpd.c": {
+      "bytes": 17208,
+      "sha256": "99fcf7964a8387487c5cae757ccf52c641ad6a5a61db53dc7e9a5a0d98f9c935"
+    },
+    "tests/n71_i2c_controller_observe.c": {
+      "bytes": 7365,
+      "sha256": "b95d56a27ffd297b92d673fe619c104fd229fa1e3db375dfdb010125bfd97d36"
+    }
+  },
+  "primary_kernel_sources": {
+    "drivers/pinctrl/pinctrl-apple-gpio.c": "81767e760802ce9fc1a9d9383268ccefd930aff821e59f414d2f8e99193e603a",
+    "drivers/pinctrl/core.c": "172baa1c312b1000743a95bc5a09124fbb900df60ccc2e84f87bc9757862e38b",
+    "drivers/pinctrl/pinmux.c": "6a43fadf03a2f6e55ee00e70c3e51639273556c3d378a262f930e00f79879fcd",
+    "drivers/gpio/gpiolib.c": "2193d069cdbf58b9168288b136b93e0e0c80e9be04deebc68496d7549a569f25",
+    "arch/arm64/boot/dts/apple/s800-0-3.dtsi": "7dea8e989e58b12b56a33f127b40b332814fa78d46ae4c11ac57bcc0e2f30525",
+    "include/dt-bindings/pinctrl/apple.h": "2079cb60617b0bb054e2e9e346ec6f5b3fdf8b4464ac9da89e09655e3af183b0"
+  },
+  "owner_contract": {
+    "pins": [
+      115,
+      114
+    ],
+    "of_group": "/soc/pinctrl@20f100000/i2c1-pins",
+    "pinmux_cells": [
+      "00010073",
+      "00010072"
+    ],
+    "default_only": true,
+    "gpio_overrides_refused": true,
+    "mmio_base": "20f100000",
+    "mmio_size": "100000",
+    "npins": 208,
+    "required_bind_attrs_suppressed": true,
+    "fresh_provider_lock_and_regmap_per_operation": true,
+    "no_borrowed_regmap_or_mutex_retained": true,
+    "descriptors_asis_and_default_pinctrl_held": true,
+    "baseline_mask": "270",
+    "baseline_value": "220",
+    "full_words_preserved_before_and_after_release": true,
+    "pre_release_errors_retain_handles": true,
+    "post_release_errors_retain_references_and_obligation": true,
+    "raw_gpio_mux_direction_value_writes": false,
+    "electrical_exclusivity_universally_proved": false,
+    "forced_provider_remove_or_concurrent_dt_mutation_supported": false
+  },
+  "caller_contract": {
+    "new_action": "configure",
+    "new_readonly_parameter": "configuration_status",
+    "legacy_cycle_inspect_status_compatible": true,
+    "init_only_qualifies": true,
+    "controller_programming_requires_explicit_action_after_init": true,
+    "acquire_order": [
+      "pins",
+      "genpd",
+      "controller"
+    ],
+    "cleanup_order": [
+      "controller",
+      "pins",
+      "genpd"
+    ],
+    "pending_cleanup_retains_module_objects_power": true,
+    "primary_error_separate_from_cleanup_error": true,
+    "last_saved_values_not_new_baseline_proof_on_acquire_error": true,
+    "adapter_irq_fifo_charger_io": false
+  },
+  "native": {
+    "platforms": [
+      "macOS",
+      "Ubuntu ARM64"
+    ],
+    "owner": {
+      "cases_per_platform": 67,
+      "assertion_mutations_per_platform": 13,
+      "mac_seconds": 4.966,
+      "arm_seconds": 16.644,
+      "actual_headers": true,
+      "gpio_provider_and_pinctrl_are_fixtures": true
+    },
+    "caller": {
+      "cases_per_platform": 66,
+      "previous_cases": 52,
+      "new_cases": 14,
+      "assertion_mutations_per_platform": 19,
+      "previous_mutations": 14,
+      "new_mutations": 5,
+      "mac_seconds": 12.369,
+      "arm_seconds": 25.653,
+      "actual_caller_and_genpd": true,
+      "pins_and_controller_dependencies_are_fixtures": true
+    },
+    "all_mutations_compiled": true,
+    "kills_require_sigabrt_and_assertion": true,
+    "unchanged_controller_and_genpd_gate_evidence_reused": true
+  },
+  "build": {
+    "owner_probe": {
+      "bytes": 15800,
+      "sha256": "5473041aa1d592e9cb6401ba21ecfbcd6903734541c16943b3851ec0373324d1",
+      "imports": 43,
+      "source_sha256": "c0032ef9a4e69a44b57d07f67f4f1e6cc8707e9892bfbf4a10c648639ca8f302",
+      "refuses_load_enodev": true
+    },
+    "operational_caller": {
+      "bytes": 48240,
+      "sha256": "ef1e00bd0ff7ed591d8881b7e8449de1b3c3783e54e5290b158664e0a5ed43e9",
+      "imports": 79,
+      "imports_absent": 0,
+      "vermagic": "7.2.0-iphone6s-dart-serdev-power2 SMP preempt mod_unload aarch64",
+      "elf": "ELF64 REL AArch64",
+      "W": 1,
+      "KCFLAGS": "-Werror",
+      "modpost": true,
+      "aggregate_module_symvers_warning": true,
+      "vmlinux_symvers_supplied": true,
+      "kbuild_modpost_warn_used": false,
+      "compiled_actual_backends_together": true
+    }
+  },
+  "style": {
+    "owner_headers_checkpatch": [
+      0,
+      0,
+      0
+    ],
+    "caller_checkpatch": [
+      0,
+      0,
+      0
+    ],
+    "python_ast_both": true,
+    "fatal_lint_both": true,
+    "python_type_checker_configured": false
+  },
+  "preservation": {
+    "protected_build_sha256": {
+      ".config": "c4e421b28d9ff2f3c372fa0d13431742a69a922a47bde23d62e9036483ae36b8",
+      "arch/arm64/boot/Image": "f36963f9f2abcce8e93b8c912112deb4b2563b36c5cc781c46e1bc8e9b819eed",
+      "vmlinux.symvers": "03b00b50ef19d434d3f4ea13b21f68f9e52bb163642421010edf76a0ddb6ce61"
+    },
+    "source_image_config_exports_unchanged": true,
+    "new_image_built": false,
+    "old_modules_profiles_preserved": true,
+    "default_profile_swapped": false,
+    "private_directory_mode": "0700",
+    "private_file_mode": "0600"
+  },
+  "ci_prior_head": {
+    "head": "be960f14268da56aa928873375200cb10a4e2e88",
+    "pr": 38090497215,
+    "push": 38090494013,
+    "jobs": 6,
+    "all_terminal_success": true,
+    "timeout_minutes": 45,
+    "covers_new_owner_and_caller_commits": false
+  },
+  "initial_errors_corrected": [
+    "C identifier current collided with the ARM64 kernel macro; renamed registered_gdev and all affected gates rerun.",
+    "Darwin fixture needed EUCLEAN=117; production kernel errno unchanged.",
+    "Mutation omitting pinctrl_select_state initially failed compilation due unused fixture function; rewritten with dead conditional call so the kill is a real assertion."
+  ],
+  "physical": {
+    "phone_accessed": false,
+    "usb_ssh_dfu_reboot": false,
+    "pin_or_controller_configuration_proved": false,
+    "sn2400_hdq_gauge_proved": false,
+    "linux_net_charging_proved": false,
+    "native_wifi_proved_by_this_change": false
+  },
+  "remaining": [
+    "Implement bounded SN2400/HDQ transport and qualify gauge revision/register map/units.",
+    "Prepare one grouped native Wi-Fi plus controller/gauge/power physical session with snapshots and cleanup.",
+    "Require the new publication own terminal CI results.",
+    "Prove actual charging and service stability before declaring the full goal complete."
+  ]
+}
