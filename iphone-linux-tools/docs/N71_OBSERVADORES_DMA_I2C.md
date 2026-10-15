@@ -85,3 +85,33 @@ Os quatro baselines usaram os pares Python/C `test_n71_dma_observe`, `test_n71_d
 As duas primeiras compilações recusaram colisões de nomes com macros Linux: o callback `guard` virou `validate`; o ponteiro local `current` virou `row`. A fixture agora define ambas as macros antes de incluir o helper. Não foram usados undef, supressão de warnings ou pins de módulos antigos alterados. Receitas e hashes de cada tentativa estão no histórico Git; logs permanecem privados.
 
 Após copiar e verificar os artefatos, foram removidas somente as quatro pastas próprias das tentativas recusadas e dois tars locais obsoletos. Os logs de falha, o pacote atual, os artefatos e o build de kernel foram mantidos. A VM foi parada com `multipass stop iphone6s-kernel-20261001` e o estado Stopped foi confirmado. Nenhum painel adicional foi aberto.
+
+## Seleção e perfil do runtime
+
+O catálogo novo é optativo. Exportar `IPHONE_LINUX_PMD_DIAGNOSTICS=pmd-observers-v1` e apontar `IPHONE_LINUX_PMD_SOURCE_RECEIPT` para o receipt privado dos inputs PMD preservados. O seletor primeiro qualifica a base antiga, depois confere os 64 inputs novos e o mapa dos sete módulos compilados. Os pins antigos continuam válidos para os perfis anteriores.
+
+O perfil privado `runtime/n71-observers-runtime-profile-20261015` contém os dois diagnósticos reais e cinco módulos WCC, além do payload e das identidades preservados. Sua composição manteve os 115 arquivos de origem conferidos. O comando local abaixo valida o perfil/firmware sem SSH, USB ou carga de módulo:
+
+```sh
+python3 -B scripts/host/n71-runtime-session.py \
+  --profile runtime/n71-observers-runtime-profile-20261015/deployment.json \
+  --action acquire --firmware-dir runtime/n71-trusted-firmware-20261010 --check
+```
+
+As variáveis acima também devem estar definidas nesse comando. A Session confere bytes e catálogo novamente antes de acrescentar `dma_observe=1 dma_iova=0x3ffff028` ao único insmod existente. A interface anterior mantém suas opções anteriores.
+
+## Captura conjunta em um boot
+
+Preparar o módulo I2C e o roteiro antes do DFU. Com o boot confirmado por SSH, `n71_i2c_trace_command.prepare(root, boot_id)` seleciona o módulo novo do catálogo. Transferir somente esse arquivo para o diretório privado indicado, conferir novamente seu SHA/tamanho e executar o comando gerado. Ele exige boot/ABI corretos e ausência dos diagnósticos WLAN/PCIe. A sequência é inspect, configure e read-hdq-control, interrompida na primeira ação negativa. Os dois getters de limpeza são conferidos antes do unload normal; recurso retido impede prosseguir. O dmesg filtrado inclui RESET_TRACE mesmo em uma saída negativa. Os estados aceitos de reset e os acessos ao carregador permanecem os do módulo compilado.
+
+Depois de comprovar o unload I2C, usar acquire, assign, start e observe com `n71-runtime-session.py`, sempre com um diretório de saída novo e o anterior em `--source`. Não usar reacquire para repetir um resultado já conhecido. No start, o coletor DMA confirma boot, ABI e opções antes de driver-publish. O arquivo bruto e o receipt são privados; a prova `dma-observer-proof-private.log` segue os hashes e cópias do journal em observe, retomada e stop. Um receipt com conteúdo ou boot divergente é recusado antes de outro efeito.
+
+O leitor admite até 100 getters com pausa de 0,1 s, ou 20 com pausa de 1 s se o sleep fracionário não estiver disponível. Cada getter tem duas amostras, no máximo 16 leituras de registradores. O parser aceita até 256 KiB; uma saída maior é recusada e mantida privada, com encerramento do processo próprio. Esse orçamento limita a aceitação dos dados, não é uma quota rígida do arquivo enquanto outra operação está em curso. A prontidão tem prazo de 5 s e o coletor usa prazo absoluto de 50 s. Erros e amostras parciais são preservados. Uma falha da captura não substitui a exceção original da publicação.
+
+O getter usa session_lock/device_lock e pode aguardar o término da publicação. Seus horários são os das leituras efetivas; o fault do dmesg tem seu próprio horário. Uma leitura posterior não prova o mapeamento no instante da falha. PA zero não conta como mapeamento, e iommu_iova_to_phys é uma consulta ao domínio de software, não uma prova de tradução física pelo DART. Ausência de amostras completas também deve ser registrada.
+
+Ao terminar, stop deve comprovar a limpeza independente dos módulos, PCIe e REG_ON. Salvar/verificar snapshot, fazer sync e retornar ao iOS para recarregar dentro do prazo da sessão. A perda de USB após o retorno é tratada operacionalmente como tela de bloqueio; não exige confirmação visual. O console não precisa ser operado.
+
+## Provas e limites atuais
+
+Os testes locais exercitam o shell gerado numa árvore descartável, processos leitores reais, arquivos privados e o ciclo completo do journal com telefone/perfil modelados. As provas do build ARM64 continuam separadas. Não há nova comprovação física de Wi-Fi, bateria ou carregamento nessa integração; os resultados do último boot físico permanecem em `N71_SESSAO_PMD_HDQ.md`. Os registros históricos de build descrevem o instante da compilação e não são reescritos para indicar integração posterior.

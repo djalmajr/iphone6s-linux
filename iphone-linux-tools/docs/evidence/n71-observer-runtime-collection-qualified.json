@@ -1,0 +1,46 @@
+{
+  "format": 1,
+  "status": "runtime_collection_locally_qualified_physical_run_pending",
+  "issue": 49,
+  "diagnostic_variant": "pmd-observers-v1",
+  "kernel_release": "7.2.0-iphone6s-dart-serdev-pmd1",
+  "gates": {
+    "dma_protocol_process": {"methods": 10, "assertion_mutations": 6},
+    "dma_runtime_journal": {"methods": 7, "assertion_mutations": 5},
+    "affected_regression_including_dma_protocol": {"methods": 57, "assertion_mutations": 65},
+    "i2c_trace_shell": {"methods": 7, "assertion_mutations": 4},
+    "python_ast": true,
+    "fatal_and_unused_lint": true,
+    "actual_private_runtime_cli_check": true,
+    "actual_i2c_module_bytes_sha_elf_verified": true
+  },
+  "observable_local_results": {
+    "ready_before_modeled_publication": true,
+    "real_local_reader_reaped": true,
+    "capture_receipt_follows_start_observe_resume_stop": true,
+    "no_reader_replay_on_completed_publication": true,
+    "changed_receipt_boot_or_ssh_identity_refused": true,
+    "capture_failure_preserves_primary_publication_failure": true,
+    "legacy_runtime_still_has_no_dma_reader": true,
+    "i2c_retained_configuration_prevents_unload": true,
+    "i2c_trace_preserved_on_negative_exit": true,
+    "i2c_boot_hash_or_concurrent_wlan_refuses_before_load": true
+  },
+  "proof_scope": {
+    "runtime_profile_selection_modeled_in_journal_tests": true,
+    "phone_and_sysfs_modeled_in_tests": true,
+    "shell_files_and_child_processes_real": true,
+    "arm64_module_compile_reused_unchanged": true,
+    "new_physical_boot_or_module_load": false,
+    "wifi_verified": false,
+    "battery_telemetry_verified": false,
+    "charging_verified": false,
+    "hardware_dma_translation_verified": false
+  },
+  "caveats": [
+    "Getter serialization can delay a sample until after publication; read timestamps are not fault timestamps.",
+    "A zero physical address is not a mapping; iommu_iova_to_phys is a software-domain lookup.",
+    "The 256 KiB output limit is a parser acceptance budget, not a hard filesystem quota during publication.",
+    "Physical WLAN, gauge and supply evidence is still required before goal completion."
+  ]
+}
