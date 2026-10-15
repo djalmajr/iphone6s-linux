@@ -55,6 +55,22 @@ BINDING_FILES = {
         '4b0adc3013e2fabe9ca1cb8228f8f6b7934af4b667f7f0f893b675102d8710df',
         '0d84693ae4f5a24df9f8c9499ecd0f8f6725566223428dfe7af686cf7a21f5b2'),
 }
+PMD_BUNDLE = 'n71-dart-serdev-pmd-v1'
+PMD_LOCALVERSION = '-iphone6s-dart-serdev-pmd1'
+PMD_PATCHES = {
+    '0009-s5l8960x-dart-pmd.patch': 'cddfa9cfb894b80236eee0df0a1c199fc2c14b0ebb5570e3a3d502ddc5666e3f',
+}
+PMD_FILES = {
+    'drivers/iommu/apple-dart.c': (
+        'f19d3c2a7ada7451956f2a87fea09c174584bfd68ba7a1f6e8793db653047f85',
+        '8581e8cc3b19817a5d29db6255c6162de4068f2cfea2c4404c06dfe894282e9b'),
+    'drivers/iommu/io-pgtable-dart.c': (
+        'ba8b9e53edb1bbf3ebd2e1881c10a40d3b93284e9f074231f07e0443874be493',
+        '9afb247569da7bd025a098e77af49af771545d3d90e52b42f11c0c980fdc1038'),
+    'include/linux/io-pgtable.h': (
+        '360318641218b27728313dfa1beadf5e9ce8671f6e3223104113e16db6aef0ec',
+        'c9dfc3d06047e92782ceb35e28792a5346b7272dc0bfdd02eef754b3831b576c'),
+}
 
 
 def bundle_spec(profile):
@@ -64,6 +80,9 @@ def bundle_spec(profile):
         return POWER_LOCALVERSION, {**FILES, **POWER_FILES}, {**PATCHES, **POWER_PATCHES}
     if profile == BINDING_BUNDLE:
         return BINDING_LOCALVERSION, {**FILES, **POWER_FILES, **BINDING_FILES}, {**PATCHES, **POWER_PATCHES, **BINDING_PATCHES}
+    if profile == PMD_BUNDLE:
+        _, files, patches = bundle_spec(BINDING_BUNDLE)
+        return PMD_LOCALVERSION, {**files, **PMD_FILES}, {**patches, **PMD_PATCHES}
     raise ValueError('Unknown bundle profile.')
 
 
@@ -140,7 +159,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=('apply', 'check'))
     parser.add_argument('checkout', type=Path)
-    parser.add_argument('--profile', choices=(BUNDLE, POWER_BUNDLE, BINDING_BUNDLE), default=BUNDLE)
+    parser.add_argument('--profile', choices=(BUNDLE, POWER_BUNDLE, BINDING_BUNDLE) + (PMD_BUNDLE,), default=BUNDLE)
     options = parser.parse_args()
     try:
         if options.command == 'apply':

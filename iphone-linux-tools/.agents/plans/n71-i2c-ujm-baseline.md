@@ -26,11 +26,11 @@ Publicar código, evidência sanitizada e reprodução na branch autorizada, sem
 
 - [x] Implementação e contratos do controlador.
 - [x] Gates Mac/ARM64 e módulo externo qualificados.
-- [ ] Documentação/issue e candidata preservadas.
+- [x] Documentação/issue e candidata preservadas.
 - [ ] Prova física com CTL UJM; gauge/telemetria/carga continuam sem prova.
 
 ## Resultado da qualificação
 
 Mac/ARM64: controlador 76 cenários/17 mutações por plataforma; HDQ dependente 42/24. Mac HDQ retomou somente 15 mutações após timeout de uma execução; as 9 já mortas foram mantidas. ARM64 concluiu sem retomada. Nove inputs intactos, AST/lint aprovados, sem typechecker Python. Caller com controller stub reutilizado com contrato/implementação inalterados.
 
-Módulo externo novo: 52456 bytes, SHA256 13c49a3c8b2ab83577188401c6f648f22330258a305ec09209ee6bd43298f99f, 79 imports válidos, ELF AArch64/ABI power2 e W=1/KCFLAGS=-Werror. .config/Image/exports e 11 inputs preservados; módulo anterior intacto. Ainda não executado no aparelho. Documentação em docs/N71_I2C_UJM.md; evidência em docs/evidence/n71-i2c-ujm-qualified.json. Aguardando publicação enquanto o CI do relatório físico termina; nenhuma nova intervenção solicitada ao operador.
+Módulo externo novo: 52456 bytes, SHA256 13c49a3c8b2ab83577188401c6f648f22330258a305ec09209ee6bd43298f99f, 79 imports válidos, ELF AArch64/ABI power2 e W=1/KCFLAGS=-Werror. .config/Image/exports e 11 inputs preservados; módulo anterior intacto. Ainda não executado no aparelho. Documentação em docs/N71_I2C_UJM.md; evidência em docs/evidence/n71-i2c-ujm-qualified.json. Publicado em 402075a e registrado na issue48. Os CI verdes de 42dbd66 permanecem preservados; c87dcc2 era exclusivamente documentação desses mesmos fontes, sem prova nova a aguardar. A nova publicação inicia CI dos fontes alterados. Nenhuma nova intervenção solicitada ao operador.

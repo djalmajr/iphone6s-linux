@@ -1,0 +1,30 @@
+{
+  "format": 1,
+  "status": "primary_binary_difference_not_physical_fix",
+  "apple_kernelcache_sha256": "0a9b98d58c5c606030c394bee37b6ddd58e0d82468203f7de9ab3fe6c63a8b9a",
+  "reference": {
+    "segment": "__PLK_TEXT_EXEC",
+    "virtual_start": "0xfffffff006060520",
+    "file_offset": 22201632,
+    "witness_bytes": 16,
+    "witness_sha256": "90b85a61cb5b5740b7938174f650ca3872b8c38e2c940df366b191048061a73a",
+    "physical_address_mask": "0xffffff000",
+    "table_descriptor_flags": "0x3",
+    "entry_bytes": 8,
+    "pmd_store_address": "0xfffffff00606052c"
+  },
+  "linux": {
+    "base_commit": "958481f87fee0949ff6a9a4af77f7eb6dac8a149",
+    "path": "drivers/iommu/io-pgtable-dart.c",
+    "blob_sha256": "ba8b9e53edb1bbf3ebd2e1881c10a40d3b93284e9f074231f07e0443874be493",
+    "table_descriptor_flags": "0x1"
+  },
+  "causality_proven": false,
+  "wifi_verified": false,
+  "firmware_bytes_published": false,
+  "limits": [
+    "Apple descriptor bit 1 is observed; its hardware meaning and relationship to the NO PMD fault are not proven.",
+    "No raw IOVA inference from an address logged after OR with dma_min.",
+    "No modern DART format or leaf descriptor changes are justified by this observation."
+  ]
+}

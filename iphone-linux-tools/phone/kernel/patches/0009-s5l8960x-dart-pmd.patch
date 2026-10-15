@@ -1,0 +1,145 @@
+Subject: [PATCH] iommu: apple-dart: match S5L intermediate descriptor flags
+
+The preserved N71 Apple reference writes PA[35:12] | 3 to intermediate
+table entries, whereas the shared allocator writes PA | 1. Select bit 1
+only for S5L8960X through an explicit quirk, and only in APPLE_DART.
+Keep modern formats, physical addresses, leaves and publication unchanged.
+The relationship to the physical NO PMD fault remains to be tested.
+
+---
+--- a/include/linux/io-pgtable.h
++++ b/include/linux/io-pgtable.h
+@@ -86,40 +86,42 @@
+ 	 *
+ 	 * IO_PGTABLE_QUIRK_ARM_HD: Enables dirty tracking in stage 1 pagetable.
+ 	 * IO_PGTABLE_QUIRK_ARM_S2FWB: Use the FWB format for the MemAttrs bits
+ 	 *
+ 	 * IO_PGTABLE_QUIRK_NO_WARN: Do not WARN_ON() on conflicting
+ 	 *	mappings, but silently return -EEXISTS.  Normally an attempt
+ 	 *	to map over an existing mapping would indicate some sort of
+ 	 *	kernel bug, which would justify the WARN_ON().  But for GPU
+ 	 *	drivers, this could be under control of userspace.  Which
+ 	 *	deserves an error return, but not to spam dmesg.
+ 	 */
+ 	#define IO_PGTABLE_QUIRK_ARM_NS			BIT(0)
+ 	#define IO_PGTABLE_QUIRK_NO_PERMS		BIT(1)
+ 	#define IO_PGTABLE_QUIRK_ARM_MTK_EXT		BIT(3)
+ 	#define IO_PGTABLE_QUIRK_ARM_MTK_TTBR_EXT	BIT(4)
+ 	#define IO_PGTABLE_QUIRK_ARM_TTBR1		BIT(5)
+ 	#define IO_PGTABLE_QUIRK_ARM_OUTER_WBWA		BIT(6)
+ 	#define IO_PGTABLE_QUIRK_ARM_HD			BIT(7)
+ 	#define IO_PGTABLE_QUIRK_ARM_S2FWB		BIT(8)
+ 	#define IO_PGTABLE_QUIRK_NO_WARN		BIT(9)
++	/* S5L intermediate table descriptors also carry bit 1. */
++	#define IO_PGTABLE_QUIRK_APPLE_DART_S5L		BIT(10)
+ 	unsigned long			quirks;
+ 	unsigned long			pgsize_bitmap;
+ 	unsigned int			ias;
+ 	unsigned int			oas;
+ 	bool				coherent_walk;
+ 	const struct iommu_flush_ops	*tlb;
+ 	struct device			*iommu_dev;
+ 
+ 	/**
+ 	 * @alloc: Custom page allocator.
+ 	 *
+ 	 * Optional hook used to allocate page tables. If this function is NULL,
+ 	 * @free must be NULL too.
+ 	 *
+ 	 * Memory returned should be zeroed and suitable for dma_map_single() and
+ 	 * virt_to_phys().
+ 	 *
+ 	 * Not all formats support custom page allocators. Before considering
+ 	 * passing a non-NULL value, make sure the chosen page format supports
+ 	 * this feature.
+--- a/drivers/iommu/apple-dart.c
++++ b/drivers/iommu/apple-dart.c
+@@ -698,40 +698,42 @@
+ 	u32 ias = min_t(u32, dart->ias, fls64(dma_max));
+ 	int ret = 0;
+ 	int i, j;
+ 
+ 	if (dart->pgsize > PAGE_SIZE)
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&dart_domain->init_lock);
+ 
+ 	if (dart_domain->finalized)
+ 		goto done;
+ 
+ 	for (i = 0; i < MAX_DARTS_PER_DEVICE; ++i) {
+ 		dart_domain->stream_maps[i].dart = cfg->stream_maps[i].dart;
+ 		for (j = 0; j < BITS_TO_LONGS(dart->num_streams); j++)
+ 			atomic_long_set(&dart_domain->stream_maps[i].sidmap[j],
+ 					cfg->stream_maps[i].sidmap[j]);
+ 	}
+ 
+ 	pgtbl_cfg = (struct io_pgtable_cfg){
++		.quirks = dart->hw->type == DART_S5L8960X ?
++			IO_PGTABLE_QUIRK_APPLE_DART_S5L : 0,
+ 		.pgsize_bitmap = dart->pgsize,
+ 		.ias = ias,
+ 		.oas = dart->oas,
+ 		.coherent_walk = 1,
+ 		.iommu_dev = dart->dev,
+ 	};
+ 
+ 	dart_domain->pgtbl_ops = alloc_io_pgtable_ops(dart->hw->fmt, &pgtbl_cfg,
+ 						      &dart_domain->domain);
+ 	if (!dart_domain->pgtbl_ops) {
+ 		ret = -ENOMEM;
+ 		goto done;
+ 	}
+ 
+ 	if (dart->hw->type == DART_S5L8960X)
+ 		dart_domain->mask = ~dart->dma_min;
+ 	else if (pgtbl_cfg.pgsize_bitmap == SZ_4K)
+ 		dart_domain->mask = DMA_BIT_MASK(min_t(u32, dart->ias, 32));
+ 	else if (pgtbl_cfg.apple_dart_cfg.n_levels == 3)
+ 		dart_domain->mask = DMA_BIT_MASK(min_t(u32, dart->ias, 36));
+--- a/drivers/iommu/io-pgtable-dart.c
++++ b/drivers/iommu/io-pgtable-dart.c
+@@ -128,40 +128,43 @@
+ 	/* subpage protection: always allow access to the entire page */
+ 	pte |= FIELD_PREP(APPLE_DART_PTE_SUBPAGE_START, 0);
+ 	pte |= FIELD_PREP(APPLE_DART_PTE_SUBPAGE_END, 0xfff);
+ 
+ 	pte |= APPLE_DART_PTE_VALID;
+ 
+ 	for (i = 0; i < num_entries; i++)
+ 		ptep[i] = pte | paddr_to_iopte(paddr + i * sz, data);
+ 
+ 	return 0;
+ }
+ 
+ static dart_iopte dart_install_table(dart_iopte *table,
+ 					     dart_iopte *ptep,
+ 					     dart_iopte curr,
+ 					     struct dart_io_pgtable *data)
+ {
+ 	dart_iopte old, new;
+ 
+ 	new = paddr_to_iopte(__pa(table), data) | APPLE_DART_PTE_VALID;
++	if (data->iop.fmt == APPLE_DART &&
++	    data->iop.cfg.quirks & IO_PGTABLE_QUIRK_APPLE_DART_S5L)
++		new |= BIT(1);
+ 
+ 	/*
+ 	 * Ensure the table itself is visible before its PTE can be.
+ 	 * Whilst we could get away with cmpxchg64_release below, this
+ 	 * doesn't have any ordering semantics when !CONFIG_SMP.
+ 	 */
+ 	dma_wmb();
+ 
+ 	old = cmpxchg64_relaxed(ptep, curr, new);
+ 
+ 	return old;
+ }
+ 
+ static int dart_get_index(struct dart_io_pgtable *data, unsigned long iova, int level)
+ {
+ 	return (iova >> (level * data->bits_per_level + ilog2(sizeof(dart_iopte)))) &
+ 		((1 << data->bits_per_level) - 1);
+ }
+ 
+ static int dart_get_last_index(struct dart_io_pgtable *data, unsigned long iova)
