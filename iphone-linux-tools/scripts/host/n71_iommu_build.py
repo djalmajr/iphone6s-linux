@@ -6,6 +6,8 @@ import struct
 import zlib
 import profile_image
 
+PMD_RELEASE = '7.2.0-iphone6s-dart-serdev-pmd1'
+
 
 def require(condition, message):
     if not condition:
@@ -20,6 +22,9 @@ def evidence(root, filename):
 
 
 def qualified(root, *, release):
+    if release == PMD_RELEASE:
+        import n71_pmd_runtime_build
+        return n71_pmd_runtime_build.qualified(root, release=release)
     proof = evidence(root, 'n71-dma-topology-qualification.json')
     build = proof['kernel_build']
     require(type(proof.get('format')) is int and proof['format'] == 1
@@ -48,7 +53,8 @@ def qualified(root, *, release):
 
 def image_record(root, *, release):
     qualified_build = qualified(root, release=release)
-    kernel = evidence(root, 'kernel-n71-binding-build.json')
+    filename = 'kernel-n71-pmd-build.json' if release == PMD_RELEASE else 'kernel-n71-binding-build.json'
+    kernel = evidence(root, filename)
     build = kernel['build']
     outputs = build['outputs']
     baseline = qualified_build['baseline_sha256']

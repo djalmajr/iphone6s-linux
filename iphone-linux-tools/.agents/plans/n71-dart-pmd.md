@@ -52,6 +52,16 @@ Aplicar somente em worktree novo na VM dedicada, com inputs selados. Manter sour
 - **Verificação:** identidade ligada ao registro público compilado; filesystem real e ELF sintético para recusas de hashes/release cruzados; CLI sem build, mutações por AssertionError, regressão dos 24 mutantes antigos, AST/lint no Mac e gates ARM64. Depois, build real com Werror/modpost, oito módulos, alias 14e4:43a3, símbolos PCIe/MSGBUF e imports resolvidos, source/Image/config/exports preservados antes/depois. Nada disso substitui prova física de Wi-Fi.
 - **Status:** aplicada; oito módulos auditados na VM/Mac, carregamento físico pendente.
 
+### D5 — seleção PMD de IOMMU e recursos
+
+- **Decisão:** acrescentar scripts/host/n71_pmd_runtime_build.py e ramos explícitos em n71_iommu_build.py/n71_resource_result.py, qualificados com os registros reais do kernel, sete diagnósticos e comparação do caller. Fixar os manifests canônicos de source do kernel e dos 62 inputs compilados; verificar os 69 inputs dos gates nativos, permitindo somente o C I2C separado já recompilado. Não mudar flags globais ou vermagic.
+- **Por quê:** o caller PCIe tem código executável, imports e parâmetros preservados. A nova seleção deve acoplar os fatos da ABI PMD à mesma política nativa de recursos, sem exigir outro boot ou build.
+- **Alternativas:** afrouxar os checks power2 permite cruzar artefatos; repetir os 575 casos/455 mutações nativas de código idêntico não resolve o vínculo de ABI. O teste do DART real continua obrigatório.
+- **Onde:** os três helpers acima, tests/test_n71_pmd_runtime_build.py e este plano (cinco arquivos). Session, WCC, CLI e composição permanecem para fases seguintes.
+- **Verificação:** filesystem/JSON reais, prova atual do projeto, gzip/payload sintético, cruzamento de hash/release, source alterado, symlinks, tipos e fatos de build, código/interface/bindings e todos os contratos de recursos legados. Mutações precisam falhar por AssertionError; regressão do IOMMU e seleção power2. AST/lint, sem typechecker configurado. Nenhum acesso ao telefone ou início de VM.
+- **Reverter:** baixo; o ramo é selecionado somente pela release PMD exata, e os caminhos anteriores permanecem intactos.
+- **Status:** aplicada; seleção IOMMU/recursos e payload PMD reais validados no Mac. Novo gate com 8 testes/10 mutações; regressões com 13 testes/33 mutações. VM permaneceu parada. Session, WCC, CLI e composição completa ainda pendentes.
+
 ## Fase C — um teste físico agrupado
 
 Antes de solicitar DFU, preparar kernel, todos os módulos compatíveis, perfil privado com identidades preservadas, diagnóstico HDQ UJM, restore e coleta/cleanup numa sessão limitada. O aparelho está no iOS bloqueado e recarregando; nenhuma ação necessária agora. Após retorno ao iOS, ausência de USB é tratada como tela bloqueada, sem nova confirmação rotineira.

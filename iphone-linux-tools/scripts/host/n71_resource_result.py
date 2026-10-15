@@ -7,6 +7,7 @@ import n71_resource_io16
 import n71_resource_pref64
 import n71_resource_build
 import n71_scan_held_result
+import n71_iommu_build
 
 FIELDS = ('ready', 'attempted', 'assigned', 'pending', 'claimed', 'active', 'error')
 RESULT = (r'N71_PCIE_RESOURCE_RESULT error=(-?\d+) assigned=([01]) pending=([01]) '
@@ -182,6 +183,10 @@ def cleanup_errors(text, assignment, errors):
 def selected_records(root, *, release, pcie_sha256=None, iommu_parent=False):
     require(type(iommu_parent) is bool and (not iommu_parent or pcie_sha256 is not None),
             'IOMMU resources require explicit boolean and module hash')
+    if release == n71_iommu_build.PMD_RELEASE:
+        import n71_pmd_runtime_build
+        return n71_pmd_runtime_build.records(root, release=release,
+                                             pcie_sha256=pcie_sha256, iommu_parent=iommu_parent)
     previous = n71_scan_held_result.selected_records(root, release=release)
     evidence = json.loads((root / 'docs/evidence/n71-pci-resource-assignment.json').read_text())
     require(type(evidence.get('format')) is int and evidence['format'] == 1, 'Assignment evidence format differs')

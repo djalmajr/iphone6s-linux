@@ -33,7 +33,7 @@ O ponto novo é o bit 1 da entrada intermediária. O significado exato desse bit
 - Endereço físico, folhas, janela DMA, TTBR, TCR, barreira de publicação e CAS permanecem iguais.
 - O bundle `n71-dart-serdev-pmd-v1` tem identidade `7.2.0-iphone6s-dart-serdev-pmd1`. Os bundles anteriores mantêm seus hashes, patches e versões.
 
-O nome novo impede que um módulo da candidata anterior seja confundido com um módulo recompilado para este kernel. O gerador de perfis tem uma seleção opt-in separada, descrita abaixo; os seletores de runtime/driver ainda não aceitam a candidata. Não há override de hash, carga forçada de módulo ou alteração do perfil padrão.
+O nome novo impede que um módulo da candidata anterior seja confundido com um módulo recompilado para este kernel. O gerador de perfis e os seletores IOMMU/recursos têm uma seleção opt-in separada, descrita abaixo; Session, CLI e seletores de driver ainda precisam receber a candidata. Não há override de hash, carga forçada de módulo ou alteração do perfil padrão.
 
 ## Qualificação e reprodução do build
 
@@ -205,6 +205,22 @@ A primeira tentativa parou antes de criar saída porque o grep global do kernel 
 Os gates passaram no Mac e no ARM64: cinco testes PMD/cinco mutações e 15 testes anteriores/24 mutações em cada. AST/lint aprovados; não há typechecker Python configurado. Os testes usam filesystem/Git reais e ELF sintético não inicializável; não acessam o telefone.
 
 A [comparação do caller PCIe](evidence/n71-pmd-caller-reuse.json) confirma cinco seções executáveis idênticas, os mesmos 135 imports e a mesma interface de parâmetros do módulo anterior. Entre as seções PROGBITS/RELA, apenas `.modinfo` mudou, exclusivamente na vermagic. Os arquivos foram recompilados com os headers PMD. Isso permite reutilizar os gates de lógica do caller; o comportamento real do DART modificado permanece pendente.
+
+## Seleção IOMMU e recursos PMD
+
+[n71_pmd_runtime_build.py](../scripts/host/n71_pmd_runtime_build.py) vincula a seleção explícita PMD aos registros do kernel completo, sete diagnósticos e comparação do caller. Confere os 62 inputs compilados e os 69 inputs dos gates nativos. A única mudança permitida nesse conjunto anterior é o diagnóstico I2C já recompilado com a correção UJM; o caller PCIe e seus headers continuam iguais. Os manifests canônicos de source e inputs têm hashes fixados. Release, configuração, Image, exports, imports, parâmetros e comparação binária precisam concordar.
+
+Os ramos novos de `n71_iommu_build` e `n71_resource_result` selecionam somente a release PMD exata. A seleção de recursos percorre todos os contratos legados de held/readback/optional/IO16/pref64 e substitui somente bytes, hash e vermagic pelos módulos PMD reais. Os perfis power2 permanecem iguais. Não habilita o driver nem altera flags globais.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pmd_runtime_build.py -v
+python3 -B -m unittest discover -s tests -p test_n71_iommu_build.py -v
+python3 -B -m unittest discover -s tests -p test_n71_resource_build.py -v
+```
+
+O [registro de seleção](evidence/n71-pmd-runtime-selection-qualified.json) contém 21 testes/43 mutações por AssertionError no Mac: 8/10 novos e 13/33 de regressão. Usa filesystem/JSON reais, gzip e payload sintéticos para recusas; AST e lint fatal aprovados, sem typechecker Python configurado. O log do gate novo antecede somente comentários de teste e remoção de um import não usado, sem mudança no código de produção. Não foi necessário iniciar a VM.
+
+Além do gate, os leitores reais conferiram o Image.gz compilado e o payload privado base: Image SHA256 `c6c020756b970ebb77d1eb8e7975682385efacdbdefaacc78b70b8b8eb177246`, framing DTB/kernel/initramfs exato e arquivos preservados. Isso não prova boot ou comportamento do DART. Session, WCC, CLI e composição completa continuam pendentes.
 
 ## Aceite no aparelho ainda pendente
 
