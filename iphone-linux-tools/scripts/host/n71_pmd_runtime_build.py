@@ -160,6 +160,8 @@ def snapshot(root, *, release):
                 and row.get('elf64_aarch64_relocatable') is True,
                 'PMD diagnostic module identity differs')
     native_reference(root, native, manifest, records['n71_pcie_diagnostic'], reuse, kernel, source_root=source_root)
+    import n71_pmd_observer_build as observers
+    records = observers.select(root, records, release=release, kernel_hashes=hashes, source_bundle=selected)
     return kernel, records, hashes
 
 
