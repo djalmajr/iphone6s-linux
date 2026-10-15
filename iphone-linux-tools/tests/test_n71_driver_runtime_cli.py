@@ -198,7 +198,7 @@ class RuntimeCliMutations(unittest.TestCase):
             ('exact-runtime-scope','all(metadata.get(name) is True for name in TRUE_FLAGS)','True',scope),
             ('wcc-manifest',"metadata.get('driver_modules') == [record for record, _ in selected['drivers']]",'True',scope),
             ('reg-identity',"metadata.get('reg_on_module_sha256') == selected['diagnostics'][1]['sha256']",'True',scope),
-            ('diagnostic-before-identity',"link.module_bytes(request['profile'].parent, record, release=RELEASE)","(request['profile'].parent / record['module']).read_bytes()",scope),
+            ('diagnostic-before-identity',"link.module_bytes(request['profile'].parent, record, release=release)","(request['profile'].parent / record['module']).read_bytes()",scope),
             ('explicit-session-wcc',"runtime=selected['drivers']",'runtime=None',dispatch),
             ('local-check',"if request['check']:",'if False:','test_real_entry_and_local_check_preserve_files_without_handler_or_output'),
             ('passive-source-loader',"held.load_source(session, root, request['source'], identity)",'pass','test_local_saved_source_uses_real_journal_loader_without_promotion'),

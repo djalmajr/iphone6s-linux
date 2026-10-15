@@ -102,6 +102,16 @@ Aplicar somente em worktree novo na VM dedicada, com inputs selados. Manter sour
 - **Reverter:** baixo; os bytes do catálogo e as releases padrão permanecem iguais.
 - **Status:** aplicada; 6 testes/5 mutações novos e 24 testes/33 mutações anteriores aprovados no Mac. O pacote privado real (três arquivos, 633.573 bytes) foi selecionado/configurado com kernel PMD e sete módulos reais, sem transferir, vincular ou carregar. O primeiro reacquire PMD revelou que a fixture restaurava Sessions/checkpoints power2; a fábrica e o checkpoint inicial do modelo foram corrigidos para gerar PMD, sem afrouxar a validação. Gate isolado e matriz corrigida completos aprovados. CLI/composição e prova física seguem pendentes.
 
+### D10a — CLI com release explícita do perfil
+
+- **Decisão:** ampliar n71_driver_runtime_cli.py com o par bundle/release PMD, mantendo power2. A seleção liga metadata e arquivos à release derivada do bundle; a leitura dos diagnósticos usa essa mesma release. Preservar flags, dados privados, validação antes de identidades, --check, roteamento, ambiente e umask.
+- **Por quê:** a Session e o firmware já aceitam PMD, mas a CLI ainda escolhia power2 para os arquivos. O fluxo completo precisa usar a ABI do perfil em todas as etapas.
+- **Alternativas:** substituir RELEASE globalmente quebra perfis antigos; aceitar release sem bundle conhecido permite cruzar metadados e binários.
+- **Onde:** CLI, ajuste de uma âncora em tests/test_n71_driver_runtime_cli.py, tests/test_n71_pmd_runtime_cli.py novo e este plano (quatro arquivos). Compositor e execução privada completa ficam para D10b.
+- **Verificação:** seleção/filesystem/ELF/Session reais com módulos e payload sintéticos; identidade/gzip e handlers modelados nos contratos da CLI; --check sem output, recusa antes de identidade, ABI cruzada e roteamento observável. Mutações novas, os 20 mutantes legados, AST/lint. Após o compositor, exigir --check real com a candidata e firmware privados antes de DFU.
+- **Reverter:** baixo; seleção power2 e defaults preservados.
+- **Status:** aplicada; 5 testes/4 mutações novos e 7 testes/20 mutações anteriores aprovados no Mac. Seletores, leitores ELF e Session reais; identidade/gzip e handlers modelados. Ainda exigir o --check privado completo após D10b. Nenhuma ação SSH/USB, início de VM ou alteração do perfil padrão.
+
 ## Fase C — um teste físico agrupado
 
 Antes de solicitar DFU, preparar kernel, todos os módulos compatíveis, perfil privado com identidades preservadas, diagnóstico HDQ UJM, restore e coleta/cleanup numa sessão limitada. O aparelho está no iOS bloqueado e recarregando; nenhuma ação necessária agora. Após retorno ao iOS, ausência de USB é tratada como tela bloqueada, sem nova confirmação rotineira.

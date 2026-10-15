@@ -275,6 +275,16 @@ O [registro de firmware](evidence/n71-pmd-firmware-qualified.json) contém 30 te
 
 O pacote privado real, com três arquivos e 633.573 bytes, também passou pela seleção e configuração com a Session PMD e seus sete módulos reais. Os hashes foram preservados; não houve transferência, vínculo do loader, carga de firmware, conexão SSH/USB, output ou boot inventado. AST/lint aprovados, sem typechecker Python configurado. A VM permaneceu parada. Faltam a CLI, o compositor e a candidata completa antes da prova física agrupada.
 
+## CLI PMD
+
+`n71_driver_runtime_cli` vincula a release ao bundle conhecido do perfil e usa essa ABI tanto na seleção quanto na leitura dos diagnósticos. Flags, catálogo WCC/REG_ON, arquivos privados, validação antes das identidades, --check e roteamento permanecem obrigatórios. O padrão power2 foi preservado.
+
+```sh
+python3 -B -m unittest discover -s tests -p test_n71_pmd_runtime_cli.py -v
+```
+
+O [registro da CLI](evidence/n71-pmd-cli-qualified.json) contém 12 testes/24 mutações por AssertionError no Mac: 5/4 novos e 7/20 anteriores. Arquivos, seletores, ELF e Session são reais; payload/módulos não inicializáveis, identidade/gzip e handlers são modelados. Os contratos dos handlers são arquivos locais; não representam efeitos no telefone. AST/lint aprovados, sem typechecker Python configurado. O --check completo com identidades, payload e firmware privados reais ainda depende da candidata do compositor.
+
 ## Aceite no aparelho ainda pendente
 
 O kernel, os sete diagnósticos, o conjunto Wi-Fi e a integração base estão qualificados sem uso do telefone. Faltam ampliar os gates de runtime explicitamente e montar o perfil completo antes de uma sessão física reunindo DART/firmware com HDQ/UJM. Não solicitar outro DFU para repetir o fault conhecido sem a candidata pronta. Nenhuma ação é necessária no iPhone enquanto isso: ele pode permanecer no iOS bloqueado e carregando.

@@ -17,6 +17,7 @@ TRUE_FLAGS = ('kernel_initramfs_identities_preserved', 'pcie_driver_runtime', 'p
     'requires_explicit_run', 'requires_explicit_enumerate')
 FALSE_FLAGS = ('pcie_scan_pme_noop', 'module_automatic_load', 'default_profile_changed')
 RELEASE = '7.2.0-iphone6s-dart-serdev-power2'
+PROFILE_RELEASES = {'n71-dart-serdev-power-v2': RELEASE, 'n71-dart-serdev-pmd-v1': iommu.PMD_RELEASE}
 
 
 def require(condition, message):
@@ -57,12 +58,13 @@ def selection(root, profile):
     path = profile.parent / 'provenance.json'; device_profile.protected(path)
     require(path.stat().st_size <= 8192, 'Runtime provenance exceeds budget')
     metadata = json.loads(path.read_text())
+    release = PROFILE_RELEASES.get(metadata.get('kernel_patchset')) if isinstance(metadata, dict) else None
     require(isinstance(metadata, dict) and type(metadata.get('format')) is int and metadata['format'] == 1
         and all(metadata.get(name) is True for name in TRUE_FLAGS)
         and all(metadata.get(name) is False for name in FALSE_FLAGS)
-        and metadata.get('kernel_patchset') == 'n71-dart-serdev-power-v2' and metadata.get('kernel_release') == RELEASE,
-        'Runtime profile requires its exact opt-in held/IOMMU power2 scope')
-    selected = files.select(root, {'directory': profile.parent, 'release': RELEASE,
+        and release is not None and metadata.get('kernel_release') == release,
+        'Runtime profile requires its exact qualified opt-in held/IOMMU scope')
+    selected = files.select(root, {'directory': profile.parent, 'release': release,
         'pcie_sha256': metadata.get('module_sha256')})
     require(metadata.get('driver_modules') == [record for record, _ in selected['drivers']]
         and metadata.get('reg_on_module_sha256') == selected['diagnostics'][1]['sha256'],
@@ -81,7 +83,8 @@ def link_module(root):
 def run(root, request):
     paths(root, request); metadata, selected = selection(root, request['profile'])
     link = link_module(root)
-    modules = [(record, link.module_bytes(request['profile'].parent, record, release=RELEASE))
+    release = metadata['kernel_release']
+    modules = [(record, link.module_bytes(request['profile'].parent, record, release=release))
         for record in selected['diagnostics']]
     previous = os.environ.get('IPHONE_LINUX_PROFILE'); previous_mask = os.umask(0o077)
     try:
